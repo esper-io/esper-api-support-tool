@@ -8,8 +8,6 @@ import string
 
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
-from esperclient import DeviceApi
-from esperclient.api_client import ApiClient
 
 ####Esper API Requests####
 def getInfo(request_extension, deviceid):
@@ -162,7 +160,6 @@ def iterateThroughDeviceList(frame, action, api_response):
         
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
-
     kioskMode = iskioskmode(device.id)
     deviceInfo.update({'EsperName':device.device_name})
 
@@ -198,7 +195,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo.update({'KioskApp':str(getkioskmodeapp(device.id))})
     else:
         deviceInfo.update({'KioskApp':''})
-
+    
     location_info = getLocationInfo(device.id)
     network_info = getNetworkInfo(device.id)
 
@@ -351,20 +348,12 @@ def removeTags(frame, device, deviceInfo, serialNum):
 ####End Perform Actions####
 
 def generateReport(frame, device, deviceInfo):
-    #patchVersion = getSecurityPatch(device)
+    patchVersion = getSecurityPatch(device)
     wifiStatus = getWifiStatus(deviceInfo)
     networkStatus = getCellularStatus(deviceInfo)
     device_name = getDeviceName(device)
 
-    mac_address = getMACAddress(device)
-    serial_number = getSerial(device)
-    id = getID(device, deviceInfo)
-    imei = getIMEIAddress(device)
-
-    latitude, longitude = getLocation(deviceInfo)
-
-    #deviceCSV = device_name + ',' + serial_number + ',' + mac_address + ',' + wifiStatus + ',' + networkStatus + ',' + id
-    deviceCSV = latitude + " " + longitude
+    deviceCSV = device_name + ',' + patchVersion + ',' + wifiStatus + ',' + networkStatus
     frame.Logging(deviceCSV)
     return deviceCSV
 
