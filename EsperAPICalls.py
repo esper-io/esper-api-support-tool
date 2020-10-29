@@ -324,7 +324,7 @@ def addTags(frame, device, deviceInfo, serialNum):
     if newTags != '':
         newTagsList = newTags.split(",")
         tagList = device.tags
-        for tag in tagList: #taglist is None
+        for tag in tagList:
             if tag not in newTagsList:
                 newTagsList.append(tag)
         setdevicetags(device.id, newTagsList)
