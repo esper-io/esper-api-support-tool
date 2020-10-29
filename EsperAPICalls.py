@@ -188,6 +188,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo.update({'Tags':device.tags})
     else:
         deviceInfo.update({'Tags':''})
+
+        if device.tags is None:
+            device.tags = []
         
     deviceInfo.update({'Apps':str(getdeviceapps(device.id))})
 
