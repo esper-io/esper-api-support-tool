@@ -188,6 +188,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo.update({'Tags':device.tags})
     else:
         deviceInfo.update({'Tags':''})
+
+        if device.tags is None:
+            device.tags = []
         
     deviceInfo.update({'Apps':str(getdeviceapps(device.id))})
 
@@ -321,7 +324,7 @@ def addTags(frame, device, deviceInfo, serialNum):
     if newTags != '':
         newTagsList = newTags.split(",")
         tagList = device.tags
-        for tag in tagList:
+        for tag in tagList: #taglist is None
             if tag not in newTagsList:
                 newTagsList.append(tag)
         setdevicetags(device.id, newTagsList)
