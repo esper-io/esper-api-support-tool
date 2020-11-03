@@ -426,7 +426,9 @@ class FrameLayout(wx.Frame):
         self.Close()
 
     def showUrlBlacklistDialog(self):
-        dlg = wx.TextEntryDialog(self.Parent, 'Enter URL BlackList (comma seperated)','URL BlackList')
+        dlg = wx.TextEntryDialog(
+            self.Parent, "Enter URL BlackList (comma seperated)", "URL BlackList"
+        )
         dlg.SetValue("Default")
         if dlg.ShowModal() == wx.ID_OK:
             Globals.url_blacklist = dlg.GetValue()

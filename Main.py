@@ -11,6 +11,7 @@ import os
 import platform
 import subprocess
 
+
 def askForAuthCSV():
     # Windows, Standalone executable will allow user to select CSV
     if "Windows" in platform.system():
@@ -48,12 +49,13 @@ class MyApp(wx.App):
         self.frame.Show()
         return True
 
+
 if __name__ == "__main__":
     """Launches Main App"""
-    #askForAuthCSV()
+    # askForAuthCSV()
     Globals.app = MyApp(0)
     Globals.app.MainLoop()
-    
-    #Globals.app = wx.App(False)
-    #initFrameLayout()
-    #Globals.app.MainLoop()
+
+    # Globals.app = wx.App(False)
+    # initFrameLayout()
+    # Globals.app.MainLoop()

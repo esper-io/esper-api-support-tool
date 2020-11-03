@@ -24,6 +24,7 @@ class NewFrameLayout(wx.Frame):
         else:
             self.WINDOWS = False
         self.auth_csv_reader = None
+        self.configChoice = {}
 
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -31,38 +32,73 @@ class NewFrameLayout(wx.Frame):
         self.SetSize((1552, 840))
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
-        self.configList = wx.TextCtrl(self.panel_3, wx.ID_ANY, "")
-        self.combo_box_1 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
+        self.configList = wx.TextCtrl(
+            self.panel_3, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        self.groupChoice = wx.ComboBox(
+            self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN
+        )
         self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=[""])
-        self.combo_box_2 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
+        self.appChoice = wx.ComboBox(
+            self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN
+        )
         self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "Run")
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        self.loggingList = wx.ListBox(self.panel_2, wx.ID_ANY, choices=[""], style=wx.LB_NEEDED_SB)
-        
+        self.loggingList = wx.ListBox(
+            self.panel_2, wx.ID_ANY, choices=[""], style=wx.LB_NEEDED_SB
+        )
+
+        self.configList.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "",
+            )
+        )
+        self.loggingList.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "",
+            )
+        )
+
         # Menu Bar
         self.menubar = wx.MenuBar()
-        
+
         fileMenu = wx.Menu()
-        fileOpenAuth = fileMenu.Append(wx.ID_OPEN, 'Open Auth CSV', 'Open Auth CSV')
-        fileOpenConfig = fileMenu.Append(wx.ID_APPLY, 'Open Device CSV', 'Open Device CSV')
+        fileOpenAuth = fileMenu.Append(wx.ID_OPEN, "Open Auth CSV", "Open Auth CSV")
+        fileOpenConfig = fileMenu.Append(
+            wx.ID_APPLY, "Open Device CSV", "Open Device CSV"
+        )
         fileMenu.Append(wx.ID_SEPARATOR)
-        fileSave = fileMenu.Append(wx.ID_SAVE, 'Save As', 'Save As')
+        fileSave = fileMenu.Append(wx.ID_SAVE, "Save As", "Save As")
         fileMenu.Append(wx.ID_SEPARATOR)
-        fileItem = fileMenu.Append(wx.ID_EXIT, 'Quit', 'Quit application')
+        fileItem = fileMenu.Append(wx.ID_EXIT, "Quit", "Quit application")
 
         consoleMenu = wx.Menu()
-        clearConsole = consoleMenu.Append(wx.ID_RESET, "Clear", 'Clear Console')
+        clearConsole = consoleMenu.Append(wx.ID_RESET, "Clear", "Clear Console")
 
         self.configMenu = wx.Menu()
-        self.configMenuOptions.append(self.configMenu.Append(wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"))
+        self.configMenuOptions.append(
+            self.configMenu.Append(
+                wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
+            )
+        )
 
         runMenu = wx.Menu()
-        run = runMenu.Append(wx.ID_RETRY, "Run", 'Run')
+        run = runMenu.Append(wx.ID_RETRY, "Run", "Run")
 
-        self.menubar.Append(fileMenu, '&File')
-        self.menubar.Append(self.configMenu, '&Configurations')
-        self.menubar.Append(consoleMenu, '&Console')
-        self.menubar.Append(runMenu, '&Run')
+        self.menubar.Append(fileMenu, "&File")
+        self.menubar.Append(self.configMenu, "&Configurations")
+        self.menubar.Append(consoleMenu, "&Console")
+        self.menubar.Append(runMenu, "&Run")
         self.SetMenuBar(self.menubar)
 
         self.Bind(wx.EVT_MENU, self.OnOpen, fileOpenAuth)
@@ -72,20 +108,20 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onClear, clearConsole)
         self.Bind(wx.EVT_MENU, self.onRun, run)
         # Menu Bar end
-        
+
         # Tool Bar
-        #self.frame_toolbar = wx.ToolBar(self, -1)
-        #self.SetToolBar(self.frame_toolbar)
+        # self.frame_toolbar = wx.ToolBar(self, -1)
+        # self.SetToolBar(self.frame_toolbar)
 
-        #qtool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Quit', png)
-        #otool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Open Auth CSV',  wx.Bitmap('Images/openFile.png', wx.BITMAP_TYPE_ANY))
-        #stool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Save As',  wx.Bitmap('Images/save.png', wx.BITMAP_TYPE_ANY))
-        #ctool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Clear',  wx.Bitmap('Images/clear.png', wx.BITMAP_TYPE_ANY))
+        # qtool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Quit', png)
+        # otool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Open Auth CSV',  wx.Bitmap('Images/openFile.png', wx.BITMAP_TYPE_ANY))
+        # stool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Save As',  wx.Bitmap('Images/save.png', wx.BITMAP_TYPE_ANY))
+        # ctool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Clear',  wx.Bitmap('Images/clear.png', wx.BITMAP_TYPE_ANY))
 
-        #self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
-        #self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
-        #self.Bind(wx.EVT_TOOL, self.onSave, stool)
-        #self.Bind(wx.EVT_TOOL, self.onClear, ctool)
+        # self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
+        # self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
+        # self.Bind(wx.EVT_TOOL, self.onSave, stool)
+        # self.Bind(wx.EVT_TOOL, self.onClear, ctool)
         # Tool Bar end
 
         self.__set_properties()
@@ -97,7 +133,7 @@ class NewFrameLayout(wx.Frame):
         self.SetTitle("frame")
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
         self.choice_1.SetSelection(0)
-        #self.frame_toolbar.Realize()
+        # self.frame_toolbar.Realize()
         self.Maximize(True)
         # end wxGlade
 
@@ -109,28 +145,84 @@ class NewFrameLayout(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Loaded Configuration:", style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END)
-        label_1.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_1 = wx.StaticText(
+            self.panel_1,
+            wx.ID_ANY,
+            "Loaded Configuration:",
+            style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
+        )
+        label_1.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         label_1.Wrap(200)
         sizer_2.Add(label_1, 0, wx.EXPAND, 0)
         grid_sizer_3.Add(self.configList, 0, wx.EXPAND, 0)
         self.panel_3.SetSizer(grid_sizer_3)
         sizer_2.Add(self.panel_3, 1, wx.EXPAND, 0)
         grid_sizer_1.Add(sizer_2, 0, wx.EXPAND, 0)
-        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Choose the Group to take Action on:", style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END)
-        label_2.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_2 = wx.StaticText(
+            self.panel_1,
+            wx.ID_ANY,
+            "Choose the Group to take Action on:",
+            style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
+        )
+        label_2.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_3.Add(label_2, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.combo_box_1, 0, wx.ALL | wx.EXPAND, 0)
+        sizer_3.Add(self.groupChoice, 0, wx.ALL | wx.EXPAND, 0)
         sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
-        label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Action to apply to Devices in Group:", style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END)
-        label_3.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_3 = wx.StaticText(
+            self.panel_1,
+            wx.ID_ANY,
+            "Action to apply to Devices in Group:",
+            style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
+        )
+        label_3.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_3.Add(label_3, 0, wx.EXPAND, 0)
         sizer_3.Add(self.choice_1, 0, wx.EXPAND, 0)
         sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
-        label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Application for Kiosk Mode", style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END)
-        label_4.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_4 = wx.StaticText(
+            self.panel_1,
+            wx.ID_ANY,
+            "Application for Kiosk Mode:",
+            style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
+        )
+        label_4.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_3.Add(label_4, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.combo_box_2, 0, wx.EXPAND, 0)
+        sizer_3.Add(self.appChoice, 0, wx.EXPAND, 0)
         grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
         grid_sizer_1.Add(self.button_1, 0, wx.ALIGN_BOTTOM | wx.EXPAND, 0)
         self.panel_1.SetSizer(grid_sizer_1)
@@ -160,11 +252,15 @@ class NewFrameLayout(wx.Frame):
 
     def OnOpen(self, event):
         # otherwise ask the user what new file to open
-        with wx.FileDialog(self, "Open Auth CSV File", wildcard="CSV files (*.csv)|*.csv",
-                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        with wx.FileDialog(
+            self,
+            "Open Auth CSV File",
+            wildcard="CSV files (*.csv)|*.csv",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as fileDialog:
 
             if fileDialog.ShowModal() == wx.ID_CANCEL:
-                return     # the user changed their mind
+                return  # the user changed their mind
 
             # Proceed loading the file chosen by the user
             Globals.csv_auth_path = fileDialog.GetPath()
@@ -223,21 +319,24 @@ class NewFrameLayout(wx.Frame):
                 self.auth_csv_reader = csv.DictReader(csvfile)
                 num = 0
                 for row in self.auth_csv_reader:
-                    # self.configChoice.Append(row["name"], row)
-                    item = self.configMenu.Append(wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_RADIO)
+                    self.configChoice[row["name"]] = row
+                    item = self.configMenu.Append(
+                        wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_CHECK
+                    )
                     self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
                     self.configMenuOptions.append(item)
-                    if num == 0:
-                        wx.Menu().Check(item.Id, False)
-                    else:
-                        num += 1
+            self.Logging("--->**** Please Select an Endpoint")
         else:
             self.Logging(
                 "--->****"
                 + Globals.CONFIGFILE
                 + " not found - PLEASE Quit and create configuration file"
             )
-            self.configMenuOptions.append(self.configMenu.Append(wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"))
+            self.configMenuOptions.append(
+                self.configMenu.Append(
+                    wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
+                )
+            )
 
     def LoadTagsAndAliases(self):
         return
@@ -245,38 +344,99 @@ class NewFrameLayout(wx.Frame):
     def onConfigChoice(self):
         return
 
-    def loadConfiguartion(self, *args, **kwargs):
+    def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
-        choice = self.configChoice.GetSelection()
-        selectedConfig = self.configChoice.GetClientData(choice)
+        menuItem = self.configMenu.FindItemById(event.Id)
+        try:
+            selectedConfig = self.configChoice[menuItem.GetItemLabelText()]
 
-        self.configList.Clear()
-        self.configList.AppendText("API Host = " + selectedConfig["apiHost"] + "\n")
-        self.configList.AppendText("API key = " + selectedConfig["apiKey"] + "\n")
-        self.configList.AppendText("API Prefix = " + selectedConfig["apiPrefix"] + "\n")
-        self.configList.AppendText("Enterprise = " + selectedConfig["enterprise"])
+            for item in menuItem.Menu.MenuItems:
+                if item != menuItem:
+                    item.Check(False)
 
-        if "https" in str(selectedConfig["apiHost"]):
-            Globals.configuration.host = selectedConfig["apiHost"]
-            Globals.configuration.api_key["Authorization"] = selectedConfig["apiKey"]
-            Globals.configuration.api_key_prefix["Authorization"] = selectedConfig[
-                "apiPrefix"
-            ]
-            Globals.enterprise_id = selectedConfig["enterprise"]
-            self.PopulateGroups()
-            self.PopulateApps()
-        else:
-            self.Logging(self, "--->**** Please Select an Endpoint")
-        return
+            self.configList.Clear()
+            self.configList.AppendText("API Host = " + selectedConfig["apiHost"] + "\n")
+            self.configList.AppendText("API key = " + selectedConfig["apiKey"] + "\n")
+            self.configList.AppendText(
+                "API Prefix = " + selectedConfig["apiPrefix"] + "\n"
+            )
+            self.configList.AppendText("Enterprise = " + selectedConfig["enterprise"])
+
+            if "https" in str(selectedConfig["apiHost"]):
+                Globals.configuration.host = selectedConfig["apiHost"]
+                Globals.configuration.api_key["Authorization"] = selectedConfig[
+                    "apiKey"
+                ]
+                Globals.configuration.api_key_prefix["Authorization"] = selectedConfig[
+                    "apiPrefix"
+                ]
+                Globals.enterprise_id = selectedConfig["enterprise"]
+
+                myCursor = wx.StockCursor(wx.CURSOR_WAIT)
+                self.SetCursor(myCursor)
+
+                self.PopulateGroups()
+                self.PopulateApps()
+
+                myCursor = wx.StockCursor(wx.CURSOR_DEFAULT)
+                self.SetCursor(myCursor)
+        except:
+            self.Logging(
+                "--->****An Error has occured while loading the configuration, please try again."
+            )
+            menuItem.Check(False)
+
+    def PopulateGroups(self):
+        """create an instance of the API class"""
+        self.Logging("--->Attemptting to populate groups...")
+        api_instance = esperclient.DeviceGroupApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        limit = 5000  # int | Number of results to return per page. (optional) (default to 20)
+        offset = 0  # int | T    he initial index from which to return the results. (optional) (default to 0)
+        self.groupChoice.Clear()
+        try:
+            api_response = api_instance.get_all_groups(
+                Globals.enterprise_id, limit=limit, offset=offset
+            )
+            if len(api_response.results):
+                for group in api_response.results:
+                    self.groupChoice.Append(group.name, group.id)
+        except ApiException as e:
+            self.Logging(
+                "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
+            )
+            print("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
+
+    def PopulateApps(self):
+        """create an instance of the API class"""
+        self.Logging("--->Attemptting to populate apps...")
+        api_instance = esperclient.ApplicationApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        limit = 5000  # int | Number of results to return per page. (optional) (default to 20)
+        offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
+        self.appChoice.Clear()
+        try:
+            api_response = api_instance.get_all_applications(
+                Globals.enterprise_id, limit=limit, offset=offset, is_hidden=False
+            )
+            if len(api_response.results):
+                for app in api_response.results:
+                    self.appChoice.Append(app.application_name, app.package_name)
+        except ApiException as e:
+            self.Logging(
+                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+            )
+            print(
+                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+            )
+
 
 # end of class MyFrame
 
 
-
-
-
 class FrameLayout(wx.Frame):
-
     def __init__(self, *args, **kwargs):
         super(FrameLayout, self).__init__(*args, **kwargs)
 
@@ -301,15 +461,13 @@ class FrameLayout(wx.Frame):
         self.appChoice = None
         self.loggingList = None
 
-        #self.initUI()
-    
+        # self.initUI()
+
     def initUI(self):
 
         # Menu Bar
-        
 
         # Tool Bar
-        
 
         # Body
         self.panel = wx.Panel(self)
@@ -389,7 +547,5 @@ class FrameLayout(wx.Frame):
 
         self.SetSizeHints(250, 300, 800, 800)"""
         self.SetSize(800, 800)
-        self.SetTitle('Esper API Tool')
+        self.SetTitle("Esper API Tool")
         self.Centre()
-
-    

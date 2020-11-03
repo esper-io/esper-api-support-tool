@@ -17,7 +17,7 @@ ACTIONS = [
     "Action -> Add Device Tags <from loaded file>",
     "Action -> Remove Device Tags <from loaded file>",
     "Show -> Network And Secruity Report",
-    "Action -> Apply URL Blacklist"
+    "Action -> Apply URL Blacklist",
 ]
 
 CONFIGFILE = "EsperGroupActionsConfig.csv"

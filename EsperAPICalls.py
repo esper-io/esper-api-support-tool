@@ -604,18 +604,21 @@ def getCommandsApiInstance():
 
 
 def executeUpdateDeviceConfigCommandOnGroup(frame, command_args):
-    groupToUse = frame.groupChoice.GetClientData(frame.groupChoice.GetSelection())  # Get Device Group ID
+    groupToUse = frame.groupChoice.GetClientData(
+        frame.groupChoice.GetSelection()
+    )  # Get Device Group ID
     request = esperclient.V0CommandRequest(
         enterprise=Globals.enterprise_id,
         command_type="GROUP",
         device_type="all",
-        groups = [groupToUse],
+        groups=[groupToUse],
         command="UPDATE_DEVICE_CONFIG",
-        command_args=command_args
+        command_args=command_args,
     )
     api_instance = getCommandsApiInstance()
     api_response = api_instance.create_command(Globals.enterprise_id, request)
     return waitForCommandToFinish(frame, api_response.id)
+
 
 def waitForCommandToFinish(frame, request_id):
     api_instance = getCommandsApiInstance()
@@ -647,21 +650,18 @@ def urlBlacklist(frame):
     command_args = V0CommandArgs(
         custom_settings_config={
             "managedAppConfigurations": {
-                "com.android.chrome": {
-                    "URLBlacklist": [Globals.url_blacklist]
-                }
+                "com.android.chrome": {"URLBlacklist": [Globals.url_blacklist]}
             }
         }
     )
     return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
 
+
 def urlWhiteList(frame, urlWhiteList):
     command_args = V0CommandArgs(
         custom_settings_config={
             "managedAppConfigurations": {
-                "com.android.chrome": {
-                    "URLWhitelist": urlWhiteList
-                }
+                "com.android.chrome": {"URLWhitelist": urlWhiteList}
             }
         }
     )
@@ -673,24 +673,26 @@ def setIncognitoMode(frame, mode):
         custom_settings_config={
             "managedAppConfigurations": {
                 "com.android.chrome": {
-                    "IncognitoModeAvailability": mode,   # 1 disable incognito mode
+                    "IncognitoModeAvailability": mode,  # 1 disable incognito mode
                 }
             }
         }
     )
     return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
 
+
 def setGoogleSafeSearch(frame, mode):
     command_args = V0CommandArgs(
         custom_settings_config={
             "managedAppConfigurations": {
                 "com.android.chrome": {
-                    "ForceGoogleSafeSearch" : mode,   # enable safe search to work
+                    "ForceGoogleSafeSearch": mode,  # enable safe search to work
                 }
             }
         }
     )
     return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
+
 
 def setHomepageLocation(frame, homeURL):
     command_args = V0CommandArgs(
