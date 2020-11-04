@@ -1,4 +1,5 @@
 import wx
+import wx.grid
 import esperclient
 import time
 import csv
@@ -26,6 +27,8 @@ class NewFrameLayout(wx.Frame):
         self.auth_csv_reader = None
         self.configChoice = {}
 
+        self.csvHeaders = ["Number","EsperName","Alias","Online","Mode","Serial","Tags","Applications","Pinned App"]
+
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
@@ -36,17 +39,25 @@ class NewFrameLayout(wx.Frame):
             self.panel_3, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY
         )
         self.groupChoice = wx.ComboBox(
-            self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN
+            self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_READONLY
+        )
+        self.deviceChoice = wx.ComboBox(
+            self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_READONLY
         )
         self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=[""])
         self.appChoice = wx.ComboBox(
             self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN
         )
-        self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "Run")
+        self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "Run on Group")
+        self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, "Run on Device")
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         self.loggingList = wx.ListBox(
             self.panel_2, wx.ID_ANY, choices=[""], style=wx.LB_NEEDED_SB
         )
+        self.grid_1 = wx.grid.Grid(self.panel_2, wx.ID_ANY, size=(1, 1))
+
+        self.Bind(wx.EVT_BUTTON, self.runActionOnGroup, self.button_1)
+        self.Bind(wx.EVT_BUTTON, self.runActionOnDevice, self.button_2)
 
         self.configList.SetFont(
             wx.Font(
@@ -133,6 +144,7 @@ class NewFrameLayout(wx.Frame):
         self.SetTitle("frame")
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
         self.choice_1.SetSelection(0)
+        self.grid_1.CreateGrid(0, len(self.csvHeaders))
         # self.frame_toolbar.Realize()
         self.Maximize(True)
         # end wxGlade
@@ -140,11 +152,12 @@ class NewFrameLayout(wx.Frame):
     def __do_layout(self):
         # begin wxGlade: MyFrame.__do_layout
         sizer_1 = wx.GridSizer(1, 2, 0, 0)
-        grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
-        grid_sizer_1 = wx.GridSizer(3, 1, 0, 0)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_2 = wx.GridSizer(2, 1, 0, 0)
+        grid_sizer_1 = wx.GridSizer(3, 1, 0, 0)
         grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
+        grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
         label_1 = wx.StaticText(
             self.panel_1,
             wx.ID_ANY,
@@ -170,7 +183,7 @@ class NewFrameLayout(wx.Frame):
         label_2 = wx.StaticText(
             self.panel_1,
             wx.ID_ANY,
-            "Choose the Group to take Action on:",
+            "Choose a Group to take Action on:",
             style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
         )
         label_2.SetFont(
@@ -185,6 +198,25 @@ class NewFrameLayout(wx.Frame):
         )
         sizer_3.Add(label_2, 0, wx.EXPAND, 0)
         sizer_3.Add(self.groupChoice, 0, wx.ALL | wx.EXPAND, 0)
+        sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
+        label_device = wx.StaticText(
+            self.panel_1,
+            wx.ID_ANY,
+            "Choose a Device to take Action on:",
+            style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
+        )
+        label_device.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
+        sizer_3.Add(label_device, 0, wx.EXPAND, 0)
+        sizer_3.Add(self.deviceChoice, 0, wx.ALL | wx.EXPAND, 0)
         sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
         label_3 = wx.StaticText(
             self.panel_1,
@@ -224,10 +256,13 @@ class NewFrameLayout(wx.Frame):
         sizer_3.Add(label_4, 0, wx.EXPAND, 0)
         sizer_3.Add(self.appChoice, 0, wx.EXPAND, 0)
         grid_sizer_1.Add(sizer_3, 1, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.button_1, 0, wx.ALIGN_BOTTOM | wx.EXPAND, 0)
+        grid_sizer_4.Add(self.button_1, 0, wx.ALIGN_BOTTOM | wx.ALL | wx.EXPAND, 5)
+        grid_sizer_4.Add(self.button_2, 0, wx.ALIGN_BOTTOM | wx.ALL | wx.EXPAND, 5)
+        grid_sizer_1.Add(grid_sizer_4, 1, wx.EXPAND, 0)
         self.panel_1.SetSizer(grid_sizer_1)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
         grid_sizer_2.Add(self.loggingList, 0, wx.EXPAND, 0)
+        grid_sizer_2.Add(self.grid_1, 1, wx.EXPAND, 1)
         self.panel_2.SetSizer(grid_sizer_2)
         sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer_1)
@@ -290,16 +325,38 @@ class NewFrameLayout(wx.Frame):
             filename = os.path.dirname(currentpath) + os.path.sep + Globals.CONFIGFILE
             Globals.csv_auth_path = filename
 
-    def onSave(self):
-        return
+    def onSave(self, event=None):
+        self.SaveLogging()
 
-    def onClear(self):
-        return
+    def SaveLogging(self):
+        """Sends Device Info To Frame For Logging"""
+        secs = time.time()
+        timestamp = "{}".format(time.strftime("%Y%m%d-%H%M", time.localtime(secs)))
+        self.CreateNewFile()
+        loggingfile = Globals.csv_tag_path_clone
+        header = Globals.header_format
+        with open(loggingfile, "w") as csvfile:
+            csvfile.write(header)
+            # for rows in Globals.new_output_to_save:
+            csvfile.write(Globals.new_output_to_save)
+        self.Logging(
+            "---> Logging info saved to csv file - " + Globals.csv_tag_path_clone
+        )
+
+    def CreateNewFile(self):
+        newFile = "output.csv"
+        Globals.csv_tag_path_clone = newFile
+        if not os.path.exists(Globals.csv_tag_path_clone):
+            with open(Globals.csv_tag_path_clone, "w"):
+                pass
+
+    def onClear(self, event=None):
+        self.loggingList.Clear()
 
     def onUploadCSV(self):
         return
 
-    def onRun(self):
+    def onRun(self, event=None):
         return
 
     def PopulateConfig(self):
@@ -341,13 +398,14 @@ class NewFrameLayout(wx.Frame):
     def LoadTagsAndAliases(self):
         return
 
-    def onConfigChoice(self):
-        return
-
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
         try:
+            self.Logging(
+                "--->Attempting to load configuration: %s."
+                % menuItem.GetItemLabelText()
+            )
             selectedConfig = self.configChoice[menuItem.GetItemLabelText()]
 
             for item in menuItem.Menu.MenuItems:
@@ -372,14 +430,9 @@ class NewFrameLayout(wx.Frame):
                 ]
                 Globals.enterprise_id = selectedConfig["enterprise"]
 
-                myCursor = wx.StockCursor(wx.CURSOR_WAIT)
-                self.SetCursor(myCursor)
-
                 self.PopulateGroups()
                 self.PopulateApps()
 
-                myCursor = wx.StockCursor(wx.CURSOR_DEFAULT)
-                self.SetCursor(myCursor)
         except:
             self.Logging(
                 "--->****An Error has occured while loading the configuration, please try again."
@@ -389,6 +442,8 @@ class NewFrameLayout(wx.Frame):
     def PopulateGroups(self):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate groups...")
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
         api_instance = esperclient.DeviceGroupApi(
             esperclient.ApiClient(Globals.configuration)
         )
@@ -402,15 +457,68 @@ class NewFrameLayout(wx.Frame):
             if len(api_response.results):
                 for group in api_response.results:
                     self.groupChoice.Append(group.name, group.id)
+                self.groupChoice.SetValue("<Select Group>")
+                self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
         except ApiException as e:
             self.Logging(
                 "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
             )
             print("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
+
+    def PopulateDevices(self, event=None):
+        self.Logging(
+            "--->Attemptting to populate devices of selected group (%s)..."
+            % event.String
+        )
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
+        self.deviceChoice.Clear()
+        self.grid_1.ClearGrid()
+        try:
+            api_instance = esperclient.DeviceApi(
+                esperclient.ApiClient(Globals.configuration)
+            )
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                group=event.ClientData,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            self.grid_1.AppendRows(1)
+            num = 0
+            for head in self.csvHeaders:
+                self.grid_1.SetCellValue(0, num, head)
+                num += 1
+
+            if len(api_response.results):
+                self.deviceChoice.Enable(True)
+                for device in api_response.results:
+                    name = "%s %s %s %s" % (
+                        device.hardware_info["manufacturer"],
+                        device.hardware_info["model"],
+                        device.device_name,
+                        device.software_info["androidVersion"],
+                    )
+                    self.deviceChoice.Append(name, device)
+                self.deviceChoice.SetValue("<Select Device>")
+            else:
+                self.deviceChoice.Append("No Devices Found", "")
+                self.groupChoice.SetValue("No Devices Found")
+                self.deviceChoice.Enable(False)
+                self.Logging("No Devices found in group")
+        except ApiException as e:
+            self.Logging("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+            print(print("Exception when calling DeviceApi->get_all_devices: %s\n" % e))
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
 
     def PopulateApps(self):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate apps...")
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
         api_instance = esperclient.ApplicationApi(
             esperclient.ApiClient(Globals.configuration)
         )
@@ -419,11 +527,15 @@ class NewFrameLayout(wx.Frame):
         self.appChoice.Clear()
         try:
             api_response = api_instance.get_all_applications(
-                Globals.enterprise_id, limit=limit, offset=offset, is_hidden=False
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+                is_hidden=False,
             )
             if len(api_response.results):
                 for app in api_response.results:
                     self.appChoice.Append(app.application_name, app.package_name)
+                self.appChoice.SetValue("<Select App>")
         except ApiException as e:
             self.Logging(
                 "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
@@ -431,121 +543,77 @@ class NewFrameLayout(wx.Frame):
             print(
                 "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
             )
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
 
-
-# end of class MyFrame
-
-
-class FrameLayout(wx.Frame):
-    def __init__(self, *args, **kwargs):
-        super(FrameLayout, self).__init__(*args, **kwargs)
-
-        self.WINDOWS = True
-        if platform.system() == "Windows":
-            self.WINDOWS = True
-        else:
-            self.WINDOWS = False
-
-        self.configMenuOptions = []
-
-        self.menubar = None
-        self.panel = None
-        self.configLabel = None
-        self.configMenu = None
-        self.configList = None
-        self.groupLabel = None
-        self.groupChoice = None
-        self.actionLabel = None
-        self.actionChoice = None
-        self.appLabel = None
-        self.appChoice = None
-        self.loggingList = None
-
-        # self.initUI()
-
-    def initUI(self):
-
-        # Menu Bar
-
-        # Tool Bar
-
-        # Body
-        self.panel = wx.Panel(self)
-
-        if self.WINDOWS:
-            font = wx.Font(
-                10, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_LIGHT
+    def createLogString(self, deviceInfo, action):
+        """Prepares Raw Data For UI"""
+        logString = ""
+        tagString = str(deviceInfo["Tags"])
+        tagString = tagString.replace("'", "")
+        tagString = tagString.replace("[", "")
+        tagString = tagString.replace("]", "")
+        tagString = tagString.replace(", ", ",")
+        appString = str(deviceInfo["Apps"]).replace(",", "")
+        if action == Globals.SHOW_ALL:
+            logString = (
+                "{:>4}".format(str(deviceInfo["num"]))
+                + ","
+                + deviceInfo["EsperName"]
+                + ","
+                + deviceInfo["Alias"]
+                + ","
+                + deviceInfo["Status"]
+                + ","
+                + deviceInfo["Mode"]
+                + ","
+                + deviceInfo["Serial"]
+                + ","
+                + '"'
+                + str(tagString)
+                + '"'
+                + ","
+                + str(appString)
+                + ","
+                + str(deviceInfo["KioskApp"])
             )
-        else:
-            font = wx.Font(
-                14, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_LIGHT
+            return logString
+        logString = (
+            "{:>4}".format(str(deviceInfo["num"]))
+            + ","
+            + "{:13.13}".format(deviceInfo["EsperName"])
+            + ","
+            + "{:16.16}".format(str(deviceInfo["Alias"]))
+            + ","
+            + "{:10.10}".format(deviceInfo["Status"])
+            + ","
+            + "{:8.8}".format(deviceInfo["Mode"])
+        )
+        if action == Globals.SHOW_DEVICES:
+            logString = (
+                logString
+                + ","
+                + "{:20.20}".format(deviceInfo["Serial"])
+                + ","
+                + "{:20.20}".format(tagString)
             )
-        self.panel.SetFont(font)
+        elif action == Globals.SHOW_APP_VERSION:
+            logString = logString + ",,," + "{:32.32}".format(appString)
+            if "KioskApp" in deviceInfo:
+                logString = logString + "," + "{:16.16}".format(deviceInfo["KioskApp"])
+        return logString
 
-        # Configuration UI
-        self.configLabel = wx.StaticText(self.panel, label="Loaded Configuration:")
-        sizerH.Add(self.configLabel, 1)
-        self.configList = wx.TextCtrl(
-            self.panel, style=wx.TE_MULTILINE | wx.TE_READONLY, size=(200, 80)
-        )
-        sizerH.Add(self.configList, 1)
-
-        # Action UI
-        """
-        collpane = wx.CollapsiblePane(self, wx.ID_ANY, "Details:")
-        # add the pane with a zero proportion value to the 'sz' sizer which contains it
-        sizer.Add(collpane, pos=(2,0), flag=wx.GROW | wx.ALL, border=5)
-        # now add a test label in the collapsible pane using a sizer to layout it:
-        win = collpane.GetPane()
-        paneSz = wx.BoxSizer(wx.VERTICAL)
-        paneSz.Add(wx.StaticText(win, wx.ID_ANY, "test!"), 1, wx.GROW | wx.ALL, 2)
-        win.SetSizer(paneSz)
-        paneSz.SetSizeHints(win)
-
-        self.groupLabel = wx.StaticText(
-            self.panel, label="Choose the Group to take Action on"
-        )
-        sizer.Add(self.groupLabel, pos=(2,0), flag=wx.ALL, border=1)
-        self.groupChoice = wx.ComboBox(self.panel, wx.CB_READONLY, size=(100, -1))
-        sizer.Add(self.groupChoice, pos=(2,1), flag=wx.ALL, border=5)
-        self.actionLabel = wx.StaticText(
-            self.panel, label="Action to apply to Devices in Group"
-        )
-        sizer.Add(self.actionLabel, pos=(3,0), flag=wx.ALL, border=5)
-        self.actionChoice = wx.Choice(
-            self.panel, wx.CB_SORT, size=(100, -1), choices=Globals.ACTIONS
-        )
-        sizer.Add(self.actionChoice, pos=(3,1), flag=wx.ALL, border=5)
-        self.appLabel = wx.StaticText(self.panel, label="Application for Kiosk Mode")
-        sizer.Add(self.appLabel, pos=(4,0), flag=wx.ALL, border=5)
-        self.appChoice = wx.ComboBox(self.panel, wx.CB_READONLY, size=(100, -1))
-        sizer.Add(self.appChoice, pos=(4,1), flag=wx.ALL, border=5)
-
-        # Logging UI
-        if self.WINDOWS:
-            self.loggingList = wx.ListBox(self.panel, size=(700, 300))
-            myfont = wx.Font(
-                8,
-                wx.FONTFAMILY_MODERN,
-                wx.FONTSTYLE_ITALIC,
-                wx.FONTWEIGHT_NORMAL,
-                False,
+    def runActionOnGroup(self, event=None):
+        self.Logging(
+                "Running Action on Group"
             )
-        else:
-            self.loggingList = wx.ListBox(self.panel, size=(700, 400))
-            myfont = wx.Font(
-                10,
-                wx.FONTFAMILY_MODERN,
-                wx.FONTSTYLE_ITALIC,
-                wx.FONTWEIGHT_NORMAL,
-                False,
+        return
+
+    def runActionOnDevice(self, event=None):
+        self.Logging(
+                "Running Action on Device"
             )
-        sizer.Add(self.loggingList, pos=(0,2), flag=wx.ALL, border=5)
-        self.loggingList.SetFont(myfont)
+        return
 
-        self.panel.SetSizerAndFit(sizer)
-
-        self.SetSizeHints(250, 300, 800, 800)"""
-        self.SetSize(800, 800)
-        self.SetTitle("Esper API Tool")
-        self.Centre()
+    def OnGridRightDown(self):
+        return
