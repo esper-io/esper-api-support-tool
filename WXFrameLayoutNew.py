@@ -27,7 +27,17 @@ class NewFrameLayout(wx.Frame):
         self.auth_csv_reader = None
         self.configChoice = {}
 
-        self.csvHeaders = ["Number","EsperName","Alias","Online","Mode","Serial","Tags","Applications","Pinned App"]
+        self.csvHeaders = [
+            "Number",
+            "EsperName",
+            "Alias",
+            "Online",
+            "Mode",
+            "Serial",
+            "Tags",
+            "Applications",
+            "Pinned App",
+        ]
 
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -604,15 +614,11 @@ class NewFrameLayout(wx.Frame):
         return logString
 
     def runActionOnGroup(self, event=None):
-        self.Logging(
-                "Running Action on Group"
-            )
+        self.Logging("Running Action on Group")
         return
 
     def runActionOnDevice(self, event=None):
-        self.Logging(
-                "Running Action on Device"
-            )
+        self.Logging("Running Action on Device")
         return
 
     def OnGridRightDown(self):
