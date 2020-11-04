@@ -241,6 +241,8 @@ def TakeAction(frame, group, action, label):
 def iterateThroughAllGroups(frame, action, api_instance):
     for index, value in enumerate(frame.groupChoice.Strings):
         groupToUse = frame.groupChoice.GetClientData(index)#Get Device Group ID
+        if value == "All devices":
+            continue
         try:
             api_response = api_instance.get_all_devices(Globals.enterprise_id, group=groupToUse, limit=Globals.limit, offset=Globals.offset)
             if len(api_response.results):
