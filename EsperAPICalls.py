@@ -99,7 +99,7 @@ def getLocationInfo(deviceid):
     location_event = ''
     if ('locationEvent' in respData):
         location_event = respData['locationEvent']
-    return location_event
+    return location_event, respData
 
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""        
@@ -138,7 +138,7 @@ def iterateThroughDeviceList(frame, action, api_response):
         deviceInfo.clear()
         deviceInfo.update({'num':number_of_devices})
         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-        if (action == Globals.SHOW_DEVICES or action == Globals.SHOW_APP_VERSION or action == Globals.SHOW_ALL):
+        if (action == Globals.SHOW_DEVICES or action == Globals.SHOW_APP_VERSION or action == Globals.SHOW_ALL or action == Globals.SHOW_BLUETOOTH):
             Globals.header_format = Globals.CSV_TAG_HEADER
             logstring = frame.createLogString(deviceInfo, action)
             frame.Logging(logstring)
@@ -199,8 +199,13 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     else:
         deviceInfo.update({'KioskApp':''})
     
-    location_info = getLocationInfo(device.id)
+    location_info, resp_json = getLocationInfo(device.id)
     network_info = getNetworkInfo(device.id)
+
+    if resp_json and "bluetoothStats" in resp_json:
+        deviceInfo.update({'bluetoothStats':resp_json['bluetoothStats']})
+    if resp_json and "deviceSettings" in resp_json and "bluetoothState" in resp_json["deviceSettings"]:
+        deviceInfo.update({'bluetoothState':resp_json['deviceSettings']['bluetoothState']})
 
     deviceInfo.update({'location_info':location_info})
     deviceInfo.update({'network_event':network_info})
@@ -236,6 +241,8 @@ def TakeAction(frame, group, action, label):
 def iterateThroughAllGroups(frame, action, api_instance):
     for index, value in enumerate(frame.groupChoice.Strings):
         groupToUse = frame.groupChoice.GetClientData(index)#Get Device Group ID
+        if value != "All devices":
+            continue
         try:
             api_response = api_instance.get_all_devices(Globals.enterprise_id, group=groupToUse, limit=Globals.limit, offset=Globals.offset)
             if len(api_response.results):
@@ -355,8 +362,9 @@ def generateReport(frame, device, deviceInfo):
     wifiStatus = getWifiStatus(deviceInfo)
     networkStatus = getCellularStatus(deviceInfo)
     device_name = getDeviceName(device)
+    bluetooth_state = deviceInfo['bluetoothState']
 
-    deviceCSV = device_name + ',' + patchVersion + ',' + wifiStatus + ',' + networkStatus
+    deviceCSV = device_name + ',' + patchVersion + ',' + wifiStatus + ',' + networkStatus + "," + bluetooth_state
     frame.Logging(deviceCSV)
     return deviceCSV
 
