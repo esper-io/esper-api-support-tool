@@ -98,7 +98,7 @@ class FrameLayout(wx.Frame):
 
         # Logging UI
         if self.WINDOWS:
-            self.loggingList = wx.ListBox(self.panel, size=(700, 300))
+            self.loggingList = wx.ListBox(self.panel, size=(700, 300), style=wx.LB_NEEDED_SB | wx.LB_HSCROLL)
             myfont = wx.Font(
                 8,
                 wx.FONTFAMILY_MODERN,
@@ -107,7 +107,7 @@ class FrameLayout(wx.Frame):
                 False,
             )
         else:
-            self.loggingList = wx.ListBox(self.panel, size=(700, 400))
+            self.loggingList = wx.ListBox(self.panel, size=(700, 400), style=wx.LB_NEEDED_SB | wx.LB_HSCROLL)
             myfont = wx.Font(
                 10,
                 wx.FONTFAMILY_MODERN,
@@ -125,6 +125,8 @@ class FrameLayout(wx.Frame):
         self.clearButton.Bind(wx.EVT_BUTTON, self.onClearButton, self.clearButton)
         self.reloadButton = wx.Button(self.panel, label=" Reload Names/Tags ")
         self.reloadButton.Bind(wx.EVT_BUTTON, self.onReloadButton, self.reloadButton)
+        #self.get_bt_csv = wx.Button(self.panel, label=' Create Bluetooth CSV ')
+        #self.get_bt_csv.Bind(wx.EVT_BUTTON, self.get_bt_csv, self.get_bt_csv)
         loggingSizer = wx.BoxSizer(wx.HORIZONTAL)
         clearButtonSizer = wx.BoxSizer(wx.HORIZONTAL)
         saveButtonSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -369,6 +371,8 @@ class FrameLayout(wx.Frame):
                 + str(appString)
                 + ","
                 + str(deviceInfo["KioskApp"])
+                + ","
+                + str(deviceInfo['bluetoothState'])
             )
             return logString
         logString = (
@@ -389,6 +393,12 @@ class FrameLayout(wx.Frame):
                 + "{:20.20}".format(deviceInfo["Serial"])
                 + ","
                 + "{:20.20}".format(tagString)
+                + ","
+                + str(appString)
+                + ","
+                + str(deviceInfo['KioskApp'])
+                + ","
+                + str(deviceInfo['bluetoothState'])
             )
         elif action == Globals.SHOW_APP_VERSION:
             logString = logString + ",,," + "{:32.32}".format(appString)
@@ -434,3 +444,6 @@ class FrameLayout(wx.Frame):
             Globals.url_blacklist = dlg.GetValue()
             print(dlg.GetValue())
         dlg.Destroy()
+
+    def get_bt_csv(self):
+        return

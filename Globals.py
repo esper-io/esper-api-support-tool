@@ -45,7 +45,7 @@ DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
 DEVICE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
 
 CSV_TAG_HEADER = (
-    "Number,EsperName,Alias,OnLine,Mode,Serial,Tags,Applications,Pinned App" + "\n"
+    "Number,EsperName,Alias,OnLine,Mode,Serial,Tags,Applications,Pinned App, Bluetooth State" + "\n"
 )
 CSV_SECURITY_WIFI_HEADER = (
     "Device Name,Security Patch,[WIFI ACCESS POINTS],[Current WIFI Connection],[Cellular Access Point],Active Connection"
