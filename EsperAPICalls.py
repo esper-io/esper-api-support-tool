@@ -191,13 +191,10 @@ def iterateThroughDeviceList(frame, action, api_response):
         deviceInfo.clear()
         deviceInfo.update({"num": number_of_devices})
         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-        if (
-            action == Globals.SHOW_DEVICES
-            or action == Globals.SHOW_APP_VERSION
-            or action == Globals.SHOW_ALL
-        ):
+        if action == Globals.SHOW_ALL:
             Globals.header_format = Globals.CSV_TAG_HEADER
             logstring = frame.createLogString(deviceInfo, action)
+            frame.addDeviceToGrid(deviceInfo)
             frame.Logging(logstring)
             Globals.new_output_to_save = Globals.new_output_to_save + "\n" + logstring
         elif action == Globals.SET_KIOSK:
@@ -214,8 +211,6 @@ def iterateThroughDeviceList(frame, action, api_response):
             Globals.header_format = Globals.CSV_SECURITY_WIFI_HEADER
             output = generateReport(frame, device, deviceInfo)
             Globals.new_output_to_save += "\n" + output
-        elif action == Globals.URL_BLACKLIST:
-            urlBlacklist(frame)
 
 
 def populateDeviceInfoDictionary(device, deviceInfo):
@@ -229,9 +224,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo.update({"Alias": ""})
 
     if device.status == 1:
-        deviceInfo.update({"Status": "On-Line"})
+        deviceInfo.update({"Status": "Online"})
     else:
-        deviceInfo.update({"Status": "Off-Line"})
+        deviceInfo.update({"Status": "Offline"})
 
     if kioskMode == 1:
         deviceInfo.update({"Mode": "Kiosk"})
@@ -280,18 +275,28 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
-def TakeAction(frame, group, action, label):
+def TakeAction(frame, group, action, label, isDevice=False):
     """Calls API To Perform Action And Logs Result To UI"""
     Globals.new_output_to_save = ""
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    groupToUse = frame.groupChoice.GetClientData(group)  # Get Device Group ID
+    groupToUse = (
+        frame.groupChoice.GetClientData(group)
+        if frame.groupChoice.GetClientData(group)
+        else ""
+    )  # Get Device Group ID
+    deviceToUse = (
+        frame.deviceChoice.GetClientData(group)
+        if frame.deviceChoice.GetClientData(group)
+        else ""
+    )
     frame.Logging(
         "---> Starting Execution - "
         + str(Globals.ACTIONS[action])
         + " on "
         + frame.groupChoice.GetString(group)
     )
-    if action == Globals.SHOW_NamesAndTags:
+    frame.emptyGrid()
+    """if action == Globals.SHOW_NamesAndTags:
         # Iterate Through Each Device in Group VIA CSV
         for serial, names in Globals.TAGSandALIASES.items():
             tag = names[1]
@@ -303,6 +308,18 @@ def TakeAction(frame, group, action, label):
                 + ", "
                 + tag
             )
+    else:"""
+    if isDevice:
+        try:
+            api_response = api_instance.get_device_by_id(
+                Globals.enterprise_id, device_id=deviceToUse
+            )
+            if api_response:
+                api_response.results = [api_response]
+                iterateThroughDeviceList(frame, action, api_response)
+                frame.Logging("--- Completed ---")
+        except ApiException as e:
+            print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
     else:
         if label == "All devices":
             iterateThroughAllGroups(frame, action, api_instance)

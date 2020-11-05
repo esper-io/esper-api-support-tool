@@ -448,6 +448,3 @@ class FrameLayout(wx.Frame):
             Globals.url_blacklist = dlg.GetValue()
             print(dlg.GetValue())
         dlg.Destroy()
-
-    def get_bt_csv(self):
-        return

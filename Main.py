@@ -1,15 +1,12 @@
 from WXFrameLayoutNew import NewFrameLayout as FrameLayout
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-import EsperAPICalls
-import WXFrameLayout
 import Globals
 import wx
 import ctypes
 import sys
 import os
 import platform
-import subprocess
 
 
 def askForAuthCSV():
@@ -33,29 +30,15 @@ def askForAuthCSV():
         Globals.csv_auth_path = filename
 
 
-def initFrameLayout():
-    """Intializes Frame"""
-    frame = FrameLayout(None)
-    frame.Show()
-    frame.PopulateConfig()
-    frame.LoadTagsAndAliases()
-    Globals.frame = frame
-
-
 class MyApp(wx.App):
     def OnInit(self):
-        self.frame = FrameLayout(None, wx.ID_ANY, "")
-        self.SetTopWindow(self.frame)
-        self.frame.Show()
+        Globals.frame = FrameLayout(None, wx.ID_ANY, "")
+        self.SetTopWindow(Globals.frame)
+        Globals.frame.Show()
         return True
 
 
 if __name__ == "__main__":
     """Launches Main App"""
-    # askForAuthCSV()
     Globals.app = MyApp(0)
     Globals.app.MainLoop()
-
-    # Globals.app = wx.App(False)
-    # initFrameLayout()
-    # Globals.app.MainLoop()

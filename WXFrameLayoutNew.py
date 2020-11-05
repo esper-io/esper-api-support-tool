@@ -27,22 +27,11 @@ class NewFrameLayout(wx.Frame):
         self.auth_csv_reader = None
         self.configChoice = {}
 
-        self.csvHeaders = [
-            "Number",
-            "EsperName",
-            "Alias",
-            "Online",
-            "Mode",
-            "Serial",
-            "Tags",
-            "Applications",
-            "Pinned App",
-        ]
-
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.SetSize((1552, 840))
+
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.configList = wx.TextCtrl(
@@ -54,7 +43,7 @@ class NewFrameLayout(wx.Frame):
         self.deviceChoice = wx.ComboBox(
             self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_READONLY
         )
-        self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=[""])
+        self.actionChoice = wx.Choice(self.panel_1, wx.ID_ANY, choices=Globals.ACTIONS)
         self.appChoice = wx.ComboBox(
             self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN
         )
@@ -62,9 +51,11 @@ class NewFrameLayout(wx.Frame):
         self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, "Run on Device")
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         self.loggingList = wx.ListBox(
-            self.panel_2, wx.ID_ANY, choices=[""], style=wx.LB_NEEDED_SB
+            self.panel_2, wx.ID_ANY, choices=[""], style=wx.LB_NEEDED_SB | wx.LB_HSCROLL
         )
-        self.grid_1 = wx.grid.Grid(self.panel_2, wx.ID_ANY, size=(1, 1))
+        self.grid_1 = wx.grid.Grid(
+            self.panel_2, wx.ID_ANY, size=(1, 1), style=wx.LB_NEEDED_SB | wx.LB_HSCROLL
+        )
 
         self.Bind(wx.EVT_BUTTON, self.runActionOnGroup, self.button_1)
         self.Bind(wx.EVT_BUTTON, self.runActionOnDevice, self.button_2)
@@ -94,40 +85,63 @@ class NewFrameLayout(wx.Frame):
         self.menubar = wx.MenuBar()
 
         fileMenu = wx.Menu()
-        fileOpenAuth = fileMenu.Append(wx.ID_OPEN, "Open Auth CSV", "Open Auth CSV")
-        fileOpenConfig = fileMenu.Append(
-            wx.ID_APPLY, "Open Device CSV", "Open Device CSV"
-        )
+        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Open Auth CSV\tCtrl+O")
+        fileOpenAuth = fileMenu.Append(foa)
+
+        foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+D")
+        fileOpenConfig = fileMenu.Append(foc)
+
         fileMenu.Append(wx.ID_SEPARATOR)
-        fileSave = fileMenu.Append(wx.ID_SAVE, "Save As", "Save As")
+        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save As\tCtrl+S")
+        fileSave = fileMenu.Append(fs)
+
         fileMenu.Append(wx.ID_SEPARATOR)
-        fileItem = fileMenu.Append(wx.ID_EXIT, "Quit", "Quit application")
+        fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
+        fileItem = fileMenu.Append(fi)
 
         consoleMenu = wx.Menu()
         clearConsole = consoleMenu.Append(wx.ID_RESET, "Clear", "Clear Console")
 
         self.configMenu = wx.Menu()
-        self.configMenuOptions.append(
-            self.configMenu.Append(
-                wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
-            )
+        defaultConfigVal = self.configMenu.Append(
+            wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
         )
+        self.configMenuOptions.append(defaultConfigVal)
 
         runMenu = wx.Menu()
-        run = runMenu.Append(wx.ID_RETRY, "Run", "Run")
+        self.runGroup = runMenu.Append(wx.ID_RETRY, "Run on Group", "Run on Group")
+        self.runDevice = runMenu.Append(wx.ID_RETRY, "Run on Device", "Run on Device")
+
+        viewMenu = wx.Menu()
+        self.viewMenuOptions = {}
+        colNum = 0
+        for header in Globals.CSV_TAG_HEADER.split(","):
+            if header == "Esper Name":
+                continue
+            item = viewMenu.Append(
+                wx.ID_ANY, "Show  %s" % header, "Show  %s" % header, kind=wx.ITEM_CHECK
+            )
+            item.Check(True)
+            self.Bind(wx.EVT_MENU, self.toggleColVisibility, item)
+            self.viewMenuOptions[item.Id] = colNum
+            colNum += 1
+        # viewMenu.Append(wx.ID_SEPARATOR)
 
         self.menubar.Append(fileMenu, "&File")
+        self.menubar.Append(viewMenu, "&View")
         self.menubar.Append(self.configMenu, "&Configurations")
         self.menubar.Append(consoleMenu, "&Console")
         self.menubar.Append(runMenu, "&Run")
         self.SetMenuBar(self.menubar)
 
+        self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.OnOpen, fileOpenAuth)
         self.Bind(wx.EVT_MENU, self.onUploadCSV, fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.OnQuit, fileItem)
         self.Bind(wx.EVT_MENU, self.onSave, fileSave)
         self.Bind(wx.EVT_MENU, self.onClear, clearConsole)
-        self.Bind(wx.EVT_MENU, self.onRun, run)
+        self.Bind(wx.EVT_MENU, self.runActionOnGroup, self.runGroup)
+        self.Bind(wx.EVT_MENU, self.runActionOnDevice, self.runDevice)
         # Menu Bar end
 
         # Tool Bar
@@ -153,15 +167,29 @@ class NewFrameLayout(wx.Frame):
         # begin wxGlade: MyFrame.__set_properties
         self.SetTitle("frame")
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
-        self.choice_1.SetSelection(0)
-        self.grid_1.CreateGrid(0, len(self.csvHeaders))
+
+        self.actionChoice.SetSelection(1)
+        self.actionChoice.Enable(False)
+        self.deviceChoice.Enable(False)
+        self.groupChoice.Enable(False)
+        self.appChoice.Enable(False)
+        self.runGroup.Enable(False)
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+        self.runDevice.Enable(False)
+
+        self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_HEADER.split(",")))
+        self.fillGridHeaders()
+
         # self.frame_toolbar.Realize()
+        self.panel_1.SetMinSize((400, 900))
+        self.panel_2.SetMinSize((2000, 800))
         self.Maximize(True)
         # end wxGlade
 
     def __do_layout(self):
         # begin wxGlade: MyFrame.__do_layout
-        sizer_1 = wx.GridSizer(1, 2, 0, 0)
+        sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2 = wx.GridSizer(2, 1, 0, 0)
@@ -184,7 +212,7 @@ class NewFrameLayout(wx.Frame):
                 "",
             )
         )
-        label_1.Wrap(200)
+        # label_1.Wrap(200)
         sizer_2.Add(label_1, 0, wx.EXPAND, 0)
         grid_sizer_3.Add(self.configList, 0, wx.EXPAND, 0)
         self.panel_3.SetSizer(grid_sizer_3)
@@ -231,7 +259,7 @@ class NewFrameLayout(wx.Frame):
         label_3 = wx.StaticText(
             self.panel_1,
             wx.ID_ANY,
-            "Action to apply to Devices in Group:",
+            "Action to apply:",
             style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
         )
         label_3.SetFont(
@@ -245,7 +273,7 @@ class NewFrameLayout(wx.Frame):
             )
         )
         sizer_3.Add(label_3, 0, wx.EXPAND, 0)
-        sizer_3.Add(self.choice_1, 0, wx.EXPAND, 0)
+        sizer_3.Add(self.actionChoice, 0, wx.EXPAND, 0)
         sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
         label_4 = wx.StaticText(
             self.panel_1,
@@ -336,26 +364,53 @@ class NewFrameLayout(wx.Frame):
             Globals.csv_auth_path = filename
 
     def onSave(self, event=None):
-        self.SaveLogging()
-
-    def SaveLogging(self):
         """Sends Device Info To Frame For Logging"""
-        secs = time.time()
-        timestamp = "{}".format(time.strftime("%Y%m%d-%H%M", time.localtime(secs)))
-        self.CreateNewFile()
-        loggingfile = Globals.csv_tag_path_clone
-        header = Globals.header_format
-        with open(loggingfile, "w") as csvfile:
-            csvfile.write(header)
-            # for rows in Globals.new_output_to_save:
-            csvfile.write(Globals.new_output_to_save)
+        if self.grid_1.GetNumberRows() > 0:
+            dlg = wx.FileDialog(
+                self,
+                "Save CSV as...",
+                os.getcwd(),
+                "",
+                "*.csv",
+                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+            )
+            result = dlg.ShowModal()
+            inFile = dlg.GetPath()
+            dlg.Destroy()
+
+            if result == wx.ID_OK:  # Save button was pressed
+                self.save(inFile)
+                return True
+            elif (
+                result == wx.ID_CANCEL
+            ):  # Either the cancel button was pressed or the window was closed
+                return False
+
+    def save(self, inFile):
+        numRows = self.grid_1.GetNumberRows()
+        numCols = self.grid_1.GetNumberCols()
+        gridData = []
+        gridData.append(Globals.CSV_TAG_HEADER.replace("\n", "").split(","))
+
+        self.createNewFile(inFile)
+
+        for row in range(numRows):
+            rowValues = []
+            for col in range(numCols):
+                value = self.grid_1.GetCellValue(row, col)
+                rowValues.append(value)
+            gridData.append(rowValues)
+
+        with open(Globals.csv_tag_path_clone, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerows(gridData)
+
         self.Logging(
             "---> Logging info saved to csv file - " + Globals.csv_tag_path_clone
         )
 
-    def CreateNewFile(self):
-        newFile = "output.csv"
-        Globals.csv_tag_path_clone = newFile
+    def createNewFile(self, filePath):
+        Globals.csv_tag_path_clone = filePath
         if not os.path.exists(Globals.csv_tag_path_clone):
             with open(Globals.csv_tag_path_clone, "w"):
                 pass
@@ -363,11 +418,63 @@ class NewFrameLayout(wx.Frame):
     def onClear(self, event=None):
         self.loggingList.Clear()
 
-    def onUploadCSV(self):
-        return
-
-    def onRun(self, event=None):
-        return
+    def onUploadCSV(self, event=None):
+        self.emptyGrid()
+        with wx.FileDialog(
+            self,
+            "Open Device CSV File",
+            wildcard="CSV files (*.csv)|*.csv",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as fileDialog:
+            result = fileDialog.ShowModal()
+            if result == wx.ID_OK:
+                # Proceed loading the file chosen by the user
+                Globals.csv_auth_path = fileDialog.GetPath()
+                self.Logging(
+                    "--->Attempting to load device data from %s" % Globals.csv_auth_path
+                )
+                num = 0
+                with open(Globals.csv_auth_path, "r") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    header = None
+                    grid_headers = Globals.CSV_TAG_HEADER.replace("\n", "").split(",")
+                    for row in reader:
+                        if not all("" == val or val.isspace() for val in row):
+                            if num == 0:
+                                header = row
+                                num += 1
+                                continue
+                            self.grid_1.AppendRows(1)
+                            fileCol = 0
+                            toolCol = 0
+                            for colValue in row:
+                                colName = (
+                                    header[fileCol].replace(" ", "").lower()
+                                    if len(header) > fileCol
+                                    else ""
+                                )
+                                if (
+                                    header[fileCol]
+                                    in Globals.CSV_DEPRECATED_HEADER_LABEL
+                                ):
+                                    fileCol += 1
+                                    continue
+                                gridColName = (
+                                    grid_headers[toolCol].replace(" ", "").lower()
+                                )
+                                val = str(colValue) if colName == gridColName else ""
+                                self.grid_1.SetCellValue(
+                                    self.grid_1.GetNumberRows() - 1,
+                                    toolCol,
+                                    str(colValue),
+                                )
+                                toolCol += 1
+                                fileCol += 1
+                    self.grid_1.AutoSizeColumns()
+            elif result == wx.ID_CANCEL:
+                return  # the user changed their mind
 
     def PopulateConfig(self):
         """Populates Configuration From CSV"""
@@ -386,24 +493,42 @@ class NewFrameLayout(wx.Frame):
                 self.auth_csv_reader = csv.DictReader(csvfile)
                 num = 0
                 for row in self.auth_csv_reader:
-                    self.configChoice[row["name"]] = row
-                    item = self.configMenu.Append(
-                        wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_CHECK
-                    )
-                    self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
-                    self.configMenuOptions.append(item)
-            self.Logging("--->**** Please Select an Endpoint")
+                    if "name" in row:
+                        self.configChoice[row["name"]] = row
+                        item = self.configMenu.Append(
+                            wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_CHECK
+                        )
+                        self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
+                        self.configMenuOptions.append(item)
+                    else:
+                        self.Logging(
+                            "--->ERROR: Please check that the Auth CSV is set up correctly!"
+                        )
+                        defaultConfigVal = self.configMenu.Append(
+                            wx.ID_NONE,
+                            "No Loaded Configurations",
+                            "No Loaded Configurations",
+                        )
+                        self.configMenuOptions.append(defaultConfigVal)
+                        self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
+                        return
+            self.Logging(
+                "--->**** Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
+            )
+            defaultConfigItem = self.configMenuOptions[0]
+            defaultConfigItem.Check(True)
+            self.loadConfiguartion(defaultConfigItem)
         else:
             self.Logging(
                 "--->****"
                 + Globals.CONFIGFILE
                 + " not found - PLEASE Quit and create configuration file"
             )
-            self.configMenuOptions.append(
-                self.configMenu.Append(
-                    wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
-                )
+            defaultConfigVal = self.configMenu.Append(
+                wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
             )
+            self.configMenuOptions.append(defaultConfigVal)
+            self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
 
     def LoadTagsAndAliases(self):
         return
@@ -443,6 +568,10 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateGroups()
                 self.PopulateApps()
 
+            self.deviceChoice.Enable(True)
+            self.groupChoice.Enable(True)
+            self.appChoice.Enable(True)
+            self.actionChoice.Enable(True)
         except:
             self.Logging(
                 "--->****An Error has occured while loading the configuration, please try again."
@@ -469,6 +598,8 @@ class NewFrameLayout(wx.Frame):
                     self.groupChoice.Append(group.name, group.id)
                 self.groupChoice.SetValue("<Select Group>")
                 self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
+            self.runGroup.Enable(True)
+            self.button_1.Enable(True)
         except ApiException as e:
             self.Logging(
                 "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
@@ -485,7 +616,8 @@ class NewFrameLayout(wx.Frame):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.deviceChoice.Clear()
-        self.grid_1.ClearGrid()
+        # self.grid_1.ClearGrid()
+        # self.fillGridHeaders()
         try:
             api_instance = esperclient.DeviceApi(
                 esperclient.ApiClient(Globals.configuration)
@@ -496,11 +628,6 @@ class NewFrameLayout(wx.Frame):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
-            self.grid_1.AppendRows(1)
-            num = 0
-            for head in self.csvHeaders:
-                self.grid_1.SetCellValue(0, num, head)
-                num += 1
 
             if len(api_response.results):
                 self.deviceChoice.Enable(True)
@@ -511,8 +638,10 @@ class NewFrameLayout(wx.Frame):
                         device.device_name,
                         device.software_info["androidVersion"],
                     )
-                    self.deviceChoice.Append(name, device)
+                    self.deviceChoice.Append(name, device.id)
                 self.deviceChoice.SetValue("<Select Device>")
+                self.runDevice.Enable(False)
+                self.button_2.Enable(True)
             else:
                 self.deviceChoice.Append("No Devices Found", "")
                 self.groupChoice.SetValue("No Devices Found")
@@ -567,9 +696,9 @@ class NewFrameLayout(wx.Frame):
         appString = str(deviceInfo["Apps"]).replace(",", "")
         if action == Globals.SHOW_ALL:
             logString = (
-                "{:>4}".format(str(deviceInfo["num"]))
-                + ","
-                + deviceInfo["EsperName"]
+                # "{:>4}".format(str(deviceInfo["num"]))
+                # + ","
+                deviceInfo["EsperName"]
                 + ","
                 + deviceInfo["Alias"]
                 + ","
@@ -589,9 +718,9 @@ class NewFrameLayout(wx.Frame):
             )
             return logString
         logString = (
-            "{:>4}".format(str(deviceInfo["num"]))
-            + ","
-            + "{:13.13}".format(deviceInfo["EsperName"])
+            # "{:>4}".format(str(deviceInfo["num"]))
+            # + ","
+            +"{:13.13}".format(deviceInfo["EsperName"])
             + ","
             + "{:16.16}".format(str(deviceInfo["Alias"]))
             + ","
@@ -599,27 +728,97 @@ class NewFrameLayout(wx.Frame):
             + ","
             + "{:8.8}".format(deviceInfo["Mode"])
         )
-        if action == Globals.SHOW_DEVICES:
-            logString = (
-                logString
-                + ","
-                + "{:20.20}".format(deviceInfo["Serial"])
-                + ","
-                + "{:20.20}".format(tagString)
-            )
-        elif action == Globals.SHOW_APP_VERSION:
-            logString = logString + ",,," + "{:32.32}".format(appString)
-            if "KioskApp" in deviceInfo:
-                logString = logString + "," + "{:16.16}".format(deviceInfo["KioskApp"])
         return logString
 
     def runActionOnGroup(self, event=None):
         self.Logging("Running Action on Group")
-        return
+        if self.groupChoice.GetSelection() < 0:
+            wx.MessageBox("Please select a Group", style=wx.OK)
+        elif self.actionChoice.GetSelection() < 0:
+            wx.MessageBox("Please select an Action", style=wx.OK)
+        elif (
+            self.actionChoice.GetSelection() == Globals.SET_KIOSK
+            and self.appChoice.GetSelection() < 0
+        ):
+            wx.MessageBox("Please select an Application", style=wx.OK)
+        else:
+            groupLabel = self.groupChoice.Items[self.groupChoice.GetSelection()]
+            TakeAction(
+                self,
+                self.groupChoice.GetSelection(),
+                self.actionChoice.GetSelection(),
+                groupLabel,
+            )
 
     def runActionOnDevice(self, event=None):
         self.Logging("Running Action on Device")
-        return
+        if self.deviceChoice.GetSelection() < 0:
+            wx.MessageBox("Please select a Device", style=wx.OK)
+        elif self.actionChoice.GetSelection() < 0:
+            wx.MessageBox("Please select an Action", style=wx.OK)
+        elif (
+            self.actionChoice.GetSelection() == Globals.SET_KIOSK
+            and self.appChoice.GetSelection() < 0
+        ):
+            wx.MessageBox("Please select an Application", style=wx.OK)
+        else:
+            deviceLabel = self.deviceChoice.Items[self.deviceChoice.GetSelection()]
+            TakeAction(
+                self,
+                self.deviceChoice.GetSelection(),
+                self.actionChoice.GetSelection(),
+                deviceLabel,
+                isDevice=True,
+            )
 
-    def OnGridRightDown(self):
-        return
+    def buttonYieldEvent(self):
+        """Allows Button Press Action to Yield For Result"""
+        if Globals.frame.WINDOWS:
+            wx.Yield()
+        else:
+            Globals.app.SafeYield(None, True)
+
+    def fillGridHeaders(self):
+        num = 0
+        headerLabels = Globals.CSV_TAG_HEADER.split(",")
+        for head in headerLabels:
+            if head:
+                if self.grid_1.GetNumberCols() < len(headerLabels):
+                    self.grid_1.AppendCols(1)
+                self.grid_1.SetColLabelValue(num, head)
+                num += 1
+        self.grid_1.AutoSizeColumns()
+
+    def emptyGrid(self):
+        self.grid_1.ClearGrid()
+        if self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        self.grid_1.SetScrollLineX(15)
+        self.grid_1.SetScrollLineY(15)
+        self.fillGridHeaders()
+
+    def addDeviceToGrid(self, device_info):
+        num = 0
+        self.grid_1.AppendRows(1)
+
+        # self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, 0, str(num))
+        for attribute in Globals.CSV_TAG_ATTR_NAME:
+            value = (
+                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                else ""
+            )
+            self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
+            num += 1
+
+        self.grid_1.AutoSizeColumns()
+
+    def toggleColVisibility(self, event):
+        index = (
+            self.viewMenuOptions[event.Id] if event.Id in self.viewMenuOptions else None
+        )
+        isShown = self.grid_1.IsColShown(index)
+        if isShown:
+            self.grid_1.HideCol(index)
+        else:
+            self.grid_1.ShowCol(index)
