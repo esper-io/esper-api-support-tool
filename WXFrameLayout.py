@@ -70,7 +70,7 @@ class FrameLayout(wx.Frame):
             self.panel, label="Action to apply to Devices in Group"
         )
         self.actionChoice = wx.Choice(
-            self.panel, wx.CB_SORT, size=(100, -1), choices=Globals.ACTIONS
+            self.panel, wx.CB_SORT, size=(100, -1), choices=Globals.GENERAL_ACTIONS
         )
         self.appLabel = wx.StaticText(self.panel, label="Application for Kiosk Mode")
         self.appChoice = wx.ComboBox(self.panel, wx.CB_READONLY, size=(100, -1))

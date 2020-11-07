@@ -6,17 +6,21 @@ enterprise_id = ""
 limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 
-ACTIONS = [
+GENERAL_ACTIONS = [
     # "Show - Device information",
     # "Show - Applications on Device",
     # "Show - Names/Tags loaded from file",
-    "Show - All Device Info",
+    "Show - Device Info",
     "Show -> Network And Secruity Report",
     "Action -> Set Kiosk Mode",
-    "Action -> Set Multi-App Mode",
-    "Action -> Set Device Names <from loaded file>",
-    "Action -> Add Device Tags <from loaded file>",
-    "Action -> Remove Device Tags <from loaded file>",
+    "Action -> Set Multi-App Mode"
+    # "Action -> Add Device Tags <from loaded file>",
+    # "Action -> Remove Device Tags <from loaded file>",
+]
+
+GRID_ACTIONS = [
+    "Action -> Set Device Names",
+    "Action -> Modify Tags",
 ]
 
 CONFIGFILE = "EsperGroupActionsConfig.csv"
@@ -27,9 +31,11 @@ SHOW_ALL = 0
 GENERATE_REPORT = 1
 SET_KIOSK = 2
 SET_MULTI = 3
-SET_ALIAS = 4
-SET_TAGS = 5
-REMOVE_TAGS = 6
+
+SET_ALIAS = 0
+MODIFY_TAGS = 1
+# SET_TAGS = 5
+# REMOVE_TAGS = 6
 
 LOGLIST = []
 TAGSandALIASES = {}
@@ -58,8 +64,15 @@ CSV_TAG_ATTR_NAME = {
     "Pinned App": "KioskApp",
     "Bluetooth State": "bluetoothState",
 }
+CSV_EDITABLE_COL = [
+    "Alias",
+    "Tags"
+]
+CSV_NETWORK_ATTR_NAME = [
+    "Device Name","Security Patch","[WIFI ACCESS POINTS]","[Current WIFI Connection]","[Cellular Access Point]","Active Connection","Bluetooth State"
+]
 CSV_SECURITY_WIFI_HEADER = (
-    "Device Name,Security Patch,[WIFI ACCESS POINTS],[Current WIFI Connection],[Cellular Access Point],Active Connection"
+    "Device Name,Security Patch,[WIFI ACCESS POINTS],[Current WIFI Connection],[Cellular Access Point],Active Connection,Bluetooth State"
     + "\n"
 )
 
