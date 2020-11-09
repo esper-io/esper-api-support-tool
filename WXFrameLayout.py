@@ -320,23 +320,24 @@ class FrameLayout(wx.Frame):
         self.loggingList.Append(entry)
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
-        if "--->" not in entry:
-            Globals.LOGLIST.append(entry)
+        # if "--->" not in entry:
+        #    Globals.LOGLIST.append(entry)
 
     def SaveLogging(self):
         """Sends Device Info To Frame For Logging"""
-        secs = time.time()
+        """secs = time.time()
         timestamp = "{}".format(time.strftime("%Y%m%d-%H%M", time.localtime(secs)))
         self.CreateNewFile()
         loggingfile = Globals.csv_tag_path_clone
-        header = Globals.header_format
+        #header = Globals.header_format
         with open(loggingfile, "w") as csvfile:
-            csvfile.write(header)
+            #csvfile.write(header)
             # for rows in Globals.new_output_to_save:
-            csvfile.write(Globals.new_output_to_save)
+            #csvfile.write(Globals.new_output_to_save)
         self.Logging(
             "---> Logging info saved to csv file - " + Globals.csv_tag_path_clone
-        )
+        )"""
+        pass
 
     def CreateNewFile(self):
         newFile = "output.csv"

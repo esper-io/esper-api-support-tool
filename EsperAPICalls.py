@@ -182,11 +182,13 @@ def setdevicename(frame, deviceid, devicename):
 
 ####End Esper API Requests####
 
+
 def iterateThroughGridRows(frame, action):
     if action == Globals.SET_ALIAS:
         modifyAlias(frame)
     elif action == Globals.MODIFY_TAGS:
         modifyTags(frame)
+
 
 def iterateThroughDeviceList(frame, action, api_response):
     """Iterates Through Each Device And Performs A Specified Action"""
@@ -198,21 +200,18 @@ def iterateThroughDeviceList(frame, action, api_response):
         deviceInfo.clear()
         deviceInfo.update({"num": number_of_devices})
         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-        if action == Globals.SHOW_ALL:
-            Globals.header_format = Globals.CSV_TAG_HEADER
+        if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
             logstring = frame.createLogString(deviceInfo, action)
             frame.addDeviceToDeviceGrid(deviceInfo)
             frame.Logging(logstring)
-            Globals.new_output_to_save = Globals.new_output_to_save + "\n" + logstring
+
+            output = generateReport(frame, device, deviceInfo)
+            frame.addDeviceToNetworkGrid(device, deviceInfo)
+            frame.Logging(output)
         elif action == Globals.SET_KIOSK:
             setKiosk(frame, device, deviceInfo)
         elif action == Globals.SET_MULTI:
             setMulti(frame, device, deviceInfo)
-        elif action == Globals.GENERATE_REPORT:
-            Globals.header_format = Globals.CSV_SECURITY_WIFI_HEADER
-            output = generateReport(frame, device, deviceInfo)
-            frame.addDeviceToNetworkGrid(device, deviceInfo)
-            Globals.new_output_to_save += "\n" + output
 
 
 def populateDeviceInfoDictionary(device, deviceInfo):
@@ -282,7 +281,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
     if not Globals.enterprise_id:
         frame.loadConfigPrompt()
 
-    Globals.new_output_to_save = ""
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     actionName = ""
     if action in Globals.GRID_ACTIONS:
@@ -295,10 +293,13 @@ def TakeAction(frame, group, action, label, isDevice=False):
         + " on "
         + frame.groupChoice.GetString(group)
     )
-    if action == Globals.SHOW_ALL or action == Globals.SET_KIOSK or action == Globals.SET_MULTI:
+    if (
+        action == Globals.SHOW_ALL_AND_GENERATE_REPORT
+        or action == Globals.SET_KIOSK
+        or action == Globals.SET_MULTI
+    ):
         frame.emptyDeviceGrid()
-    
-    if action == Globals.GENERATE_REPORT:
+        # if action == Globals.GENERATE_REPORT:
         frame.emptyNetworkGrid()
 
     if isDevice:
@@ -414,98 +415,98 @@ def setMulti(frame, device, deviceInfo):
     frame.Logging(logString)
 
 
-def setAlias(frame, device, deviceInfo):
-    """Sets Device Alias"""
-    logString = frame.createLogString(deviceInfo, Globals.SET_ALIAS)
-    serialNum = device.hardware_info["serialNumber"]
-    if serialNum in Globals.TAGSandALIASES.keys():
-        newName = Globals.TAGSandALIASES[serialNum][0]
-        if not (newName in str(device.alias_name)):
-            if deviceInfo["Status"] == "On-Line":
-                logString = logString + ",->Name->"
-                frame.Logging(
-                    str("--->" + str(device.device_name) + " " + str(device.alias_name))
-                    + " "
-                    + ",->Name->"
-                    + newName
-                )
-                status = setdevicename(frame, device.id, newName)
-                if "Success" in str(status):
-                    logString = logString + " <success>"
-                else:
-                    logString = logString + " <failed>"
-            else:
-                logString = logString + ",(Device off-line)"
-        else:
-            logString = logString + ",(Name already set)"
-    else:
-        logString = logString + ",(no Name found in file)"
-    frame.Logging(logString)  # log results
+# def setAlias(frame, device, deviceInfo):
+#     """Sets Device Alias"""
+#     logString = frame.createLogString(deviceInfo, Globals.SET_ALIAS)
+#     serialNum = device.hardware_info["serialNumber"]
+#     if serialNum in Globals.TAGSandALIASES.keys():
+#         newName = Globals.TAGSandALIASES[serialNum][0]
+#         if not (newName in str(device.alias_name)):
+#             if deviceInfo["Status"] == "On-Line":
+#                 logString = logString + ",->Name->"
+#                 frame.Logging(
+#                     str("--->" + str(device.device_name) + " " + str(device.alias_name))
+#                     + " "
+#                     + ",->Name->"
+#                     + newName
+#                 )
+#                 status = setdevicename(frame, device.id, newName)
+#                 if "Success" in str(status):
+#                     logString = logString + " <success>"
+#                 else:
+#                     logString = logString + " <failed>"
+#             else:
+#                 logString = logString + ",(Device off-line)"
+#         else:
+#             logString = logString + ",(Name already set)"
+#     else:
+#         logString = logString + ",(no Name found in file)"
+#     frame.Logging(logString)  # log results
 
 
-def editTags(frame, device, deviceInfo, removeTag):
-    """Sends Request To Edit Tags"""
-    serialNum = device.hardware_info["serialNumber"]
-    if serialNum in Globals.TAGSandALIASES.keys():
-        if removeTag:
-            removeTags(frame, device, deviceInfo, serialNum)
-        else:
-            addTags(frame, device, deviceInfo, serialNum)
-    else:
-        logString = str(device) + ",(no Tag found in file)"
-        frame.Logging(logString)
+# def editTags(frame, device, deviceInfo, removeTag):
+#     """Sends Request To Edit Tags"""
+#     serialNum = device.hardware_info["serialNumber"]
+#     if serialNum in Globals.TAGSandALIASES.keys():
+#         if removeTag:
+#             removeTags(frame, device, deviceInfo, serialNum)
+#         else:
+#             addTags(frame, device, deviceInfo, serialNum)
+#     else:
+#         logString = str(device) + ",(no Tag found in file)"
+#         frame.Logging(logString)
 
 
-def addTags(frame, device, deviceInfo, serialNum):
-    """Sets Device Tags"""
-    logString = frame.createLogString(
-        deviceInfo, Globals.MODIFY_TAGS
-    )  # Globals.SET_TAGS)
-    newTags = Globals.TAGSandALIASES[serialNum][1]
-    if newTags != "":
-        newTagsList = newTags.split(",")
-        tagList = device.tags
-        for tag in tagList:
-            if tag not in newTagsList:
-                newTagsList.append(tag)
-        setdevicetags(device.id, newTagsList)
-        logString = logString + ",Tags Added, New Tag List -> " + str(newTagsList)
-        frame.Logging(logString)
-    else:
-        frame.Logging("No Tags To Add")
+# def addTags(frame, device, deviceInfo, serialNum):
+#     """Sets Device Tags"""
+#     logString = frame.createLogString(
+#         deviceInfo, Globals.MODIFY_TAGS
+#     )  # Globals.SET_TAGS)
+#     newTags = Globals.TAGSandALIASES[serialNum][1]
+#     if newTags != "":
+#         newTagsList = newTags.split(",")
+#         tagList = device.tags
+#         for tag in tagList:
+#             if tag not in newTagsList:
+#                 newTagsList.append(tag)
+#         setdevicetags(device.id, newTagsList)
+#         logString = logString + ",Tags Added, New Tag List -> " + str(newTagsList)
+#         frame.Logging(logString)
+#     else:
+#         frame.Logging("No Tags To Add")
 
 
-def removeTags(frame, device, deviceInfo, serialNum):
-    """Removes Device Tags"""
-    logString = frame.createLogString(
-        deviceInfo, Globals.MODIFY_TAGS
-    )  # Globals.REMOVE_TAGS)
-    newTags = Globals.TAGSandALIASES[serialNum][1]
-    newTagsList = newTags.split(",")
-    tagList = device.tags
-    if tagList is not None:
-        for tag in newTagsList:
-            if tag in tagList:
-                tagList.remove(tag)
-        setdevicetags(device.id, tagList)
-        logString = logString + ",Tags Removed, New Tag List -> " + str(tagList)
-        frame.Logging(logString)
-    else:
-        frame.Logging("No Tags To Remove, Device Has No Tags")
+# def removeTags(frame, device, deviceInfo, serialNum):
+#     """Removes Device Tags"""
+#     logString = frame.createLogString(
+#         deviceInfo, Globals.MODIFY_TAGS
+#     )  # Globals.REMOVE_TAGS)
+#     newTags = Globals.TAGSandALIASES[serialNum][1]
+#     newTagsList = newTags.split(",")
+#     tagList = device.tags
+#     if tagList is not None:
+#         for tag in newTagsList:
+#             if tag in tagList:
+#                 tagList.remove(tag)
+#         setdevicetags(device.id, tagList)
+#         logString = logString + ",Tags Removed, New Tag List -> " + str(tagList)
+#         frame.Logging(logString)
+#     else:
+#         frame.Logging("No Tags To Remove, Device Has No Tags")
 
 
 def modifyTags(frame):
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
+            Globals.enterprise_id,
+            limit=Globals.limit,
+            offset=Globals.offset,
+        )
     except Exception as e:
         frame.Logging("Failed to get devices ids to modify tags")
         print(e)
-    
+
     tagsFromGrid = frame.getDeviceTagsFromGrid()
     for device in api_response.results:
         for esperName in tagsFromGrid.keys():
@@ -513,15 +514,16 @@ def modifyTags(frame):
                 tags = setdevicetags(device.id, tagsFromGrid[esperName])
                 frame.updateTagCell(esperName, tags)
 
+
 def modifyAlias(frame):
     """Sets Device Alias"""
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
+            Globals.enterprise_id,
+            limit=Globals.limit,
+            offset=Globals.offset,
+        )
     except Exception as e:
         frame.Logging("Failed to get devices ids to modify tags")
         print(e)
@@ -536,7 +538,12 @@ def modifyAlias(frame):
                     if device.status == 1:
                         logString = logString + ",->Name->"
                         frame.Logging(
-                            str("--->" + str(device.device_name) + " " + str(device.alias_name))
+                            str(
+                                "--->"
+                                + str(device.device_name)
+                                + " "
+                                + str(device.alias_name)
+                            )
                             + " "
                             + ",->Name->"
                             + newName
@@ -551,6 +558,7 @@ def modifyAlias(frame):
                 else:
                     logString = logString + ",(Name already set)"
     frame.Logging(logString)
+
 
 ####End Perform Actions####
 
@@ -577,9 +585,6 @@ def generateReport(frame, device, deviceInfo):
     return deviceCSV
 
 
-
-
-
 def getCommandsApiInstance():
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
 
@@ -593,6 +598,23 @@ def executeUpdateDeviceConfigCommandOnGroup(frame, command_args):
         command_type="GROUP",
         device_type="all",
         groups=[groupToUse],
+        command="UPDATE_DEVICE_CONFIG",
+        command_args=command_args,
+    )
+    api_instance = getCommandsApiInstance()
+    api_response = api_instance.create_command(Globals.enterprise_id, request)
+    return waitForCommandToFinish(frame, api_response.id)
+
+
+def executeUpdateDeviceConfigCommandOnDevice(frame, command_args):
+    deviceToUse = frame.deviceChoice.GetClientData(
+        frame.deviceChoice.GetSelection()
+    )  # Get Device Group ID
+    request = esperclient.V0CommandRequest(
+        enterprise=Globals.enterprise_id,
+        command_type="DEVICE",
+        device_type="all",
+        devices=[deviceToUse],
         command="UPDATE_DEVICE_CONFIG",
         command_args=command_args,
     )
@@ -625,64 +647,11 @@ def waitForCommandToFinish(frame, request_id):
     return status
 
 
-def urlBlacklist(frame):
-    # Create new window and ask user for blacklist data
-    frame.showUrlBlacklistDialog()
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "managedAppConfigurations": {
-                "com.android.chrome": {"URLBlacklist": [Globals.url_blacklist]}
-            }
-        }
-    )
-    return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
+def ApplyDeviceConfig(frame, config):
+    command_args = V0CommandArgs(custom_settings_config=config)
+    result, isGroup = frame.confirmCommand(command_args)
 
-
-def urlWhiteList(frame, urlWhiteList):
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "managedAppConfigurations": {
-                "com.android.chrome": {"URLWhitelist": urlWhiteList}
-            }
-        }
-    )
-    return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
-
-
-def setIncognitoMode(frame, mode):
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "managedAppConfigurations": {
-                "com.android.chrome": {
-                    "IncognitoModeAvailability": mode,  # 1 disable incognito mode
-                }
-            }
-        }
-    )
-    return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
-
-
-def setGoogleSafeSearch(frame, mode):
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "managedAppConfigurations": {
-                "com.android.chrome": {
-                    "ForceGoogleSafeSearch": mode,  # enable safe search to work
-                }
-            }
-        }
-    )
-    return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
-
-
-def setHomepageLocation(frame, homeURL):
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "managedAppConfigurations": {
-                "com.android.chrome": {
-                    "HomepageLocation": homeURL  # set chrome home page
-                }
-            }
-        }
-    )
-    return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
+    if result and isGroup:
+        return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
+    elif result and not isGroup:
+        return executeUpdateDeviceConfigCommandOnDevice(frame, command_args)

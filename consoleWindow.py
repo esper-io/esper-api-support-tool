@@ -2,6 +2,7 @@ import wx
 import Globals
 import platform
 
+
 class Console(wx.Frame):
     def __init__(self, parent=None):
         self.title = "Console"
@@ -11,10 +12,12 @@ class Console(wx.Frame):
         else:
             self.WINDOWS = False
 
-        wx.Frame.__init__(self, title=self.title, parent=parent, size=(500,700))
+        wx.Frame.__init__(self, title=self.title, parent=parent, size=(500, 700))
         panel = wx.Panel(self, -1)
 
-        self.loggingList = wx.ListBox(panel, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_HSCROLL)
+        self.loggingList = wx.ListBox(
+            panel, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_HSCROLL
+        )
 
         self.loggingList.SetFont(
             wx.Font(
@@ -31,7 +34,7 @@ class Console(wx.Frame):
         grid_sizer_2.Add(self.loggingList, 0, wx.EXPAND, 1)
         panel.SetSizer(grid_sizer_2)
 
-        self.SetBackgroundColour(wx.Colour(100,100,100))
+        self.SetBackgroundColour(wx.Colour(100, 100, 100))
         self.Centre()
         self.Show()
 
@@ -40,6 +43,6 @@ class Console(wx.Frame):
         self.loggingList.Append(entry)
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
-        if "--->" not in entry:
-            Globals.LOGLIST.append(entry)
+        # if "--->" not in entry:
+        #    Globals.LOGLIST.append(entry)
         return
