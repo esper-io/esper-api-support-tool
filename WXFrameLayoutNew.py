@@ -35,6 +35,8 @@ class NewFrameLayout(wx.Frame):
         self.auth_csv_reader = None
         self.configChoice = {}
         self.consoleWin = None
+        self.grid_1_contents = []
+        self.grid_2_contents = []
 
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -95,6 +97,11 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGING, self.onCellChange)
+        # self.grid_1.Bind(gridlib.EVT_GRID_COL_SORT, self.onSort)
+        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
+        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
+        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
         # Menu Bar
         self.menubar = wx.MenuBar()
@@ -214,6 +221,8 @@ class NewFrameLayout(wx.Frame):
         self.SetTitle(Globals.TITLE)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
 
+        self.actionChoice.SetSelection(0)
+
         self.actionChoice.Enable(False)
         self.deviceChoice.Enable(False)
         self.groupChoice.Enable(False)
@@ -225,6 +234,8 @@ class NewFrameLayout(wx.Frame):
 
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
+        self.grid_1.UseNativeColHeader()
+        self.grid_2.UseNativeColHeader()
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
 
@@ -739,6 +750,7 @@ class NewFrameLayout(wx.Frame):
             self.runBtn.Enable(True)
             self.run.Enable(True)
             self.command.Enable(True)
+            self.groupChoice.SetSelection(0)
         except ApiException as e:
             self.Logging(
                 "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
@@ -1024,6 +1036,7 @@ class NewFrameLayout(wx.Frame):
     def addDeviceToDeviceGrid(self, device_info):
         num = 0
         self.grid_1.AppendRows(1)
+        device = {}
 
         for attribute in Globals.CSV_TAG_ATTR_NAME:
             value = (
@@ -1031,6 +1044,7 @@ class NewFrameLayout(wx.Frame):
                 if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
                 else ""
             )
+            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
             self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
@@ -1039,6 +1053,8 @@ class NewFrameLayout(wx.Frame):
             num += 1
 
         self.grid_1.AutoSizeColumns()
+        if device not in self.grid_1_contents:
+            self.grid_1_contents.append(device)
 
     def addDeviceToNetworkGrid(self, device, deviceInfo):
         networkInfo = {}
@@ -1051,7 +1067,9 @@ class NewFrameLayout(wx.Frame):
         networkInfo["Active Connection"] = cellStatus[1]
         networkInfo["Device Name"] = getDeviceName(device)
         networkInfo["Bluetooth State"] = str(deviceInfo["bluetoothState"])
+        self.addToNetworkGrid(networkInfo)
 
+    def addToNetworkGrid(self, networkInfo):
         num = 0
         self.grid_2.AppendRows(1)
 
@@ -1065,6 +1083,8 @@ class NewFrameLayout(wx.Frame):
             num += 1
 
         self.grid_2.AutoSizeColumns()
+        if networkInfo not in self.grid_2_contents:
+            self.grid_2_contents.append(networkInfo)
 
     def toggleColVisibilityInGridOne(self, event):
         index = (
@@ -1117,9 +1137,6 @@ class NewFrameLayout(wx.Frame):
 
     def onGridActionSelection(self, event):
         if event and event.String:
-            # if self.grid_1.GetNumberRows() > 0:
-            #    self.groupChoice.SetSelection(-1)
-            #    self.deviceChoice.SetSelection(-1)
             self.actionChoice.SetSelection(-1)
             self.appChoice.Enable(False)
             self.appChoice.SetSelection(-1)
@@ -1236,6 +1253,39 @@ class NewFrameLayout(wx.Frame):
         self.statusBar.PushStatusText(status)
 
     def restoreStatus(self):
-        if self.statusBar.GetStatusText():
+        text = self.statusBar.GetStatusText()
+        if text and text != '\x00':
             self.statusBar.PopStatusText()
 
+    def onDeviceGridSort(self, event):
+        col = event.Col
+        keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
+        
+        curSortCol = self.grid_1.GetSortingColumn()
+        descending = False
+        if curSortCol == col:
+            descending = True
+        self.grid_1.SetSortingColumn(col, bool(not descending))
+        self.grid_1_contents = sorted(self.grid_1_contents, key = lambda i: i[keyName], reverse=descending)
+        self.Logging("Sorting Device Grid on Column: %s" % keyName)
+        self.emptyDeviceGrid()
+        for device in self.grid_1_contents:
+            self.addDeviceToDeviceGrid(device)
+
+    def onNetworkGridSort(self, event):
+        col = event.Col
+        keyName = Globals.CSV_NETWORK_ATTR_NAME[col]
+        
+        curSortCol = self.grid_2.GetSortingColumn()
+        descending = False
+        if curSortCol == col:
+            descending = True
+        self.grid_2.SetSortingColumn(col, bool(not descending))
+        self.grid_2_contents = sorted(self.grid_2_contents, key = lambda i: i[keyName], reverse=descending)
+        self.Logging("Sorting Network Grid on Column: %s" % keyName)
+        self.emptyNetworkGrid()
+        for info in self.grid_2_contents:
+            self.addToNetworkGrid(info)
+
+    def toogleViewMenuItem(self, event):
+        return

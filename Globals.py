@@ -44,7 +44,7 @@ CSV_EDITABLE_COL = ["Alias", "Tags"]
 CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
-    "Online": "Status",
+    "Status": "Status",
     "Mode": "Mode",
     "Serial": "Serial",
     "Tags": "Tags",
