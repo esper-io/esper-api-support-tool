@@ -48,5 +48,8 @@ Thumbs.db
 *.mov
 *.wmv
 
+# Excel
+*.csv
+
 # VS Code Settings
 .vscode/settings.json
