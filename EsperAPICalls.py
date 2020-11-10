@@ -635,7 +635,6 @@ def waitForCommandToFinish(frame, request_id):
         "Command Failure",
         "Command TimeOut",
         "Command Cancelled",
-        "Command Queued",
     ]:
         response = api_instance.get_command_request_status(
             Globals.enterprise_id, request_id

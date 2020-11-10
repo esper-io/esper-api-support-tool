@@ -87,6 +87,8 @@ class NewFrameLayout(wx.Frame):
             )
         )
 
+        self.Bind(wx.EVT_CLOSE, self.OnQuit)
+
         self.Bind(wx.EVT_COMBOBOX, self.onActionSelection, self.actionChoice)
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
@@ -154,8 +156,11 @@ class NewFrameLayout(wx.Frame):
             self.viewMenuOptions[item.Id] = colNum
             colNum += 1
         viewMenu.Append(wx.ID_SEPARATOR)
-        consoleView = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console"))
+        consoleView = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console", kind=wx.ITEM_CHECK))
         self.Bind(wx.EVT_MENU, self.showConsole, consoleView)
+        self.clearConsole = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console")
+        )
 
         # helpMenu = wx.Menu()
         # helpItem = helpMenu.Append(wx.ID_HELP, "Help", "Help")
@@ -209,6 +214,7 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(False)
         self.run.Enable(False)
         self.command.Enable(False)
+        self.clearConsole.Enable(False)
 
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
@@ -427,7 +433,13 @@ class NewFrameLayout(wx.Frame):
             self.PopulateConfig()
 
     def OnQuit(self, e):
-        self.Close()
+        if self.consoleWin:
+            self.consoleWin.Close()
+            self.consoleWin.Destroy()
+            self.consoleWin = None
+        if e.EventType != wx.EVT_CLOSE.typeId:
+            self.Close()
+        self.Destroy()
 
     def askForAuthCSV():
         # Windows, Standalone executable will allow user to select CSV
@@ -520,9 +532,6 @@ class NewFrameLayout(wx.Frame):
         if not os.path.exists(Globals.csv_tag_path_clone):
             with open(Globals.csv_tag_path_clone, "w"):
                 pass
-
-    # def onClear(self, event=None):
-    #     self.loggingList.Clear()
 
     def onUploadCSV(self, event=None):
         if not Globals.enterprise_id:
@@ -1121,9 +1130,16 @@ class NewFrameLayout(wx.Frame):
     def showConsole(self, event):
         if not self.consoleWin:
             self.consoleWin = Console()
+            self.clearConsole.Enable(True)
+            self.Bind(wx.EVT_MENU, self.onClear, self.clearConsole)
         else:
             self.consoleWin.Destroy()
             self.consoleWin = None
+            self.clearConsole.Enable(False)
+
+    def onClear(self, event=None):
+        if self.consoleWin:
+            self.consoleWin.onClear()
 
     def onHelp(self, event=None):
         return

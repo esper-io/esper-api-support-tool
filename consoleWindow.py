@@ -38,11 +38,14 @@ class Console(wx.Frame):
         self.Centre()
         self.Show()
 
+    def onClear(self, event=None):
+        self.loggingList.Clear()
+
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
         self.loggingList.Append(entry)
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
         # if "--->" not in entry:
-        #    Globals.LOGLIST.append(entry)
+        #   Globals.LOGLIST.append(entry)
         return
