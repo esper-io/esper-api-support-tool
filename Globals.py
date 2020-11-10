@@ -4,11 +4,13 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
+TITLE = "Esper API Tool"
 CONFIGFILE = "EsperGroupActionsConfig.csv"
 # LOGFILE = "EsperGroupActionLog"
 NAMESTAGSFILE = "EsperGroupActionsNamesTags.csv"
 limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
+SHOW_GRID_DIALOG = True
 
 """ Actions """
 GENERAL_ACTIONS = [
@@ -27,7 +29,7 @@ GRID_ACTIONS = [
 SET_ALIAS = 0
 MODIFY_TAGS = 1
 
-# LOGLIST = []
+LOGLIST = []
 TAGSandALIASES = {}  # Unused?
 
 """ URL Requests and Extensions """

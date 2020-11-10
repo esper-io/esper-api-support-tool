@@ -80,21 +80,24 @@ def toggleKioskMode(frame, deviceid, appToUse, isKiosk):
     """Toggles Kiosk Mode On/Off"""
     api_instance = getCommandsApiInstance()
     if isKiosk:
-        command_args = esperclient.CommandArgs(package_name=appToUse)
+        command_args = esperclient.V0CommandArgs(package_name=appToUse)
     else:
         command_args = {}
-    command = esperclient.CommandRequest(
-        command="SET_KIOSK_APP", command_args=command_args
+    command = esperclient.V0CommandRequest(
+        enterprise=Globals.enterprise_id,
+        command_type="DEVICE",
+        device_type="all",
+        devices=[deviceid],
+        command="SET_KIOSK_APP",
+        command_args=command_args,
     )
     api_response = api_instance.create_command(Globals.enterprise_id, command)
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, api_response.id
     )
 
-    status = response.state
-    frame.Logging("---> " + str(status))
-
-    waitForCommandToFinish(frame, api_response.id)
+    status = response.results[0].state
+    status = waitForCommandToFinish(frame, api_response.id)
     return status
 
 
@@ -175,7 +178,6 @@ def setdevicename(frame, deviceid, devicename):
         Globals.enterprise_id, api_response.id
     )
     status = response.results[0].state
-    frame.Logging("---> " + str(status))
     status = waitForCommandToFinish(frame, api_response.id)
     return status
 
@@ -201,13 +203,13 @@ def iterateThroughDeviceList(frame, action, api_response):
         deviceInfo.update({"num": number_of_devices})
         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
         if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-            logstring = frame.createLogString(deviceInfo, action)
+            # logstring = frame.createLogString(deviceInfo, action)
             frame.addDeviceToDeviceGrid(deviceInfo)
-            frame.Logging(logstring)
+            # frame.Logging(logstring)
 
-            output = generateReport(frame, device, deviceInfo)
+            # generateReport(frame, device, deviceInfo)
             frame.addDeviceToNetworkGrid(device, deviceInfo)
-            frame.Logging(output)
+            # frame.Logging(output)
         elif action == Globals.SET_KIOSK:
             setKiosk(frame, device, deviceInfo)
         elif action == Globals.SET_MULTI:
@@ -342,7 +344,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     frame.Logging("--- Completed ---")
                 else:
                     frame.Logging("No devices found for group")
-                    frame.Logging("--- Completed ---")
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
@@ -360,7 +361,7 @@ def iterateThroughAllGroups(frame, action, api_instance):
                 offset=Globals.offset,
             )
             if len(api_response.results):
-                frame.Logging("Group Name:" + value)
+                frame.Logging("Processing Group: " + value)
                 iterateThroughDeviceList(frame, action, api_response)
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -369,49 +370,44 @@ def iterateThroughAllGroups(frame, action, api_instance):
 
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
-    logString = frame.createLogString(deviceInfo, Globals.SET_KIOSK)
+    # logString = frame.createLogString(deviceInfo, Globals.SET_KIOSK)
+    logString = (
+        str("--->" + str(device.device_name) + " " + str(device.alias_name))
+        + " ,->Kiosk->"
+        + str(appToUse)
+    )
     if deviceInfo["Mode"] == "Multi":
-        if deviceInfo["Status"] == "On-Line":
+        if deviceInfo["Status"] == "Online":
             appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
-            logString = logString + ",->Kiosk->" + appToUse
-            frame.Logging(
-                str("--->" + str(device.device_name) + " " + str(device.alias_name))
-                + " "
-                + ",->Kiosk->"
-                + str(appToUse)
-            )
             status = toggleKioskMode(frame, device.id, appToUse, True)
             if "Success" in str(status):
                 logString = logString + " <success>"
             else:
                 logString = logString + " <failed>"
         else:
-            logString = logString + ",(Device off-line)"
+            logString = logString + "(Device offline, skipping)"
     else:
-        logString = logString + ",(Already Kiosk mode)"
+        logString = logString + "(Already Kiosk mode, skipping)"
     frame.Logging(logString)
 
 
 def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
-    logString = frame.createLogString(deviceInfo, Globals.SET_MULTI)
+    logString = (
+        str("--->" + str(device.device_name) + " " + str(device.alias_name))
+        + " ,->Multi->"
+    )
     if deviceInfo["Mode"] == "Kiosk":
-        if deviceInfo["Status"] == "On-Line":
-            logString = logString + ",->Multi->"
-            frame.Logging(
-                str("--->" + str(device.device_name) + " " + str(device.alias_name))
-                + " "
-                + ",->Multi->"
-            )
+        if deviceInfo["Status"] == "Online":
             status = toggleKioskMode(frame, device.id, {}, False)
             if "Success" in str(status):
                 logString = logString + " <success>"
             else:
                 logString = logString + " <failed>"
         else:
-            logString = logString + ",(Device off-line)"
+            logString = logString + "(Device offline, skipping)"
     else:
-        logString = logString + ",(Already Multi mode)"
+        logString = logString + "(Already Multi mode, skipping)"
     frame.Logging(logString)
 
 
@@ -529,41 +525,31 @@ def modifyAlias(frame):
         print(e)
 
     aliasDic = frame.getDeviceAliasFromGrid()
-    logString = ""
+    logString = str(
+        "--->" + str(device.device_name) + " " + str(device.alias_name) + "--->"
+    )
     for device in api_response.results:
         for esperName in aliasDic.keys():
             if device.device_name == esperName:
                 newName = aliasDic[esperName]
                 if not (newName in str(device.alias_name)):
                     if device.status == 1:
-                        logString = logString + ",->Name->"
-                        frame.Logging(
-                            str(
-                                "--->"
-                                + str(device.device_name)
-                                + " "
-                                + str(device.alias_name)
-                            )
-                            + " "
-                            + ",->Name->"
-                            + newName
-                        )
                         status = setdevicename(frame, device.id, newName)
                         if "Success" in str(status):
                             logString = logString + " <success>"
                         else:
                             logString = logString + " <failed>"
                     else:
-                        logString = logString + ",(Device off-line)"
+                        logString = logString + "(Device offline)"
                 else:
-                    logString = logString + ",(Name already set)"
+                    logString = logString + "(Name already set)"
     frame.Logging(logString)
 
 
 ####End Perform Actions####
 
 
-def generateReport(frame, device, deviceInfo):
+"""def generateReport(frame, device, deviceInfo):
     patchVersion = getSecurityPatch(device)
     wifiStatus = getWifiStatus(deviceInfo)
     networkStatus = getCellularStatus(deviceInfo)
@@ -582,7 +568,7 @@ def generateReport(frame, device, deviceInfo):
         + str(bluetooth_state)
     )
     frame.Logging(deviceCSV)
-    return deviceCSV
+    return deviceCSV"""
 
 
 def getCommandsApiInstance():
@@ -640,7 +626,7 @@ def waitForCommandToFinish(frame, request_id):
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        frame.Logging("---> " + str(status))
+        frame.Logging("Command state: %s" % str(status))
         frame.buttonYieldEvent()
         time.sleep(1)
     return status

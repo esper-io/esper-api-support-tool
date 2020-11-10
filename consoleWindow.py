@@ -34,12 +34,18 @@ class Console(wx.Frame):
         grid_sizer_2.Add(self.loggingList, 0, wx.EXPAND, 1)
         panel.SetSizer(grid_sizer_2)
 
+        for entry in Globals.LOGLIST:
+            self.loggingList.Append(entry)
+            if self.WINDOWS:
+                self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
+
         self.SetBackgroundColour(wx.Colour(100, 100, 100))
         self.Centre()
         self.Show()
 
     def onClear(self, event=None):
         self.loggingList.Clear()
+        Globals.LOGLIST.clear()
 
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""

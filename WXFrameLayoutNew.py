@@ -21,6 +21,8 @@ from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
 from EsperAPICalls import TakeAction, iterateThroughGridRows, ApplyDeviceConfig
 
+from CustomDialogs import CheckboxMessageBox, CommandDialog
+
 
 class NewFrameLayout(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -156,7 +158,9 @@ class NewFrameLayout(wx.Frame):
             self.viewMenuOptions[item.Id] = colNum
             colNum += 1
         viewMenu.Append(wx.ID_SEPARATOR)
-        consoleView = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console", kind=wx.ITEM_CHECK))
+        consoleView = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console", kind=wx.ITEM_CHECK)
+        )
         self.Bind(wx.EVT_MENU, self.showConsole, consoleView)
         self.clearConsole = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console")
@@ -198,13 +202,16 @@ class NewFrameLayout(wx.Frame):
         # self.Bind(wx.EVT_TOOL, self.onClear, ctool)
         # Tool Bar end
 
+        self.statusBar = self.CreateStatusBar()
+        self.statusBar.SetStatusText("")
+
         self.__set_properties()
         self.__do_layout()
         # end wxGlade
 
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
-        self.SetTitle("frame")
+        self.SetTitle(Globals.TITLE)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
 
         self.actionChoice.Enable(False)
@@ -414,6 +421,7 @@ class NewFrameLayout(wx.Frame):
     def Logging(self, entry):
         if self.consoleWin:
             self.consoleWin.Logging(entry)
+        self.setTempStatus(entry)
 
     def OnOpen(self, event):
         # otherwise ask the user what new file to open
@@ -558,7 +566,7 @@ class NewFrameLayout(wx.Frame):
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
                     header = None
-                    grid_headers = Globals.CSV_TAG_ATTR_NAME.keys()
+                    grid_headers = list(Globals.CSV_TAG_ATTR_NAME.keys())
                     for row in reader:
                         if not all("" == val or val.isspace() for val in row):
                             if num == 0:
@@ -774,7 +782,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging("No Devices found in group")
         except ApiException as e:
             self.Logging("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-            print(print("Exception when calling DeviceApi->get_all_devices: %s\n" % e))
+            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
         self.setCursorDefault()
 
     def PopulateApps(self):
@@ -842,7 +850,7 @@ class NewFrameLayout(wx.Frame):
         logString = (
             # "{:>4}".format(str(deviceInfo["num"]))
             # + ","
-            +"{:13.13}".format(deviceInfo["EsperName"])
+            "{:13.13}".format(deviceInfo["EsperName"])
             + ","
             + "{:16.16}".format(str(deviceInfo["Alias"]))
             + ","
@@ -926,8 +934,18 @@ class NewFrameLayout(wx.Frame):
         elif gridSelection >= 0:
             # run grid action
             if self.grid_1.GetNumberRows() > 0:
-                self.Logging('Attempting to run grid action, "%s".' % gridLabel)
-                iterateThroughGridRows(self, gridSelection)
+                runAction = True
+                if Globals.SHOW_GRID_DIALOG:
+                    result = CheckboxMessageBox(
+                        "Confirmation",
+                        "The %s will attempt to process the action on all devices in the Device Info grid. \n\nContinue?"
+                        % Globals.TITLE,
+                    ).ShowModal()
+                    if result != wx.ID_OK:
+                        runAction = False
+                if runAction:
+                    self.Logging('Attempting to run grid action, "%s".' % gridLabel)
+                    iterateThroughGridRows(self, gridSelection)
             else:
                 wx.MessageBox(
                     "Make sure the grid has data to perform an action on",
@@ -1149,12 +1167,9 @@ class NewFrameLayout(wx.Frame):
         try:
             groupSelection = self.groupChoice.GetSelection()
             if groupSelection >= 0:
-                with wx.TextEntryDialog(
-                    None,
-                    "Please Enter Device Config JSON below:",
-                    style=wx.TE_MULTILINE | wx.OK | wx.CANCEL,
-                ) as cmdDialog:
-                    if cmdDialog.ShowModal() == wx.ID_OK:
+                with CommandDialog("Enter JSON Command") as cmdDialog:
+                    result = cmdDialog.ShowModal()
+                    if result == wx.ID_OK:
                         cmd = json.loads(cmdDialog.GetValue())
                         if cmd:
                             result = ApplyDeviceConfig(self, cmd)
@@ -1215,3 +1230,12 @@ class NewFrameLayout(wx.Frame):
             return True, isGroup
         else:
             return False, isGroup
+
+    def setTempStatus(self, status):
+        self.restoreStatus()
+        self.statusBar.PushStatusText(status)
+
+    def restoreStatus(self):
+        if self.statusBar.GetStatusText():
+            self.statusBar.PopStatusText()
+
