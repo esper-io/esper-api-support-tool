@@ -290,7 +290,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
     elif action in Globals.GENERAL_ACTIONS:
         actionName = actionName = str(Globals.GENERAL_ACTIONS[action])
     frame.Logging(
-        "---> Starting Execution - "
+        "---> Starting Execution "
         + actionName
         + " on "
         + frame.groupChoice.GetString(group)
@@ -371,14 +371,15 @@ def iterateThroughAllGroups(frame, action, api_instance):
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     # logString = frame.createLogString(deviceInfo, Globals.SET_KIOSK)
-    logString = (
-        str("--->" + str(device.device_name) + " " + str(device.alias_name))
-        + " ,->Kiosk->"
-        + str(appToUse)
-    )
+    logString = ""
     if deviceInfo["Mode"] == "Multi":
         if deviceInfo["Status"] == "Online":
             appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+            logString = (
+                str("--->" + str(device.device_name) + " " + str(device.alias_name))
+                + " ->Kiosk->"
+                + str(appToUse)
+            )
             status = toggleKioskMode(frame, device.id, appToUse, True)
             if "Success" in str(status):
                 logString = logString + " <success>"
@@ -525,10 +526,11 @@ def modifyAlias(frame):
         print(e)
 
     aliasDic = frame.getDeviceAliasFromGrid()
-    logString = str(
-        "--->" + str(device.device_name) + " " + str(device.alias_name) + "--->"
-    )
+    logString = ""
     for device in api_response.results:
+        logString = str(
+            "--->" + str(device.device_name) + " " + str(device.alias_name) + "--->"
+        )
         for esperName in aliasDic.keys():
             if device.device_name == esperName:
                 newName = aliasDic[esperName]
@@ -543,7 +545,7 @@ def modifyAlias(frame):
                         logString = logString + "(Device offline)"
                 else:
                     logString = logString + "(Name already set)"
-    frame.Logging(logString)
+        frame.Logging(logString)
 
 
 ####End Perform Actions####
