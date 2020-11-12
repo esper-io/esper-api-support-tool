@@ -44,6 +44,7 @@ class NewFrameLayout(wx.Frame):
         self.consoleWin = None
         self.grid_1_contents = []
         self.grid_2_contents = []
+        self.apps = []
 
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -102,6 +103,7 @@ class NewFrameLayout(wx.Frame):
 
         self.Bind(wx.EVT_COMBOBOX, self.onActionSelection, self.actionChoice)
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
+        self.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGING, self.onCellChange)
         # self.grid_1.Bind(gridlib.EVT_GRID_COL_SORT, self.onSort)
@@ -827,6 +829,7 @@ class NewFrameLayout(wx.Frame):
             if len(api_response.results):
                 for app in api_response.results:
                     self.appChoice.Append(app.application_name, app.package_name)
+                    self.
                 self.appChoice.SetValue("<Select App>")
         except ApiException as e:
             self.Logging(
@@ -923,8 +926,8 @@ class NewFrameLayout(wx.Frame):
         if (
             groupSelection >= 0
             and deviceSelection <= 0
-            and gridSelection < 0
-            and actionSelection >= 0
+            and gridSelection <= 0
+            and actionSelection > 0
         ):
             # run action on group
             if actionSelection == Globals.SET_KIOSK and appSelection < 0:
@@ -939,7 +942,7 @@ class NewFrameLayout(wx.Frame):
             self.runActionOnGroup(
                 groupLabel=groupLabel, group=groupSelection, action=actionSelection
             )
-        elif deviceSelection > 0 and gridSelection < 0 and actionSelection >= 0:
+        elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
             # run action on device
             if actionSelection == Globals.SET_KIOSK and appSelection < 0:
                 wx.MessageBox(
@@ -953,7 +956,7 @@ class NewFrameLayout(wx.Frame):
             self.runActionOnDevice(
                 deviceLabel=deviceLabel, device=deviceSelection, action=actionSelection
             )
-        elif gridSelection >= 0:
+        elif gridSelection > 0:
             # run grid action
             if self.grid_1.GetNumberRows() > 0:
                 runAction = True
@@ -1321,3 +1324,6 @@ class NewFrameLayout(wx.Frame):
                 setKiosk(self, device, deviceInfo)
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
+
+    def onDeviceSelection(self):
+        pass
