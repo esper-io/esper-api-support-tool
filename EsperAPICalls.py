@@ -207,9 +207,10 @@ def iterateThroughDeviceList(frame, action, api_response):
     ]
 
     threads = []
+    frame.buttonYieldEvent()
     for chunk in splitResults:
         t = wxThread.GUIThread(
-            frame, processDevices, args=(chunk, frame, number_of_devices, action)
+            frame, processDevices, args=(chunk, number_of_devices, action)
         )
         threads.append(t)
         t.start()
@@ -219,11 +220,10 @@ def iterateThroughDeviceList(frame, action, api_response):
         t.join()
 
 
-def processDevices(chunk, frame, number_of_devices, action):
+def processDevices(chunk, number_of_devices, action):
     deviceList = {}
     for device in chunk:
         try:
-            frame.buttonYieldEvent()
             number_of_devices = number_of_devices + 1
             deviceInfo = {}
             deviceInfo.update({"num": number_of_devices})
