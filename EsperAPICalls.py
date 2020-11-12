@@ -7,6 +7,7 @@ import Globals
 import string
 import platform
 import ctypes
+import wxThread
 
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
@@ -17,6 +18,8 @@ from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
 from esperclient.models.command_args import CommandArgs
 from esperclient.models.v0_command_args import V0CommandArgs
+
+from threading import Thread
 
 ####Esper API Requests####
 def getInfo(request_extension, deviceid):
@@ -195,25 +198,41 @@ def iterateThroughGridRows(frame, action):
 def iterateThroughDeviceList(frame, action, api_response):
     """Iterates Through Each Device And Performs A Specified Action"""
     number_of_devices = 0
-    deviceInfo = {}
-    for device in api_response.results:
-        frame.buttonYieldEvent()
-        number_of_devices = number_of_devices + 1
-        deviceInfo.clear()
-        deviceInfo.update({"num": number_of_devices})
-        deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-        if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-            # logstring = frame.createLogString(deviceInfo, action)
-            frame.addDeviceToDeviceGrid(deviceInfo)
-            # frame.Logging(logstring)
+    n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+    if n == 0:
+        n = len(api_response.results)
+    splitResults = [
+        api_response.results[i * n : (i + 1) * n]
+        for i in range((len(api_response.results) + n - 1) // n)
+    ]
 
-            # generateReport(frame, device, deviceInfo)
-            frame.addDeviceToNetworkGrid(device, deviceInfo)
-            # frame.Logging(output)
-        elif action == Globals.SET_KIOSK:
-            setKiosk(frame, device, deviceInfo)
-        elif action == Globals.SET_MULTI:
-            setMulti(frame, device, deviceInfo)
+    threads = []
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            frame, processDevices, args=(chunk, frame, number_of_devices, action)
+        )
+        threads.append(t)
+        t.start()
+        number_of_devices += len(chunk)
+
+    for t in threads:
+        t.join()
+
+
+def processDevices(chunk, frame, number_of_devices, action):
+    deviceList = {}
+    for device in chunk:
+        try:
+            frame.buttonYieldEvent()
+            number_of_devices = number_of_devices + 1
+            deviceInfo = {}
+            deviceInfo.update({"num": number_of_devices})
+            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+
+            deviceList[number_of_devices] = [device, deviceInfo]
+        except Exception as e:
+            print(e)
+    return action, deviceList
 
 
 def populateDeviceInfoDictionary(device, deviceInfo):
@@ -285,10 +304,10 @@ def TakeAction(frame, group, action, label, isDevice=False):
 
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     actionName = ""
-    if action in Globals.GRID_ACTIONS:
-        actionName = str(Globals.GRID_ACTIONS[action])
-    elif action in Globals.GENERAL_ACTIONS:
-        actionName = actionName = str(Globals.GENERAL_ACTIONS[action])
+    if frame.actionChoice.GetValue() in Globals.GRID_ACTIONS:
+        actionName = '"%s"' % str(Globals.GRID_ACTIONS[action])
+    elif frame.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
+        actionName = '"%s"' % str(Globals.GENERAL_ACTIONS[action])
     frame.Logging(
         "---> Starting Execution "
         + actionName
@@ -301,7 +320,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
         or action == Globals.SET_MULTI
     ):
         frame.emptyDeviceGrid()
-        # if action == Globals.GENERATE_REPORT:
         frame.emptyNetworkGrid()
 
     if isDevice:
@@ -370,7 +388,6 @@ def iterateThroughAllGroups(frame, action, api_instance):
 
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
-    # logString = frame.createLogString(deviceInfo, Globals.SET_KIOSK)
     logString = ""
     if deviceInfo["Mode"] == "Multi":
         if deviceInfo["Status"] == "Online":
@@ -410,86 +427,6 @@ def setMulti(frame, device, deviceInfo):
     else:
         logString = logString + "(Already Multi mode, skipping)"
     frame.Logging(logString)
-
-
-# def setAlias(frame, device, deviceInfo):
-#     """Sets Device Alias"""
-#     logString = frame.createLogString(deviceInfo, Globals.SET_ALIAS)
-#     serialNum = device.hardware_info["serialNumber"]
-#     if serialNum in Globals.TAGSandALIASES.keys():
-#         newName = Globals.TAGSandALIASES[serialNum][0]
-#         if not (newName in str(device.alias_name)):
-#             if deviceInfo["Status"] == "On-Line":
-#                 logString = logString + ",->Name->"
-#                 frame.Logging(
-#                     str("--->" + str(device.device_name) + " " + str(device.alias_name))
-#                     + " "
-#                     + ",->Name->"
-#                     + newName
-#                 )
-#                 status = setdevicename(frame, device.id, newName)
-#                 if "Success" in str(status):
-#                     logString = logString + " <success>"
-#                 else:
-#                     logString = logString + " <failed>"
-#             else:
-#                 logString = logString + ",(Device off-line)"
-#         else:
-#             logString = logString + ",(Name already set)"
-#     else:
-#         logString = logString + ",(no Name found in file)"
-#     frame.Logging(logString)  # log results
-
-
-# def editTags(frame, device, deviceInfo, removeTag):
-#     """Sends Request To Edit Tags"""
-#     serialNum = device.hardware_info["serialNumber"]
-#     if serialNum in Globals.TAGSandALIASES.keys():
-#         if removeTag:
-#             removeTags(frame, device, deviceInfo, serialNum)
-#         else:
-#             addTags(frame, device, deviceInfo, serialNum)
-#     else:
-#         logString = str(device) + ",(no Tag found in file)"
-#         frame.Logging(logString)
-
-
-# def addTags(frame, device, deviceInfo, serialNum):
-#     """Sets Device Tags"""
-#     logString = frame.createLogString(
-#         deviceInfo, Globals.MODIFY_TAGS
-#     )  # Globals.SET_TAGS)
-#     newTags = Globals.TAGSandALIASES[serialNum][1]
-#     if newTags != "":
-#         newTagsList = newTags.split(",")
-#         tagList = device.tags
-#         for tag in tagList:
-#             if tag not in newTagsList:
-#                 newTagsList.append(tag)
-#         setdevicetags(device.id, newTagsList)
-#         logString = logString + ",Tags Added, New Tag List -> " + str(newTagsList)
-#         frame.Logging(logString)
-#     else:
-#         frame.Logging("No Tags To Add")
-
-
-# def removeTags(frame, device, deviceInfo, serialNum):
-#     """Removes Device Tags"""
-#     logString = frame.createLogString(
-#         deviceInfo, Globals.MODIFY_TAGS
-#     )  # Globals.REMOVE_TAGS)
-#     newTags = Globals.TAGSandALIASES[serialNum][1]
-#     newTagsList = newTags.split(",")
-#     tagList = device.tags
-#     if tagList is not None:
-#         for tag in newTagsList:
-#             if tag in tagList:
-#                 tagList.remove(tag)
-#         setdevicetags(device.id, tagList)
-#         logString = logString + ",Tags Removed, New Tag List -> " + str(tagList)
-#         frame.Logging(logString)
-#     else:
-#         frame.Logging("No Tags To Remove, Device Has No Tags")
 
 
 def modifyTags(frame):
@@ -551,28 +488,6 @@ def modifyAlias(frame):
 ####End Perform Actions####
 
 
-"""def generateReport(frame, device, deviceInfo):
-    patchVersion = getSecurityPatch(device)
-    wifiStatus = getWifiStatus(deviceInfo)
-    networkStatus = getCellularStatus(deviceInfo)
-    device_name = getDeviceName(device)
-    bluetooth_state = deviceInfo["bluetoothState"]
-
-    deviceCSV = (
-        device_name
-        + ","
-        + patchVersion
-        + ","
-        + wifiStatus
-        + ","
-        + networkStatus
-        + ","
-        + str(bluetooth_state)
-    )
-    frame.Logging(deviceCSV)
-    return deviceCSV"""
-
-
 def getCommandsApiInstance():
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
 
@@ -628,7 +543,7 @@ def waitForCommandToFinish(frame, request_id):
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        frame.Logging("Command state: %s" % str(status))
+        frame.Logging("Command state: %s" % str(status.state))
         frame.buttonYieldEvent()
         time.sleep(1)
     return status

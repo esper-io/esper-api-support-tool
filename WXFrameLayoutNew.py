@@ -9,6 +9,7 @@ import Globals
 import ctypes
 import platform
 import json
+import wxThread
 
 from consoleWindow import Console
 
@@ -19,7 +20,13 @@ from tkinter.filedialog import askopenfilename
 
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
-from EsperAPICalls import TakeAction, iterateThroughGridRows, ApplyDeviceConfig
+from EsperAPICalls import (
+    TakeAction,
+    iterateThroughGridRows,
+    ApplyDeviceConfig,
+    setKiosk,
+    setMulti,
+)
 
 from CustomDialogs import CheckboxMessageBox, CommandDialog
 
@@ -208,6 +215,8 @@ class NewFrameLayout(wx.Frame):
         # self.Bind(wx.EVT_TOOL, self.onSave, stool)
         # self.Bind(wx.EVT_TOOL, self.onClear, ctool)
         # Tool Bar end
+
+        self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
 
         self.statusBar = self.CreateStatusBar()
         self.statusBar.SetStatusText("")
@@ -558,6 +567,7 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.emptyDeviceGrid()
+        self.emptyNetworkGrid()
         with wx.FileDialog(
             self,
             "Open Device CSV File",
@@ -1254,19 +1264,21 @@ class NewFrameLayout(wx.Frame):
 
     def restoreStatus(self):
         text = self.statusBar.GetStatusText()
-        if text and text != '\x00':
+        if text and text != "\x00":
             self.statusBar.PopStatusText()
 
     def onDeviceGridSort(self, event):
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
-        
+
         curSortCol = self.grid_1.GetSortingColumn()
         descending = False
         if curSortCol == col:
             descending = True
         self.grid_1.SetSortingColumn(col, bool(not descending))
-        self.grid_1_contents = sorted(self.grid_1_contents, key = lambda i: i[keyName], reverse=descending)
+        self.grid_1_contents = sorted(
+            self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
+        )
         self.Logging("Sorting Device Grid on Column: %s" % keyName)
         self.emptyDeviceGrid()
         for device in self.grid_1_contents:
@@ -1275,17 +1287,37 @@ class NewFrameLayout(wx.Frame):
     def onNetworkGridSort(self, event):
         col = event.Col
         keyName = Globals.CSV_NETWORK_ATTR_NAME[col]
-        
+
         curSortCol = self.grid_2.GetSortingColumn()
         descending = False
         if curSortCol == col:
             descending = True
         self.grid_2.SetSortingColumn(col, bool(not descending))
-        self.grid_2_contents = sorted(self.grid_2_contents, key = lambda i: i[keyName], reverse=descending)
+        self.grid_2_contents = sorted(
+            self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
+        )
         self.Logging("Sorting Network Grid on Column: %s" % keyName)
         self.emptyNetworkGrid()
         for info in self.grid_2_contents:
             self.addToNetworkGrid(info)
 
     def toogleViewMenuItem(self, event):
+        """
+        Disable native headers ability to hide columns when clicking an entry from the context menu
+        """
         return
+
+    def onUpdate(self, event):
+        evtValue = event.GetValue()
+        action = evtValue[0]
+        deviceList = evtValue[1]
+        for entry in deviceList.values():
+            device = entry[0]
+            deviceInfo = entry[1]
+            if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                self.addDeviceToDeviceGrid(deviceInfo)
+                self.addDeviceToNetworkGrid(device, deviceInfo)
+            elif action == Globals.SET_KIOSK:
+                setKiosk(self, device, deviceInfo)
+            elif action == Globals.SET_MULTI:
+                setMulti(self, device, deviceInfo)
