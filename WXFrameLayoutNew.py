@@ -829,7 +829,7 @@ class NewFrameLayout(wx.Frame):
             if len(api_response.results):
                 for app in api_response.results:
                     self.appChoice.Append(app.application_name, app.package_name)
-                    self.
+                    #self.
                 self.appChoice.SetValue("<Select App>")
         except ApiException as e:
             self.Logging(
