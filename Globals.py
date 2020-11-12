@@ -15,20 +15,22 @@ MAX_THREAD_COUNT = 4
 
 """ Actions """
 GENERAL_ACTIONS = [
+    "",
     "Show - Device Info & Network And Secruity Report",
     "Action -> Set Kiosk Mode",
     "Action -> Set Multi-App Mode",
 ]
-SHOW_ALL_AND_GENERATE_REPORT = 0
-SET_KIOSK = 1
-SET_MULTI = 2
+SHOW_ALL_AND_GENERATE_REPORT = 1
+SET_KIOSK = 2
+SET_MULTI = 3
 
 GRID_ACTIONS = [
+    "",
     "Action -> Set Device Names",
     "Action -> Modify Tags",
 ]
-SET_ALIAS = 0
-MODIFY_TAGS = 1
+SET_ALIAS = 1
+MODIFY_TAGS = 2
 
 LOGLIST = []
 TAGSandALIASES = {}  # Unused?

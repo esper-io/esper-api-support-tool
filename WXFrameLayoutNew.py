@@ -232,7 +232,8 @@ class NewFrameLayout(wx.Frame):
         self.SetTitle(Globals.TITLE)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
 
-        self.actionChoice.SetSelection(0)
+        self.actionChoice.SetSelection(1)
+        self.gridActions.SetSelection(0)
 
         self.actionChoice.Enable(False)
         self.deviceChoice.Enable(False)
@@ -777,13 +778,14 @@ class NewFrameLayout(wx.Frame):
         )
         self.setCursorBusy()
         self.deviceChoice.Clear()
+        clientData = event.ClientData if event.ClientData else self.groupChoice.GetClientData(event.Int)
         try:
             api_instance = esperclient.DeviceApi(
                 esperclient.ApiClient(Globals.configuration)
             )
             api_response = api_instance.get_all_devices(
                 Globals.enterprise_id,
-                group=event.ClientData,
+                group=clientData,
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
@@ -1150,13 +1152,13 @@ class NewFrameLayout(wx.Frame):
 
     def onGridActionSelection(self, event):
         if event and event.String:
-            self.actionChoice.SetSelection(-1)
+            self.actionChoice.SetSelection(0)
             self.appChoice.Enable(False)
             self.appChoice.SetSelection(-1)
 
     def onActionSelection(self, event):
         if event and event.String:
-            self.gridActions.SetSelection(-1)
+            self.gridActions.SetSelection(0)
 
             if event and event.String == Globals.GENERAL_ACTIONS[Globals.SET_KIOSK]:
                 self.appChoice.Enable(True)
