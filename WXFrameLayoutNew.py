@@ -1377,6 +1377,8 @@ class NewFrameLayout(wx.Frame):
         action = evtValue[0]
         deviceList = evtValue[1]
         for entry in deviceList.values():
+            curProgress = self.gauge.GetValue() + 1
+            self.gauge.SetValue(curProgress)
             device = entry[0]
             deviceInfo = entry[1]
             if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
