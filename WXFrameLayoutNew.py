@@ -559,7 +559,7 @@ class NewFrameLayout(wx.Frame):
         numRows = grid.GetNumberRows()
         numCols = grid.GetNumberCols()
         gridData = []
-        gridData.append(header.replace("\n", "").split(","))
+        gridData.append(header)
 
         self.createNewFile(inFile)
 
@@ -1219,7 +1219,10 @@ class NewFrameLayout(wx.Frame):
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
                 if name == esperName:
                     indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
-                    self.grid_1.SetCellValue(rowNum, indx, str(tags))
+                    if len(tags) > 0:
+                        self.grid_1.SetCellValue(rowNum, indx, str(tags))
+                    else:
+                        self.grid_1.SetCellValue(rowNum, indx, "")
 
     def showConsole(self, event):
         if not self.consoleWin:
