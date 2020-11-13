@@ -3,16 +3,21 @@ import esperclient
 import time
 import json
 import os.path
-import Globals
+import Common.Globals as Globals
 import string
 import platform
 import ctypes
-import wxThread
+import Utility.wxThread as wxThread
 
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+# from tkinter import Tk
+# from tkinter.filedialog import askopenfilename
 
-from deviceInfo import getSecurityPatch, getWifiStatus, getCellularStatus, getDeviceName
+from Utility.deviceInfo import (
+    getSecurityPatch,
+    getWifiStatus,
+    getCellularStatus,
+    getDeviceName,
+)
 
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
@@ -184,6 +189,64 @@ def setdevicename(frame, deviceid, devicename):
     return status
 
 
+def getAllGroups(*args, **kwds):
+    try:
+        api_instance = esperclient.DeviceGroupApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = api_instance.get_all_groups(
+            Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
+        )
+        return api_response
+    except ApiException as e:
+        raise Exception(
+            "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
+        )
+
+
+def getAllDevices(groupToUse, *args, **kwds):
+    try:
+        api_instance = esperclient.DeviceApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = api_instance.get_all_devices(
+            Globals.enterprise_id,
+            group=groupToUse,
+            limit=Globals.limit,
+            offset=Globals.offset,
+        )
+        return api_response
+    except ApiException as e:
+        raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+
+
+def getAllApplications(*args, **kwds):
+    try:
+        api_instance = esperclient.ApplicationApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = api_instance.get_all_applications(
+            Globals.enterprise_id,
+            limit=Globals.limit,
+            offset=Globals.offset,
+            is_hidden=False,
+        )
+        return api_response
+    except ApiException as e:
+        raise Exception("Exception when calling ApplicationApi->get_all_applications: %s\n" % e)
+
+def getDeviceById(deviceToUse, *args, **kwds):
+    try:
+        api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+        api_response = api_instance.get_device_by_id(
+            Globals.enterprise_id, device_id=deviceToUse
+        )
+        if api_response:
+            api_response.results = [api_response]
+        return api_response
+    except ApiException as e:
+        print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
+
 ####End Esper API Requests####
 
 
@@ -196,32 +259,34 @@ def iterateThroughGridRows(frame, action):
 
 def iterateThroughDeviceList(frame, action, api_response):
     """Iterates Through Each Device And Performs A Specified Action"""
-    number_of_devices = 0
-    n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-    if n == 0:
-        n = len(api_response.results)
-    splitResults = [
-        api_response.results[i * n : (i + 1) * n]
-        for i in range((len(api_response.results) + n - 1) // n)
-    ]
+    if len(api_response.results):
+        number_of_devices = 0
+        n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+        if n == 0:
+            n = len(api_response.results)
+        splitResults = [
+            api_response.results[i * n : (i + 1) * n]
+            for i in range((len(api_response.results) + n - 1) // n)
+        ]
 
-    threads = []
-    # frame.buttonYieldEvent()
-    for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame, processDevices, args=(chunk, number_of_devices, action)
-        )
-        threads.append(t)
-        t.start()
-        number_of_devices += len(chunk)
+        threads = []
+        for chunk in splitResults:
+            t = wxThread.GUIThread(
+                frame, processDevices, args=(chunk, number_of_devices, action)
+            )
+            threads.append(t)
+            t.start()
+            number_of_devices += len(chunk)
 
-    num = 0
-    done = 0
-    for t in threads:
-        t.join()
-        done += len(splitResults[num])
-        frame.setGaugeValue(int(done / len(api_response.results) * 100))
-        num += 1
+        num = 0
+        done = 0
+        for t in threads:
+            t.join()
+            done += len(splitResults[num])
+            frame.setGaugeValue(int(done / len(api_response.results) * 100))
+            num += 1
+    else:
+        frame.Logging("No devices found for group")
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -238,7 +303,7 @@ def processDevices(chunk, number_of_devices, action):
                 Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
-    return action, deviceList
+    return (action, deviceList)
 
 
 def populateDeviceInfoDictionary(device, deviceInfo):
@@ -336,16 +401,11 @@ def TakeAction(frame, group, action, label, isDevice=False):
             if frame.deviceChoice.GetClientData(group)
             else ""
         )
-        try:
-            api_response = api_instance.get_device_by_id(
-                Globals.enterprise_id, device_id=deviceToUse
-            )
-            if api_response:
-                api_response.results = [api_response]
-                iterateThroughDeviceList(frame, action, api_response)
-                frame.Logging("--- Completed ---")
-        except ApiException as e:
-            print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
+        frame.Logging("---> Calling API")
+        wxThread.doAPICallInThread(frame, getDeviceById, args=(deviceToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+        # frame.Logging("---> API Request Finished")
+        # iterateThroughDeviceList(frame, action, t.result)
+        # frame.Logging("--- Completed ---")
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
@@ -359,17 +419,15 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     if frame.groupChoice.GetClientData(group)
                     else ""
                 )  # Get Device Group ID
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    group=groupToUse,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-                if len(api_response.results):
-                    iterateThroughDeviceList(frame, action, api_response)
+                frame.Logging("---> Calling API")
+                wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+                """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
+                frame.Logging("---> API Request Finished")
+                if len(t.result.results):
+                    iterateThroughDeviceList(frame, action, t.result)
                     frame.Logging("--- Completed ---")
                 else:
-                    frame.Logging("No devices found for group")
+                    frame.Logging("No devices found for group")"""
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
     frame.runBtn.Enable(True)
@@ -381,15 +439,13 @@ def iterateThroughAllGroups(frame, action, api_instance):
         if value != "All devices":
             continue
         try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                group=groupToUse,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            if len(api_response.results):
+            frame.Logging("---> Calling API")
+            wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+            """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
+            frame.Logging("---> API Request Finished")
+            if len(t.result.results):
                 frame.Logging("Processing Group: " + value)
-                iterateThroughDeviceList(frame, action, api_response)
+                iterateThroughDeviceList(frame, action, t.result)"""
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
     frame.Logging("---Completed Request---")

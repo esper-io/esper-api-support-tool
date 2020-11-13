@@ -5,34 +5,42 @@ import time
 import csv
 import os.path
 import logging
-import Globals
+import Common.Globals as Globals
 import ctypes
 import platform
 import json
-import wxThread
-import EnhancedStatusBar as ESB
+import Utility.wxThread as wxThread
+import GUI.EnhancedStatusBar as ESB
 
-from decorator import api_tool_decorator
+from Common.decorator import api_tool_decorator
 
-from consoleWindow import Console
+from GUI.consoleWindow import Console
 
-from deviceInfo import getSecurityPatch, getWifiStatus, getCellularStatus, getDeviceName
+from Utility.deviceInfo import (
+    getSecurityPatch,
+    getWifiStatus,
+    getCellularStatus,
+    getDeviceName,
+)
 
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+# from tkinter import Tk
+# from tkinter.filedialog import askopenfilename
 
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
-from EsperAPICalls import (
+from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
     ApplyDeviceConfig,
     setKiosk,
     setMulti,
     getdeviceapps,
+    getAllDevices,
+    getAllGroups,
+    getAllApplications
 )
 
-from CustomDialogs import CheckboxMessageBox, CommandDialog
+from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog
 
 
 class NewFrameLayout(wx.Frame):
@@ -223,6 +231,9 @@ class NewFrameLayout(wx.Frame):
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
+        self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
+        self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
+        self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
         # self.Bind(wxThread.EVT_PULSE, self.onPulse)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
@@ -238,7 +249,12 @@ class NewFrameLayout(wx.Frame):
             self.sbText, pos=0, horizontalalignment=ESB.ESB_EXACT_FIT
         )
 
-        self.gauge = wx.Gauge(self.statusBar, wx.ID_ANY, 100, style = wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH)
+        self.gauge = wx.Gauge(
+            self.statusBar,
+            wx.ID_ANY,
+            100,
+            style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH,
+        )
         self.statusBar.AddWidget(
             self.gauge, pos=1, horizontalalignment=ESB.ESB_EXACT_FIT
         )
@@ -457,11 +473,14 @@ class NewFrameLayout(wx.Frame):
 
     # Frame UI Logging
     def Logging(self, entry, isError=False):
-        if self.consoleWin:
-            self.consoleWin.Logging(entry)
-        if "error" in entry.lower():
-            isError = True
-        self.setTempStatus(entry, isError)
+        try:
+            if self.consoleWin:
+                self.consoleWin.Logging(entry)
+            if "error" in entry.lower():
+                isError = True
+            self.setTempStatus(entry, isError)
+        except:
+            pass
 
     @api_tool_decorator
     def OnOpen(self, event):
@@ -685,8 +704,8 @@ class NewFrameLayout(wx.Frame):
                 # Handle empty File
                 if maxRow == 0:
                     self.Logging(
-                            "--->ERROR: Empty Auth File, please select a proper Auth CSV file!"
-                        )
+                        "--->ERROR: Empty Auth File, please select a proper Auth CSV file!"
+                    )
                     return
 
                 for row in auth_csv_reader:
@@ -730,8 +749,11 @@ class NewFrameLayout(wx.Frame):
             self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
 
     def setCursorDefault(self):
-        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-        self.SetCursor(myCursor)
+        try:
+            myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+            self.SetCursor(myCursor)
+        except:
+            pass
 
     def setCursorBusy(self):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
@@ -789,29 +811,21 @@ class NewFrameLayout(wx.Frame):
         self.Logging("--->Attemptting to populate groups...")
         self.setCursorBusy()
         self.setGaugeValue(0)
-        api_instance = esperclient.DeviceGroupApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
         self.groupChoice.Clear()
-        try:
-            api_response = api_instance.get_all_groups(
-                Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
-            )
-            if len(api_response.results):
-                num = 1
-                for group in api_response.results:
-                    self.groupChoice.Append(group.name, group.id)
-                    self.setGaugeValue(int(num / len(api_response.results) * 100))
-                    num += 1
-                self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
-            self.runBtn.Enable(True)
-            self.run.Enable(True)
-            self.command.Enable(True)
-        except ApiException as e:
-            self.Logging(
-                "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
-            )
-            print("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
+        wxThread.doAPICallInThread(self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False)
+
+    def addGroupsToGroupChoice(self, event):
+        results = event.GetValue().results
+        num = 1
+        if len(results):
+            for group in results:
+                self.groupChoice.Append(group.name, group.id)
+                self.setGaugeValue(int(num / len(results) * 100))
+                num += 1
+            self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
+        self.runBtn.Enable(True)
+        self.run.Enable(True)
+        self.command.Enable(True)
         self.setCursorDefault()
 
     @api_tool_decorator
@@ -831,39 +845,28 @@ class NewFrameLayout(wx.Frame):
             if event and event.ClientData
             else self.groupChoice.GetClientData(event.Int)
         )
-        try:
-            api_instance = esperclient.DeviceApi(
-                esperclient.ApiClient(Globals.configuration)
-            )
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,  
-                group=clientData,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
+        wxThread.doAPICallInThread(self, getAllDevices, args=(clientData), eventType=wxThread.myEVT_DEVICE, waitForJoin=False)
 
-            if len(api_response.results):
-                self.deviceChoice.Enable(True)
-                self.deviceChoice.Append("", "")
-                num = 1
-                for device in api_response.results:
-                    name = "%s %s %s %s" % (
-                        device.hardware_info["manufacturer"],
-                        device.hardware_info["model"],
-                        device.device_name,
-                        device.software_info["androidVersion"],
-                    )
-                    self.deviceChoice.Append(name, device.id)
-                    self.setGaugeValue(int(num / len(api_response.results) * 100))
-                    num += 1
-            else:
-                self.deviceChoice.Append("No Devices Found", "")
-                self.groupChoice.SetValue("No Devices Found")
-                self.deviceChoice.Enable(False)
-                self.Logging("No Devices found in group")
-        except ApiException as e:
-            self.Logging("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+    def addDevicesToDeviceChoice(self, event):
+        api_response = event.GetValue()
+        if len(api_response.results):
+            self.deviceChoice.Enable(True)
+            self.deviceChoice.Append("", "")
+            num = 1
+            for device in api_response.results:
+                name = "%s %s %s" % (
+                    device.hardware_info["manufacturer"],
+                    device.hardware_info["model"],
+                    device.device_name,
+                )
+                self.deviceChoice.Append(name, device.id)
+                self.setGaugeValue(int(num / len(api_response.results) * 100))
+                num += 1
+        else:
+            self.deviceChoice.Append("No Devices Found", "")
+            self.groupChoice.SetValue("No Devices Found")
+            self.deviceChoice.Enable(False)
+            self.Logging("No Devices found in group")
         self.setCursorDefault()
 
     @api_tool_decorator
@@ -871,34 +874,19 @@ class NewFrameLayout(wx.Frame):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate apps...")
         self.setCursorBusy()
-        api_instance = esperclient.ApplicationApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        limit = 5000  # int | Number of results to return per page. (optional) (default to 20)
-        offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
         self.appChoice.Clear()
-        try:
-            api_response = api_instance.get_all_applications(
-                Globals.enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
-                is_hidden=False,
-            )
-            self.appChoice.Append("", "")
-            if len(api_response.results):
-                num = 1
-                for app in api_response.results:
-                    self.appChoice.Append(app.application_name, app.package_name)
-                    self.apps.append({app.application_name: app.package_name})
-                    self.setGaugeValue(int(num / len(api_response.results) * 100))
-                    num += 1
-        except ApiException as e:
-            self.Logging(
-                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
-            )
-            print(
-                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
-            )
+        wxThread.doAPICallInThread(self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False)
+
+    def addAppsToAppChoice(self, event):
+        api_response = event.GetValue()
+        self.appChoice.Append("", "")
+        if len(api_response.results):
+            num = 1
+            for app in api_response.results:
+                self.appChoice.Append(app.application_name, app.package_name)
+                self.apps.append({app.application_name: app.package_name})
+                self.setGaugeValue(int(num / len(api_response.results) * 100))
+                num += 1
         self.setCursorDefault()
 
     def createLogString(self, deviceInfo, action):
@@ -1004,10 +992,8 @@ class NewFrameLayout(wx.Frame):
             )
         elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
             # run action on device
-            if (
-                actionSelection == Globals.SET_KIOSK
-                and appSelection < 0
-                or appLabel == "No available app(s) on this device"
+            if actionSelection == Globals.SET_KIOSK and (
+                appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
                 wx.MessageBox(
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR

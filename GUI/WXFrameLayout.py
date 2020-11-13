@@ -5,14 +5,14 @@ import csv
 import os.path
 import platform
 import logging
-import Globals
+import Common.Globals as Globals
 import platform
 import ctypes
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
-from EsperAPICalls import TakeAction
+from Utility.EsperAPICalls import TakeAction
 
 
 class FrameLayout(wx.Frame):

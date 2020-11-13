@@ -1,5 +1,5 @@
 import wx
-import Globals
+import Common.Globals as Globals
 import platform
 
 
