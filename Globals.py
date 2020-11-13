@@ -13,6 +13,7 @@ offset = 0  # int | The initial index from which to return the results. (optiona
 SHOW_GRID_DIALOG = True
 MAX_THREAD_COUNT = 8
 PRINT_RESPONSES = False
+PRINT_FUNC_DURATION = False
 
 """ Actions """
 GENERAL_ACTIONS = [
@@ -74,3 +75,4 @@ app = None
 csv_tag_path = ""
 csv_tag_path_clone = ""
 csv_auth_path = ""
+GRID_DEVICE_INFO_LIST = []

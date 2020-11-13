@@ -220,7 +220,7 @@ def iterateThroughDeviceList(frame, action, api_response):
     for t in threads:
         t.join()
         done += len(splitResults[num])
-        frame.gauge.SetValue(int(done / len(api_response.results) * 100))
+        frame.setGaugeValue(int(done / len(api_response.results) * 100))
         num += 1
 
 
@@ -234,6 +234,8 @@ def processDevices(chunk, number_of_devices, action):
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
 
             deviceList[number_of_devices] = [device, deviceInfo]
+            if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
+                Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
     return action, deviceList
@@ -243,6 +245,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
     kioskMode = iskioskmode(device.id)
     deviceInfo.update({"EsperName": device.device_name})
+    deviceInfo.update(device.__dict__)
 
     if bool(device.alias_name):
         deviceInfo.update({"Alias": device.alias_name})
@@ -454,7 +457,7 @@ def modifyTags(frame):
             if device.device_name == esperName:
                 tags = setdevicetags(device.id, tagsFromGrid[esperName])
                 frame.updateTagCell(esperName, tags)
-                frame.gauge.SetValue(int(num / len(tagsFromGrid.keys()) * 100))
+                frame.setGaugeValue(int(num / len(tagsFromGrid.keys()) * 100))
                 num += 1
 
 
@@ -491,7 +494,7 @@ def modifyAlias(frame):
                         logString = logString + "(Device offline)"
                 else:
                     logString = logString + "(Name already set)"
-                frame.gauge.SetValue(int(num / len(aliasDic.keys()) * 100))
+                frame.setGaugeValue(int(num / len(aliasDic.keys()) * 100))
                 num += 1
         frame.Logging(logString)
 

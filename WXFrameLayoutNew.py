@@ -12,6 +12,8 @@ import json
 import wxThread
 import EnhancedStatusBar as ESB
 
+from decorator import api_tool_decorator
+
 from consoleWindow import Console
 
 from deviceInfo import getSecurityPatch, getWifiStatus, getCellularStatus, getDeviceName
@@ -221,6 +223,7 @@ class NewFrameLayout(wx.Frame):
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
+        # self.Bind(wxThread.EVT_PULSE, self.onPulse)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
         # self.statusBar = self.CreateStatusBar()
@@ -235,7 +238,7 @@ class NewFrameLayout(wx.Frame):
             self.sbText, pos=0, horizontalalignment=ESB.ESB_EXACT_FIT
         )
 
-        self.gauge = wx.Gauge(self.statusBar, wx.ID_ANY, 100)
+        self.gauge = wx.Gauge(self.statusBar, wx.ID_ANY, 100, style = wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH)
         self.statusBar.AddWidget(
             self.gauge, pos=1, horizontalalignment=ESB.ESB_EXACT_FIT
         )
@@ -452,18 +455,13 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def scaleBitmapImage(self, width, height, path):
-        image = wx.Bitmap(path).ConvertToImage()
-        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-        result = wx.Bitmap(image)
-        return result
-
     # Frame UI Logging
     def Logging(self, entry, isError=False):
         if self.consoleWin:
             self.consoleWin.Logging(entry)
         self.setTempStatus(entry, isError)
 
+    @api_tool_decorator
     def OnOpen(self, event):
         # otherwise ask the user what new file to open
         with wx.FileDialog(
@@ -481,6 +479,7 @@ class NewFrameLayout(wx.Frame):
             print(Globals.csv_auth_path)
             self.PopulateConfig()
 
+    @api_tool_decorator
     def OnQuit(self, e):
         if self.consoleWin:
             self.consoleWin.Close()
@@ -490,6 +489,7 @@ class NewFrameLayout(wx.Frame):
             self.Close()
         self.Destroy()
 
+    @api_tool_decorator
     def askForAuthCSV():
         # Windows, Standalone executable will allow user to select CSV
         if "Windows" in platform.system():
@@ -510,6 +510,7 @@ class NewFrameLayout(wx.Frame):
             filename = os.path.dirname(currentpath) + os.path.sep + Globals.CONFIGFILE
             Globals.csv_auth_path = filename
 
+    @api_tool_decorator
     def onSave(self, event):
         """Sends Device Info To Frame For Logging"""
         if self.grid_1.GetNumberRows() > 0:
@@ -533,6 +534,7 @@ class NewFrameLayout(wx.Frame):
             ):  # Either the cancel button was pressed or the window was closed
                 return False
 
+    @api_tool_decorator
     def onSaveAs(self, event):
         if self.grid_2.GetNumberRows() > 0:
             dlg = wx.FileDialog(
@@ -582,6 +584,7 @@ class NewFrameLayout(wx.Frame):
             with open(Globals.csv_tag_path_clone, "w"):
                 pass
 
+    @api_tool_decorator
     def onUploadCSV(self, event):
         if not Globals.enterprise_id:
             self.loadConfigPrompt()
@@ -589,7 +592,7 @@ class NewFrameLayout(wx.Frame):
 
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         with wx.FileDialog(
             self,
             "Open Device CSV File",
@@ -614,7 +617,7 @@ class NewFrameLayout(wx.Frame):
                     len_reader = len(data)
                     rowCount = 1
                     for row in data:
-                        self.gauge.SetValue(int((rowCount) / len_reader * 100))
+                        self.setGaugeValue(int((rowCount) / len_reader * 100))
                         rowCount += 1
                         if not all("" == val or val.isspace() for val in row):
                             if num == 0:
@@ -657,6 +660,7 @@ class NewFrameLayout(wx.Frame):
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
 
+    @api_tool_decorator
     def PopulateConfig(self):
         """Populates Configuration From CSV"""
         self.Logging("--->Loading Configurations from %s" % Globals.csv_auth_path)
@@ -669,7 +673,7 @@ class NewFrameLayout(wx.Frame):
                 pass
         self.configMenuOptions = []
 
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         if os.path.isfile(configfile):
             with open(configfile, newline="") as csvfile:
                 auth_csv_reader = csv.DictReader(csvfile)
@@ -677,7 +681,7 @@ class NewFrameLayout(wx.Frame):
                 maxRow = len(auth_csv_reader)
                 num = 1
                 for row in auth_csv_reader:
-                    self.gauge.SetValue(int((num) / maxRow * 100))
+                    self.setGaugeValue(int(num / maxRow * 100))
                     num += 1
                     if "name" in row:
                         self.configChoice[row["name"]] = row
@@ -724,6 +728,7 @@ class NewFrameLayout(wx.Frame):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
 
+    @api_tool_decorator
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
@@ -769,11 +774,12 @@ class NewFrameLayout(wx.Frame):
             menuItem.Check(False)
         self.setCursorDefault()
 
+    @api_tool_decorator
     def PopulateGroups(self):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate groups...")
         self.setCursorBusy()
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         api_instance = esperclient.DeviceGroupApi(
             esperclient.ApiClient(Globals.configuration)
         )
@@ -786,7 +792,7 @@ class NewFrameLayout(wx.Frame):
                 num = 1
                 for group in api_response.results:
                     self.groupChoice.Append(group.name, group.id)
-                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    self.setGaugeValue(int(num / len(api_response.results) * 100))
                     num += 1
                 self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
             self.runBtn.Enable(True)
@@ -799,13 +805,14 @@ class NewFrameLayout(wx.Frame):
             print("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
         self.setCursorDefault()
 
+    @api_tool_decorator
     def PopulateDevices(self, event):
         self.Logging(
             "--->Attemptting to populate devices of selected group (%s)..."
             % event.String
         )
         self.setCursorBusy()
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         self.deviceChoice.Clear()
         self.appChoice.Clear()
         for app in self.apps:
@@ -820,7 +827,7 @@ class NewFrameLayout(wx.Frame):
                 esperclient.ApiClient(Globals.configuration)
             )
             api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
+                Globals.enterprise_id,  
                 group=clientData,
                 limit=Globals.limit,
                 offset=Globals.offset,
@@ -838,7 +845,7 @@ class NewFrameLayout(wx.Frame):
                         device.software_info["androidVersion"],
                     )
                     self.deviceChoice.Append(name, device.id)
-                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    self.setGaugeValue(int(num / len(api_response.results) * 100))
                     num += 1
             else:
                 self.deviceChoice.Append("No Devices Found", "")
@@ -850,6 +857,7 @@ class NewFrameLayout(wx.Frame):
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
         self.setCursorDefault()
 
+    @api_tool_decorator
     def PopulateApps(self):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate apps...")
@@ -873,7 +881,7 @@ class NewFrameLayout(wx.Frame):
                 for app in api_response.results:
                     self.appChoice.Append(app.application_name, app.package_name)
                     self.apps.append({app.application_name: app.package_name})
-                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    self.setGaugeValue(int(num / len(api_response.results) * 100))
                     num += 1
         except ApiException as e:
             self.Logging(
@@ -927,6 +935,7 @@ class NewFrameLayout(wx.Frame):
         )
         return logString
 
+    @api_tool_decorator
     def onRun(self, event):
         self.setCursorBusy()
 
@@ -964,7 +973,7 @@ class NewFrameLayout(wx.Frame):
             and self.actionChoice.Items[actionSelection]
             else ""
         )
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         if (
             groupSelection >= 0
             and deviceSelection <= 0
@@ -1054,6 +1063,7 @@ class NewFrameLayout(wx.Frame):
         else:
             Globals.app.SafeYield(None, True)
 
+    @api_tool_decorator
     def fillDeviceGridHeaders(self):
         num = 0
         headerLabels = Globals.CSV_TAG_ATTR_NAME.keys()
@@ -1065,6 +1075,7 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.grid_1.AutoSizeColumns()
 
+    @api_tool_decorator
     def fillNetworkGridHeaders(self):
         num = 0
         headerLabels = Globals.CSV_NETWORK_ATTR_NAME
@@ -1076,6 +1087,7 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.grid_2.AutoSizeColumns()
 
+    @api_tool_decorator
     def emptyDeviceGrid(self):
         self.grid_1.ClearGrid()
         if self.grid_1.GetNumberRows() > 0:
@@ -1084,6 +1096,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_1.SetScrollLineY(15)
         self.fillDeviceGridHeaders()
 
+    @api_tool_decorator
     def emptyNetworkGrid(self):
         self.grid_2.ClearGrid()
         if self.grid_2.GetNumberRows() > 0:
@@ -1092,6 +1105,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_2.SetScrollLineY(15)
         self.fillNetworkGridHeaders()
 
+    @api_tool_decorator
     def addDeviceToDeviceGrid(self, device_info):
         num = 0
         self.grid_1.AppendRows(1)
@@ -1115,6 +1129,7 @@ class NewFrameLayout(wx.Frame):
         if device not in self.grid_1_contents:
             self.grid_1_contents.append(device)
 
+    @api_tool_decorator
     def addDeviceToNetworkGrid(self, device, deviceInfo):
         networkInfo = {}
         networkInfo["Security Patch"] = getSecurityPatch(device)
@@ -1168,6 +1183,7 @@ class NewFrameLayout(wx.Frame):
     def loadConfigPrompt(self):
         wx.MessageBox("Please load a configuration first!", style=wx.OK | wx.ICON_ERROR)
 
+    @api_tool_decorator
     def getDeviceTagsFromGrid(self):
         tagList = {}
         for rowNum in range(self.grid_1.GetNumberRows()):
@@ -1184,6 +1200,7 @@ class NewFrameLayout(wx.Frame):
                 tagList[esperName] = properTagList
         return tagList
 
+    @api_tool_decorator
     def getDeviceAliasFromGrid(self):
         aliasList = {}
         for rowNum in range(self.grid_1.GetNumberRows()):
@@ -1213,6 +1230,7 @@ class NewFrameLayout(wx.Frame):
     def onCellChange(self, event):
         self.grid_1.AutoSizeColumns()
 
+    @api_tool_decorator
     def updateTagCell(self, name, tags):
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
@@ -1241,9 +1259,10 @@ class NewFrameLayout(wx.Frame):
     def onHelp(self, event):
         return
 
+    @api_tool_decorator
     def onCommand(self, event):
         self.setCursorBusy()
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         try:
             groupSelection = self.groupChoice.GetSelection()
             if groupSelection >= 0:
@@ -1252,9 +1271,9 @@ class NewFrameLayout(wx.Frame):
                     if result == wx.ID_OK:
                         cmd = json.loads(cmdDialog.GetValue())
                         if cmd:
-                            self.gauge.SetValue(50)
+                            self.setGaugeValue(50)
                             result = ApplyDeviceConfig(self, cmd)
-                            self.gauge.SetValue(100)
+                            self.setGaugeValue(100)
                             if hasattr(result, "state"):
                                 wx.MessageBox(result.state, style=wx.OK)
             else:
@@ -1327,6 +1346,7 @@ class NewFrameLayout(wx.Frame):
         if text and text != "\x00":
             self.statusBar.PopStatusText()
 
+    @api_tool_decorator
     def onDeviceGridSort(self, event):
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
@@ -1340,14 +1360,15 @@ class NewFrameLayout(wx.Frame):
             self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
         )
         self.Logging("Sorting Device Grid on Column: %s" % keyName)
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         self.emptyDeviceGrid()
         num = 1
         for device in self.grid_1_contents:
             self.addDeviceToDeviceGrid(device)
-            self.gauge.SetValue(int(num / len(self.grid_1_contents) * 100))
+            self.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
             num += 1
 
+    @api_tool_decorator
     def onNetworkGridSort(self, event):
         col = event.Col
         keyName = Globals.CSV_NETWORK_ATTR_NAME[col]
@@ -1361,12 +1382,12 @@ class NewFrameLayout(wx.Frame):
             self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
         )
         self.Logging("Sorting Network Grid on Column: %s" % keyName)
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         self.emptyNetworkGrid()
         num = 1
         for info in self.grid_2_contents:
             self.addToNetworkGrid(info)
-            self.gauge.SetValue(int(num / len(self.grid_2_contents) * 100))
+            self.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
 
     def toogleViewMenuItem(self, event):
@@ -1375,13 +1396,14 @@ class NewFrameLayout(wx.Frame):
         """
         return
 
+    @api_tool_decorator
     def onUpdate(self, event):
         evtValue = event.GetValue()
         action = evtValue[0]
         deviceList = evtValue[1]
         for entry in deviceList.values():
             curProgress = self.gauge.GetValue() + 1
-            self.gauge.SetValue(curProgress)
+            self.setGaugeValue(curProgress)
             device = entry[0]
             deviceInfo = entry[1]
             if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
@@ -1392,9 +1414,10 @@ class NewFrameLayout(wx.Frame):
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
 
+    @api_tool_decorator
     def onDeviceSelection(self, event):
         self.appChoice.Clear()
-        self.gauge.SetValue(0)
+        self.setGaugeValue(0)
         num = 1
         if self.deviceChoice.GetSelection() > 0:
             deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
@@ -1408,14 +1431,14 @@ class NewFrameLayout(wx.Frame):
                 d = [k for k in self.apps if app_name in k]
                 d = d[0]
                 self.appChoice.Append(app_name, d[app_name])
-                self.gauge.SetValue(int(num / len(appList) * 100))
+                self.setGaugeValue(int(num / len(appList) * 100))
                 num += 1
         else:
             for app in self.apps:
                 self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
-                self.gauge.SetValue(int(num / len(self.apps) * 100))
+                self.setGaugeValue(int(num / len(self.apps) * 100))
                 num += 1
-        self.gauge.SetValue(100)
+        self.setGaugeValue(100)
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""
@@ -1431,3 +1454,16 @@ class NewFrameLayout(wx.Frame):
 
     def MacPrintFile(self, file_path):
         pass
+
+    # UNUSED
+    def onPulse(self, event):
+        self.gauge.Pulse()
+
+    def setGaugeValue(self, value):
+        maxValue = self.gauge.GetRange()
+        if value > maxValue:
+            value = maxValue
+        if value < 0:
+            value = 0
+        if value >= 0 and value <= maxValue:
+            self.gauge.SetValue(value)
