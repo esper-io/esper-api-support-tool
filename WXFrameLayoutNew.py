@@ -459,6 +459,8 @@ class NewFrameLayout(wx.Frame):
     def Logging(self, entry, isError=False):
         if self.consoleWin:
             self.consoleWin.Logging(entry)
+        if "error" in entry.lower():
+            isError = True
         self.setTempStatus(entry, isError)
 
     @api_tool_decorator
@@ -476,7 +478,6 @@ class NewFrameLayout(wx.Frame):
 
             # Proceed loading the file chosen by the user
             Globals.csv_auth_path = fileDialog.GetPath()
-            print(Globals.csv_auth_path)
             self.PopulateConfig()
 
     @api_tool_decorator
@@ -680,6 +681,14 @@ class NewFrameLayout(wx.Frame):
                 auth_csv_reader = list(auth_csv_reader)
                 maxRow = len(auth_csv_reader)
                 num = 1
+
+                # Handle empty File
+                if maxRow == 0:
+                    self.Logging(
+                            "--->ERROR: Empty Auth File, please select a proper Auth CSV file!"
+                        )
+                    return
+
                 for row in auth_csv_reader:
                     self.setGaugeValue(int(num / maxRow * 100))
                     num += 1
