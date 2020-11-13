@@ -19,8 +19,6 @@ from esperclient.rest import ApiException
 from esperclient.models.command_args import CommandArgs
 from esperclient.models.v0_command_args import V0CommandArgs
 
-from threading import Thread
-
 ####Esper API Requests####
 def getInfo(request_extension, deviceid):
     """Sends Request For Device Info JSON"""
@@ -38,11 +36,12 @@ def getInfo(request_extension, deviceid):
     )
     resp = requests.get(url, headers=headers)
     json_resp = resp.json()
-    print(
-        "Response {result}".format(
-            result=json.dumps(json_resp, indent=4, sort_keys=True)
+    if Globals.PRINT_RESPONSES:
+        print(
+            "Response {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
         )
-    )
     return json_resp
 
 
@@ -207,7 +206,7 @@ def iterateThroughDeviceList(frame, action, api_response):
     ]
 
     threads = []
-    frame.buttonYieldEvent()
+    # frame.buttonYieldEvent()
     for chunk in splitResults:
         t = wxThread.GUIThread(
             frame, processDevices, args=(chunk, number_of_devices, action)
@@ -216,8 +215,13 @@ def iterateThroughDeviceList(frame, action, api_response):
         t.start()
         number_of_devices += len(chunk)
 
+    num = 0
+    done = 0
     for t in threads:
         t.join()
+        done += len(splitResults[num])
+        frame.gauge.SetValue(int(done / len(api_response.results) * 100))
+        num += 1
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -322,6 +326,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
         frame.emptyDeviceGrid()
         frame.emptyNetworkGrid()
 
+    frame.runBtn.Enable(False)
     if isDevice:
         deviceToUse = (
             frame.deviceChoice.GetClientData(group)
@@ -364,6 +369,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     frame.Logging("No devices found for group")
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+    frame.runBtn.Enable(True)
 
 
 def iterateThroughAllGroups(frame, action, api_instance):
@@ -442,11 +448,14 @@ def modifyTags(frame):
         print(e)
 
     tagsFromGrid = frame.getDeviceTagsFromGrid()
+    num = 1
     for device in api_response.results:
         for esperName in tagsFromGrid.keys():
             if device.device_name == esperName:
                 tags = setdevicetags(device.id, tagsFromGrid[esperName])
                 frame.updateTagCell(esperName, tags)
+                frame.gauge.SetValue(int(num / len(tagsFromGrid.keys()) * 100))
+                num += 1
 
 
 def modifyAlias(frame):
@@ -482,6 +491,8 @@ def modifyAlias(frame):
                         logString = logString + "(Device offline)"
                 else:
                     logString = logString + "(Name already set)"
+                frame.gauge.SetValue(int(num / len(aliasDic.keys()) * 100))
+                num += 1
         frame.Logging(logString)
 
 

@@ -10,6 +10,7 @@ import ctypes
 import platform
 import json
 import wxThread
+import EnhancedStatusBar as ESB
 
 from consoleWindow import Console
 
@@ -26,6 +27,7 @@ from EsperAPICalls import (
     ApplyDeviceConfig,
     setKiosk,
     setMulti,
+    getdeviceapps,
 )
 
 from CustomDialogs import CheckboxMessageBox, CommandDialog
@@ -39,12 +41,12 @@ class NewFrameLayout(wx.Frame):
             self.WINDOWS = True
         else:
             self.WINDOWS = False
-        self.auth_csv_reader = None
         self.configChoice = {}
         self.consoleWin = None
         self.grid_1_contents = []
         self.grid_2_contents = []
         self.apps = []
+        self.progress = 0
 
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
@@ -219,12 +221,28 @@ class NewFrameLayout(wx.Frame):
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
+        self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
-        self.statusBar = self.CreateStatusBar()
+        # self.statusBar = self.CreateStatusBar()
+        # self.statusBar.SetStatusText("")
+        self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
+        self.statusBar.SetFieldsCount(2)
+        self.SetStatusBar(self.statusBar)
         self.statusBar.SetStatusText("")
+
+        self.sbText = wx.StaticText(self.statusBar, wx.ID_ANY, "")
+        self.statusBar.AddWidget(
+            self.sbText, pos=0, horizontalalignment=ESB.ESB_EXACT_FIT
+        )
+
+        self.gauge = wx.Gauge(self.statusBar, wx.ID_ANY, 100)
+        self.statusBar.AddWidget(
+            self.gauge, pos=1, horizontalalignment=ESB.ESB_EXACT_FIT
+        )
 
         self.__set_properties()
         self.__do_layout()
+        self.Raise()
         # end wxGlade
 
     def __set_properties(self):
@@ -441,10 +459,10 @@ class NewFrameLayout(wx.Frame):
         return result
 
     # Frame UI Logging
-    def Logging(self, entry):
+    def Logging(self, entry, isError=False):
         if self.consoleWin:
             self.consoleWin.Logging(entry)
-        self.setTempStatus(entry)
+        self.setTempStatus(entry, isError)
 
     def OnOpen(self, event):
         # otherwise ask the user what new file to open
@@ -492,7 +510,7 @@ class NewFrameLayout(wx.Frame):
             filename = os.path.dirname(currentpath) + os.path.sep + Globals.CONFIGFILE
             Globals.csv_auth_path = filename
 
-    def onSave(self, event=None):
+    def onSave(self, event):
         """Sends Device Info To Frame For Logging"""
         if self.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
@@ -564,13 +582,14 @@ class NewFrameLayout(wx.Frame):
             with open(Globals.csv_tag_path_clone, "w"):
                 pass
 
-    def onUploadCSV(self, event=None):
+    def onUploadCSV(self, event):
         if not Globals.enterprise_id:
             self.loadConfigPrompt()
             return
 
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
+        self.gauge.SetValue(0)
         with wx.FileDialog(
             self,
             "Open Device CSV File",
@@ -591,7 +610,12 @@ class NewFrameLayout(wx.Frame):
                     )
                     header = None
                     grid_headers = list(Globals.CSV_TAG_ATTR_NAME.keys())
-                    for row in reader:
+                    data = list(reader)
+                    len_reader = len(data)
+                    rowCount = 1
+                    for row in data:
+                        self.gauge.SetValue(int((rowCount) / len_reader * 100))
+                        rowCount += 1
                         if not all("" == val or val.isspace() for val in row):
                             if num == 0:
                                 header = row
@@ -645,11 +669,16 @@ class NewFrameLayout(wx.Frame):
                 pass
         self.configMenuOptions = []
 
+        self.gauge.SetValue(0)
         if os.path.isfile(configfile):
             with open(configfile, newline="") as csvfile:
-                self.auth_csv_reader = csv.DictReader(csvfile)
-                num = 0
-                for row in self.auth_csv_reader:
+                auth_csv_reader = csv.DictReader(csvfile)
+                auth_csv_reader = list(auth_csv_reader)
+                maxRow = len(auth_csv_reader)
+                num = 1
+                for row in auth_csv_reader:
+                    self.gauge.SetValue(int((num) / maxRow * 100))
+                    num += 1
                     if "name" in row:
                         self.configChoice[row["name"]] = row
                         item = self.configMenu.Append(
@@ -686,9 +715,6 @@ class NewFrameLayout(wx.Frame):
             )
             self.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
-
-    def LoadTagsAndAliases(self):
-        return
 
     def setCursorDefault(self):
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
@@ -747,6 +773,7 @@ class NewFrameLayout(wx.Frame):
         """create an instance of the API class"""
         self.Logging("--->Attemptting to populate groups...")
         self.setCursorBusy()
+        self.gauge.SetValue(0)
         api_instance = esperclient.DeviceGroupApi(
             esperclient.ApiClient(Globals.configuration)
         )
@@ -756,14 +783,15 @@ class NewFrameLayout(wx.Frame):
                 Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
             )
             if len(api_response.results):
+                num = 1
                 for group in api_response.results:
                     self.groupChoice.Append(group.name, group.id)
-                self.groupChoice.SetValue("<Select Group>")
+                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    num += 1
                 self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
             self.runBtn.Enable(True)
             self.run.Enable(True)
             self.command.Enable(True)
-            self.groupChoice.SetSelection(0)
         except ApiException as e:
             self.Logging(
                 "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
@@ -771,14 +799,22 @@ class NewFrameLayout(wx.Frame):
             print("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
         self.setCursorDefault()
 
-    def PopulateDevices(self, event=None):
+    def PopulateDevices(self, event):
         self.Logging(
             "--->Attemptting to populate devices of selected group (%s)..."
             % event.String
         )
         self.setCursorBusy()
+        self.gauge.SetValue(0)
         self.deviceChoice.Clear()
-        clientData = event.ClientData if event.ClientData else self.groupChoice.GetClientData(event.Int)
+        self.appChoice.Clear()
+        for app in self.apps:
+            self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
+        clientData = (
+            event.ClientData
+            if event and event.ClientData
+            else self.groupChoice.GetClientData(event.Int)
+        )
         try:
             api_instance = esperclient.DeviceApi(
                 esperclient.ApiClient(Globals.configuration)
@@ -793,6 +829,7 @@ class NewFrameLayout(wx.Frame):
             if len(api_response.results):
                 self.deviceChoice.Enable(True)
                 self.deviceChoice.Append("", "")
+                num = 1
                 for device in api_response.results:
                     name = "%s %s %s %s" % (
                         device.hardware_info["manufacturer"],
@@ -801,6 +838,8 @@ class NewFrameLayout(wx.Frame):
                         device.software_info["androidVersion"],
                     )
                     self.deviceChoice.Append(name, device.id)
+                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    num += 1
             else:
                 self.deviceChoice.Append("No Devices Found", "")
                 self.groupChoice.SetValue("No Devices Found")
@@ -828,11 +867,14 @@ class NewFrameLayout(wx.Frame):
                 offset=Globals.offset,
                 is_hidden=False,
             )
+            self.appChoice.Append("", "")
             if len(api_response.results):
+                num = 1
                 for app in api_response.results:
                     self.appChoice.Append(app.application_name, app.package_name)
-                    #self.
-                self.appChoice.SetValue("<Select App>")
+                    self.apps.append({app.application_name: app.package_name})
+                    self.gauge.SetValue(int(num / len(api_response.results) * 100))
+                    num += 1
         except ApiException as e:
             self.Logging(
                 "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
@@ -853,8 +895,6 @@ class NewFrameLayout(wx.Frame):
         appString = str(deviceInfo["Apps"]).replace(",", "")
         if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
             logString = (
-                # "{:>4}".format(str(deviceInfo["num"]))
-                # + ","
                 deviceInfo["EsperName"]
                 + ","
                 + deviceInfo["Alias"]
@@ -887,7 +927,7 @@ class NewFrameLayout(wx.Frame):
         )
         return logString
 
-    def onRun(self, event=None):
+    def onRun(self, event):
         self.setCursorBusy()
 
         groupSelection = self.groupChoice.GetSelection()
@@ -924,7 +964,7 @@ class NewFrameLayout(wx.Frame):
             and self.actionChoice.Items[actionSelection]
             else ""
         )
-
+        self.gauge.SetValue(0)
         if (
             groupSelection >= 0
             and deviceSelection <= 0
@@ -934,7 +974,7 @@ class NewFrameLayout(wx.Frame):
             # run action on group
             if actionSelection == Globals.SET_KIOSK and appSelection < 0:
                 wx.MessageBox(
-                    "Please select an Application", style=wx.OK | wx.ICON_ERROR
+                    "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 return
             self.Logging(
@@ -946,9 +986,13 @@ class NewFrameLayout(wx.Frame):
             )
         elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
             # run action on device
-            if actionSelection == Globals.SET_KIOSK and appSelection < 0:
+            if (
+                actionSelection == Globals.SET_KIOSK
+                and appSelection < 0
+                or appLabel == "No available app(s) on this device"
+            ):
                 wx.MessageBox(
-                    "Please select an Application", style=wx.OK | wx.ICON_ERROR
+                    "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 return
             self.Logging(
@@ -986,7 +1030,7 @@ class NewFrameLayout(wx.Frame):
 
         self.setCursorDefault()
 
-    def runActionOnGroup(self, event=None, groupLabel=None, group=None, action=None):
+    def runActionOnGroup(self, groupLabel=None, group=None, action=None):
         TakeAction(
             self,
             group,
@@ -994,7 +1038,7 @@ class NewFrameLayout(wx.Frame):
             groupLabel,
         )
 
-    def runActionOnDevice(self, event=None, deviceLabel=None, device=None, action=None):
+    def runActionOnDevice(self, deviceLabel=None, device=None, action=None):
         TakeAction(
             self,
             device,
@@ -1166,7 +1210,7 @@ class NewFrameLayout(wx.Frame):
                 self.appChoice.SetSelection(-1)
                 self.appChoice.Enable(False)
 
-    def onCellChange(self, event=None):
+    def onCellChange(self, event):
         self.grid_1.AutoSizeColumns()
 
     def updateTagCell(self, name, tags):
@@ -1187,15 +1231,16 @@ class NewFrameLayout(wx.Frame):
             self.consoleWin = None
             self.clearConsole.Enable(False)
 
-    def onClear(self, event=None):
+    def onClear(self, event):
         if self.consoleWin:
             self.consoleWin.onClear()
 
-    def onHelp(self, event=None):
+    def onHelp(self, event):
         return
 
     def onCommand(self, event):
         self.setCursorBusy()
+        self.gauge.SetValue(0)
         try:
             groupSelection = self.groupChoice.GetSelection()
             if groupSelection >= 0:
@@ -1204,7 +1249,9 @@ class NewFrameLayout(wx.Frame):
                     if result == wx.ID_OK:
                         cmd = json.loads(cmdDialog.GetValue())
                         if cmd:
+                            self.gauge.SetValue(50)
                             result = ApplyDeviceConfig(self, cmd)
+                            self.gauge.SetValue(100)
                             if hasattr(result, "state"):
                                 wx.MessageBox(result.state, style=wx.OK)
             else:
@@ -1263,9 +1310,14 @@ class NewFrameLayout(wx.Frame):
         else:
             return False, isGroup
 
-    def setTempStatus(self, status):
-        self.restoreStatus()
-        self.statusBar.PushStatusText(status)
+    def setTempStatus(self, status, isError=False):
+        # self.restoreStatus()
+        # self.statusBar.PushStatusText(status)
+        self.sbText.SetLabel(status)
+        if isError:
+            self.sbText.SetForegroundColour(wx.Colour(255, 0, 0))
+        else:
+            self.sbText.SetForegroundColour(wx.Colour(0, 0, 0))
 
     def restoreStatus(self):
         text = self.statusBar.GetStatusText()
@@ -1285,9 +1337,13 @@ class NewFrameLayout(wx.Frame):
             self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
         )
         self.Logging("Sorting Device Grid on Column: %s" % keyName)
+        self.gauge.SetValue(0)
         self.emptyDeviceGrid()
+        num = 1
         for device in self.grid_1_contents:
             self.addDeviceToDeviceGrid(device)
+            self.gauge.SetValue(int(num / len(self.grid_1_contents) * 100))
+            num += 1
 
     def onNetworkGridSort(self, event):
         col = event.Col
@@ -1302,9 +1358,13 @@ class NewFrameLayout(wx.Frame):
             self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
         )
         self.Logging("Sorting Network Grid on Column: %s" % keyName)
+        self.gauge.SetValue(0)
         self.emptyNetworkGrid()
+        num = 1
         for info in self.grid_2_contents:
             self.addToNetworkGrid(info)
+            self.gauge.SetValue(int(num / len(self.grid_2_contents) * 100))
+            num += 1
 
     def toogleViewMenuItem(self, event):
         """
@@ -1327,5 +1387,42 @@ class NewFrameLayout(wx.Frame):
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
 
-    def onDeviceSelection(self):
+    def onDeviceSelection(self, event):
+        self.appChoice.Clear()
+        self.gauge.SetValue(0)
+        num = 1
+        if self.deviceChoice.GetSelection() > 0:
+            deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
+
+            appList = getdeviceapps(deviceId)
+            if len(appList) == 0:
+                self.appChoice.Append("No available app(s) on this device")
+                self.appChoice.SetSelection(0)
+            for app in appList:
+                app_name = app.split(" v")[0]
+                d = [k for k in self.apps if app_name in k]
+                d = d[0]
+                self.appChoice.Append(app_name, d[app_name])
+                self.gauge.SetValue(int(num / len(appList) * 100))
+                num += 1
+        else:
+            for app in self.apps:
+                self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
+                self.gauge.SetValue(int(num / len(self.apps) * 100))
+                num += 1
+        self.gauge.SetValue(100)
+
+    def MacReopenApp(self, event):
+        """Called when the doc icon is clicked, and ???"""
+        if event.GetActive():
+            try:
+                self.GetTopWindow().Raise()
+            except:
+                pass
+        event.Skip()
+
+    def MacNewFile(self):
+        pass
+
+    def MacPrintFile(self, file_path):
         pass

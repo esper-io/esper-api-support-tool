@@ -11,7 +11,8 @@ NAMESTAGSFILE = "EsperGroupActionsNamesTags.csv"
 limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 SHOW_GRID_DIALOG = True
-MAX_THREAD_COUNT = 4
+MAX_THREAD_COUNT = 8
+PRINT_RESPONSES = False
 
 """ Actions """
 GENERAL_ACTIONS = [
