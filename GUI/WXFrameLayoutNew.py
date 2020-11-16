@@ -37,7 +37,7 @@ from Utility.EsperAPICalls import (
     getdeviceapps,
     getAllDevices,
     getAllGroups,
-    getAllApplications
+    getAllApplications,
 )
 
 from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog
@@ -813,7 +813,9 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.setGaugeValue(0)
         self.groupChoice.Clear()
-        wxThread.doAPICallInThread(self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False)
+        wxThread.doAPICallInThread(
+            self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
+        )
 
     def addGroupsToGroupChoice(self, event):
         results = event.GetValue().results
@@ -847,7 +849,13 @@ class NewFrameLayout(wx.Frame):
             if event and event.ClientData
             else self.groupChoice.GetClientData(event.Int)
         )
-        wxThread.doAPICallInThread(self, getAllDevices, args=(clientData), eventType=wxThread.myEVT_DEVICE, waitForJoin=False)
+        wxThread.doAPICallInThread(
+            self,
+            getAllDevices,
+            args=(clientData),
+            eventType=wxThread.myEVT_DEVICE,
+            waitForJoin=False,
+        )
 
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
@@ -878,7 +886,9 @@ class NewFrameLayout(wx.Frame):
         self.Logging("--->Attemptting to populate apps...")
         self.setCursorBusy()
         self.appChoice.Clear()
-        wxThread.doAPICallInThread(self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False)
+        wxThread.doAPICallInThread(
+            self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
+        )
 
     def addAppsToAppChoice(self, event):
         api_response = event.GetValue()
@@ -1192,7 +1202,9 @@ class NewFrameLayout(wx.Frame):
                 tags = tags.split(",")
                 properTagList = []
                 for tag in tags:
-                    processedTag = tag.strip().replace("'", "").replace("[", "").replace("]", "")
+                    processedTag = (
+                        tag.strip().replace("'", "").replace("[", "").replace("]", "")
+                    )
                     if processedTag:
                         properTagList.append(processedTag)
                 tagList[esperName] = properTagList
@@ -1235,7 +1247,7 @@ class NewFrameLayout(wx.Frame):
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
                 if name == esperName:
                     indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
-                    if not all('' == s or s.isspace() for s in tags):
+                    if not all("" == s or s.isspace() for s in tags):
                         self.grid_1.SetCellValue(rowNum, indx, str(tags))
                     else:
                         self.grid_1.SetCellValue(rowNum, indx, "")

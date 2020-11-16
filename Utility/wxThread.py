@@ -17,10 +17,25 @@ EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
 myEVT_APPS = wx.NewEventType()
 EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
 
-def doAPICallInThread(frame, func, args=None, eventType=myEVT_UPDATE,
-        callback=None, callbackArgs=None, 
-        waitForJoin=True):
-    t = GUIThread(frame, func, args=args, eventType=eventType, passArgAsTuple=True,callback=callback, callbackArgs=callbackArgs)
+
+def doAPICallInThread(
+    frame,
+    func,
+    args=None,
+    eventType=myEVT_UPDATE,
+    callback=None,
+    callbackArgs=None,
+    waitForJoin=True,
+):
+    t = GUIThread(
+        frame,
+        func,
+        args=args,
+        eventType=eventType,
+        passArgAsTuple=True,
+        callback=callback,
+        callbackArgs=callbackArgs,
+    )
     t.start()
     if waitForJoin:
         t.join()
@@ -69,8 +84,14 @@ class CustomEvent(wx.PyCommandEvent):
 
 class GUIThread(threading.Thread):
     def __init__(
-        self, parent, target, args, eventType=None, passArgAsTuple=False,
-        callback=None, callbackArgs=None
+        self,
+        parent,
+        target,
+        args,
+        eventType=None,
+        passArgAsTuple=False,
+        callback=None,
+        callbackArgs=None,
     ):
         """
         @param parent: The gui object that should recieve the value
