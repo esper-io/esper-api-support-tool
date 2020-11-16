@@ -272,7 +272,7 @@ def iterateThroughDeviceList(frame, action, api_response):
         threads = []
         for chunk in splitResults:
             t = wxThread.GUIThread(
-                frame, processDevices, args=(chunk, number_of_devices, action)
+                frame, processDevices, args=(chunk, number_of_devices, action), eventType=wxThread.myEVT_UPDATE
             )
             threads.append(t)
             t.start()
@@ -401,8 +401,8 @@ def TakeAction(frame, group, action, label, isDevice=False):
             if frame.deviceChoice.GetClientData(group)
             else ""
         )
-        frame.Logging("---> Calling API")
-        wxThread.doAPICallInThread(frame, getDeviceById, args=(deviceToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+        frame.Logging("---> Makeing API Request")
+        wxThread.doAPICallInThread(frame, getDeviceById, args=(deviceToUse), eventType=wxThread.myEVT_RESPONSE, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
         # frame.Logging("---> API Request Finished")
         # iterateThroughDeviceList(frame, action, t.result)
         # frame.Logging("--- Completed ---")
@@ -419,8 +419,8 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     if frame.groupChoice.GetClientData(group)
                     else ""
                 )  # Get Device Group ID
-                frame.Logging("---> Calling API")
-                wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+                frame.Logging("---> Makeing API Request")
+                wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=wxThread.myEVT_RESPONSE, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
                 """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
                 frame.Logging("---> API Request Finished")
                 if len(t.result.results):
@@ -439,8 +439,8 @@ def iterateThroughAllGroups(frame, action, api_instance):
         if value != "All devices":
             continue
         try:
-            frame.Logging("---> Calling API")
-            wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
+            frame.Logging("---> Makeing API Request")
+            wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=wxThread.myEVT_RESPONSE, callback=iterateThroughDeviceList, callbackArgs=(frame, action), waitForJoin=False)
             """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
             frame.Logging("---> API Request Finished")
             if len(t.result.results):

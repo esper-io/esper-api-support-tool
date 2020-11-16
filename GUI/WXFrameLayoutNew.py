@@ -234,6 +234,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
         self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
+        self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
         # self.Bind(wxThread.EVT_PULSE, self.onPulse)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
@@ -1462,3 +1463,14 @@ class NewFrameLayout(wx.Frame):
             value = 0
         if value >= 0 and value <= maxValue:
             self.gauge.SetValue(value)
+
+    def performAPIResponse(self, event):
+        self.Logging("---> API Response Returned")
+        evtValue = event.GetValue()
+        response = evtValue[0]
+        callback = evtValue[1]
+        cbArgs = evtValue[2]
+
+        if callback:
+            self.Logging("---> Attempting to Process API Response")
+            callback(*(*cbArgs, response))

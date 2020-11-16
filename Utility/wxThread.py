@@ -2,6 +2,9 @@ import Common.Globals as Globals
 import threading
 import wx
 
+myEVT_RESPONSE = wx.NewEventType()
+EVT_RESPONSE = wx.PyEventBinder(myEVT_RESPONSE, 1)
+
 myEVT_UPDATE = wx.NewEventType()
 EVT_UPDATE = wx.PyEventBinder(myEVT_UPDATE, 1)
 
@@ -15,7 +18,8 @@ myEVT_APPS = wx.NewEventType()
 EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
 
 def doAPICallInThread(frame, func, args=None, eventType=myEVT_UPDATE,
-        callback=None, callbackArgs=None, waitForJoin=True):
+        callback=None, callbackArgs=None, 
+        waitForJoin=True):
     t = GUIThread(frame, func, args=args, eventType=eventType, passArgAsTuple=True,callback=callback, callbackArgs=callbackArgs)
     t.start()
     if waitForJoin:
@@ -65,7 +69,7 @@ class CustomEvent(wx.PyCommandEvent):
 
 class GUIThread(threading.Thread):
     def __init__(
-        self, parent, target, args, eventType=myEVT_UPDATE, passArgAsTuple=False,
+        self, parent, target, args, eventType=None, passArgAsTuple=False,
         callback=None, callbackArgs=None
     ):
         """
@@ -91,8 +95,10 @@ class GUIThread(threading.Thread):
             self.result = self._target(*self._args)
         else:
             self.result = self._target(self._args)
+
+        if self._callback:
+            self.result = (self.result, self._callback, self._cbArgs)
+
         if self.eventType:
             evt = CustomEvent(self.eventType, -1, self.result)
             wx.PostEvent(self._parent, evt)
-        if self._callback:
-            self._callback(*(*self._cbArgs, self.result))
