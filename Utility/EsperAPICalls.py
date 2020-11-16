@@ -41,7 +41,7 @@ def getInfo(request_extension, deviceid):
     )
     resp = requests.get(url, headers=headers)
     json_resp = resp.json()
-    if Globals.PRINT_RESPONSES:
+    if Globals.PRINT_RESPONSES or resp.status_code > 300:
         print(
             "Response {result}".format(
                 result=json.dumps(json_resp, indent=4, sort_keys=True)
@@ -66,11 +66,12 @@ def patchInfo(request_extension, deviceid, tags):
     )
     resp = requests.patch(url, headers=headers, data=json.dumps({"tags": tags}))
     json_resp = resp.json()
-    print(
-        "Response {result}".format(
-            result=json.dumps(json_resp, indent=4, sort_keys=True)
+    if Globals.PRINT_RESPONSES or resp.status_code > 300:
+        print(
+            "Response {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
         )
-    )
     return json_resp
 
 
@@ -508,13 +509,13 @@ def modifyTags(frame):
 
     tagsFromGrid = frame.getDeviceTagsFromGrid()
     num = 1
+    
     for device in api_response.results:
-        for esperName in tagsFromGrid.keys():
-            if device.device_name == esperName:
-                tags = setdevicetags(device.id, tagsFromGrid[esperName])
-                frame.updateTagCell(esperName, tags)
-                frame.setGaugeValue(int(num / len(tagsFromGrid.keys()) * 100))
-                num += 1
+        if device.device_name in tagsFromGrid.keys():
+            tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
+            frame.updateTagCell(device.device_name, tags)
+            frame.setGaugeValue(int(num / len(tagsFromGrid.keys()) * 100))
+            num += 1
 
 
 def modifyAlias(frame):
@@ -532,26 +533,26 @@ def modifyAlias(frame):
 
     aliasDic = frame.getDeviceAliasFromGrid()
     logString = ""
+    num = 1
     for device in api_response.results:
-        logString = str(
-            "--->" + str(device.device_name) + " " + str(device.alias_name) + "--->"
-        )
-        for esperName in aliasDic.keys():
-            if device.device_name == esperName:
-                newName = aliasDic[esperName]
-                if not (newName in str(device.alias_name)):
-                    if device.status == 1:
-                        status = setdevicename(frame, device.id, newName)
-                        if "Success" in str(status):
-                            logString = logString + " <success>"
-                        else:
-                            logString = logString + " <failed>"
+        if device.device_name in aliasDic.keys():
+            newName = aliasDic[device.device_name]
+            logString = str(
+                "--->" + str(device.device_name) + " : " + str(newName) + "--->"
+            )            
+            if not (newName in str(device.alias_name)):
+                if device.status == 1:
+                    status = setdevicename(frame, device.id, newName)
+                    if "Success" in str(status):
+                        logString = logString + " <success>"
                     else:
-                        logString = logString + "(Device offline)"
+                        logString = logString + " <failed>"
                 else:
-                    logString = logString + "(Name already set)"
-                frame.setGaugeValue(int(num / len(aliasDic.keys()) * 100))
-                num += 1
+                    logString = logString + "(Device offline)"
+            else:
+                logString = logString + "(Name already set)"
+            frame.setGaugeValue(int(num / len(aliasDic.keys()) * 100))
+            num += 1
         frame.Logging(logString)
 
 

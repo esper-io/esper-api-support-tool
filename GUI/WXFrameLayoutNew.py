@@ -839,6 +839,7 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         self.deviceChoice.Clear()
         self.appChoice.Clear()
+        self.runBtn.Enable(False)
         for app in self.apps:
             self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
         clientData = (
@@ -869,6 +870,7 @@ class NewFrameLayout(wx.Frame):
             self.deviceChoice.Enable(False)
             self.Logging("No Devices found in group")
         self.setCursorDefault()
+        self.runBtn.Enable(True)
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1190,9 +1192,9 @@ class NewFrameLayout(wx.Frame):
                 tags = tags.split(",")
                 properTagList = []
                 for tag in tags:
-                    properTagList.append(
-                        tag.strip().replace("'", "").replace("[", "").replace("]", "")
-                    )
+                    processedTag = tag.strip().replace("'", "").replace("[", "").replace("]", "")
+                    if processedTag:
+                        properTagList.append(processedTag)
                 tagList[esperName] = properTagList
         return tagList
 
@@ -1233,7 +1235,7 @@ class NewFrameLayout(wx.Frame):
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
                 if name == esperName:
                     indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
-                    if len(tags) > 0:
+                    if not all('' == s or s.isspace() for s in tags):
                         self.grid_1.SetCellValue(rowNum, indx, str(tags))
                     else:
                         self.grid_1.SetCellValue(rowNum, indx, "")
