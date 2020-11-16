@@ -23,9 +23,6 @@ from Utility.deviceInfo import (
     getDeviceName,
 )
 
-# from tkinter import Tk
-# from tkinter.filedialog import askopenfilename
-
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
 from Utility.EsperAPICalls import (
@@ -58,7 +55,6 @@ class NewFrameLayout(wx.Frame):
         self.apps = []
         self.progress = 0
 
-        # begin wxGlade: MyFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.SetSize((1552, 840))
@@ -118,7 +114,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGING, self.onCellChange)
-        # self.grid_1.Bind(gridlib.EVT_GRID_COL_SORT, self.onSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -235,11 +230,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
         self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
-        # self.Bind(wxThread.EVT_PULSE, self.onPulse)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
-        # self.statusBar = self.CreateStatusBar()
-        # self.statusBar.SetStatusText("")
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
         self.statusBar.SetFieldsCount(2)
         self.SetStatusBar(self.statusBar)
@@ -263,10 +255,8 @@ class NewFrameLayout(wx.Frame):
         self.__set_properties()
         self.__do_layout()
         self.Raise()
-        # end wxGlade
 
     def __set_properties(self):
-        # begin wxGlade: MyFrame.__set_properties
         self.SetTitle(Globals.TITLE)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
 
@@ -293,10 +283,8 @@ class NewFrameLayout(wx.Frame):
         self.panel_1.SetMinSize((400, 900))
         self.panel_2.SetMinSize((2000, 800))
         self.Maximize(True)
-        # end wxGlade
 
     def __do_layout(self):
-        # begin wxGlade: MyFrame.__do_layout
         sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
         grid_sizer_2 = wx.GridSizer(2, 1, 0, 0)
         grid_sizer_8 = wx.BoxSizer(wx.VERTICAL)
@@ -470,10 +458,9 @@ class NewFrameLayout(wx.Frame):
         sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer_1)
         self.Layout()
-        # end wxGlade
 
-    # Frame UI Logging
     def Logging(self, entry, isError=False):
+        """ Frame UI Logging """
         try:
             if self.consoleWin:
                 self.consoleWin.Logging(entry)
@@ -933,8 +920,6 @@ class NewFrameLayout(wx.Frame):
             )
             return logString
         logString = (
-            # "{:>4}".format(str(deviceInfo["num"]))
-            # + ","
             "{:13.13}".format(deviceInfo["EsperName"])
             + ","
             + "{:16.16}".format(str(deviceInfo["Alias"]))
@@ -1464,10 +1449,6 @@ class NewFrameLayout(wx.Frame):
 
     def MacPrintFile(self, file_path):
         pass
-
-    # UNUSED
-    def onPulse(self, event):
-        self.gauge.Pulse()
 
     def setGaugeValue(self, value):
         maxValue = self.gauge.GetRange()

@@ -52,6 +52,5 @@ class Console(wx.Frame):
         self.loggingList.Append(entry)
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
-        # if "--->" not in entry:
-        #   Globals.LOGLIST.append(entry)
+        Globals.LOGLIST.append(entry)
         return

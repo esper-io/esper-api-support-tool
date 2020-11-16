@@ -4,8 +4,6 @@ import wx
 
 class CheckboxMessageBox(wx.Dialog):
     def __init__(self, title, caption, *args, **kwds):
-        # begin wxGlade: CheckboxMessageBox.__init__
-        # kwds["style"] = kwds.get("style", 0) |
         super(CheckboxMessageBox, self).__init__(
             None,
             wx.ID_ANY,
@@ -25,17 +23,13 @@ class CheckboxMessageBox(wx.Dialog):
 
         self.__set_properties(title)
         self.__do_layout(caption)
-        # end wxGlade
 
     def __set_properties(self, title):
-        # begin wxGlade: CheckboxMessageBox.__set_properties
         self.SetTitle(title)
         self.SetSize((400, 200))
         self.cancelBtn.SetFocus()
-        # end wxGlade
 
     def __do_layout(self, caption):
-        # begin wxGlade: CheckboxMessageBox.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -63,7 +57,6 @@ class CheckboxMessageBox(wx.Dialog):
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
-        # end wxGlade
 
     def toggleCheckbox(self, event):
         if self.checkbox_1.IsChecked():
@@ -79,9 +72,6 @@ class CheckboxMessageBox(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-
-
-# end of class CheckboxMessageBox
 
 
 class CommandDialog(wx.Dialog):
@@ -110,17 +100,13 @@ class CommandDialog(wx.Dialog):
 
         self.__set_properties(title)
         self.__do_layout()
-        # end wxGlade
 
     def __set_properties(self, title):
-        # begin wxGlade: MyDialog.__set_properties
         self.SetTitle(title)
         self.SetSize((500, 400))
         self.text_ctrl_1.SetFocus()
-        # end wxGlade
 
     def __do_layout(self):
-        # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -155,7 +141,6 @@ class CommandDialog(wx.Dialog):
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
-        # end wxGlade
 
     def GetValue(self):
         return self.text_ctrl_1.GetValue()
@@ -165,5 +150,3 @@ class CommandDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-
-    # end of class MyDialog

@@ -9,9 +9,6 @@ import platform
 import ctypes
 import Utility.wxThread as wxThread
 
-# from tkinter import Tk
-# from tkinter.filedialog import askopenfilename
-
 from Utility.deviceInfo import (
     getSecurityPatch,
     getWifiStatus,
@@ -421,9 +418,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
             callbackArgs=(frame, action),
             waitForJoin=False,
         )
-        # frame.Logging("---> API Request Finished")
-        # iterateThroughDeviceList(frame, action, t.result)
-        # frame.Logging("--- Completed ---")
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
@@ -447,13 +441,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     callbackArgs=(frame, action),
                     waitForJoin=False,
                 )
-                """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
-                frame.Logging("---> API Request Finished")
-                if len(t.result.results):
-                    iterateThroughDeviceList(frame, action, t.result)
-                    frame.Logging("--- Completed ---")
-                else:
-                    frame.Logging("No devices found for group")"""
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
     frame.runBtn.Enable(True)
