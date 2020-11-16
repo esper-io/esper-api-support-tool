@@ -264,6 +264,7 @@ class NewFrameLayout(wx.Frame):
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
+        self.SetThemeEnabled(False)
 
         self.actionChoice.SetSelection(1)
         self.gridActions.SetSelection(0)

@@ -1,6 +1,4 @@
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
 import Common.Globals as Globals
 import wx
 import ctypes
