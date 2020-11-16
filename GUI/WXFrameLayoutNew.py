@@ -56,9 +56,8 @@ class NewFrameLayout(wx.Frame):
         self.apps = []
         self.progress = 0
 
-        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
-        wx.Frame.__init__(self, *args, **kwds)
-        self.SetSize((1552, 840))
+        wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
+        self.SetSize((900, 600))
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_5 = wx.Panel(self.panel_1, wx.ID_ANY)
