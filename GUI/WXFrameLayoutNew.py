@@ -1,5 +1,6 @@
 import wx
 import wx.grid as gridlib
+import wx.adv as adv
 import esperclient
 import time
 import csv
@@ -189,15 +190,15 @@ class NewFrameLayout(wx.Frame):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console")
         )
 
-        # helpMenu = wx.Menu()
-        # helpItem = helpMenu.Append(wx.ID_HELP, "Help", "Help")
-        # self.Bind(wx.EVT_MENU, self.onHelp, helpItem)
+        helpMenu = wx.Menu()
+        about = helpMenu.Append(wx.ID_HELP, "About", "&About")
+        self.Bind(wx.EVT_MENU, self.onAbout, about)
 
         self.menubar.Append(fileMenu, "&File")
         self.menubar.Append(viewMenu, "&View")
         self.menubar.Append(self.configMenu, "&Configurations")
         self.menubar.Append(runMenu, "&Run")
-        # self.menubar.Append(helpMenu, "&Help")
+        self.menubar.Append(helpMenu, "&Help")
         self.SetMenuBar(self.menubar)
 
         self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
@@ -276,6 +277,8 @@ class NewFrameLayout(wx.Frame):
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
         self.grid_1.UseNativeColHeader()
         self.grid_2.UseNativeColHeader()
+        self.grid_1.DisableDragRowSize()
+        self.grid_2.DisableDragRowSize()
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
 
@@ -1251,8 +1254,19 @@ class NewFrameLayout(wx.Frame):
         if self.consoleWin:
             self.consoleWin.onClear()
 
-    def onHelp(self, event):
-        return
+    def onAbout(self, event):
+        info = adv.AboutDialogInfo()
+
+        info.SetIcon(wx.Icon('Images/logo.png', wx.BITMAP_TYPE_PNG))
+        info.SetName(Globals.TITLE)
+        info.SetVersion(Globals.VERSION)
+        info.SetDescription(Globals.DESCRIPTION)
+        info.SetCopyright('(C) 2020 Esper - All Rights Reserved')
+        info.SetWebSite('https://esper.io/')
+        for dev in Globals.DEVS:
+            info.AddDeveloper(dev)
+
+        adv.AboutBox(info)
 
     @api_tool_decorator
     def onCommand(self, event):

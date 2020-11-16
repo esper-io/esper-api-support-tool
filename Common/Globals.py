@@ -4,6 +4,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
+VERSION = "0.1"
 TITLE = "Esper API Tool"
 CONFIGFILE = "EsperGroupActionsConfig.csv"
 # LOGFILE = "EsperGroupActionLog"
@@ -14,6 +15,14 @@ SHOW_GRID_DIALOG = True
 MAX_THREAD_COUNT = 8
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
+
+DESCRIPTION = "Esper API Tool"
+
+DEVS = [
+    'Jonathan Featherston',
+    'James Schaefer',
+    'Chris Stirrat'
+]
 
 """ Actions """
 GENERAL_ACTIONS = [
