@@ -253,7 +253,7 @@ class NewFrameLayout(wx.Frame):
             self.gauge, pos=1, horizontalalignment=ESB.ESB_EXACT_FIT
         )
 
-        icon = wx.EmptyIcon()        
+        icon = wx.Icon()
         icon.CopyFromBitmap(wx.Bitmap('Images/icon.png', wx.BITMAP_TYPE_PNG))
         self.SetIcon(icon)
 
