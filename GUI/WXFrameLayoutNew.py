@@ -474,7 +474,7 @@ class NewFrameLayout(wx.Frame):
                 self.consoleWin.Logging(entry)
             if "error" in entry.lower():
                 isError = True
-            self.setTempStatus(entry, isError)
+            self.setStatus(entry, isError)
         except:
             pass
 
@@ -869,9 +869,8 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         else:
             self.deviceChoice.Append("No Devices Found", "")
-            self.groupChoice.SetValue("No Devices Found")
             self.deviceChoice.Enable(False)
-            self.Logging("No Devices found in group")
+            self.Logging("---> No Devices found in group")
         self.setCursorDefault()
         self.runBtn.Enable(True)
 
@@ -990,7 +989,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 return
             self.Logging(
-                'Attempting to run action, "%s", on group, %s.'
+                '---> Attempting to run action, "%s", on group, %s.'
                 % (actionLabel, groupLabel)
             )
             self.runActionOnGroup(
@@ -1006,7 +1005,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 return
             self.Logging(
-                'Attempting to run action, "%s", on device, %s.'
+                '---> Attempting to run action, "%s", on device, %s.'
                 % (actionLabel, deviceLabel)
             )
             self.runActionOnDevice(
@@ -1025,7 +1024,7 @@ class NewFrameLayout(wx.Frame):
                     if result != wx.ID_OK:
                         runAction = False
                 if runAction:
-                    self.Logging('Attempting to run grid action, "%s".' % gridLabel)
+                    self.Logging('---> Attempting to run grid action, "%s".' % gridLabel)
                     iterateThroughGridRows(self, gridSelection)
             else:
                 wx.MessageBox(
@@ -1346,19 +1345,12 @@ class NewFrameLayout(wx.Frame):
         else:
             return False, isGroup
 
-    def setTempStatus(self, status, isError=False):
-        # self.restoreStatus()
-        # self.statusBar.PushStatusText(status)
+    def setStatus(self, status, isError=False):
         self.sbText.SetLabel(status)
         if isError:
             self.sbText.SetForegroundColour(wx.Colour(255, 0, 0))
         else:
             self.sbText.SetForegroundColour(wx.Colour(0, 0, 0))
-
-    def restoreStatus(self):
-        text = self.statusBar.GetStatusText()
-        if text and text != "\x00":
-            self.statusBar.PopStatusText()
 
     @api_tool_decorator
     def onDeviceGridSort(self, event):
@@ -1373,7 +1365,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_1_contents = sorted(
             self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
         )
-        self.Logging("Sorting Device Grid on Column: %s" % keyName)
+        self.Logging("---> Sorting Device Grid on Column: %s" % keyName)
         self.setGaugeValue(0)
         self.emptyDeviceGrid()
         num = 1
@@ -1395,7 +1387,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_2_contents = sorted(
             self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
         )
-        self.Logging("Sorting Network Grid on Column: %s" % keyName)
+        self.Logging("---> Sorting Network Grid on Column: %s" % keyName)
         self.setGaugeValue(0)
         self.emptyNetworkGrid()
         num = 1

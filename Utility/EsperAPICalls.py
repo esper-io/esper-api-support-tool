@@ -293,7 +293,7 @@ def iterateThroughDeviceList(frame, action, api_response):
             frame.setGaugeValue(int(done / len(api_response.results) * 100))
             num += 1
     else:
-        frame.Logging("No devices found for group")
+        frame.Logging("---> No devices found for group")
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -462,14 +462,8 @@ def iterateThroughAllGroups(frame, action, api_instance):
                 callbackArgs=(frame, action),
                 waitForJoin=False,
             )
-            """t = wxThread.doAPICallInThread(frame, getAllDevices, args=(groupToUse), eventType=None)
-            frame.Logging("---> API Request Finished")
-            if len(t.result.results):
-                frame.Logging("Processing Group: " + value)
-                iterateThroughDeviceList(frame, action, t.result)"""
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-    frame.Logging("---Completed Request---")
 
 
 def setKiosk(frame, device, deviceInfo):
@@ -524,7 +518,7 @@ def modifyTags(frame):
             offset=Globals.offset,
         )
     except Exception as e:
-        frame.Logging("Failed to get devices ids to modify tags")
+        frame.Logging("---> ERROR: Failed to get devices ids to modify tags")
         print(e)
 
     tagsFromGrid = frame.getDeviceTagsFromGrid()
@@ -548,7 +542,7 @@ def modifyAlias(frame):
             offset=Globals.offset,
         )
     except Exception as e:
-        frame.Logging("Failed to get devices ids to modify tags")
+        frame.Logging("---> ERROR: Failed to get devices ids to modify tags")
         print(e)
 
     aliasDic = frame.getDeviceAliasFromGrid()
@@ -634,7 +628,7 @@ def waitForCommandToFinish(frame, request_id):
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        frame.Logging("Command state: %s" % str(status.state))
+        frame.Logging("---> Command state: %s" % str(status.state))
         frame.buttonYieldEvent()
         time.sleep(1)
     return status

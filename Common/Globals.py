@@ -16,7 +16,7 @@ MAX_THREAD_COUNT = 8
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 
-DESCRIPTION = "Esper API Tool"
+DESCRIPTION = "Esper API Tool makes use of Esper's APIs to programmatically control and monitor your enterprise's Android-based Dedicated Devices."
 
 DEVS = [
     'Jonathan Featherston',
