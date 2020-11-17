@@ -946,6 +946,9 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.gauge.Pulse()
 
+        self.grid_1_contents = []
+        self.grid_2_contents = []
+
         groupSelection = self.groupChoice.GetSelection()
         deviceSelection = self.deviceChoice.GetSelection()
         gridSelection = self.gridActions.GetSelection()
@@ -1021,6 +1024,7 @@ class NewFrameLayout(wx.Frame):
                 deviceSelection,
                 actionSelection,
                 deviceLabel,
+                isDevice=True
             )
         elif gridSelection > 0:
             # run grid action
