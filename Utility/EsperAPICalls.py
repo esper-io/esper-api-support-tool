@@ -18,9 +18,8 @@ from Utility.deviceInfo import (
 
 from Common.decorator import api_tool_decorator
 
-from esperclient import EnterpriseApi, ApiClient
+from esperclient import ApiClient
 from esperclient.rest import ApiException
-from esperclient.models.command_args import CommandArgs
 from esperclient.models.v0_command_args import V0CommandArgs
 
 ####Esper API Requests####

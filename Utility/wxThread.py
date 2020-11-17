@@ -45,30 +45,6 @@ def doAPICallInThread(
     return t
 
 
-def processListUsingThread(frame, listToProcess, func, args=(), eventType=myEVT_UPDATE):
-    n = int(len(listToProcess) / Globals.MAX_THREAD_COUNT)
-    if n == 0:
-        n = len(listToProcess)
-    splitResults = [
-        listToProcess[i * n : (i + 1) * n]
-        for i in range((len(listToProcess) + n - 1) // n)
-    ]
-
-    threads = []
-    for chunk in splitResults:
-        t = GUIThread(frame, func, args=tuple(chunk) + args, eventType=eventType)
-        threads.append(t)
-        t.start()
-
-    num = 0
-    done = 0
-    for t in threads:
-        t.join()
-        done += len(splitResults[num])
-        frame.setGaugeValue(int(done / len(listToProcess) * 100))
-        num += 1
-
-
 class CustomEvent(wx.PyCommandEvent):
     """Event to signal that a count value is ready"""
 

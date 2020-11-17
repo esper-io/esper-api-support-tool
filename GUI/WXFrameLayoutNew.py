@@ -24,7 +24,7 @@ from Utility.deviceInfo import (
     getDeviceName,
 )
 
-from esperclient import EnterpriseApi, ApiClient
+from esperclient import ApiClient
 from esperclient.rest import ApiException
 from Utility.EsperAPICalls import (
     TakeAction,
@@ -54,7 +54,6 @@ class NewFrameLayout(wx.Frame):
         self.grid_1_contents = []
         self.grid_2_contents = []
         self.apps = []
-        self.progress = 0
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 600))
@@ -505,7 +504,7 @@ class NewFrameLayout(wx.Frame):
             self.Close()
         self.Destroy()
 
-    @api_tool_decorator
+    """@api_tool_decorator
     def askForAuthCSV():
         # Windows, Standalone executable will allow user to select CSV
         if "Windows" in platform.system():
@@ -524,7 +523,7 @@ class NewFrameLayout(wx.Frame):
         else:
             currentpath = os.path.realpath(__file__)
             filename = os.path.dirname(currentpath) + os.path.sep + Globals.CONFIGFILE
-            Globals.csv_auth_path = filename
+            Globals.csv_auth_path = filename"""
 
     @api_tool_decorator
     def onSave(self, event):
@@ -901,8 +900,8 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.setCursorDefault()
 
-    def createLogString(self, deviceInfo, action):
-        """Prepares Raw Data For UI"""
+    """def createLogString(self, deviceInfo, action):
+        # Prepares Raw Data For UI
         logString = ""
         tagString = str(deviceInfo["Tags"])
         tagString = tagString.replace("'", "")
@@ -940,7 +939,7 @@ class NewFrameLayout(wx.Frame):
             + ","
             + "{:8.8}".format(deviceInfo["Mode"])
         )
-        return logString
+        return logString"""
 
     @api_tool_decorator
     def onRun(self, event):
@@ -998,8 +997,11 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on group, %s.'
                 % (actionLabel, groupLabel)
             )
-            self.runActionOnGroup(
-                groupLabel=groupLabel, group=groupSelection, action=actionSelection
+            TakeAction(
+                self,
+                groupSelection,
+                actionSelection,
+                groupLabel,
             )
         elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
             # run action on device
@@ -1014,8 +1016,11 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on device, %s.'
                 % (actionLabel, deviceLabel)
             )
-            self.runActionOnDevice(
-                deviceLabel=deviceLabel, device=deviceSelection, action=actionSelection
+            TakeAction(
+                self,
+                deviceSelection,
+                actionSelection,
+                deviceLabel,
             )
         elif gridSelection > 0:
             # run grid action
@@ -1044,23 +1049,6 @@ class NewFrameLayout(wx.Frame):
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
-
-    def runActionOnGroup(self, groupLabel=None, group=None, action=None):
-        TakeAction(
-            self,
-            group,
-            action,
-            groupLabel,
-        )
-
-    def runActionOnDevice(self, deviceLabel=None, device=None, action=None):
-        TakeAction(
-            self,
-            device,
-            action,
-            deviceLabel,
-            isDevice=True,
-        )
 
     def buttonYieldEvent(self):
         """Allows Button Press Action to Yield For Result"""
