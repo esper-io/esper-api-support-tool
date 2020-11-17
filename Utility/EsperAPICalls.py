@@ -292,11 +292,12 @@ def iterateThroughDeviceList(frame, action, api_response):
             waitTillThreadsFinish,
             args=tuple(threads),
             eventType=wxThread.myEVT_COMPLETE,
-            passArgAsTuple=True
+            passArgAsTuple=True,
         )
         t.start()
     else:
         frame.Logging("---> No devices found for group")
+
 
 @api_tool_decorator
 def waitTillThreadsFinish(threads):
