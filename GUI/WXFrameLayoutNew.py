@@ -813,6 +813,7 @@ class NewFrameLayout(wx.Frame):
             self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
         )
 
+    @api_tool_decorator
     def addGroupsToGroupChoice(self, event):
         results = event.GetValue().results
         num = 1
@@ -854,6 +855,7 @@ class NewFrameLayout(wx.Frame):
             waitForJoin=False,
         )
 
+    @api_tool_decorator
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
         if len(api_response.results):
@@ -886,6 +888,7 @@ class NewFrameLayout(wx.Frame):
             self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
         )
 
+    @api_tool_decorator
     def addAppsToAppChoice(self, event):
         api_response = event.GetValue()
         self.appChoice.Append("", "")
@@ -1472,6 +1475,7 @@ class NewFrameLayout(wx.Frame):
         if value >= 0 and value <= maxValue:
             self.gauge.SetValue(value)
 
+    @api_tool_decorator
     def performAPIResponse(self, event):
         self.Logging("---> API Response Returned")
         evtValue = event.GetValue()

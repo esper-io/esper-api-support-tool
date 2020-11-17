@@ -16,6 +16,8 @@ from Utility.deviceInfo import (
     getDeviceName,
 )
 
+from Common.decorator import api_tool_decorator
+
 from esperclient import EnterpriseApi, ApiClient
 from esperclient.rest import ApiException
 from esperclient.models.command_args import CommandArgs
@@ -296,7 +298,7 @@ def iterateThroughDeviceList(frame, action, api_response):
     else:
         frame.Logging("---> No devices found for group")
 
-
+@api_tool_decorator
 def waitTillThreadsFinish(threads):
     for t in threads:
         t.join()
