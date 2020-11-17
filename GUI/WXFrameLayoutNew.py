@@ -230,6 +230,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
         self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
+        self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
@@ -253,7 +254,7 @@ class NewFrameLayout(wx.Frame):
         )
 
         icon = wx.Icon()
-        icon.CopyFromBitmap(wx.Bitmap('Images/icon.png', wx.BITMAP_TYPE_PNG))
+        icon.CopyFromBitmap(wx.Bitmap("Images/icon.png", wx.BITMAP_TYPE_PNG))
         self.SetIcon(icon)
 
         self.__set_properties()
@@ -806,6 +807,7 @@ class NewFrameLayout(wx.Frame):
         self.Logging("--->Attemptting to populate groups...")
         self.setCursorBusy()
         self.setGaugeValue(0)
+        self.gauge.Pulse()
         self.groupChoice.Clear()
         wxThread.doAPICallInThread(
             self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
@@ -833,6 +835,7 @@ class NewFrameLayout(wx.Frame):
         )
         self.setCursorBusy()
         self.setGaugeValue(0)
+        self.gauge.Pulse()
         self.deviceChoice.Clear()
         self.appChoice.Clear()
         self.runBtn.Enable(False)
@@ -939,6 +942,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onRun(self, event):
         self.setCursorBusy()
+        self.gauge.Pulse()
 
         groupSelection = self.groupChoice.GetSelection()
         deviceSelection = self.deviceChoice.GetSelection()
@@ -1023,7 +1027,9 @@ class NewFrameLayout(wx.Frame):
                     if result != wx.ID_OK:
                         runAction = False
                 if runAction:
-                    self.Logging('---> Attempting to run grid action, "%s".' % gridLabel)
+                    self.Logging(
+                        '---> Attempting to run grid action, "%s".' % gridLabel
+                    )
                     iterateThroughGridRows(self, gridSelection)
             else:
                 wx.MessageBox(
@@ -1035,8 +1041,6 @@ class NewFrameLayout(wx.Frame):
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
-
-        self.setCursorDefault()
 
     def runActionOnGroup(self, groupLabel=None, group=None, action=None):
         TakeAction(
@@ -1260,12 +1264,12 @@ class NewFrameLayout(wx.Frame):
     def onAbout(self, event):
         info = adv.AboutDialogInfo()
 
-        info.SetIcon(wx.Icon('Images/logo.png', wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon("Images/logo.png", wx.BITMAP_TYPE_PNG))
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
-        info.SetCopyright('(C) 2020 Esper - All Rights Reserved')
-        info.SetWebSite('https://esper.io/')
+        info.SetCopyright("(C) 2020 Esper - All Rights Reserved")
+        info.SetWebSite("https://esper.io/")
         for dev in Globals.DEVS:
             info.AddDeveloper(dev)
 
@@ -1407,8 +1411,7 @@ class NewFrameLayout(wx.Frame):
         action = evtValue[0]
         deviceList = evtValue[1]
         for entry in deviceList.values():
-            curProgress = self.gauge.GetValue() + 1
-            self.setGaugeValue(curProgress)
+            self.gauge.Pulse()
             device = entry[0]
             deviceInfo = entry[1]
             if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
@@ -1479,3 +1482,8 @@ class NewFrameLayout(wx.Frame):
         if callback:
             self.Logging("---> Attempting to Process API Response")
             callback(*(*cbArgs, response))
+
+    def onComplete(self, event):
+        self.setCursorDefault()
+        self.setGaugeValue(100)
+        self.Logging("---> Completed Action")

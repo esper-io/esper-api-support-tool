@@ -18,11 +18,7 @@ PRINT_FUNC_DURATION = False
 
 DESCRIPTION = "Esper API Tool makes use of Esper's APIs to programmatically control and monitor your enterprise's Android-based Dedicated Devices."
 
-DEVS = [
-    'Jonathan Featherston',
-    'James Schaefer',
-    'Chris Stirrat'
-]
+DEVS = ["Jonathan Featherston", "James Schaefer", "Chris Stirrat"]
 
 """ Actions """
 GENERAL_ACTIONS = [

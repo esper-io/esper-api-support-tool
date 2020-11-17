@@ -285,15 +285,21 @@ def iterateThroughDeviceList(frame, action, api_response):
             t.start()
             number_of_devices += len(chunk)
 
-        num = 0
-        done = 0
-        for t in threads:
-            t.join()
-            done += len(splitResults[num])
-            frame.setGaugeValue(int(done / len(api_response.results) * 100))
-            num += 1
+        t = wxThread.GUIThread(
+            frame,
+            waitTillThreadsFinish,
+            args=tuple(threads),
+            eventType=wxThread.myEVT_COMPLETE,
+            passArgAsTuple=True
+        )
+        t.start()
     else:
         frame.Logging("---> No devices found for group")
+
+
+def waitTillThreadsFinish(threads):
+    for t in threads:
+        t.join()
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -408,7 +414,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
             if frame.deviceChoice.GetClientData(group)
             else ""
         )
-        frame.Logging("---> Makeing API Request")
+        frame.Logging("---> Making API Request")
         wxThread.doAPICallInThread(
             frame,
             getDeviceById,
@@ -431,7 +437,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     if frame.groupChoice.GetClientData(group)
                     else ""
                 )  # Get Device Group ID
-                frame.Logging("---> Makeing API Request")
+                frame.Logging("---> Making API Request")
                 wxThread.doAPICallInThread(
                     frame,
                     getAllDevices,
@@ -452,7 +458,7 @@ def iterateThroughAllGroups(frame, action, api_instance):
         if value != "All devices":
             continue
         try:
-            frame.Logging("---> Makeing API Request")
+            frame.Logging("---> Making API Request")
             wxThread.doAPICallInThread(
                 frame,
                 getAllDevices,
