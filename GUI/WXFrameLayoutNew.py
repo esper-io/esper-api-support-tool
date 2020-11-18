@@ -145,6 +145,15 @@ class NewFrameLayout(wx.Frame):
         )
         self.configMenuOptions.append(defaultConfigVal)
 
+        editMenu = wx.Menu()
+        self.deviceToggle = editMenu.Append(
+                wx.ID_ANY, "Enable Device Selection", "Enable Device Selection", kind=wx.ITEM_CHECK
+            )
+        self.deviceToggle.Check(True)
+        self.Bind(wx.EVT_MENU, self.toggleDeviceSelection, self.deviceToggle)
+        #pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
+        #self.pref = editMenu.Append(pref)
+
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
         self.run = runMenu.Append(runItem)
@@ -193,6 +202,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
         self.menubar.Append(fileMenu, "&File")
+        self.menubar.Append(editMenu, "&Edit")
         self.menubar.Append(viewMenu, "&View")
         self.menubar.Append(self.configMenu, "&Configurations")
         self.menubar.Append(runMenu, "&Run")
@@ -207,6 +217,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onSaveAs, fileSaveAs)
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
+        # self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         # Menu Bar end
 
         # Tool Bar
@@ -819,12 +830,15 @@ class NewFrameLayout(wx.Frame):
             "--->Attemptting to populate devices of selected group (%s)..."
             % event.String
         )
-        self.setCursorBusy()
-        self.setGaugeValue(0)
-        self.gauge.Pulse()
         self.deviceChoice.Clear()
         self.appChoice.Clear()
-        self.runBtn.Enable(False)
+        if self.deviceToggle.IsChecked():
+            self.runBtn.Enable(False)
+            self.setGaugeValue(0)
+            self.gauge.Pulse()
+            self.setCursorBusy()
+        else:
+            self.runBtn.Enable(True)
         for app in self.apps:
             self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
         clientData = (
@@ -844,7 +858,10 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
         if len(api_response.results):
-            self.deviceChoice.Enable(True)
+            if self.deviceToggle.IsChecked():
+                self.deviceChoice.Enable(True)
+            else:
+                self.deviceChoice.Enable(False)
             self.deviceChoice.Append("", "")
             num = 1
             for device in api_response.results:
@@ -1485,3 +1502,10 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.setGaugeValue(100)
         self.Logging("---> Completed Action")
+
+    def toggleDeviceSelection(self, event):
+        if event.Selection == 1:
+            self.deviceChoice.Enable(True)
+        else:
+            self.deviceChoice.SetSelection(0)
+            self.deviceChoice.Enable(False)

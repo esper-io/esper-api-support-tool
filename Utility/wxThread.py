@@ -91,6 +91,7 @@ class GUIThread(threading.Thread):
         self.result = None
         self._callback = callback
         self._cbArgs = callbackArgs
+        self.daemon = True
 
     def run(self):
         """Overrides Thread.run. Don't call this directly its called internally
