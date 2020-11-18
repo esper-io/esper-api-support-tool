@@ -1,8 +1,12 @@
 def getSecurityPatch(device):
-    patch_ver = " "
-    if "securityPatchLevel" in device.software_info:
-        if device.software_info["securityPatchLevel"] is not None:
-            patch_ver = device.software_info["securityPatchLevel"]
+    patch_ver = ""
+    if device.software_info:
+        if "securityPatchLevel" in device.software_info:
+            if device.software_info["securityPatchLevel"] is not None:
+                patch_ver = device.software_info["securityPatchLevel"]
+    else:
+        if "securityPatchLevel" in device and device["securityPatchLevel"] is not None:
+            patch_ver = device["securityPatchLevel"]
     return patch_ver
 
 

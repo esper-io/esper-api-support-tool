@@ -8,6 +8,7 @@ from traceback import print_exc
 def api_tool_decorator(func):
     def inner(*args, **kwargs):
         start = time.perf_counter()
+        result = None
         try:
             result = func(*args, **kwargs)
         except Exception as e:

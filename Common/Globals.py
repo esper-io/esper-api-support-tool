@@ -90,17 +90,17 @@ CSV_TAG_ATTR_NAME = {
     "Pinned App": "KioskApp",
     # "Bluetooth State": "bluetoothState",
 }
-CSV_NETWORK_ATTR_NAME = [
-    "Device Name",
-    "Security Patch",
-    "[WIFI ACCESS POINTS]",
-    "[Current WIFI Connection]",
-    "[Cellular Access Point]",
-    "Active Connection",
-    "Bluetooth State",
-    "Paired Devices",
-    "Connected Devices",
-]
+CSV_NETWORK_ATTR_NAME = {
+    "Device Name": "EsperName",
+    "Security Patch": "securityPatchLevel",
+    "[WIFI ACCESS POINTS]": "",
+    "[Current WIFI Connection]": "",
+    "[Cellular Access Point]": "",
+    "Active Connection": "",
+    "Bluetooth State": "bluetoothState",
+    "Paired Devices": "pairedDevices",
+    "Connected Devices": "connectedDevices",
+}
 
 """ WxPython Frame """
 frame = None

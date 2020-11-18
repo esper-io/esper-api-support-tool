@@ -171,7 +171,7 @@ class NewFrameLayout(wx.Frame):
         viewMenu = wx.Menu()
         self.viewMenuOptions = {}
         colNum = 1
-        for header in Globals.CSV_NETWORK_ATTR_NAME:
+        for header in Globals.CSV_NETWORK_ATTR_NAME.keys():
             if header == "Device Name":
                 continue
             item = viewMenu.Append(
@@ -295,7 +295,7 @@ class NewFrameLayout(wx.Frame):
         self.command.Enable(False)
         self.clearConsole.Enable(False)
 
-        self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME))
+        self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
         self.grid_1.UseNativeColHeader()
         self.grid_2.UseNativeColHeader()
@@ -566,7 +566,7 @@ class NewFrameLayout(wx.Frame):
             dlg.Destroy()
 
             if result == wx.ID_OK:  # Save button was pressed
-                self.save(inFile, self.grid_2, Globals.CSV_NETWORK_ATTR_NAME)
+                self.save(inFile, self.grid_2, Globals.CSV_NETWORK_ATTR_NAME.keys())
                 return True
             elif (
                 result == wx.ID_CANCEL
@@ -1080,7 +1080,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def fillNetworkGridHeaders(self):
         num = 0
-        headerLabels = Globals.CSV_NETWORK_ATTR_NAME
+        headerLabels = Globals.CSV_NETWORK_ATTR_NAME.keys()
         for head in headerLabels:
             if head:
                 if self.grid_2.GetNumberCols() < len(headerLabels):
@@ -1142,16 +1142,21 @@ class NewFrameLayout(wx.Frame):
         networkInfo["[Cellular Access Point]"] = cellStatus[0]
         networkInfo["Active Connection"] = cellStatus[1]
         networkInfo["Device Name"] = getDeviceName(device)
-        networkInfo["Bluetooth State"] = str(deviceInfo["bluetoothState"])
-        networkInfo["Paired Devices"] = str(deviceInfo["pairedDevices"])
-        networkInfo["Connected Devices"] = str(deviceInfo["connectedDevices"])
+
+        for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
+            if value:
+                if value in deviceInfo:
+                    networkInfo[key] = str(deviceInfo[value])
+                else:
+                    networkInfo[key] = str([])
+
         self.addToNetworkGrid(networkInfo)
 
     def addToNetworkGrid(self, networkInfo):
         num = 0
         self.grid_2.AppendRows(1)
 
-        for attribute in Globals.CSV_NETWORK_ATTR_NAME:
+        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
             isEditable = True
@@ -1395,11 +1400,12 @@ class NewFrameLayout(wx.Frame):
             self.addDeviceToDeviceGrid(device)
             self.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
             num += 1
+        self.grid_1.MakeCellVisible(0, col)
 
     @api_tool_decorator
     def onNetworkGridSort(self, event):
         col = event.Col
-        keyName = Globals.CSV_NETWORK_ATTR_NAME[col]
+        keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
 
         curSortCol = self.grid_2.GetSortingColumn()
         descending = False
@@ -1417,6 +1423,7 @@ class NewFrameLayout(wx.Frame):
             self.addToNetworkGrid(info)
             self.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
+        self.grid_2.MakeCellVisible(0, col)
 
     def toogleViewMenuItem(self, event):
         """
