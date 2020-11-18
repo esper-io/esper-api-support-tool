@@ -829,6 +829,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def PopulateDevices(self, event):
+        self.SetFocus()
         self.Logging(
             "--->Attemptting to populate devices of selected group (%s)..."
             % event.String
@@ -1271,30 +1272,35 @@ class NewFrameLayout(wx.Frame):
         adv.AboutBox(info)
 
     @api_tool_decorator
-    def onCommand(self, event):
-        self.setCursorBusy()
-        self.setGaugeValue(0)
-        try:
+    def onCommand(self, event, value="", level=0):
+        if level < Globals.MAX_RETRY:
+            self.setCursorBusy()
+            self.setGaugeValue(0)
+        
             groupSelection = self.groupChoice.GetSelection()
             if groupSelection >= 0:
-                with CommandDialog("Enter JSON Command") as cmdDialog:
+                with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
                     result = cmdDialog.ShowModal()
                     if result == wx.ID_OK:
-                        cmd = json.loads(cmdDialog.GetValue())
+                        cmd = None
+                        try:
+                            cmd = json.loads(cmdDialog.GetValue())
+                        except:
+                            wx.MessageBox(
+                                "An error occurred while process the inputted JSON object, please make sure it is formatted correctly", style=wx.OK | wx.ICON_ERROR
+                            )
+                            self.onCommand(event, cmdDialog.GetValue(), level + 1)
                         if cmd:
                             self.setGaugeValue(50)
-                            result = ApplyDeviceConfig(self, cmd)
+                            cmdResult = ApplyDeviceConfig(self, cmd)
                             self.setGaugeValue(100)
-                            if hasattr(result, "state"):
-                                wx.MessageBox(result.state, style=wx.OK)
+                            if hasattr(cmdResult, "state"):
+                                wx.MessageBox(cmdResult.state, style=wx.OK)
             else:
                 wx.MessageBox(
                     "Please select an group and or devices", style=wx.OK | wx.ICON_ERROR
                 )
-        except Exception as e:
-            print(e)
-            wx.MessageBox("EXCEPTION: \n%s" % str(e), style=wx.OK | wx.ICON_ERROR)
-        self.setCursorDefault()
+            self.setCursorDefault()
 
     def confirmCommand(self, cmd):
         deviceSelection = self.deviceChoice.GetSelection()

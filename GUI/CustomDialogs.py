@@ -75,7 +75,7 @@ class CheckboxMessageBox(wx.Dialog):
 
 
 class CommandDialog(wx.Dialog):
-    def __init__(self, title, *args, **kwds):
+    def __init__(self, title, value="", *args, **kwds):
         super(CommandDialog, self).__init__(
             None,
             wx.ID_ANY,
@@ -92,6 +92,7 @@ class CommandDialog(wx.Dialog):
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_2, wx.ID_ANY, "", style=wx.TE_MULTILINE
         )
+        self.text_ctrl_1.SetValue(value)
         self.okBtn = wx.Button(self.panel_1, wx.ID_OK, "OK")
         self.cancelBtn = wx.Button(self.panel_1, wx.ID_CANCEL, "Cancel")
 
