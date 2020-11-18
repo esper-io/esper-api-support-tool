@@ -641,37 +641,36 @@ class NewFrameLayout(wx.Frame):
                                 num += 1
                                 continue
                             self.grid_1.AppendRows(1)
-                            fileCol = 0
                             toolCol = 0
-                            for colValue in row:
-                                colName = (
-                                    header[fileCol].replace(" ", "").lower()
-                                    if len(header) > fileCol
-                                    else ""
-                                )
-                                if (
-                                    header[fileCol]
-                                    in Globals.CSV_DEPRECATED_HEADER_LABEL
-                                ):
+                            for expectedCol in Globals.CSV_TAG_ATTR_NAME.keys():
+                                fileCol = 0
+                                for colValue in row:
+                                    colName = (
+                                        header[fileCol].replace(" ", "").lower()
+                                        if len(header) > fileCol
+                                        else ""
+                                    )
+                                    if (
+                                        header[fileCol]
+                                        in Globals.CSV_DEPRECATED_HEADER_LABEL
+                                        or header[fileCol] not in Globals.CSV_TAG_ATTR_NAME.keys()
+                                    ):
+                                        fileCol += 1
+                                        continue
+                                    if colName == expectedCol.replace(" ", "").lower():
+                                        self.grid_1.SetCellValue(
+                                            self.grid_1.GetNumberRows() - 1,
+                                            toolCol,
+                                            str(colValue),
+                                        )
+                                        isEditable = True
+                                        if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
+                                            isEditable = False
+                                        self.grid_1.SetReadOnly(
+                                            self.grid_1.GetNumberRows() - 1, toolCol, isEditable
+                                        )
                                     fileCol += 1
-                                    continue
-                                gridColName = (
-                                    grid_headers[toolCol].replace(" ", "").lower()
-                                )
-                                val = str(colValue) if colName == gridColName else ""
-                                self.grid_1.SetCellValue(
-                                    self.grid_1.GetNumberRows() - 1,
-                                    toolCol,
-                                    str(colValue),
-                                )
-                                isEditable = True
-                                if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
-                                    isEditable = False
-                                self.grid_1.SetReadOnly(
-                                    self.grid_1.GetNumberRows() - 1, toolCol, isEditable
-                                )
                                 toolCol += 1
-                                fileCol += 1
                     self.grid_1.AutoSizeColumns()
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind

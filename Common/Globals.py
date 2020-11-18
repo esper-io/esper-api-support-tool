@@ -97,6 +97,7 @@ CSV_NETWORK_ATTR_NAME = {
     "[Current WIFI Connection]": "",
     "[Cellular Access Point]": "",
     "Active Connection": "",
+    "IP Address": "ipAddress",
     "Bluetooth State": "bluetoothState",
     "Paired Devices": "pairedDevices",
     "Connected Devices": "connectedDevices",
