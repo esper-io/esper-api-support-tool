@@ -88,7 +88,7 @@ class NewFrameLayout(wx.Frame):
         )
         self.panel_6 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.panel_8 = wx.Panel(self.panel_6, wx.ID_ANY)
-        self.runBtn = wx.Button(self.panel_8, wx.ID_ANY, "Run")
+        self.runBtn = wx.Button(self.panel_8, wx.ID_ANY, "Run", style=wx.EXPAND | wx.SHAPED)
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
