@@ -1125,6 +1125,8 @@ class NewFrameLayout(wx.Frame):
         networkInfo["Active Connection"] = cellStatus[1]
         networkInfo["Device Name"] = getDeviceName(device)
         networkInfo["Bluetooth State"] = str(deviceInfo["bluetoothState"])
+        networkInfo["Paired Devices"] = str(deviceInfo["pairedDevices"])
+        networkInfo["Connected Devices"] = str(deviceInfo["connectedDevices"])
         self.addToNetworkGrid(networkInfo)
 
     def addToNetworkGrid(self, networkInfo):

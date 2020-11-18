@@ -88,7 +88,7 @@ CSV_TAG_ATTR_NAME = {
     "Tags": "Tags",
     "Applications": "Apps",
     "Pinned App": "KioskApp",
-    "Bluetooth State": "bluetoothState",
+    # "Bluetooth State": "bluetoothState",
 }
 CSV_NETWORK_ATTR_NAME = [
     "Device Name",
@@ -98,6 +98,8 @@ CSV_NETWORK_ATTR_NAME = [
     "[Cellular Access Point]",
     "Active Connection",
     "Bluetooth State",
+    "Paired Devices",
+    "Connected Devices",
 ]
 
 """ WxPython Frame """

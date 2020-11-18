@@ -376,7 +376,8 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     network_info = getNetworkInfo(device.id)
 
     if resp_json and "bluetoothStats" in resp_json:
-        deviceInfo.update({"bluetoothStats": resp_json["bluetoothStats"]})
+        deviceInfo.update({"pairedDevices": resp_json["bluetoothStats"]['pairedDevices']})
+        deviceInfo.update({"connectedDevices": resp_json["bluetoothStats"]['connectedDevices']})
     if (
         resp_json
         and "deviceSettings" in resp_json
