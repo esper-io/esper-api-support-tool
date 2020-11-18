@@ -330,11 +330,24 @@ def processDevices(chunk, number_of_devices, action):
     return (action, deviceList)
 
 
+def unpackageDict(deviceInfo, deviceDict):
+    for key in deviceDict.keys():
+        if type(deviceDict[key]) is dict:
+            unpackageDict(deviceInfo, deviceDict[key])
+        else:
+            if key.startswith('_'):
+                deviceInfo[key[1:len(key)]] = deviceDict[key]
+            else:
+                deviceInfo[key] = deviceDict[key]
+    return deviceInfo
+
+
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
     kioskMode = iskioskmode(device.id)
     deviceInfo.update({"EsperName": device.device_name})
-    deviceInfo.update(device.__dict__)
+    deviceDict = device.__dict__
+    unpackageDict(deviceInfo, deviceDict)
 
     if bool(device.alias_name):
         deviceInfo.update({"Alias": device.alias_name})
@@ -374,22 +387,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
     location_info, resp_json = getLocationInfo(device.id)
     network_info = getNetworkInfo(device.id)
-
-    if resp_json and "bluetoothStats" in resp_json:
-        deviceInfo.update(
-            {"pairedDevices": resp_json["bluetoothStats"]["pairedDevices"]}
-        )
-        deviceInfo.update(
-            {"connectedDevices": resp_json["bluetoothStats"]["connectedDevices"]}
-        )
-    if (
-        resp_json
-        and "deviceSettings" in resp_json
-        and "bluetoothState" in resp_json["deviceSettings"]
-    ):
-        deviceInfo.update(
-            {"bluetoothState": resp_json["deviceSettings"]["bluetoothState"]}
-        )
+    unpackageDict(deviceInfo, resp_json)
 
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})
