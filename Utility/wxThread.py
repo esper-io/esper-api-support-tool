@@ -20,6 +20,11 @@ EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
 myEVT_APPS = wx.NewEventType()
 EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
 
+myEVT_LOG = wx.NewEventType()
+EVT_LOG = wx.PyEventBinder(myEVT_LOG, 1)
+
+myEVT_COMMAND = wx.NewEventType()
+EVT_COMMAND = wx.PyEventBinder(myEVT_COMMAND, 1)
 
 def doAPICallInThread(
     frame,

@@ -230,6 +230,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
         self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
         self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
+        self.Bind(wxThread.EVT_LOG, self.onLog)
+        self.Bind(wxThread.EVT_COMMAND, self.onCommandDone)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
@@ -466,6 +468,10 @@ class NewFrameLayout(wx.Frame):
         self.SetSizer(sizer_1)
         self.Layout()
 
+    def onLog(self, event):
+        evtValue = event.GetValue()
+        self.Logging(evtValue)
+
     def Logging(self, entry, isError=False):
         """ Frame UI Logging """
         try:
@@ -503,27 +509,6 @@ class NewFrameLayout(wx.Frame):
         if e.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
         self.Destroy()
-
-    """@api_tool_decorator
-    def askForAuthCSV():
-        # Windows, Standalone executable will allow user to select CSV
-        if "Windows" in platform.system():
-            answer = ctypes.windll.user32.MessageBoxW(
-                0, "Please Select The Config CSV", "Esper Tool", 1
-            )
-            print(answer)
-            if answer == 2:
-                sys.exit("No CSV Selected")
-            root = Tk()
-            filename = askopenfilename()
-            Globals.csv_auth_path = filename
-            print(filename)
-            root.destroy()
-        # Mac, Debug mode, find csv file using system path
-        else:
-            currentpath = os.path.realpath(__file__)
-            filename = os.path.dirname(currentpath) + os.path.sep + Globals.CONFIGFILE
-            Globals.csv_auth_path = filename"""
 
     @api_tool_decorator
     def onSave(self, event):
@@ -1217,6 +1202,7 @@ class NewFrameLayout(wx.Frame):
             self.actionChoice.SetSelection(0)
             self.appChoice.Enable(False)
             self.appChoice.SetSelection(-1)
+        self.SetFocus()
 
     def onActionSelection(self, event):
         if event and event.String:
@@ -1227,6 +1213,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.appChoice.SetSelection(-1)
                 self.appChoice.Enable(False)
+        self.SetFocus()
 
     def onCellChange(self, event):
         self.grid_1.AutoSizeColumns()
@@ -1272,7 +1259,7 @@ class NewFrameLayout(wx.Frame):
         adv.AboutBox(info)
 
     @api_tool_decorator
-    def onCommand(self, event, value="", level=0):
+    def onCommand(self, event, value='{\n\n}', level=0):
         if level < Globals.MAX_RETRY:
             self.setCursorBusy()
             self.setGaugeValue(0)
@@ -1283,26 +1270,32 @@ class NewFrameLayout(wx.Frame):
                     result = cmdDialog.ShowModal()
                     if result == wx.ID_OK:
                         cmd = None
+                        commandType = None
+                        config = None
                         try:
-                            cmd = json.loads(cmdDialog.GetValue())
+                            config, commandType = cmdDialog.GetValue()
+                            cmd = json.loads(config)
                         except:
                             wx.MessageBox(
                                 "An error occurred while process the inputted JSON object, please make sure it is formatted correctly", style=wx.OK | wx.ICON_ERROR
                             )
-                            self.onCommand(event, cmdDialog.GetValue(), level + 1)
-                        if cmd:
-                            self.setGaugeValue(50)
-                            cmdResult = ApplyDeviceConfig(self, cmd)
-                            self.setGaugeValue(100)
-                            if hasattr(cmdResult, "state"):
-                                wx.MessageBox(cmdResult.state, style=wx.OK)
+                            self.onCommand(event, config, level + 1)
+                        if cmd != None:
+                            ApplyDeviceConfig(self, cmd, commandType)
+                            self.gauge.Pulse()
             else:
                 wx.MessageBox(
                     "Please select an group and or devices", style=wx.OK | wx.ICON_ERROR
                 )
             self.setCursorDefault()
 
-    def confirmCommand(self, cmd):
+    def onCommandDone(self, event):
+        cmdResult = event.GetValue()
+        self.setGaugeValue(100)
+        if hasattr(cmdResult, "state"):
+            wx.MessageBox("Command State: %s \n\n Check the console for detailed command results." % cmdResult.state, style=wx.OK)
+
+    def confirmCommand(self, cmd, commandType):
         deviceSelection = self.deviceChoice.GetSelection()
         groupSelection = self.groupChoice.GetSelection()
         groupToUse = self.groupChoice.GetClientData(groupSelection)
@@ -1332,14 +1325,14 @@ class NewFrameLayout(wx.Frame):
         )
         if deviceSelection > 0 and deviceLabel:
             modal = wx.MessageBox(
-                "About to try applying the command: \n\n%s\n\n on the device, %s, continue?"
-                % (cmd_format, deviceLabel),
+                "About to try applying the %s command: \n\n%s\n\n on the device, %s, continue?"
+                % (commandType, cmd_format, deviceLabel),
                 style=wx.YES | wx.NO | wx.YES_DEFAULT,
             )
         elif groupSelection >= 0 and groupLabel:
             modal = wx.MessageBox(
-                "About to try applying the command: \n%s\n\n on the group, %s, continue?"
-                % (cmd_format, groupLabel),
+                "About to try applying the %s command: \n%s\n\n on the group, %s, continue?"
+                % (commandType, cmd_format, groupLabel),
                 style=wx.YES | wx.NO | wx.YES_DEFAULT,
             )
             isGroup = True
@@ -1425,6 +1418,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onDeviceSelection(self, event):
+        self.SetFocus()
         self.appChoice.Clear()
         self.setGaugeValue(0)
         num = 1

@@ -8,6 +8,7 @@ import string
 import platform
 import ctypes
 import Utility.wxThread as wxThread
+import wx
 
 from Utility.deviceInfo import (
     getSecurityPatch,
@@ -196,6 +197,8 @@ def getAllGroups(*args, **kwds):
         api_response = api_instance.get_all_groups(
             Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
         )
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> API Request Finished")
+        wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
         raise Exception(
@@ -214,6 +217,8 @@ def getAllDevices(groupToUse, *args, **kwds):
             limit=Globals.limit,
             offset=Globals.offset,
         )
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> API Request Finished")
+        wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -230,6 +235,8 @@ def getAllApplications(*args, **kwds):
             offset=Globals.offset,
             is_hidden=False,
         )
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> API Request Finished")
+        wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
         raise Exception(
@@ -247,6 +254,8 @@ def getDeviceById(deviceToUse, *args, **kwds):
         )
         if api_response:
             api_response.results = [api_response]
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> API Request Finished")
+        wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
@@ -584,8 +593,8 @@ def modifyAlias(frame):
 def getCommandsApiInstance():
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
 
-
-def executeUpdateDeviceConfigCommandOnGroup(frame, command_args):
+@api_tool_decorator
+def executeUpdateDeviceConfigCommandOnGroup(frame, command_args, command_type="UPDATE_DEVICE_CONFIG"):
     groupToUse = frame.groupChoice.GetClientData(
         frame.groupChoice.GetSelection()
     )  # Get Device Group ID
@@ -594,15 +603,15 @@ def executeUpdateDeviceConfigCommandOnGroup(frame, command_args):
         command_type="GROUP",
         device_type="all",
         groups=[groupToUse],
-        command="UPDATE_DEVICE_CONFIG",
+        command=command_type,
         command_args=command_args,
     )
     api_instance = getCommandsApiInstance()
     api_response = api_instance.create_command(Globals.enterprise_id, request)
     return waitForCommandToFinish(frame, api_response.id)
 
-
-def executeUpdateDeviceConfigCommandOnDevice(frame, command_args):
+@api_tool_decorator
+def executeUpdateDeviceConfigCommandOnDevice(frame, command_args, command_type="UPDATE_DEVICE_CONFIG"):
     deviceToUse = frame.deviceChoice.GetClientData(
         frame.deviceChoice.GetSelection()
     )  # Get Device Group ID
@@ -611,20 +620,22 @@ def executeUpdateDeviceConfigCommandOnDevice(frame, command_args):
         command_type="DEVICE",
         device_type="all",
         devices=[deviceToUse],
-        command="UPDATE_DEVICE_CONFIG",
+        command=command_type,
         command_args=command_args,
     )
     api_instance = getCommandsApiInstance()
     api_response = api_instance.create_command(Globals.enterprise_id, request)
     return waitForCommandToFinish(frame, api_response.id)
 
-
+@api_tool_decorator
 def waitForCommandToFinish(frame, request_id):
     api_instance = getCommandsApiInstance()
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, request_id
     )
     status = response.results[0]
+    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state))
+    wx.PostEvent(Globals.frame, evt)
 
     while status.state not in [
         "Command Success",
@@ -637,17 +648,44 @@ def waitForCommandToFinish(frame, request_id):
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        frame.Logging("---> Command state: %s" % str(status.state))
-        frame.buttonYieldEvent()
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state))
+        wx.PostEvent(Globals.frame, evt)
         time.sleep(1)
     return status
 
 
-def ApplyDeviceConfig(frame, config):
-    command_args = V0CommandArgs(custom_settings_config=config)
-    result, isGroup = frame.confirmCommand(command_args)
+def ApplyDeviceConfig(frame, config, commandType):
+    otherConfig = {}
+    for key in config.keys():
+        if key not in Globals.COMMAND_ARGS:
+            otherConfig[key] = config[key]
 
+    command_args = V0CommandArgs(app_state=config['app_state'] if 'app_state' in config else None,
+        app_version=config['app_version'] if 'app_version' in config else None,
+        device_alias_name=config['device_alias_name'] if 'device_alias_name' in config else None,
+        custom_settings_config=otherConfig,
+        package_name=config['package_name'] if 'package_name' in config else None,
+        policy_url=config['policy_url'] if 'policy_url' in config else None,
+        state=config['state'] if 'state' in config else None,
+        message=config['message'] if 'message' in config else None,
+        wifi_access_points=config['wifi_access_points'] if 'wifi_access_points' in config else None
+        )
+    result, isGroup = frame.confirmCommand(command_args, commandType)
+
+    t = None
     if result and isGroup:
-        return executeUpdateDeviceConfigCommandOnGroup(frame, command_args)
+        t = wxThread.GUIThread(
+                frame,
+                executeUpdateDeviceConfigCommandOnGroup,
+                args=(frame, command_args, commandType),
+                eventType=wxThread.myEVT_COMMAND,
+            )
     elif result and not isGroup:
-        return executeUpdateDeviceConfigCommandOnDevice(frame, command_args)
+        t = wxThread.GUIThread(
+                frame,
+                executeUpdateDeviceConfigCommandOnDevice,
+                args=(frame, command_args, commandType),
+                eventType=wxThread.myEVT_COMMAND,
+            )
+    if t:
+        t.start()

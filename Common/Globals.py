@@ -43,6 +43,33 @@ MODIFY_TAGS = 2
 LOGLIST = []
 TAGSandALIASES = {}  # Unused?
 
+COMMAND_ARGS = [
+    "app_state",
+    "app_version",
+    "device_alias_name",
+    'message',
+    'package_name',
+    'policy_url',
+    'state',
+    'wifi_access_points'
+]
+
+COMMAND_TYPES = [
+    "REBOOT",
+    "UPDATE_HEARTBEAT",
+    "UPDATE_DEVICE_CONFIG",
+    "INSTALL",
+    "UNINSTALL",
+    "SET_NEW_POLICY",
+    "ADD_WIFI_AP",
+    "REMOVE_WIFI_AP",
+    "SET_KIOSK_APP",
+    "SET_DEVICE_LOCKDOWN_STATE",
+    "SET_APP_STATE",
+    "WIPE",
+    "UPDATE_LATEST_DPC"
+]
+
 """ URL Requests and Extensions """
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/device/{device_id}"
 BASE_REQUEST_EXTENSION = "/?&format=json"
