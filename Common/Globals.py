@@ -47,11 +47,11 @@ COMMAND_ARGS = [
     "app_state",
     "app_version",
     "device_alias_name",
-    'message',
-    'package_name',
-    'policy_url',
-    'state',
-    'wifi_access_points'
+    "message",
+    "package_name",
+    "policy_url",
+    "state",
+    "wifi_access_points",
 ]
 
 COMMAND_TYPES = [
@@ -67,7 +67,7 @@ COMMAND_TYPES = [
     "SET_DEVICE_LOCKDOWN_STATE",
     "SET_APP_STATE",
     "WIPE",
-    "UPDATE_LATEST_DPC"
+    "UPDATE_LATEST_DPC",
 ]
 
 """ URL Requests and Extensions """

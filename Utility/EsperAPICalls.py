@@ -376,8 +376,12 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     network_info = getNetworkInfo(device.id)
 
     if resp_json and "bluetoothStats" in resp_json:
-        deviceInfo.update({"pairedDevices": resp_json["bluetoothStats"]['pairedDevices']})
-        deviceInfo.update({"connectedDevices": resp_json["bluetoothStats"]['connectedDevices']})
+        deviceInfo.update(
+            {"pairedDevices": resp_json["bluetoothStats"]["pairedDevices"]}
+        )
+        deviceInfo.update(
+            {"connectedDevices": resp_json["bluetoothStats"]["connectedDevices"]}
+        )
     if (
         resp_json
         and "deviceSettings" in resp_json
@@ -594,8 +598,11 @@ def modifyAlias(frame):
 def getCommandsApiInstance():
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
 
+
 @api_tool_decorator
-def executeUpdateDeviceConfigCommandOnGroup(frame, command_args, command_type="UPDATE_DEVICE_CONFIG"):
+def executeUpdateDeviceConfigCommandOnGroup(
+    frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
+):
     groupToUse = frame.groupChoice.GetClientData(
         frame.groupChoice.GetSelection()
     )  # Get Device Group ID
@@ -611,8 +618,11 @@ def executeUpdateDeviceConfigCommandOnGroup(frame, command_args, command_type="U
     api_response = api_instance.create_command(Globals.enterprise_id, request)
     return waitForCommandToFinish(frame, api_response.id)
 
+
 @api_tool_decorator
-def executeUpdateDeviceConfigCommandOnDevice(frame, command_args, command_type="UPDATE_DEVICE_CONFIG"):
+def executeUpdateDeviceConfigCommandOnDevice(
+    frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
+):
     deviceToUse = frame.deviceChoice.GetClientData(
         frame.deviceChoice.GetSelection()
     )  # Get Device Group ID
@@ -628,6 +638,7 @@ def executeUpdateDeviceConfigCommandOnDevice(frame, command_args, command_type="
     api_response = api_instance.create_command(Globals.enterprise_id, request)
     return waitForCommandToFinish(frame, api_response.id)
 
+
 @api_tool_decorator
 def waitForCommandToFinish(frame, request_id):
     api_instance = getCommandsApiInstance()
@@ -635,7 +646,9 @@ def waitForCommandToFinish(frame, request_id):
         Globals.enterprise_id, request_id
     )
     status = response.results[0]
-    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state))
+    evt = wxThread.CustomEvent(
+        wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state)
+    )
     wx.PostEvent(Globals.frame, evt)
 
     while status.state not in [
@@ -649,7 +662,9 @@ def waitForCommandToFinish(frame, request_id):
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state))
+        evt = wxThread.CustomEvent(
+            wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state)
+        )
         wx.PostEvent(Globals.frame, evt)
         time.sleep(1)
     return status
@@ -661,32 +676,37 @@ def ApplyDeviceConfig(frame, config, commandType):
         if key not in Globals.COMMAND_ARGS:
             otherConfig[key] = config[key]
 
-    command_args = V0CommandArgs(app_state=config['app_state'] if 'app_state' in config else None,
-        app_version=config['app_version'] if 'app_version' in config else None,
-        device_alias_name=config['device_alias_name'] if 'device_alias_name' in config else None,
+    command_args = V0CommandArgs(
+        app_state=config["app_state"] if "app_state" in config else None,
+        app_version=config["app_version"] if "app_version" in config else None,
+        device_alias_name=config["device_alias_name"]
+        if "device_alias_name" in config
+        else None,
         custom_settings_config=otherConfig,
-        package_name=config['package_name'] if 'package_name' in config else None,
-        policy_url=config['policy_url'] if 'policy_url' in config else None,
-        state=config['state'] if 'state' in config else None,
-        message=config['message'] if 'message' in config else None,
-        wifi_access_points=config['wifi_access_points'] if 'wifi_access_points' in config else None
-        )
+        package_name=config["package_name"] if "package_name" in config else None,
+        policy_url=config["policy_url"] if "policy_url" in config else None,
+        state=config["state"] if "state" in config else None,
+        message=config["message"] if "message" in config else None,
+        wifi_access_points=config["wifi_access_points"]
+        if "wifi_access_points" in config
+        else None,
+    )
     result, isGroup = frame.confirmCommand(command_args, commandType)
 
     t = None
     if result and isGroup:
         t = wxThread.GUIThread(
-                frame,
-                executeUpdateDeviceConfigCommandOnGroup,
-                args=(frame, command_args, commandType),
-                eventType=wxThread.myEVT_COMMAND,
-            )
+            frame,
+            executeUpdateDeviceConfigCommandOnGroup,
+            args=(frame, command_args, commandType),
+            eventType=wxThread.myEVT_COMMAND,
+        )
     elif result and not isGroup:
         t = wxThread.GUIThread(
-                frame,
-                executeUpdateDeviceConfigCommandOnDevice,
-                args=(frame, command_args, commandType),
-                eventType=wxThread.myEVT_COMMAND,
-            )
+            frame,
+            executeUpdateDeviceConfigCommandOnDevice,
+            args=(frame, command_args, commandType),
+            eventType=wxThread.myEVT_COMMAND,
+        )
     if t:
         t.start()

@@ -88,7 +88,9 @@ class NewFrameLayout(wx.Frame):
         )
         self.panel_6 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.panel_8 = wx.Panel(self.panel_6, wx.ID_ANY)
-        self.runBtn = wx.Button(self.panel_8, wx.ID_ANY, "Run", style=wx.EXPAND | wx.SHAPED)
+        self.runBtn = wx.Button(
+            self.panel_8, wx.ID_ANY, "Run", style=wx.EXPAND | wx.SHAPED
+        )
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
@@ -147,12 +149,15 @@ class NewFrameLayout(wx.Frame):
 
         editMenu = wx.Menu()
         self.deviceToggle = editMenu.Append(
-                wx.ID_ANY, "Enable Device Selection", "Enable Device Selection", kind=wx.ITEM_CHECK
-            )
+            wx.ID_ANY,
+            "Enable Device Selection",
+            "Enable Device Selection",
+            kind=wx.ITEM_CHECK,
+        )
         self.deviceToggle.Check(True)
         self.Bind(wx.EVT_MENU, self.toggleDeviceSelection, self.deviceToggle)
-        #pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
-        #self.pref = editMenu.Append(pref)
+        # pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
+        # self.pref = editMenu.Append(pref)
 
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
@@ -1023,11 +1028,7 @@ class NewFrameLayout(wx.Frame):
                 % (actionLabel, deviceLabel)
             )
             TakeAction(
-                self,
-                deviceSelection,
-                actionSelection,
-                deviceLabel,
-                isDevice=True
+                self, deviceSelection, actionSelection, deviceLabel, isDevice=True
             )
         elif gridSelection > 0:
             # run grid action
@@ -1278,11 +1279,11 @@ class NewFrameLayout(wx.Frame):
         adv.AboutBox(info)
 
     @api_tool_decorator
-    def onCommand(self, event, value='{\n\n}', level=0):
+    def onCommand(self, event, value="{\n\n}", level=0):
         if level < Globals.MAX_RETRY:
             self.setCursorBusy()
             self.setGaugeValue(0)
-        
+
             groupSelection = self.groupChoice.GetSelection()
             if groupSelection >= 0:
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
@@ -1296,7 +1297,8 @@ class NewFrameLayout(wx.Frame):
                             cmd = json.loads(config)
                         except:
                             wx.MessageBox(
-                                "An error occurred while process the inputted JSON object, please make sure it is formatted correctly", style=wx.OK | wx.ICON_ERROR
+                                "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
+                                style=wx.OK | wx.ICON_ERROR,
                             )
                             self.onCommand(event, config, level + 1)
                         if cmd != None:
@@ -1312,7 +1314,11 @@ class NewFrameLayout(wx.Frame):
         cmdResult = event.GetValue()
         self.setGaugeValue(100)
         if hasattr(cmdResult, "state"):
-            wx.MessageBox("Command State: %s \n\n Check the console for detailed command results." % cmdResult.state, style=wx.OK)
+            wx.MessageBox(
+                "Command State: %s \n\n Check the console for detailed command results."
+                % cmdResult.state,
+                style=wx.OK,
+            )
 
     def confirmCommand(self, cmd, commandType):
         deviceSelection = self.deviceChoice.GetSelection()
