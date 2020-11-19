@@ -13,6 +13,8 @@ import json
 import Utility.wxThread as wxThread
 import GUI.EnhancedStatusBar as ESB
 
+from threading import Lock
+
 from Common.decorator import api_tool_decorator
 
 from GUI.consoleWindow import Console
@@ -38,7 +40,7 @@ from Utility.EsperAPICalls import (
     getAllApplications,
 )
 
-from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog
+from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog, ProgressCheckDialog
 
 
 class NewFrameLayout(wx.Frame):
@@ -54,6 +56,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_1_contents = []
         self.grid_2_contents = []
         self.apps = []
+        self.checkConsole = None
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 600))
@@ -201,6 +204,11 @@ class NewFrameLayout(wx.Frame):
         self.clearConsole = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console")
         )
+        viewMenu.Append(wx.ID_SEPARATOR)
+        self.clearGrids = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
+        )
+        self.Bind(wx.EVT_MENU, self.onClearGrids, self.clearGrids)
 
         helpMenu = wx.Menu()
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
@@ -241,6 +249,7 @@ class NewFrameLayout(wx.Frame):
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
+        self.Bind(wxThread.EVT_UPDATE_DONE, self.onUpdateComplete)
         self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
         self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
@@ -1447,6 +1456,18 @@ class NewFrameLayout(wx.Frame):
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
 
+    def onUpdateComplete(self, event):
+        action = event.GetValue()
+        if action == Globals.SET_KIOSK or action == Globals.SET_MULTI:
+            self.Logging("---> Please refer to the Esper Console for detailed results.")
+            if not self.checkConsole:
+                try:
+                    self.checkConsole = ProgressCheckDialog()
+                    self.checkConsole.ShowModal()
+                    self.checkConsole = None
+                except Exception as e:
+                    print(e)
+
     @api_tool_decorator
     def onDeviceSelection(self, event):
         self.SetFocus()
@@ -1521,3 +1542,7 @@ class NewFrameLayout(wx.Frame):
         else:
             self.deviceChoice.SetSelection(0)
             self.deviceChoice.Enable(False)
+
+    def onClearGrids(self, event):
+        self.grid_1.ClearGrid()
+        self.grid_2.ClearGrid()

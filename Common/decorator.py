@@ -18,6 +18,7 @@ def api_tool_decorator(func):
             print_exc()
             Globals.frame.Logging(str(e), isError=True)
             Globals.frame.setCursorDefault()
+            Globals.setGaugeValue(100)
         end = time.perf_counter()
         duration = end - start
         if Globals.PRINT_FUNC_DURATION:

@@ -298,9 +298,8 @@ def iterateThroughDeviceList(frame, action, api_response):
         t = wxThread.GUIThread(
             frame,
             waitTillThreadsFinish,
-            args=tuple(threads),
-            eventType=wxThread.myEVT_COMPLETE,
-            passArgAsTuple=True,
+            args=(tuple(threads), action),
+            eventType=wxThread.myEVT_COMPLETE
         )
         t.start()
     else:
@@ -308,9 +307,11 @@ def iterateThroughDeviceList(frame, action, api_response):
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads):
+def waitTillThreadsFinish(threads, action):
     for t in threads:
         t.join()
+    evt = wxThread.CustomEvent(wxThread.myEVT_UPDATE_DONE, -1, action)
+    wx.PostEvent(Globals.frame, evt)
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -506,7 +507,10 @@ def setKiosk(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Kiosk mode, skipping)"
-    frame.Logging(logString)
+    evt = wxThread.CustomEvent(
+        wxThread.myEVT_LOG, -1, logString
+    )
+    wx.PostEvent(Globals.frame, evt)
 
 
 def setMulti(frame, device, deviceInfo):
@@ -526,7 +530,10 @@ def setMulti(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Multi mode, skipping)"
-    frame.Logging(logString)
+    evt = wxThread.CustomEvent(
+        wxThread.myEVT_LOG, -1, logString
+    )
+    wx.PostEvent(Globals.frame, evt)
 
 
 def modifyTags(frame):
