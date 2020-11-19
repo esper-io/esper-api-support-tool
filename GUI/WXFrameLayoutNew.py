@@ -167,7 +167,7 @@ class NewFrameLayout(wx.Frame):
         self.run = runMenu.Append(runItem)
 
         commandItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Apply Device Config\tCtrl+Shift+C"
+            runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C"
         )
         self.command = runMenu.Append(commandItem)
 
@@ -492,6 +492,20 @@ class NewFrameLayout(wx.Frame):
         sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer_1)
         self.Layout()
+        self.setColorTheme()
+
+    def setColorTheme(self, parent=None):
+        white = wx.Colour(255, 255, 255)
+        black = wx.Colour(0, 0, 0)
+        if not parent:
+            parent = self
+        for child in parent.GetChildren():
+            if type(child) != wx.Panel:
+                if type(child) != wx.StaticText:
+                    child.SetBackgroundColour(white)
+                child.SetForegroundColour(black)
+            if child.GetChildren():
+                self.setColorTheme(child)
 
     def onLog(self, event):
         evtValue = event.GetValue()
@@ -1544,5 +1558,5 @@ class NewFrameLayout(wx.Frame):
             self.deviceChoice.Enable(False)
 
     def onClearGrids(self, event):
-        self.grid_1.ClearGrid()
-        self.grid_2.ClearGrid()
+        self.emptyDeviceGrid()
+        self.emptyNetworkGrid()

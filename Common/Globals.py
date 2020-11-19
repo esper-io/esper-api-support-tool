@@ -17,7 +17,9 @@ MAX_RETRY = 5
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 
-DESCRIPTION = "Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor your enterprise's Android-based Dedicated Devices that is not currently available on the Esper Console Dashboard."
+DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
+your enterprise's Android-based Dedicated Devices that is not currently available on 
+the Esper Console Dashboard."""
 
 DEVS = ["Jonathan Featherston", "James Schaefer", "Chris Stirrat"]
 
