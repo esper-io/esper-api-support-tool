@@ -14,6 +14,7 @@ offset = 0  # int | The initial index from which to return the results. (optiona
 SHOW_GRID_DIALOG = True
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
+MAX_RECENT_ITEMS = 5
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 
@@ -111,6 +112,6 @@ app = None
 
 """ CSV Save File """
 csv_tag_path = ""
-csv_tag_path_clone = ""
+csv_tag_path_clone = "" # unused
 csv_auth_path = ""
 GRID_DEVICE_INFO_LIST = []

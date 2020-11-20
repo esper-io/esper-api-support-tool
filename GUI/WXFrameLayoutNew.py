@@ -12,6 +12,9 @@ import platform
 import json
 import Utility.wxThread as wxThread
 import GUI.EnhancedStatusBar as ESB
+import tempfile
+
+from functools import partial
 
 from threading import Lock
 
@@ -40,13 +43,14 @@ from Utility.EsperAPICalls import (
     getAllApplications,
 )
 
-from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog, ProgressCheckDialog
+from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog, ProgressCheckDialog, PreferencesDialog
 
 
 class NewFrameLayout(wx.Frame):
     def __init__(self, *args, **kwds):
         self.configMenuOptions = []
         self.WINDOWS = True
+        self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace("Local", "Roaming")
         if platform.system() == "Windows":
             self.WINDOWS = True
         else:
@@ -57,6 +61,9 @@ class NewFrameLayout(wx.Frame):
         self.grid_2_contents = []
         self.apps = []
         self.checkConsole = None
+        self.preferences = None
+        self.prefDialog = None
+        self.loadPref()
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 600))
@@ -133,6 +140,21 @@ class NewFrameLayout(wx.Frame):
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+D")
         fileOpenConfig = fileMenu.Append(foc)
 
+        self.recent = wx.Menu()
+        if self.preferences and "recentAuth" in self.preferences and not all('' == s or s.isspace() for s in self.preferences["recentAuth"]):
+            notExist = []
+            revList = self.preferences["recentAuth"]
+            revList.reverse()
+            for auth in revList:
+                if auth and os.path.isfile(auth) and os.path.exists(auth):
+                    item = self.recent.Append(wx.ID_ANY, auth)
+                    self.Bind(wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item)
+                if not os.path.exists(auth):
+                    notExist.append(auth)
+            for auth in notExist:
+                self.preferences["recentAuth"].remove(auth)
+        openRecent = fileMenu.Append(wx.ID_ANY, "&Open Recent Auth", self.recent)
+
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device Info As\tCtrl+S")
         fileSave = fileMenu.Append(fs)
@@ -151,16 +173,16 @@ class NewFrameLayout(wx.Frame):
         self.configMenuOptions.append(defaultConfigVal)
 
         editMenu = wx.Menu()
-        self.deviceToggle = editMenu.Append(
+        """self.deviceToggle = editMenu.Append(
             wx.ID_ANY,
             "Enable Device Selection",
             "Enable Device Selection",
             kind=wx.ITEM_CHECK,
         )
         self.deviceToggle.Check(True)
-        self.Bind(wx.EVT_MENU, self.toggleDeviceSelection, self.deviceToggle)
-        # pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
-        # self.pref = editMenu.Append(pref)
+        self.Bind(wx.EVT_MENU, self.toggleDeviceSelection, self.deviceToggle)"""
+        pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
+        self.pref = editMenu.Append(pref)
 
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
@@ -230,7 +252,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onSaveAs, fileSaveAs)
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
-        # self.Bind(wx.EVT_MENU, self.onPref, self.pref)
+        self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         # Menu Bar end
 
         # Tool Bar
@@ -547,6 +569,7 @@ class NewFrameLayout(wx.Frame):
             self.consoleWin = None
         if e.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
+        self.savePrefs(self.prefDialog)
         self.Destroy()
 
     @api_tool_decorator
@@ -611,16 +634,18 @@ class NewFrameLayout(wx.Frame):
                 rowValues.append(value)
             gridData.append(rowValues)
 
-        with open(Globals.csv_tag_path_clone, "w", newline="") as csvfile:
+        with open(inFile, "w", newline="") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
 
-        self.Logging("---> Info saved to csv file - " + Globals.csv_tag_path_clone)
+        self.Logging("---> Info saved to csv file - " + inFile)
 
     def createNewFile(self, filePath):
-        Globals.csv_tag_path_clone = filePath
-        if not os.path.exists(Globals.csv_tag_path_clone):
-            with open(Globals.csv_tag_path_clone, "w"):
+        if not os.path.exists(filePath):
+            parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
+            if not os.path.exists(parentPath):
+                os.makedirs(parentPath)
+            with open(filePath, "w"):
                 pass
 
     @api_tool_decorator
@@ -699,9 +724,14 @@ class NewFrameLayout(wx.Frame):
                 return  # the user changed their mind
 
     @api_tool_decorator
-    def PopulateConfig(self):
+    def PopulateConfig(self, auth=None, authItem=None, event=None):
         """Populates Configuration From CSV"""
         self.Logging("--->Loading Configurations from %s" % Globals.csv_auth_path)
+        if auth:
+            if Globals.csv_auth_path != auth:
+                Globals.csv_auth_path = auth
+            else:
+                return
         configfile = Globals.csv_auth_path
 
         for item in self.configMenuOptions:
@@ -751,6 +781,13 @@ class NewFrameLayout(wx.Frame):
             self.Logging(
                 "--->**** Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
             )
+            if Globals.csv_auth_path in self.preferences["recentAuth"]:
+                self.preferences["recentAuth"].remove(Globals.csv_auth_path)
+                if authItem:
+                    self.recent.Delete(authItem)
+            self.preferences["recentAuth"].append(Globals.csv_auth_path)
+            recentItem = self.recent.Prepend(wx.ID_ANY, Globals.csv_auth_path)
+            self.Bind(wx.EVT_MENU, partial(self.PopulateConfig, auth, recentItem), recentItem)
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -859,7 +896,8 @@ class NewFrameLayout(wx.Frame):
         )
         self.deviceChoice.Clear()
         self.appChoice.Clear()
-        if self.deviceToggle.IsChecked():
+        # if self.deviceToggle.IsChecked():
+        if not self.preferences or self.preferences['enableDevice'] == True:
             self.runBtn.Enable(False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
@@ -885,7 +923,8 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
         if len(api_response.results):
-            if self.deviceToggle.IsChecked():
+            #if self.deviceToggle.IsChecked():
+            if not self.preferences or self.preferences['enableDevice'] == True:
                 self.deviceChoice.Enable(True)
             else:
                 self.deviceChoice.Enable(False)
@@ -929,47 +968,6 @@ class NewFrameLayout(wx.Frame):
                 self.setGaugeValue(int(num / len(api_response.results) * 100))
                 num += 1
         self.setCursorDefault()
-
-    """def createLogString(self, deviceInfo, action):
-        # Prepares Raw Data For UI
-        logString = ""
-        tagString = str(deviceInfo["Tags"])
-        tagString = tagString.replace("'", "")
-        tagString = tagString.replace("[", "")
-        tagString = tagString.replace("]", "")
-        tagString = tagString.replace(", ", ",")
-        appString = str(deviceInfo["Apps"]).replace(",", "")
-        if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-            logString = (
-                deviceInfo["EsperName"]
-                + ","
-                + deviceInfo["Alias"]
-                + ","
-                + deviceInfo["Status"]
-                + ","
-                + deviceInfo["Mode"]
-                + ","
-                + deviceInfo["Serial"]
-                + ","
-                + '"'
-                + str(tagString)
-                + '"'
-                + ","
-                + str(appString)
-                + ","
-                + str(deviceInfo["KioskApp"])
-            )
-            return logString
-        logString = (
-            "{:13.13}".format(deviceInfo["EsperName"])
-            + ","
-            + "{:16.16}".format(str(deviceInfo["Alias"]))
-            + ","
-            + "{:10.10}".format(deviceInfo["Status"])
-            + ","
-            + "{:8.8}".format(deviceInfo["Mode"])
-        )
-        return logString"""
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1560,3 +1558,23 @@ class NewFrameLayout(wx.Frame):
     def onClearGrids(self, event):
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
+
+    def loadPref(self):
+        if os.path.isfile(self.prefPath) and os.path.exists(self.prefPath) and os.access(self.prefPath, os.R_OK):
+            with open(self.prefPath) as jsonFile:
+                self.preferences = json.load(jsonFile)
+            Globals.limit = self.preferences['limit']
+            Globals.offset = self.preferences['offset']
+        else:
+            self.createNewFile(self.prefPath)
+            self.savePrefs(PreferencesDialog(self.preferences))
+
+    def savePrefs(self, dialog):
+        with open(self.prefPath, 'w') as outfile:
+            self.preferences = dialog.GetPrefs()
+            json.dump(self.preferences, outfile)
+
+    def onPref(self, event):
+        with PreferencesDialog(self.preferences) as self.prefDialog:
+            if self.prefDialog.ShowModal() == wx.ID_APPLY:
+                self.savePrefs(self.prefDialog)

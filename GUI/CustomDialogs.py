@@ -230,3 +230,110 @@ class ProgressCheckDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
+
+class PreferencesDialog(wx.Dialog):
+    def __init__(self, prefDict, *args, **kwds):
+        super(PreferencesDialog, self).__init__(
+            None,
+            wx.ID_ANY,
+            size=(500, 400),
+            style=wx.DEFAULT_DIALOG_STYLE
+            | wx.RESIZE_BORDER
+        )
+        self.prefs = prefDict
+
+        self.SetSize((500, 400))
+        self.window_1_pane_1 = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+        self.panel_4 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
+        self.checkbox_2 = wx.CheckBox(self.panel_4, wx.ID_ANY, "")
+        self.panel_5 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
+        self.panel_3 = wx.Panel(self.panel_5, wx.ID_ANY)
+        self.text_ctrl_3 = wx.TextCtrl(self.panel_3, wx.ID_ANY, str(Globals.limit))
+        self.panel_6 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
+        self.panel_2 = wx.Panel(self.panel_6, wx.ID_ANY)
+        self.text_ctrl_2 = wx.TextCtrl(self.panel_2, wx.ID_ANY, str(Globals.offset))
+        self.button_1 = wx.Button(self, wx.ID_APPLY, "Apply")
+
+        if prefDict and not prefDict["enableDevice"]:
+            self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
+        else:
+            self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
+        self.button_1.Bind(wx.EVT_BUTTON, self.OnApply)
+
+        self.__set_properties()
+        self.__do_layout()
+
+    def __set_properties(self):
+        self.SetTitle("dialog")
+        self.SetSize((500, 400))
+        self.window_1_pane_1.SetMinSize((437, 271))
+        self.window_1_pane_1.SetScrollRate(10, 10)
+
+    def __do_layout(self):
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.GridSizer(1, 1, 0, 0)
+        grid_sizer_4 = wx.GridSizer(5, 1, 0, 0)
+        sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
+        sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
+        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
+        label_2 = wx.StaticText(self, wx.ID_ANY, "Preferences:")
+        sizer_1.Add(label_2, 0, wx.ALL, 5)
+        label_3 = wx.StaticText(self.panel_4, wx.ID_ANY, "Enable Device Selection")
+        sizer_4.Add(label_3, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        grid_sizer_3.Add(self.checkbox_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        sizer_4.Add(grid_sizer_3, 1, wx.EXPAND, 0)
+        self.panel_4.SetSizer(sizer_4)
+        grid_sizer_4.Add(self.panel_4, 1, wx.EXPAND, 0)
+        label_4 = wx.StaticText(self.panel_5, wx.ID_ANY, "API Request Limit")
+        sizer_5.Add(label_4, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        grid_sizer_7.Add(self.text_ctrl_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        self.panel_3.SetSizer(grid_sizer_7)
+        sizer_5.Add(self.panel_3, 1, wx.EXPAND, 0)
+        self.panel_5.SetSizer(sizer_5)
+        grid_sizer_4.Add(self.panel_5, 1, wx.EXPAND, 0)
+        label_5 = wx.StaticText(self.panel_6, wx.ID_ANY, "API Request Offset")
+        sizer_6.Add(label_5, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        grid_sizer_6.Add(self.text_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        self.panel_2.SetSizer(grid_sizer_6)
+        sizer_6.Add(self.panel_2, 1, wx.EXPAND, 0)
+        self.panel_6.SetSizer(sizer_6)
+        grid_sizer_4.Add(self.panel_6, 1, wx.EXPAND, 0)
+        grid_sizer_4.Add((0, 0), 0, 0, 0)
+        grid_sizer_4.Add((0, 0), 0, 0, 0)
+        self.window_1_pane_1.SetSizer(grid_sizer_4)
+        sizer_1.Add(self.window_1_pane_1, 0, wx.ALL | wx.EXPAND, 10)
+        sizer_2.Add(self.button_1, 0, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL, 10)
+        sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
+        self.SetSizer(sizer_1)
+        self.Layout()
+    
+    def OnApply(self, event):
+        self.prefs = {
+            "enableDevice": self.checkbox_2.IsChecked(),
+            "limit": self.text_ctrl_3.GetValue(),
+            "offset": self.text_ctrl_2.GetValue(),
+            "recentAuth": self.prefs["recentAuth"]
+        }
+
+        if self.IsModal():
+            self.EndModal(event.EventObject.Id)
+        else:
+            self.Close()
+
+    def GetPrefs(self):
+        if not self.prefs:
+            self.prefs = {
+                "enableDevice": True,
+                "limit": Globals.limit,
+                "offset": Globals.offset,
+                "recentAuth": [
+                    Globals.csv_auth_path
+                ] if Globals.csv_auth_path else []
+            }
+        if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
+            self.prefs["recentAuth"] = self.prefs["recentAuth"][len(self.prefs["recentAuth"]) - Globals.MAX_RECENT_ITEMS : len(self.prefs["recentAuth"])]
+
+        return self.prefs
