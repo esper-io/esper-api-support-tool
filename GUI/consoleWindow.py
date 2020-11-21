@@ -12,8 +12,17 @@ class Console(wx.Frame):
         else:
             self.WINDOWS = False
 
-        no_sys_menu = wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.CAPTION | wx.CLIP_CHILDREN | wx.CLOSE_BOX
-        wx.Frame.__init__(self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu)
+        no_sys_menu = (
+            wx.MINIMIZE_BOX
+            | wx.MAXIMIZE_BOX
+            | wx.RESIZE_BORDER
+            | wx.CAPTION
+            | wx.CLIP_CHILDREN
+            | wx.CLOSE_BOX
+        )
+        wx.Frame.__init__(
+            self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
+        )
         panel = wx.Panel(self, -1)
 
         self.loggingList = wx.ListBox(

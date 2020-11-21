@@ -197,7 +197,9 @@ def getAllGroups(*args, **kwds):
         api_response = api_instance.get_all_groups(
             Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
         )
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Group API Request Finished")
+        evt = wxThread.CustomEvent(
+            wxThread.myEVT_LOG, -1, "---> Group API Request Finished"
+        )
         wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
@@ -217,7 +219,9 @@ def getAllDevices(groupToUse, *args, **kwds):
             limit=Globals.limit,
             offset=Globals.offset,
         )
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Device API Request Finished")
+        evt = wxThread.CustomEvent(
+            wxThread.myEVT_LOG, -1, "---> Device API Request Finished"
+        )
         wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
@@ -235,7 +239,9 @@ def getAllApplications(*args, **kwds):
             offset=Globals.offset,
             is_hidden=False,
         )
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> App API Request Finished")
+        evt = wxThread.CustomEvent(
+            wxThread.myEVT_LOG, -1, "---> App API Request Finished"
+        )
         wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:
@@ -254,7 +260,9 @@ def getDeviceById(deviceToUse, *args, **kwds):
         )
         if api_response:
             api_response.results = [api_response]
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Device API Request Finished")
+        evt = wxThread.CustomEvent(
+            wxThread.myEVT_LOG, -1, "---> Device API Request Finished"
+        )
         wx.PostEvent(Globals.frame, evt)
         return api_response
     except ApiException as e:

@@ -353,6 +353,7 @@ class PreferencesDialog(wx.Dialog):
                 "offset": Globals.offset,
                 "recentAuth": [Globals.csv_auth_path] if Globals.csv_auth_path else [],
             }
+        self.prefs["recentAuth"] = list(dict.fromkeys(self.prefs["recentAuth"]))
         if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
             self.prefs["recentAuth"] = self.prefs["recentAuth"][
                 len(self.prefs["recentAuth"])

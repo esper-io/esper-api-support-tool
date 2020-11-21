@@ -148,24 +148,7 @@ class NewFrameLayout(wx.Frame):
         fileOpenConfig = fileMenu.Append(foc)
 
         self.recent = wx.Menu()
-        if (
-            self.preferences
-            and "recentAuth" in self.preferences
-            and not all("" == s or s.isspace() for s in self.preferences["recentAuth"])
-        ):
-            notExist = []
-            revList = self.preferences["recentAuth"]
-            revList.reverse()
-            for auth in revList:
-                if auth and os.path.isfile(auth) and os.path.exists(auth):
-                    item = self.recent.Append(wx.ID_ANY, auth)
-                    self.Bind(
-                        wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item
-                    )
-                if not os.path.exists(auth):
-                    notExist.append(auth)
-            for auth in notExist:
-                self.preferences["recentAuth"].remove(auth)
+        self.loadRecentMenu()
         openRecent = fileMenu.Append(wx.ID_ANY, "&Open Recent Auth", self.recent)
 
         fileMenu.Append(wx.ID_SEPARATOR)
@@ -804,10 +787,11 @@ class NewFrameLayout(wx.Frame):
                 if authItem:
                     self.recent.Delete(authItem)
             self.preferences["recentAuth"].append(Globals.csv_auth_path)
-            recentItem = self.recent.Prepend(wx.ID_ANY, Globals.csv_auth_path)
+            """recentItem = self.recent.Prepend(wx.ID_ANY, Globals.csv_auth_path)
             self.Bind(
                 wx.EVT_MENU, partial(self.PopulateConfig, auth, recentItem), recentItem
-            )
+            )"""
+            self.loadRecentMenu()
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -1602,3 +1586,26 @@ class NewFrameLayout(wx.Frame):
     def onPref(self, event):
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.savePrefs(self.prefDialog)
+
+    def loadRecentMenu(self):
+        if (
+            self.preferences
+            and "recentAuth" in self.preferences
+            and not all("" == s or s.isspace() for s in self.preferences["recentAuth"])
+        ):
+            recentItems = self.recent.GetMenuItems()
+            for child in recentItems:
+                self.recent.Delete(child)
+            notExist = []
+            revList = self.preferences["recentAuth"]
+            revList.reverse()
+            for auth in revList:
+                if auth and os.path.isfile(auth) and os.path.exists(auth):
+                    item = self.recent.Append(wx.ID_ANY, auth)
+                    self.Bind(
+                        wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item
+                    )
+                if not os.path.exists(auth):
+                    notExist.append(auth)
+            for auth in notExist:
+                self.preferences["recentAuth"].remove(auth)
