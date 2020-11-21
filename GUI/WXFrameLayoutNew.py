@@ -69,7 +69,7 @@ class NewFrameLayout(wx.Frame):
         self.apps = []
         self.checkConsole = None
         self.preferences = None
-        self.prefDialog = None
+        self.prefDialog = PreferencesDialog(self.preferences)
         self.loadPref()
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
@@ -547,6 +547,7 @@ class NewFrameLayout(wx.Frame):
     def Logging(self, entry, isError=False):
         """ Frame UI Logging """
         try:
+            Globals.LOGLIST.append(entry)
             if self.consoleWin:
                 self.consoleWin.Logging(entry)
             if "error" in entry.lower():
@@ -956,7 +957,8 @@ class NewFrameLayout(wx.Frame):
                     device.device_name,
                 )
                 self.deviceChoice.Append(name, device.id)
-                self.setGaugeValue(int(num / len(api_response.results) * 100))
+                if not self.preferences or self.preferences["enableDevice"] == True:
+                    self.setGaugeValue(int(num / len(api_response.results) * 100))
                 num += 1
         else:
             self.deviceChoice.Append("No Devices Found", "")
@@ -1593,11 +1595,10 @@ class NewFrameLayout(wx.Frame):
             self.savePrefs(PreferencesDialog(self.preferences))
 
     def savePrefs(self, dialog):
+        self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
-            self.preferences = dialog.GetPrefs()
             json.dump(self.preferences, outfile)
 
     def onPref(self, event):
-        with PreferencesDialog(self.preferences) as self.prefDialog:
-            if self.prefDialog.ShowModal() == wx.ID_APPLY:
-                self.savePrefs(self.prefDialog)
+        if self.prefDialog.ShowModal() == wx.ID_APPLY:
+            self.savePrefs(self.prefDialog)
