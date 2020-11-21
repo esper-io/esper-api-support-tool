@@ -299,7 +299,7 @@ def iterateThroughDeviceList(frame, action, api_response):
             frame,
             waitTillThreadsFinish,
             args=(tuple(threads), action),
-            eventType=wxThread.myEVT_COMPLETE
+            eventType=wxThread.myEVT_COMPLETE,
         )
         t.start()
     else:
@@ -336,8 +336,8 @@ def unpackageDict(deviceInfo, deviceDict):
         if type(deviceDict[key]) is dict:
             unpackageDict(deviceInfo, deviceDict[key])
         else:
-            if key.startswith('_'):
-                deviceInfo[key[1:len(key)]] = deviceDict[key]
+            if key.startswith("_"):
+                deviceInfo[key[1 : len(key)]] = deviceDict[key]
             else:
                 deviceInfo[key] = deviceDict[key]
     return deviceInfo
@@ -507,9 +507,7 @@ def setKiosk(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Kiosk mode, skipping)"
-    evt = wxThread.CustomEvent(
-        wxThread.myEVT_LOG, -1, logString
-    )
+    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, logString)
     wx.PostEvent(Globals.frame, evt)
 
 
@@ -530,9 +528,7 @@ def setMulti(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Multi mode, skipping)"
-    evt = wxThread.CustomEvent(
-        wxThread.myEVT_LOG, -1, logString
-    )
+    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, logString)
     wx.PostEvent(Globals.frame, evt)
 
 

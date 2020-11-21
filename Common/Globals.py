@@ -112,6 +112,6 @@ app = None
 
 """ CSV Save File """
 csv_tag_path = ""
-csv_tag_path_clone = "" # unused
+csv_tag_path_clone = ""  # unused
 csv_auth_path = ""
 GRID_DEVICE_INFO_LIST = []

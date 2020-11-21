@@ -43,14 +43,21 @@ from Utility.EsperAPICalls import (
     getAllApplications,
 )
 
-from GUI.CustomDialogs import CheckboxMessageBox, CommandDialog, ProgressCheckDialog, PreferencesDialog
+from GUI.CustomDialogs import (
+    CheckboxMessageBox,
+    CommandDialog,
+    ProgressCheckDialog,
+    PreferencesDialog,
+)
 
 
 class NewFrameLayout(wx.Frame):
     def __init__(self, *args, **kwds):
         self.configMenuOptions = []
         self.WINDOWS = True
-        self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace("Local", "Roaming")
+        self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace(
+            "Local", "Roaming"
+        )
         if platform.system() == "Windows":
             self.WINDOWS = True
         else:
@@ -141,14 +148,20 @@ class NewFrameLayout(wx.Frame):
         fileOpenConfig = fileMenu.Append(foc)
 
         self.recent = wx.Menu()
-        if self.preferences and "recentAuth" in self.preferences and not all('' == s or s.isspace() for s in self.preferences["recentAuth"]):
+        if (
+            self.preferences
+            and "recentAuth" in self.preferences
+            and not all("" == s or s.isspace() for s in self.preferences["recentAuth"])
+        ):
             notExist = []
             revList = self.preferences["recentAuth"]
             revList.reverse()
             for auth in revList:
                 if auth and os.path.isfile(auth) and os.path.exists(auth):
                     item = self.recent.Append(wx.ID_ANY, auth)
-                    self.Bind(wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item)
+                    self.Bind(
+                        wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item
+                    )
                 if not os.path.exists(auth):
                     notExist.append(auth)
             for auth in notExist:
@@ -188,9 +201,7 @@ class NewFrameLayout(wx.Frame):
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
         self.run = runMenu.Append(runItem)
 
-        commandItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C"
-        )
+        commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         self.command = runMenu.Append(commandItem)
 
         viewMenu = wx.Menu()
@@ -701,7 +712,8 @@ class NewFrameLayout(wx.Frame):
                                     if (
                                         header[fileCol]
                                         in Globals.CSV_DEPRECATED_HEADER_LABEL
-                                        or header[fileCol] not in Globals.CSV_TAG_ATTR_NAME.keys()
+                                        or header[fileCol]
+                                        not in Globals.CSV_TAG_ATTR_NAME.keys()
                                     ):
                                         fileCol += 1
                                         continue
@@ -712,10 +724,15 @@ class NewFrameLayout(wx.Frame):
                                             str(colValue),
                                         )
                                         isEditable = True
-                                        if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
+                                        if (
+                                            grid_headers[toolCol]
+                                            in Globals.CSV_EDITABLE_COL
+                                        ):
                                             isEditable = False
                                         self.grid_1.SetReadOnly(
-                                            self.grid_1.GetNumberRows() - 1, toolCol, isEditable
+                                            self.grid_1.GetNumberRows() - 1,
+                                            toolCol,
+                                            isEditable,
                                         )
                                     fileCol += 1
                                 toolCol += 1
@@ -787,7 +804,9 @@ class NewFrameLayout(wx.Frame):
                     self.recent.Delete(authItem)
             self.preferences["recentAuth"].append(Globals.csv_auth_path)
             recentItem = self.recent.Prepend(wx.ID_ANY, Globals.csv_auth_path)
-            self.Bind(wx.EVT_MENU, partial(self.PopulateConfig, auth, recentItem), recentItem)
+            self.Bind(
+                wx.EVT_MENU, partial(self.PopulateConfig, auth, recentItem), recentItem
+            )
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -897,7 +916,7 @@ class NewFrameLayout(wx.Frame):
         self.deviceChoice.Clear()
         self.appChoice.Clear()
         # if self.deviceToggle.IsChecked():
-        if not self.preferences or self.preferences['enableDevice'] == True:
+        if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
@@ -923,8 +942,8 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
         if len(api_response.results):
-            #if self.deviceToggle.IsChecked():
-            if not self.preferences or self.preferences['enableDevice'] == True:
+            # if self.deviceToggle.IsChecked():
+            if not self.preferences or self.preferences["enableDevice"] == True:
                 self.deviceChoice.Enable(True)
             else:
                 self.deviceChoice.Enable(False)
@@ -1560,17 +1579,21 @@ class NewFrameLayout(wx.Frame):
         self.emptyNetworkGrid()
 
     def loadPref(self):
-        if os.path.isfile(self.prefPath) and os.path.exists(self.prefPath) and os.access(self.prefPath, os.R_OK):
+        if (
+            os.path.isfile(self.prefPath)
+            and os.path.exists(self.prefPath)
+            and os.access(self.prefPath, os.R_OK)
+        ):
             with open(self.prefPath) as jsonFile:
                 self.preferences = json.load(jsonFile)
-            Globals.limit = self.preferences['limit']
-            Globals.offset = self.preferences['offset']
+            Globals.limit = self.preferences["limit"]
+            Globals.offset = self.preferences["offset"]
         else:
             self.createNewFile(self.prefPath)
             self.savePrefs(PreferencesDialog(self.preferences))
 
     def savePrefs(self, dialog):
-        with open(self.prefPath, 'w') as outfile:
+        with open(self.prefPath, "w") as outfile:
             self.preferences = dialog.GetPrefs()
             json.dump(self.preferences, outfile)
 

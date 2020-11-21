@@ -177,6 +177,7 @@ class CommandDialog(wx.Dialog):
         else:
             self.Close()
 
+
 class ProgressCheckDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: MyDialog.__init__
@@ -184,9 +185,7 @@ class ProgressCheckDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(375, 250),
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.STAY_ON_TOP
-            | wx.OK
+            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.OK,
         )
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
@@ -207,13 +206,28 @@ class ProgressCheckDialog(wx.Dialog):
     def __do_layout(self):
         # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_1 = wx.StaticBoxSizer(wx.StaticBox(self.panel_1, wx.ID_ANY, ""), wx.VERTICAL)
+        grid_sizer_1 = wx.StaticBoxSizer(
+            wx.StaticBox(self.panel_1, wx.ID_ANY, ""), wx.VERTICAL
+        )
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
         label_2 = wx.StaticText(self.panel_2, wx.ID_ANY, "Progress Check:")
-        label_2.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_2.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_2.Add(label_2, 0, 0, 0)
         sizer_2.Add((20, 20), 0, wx.EXPAND, 0)
-        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "Please check the Esper Console for detailed results for the action taken.\nThe action may take some time to be reflected on each device.")
+        label_1 = wx.StaticText(
+            self.panel_2,
+            wx.ID_ANY,
+            "Please check the Esper Console for detailed results for the action taken.\nThe action may take some time to be reflected on each device.",
+        )
         label_1.Wrap(300)
         sizer_2.Add(label_1, 0, 0, 0)
         self.panel_2.SetSizer(sizer_2)
@@ -231,19 +245,21 @@ class ProgressCheckDialog(wx.Dialog):
         else:
             self.Close()
 
+
 class PreferencesDialog(wx.Dialog):
     def __init__(self, prefDict, *args, **kwds):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
             size=(500, 400),
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.RESIZE_BORDER
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.prefs = prefDict
 
         self.SetSize((500, 400))
-        self.window_1_pane_1 = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+        self.window_1_pane_1 = wx.ScrolledWindow(
+            self, wx.ID_ANY, style=wx.TAB_TRAVERSAL
+        )
         self.panel_4 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.checkbox_2 = wx.CheckBox(self.panel_4, wx.ID_ANY, "")
         self.panel_5 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
@@ -283,20 +299,26 @@ class PreferencesDialog(wx.Dialog):
         sizer_1.Add(label_2, 0, wx.ALL, 5)
         label_3 = wx.StaticText(self.panel_4, wx.ID_ANY, "Enable Device Selection")
         sizer_4.Add(label_3, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-        grid_sizer_3.Add(self.checkbox_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        grid_sizer_3.Add(
+            self.checkbox_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
         sizer_4.Add(grid_sizer_3, 1, wx.EXPAND, 0)
         self.panel_4.SetSizer(sizer_4)
         grid_sizer_4.Add(self.panel_4, 1, wx.EXPAND, 0)
         label_4 = wx.StaticText(self.panel_5, wx.ID_ANY, "API Request Limit")
         sizer_5.Add(label_4, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-        grid_sizer_7.Add(self.text_ctrl_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        grid_sizer_7.Add(
+            self.text_ctrl_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
         self.panel_3.SetSizer(grid_sizer_7)
         sizer_5.Add(self.panel_3, 1, wx.EXPAND, 0)
         self.panel_5.SetSizer(sizer_5)
         grid_sizer_4.Add(self.panel_5, 1, wx.EXPAND, 0)
         label_5 = wx.StaticText(self.panel_6, wx.ID_ANY, "API Request Offset")
         sizer_6.Add(label_5, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-        grid_sizer_6.Add(self.text_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        grid_sizer_6.Add(
+            self.text_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
         self.panel_2.SetSizer(grid_sizer_6)
         sizer_6.Add(self.panel_2, 1, wx.EXPAND, 0)
         self.panel_6.SetSizer(sizer_6)
@@ -309,13 +331,13 @@ class PreferencesDialog(wx.Dialog):
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
-    
+
     def OnApply(self, event):
         self.prefs = {
             "enableDevice": self.checkbox_2.IsChecked(),
             "limit": self.text_ctrl_3.GetValue(),
             "offset": self.text_ctrl_2.GetValue(),
-            "recentAuth": self.prefs["recentAuth"]
+            "recentAuth": self.prefs["recentAuth"],
         }
 
         if self.IsModal():
@@ -329,11 +351,12 @@ class PreferencesDialog(wx.Dialog):
                 "enableDevice": True,
                 "limit": Globals.limit,
                 "offset": Globals.offset,
-                "recentAuth": [
-                    Globals.csv_auth_path
-                ] if Globals.csv_auth_path else []
+                "recentAuth": [Globals.csv_auth_path] if Globals.csv_auth_path else [],
             }
         if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
-            self.prefs["recentAuth"] = self.prefs["recentAuth"][len(self.prefs["recentAuth"]) - Globals.MAX_RECENT_ITEMS : len(self.prefs["recentAuth"])]
+            self.prefs["recentAuth"] = self.prefs["recentAuth"][
+                len(self.prefs["recentAuth"])
+                - Globals.MAX_RECENT_ITEMS : len(self.prefs["recentAuth"])
+            ]
 
         return self.prefs
