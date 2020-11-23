@@ -1612,6 +1612,7 @@ class NewFrameLayout(wx.Frame):
         ):
             with open(self.prefPath) as jsonFile:
                 self.preferences = json.load(jsonFile)
+            self.prefDialog.SetPrefs(self.preferences)
             Globals.limit = self.preferences["limit"]
             Globals.offset = self.preferences["offset"]
             if "lastAuth" in self.preferences and self.preferences["lastAuth"]:

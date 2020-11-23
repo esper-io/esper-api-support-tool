@@ -337,7 +337,7 @@ class PreferencesDialog(wx.Dialog):
             "enableDevice": self.checkbox_2.IsChecked(),
             "limit": self.text_ctrl_3.GetValue(),
             "offset": self.text_ctrl_2.GetValue(),
-            "recentAuth": self.prefs["recentAuth"],
+            "recentAuth": self.prefs["recentAuth"] if self.prefs["recentAuth"] else [Globals.csv_auth_path],
             "lastAuth": Globals.csv_auth_path,
         }
 
@@ -345,6 +345,9 @@ class PreferencesDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
+
+    def SetPrefs(self, prefs):
+        self.prefs = prefs
 
     def GetPrefs(self):
         if not self.prefs:
