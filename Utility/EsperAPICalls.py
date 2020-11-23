@@ -421,6 +421,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
         frame.emptyNetworkGrid()
 
     frame.runBtn.Enable(False)
+    frame.gauge.Pulse()
     if isDevice:
         deviceToUse = (
             frame.deviceChoice.GetClientData(group)

@@ -341,6 +341,9 @@ class PreferencesDialog(wx.Dialog):
             "lastAuth": Globals.csv_auth_path,
         }
 
+        Globals.limit = self.prefs["limit"]
+        Globals.offset = self.prefs["offset"]
+
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         else:
@@ -348,6 +351,13 @@ class PreferencesDialog(wx.Dialog):
 
     def SetPrefs(self, prefs):
         self.prefs = prefs
+
+        if "enableDevice" in self.prefs:
+            self.checkbox_2.SetValue(self.prefs["enableDevice"])
+        if "limit" in self.prefs and self.prefs["limit"]:
+            Globals.limit = self.prefs["limit"]
+        if "offset" in self.prefs and self.prefs["offset"]:
+            Globals.offset = self.prefs["offset"]
 
     def GetPrefs(self):
         if not self.prefs:

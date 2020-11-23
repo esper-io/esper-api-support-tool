@@ -1585,7 +1585,6 @@ class NewFrameLayout(wx.Frame):
 
         if callback:
             self.Logging("---> Attempting to Process API Response")
-            self.gauge.Pulse()
             callback(*(*cbArgs, response))
 
     def onComplete(self, event):
@@ -1614,8 +1613,6 @@ class NewFrameLayout(wx.Frame):
             with open(self.prefPath) as jsonFile:
                 self.preferences = json.load(jsonFile)
             self.prefDialog.SetPrefs(self.preferences)
-            Globals.limit = self.preferences["limit"]
-            Globals.offset = self.preferences["offset"]
             if "lastAuth" in self.preferences and self.preferences["lastAuth"]:
                 self.PopulateConfig(auth=self.preferences["lastAuth"])
         else:
