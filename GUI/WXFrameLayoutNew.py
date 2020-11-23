@@ -1585,6 +1585,7 @@ class NewFrameLayout(wx.Frame):
 
         if callback:
             self.Logging("---> Attempting to Process API Response")
+            self.gauge.Pulse()
             callback(*(*cbArgs, response))
 
     def onComplete(self, event):
