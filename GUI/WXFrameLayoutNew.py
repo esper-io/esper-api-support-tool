@@ -16,8 +16,6 @@ import tempfile
 
 from functools import partial
 
-from threading import Lock
-
 from Common.decorator import api_tool_decorator
 
 from GUI.consoleWindow import Console
@@ -57,7 +55,7 @@ class NewFrameLayout(wx.Frame):
         self.WINDOWS = True
         self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace(
             "Local", "Roaming"
-        )
+        ).replace("Temp", "")
         if platform.system() == "Windows":
             self.WINDOWS = True
         else:
@@ -148,7 +146,7 @@ class NewFrameLayout(wx.Frame):
 
         self.recent = wx.Menu()
         self.loadRecentMenu()
-        openRecent = fileMenu.Append(wx.ID_ANY, "&Open Recent Auth", self.recent)
+        fileMenu.Append(wx.ID_ANY, "&Open Recent Auth", self.recent)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device Info As\tCtrl+S")
@@ -289,6 +287,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
         self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
         self.Bind(wx.EVT_TOOL, self.onSave, stool)
+        self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
         self.Bind(wx.EVT_TOOL, self.onRun, rtool)
         self.Bind(wx.EVT_TOOL, self.onCommand, cmdtool)
         # Tool Bar end
@@ -1115,13 +1114,6 @@ class NewFrameLayout(wx.Frame):
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
-
-    def buttonYieldEvent(self):
-        """Allows Button Press Action to Yield For Result"""
-        if Globals.frame.WINDOWS:
-            wx.Yield()
-        else:
-            Globals.app.SafeYield(None, True)
 
     @api_tool_decorator
     def fillDeviceGridHeaders(self):

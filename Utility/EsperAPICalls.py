@@ -19,6 +19,8 @@ from Utility.deviceInfo import (
 
 from Common.decorator import api_tool_decorator
 
+from Utility.ApiToolLogging import ApiToolLog
+
 from esperclient import ApiClient
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
@@ -41,11 +43,12 @@ def getInfo(request_extension, deviceid):
     resp = requests.get(url, headers=headers)
     json_resp = resp.json()
     if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        print(
-            "Response {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
+        prettyReponse = "Response {result}".format(
+            result=json.dumps(json_resp, indent=4, sort_keys=True)
         )
+        print(prettyReponse)
+        ApiToolLog.LogResponse(prettyReponse)
+
     return json_resp
 
 
@@ -66,11 +69,11 @@ def patchInfo(request_extension, deviceid, tags):
     resp = requests.patch(url, headers=headers, data=json.dumps({"tags": tags}))
     json_resp = resp.json()
     if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        print(
-            "Response {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
+        prettyReponse = "Response {result}".format(
+            result=json.dumps(json_resp, indent=4, sort_keys=True)
         )
+        print(prettyReponse)
+        ApiToolLog.LogResponse(prettyReponse)
     return json_resp
 
 
