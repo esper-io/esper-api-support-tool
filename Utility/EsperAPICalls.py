@@ -560,7 +560,6 @@ def executeTagModification(frame):
     for device in api_response.results:
         if device.device_name in tagsFromGrid.keys():
             tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
-            # frame.updateTagCell(device.device_name, tags)
             postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
             postEventToFrame(
                 wxThread.myEVT_UPDATE_GAUGE, int(num / len(tagsFromGrid.keys()) * 100)

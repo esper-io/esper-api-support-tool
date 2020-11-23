@@ -935,7 +935,6 @@ class NewFrameLayout(wx.Frame):
         )
         self.deviceChoice.Clear()
         self.appChoice.Clear()
-        # if self.deviceToggle.IsChecked():
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
             self.setGaugeValue(0)
@@ -962,7 +961,6 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, event):
         api_response = event.GetValue()
         if len(api_response.results):
-            # if self.deviceToggle.IsChecked():
             if not self.preferences or self.preferences["enableDevice"] == True:
                 self.deviceChoice.Enable(True)
             else:
