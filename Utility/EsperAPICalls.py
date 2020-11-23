@@ -169,7 +169,7 @@ def setdevicetags(deviceid, tags):
     return tags
 
 
-def setdevicename(frame, deviceid, devicename):
+def setdevicename(frame, deviceid, devicename, ignoreQueue):
     """Pushes New Name To Name"""
     api_instance = getCommandsApiInstance()
     args = esperclient.V0CommandArgs(device_alias_name=devicename)
@@ -185,7 +185,7 @@ def setdevicename(frame, deviceid, devicename):
         Globals.enterprise_id, api_response.id
     )
     status = response.results[0].state
-    status = waitForCommandToFinish(frame, api_response.id)
+    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue)
     return status
 
 
@@ -197,10 +197,7 @@ def getAllGroups(*args, **kwds):
         api_response = api_instance.get_all_groups(
             Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
         )
-        evt = wxThread.CustomEvent(
-            wxThread.myEVT_LOG, -1, "---> Group API Request Finished"
-        )
-        wx.PostEvent(Globals.frame, evt)
+        postEventToFrame(wxThread.myEVT_LOG, "---> Group API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception(
@@ -219,10 +216,7 @@ def getAllDevices(groupToUse, *args, **kwds):
             limit=Globals.limit,
             offset=Globals.offset,
         )
-        evt = wxThread.CustomEvent(
-            wxThread.myEVT_LOG, -1, "---> Device API Request Finished"
-        )
-        wx.PostEvent(Globals.frame, evt)
+        postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -239,10 +233,7 @@ def getAllApplications(*args, **kwds):
             offset=Globals.offset,
             is_hidden=False,
         )
-        evt = wxThread.CustomEvent(
-            wxThread.myEVT_LOG, -1, "---> App API Request Finished"
-        )
-        wx.PostEvent(Globals.frame, evt)
+        postEventToFrame(wxThread.myEVT_LOG, "---> App API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception(
@@ -260,10 +251,7 @@ def getDeviceById(deviceToUse, *args, **kwds):
         )
         if api_response:
             api_response.results = [api_response]
-        evt = wxThread.CustomEvent(
-            wxThread.myEVT_LOG, -1, "---> Device API Request Finished"
-        )
-        wx.PostEvent(Globals.frame, evt)
+        postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
@@ -318,8 +306,7 @@ def iterateThroughDeviceList(frame, action, api_response):
 def waitTillThreadsFinish(threads, action):
     for t in threads:
         t.join()
-    evt = wxThread.CustomEvent(wxThread.myEVT_UPDATE_DONE, -1, action)
-    wx.PostEvent(Globals.frame, evt)
+    postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
 
 
 def processDevices(chunk, number_of_devices, action):
@@ -515,8 +502,7 @@ def setKiosk(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Kiosk mode, skipping)"
-    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, logString)
-    wx.PostEvent(Globals.frame, evt)
+    postEventToFrame(wxThread.myEVT_LOG, logString)
 
 
 def setMulti(frame, device, deviceInfo):
@@ -536,11 +522,25 @@ def setMulti(frame, device, deviceInfo):
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Multi mode, skipping)"
-    evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, logString)
-    wx.PostEvent(Globals.frame, evt)
+    postEventToFrame(wxThread.myEVT_LOG, logString)
+
+
+@api_tool_decorator
+def postEventToFrame(eventType, eventValue):
+    evt = wxThread.CustomEvent(eventType, -1, eventValue)
+    if Globals.frame:
+        wx.PostEvent(Globals.frame, evt)
 
 
 def modifyTags(frame):
+    t = wxThread.GUIThread(
+        frame, executeTagModification, args=(frame), eventType=None, passArgAsTuple=True
+    )
+    t.start()
+
+
+@api_tool_decorator
+def executeTagModification(frame):
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = api_instance.get_all_devices(
@@ -549,7 +549,9 @@ def modifyTags(frame):
             offset=Globals.offset,
         )
     except Exception as e:
-        frame.Logging("---> ERROR: Failed to get devices ids to modify tags")
+        postEventToFrame(
+            wxThread.myEVT_LOG, "---> ERROR: Failed to get devices ids to modify tags"
+        )
         print(e)
 
     tagsFromGrid = frame.getDeviceTagsFromGrid()
@@ -558,13 +560,28 @@ def modifyTags(frame):
     for device in api_response.results:
         if device.device_name in tagsFromGrid.keys():
             tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
-            frame.updateTagCell(device.device_name, tags)
-            frame.setGaugeValue(int(num / len(tagsFromGrid.keys()) * 100))
+            # frame.updateTagCell(device.device_name, tags)
+            postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
+            postEventToFrame(
+                wxThread.myEVT_UPDATE_GAUGE, int(num / len(tagsFromGrid.keys()) * 100)
+            )
             num += 1
 
 
 def modifyAlias(frame):
     """Sets Device Alias"""
+    t = wxThread.GUIThread(
+        frame,
+        executeAliasModification,
+        args=(frame),
+        eventType=None,
+        passArgAsTuple=True,
+    )
+    t.start()
+
+
+@api_tool_decorator
+def executeAliasModification(frame):
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = api_instance.get_all_devices(
@@ -573,32 +590,43 @@ def modifyAlias(frame):
             offset=Globals.offset,
         )
     except Exception as e:
-        frame.Logging("---> ERROR: Failed to get devices ids to modify tags")
+        postEventToFrame(
+            wxThread.myEVT_LOG, "---> ERROR: Failed to get devices ids to modify tags"
+        )
         print(e)
 
     aliasDic = frame.getDeviceAliasFromGrid()
     logString = ""
     num = 1
+    succeeded = 0
     for device in api_response.results:
         if device.device_name in aliasDic.keys():
             newName = aliasDic[device.device_name]
             logString = str(
                 "--->" + str(device.device_name) + " : " + str(newName) + "--->"
             )
-            if not (newName in str(device.alias_name)):
+            if newName != str(device.alias_name):
                 if device.status == 1:
-                    status = setdevicename(frame, device.id, newName)
+                    status = setdevicename(frame, device.id, newName, True)
                     if "Success" in str(status):
                         logString = logString + " <success>"
+                        succeeded += 1
                     else:
                         logString = logString + " <failed>"
                 else:
                     logString = logString + "(Device offline)"
             else:
                 logString = logString + "(Name already set)"
-            frame.setGaugeValue(int(num / len(aliasDic.keys()) * 100))
+            postEventToFrame(
+                wxThread.myEVT_UPDATE_GAUGE, int(num / len(aliasDic.keys()) * 100)
+            )
             num += 1
-        frame.Logging(logString)
+            postEventToFrame(wxThread.myEVT_LOG, logString)
+    postEventToFrame(
+        wxThread.myEVT_LOG,
+        "Successfully changed alias for %s of %s devices."
+        % (succeeded, len(aliasDic.keys())),
+    )
 
 
 ####End Perform Actions####
@@ -649,33 +677,33 @@ def executeUpdateDeviceConfigCommandOnDevice(
 
 
 @api_tool_decorator
-def waitForCommandToFinish(frame, request_id):
+def waitForCommandToFinish(frame, request_id, ignoreQueue=False):
     api_instance = getCommandsApiInstance()
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, request_id
     )
     status = response.results[0]
-    evt = wxThread.CustomEvent(
-        wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state)
-    )
-    wx.PostEvent(Globals.frame, evt)
+    postEventToFrame(wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state))
 
-    while status.state not in [
+    stateList = [
         "Command Success",
         "Command Failure",
         "Command TimeOut",
         "Command Cancelled",
         "Command Queued",
-    ]:
+    ]
+    if ignoreQueue:
+        stateList.remove("Command Queued")
+
+    while status.state not in stateList:
         response = api_instance.get_command_request_status(
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        evt = wxThread.CustomEvent(
-            wxThread.myEVT_LOG, -1, "---> Command state: %s" % str(status.state)
+        postEventToFrame(
+            wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
         )
-        wx.PostEvent(Globals.frame, evt)
-        time.sleep(1)
+        time.sleep(3)
     return status
 
 

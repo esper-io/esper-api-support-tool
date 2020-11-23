@@ -70,7 +70,6 @@ class NewFrameLayout(wx.Frame):
         self.checkConsole = None
         self.preferences = None
         self.prefDialog = PreferencesDialog(self.preferences)
-        self.loadPref()
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 600))
@@ -213,10 +212,10 @@ class NewFrameLayout(wx.Frame):
             self.viewMenuOptions[item.Id] = colNum
             colNum += 1
         viewMenu.Append(wx.ID_SEPARATOR)
-        consoleView = viewMenu.Append(
+        self.consoleView = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console", kind=wx.ITEM_CHECK)
         )
-        self.Bind(wx.EVT_MENU, self.showConsole, consoleView)
+        self.Bind(wx.EVT_MENU, self.showConsole, self.consoleView)
         self.clearConsole = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console")
         )
@@ -250,18 +249,48 @@ class NewFrameLayout(wx.Frame):
         # Menu Bar end
 
         # Tool Bar
-        # self.frame_toolbar = wx.ToolBar(self, -1)
-        # self.SetToolBar(self.frame_toolbar)
+        self.frame_toolbar = wx.ToolBar(self, -1)
+        self.SetToolBar(self.frame_toolbar)
 
-        # qtool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Quit', png)
-        # otool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Open Auth CSV',  wx.Bitmap('Images/openFile.png', wx.BITMAP_TYPE_ANY))
-        # stool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Save As',  wx.Bitmap('Images/save.png', wx.BITMAP_TYPE_ANY))
-        # ctool = self.frame_toolbar.AddTool(wx.ID_ANY, 'Clear',  wx.Bitmap('Images/clear.png', wx.BITMAP_TYPE_ANY))
+        close_icon = wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_TOOLBAR, (16, 16))
+        qtool = self.frame_toolbar.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
+        self.frame_toolbar.AddSeparator()
 
-        # self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
-        # self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
-        # self.Bind(wx.EVT_TOOL, self.onSave, stool)
-        # self.Bind(wx.EVT_TOOL, self.onClear, ctool)
+        open_icon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, (16, 16))
+        otool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Open Auth CSV", open_icon, "Open Auth CSV"
+        )
+        self.frame_toolbar.AddSeparator()
+
+        save_icon = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, (16, 16))
+        stool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Save Device Info", save_icon, "Save Device Info"
+        )
+        saveas_icon = wx.ArtProvider.GetBitmap(
+            wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, (16, 16)
+        )
+        sstool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Save Network Info", saveas_icon, "Save Network Info"
+        )
+        self.frame_toolbar.AddSeparator()
+
+        exe_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR, (16, 16))
+        rtool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Run Action", exe_icon, "Run Action"
+        )
+
+        cmd_icon = wx.ArtProvider.GetBitmap(
+            wx.ART_EXECUTABLE_FILE, wx.ART_TOOLBAR, (16, 16)
+        )
+        cmdtool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Run Command", cmd_icon, "Run Command"
+        )
+
+        self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
+        self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
+        self.Bind(wx.EVT_TOOL, self.onSave, stool)
+        self.Bind(wx.EVT_TOOL, self.onRun, rtool)
+        self.Bind(wx.EVT_TOOL, self.onCommand, cmdtool)
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
@@ -273,6 +302,9 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
         self.Bind(wxThread.EVT_LOG, self.onLog)
         self.Bind(wxThread.EVT_COMMAND, self.onCommandDone)
+        self.Bind(wxThread.EVT_UPDATE_GAUGE, self.setGaugeValue)
+        self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.updateTagCell)
+        self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.uncheckConsole)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
@@ -299,6 +331,7 @@ class NewFrameLayout(wx.Frame):
         icon.CopyFromBitmap(wx.Bitmap("Images/icon.png", wx.BITMAP_TYPE_PNG))
         self.SetIcon(icon)
 
+        self.loadPref()
         self.__set_properties()
         self.__do_layout()
         self.Raise()
@@ -329,7 +362,7 @@ class NewFrameLayout(wx.Frame):
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
 
-        # self.frame_toolbar.Realize()
+        self.frame_toolbar.Realize()
         self.panel_1.SetMinSize((400, 900))
         self.panel_2.SetMinSize((2000, 800))
         self.Maximize(True)
@@ -564,6 +597,9 @@ class NewFrameLayout(wx.Frame):
             self.consoleWin = None
         if e.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
+        if self.prefDialog:
+            self.prefDialog.Close()
+            self.prefDialog.Destroy()
         self.savePrefs(self.prefDialog)
         self.Destroy()
 
@@ -787,10 +823,7 @@ class NewFrameLayout(wx.Frame):
                 if authItem:
                     self.recent.Delete(authItem)
             self.preferences["recentAuth"].append(Globals.csv_auth_path)
-            """recentItem = self.recent.Prepend(wx.ID_ANY, Globals.csv_auth_path)
-            self.Bind(
-                wx.EVT_MENU, partial(self.PopulateConfig, auth, recentItem), recentItem
-            )"""
+            self.preferences["lastAuth"] = Globals.csv_auth_path
             self.loadRecentMenu()
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
@@ -889,6 +922,8 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(True)
         self.run.Enable(True)
         self.command.Enable(True)
+        self.groupChoice.Enable(True)
+        self.actionChoice.Enable(True)
         self.setCursorDefault()
 
     @api_tool_decorator
@@ -1269,7 +1304,11 @@ class NewFrameLayout(wx.Frame):
         self.grid_1.AutoSizeColumns()
 
     @api_tool_decorator
-    def updateTagCell(self, name, tags):
+    def updateTagCell(self, name, tags=None):
+        if hasattr(name, "GetValue"):
+            tple = name.GetValue()
+            name = tple[0]
+            tags = tple[1]
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
@@ -1282,7 +1321,7 @@ class NewFrameLayout(wx.Frame):
 
     def showConsole(self, event):
         if not self.consoleWin:
-            self.consoleWin = Console()
+            self.consoleWin = Console(parent=self)
             self.clearConsole.Enable(True)
             self.Bind(wx.EVT_MENU, self.onClear, self.clearConsole)
         else:
@@ -1414,9 +1453,17 @@ class NewFrameLayout(wx.Frame):
         if curSortCol == col:
             descending = True
         self.grid_1.SetSortingColumn(col, bool(not descending))
-        self.grid_1_contents = sorted(
-            self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
-        )
+
+        if keyName == "androidVersion":
+            self.grid_1_contents = sorted(
+                self.grid_1_contents,
+                key=lambda i: list(map(int, i[keyName].split("."))),
+                reverse=descending,
+            )
+        else:
+            self.grid_1_contents = sorted(
+                self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
+            )
         self.Logging("---> Sorting Device Grid on Column: %s" % keyName)
         self.setGaugeValue(0)
         self.emptyDeviceGrid()
@@ -1528,6 +1575,8 @@ class NewFrameLayout(wx.Frame):
         pass
 
     def setGaugeValue(self, value):
+        if hasattr(value, "GetValue"):
+            value = value.GetValue()
         maxValue = self.gauge.GetRange()
         if value > maxValue:
             value = maxValue
@@ -1564,6 +1613,7 @@ class NewFrameLayout(wx.Frame):
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
 
+    @api_tool_decorator
     def loadPref(self):
         if (
             os.path.isfile(self.prefPath)
@@ -1574,10 +1624,13 @@ class NewFrameLayout(wx.Frame):
                 self.preferences = json.load(jsonFile)
             Globals.limit = self.preferences["limit"]
             Globals.offset = self.preferences["offset"]
+            if "lastAuth" in self.preferences and self.preferences["lastAuth"]:
+                self.PopulateConfig(auth=self.preferences["lastAuth"])
         else:
             self.createNewFile(self.prefPath)
             self.savePrefs(PreferencesDialog(self.preferences))
 
+    @api_tool_decorator
     def savePrefs(self, dialog):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
@@ -1587,6 +1640,7 @@ class NewFrameLayout(wx.Frame):
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.savePrefs(self.prefDialog)
 
+    @api_tool_decorator
     def loadRecentMenu(self):
         if (
             self.preferences
@@ -1609,3 +1663,7 @@ class NewFrameLayout(wx.Frame):
                     notExist.append(auth)
             for auth in notExist:
                 self.preferences["recentAuth"].remove(auth)
+
+    @api_tool_decorator
+    def uncheckConsole(self, event):
+        self.consoleView.Check(False)

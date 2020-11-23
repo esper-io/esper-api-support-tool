@@ -85,13 +85,18 @@ CSV_EDITABLE_COL = ["Alias", "Tags"]
 CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
+    "Brand": "brand",
+    "Model": "model",
+    "Android Version": "androidVersion",
     "Status": "Status",
     "Mode": "Mode",
     "Serial": "Serial",
+    "IMEI 1": "imei1",
+    "IMEI 2": "imei2",
     "Tags": "Tags",
     "Applications": "Apps",
     "Pinned App": "KioskApp",
-    # "Bluetooth State": "bluetoothState",
+    "Is GMS": "is_gms",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",

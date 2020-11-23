@@ -338,6 +338,7 @@ class PreferencesDialog(wx.Dialog):
             "limit": self.text_ctrl_3.GetValue(),
             "offset": self.text_ctrl_2.GetValue(),
             "recentAuth": self.prefs["recentAuth"],
+            "lastAuth": Globals.csv_auth_path,
         }
 
         if self.IsModal():
@@ -352,6 +353,7 @@ class PreferencesDialog(wx.Dialog):
                 "limit": Globals.limit,
                 "offset": Globals.offset,
                 "recentAuth": [Globals.csv_auth_path] if Globals.csv_auth_path else [],
+                "lastAuth": Globals.csv_auth_path,
             }
         self.prefs["recentAuth"] = list(dict.fromkeys(self.prefs["recentAuth"]))
         if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:

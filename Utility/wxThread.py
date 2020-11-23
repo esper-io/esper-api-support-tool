@@ -29,6 +29,15 @@ EVT_LOG = wx.PyEventBinder(myEVT_LOG, 1)
 myEVT_COMMAND = wx.NewEventType()
 EVT_COMMAND = wx.PyEventBinder(myEVT_COMMAND, 1)
 
+myEVT_UPDATE_GAUGE = wx.NewEventType()
+EVT_UPDATE_GAUGE = wx.PyEventBinder(myEVT_UPDATE_GAUGE, 1)
+
+myEVT_UPDATE_TAG_CELL = wx.NewEventType()
+EVT_UPDATE_TAG_CELL = wx.PyEventBinder(myEVT_UPDATE_TAG_CELL, 1)
+
+myEVT_UNCHECK_CONSOLE = wx.NewEventType()
+EVT_UNCHECK_CONSOLE = wx.PyEventBinder(myEVT_UNCHECK_CONSOLE, 1)
+
 
 def doAPICallInThread(
     frame,

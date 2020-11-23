@@ -1,12 +1,14 @@
 import wx
 import Common.Globals as Globals
 import platform
+import Utility.wxThread as wxThread
 
 
 class Console(wx.Frame):
     def __init__(self, parent=None):
         self.title = "Console"
         self.WINDOWS = True
+        self.parent = parent
         if platform.system() == "Windows":
             self.WINDOWS = True
         else:
@@ -49,9 +51,19 @@ class Console(wx.Frame):
             if self.WINDOWS:
                 self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
 
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+
         self.SetBackgroundColour(wx.Colour(100, 100, 100))
         self.Centre()
         self.Show()
+
+    def onClose(self, event):
+        evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
+        if Globals.frame:
+            wx.PostEvent(Globals.frame, evt)
+        if event.EventType != wx.EVT_CLOSE.typeId:
+            self.Close()
+        self.Destroy()
 
     def onClear(self, event=None):
         self.loggingList.Clear()
@@ -62,5 +74,6 @@ class Console(wx.Frame):
         self.loggingList.Append(entry)
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
-        Globals.LOGLIST.append(entry)
+        if entry:
+            Globals.LOGLIST.append(entry.strip())
         return
