@@ -23,9 +23,10 @@ def api_tool_decorator(func):
             exc_traceback = format_list(extract_tb(exc_traceback))
             ApiToolLog().LogError(e, exc_type, exc_value, exc_traceback)
 
-            Globals.frame.Logging(str(e), isError=True)
-            Globals.frame.setCursorDefault()
-            Globals.frame.setGaugeValue(100)
+            if Globals.frame:
+                Globals.frame.Logging(str(e), isError=True)
+                Globals.frame.setCursorDefault()
+                Globals.frame.setGaugeValue(100)
         end = time.perf_counter()
         duration = end - start
         if Globals.PRINT_FUNC_DURATION:
