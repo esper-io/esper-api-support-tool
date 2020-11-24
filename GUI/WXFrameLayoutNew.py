@@ -854,6 +854,7 @@ class NewFrameLayout(wx.Frame):
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
+        self.clearGrids()
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."
