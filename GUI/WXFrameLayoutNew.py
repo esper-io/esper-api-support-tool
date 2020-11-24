@@ -854,7 +854,7 @@ class NewFrameLayout(wx.Frame):
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
-        self.clearGrids()
+        self.onClearGrids(None)
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."
@@ -1120,24 +1120,30 @@ class NewFrameLayout(wx.Frame):
     def fillDeviceGridHeaders(self):
         num = 0
         headerLabels = Globals.CSV_TAG_ATTR_NAME.keys()
-        for head in headerLabels:
-            if head:
-                if self.grid_1.GetNumberCols() < len(headerLabels):
-                    self.grid_1.AppendCols(1)
-                self.grid_1.SetColLabelValue(num, head)
-                num += 1
+        try:
+            for head in headerLabels:
+                if head:
+                    if self.grid_1.GetNumberCols() < len(headerLabels):
+                        self.grid_1.AppendCols(1)
+                    self.grid_1.SetColLabelValue(num, head)
+                    num += 1
+        except:
+            pass
         self.grid_1.AutoSizeColumns()
 
     @api_tool_decorator
     def fillNetworkGridHeaders(self):
         num = 0
         headerLabels = Globals.CSV_NETWORK_ATTR_NAME.keys()
-        for head in headerLabels:
-            if head:
-                if self.grid_2.GetNumberCols() < len(headerLabels):
-                    self.grid_2.AppendCols(1)
-                self.grid_2.SetColLabelValue(num, head)
-                num += 1
+        try:
+            for head in headerLabels:
+                if head:
+                    if self.grid_2.GetNumberCols() < len(headerLabels):
+                        self.grid_2.AppendCols(1)
+                    self.grid_2.SetColLabelValue(num, head)
+                    num += 1
+        except:
+            pass
         self.grid_2.AutoSizeColumns()
 
     @api_tool_decorator
