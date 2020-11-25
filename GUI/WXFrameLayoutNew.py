@@ -7,13 +7,13 @@ import csv
 import os.path
 import logging
 import Common.Globals as Globals
-import ctypes
 import platform
 import json
 import Utility.wxThread as wxThread
 import GUI.EnhancedStatusBar as ESB
 import tempfile
 import re
+import ast
 
 from functools import partial
 
@@ -47,6 +47,7 @@ from GUI.CustomDialogs import (
     CommandDialog,
     ProgressCheckDialog,
     PreferencesDialog,
+    CmdConfirmDialog,
 )
 
 
@@ -167,14 +168,6 @@ class NewFrameLayout(wx.Frame):
         self.configMenuOptions.append(defaultConfigVal)
 
         editMenu = wx.Menu()
-        """self.deviceToggle = editMenu.Append(
-            wx.ID_ANY,
-            "Enable Device Selection",
-            "Enable Device Selection",
-            kind=wx.ITEM_CHECK,
-        )
-        self.deviceToggle.Check(True)
-        self.Bind(wx.EVT_MENU, self.toggleDeviceSelection, self.deviceToggle)"""
         pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
         self.pref = editMenu.Append(pref)
 
@@ -1372,10 +1365,9 @@ class NewFrameLayout(wx.Frame):
                             self.onCommand(event, config, level + 1)
                         if cmd != None:
                             ApplyDeviceConfig(self, cmd, commandType)
-                            self.gauge.Pulse()
             else:
                 wx.MessageBox(
-                    "Please select an group and or devices", style=wx.OK | wx.ICON_ERROR
+                    "Please select an group and or device", style=wx.OK | wx.ICON_ERROR
                 )
             self.setCursorDefault()
 
@@ -1412,24 +1404,22 @@ class NewFrameLayout(wx.Frame):
         )
         modal = None
         isGroup = False
-        cmd_format = (
-            json.dumps(str(cmd).replace("\n", "").replace(" ", ""), indent=2)
-            .replace(",", ",\n")
-            .replace(":{", ":{\n")
-        )
+        cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
+        cmdFormatted = json.dumps(cmd_dict, indent=2)
+        label = ""
+        applyTo = ""
         if deviceSelection > 0 and deviceLabel:
-            modal = wx.MessageBox(
-                "About to try applying the %s command: \n\n%s\n\n on the device, %s, continue?"
-                % (commandType, cmd_format, deviceLabel),
-                style=wx.YES | wx.NO | wx.YES_DEFAULT,
-            )
+            label = deviceLabel
+            applyTo = "device"
         elif groupSelection >= 0 and groupLabel:
-            modal = wx.MessageBox(
-                "About to try applying the %s command: \n%s\n\n on the group, %s, continue?"
-                % (commandType, cmd_format, groupLabel),
-                style=wx.YES | wx.NO | wx.YES_DEFAULT,
-            )
+            label = groupLabel
+            applyTo = "group"
             isGroup = True
+        modal = wx.NO
+        with CmdConfirmDialog(commandType, cmdFormatted, applyTo, label) as dialog:
+            res = dialog.ShowModal()
+            if res == wx.ID_OK:
+                modal = wx.YES
 
         if modal == wx.YES:
             return True, isGroup
@@ -1601,13 +1591,6 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.setGaugeValue(100)
         self.Logging("---> Completed Action")
-
-    def toggleDeviceSelection(self, event):
-        if event.Selection == 1:
-            self.deviceChoice.Enable(True)
-        else:
-            self.deviceChoice.SetSelection(0)
-            self.deviceChoice.Enable(False)
 
     def onClearGrids(self, event):
         self.emptyDeviceGrid()

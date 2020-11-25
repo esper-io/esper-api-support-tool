@@ -1,7 +1,6 @@
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 import Common.Globals as Globals
 import wx
-import ctypes
 import sys
 import os
 import platform

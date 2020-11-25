@@ -7,8 +7,6 @@ enterprise_id = ""
 VERSION = "0.1"
 TITLE = "Esper API Tool"
 CONFIGFILE = "EsperGroupActionsConfig.csv"
-# LOGFILE = "EsperGroupActionLog"
-NAMESTAGSFILE = "EsperGroupActionsNamesTags.csv"
 limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 SHOW_GRID_DIALOG = True
@@ -45,7 +43,6 @@ SET_ALIAS = 1
 MODIFY_TAGS = 2
 
 LOGLIST = []
-TAGSandALIASES = {}  # Unused?
 
 COMMAND_ARGS = [
     "app_state",
@@ -62,8 +59,8 @@ COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    "INSTALL",
-    "UNINSTALL",
+    # "INSTALL",
+    # "UNINSTALL",
     "SET_NEW_POLICY",
     "ADD_WIFI_AP",
     "REMOVE_WIFI_AP",
@@ -117,7 +114,5 @@ frame = None
 app = None
 
 """ CSV Save File """
-csv_tag_path = ""
-csv_tag_path_clone = ""  # unused
 csv_auth_path = ""
 GRID_DEVICE_INFO_LIST = []

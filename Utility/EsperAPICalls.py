@@ -6,7 +6,6 @@ import os.path
 import Common.Globals as Globals
 import string
 import platform
-import ctypes
 import Utility.wxThread as wxThread
 import wx
 
@@ -767,4 +766,5 @@ def ApplyDeviceConfig(frame, config, commandType):
             eventType=wxThread.myEVT_COMMAND,
         )
     if t:
+        frame.gauge.Pulse()
         t.start()
