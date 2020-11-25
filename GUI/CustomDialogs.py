@@ -296,7 +296,7 @@ class PreferencesDialog(wx.Dialog):
         self.__do_layout()
 
     def __set_properties(self):
-        self.SetTitle("dialog")
+        self.SetTitle("Preferences")
         self.SetSize((500, 400))
         self.window_1_pane_1.SetMinSize((437, 271))
         self.window_1_pane_1.SetScrollRate(10, 10)
