@@ -335,6 +335,8 @@ class NewFrameLayout(wx.Frame):
         self.__set_properties()
         self.__do_layout()
         self.Raise()
+        self.Iconize(False)
+        self.SetFocus()
 
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
