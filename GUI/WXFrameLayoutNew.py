@@ -1260,7 +1260,7 @@ class NewFrameLayout(wx.Frame):
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
                 for r in re.findall(r"'.+?'|[\w-]+", tags):
-                    processedTag = r.replace("'", "") # strip qoutes around tag
+                    processedTag = r.replace("'", "")  # strip qoutes around tag
                     if processedTag:
                         properTagList.append(processedTag)
                 tagList[esperName] = properTagList

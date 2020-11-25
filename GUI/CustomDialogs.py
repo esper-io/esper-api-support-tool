@@ -41,13 +41,11 @@ class CheckboxMessageBox(wx.Dialog):
         sizer_3.Add(title, 0, wx.ALL | wx.EXPAND, 5)
         self.panel_2.SetSizer(sizer_3)
         grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
-        sizer_4.Add(self.checkbox_1, 0, wx.ALL, 5)
-        label_1 = wx.StaticText(
-            self.panel_3, wx.ID_ANY, "Do not show again"
-        )
+        sizer_4.Add(self.checkbox_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
+        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Do not show again")
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
-        sizer_2.Add(sizer_4, 1, wx.ALIGN_BOTTOM | wx.ALL, 5)
+        sizer_2.Add(sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
         sizer_5.Add(self.okBtn, 0, wx.ALL, 5)
         sizer_5.Add(self.cancelBtn, 0, wx.ALL, 5)
         sizer_2.Add(sizer_5, 1, wx.ALIGN_BOTTOM | wx.ALL, 5)
@@ -271,12 +269,21 @@ class PreferencesDialog(wx.Dialog):
         )
         self.panel_4 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.checkbox_2 = wx.CheckBox(self.panel_4, wx.ID_ANY, "")
+
         self.panel_5 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_5, wx.ID_ANY)
         self.text_ctrl_3 = wx.TextCtrl(self.panel_3, wx.ID_ANY, str(Globals.limit))
+
         self.panel_6 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_2 = wx.Panel(self.panel_6, wx.ID_ANY)
         self.text_ctrl_2 = wx.TextCtrl(self.panel_2, wx.ID_ANY, str(Globals.offset))
+
+        self.panel_7 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
+        self.panel_8 = wx.Panel(self.panel_7, wx.ID_ANY)
+        self.text_ctrl_4 = wx.TextCtrl(
+            self.panel_8, wx.ID_ANY, str(Globals.COMMAND_TIMEOUT)
+        )
+
         self.button_1 = wx.Button(self, wx.ID_APPLY, "Apply")
 
         if prefDict and not prefDict["enableDevice"]:
@@ -298,6 +305,8 @@ class PreferencesDialog(wx.Dialog):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.GridSizer(1, 1, 0, 0)
         grid_sizer_4 = wx.GridSizer(5, 1, 0, 0)
+        sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
         sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
@@ -332,7 +341,15 @@ class PreferencesDialog(wx.Dialog):
         sizer_6.Add(self.panel_2, 1, wx.EXPAND, 0)
         self.panel_6.SetSizer(sizer_6)
         grid_sizer_4.Add(self.panel_6, 1, wx.EXPAND, 0)
-        grid_sizer_4.Add((0, 0), 0, 0, 0)
+        label_6 = wx.StaticText(self.panel_7, wx.ID_ANY, "Command Timeout")
+        sizer_7.Add(label_6, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        grid_sizer_8.Add(
+            self.text_ctrl_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+        self.panel_8.SetSizer(grid_sizer_8)
+        sizer_7.Add(self.panel_8, 1, wx.EXPAND, 0)
+        self.panel_7.SetSizer(sizer_7)
+        grid_sizer_4.Add(self.panel_7, 1, wx.EXPAND, 0)
         grid_sizer_4.Add((0, 0), 0, 0, 0)
         self.window_1_pane_1.SetSizer(grid_sizer_4)
         sizer_1.Add(self.window_1_pane_1, 0, wx.ALL | wx.EXPAND, 10)
@@ -346,13 +363,17 @@ class PreferencesDialog(wx.Dialog):
             "enableDevice": self.checkbox_2.IsChecked(),
             "limit": self.text_ctrl_3.GetValue(),
             "offset": self.text_ctrl_2.GetValue(),
-            "recentAuth": self.prefs["recentAuth"] if self.prefs["recentAuth"] else [Globals.csv_auth_path],
+            "recentAuth": self.prefs["recentAuth"]
+            if self.prefs["recentAuth"]
+            else [Globals.csv_auth_path],
             "lastAuth": Globals.csv_auth_path,
             "gridDialog": Globals.SHOW_GRID_DIALOG,
+            "commandTimeout": self.text_ctrl_2.GetValue(),
         }
 
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]
+        Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
 
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -371,6 +392,8 @@ class PreferencesDialog(wx.Dialog):
             Globals.offset = self.prefs["offset"]
         if "gridDialog" in self.prefs and self.prefs["gridDialog"]:
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
+        if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
+            Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
 
     def GetPrefs(self):
         if not self.prefs:
@@ -400,3 +423,7 @@ class PreferencesDialog(wx.Dialog):
             return [Globals.csv_auth_path] if Globals.csv_auth_path else []
         elif key == "lastAuth":
             return Globals.csv_auth_path
+        elif key == "commandTimeout":
+            return Globals.COMMAND_TIMEOUT
+        else:
+            return None

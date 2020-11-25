@@ -172,7 +172,9 @@ def setdevicetags(deviceid, tags):
     return tags
 
 
-def setdevicename(frame, deviceid, devicename, ignoreQueue):
+def setdevicename(
+    frame, deviceid, devicename, ignoreQueue, timeout=Globals.COMMAND_TIMEOUT
+):
     """Pushes New Name To Name"""
     api_instance = getCommandsApiInstance()
     args = esperclient.V0CommandArgs(device_alias_name=devicename)
@@ -188,7 +190,7 @@ def setdevicename(frame, deviceid, devicename, ignoreQueue):
         Globals.enterprise_id, api_response.id
     )
     status = response.results[0].state
-    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue)
+    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue, timeout)
     return status
 
 
@@ -530,7 +532,7 @@ def setMulti(frame, device, deviceInfo):
 
 
 @api_tool_decorator
-def postEventToFrame(eventType, eventValue):
+def postEventToFrame(eventType, eventValue=None):
     evt = wxThread.CustomEvent(eventType, -1, eventValue)
     if Globals.frame:
         wx.PostEvent(Globals.frame, evt)
@@ -569,6 +571,7 @@ def executeTagModification(frame):
                 wxThread.myEVT_UPDATE_GAUGE, int(num / len(tagsFromGrid.keys()) * 100)
             )
             num += 1
+    postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
 def modifyAlias(frame):
@@ -602,22 +605,25 @@ def executeAliasModification(frame):
     logString = ""
     num = 1
     succeeded = 0
+    numNewName = 0
     for device in api_response.results:
         if device.device_name in aliasDic.keys():
             newName = aliasDic[device.device_name]
             logString = str(
                 "--->" + str(device.device_name) + " : " + str(newName) + "--->"
             )
+            if not newName and not device.alias_name:
+                continue
             if newName != str(device.alias_name):
-                if device.status == 1:
-                    status = setdevicename(frame, device.id, newName, True)
-                    if "Success" in str(status):
-                        logString = logString + " <success>"
-                        succeeded += 1
-                    else:
-                        logString = logString + " <failed>"
+                numNewName += 1
+                status = setdevicename(frame, device.id, newName, True)
+                if "Success" in str(status):
+                    logString = logString + " <success>"
+                    succeeded += 1
+                elif "Queued" in str(status):
+                    logString = logString + " <failed, possibly offline>"
                 else:
-                    logString = logString + "(Device offline)"
+                    logString = logString + " <failed>"
             else:
                 logString = logString + "(Name already set)"
             postEventToFrame(
@@ -625,10 +631,10 @@ def executeAliasModification(frame):
             )
             num += 1
             postEventToFrame(wxThread.myEVT_LOG, logString)
+    postEventToFrame(wxThread.myEVT_COMPLETE, None)
     postEventToFrame(
         wxThread.myEVT_LOG,
-        "Successfully changed alias for %s of %s devices."
-        % (succeeded, len(aliasDic.keys())),
+        "Successfully changed alias for %s of %s devices." % (succeeded, numNewName),
     )
 
 
@@ -680,7 +686,9 @@ def executeUpdateDeviceConfigCommandOnDevice(
 
 
 @api_tool_decorator
-def waitForCommandToFinish(frame, request_id, ignoreQueue=False):
+def waitForCommandToFinish(
+    frame, request_id, ignoreQueue=False, timeout=Globals.COMMAND_TIMEOUT
+):
     api_instance = getCommandsApiInstance()
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, request_id
@@ -698,7 +706,17 @@ def waitForCommandToFinish(frame, request_id, ignoreQueue=False):
     if ignoreQueue:
         stateList.remove("Command Queued")
 
+    start = time.perf_counter()
     while status.state not in stateList:
+        end = time.perf_counter()
+        duration = end - start
+        if duration >= timeout:
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
+                % str(status.state),
+            )
+            break
         response = api_instance.get_command_request_status(
             Globals.enterprise_id, request_id
         )
