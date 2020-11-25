@@ -465,7 +465,7 @@ class PreferencesDialog(wx.Dialog):
             "limit": self.text_ctrl_3.GetValue(),
             "offset": self.text_ctrl_2.GetValue(),
             "recentAuth": self.prefs["recentAuth"]
-            if self.prefs["recentAuth"]
+            if self.prefs and self.prefs["recentAuth"]
             else [Globals.csv_auth_path],
             "lastAuth": Globals.csv_auth_path,
             "gridDialog": Globals.SHOW_GRID_DIALOG,
