@@ -13,6 +13,7 @@ import json
 import Utility.wxThread as wxThread
 import GUI.EnhancedStatusBar as ESB
 import tempfile
+import re
 
 from functools import partial
 
@@ -128,7 +129,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
         self.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
-        self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGING, self.onCellChange)
+        self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -1257,12 +1258,9 @@ class NewFrameLayout(wx.Frame):
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
                 indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
-                tags = tags.split(",")
                 properTagList = []
-                for tag in tags:
-                    processedTag = (
-                        tag.strip().replace("'", "").replace("[", "").replace("]", "")
-                    )
+                for r in re.findall(r"'.+?'|[\w-]+", tags):
+                    processedTag = r.replace("'", "") # strip qoutes around tag
                     if processedTag:
                         properTagList.append(processedTag)
                 tagList[esperName] = properTagList
