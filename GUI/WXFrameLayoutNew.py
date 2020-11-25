@@ -55,13 +55,15 @@ class NewFrameLayout(wx.Frame):
     def __init__(self, *args, **kwds):
         self.configMenuOptions = []
         self.WINDOWS = True
-        self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace(
-            "Local", "Roaming"
-        ).replace("Temp", "")
+        self.prefPath = ""
         if platform.system() == "Windows":
             self.WINDOWS = True
+            self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace(
+                "Local", "Roaming"
+            ).replace("Temp", "")
         else:
             self.WINDOWS = False
+            self.prefPath = "%s/EsperApiTool/prefs.json" % tempfile.gettempdir()
         self.configChoice = {}
         self.consoleWin = None
         self.grid_1_contents = []
