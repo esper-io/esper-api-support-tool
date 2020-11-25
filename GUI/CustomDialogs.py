@@ -43,7 +43,7 @@ class CheckboxMessageBox(wx.Dialog):
         grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
         sizer_4.Add(self.checkbox_1, 0, wx.ALL, 5)
         label_1 = wx.StaticText(
-            self.panel_3, wx.ID_ANY, "Do not show again this session"
+            self.panel_3, wx.ID_ANY, "Do not show again"
         )
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
@@ -72,6 +72,7 @@ class CheckboxMessageBox(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
+        self.Destroy()
 
 
 class CommandDialog(wx.Dialog):
@@ -255,6 +256,14 @@ class PreferencesDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.prefs = prefDict
+        self.prefKeys = [
+            "enableDevice",
+            "limit",
+            "offset",
+            "gridDialog",
+            "recentAuth",
+            "lastAuth",
+        ]
 
         self.SetSize((500, 400))
         self.window_1_pane_1 = wx.ScrolledWindow(
@@ -339,6 +348,7 @@ class PreferencesDialog(wx.Dialog):
             "offset": self.text_ctrl_2.GetValue(),
             "recentAuth": self.prefs["recentAuth"] if self.prefs["recentAuth"] else [Globals.csv_auth_path],
             "lastAuth": Globals.csv_auth_path,
+            "gridDialog": Globals.SHOW_GRID_DIALOG,
         }
 
         Globals.limit = self.prefs["limit"]
@@ -348,6 +358,7 @@ class PreferencesDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
+        self.Destroy()
 
     def SetPrefs(self, prefs):
         self.prefs = prefs
@@ -358,16 +369,15 @@ class PreferencesDialog(wx.Dialog):
             Globals.limit = self.prefs["limit"]
         if "offset" in self.prefs and self.prefs["offset"]:
             Globals.offset = self.prefs["offset"]
+        if "gridDialog" in self.prefs and self.prefs["gridDialog"]:
+            Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
 
     def GetPrefs(self):
         if not self.prefs:
-            self.prefs = {
-                "enableDevice": True,
-                "limit": Globals.limit,
-                "offset": Globals.offset,
-                "recentAuth": [Globals.csv_auth_path] if Globals.csv_auth_path else [],
-                "lastAuth": Globals.csv_auth_path,
-            }
+            self.prefs = {}
+        for key in self.prefKeys:
+            if key not in self.prefs.keys():
+                self.prefs[key] = self.getDaultKeyValue(key)
         self.prefs["recentAuth"] = list(dict.fromkeys(self.prefs["recentAuth"]))
         if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
             self.prefs["recentAuth"] = self.prefs["recentAuth"][
@@ -376,3 +386,17 @@ class PreferencesDialog(wx.Dialog):
             ]
 
         return self.prefs
+
+    def getDaultKeyValue(self, key):
+        if key == "enableDevice":
+            return True
+        elif key == "limit":
+            return Globals.limit
+        elif key == "offset":
+            return Globals.offset
+        elif key == "gridDialog":
+            return Globals.SHOW_GRID_DIALOG
+        elif key == "recentAuth":
+            return [Globals.csv_auth_path] if Globals.csv_auth_path else []
+        elif key == "lastAuth":
+            return Globals.csv_auth_path

@@ -595,11 +595,11 @@ class NewFrameLayout(wx.Frame):
             self.consoleWin.Close()
             self.consoleWin.Destroy()
             self.consoleWin = None
-        if e.EventType != wx.EVT_CLOSE.typeId:
-            self.Close()
         if self.prefDialog:
             self.prefDialog.Close()
             self.prefDialog.Destroy()
+        if e.EventType != wx.EVT_CLOSE.typeId:
+            self.Close()
         self.savePrefs(self.prefDialog)
         self.Destroy()
 
@@ -1321,7 +1321,6 @@ class NewFrameLayout(wx.Frame):
             self.Bind(wx.EVT_MENU, self.onClear, self.clearConsole)
         else:
             self.consoleWin.Destroy()
-            self.consoleWin = None
             self.clearConsole.Enable(False)
 
     def onClear(self, event):
