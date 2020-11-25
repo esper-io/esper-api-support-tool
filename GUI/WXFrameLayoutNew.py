@@ -546,7 +546,7 @@ class NewFrameLayout(wx.Frame):
         if not parent:
             parent = self
         for child in parent.GetChildren():
-            if type(child) != wx.Panel:
+            if type(child) != wx.Panel and type(child) != wx.Button and type(child) != wx.ComboBox:
                 if type(child) != wx.StaticText:
                     child.SetBackgroundColour(white)
                 child.SetForegroundColour(black)
