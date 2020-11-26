@@ -35,11 +35,9 @@ SET_MULTI = 3
 
 GRID_ACTIONS = [
     "",
-    "Action -> Set Device Names",
-    "Action -> Modify Tags",
+    "Action -> Modify Device Alias & Tags",
 ]
-SET_ALIAS = 1
-MODIFY_TAGS = 2
+MODIFY_ALIAS_AND_TAGS = 1
 
 LOGLIST = []
 
