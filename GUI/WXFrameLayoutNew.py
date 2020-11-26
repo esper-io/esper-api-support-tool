@@ -1540,8 +1540,9 @@ class NewFrameLayout(wx.Frame):
             for app in appList:
                 app_name = app.split(" v")[0]
                 d = [k for k in self.apps if app_name in k]
-                d = d[0]
-                self.appChoice.Append(app_name, d[app_name])
+                if d:
+                    d = d[0]
+                    self.appChoice.Append(app_name, d[app_name])
                 self.setGaugeValue(int(num / len(appList) * 100))
                 num += 1
         else:
