@@ -828,7 +828,7 @@ class NewFrameLayout(wx.Frame):
         else:
             self.Logging(
                 "--->****"
-                + Globals.CONFIGFILE
+                + configfile
                 + " not found - PLEASE Quit and create configuration file"
             )
             defaultConfigVal = self.configMenu.Append(

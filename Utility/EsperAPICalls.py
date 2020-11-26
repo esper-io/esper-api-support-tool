@@ -265,9 +265,8 @@ def getDeviceById(deviceToUse, *args, **kwds):
 
 
 def iterateThroughGridRows(frame, action):
-    if action == Globals.SET_ALIAS:
+    if action == Globals.MODIFY_ALIAS_AND_TAGS:
         modifyAlias(frame)
-    elif action == Globals.MODIFY_TAGS:
         modifyTags(frame)
 
 

@@ -5,8 +5,7 @@ enterprise_id = ""
 
 """ Constants """
 VERSION = "0.1"
-TITLE = "Esper API Tool"
-CONFIGFILE = "EsperGroupActionsConfig.csv"
+TITLE = "Esper API Support Tool"
 limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 SHOW_GRID_DIALOG = True
@@ -18,8 +17,8 @@ PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
-your enterprise's Android-based Dedicated Devices that is not currently available on 
-the Esper Console Dashboard."""
+your enterprise's Android-based Dedicated Devices providing features that are not currently
+available on the Esper Console Dashboard."""
 
 DEVS = ["Jonathan Featherston", "James Schaefer", "Chris Stirrat"]
 
@@ -36,11 +35,9 @@ SET_MULTI = 3
 
 GRID_ACTIONS = [
     "",
-    "Action -> Set Device Names",
-    "Action -> Modify Tags",
+    "Action -> Modify Device Alias & Tags",
 ]
-SET_ALIAS = 1
-MODIFY_TAGS = 2
+MODIFY_ALIAS_AND_TAGS = 1
 
 LOGLIST = []
 
