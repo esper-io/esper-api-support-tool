@@ -46,7 +46,7 @@ def getInfo(request_extension, deviceid):
             result=json.dumps(json_resp, indent=4, sort_keys=True)
         )
         print(prettyReponse)
-        ApiToolLog.LogResponse(prettyReponse)
+        ApiToolLog().LogResponse(prettyReponse)
 
     return json_resp
 
@@ -72,7 +72,7 @@ def patchInfo(request_extension, deviceid, tags):
             result=json.dumps(json_resp, indent=4, sort_keys=True)
         )
         print(prettyReponse)
-        ApiToolLog.LogResponse(prettyReponse)
+        ApiToolLog().LogResponse(prettyReponse)
     return json_resp
 
 
