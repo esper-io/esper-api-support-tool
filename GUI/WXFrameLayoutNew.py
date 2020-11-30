@@ -1686,7 +1686,7 @@ class NewFrameLayout(wx.Frame):
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
-                if esperName == device.device_name or applyAll:
+                if (device and esperName == device.device_name) or applyAll:
                     for colNum in range(self.grid_1.GetNumberCols()):
                         if rowNum < self.grid_1.GetNumberCols():
                             self.grid_1.SetCellTextColour(rowNum, colNum, color)
