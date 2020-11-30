@@ -71,7 +71,7 @@ class NewFrameLayout(wx.Frame):
         self.apps = []
         self.checkConsole = None
         self.preferences = None
-        self.prefDialog = PreferencesDialog(self.preferences)
+        self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 600))
@@ -1613,7 +1613,7 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateConfig(auth=self.preferences["lastAuth"])
         else:
             self.createNewFile(self.prefPath)
-            self.savePrefs(PreferencesDialog(self.preferences))
+            self.savePrefs(self.prefDialog)
 
     @api_tool_decorator
     def savePrefs(self, dialog):
@@ -1624,6 +1624,10 @@ class NewFrameLayout(wx.Frame):
     def onPref(self, event):
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.savePrefs(self.prefDialog)
+        if self.preferences["enableDevice"]:
+            self.deviceChoice.Enable(True)
+        else:
+            self.deviceChoice.Enable(False)
 
     @api_tool_decorator
     def loadRecentMenu(self):

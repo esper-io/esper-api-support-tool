@@ -347,13 +347,14 @@ class CmdConfirmDialog(wx.Dialog):
 
 
 class PreferencesDialog(wx.Dialog):
-    def __init__(self, prefDict, *args, **kwds):
+    def __init__(self, prefDict, parent=None, *args, **kwds):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
             size=(500, 400),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
+        self.parent = parent
         self.prefs = prefDict
         self.prefKeys = [
             "enableDevice",
@@ -480,7 +481,6 @@ class PreferencesDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-        self.Destroy()
 
     def SetPrefs(self, prefs):
         self.prefs = prefs
