@@ -8,12 +8,12 @@ class ApiToolLog:
     def __init__(self):
         self.logPath = ""
         if platform.system() == "Windows":
-            self.logPath = "%s\\EsperApiTool\\ApiTool.log" % tempfile.gettempdir().replace(
-                "Local", "Roaming"
-            ).replace("Temp", "")
+            self.logPath = (
+                "%s\\EsperApiTool\\ApiTool.log"
+                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+            )
         else:
             self.logPath = "%s/EsperApiTool/ApiTool.log" % tempfile.gettempdir()
-
 
     def LogError(self, e, exc_type, exc_value, exc_traceback):
         with open(self.logPath, "a") as myfile:

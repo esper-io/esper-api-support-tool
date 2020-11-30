@@ -58,9 +58,10 @@ class NewFrameLayout(wx.Frame):
         self.prefPath = ""
         if platform.system() == "Windows":
             self.WINDOWS = True
-            self.prefPath = "%s\\EsperApiTool\\prefs.json" % tempfile.gettempdir().replace(
-                "Local", "Roaming"
-            ).replace("Temp", "")
+            self.prefPath = (
+                "%s\\EsperApiTool\\prefs.json"
+                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+            )
         else:
             self.WINDOWS = False
             self.prefPath = "%s/EsperApiTool/prefs.json" % tempfile.gettempdir()
@@ -300,6 +301,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_UPDATE_GAUGE, self.setGaugeValue)
         self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.updateTagCell)
         self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.uncheckConsole)
+        self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
 
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
@@ -546,7 +548,11 @@ class NewFrameLayout(wx.Frame):
         if not parent:
             parent = self
         for child in parent.GetChildren():
-            if type(child) != wx.Panel and type(child) != wx.Button and type(child) != wx.ComboBox:
+            if (
+                type(child) != wx.Panel
+                and type(child) != wx.Button
+                and type(child) != wx.ComboBox
+            ):
                 if type(child) != wx.StaticText:
                     child.SetBackgroundColour(white)
                 child.SetForegroundColour(black)
@@ -560,6 +566,7 @@ class NewFrameLayout(wx.Frame):
     def Logging(self, entry, isError=False):
         """ Frame UI Logging """
         try:
+            entry = entry.replace("\n", " ")
             Globals.LOGLIST.append(entry)
             if self.consoleWin:
                 self.consoleWin.Logging(entry)
@@ -1104,6 +1111,12 @@ class NewFrameLayout(wx.Frame):
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % gridLabel
                     )
+                    self.applyTextColorToDevice(
+                        None,
+                        wx.Colour(0, 0, 0),
+                        bgColor=wx.Colour(255, 255, 255),
+                        applyAll=True,
+                    )
                     iterateThroughGridRows(self, gridSelection)
             else:
                 wx.MessageBox(
@@ -1593,6 +1606,7 @@ class NewFrameLayout(wx.Frame):
     def onComplete(self, event):
         self.setCursorDefault()
         self.setGaugeValue(100)
+        self.runBtn.Enable(True)
         self.Logging("---> Completed Action")
 
     def onClearGrids(self, event):
@@ -1656,3 +1670,28 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def uncheckConsole(self, event):
         self.consoleView.Check(False)
+
+    @api_tool_decorator
+    def onFail(self, event):
+        failed = event.GetValue()
+        red = wx.Colour(255, 0, 0)
+        errorBg = wx.Colour(255, 192, 203)
+        if type(failed) == list:
+            for device in failed:
+                self.applyTextColorToDevice(device, red, bgColor=errorBg)
+        elif failed:
+            self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+
+    def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
+        for rowNum in range(self.grid_1.GetNumberRows()):
+            if rowNum < self.grid_1.GetNumberRows():
+                esperName = self.grid_1.GetCellValue(rowNum, 0)
+                if esperName == device.device_name or applyAll:
+                    for colNum in range(self.grid_1.GetNumberCols()):
+                        if rowNum < self.grid_1.GetNumberCols():
+                            self.grid_1.SetCellTextColour(rowNum, colNum, color)
+                            if bgColor:
+                                self.grid_1.SetCellBackgroundColour(
+                                    rowNum, colNum, bgColor
+                                )
+        self.grid_1.ForceRefresh()

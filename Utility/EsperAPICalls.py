@@ -270,11 +270,11 @@ def iterateThroughGridRows(frame, action):
         modifyTags(frame)
 
 
-def iterateThroughDeviceList(frame, action, api_response):
+def iterateThroughDeviceList(frame, action, api_response, isDevice=False):
     """Iterates Through Each Device And Performs A Specified Action"""
     if len(api_response.results):
         number_of_devices = 0
-        if len(api_response.results) > 1:
+        if not isDevice:
             n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
             if n == 0:
                 n = len(api_response.results)
@@ -303,7 +303,9 @@ def iterateThroughDeviceList(frame, action, api_response):
             )
             t.start()
         else:
-            deviceList = processDevices(api_response.results, number_of_devices, action)[1]
+            deviceList = processDevices(
+                api_response.results, number_of_devices, action
+            )[1]
             return deviceList
     else:
         frame.Logging("---> No devices found for group")
@@ -327,7 +329,7 @@ def processDevices(chunk, number_of_devices, action):
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
 
             deviceList[number_of_devices] = [device, deviceInfo]
-            #if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
+            # if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
             #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
@@ -437,7 +439,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
         frame.Logging("---> Making API Request")
         device = getDeviceById(deviceToUse)
         if device:
-            deviceList = iterateThroughDeviceList(frame, action, device)
+            deviceList = iterateThroughDeviceList(frame, action, device, isDevice=True)
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
@@ -463,7 +465,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
                 )
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-    
+
     if deviceList:
         for entry in deviceList.values():
             device = entry[0]
@@ -476,7 +478,6 @@ def TakeAction(frame, group, action, label, isDevice=False):
             elif action == Globals.SET_MULTI:
                 setMulti(frame, device, deviceInfo)
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
-    frame.runBtn.Enable(True)
 
 
 def iterateThroughAllGroups(frame, action, api_instance):
@@ -502,6 +503,7 @@ def iterateThroughAllGroups(frame, action, api_instance):
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
+    failed = False
     if deviceInfo["Mode"] == "Multi":
         if deviceInfo["Status"] == "Online":
             appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
@@ -515,11 +517,14 @@ def setKiosk(frame, device, deviceInfo):
                 logString = logString + " <success>"
             else:
                 logString = logString + " <failed>"
+                failed = True
         else:
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Kiosk mode, skipping)"
     postEventToFrame(wxThread.myEVT_LOG, logString)
+    if failed:
+        postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
 
 
 def setMulti(frame, device, deviceInfo):
@@ -528,6 +533,7 @@ def setMulti(frame, device, deviceInfo):
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
         + " ,->Multi->"
     )
+    failed = False
     if deviceInfo["Mode"] == "Kiosk":
         if deviceInfo["Status"] == "Online":
             status = toggleKioskMode(frame, device.id, {}, False)
@@ -535,11 +541,14 @@ def setMulti(frame, device, deviceInfo):
                 logString = logString + " <success>"
             else:
                 logString = logString + " <failed>"
+                failed = True
         else:
             logString = logString + "(Device offline, skipping)"
     else:
         logString = logString + "(Already Multi mode, skipping)"
     postEventToFrame(wxThread.myEVT_LOG, logString)
+    if failed:
+        postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
 
 
 @api_tool_decorator
@@ -554,6 +563,7 @@ def modifyTags(frame):
         frame, executeTagModification, args=(frame), eventType=None, passArgAsTuple=True
     )
     t.start()
+    return t
 
 
 @api_tool_decorator
@@ -574,15 +584,23 @@ def executeTagModification(frame):
     tagsFromGrid = frame.getDeviceTagsFromGrid()
     num = 1
 
+    changeSucceeded = 0
     for device in api_response.results:
         if device.device_name in tagsFromGrid.keys():
             tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
+            if tags == tagsFromGrid[device.device_name]:
+                changeSucceeded += 1
             postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
             postEventToFrame(
                 wxThread.myEVT_UPDATE_GAUGE, int(num / len(tagsFromGrid.keys()) * 100)
             )
             num += 1
     postEventToFrame(wxThread.myEVT_COMPLETE, None)
+    postEventToFrame(
+        wxThread.myEVT_LOG,
+        "Successfully changed tags for %s of %s devices."
+        % (changeSucceeded, len(tagsFromGrid.keys())),
+    )
 
 
 def modifyAlias(frame):
@@ -595,6 +613,7 @@ def modifyAlias(frame):
         passArgAsTuple=True,
     )
     t.start()
+    return t
 
 
 @api_tool_decorator
@@ -633,8 +652,10 @@ def executeAliasModification(frame):
                     succeeded += 1
                 elif "Queued" in str(status):
                     logString = logString + " <failed, possibly offline>"
+                    postEventToFrame(wxThread.myEVT_ON_FAILED, device)
                 else:
                     logString = logString + " <failed>"
+                    postEventToFrame(wxThread.myEVT_ON_FAILED, device)
             else:
                 logString = logString + "(Name already set)"
             postEventToFrame(
@@ -705,7 +726,7 @@ def waitForCommandToFinish(
         Globals.enterprise_id, request_id
     )
     status = response.results[0]
-    postEventToFrame(wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state))
+    # postEventToFrame(wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state))
 
     stateList = [
         "Command Success",
@@ -732,9 +753,9 @@ def waitForCommandToFinish(
             Globals.enterprise_id, request_id
         )
         status = response.results[0]
-        postEventToFrame(
-            wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
-        )
+        # postEventToFrame(
+        #    wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
+        # )
         time.sleep(3)
     return status
 
