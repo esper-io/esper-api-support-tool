@@ -630,12 +630,8 @@ def executeDeviceModification(frame):
     postEventToFrame(wxThread.myEVT_COMPLETE, None)
     postEventToFrame(
         wxThread.myEVT_LOG,
-        "Successfully changed tags for %s of %s devices."
-        % (changeSucceeded, len(tagsFromGrid.keys())),
-    )
-    postEventToFrame(
-        wxThread.myEVT_LOG,
-        "Successfully changed alias for %s of %s devices." % (succeeded, numNewName),
+        "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
+        % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
     )
 
 
