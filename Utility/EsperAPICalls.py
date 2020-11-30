@@ -274,35 +274,40 @@ def iterateThroughDeviceList(frame, action, api_response):
     """Iterates Through Each Device And Performs A Specified Action"""
     if len(api_response.results):
         number_of_devices = 0
-        n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-        if n == 0:
-            n = len(api_response.results)
-        splitResults = [
-            api_response.results[i * n : (i + 1) * n]
-            for i in range((len(api_response.results) + n - 1) // n)
-        ]
+        if len(api_response.results) > 1:
+            n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+            if n == 0:
+                n = len(api_response.results)
+            splitResults = [
+                api_response.results[i * n : (i + 1) * n]
+                for i in range((len(api_response.results) + n - 1) // n)
+            ]
 
-        threads = []
-        for chunk in splitResults:
+            threads = []
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    frame,
+                    processDevices,
+                    args=(chunk, number_of_devices, action),
+                    eventType=wxThread.myEVT_UPDATE,
+                )
+                threads.append(t)
+                t.start()
+                number_of_devices += len(chunk)
+
             t = wxThread.GUIThread(
                 frame,
-                processDevices,
-                args=(chunk, number_of_devices, action),
-                eventType=wxThread.myEVT_UPDATE,
+                waitTillThreadsFinish,
+                args=(tuple(threads), action),
+                eventType=wxThread.myEVT_COMPLETE,
             )
-            threads.append(t)
             t.start()
-            number_of_devices += len(chunk)
-
-        t = wxThread.GUIThread(
-            frame,
-            waitTillThreadsFinish,
-            args=(tuple(threads), action),
-            eventType=wxThread.myEVT_COMPLETE,
-        )
-        t.start()
+        else:
+            deviceList = processDevices(api_response.results, number_of_devices, action)[1]
+            return deviceList
     else:
         frame.Logging("---> No devices found for group")
+        wx.MessageBox("No devices found for group.", style=wx.ICON_INFORMATION)
 
 
 @api_tool_decorator
@@ -322,8 +327,8 @@ def processDevices(chunk, number_of_devices, action):
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
 
             deviceList[number_of_devices] = [device, deviceInfo]
-            if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
-                Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
+            #if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
+            #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
     return (action, deviceList)
@@ -422,6 +427,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
 
     frame.runBtn.Enable(False)
     frame.gauge.Pulse()
+    deviceList = None
     if isDevice:
         deviceToUse = (
             frame.deviceChoice.GetClientData(group)
@@ -429,15 +435,9 @@ def TakeAction(frame, group, action, label, isDevice=False):
             else ""
         )
         frame.Logging("---> Making API Request")
-        wxThread.doAPICallInThread(
-            frame,
-            getDeviceById,
-            args=(deviceToUse),
-            eventType=wxThread.myEVT_RESPONSE,
-            callback=iterateThroughDeviceList,
-            callbackArgs=(frame, action),
-            waitForJoin=False,
-        )
+        device = getDeviceById(deviceToUse)
+        if device:
+            deviceList = iterateThroughDeviceList(frame, action, device)
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
@@ -463,6 +463,19 @@ def TakeAction(frame, group, action, label, isDevice=False):
                 )
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+    
+    if deviceList:
+        for entry in deviceList.values():
+            device = entry[0]
+            deviceInfo = entry[1]
+            if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                frame.addDeviceToDeviceGrid(deviceInfo)
+                frame.addDeviceToNetworkGrid(device, deviceInfo)
+            elif action == Globals.SET_KIOSK:
+                setKiosk(frame, device, deviceInfo)
+            elif action == Globals.SET_MULTI:
+                setMulti(frame, device, deviceInfo)
+        postEventToFrame(wxThread.myEVT_COMPLETE, None)
     frame.runBtn.Enable(True)
 
 
