@@ -1016,6 +1016,7 @@ class NewFrameLayout(wx.Frame):
     def onRun(self, event):
         self.setCursorBusy()
         self.gauge.Pulse()
+        self.runBtn.Enable(False)
 
         self.grid_1_contents = []
         self.grid_2_contents = []
