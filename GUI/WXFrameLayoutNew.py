@@ -270,14 +270,14 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.AddSeparator()
 
         exe_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR, (16, 16))
-        rtool = self.frame_toolbar.AddTool(
+        self.rtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
 
         cmd_icon = wx.ArtProvider.GetBitmap(
             wx.ART_EXECUTABLE_FILE, wx.ART_TOOLBAR, (16, 16)
         )
-        cmdtool = self.frame_toolbar.AddTool(
+        self.cmdtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Command", cmd_icon, "Run Command"
         )
 
@@ -285,8 +285,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
         self.Bind(wx.EVT_TOOL, self.onSave, stool)
         self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
-        self.Bind(wx.EVT_TOOL, self.onRun, rtool)
-        self.Bind(wx.EVT_TOOL, self.onCommand, cmdtool)
+        self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
+        self.Bind(wx.EVT_TOOL, self.onCommand, self.cmdtool)
         # Tool Bar end
 
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
@@ -348,6 +348,8 @@ class NewFrameLayout(wx.Frame):
         self.groupChoice.Enable(False)
         self.appChoice.Enable(False)
         self.runBtn.Enable(False)
+        self.frame_toolbar.EnableTool(self.rtool.Id, False)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
         self.run.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
@@ -925,6 +927,8 @@ class NewFrameLayout(wx.Frame):
                 num += 1
             self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
         self.runBtn.Enable(True)
+        self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         self.run.Enable(True)
         self.command.Enable(True)
         self.groupChoice.Enable(True)
@@ -942,11 +946,15 @@ class NewFrameLayout(wx.Frame):
         self.appChoice.Clear()
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
+            self.frame_toolbar.EnableTool(self.rtool.Id, False)
+            self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
             self.setCursorBusy()
         else:
             self.runBtn.Enable(True)
+            self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         for app in self.apps:
             self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
         clientData = (
@@ -988,6 +996,8 @@ class NewFrameLayout(wx.Frame):
             self.Logging("---> No Devices found in group")
         self.setCursorDefault()
         self.runBtn.Enable(True)
+        self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1017,6 +1027,8 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.gauge.Pulse()
         self.runBtn.Enable(False)
+        self.frame_toolbar.EnableTool(self.rtool.Id, False)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
 
         self.grid_1_contents = []
         self.grid_2_contents = []
@@ -1608,6 +1620,8 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.setGaugeValue(100)
         self.runBtn.Enable(True)
+        self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         self.Logging("---> Completed Action")
 
     def onClearGrids(self, event):
