@@ -171,7 +171,7 @@ class NewFrameLayout(wx.Frame):
         self.configMenuOptions.append(defaultConfigVal)
 
         editMenu = wx.Menu()
-        pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+P")
+        pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+Shift+P")
         self.pref = editMenu.Append(pref)
 
         runMenu = wx.Menu()

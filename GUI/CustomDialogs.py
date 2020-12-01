@@ -382,9 +382,10 @@ class PreferencesDialog(wx.Dialog):
 
         self.panel_7 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_8 = wx.Panel(self.panel_7, wx.ID_ANY)
-        self.text_ctrl_4 = wx.TextCtrl(
-            self.panel_8, wx.ID_ANY, str(Globals.COMMAND_TIMEOUT)
-        )
+        #self.text_ctrl_4 = wx.TextCtrl(
+        #    self.panel_8, wx.ID_ANY, str(Globals.COMMAND_TIMEOUT)
+        #)
+        self.text_ctrl_4 = wx.SpinCtrl(self.panel_8, id=wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT)
 
         self.button_1 = wx.Button(self, wx.ID_APPLY, "Apply")
 
