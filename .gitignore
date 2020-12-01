@@ -39,6 +39,7 @@ Thumbs.db
 *.app
 *.exe
 *.war
+*.pdf
 
 # Large media files
 *.mp4
@@ -47,6 +48,9 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
+# Excel
+*.csv
 
 # VS Code Settings
 .vscode/settings.json
