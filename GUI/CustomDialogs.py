@@ -319,7 +319,7 @@ class CmdConfirmDialog(wx.Dialog):
             % (commandType, applyToType, applyTo),
             style=wx.ALIGN_LEFT,
         )
-        label_5.Wrap(500)
+        label_5.Wrap(475)
         sizer_9.Add(label_5, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
         self.panel_8.SetSizer(sizer_9)
         sizer_7.Add(self.panel_8, 0, wx.ALL | wx.EXPAND, 5)
