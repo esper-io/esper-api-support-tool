@@ -545,6 +545,7 @@ class NewFrameLayout(wx.Frame):
         self.setColorTheme()
 
     def setColorTheme(self, parent=None):
+        """ Set theme color to bypass System Theme (Mac) """
         white = wx.Colour(255, 255, 255)
         black = wx.Colour(0, 0, 0)
         if not parent:
@@ -562,6 +563,7 @@ class NewFrameLayout(wx.Frame):
                 self.setColorTheme(child)
 
     def onLog(self, event):
+        """ Event trying to log data """
         evtValue = event.GetValue()
         self.Logging(evtValue)
 
@@ -580,6 +582,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def OnOpen(self, event):
+        """ Try to open and load an Auth CSV """
         # otherwise ask the user what new file to open
         with wx.FileDialog(
             self,
@@ -597,6 +600,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def OnQuit(self, e):
+        """ Actions to take when frame is closed """
         if self.consoleWin:
             self.consoleWin.Close()
             self.consoleWin.Destroy()
@@ -635,6 +639,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onSaveAs(self, event):
+        """ Save Network Grid data """
         if self.grid_2.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
@@ -657,6 +662,7 @@ class NewFrameLayout(wx.Frame):
                 return False
 
     def save(self, inFile, grid, header):
+        """ Save Grid data into CSV file """
         numRows = grid.GetNumberRows()
         numCols = grid.GetNumberCols()
         gridData = []
@@ -678,6 +684,7 @@ class NewFrameLayout(wx.Frame):
         self.Logging("---> Info saved to csv file - " + inFile)
 
     def createNewFile(self, filePath):
+        """ Create a new File to write in """
         if not os.path.exists(filePath):
             parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
             if not os.path.exists(parentPath):
@@ -687,6 +694,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onUploadCSV(self, event):
+        """ Upload device CSV to the device Grid """
         if not Globals.enterprise_id:
             self.loadConfigPrompt()
             return
@@ -847,6 +855,7 @@ class NewFrameLayout(wx.Frame):
             self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
 
     def setCursorDefault(self):
+        """ Set cursor icon to default state """
         try:
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
@@ -854,6 +863,7 @@ class NewFrameLayout(wx.Frame):
             pass
 
     def setCursorBusy(self):
+        """ Set cursor icon to busy state """
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
 
@@ -906,7 +916,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def PopulateGroups(self):
-        """create an instance of the API class"""
+        """ Populate Group Choice """
         self.Logging("--->Attemptting to populate groups...")
         self.setCursorBusy()
         self.setGaugeValue(0)
@@ -918,6 +928,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def addGroupsToGroupChoice(self, event):
+        """ Populate Group Choice """
         results = event.GetValue().results
         num = 1
         if len(results):
@@ -937,6 +948,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def PopulateDevices(self, event):
+        """ Populate Device Choice """
         self.SetFocus()
         self.Logging(
             "--->Attemptting to populate devices of selected group (%s)..."
@@ -972,6 +984,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def addDevicesToDeviceChoice(self, event):
+        """ Populate Device Choice """
         api_response = event.GetValue()
         if len(api_response.results):
             if not self.preferences or self.preferences["enableDevice"] == True:
@@ -1001,7 +1014,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def PopulateApps(self):
-        """create an instance of the API class"""
+        """ Populate App Choice """
         self.Logging("--->Attemptting to populate apps...")
         self.setCursorBusy()
         self.appChoice.Clear()
@@ -1011,6 +1024,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def addAppsToAppChoice(self, event):
+        """ Populate App Choice """
         api_response = event.GetValue()
         self.appChoice.Append("", "")
         if len(api_response.results):
@@ -1024,6 +1038,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onRun(self, event):
+        """ Try to run the specifed Action on a group or device """
         self.setCursorBusy()
         self.gauge.Pulse()
         self.runBtn.Enable(False)
@@ -1146,6 +1161,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def fillDeviceGridHeaders(self):
+        """ Populate Device Grid Headers """
         num = 0
         headerLabels = Globals.CSV_TAG_ATTR_NAME.keys()
         try:
@@ -1161,6 +1177,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def fillNetworkGridHeaders(self):
+        """ Populate Network Grid Headers """
         num = 0
         headerLabels = Globals.CSV_NETWORK_ATTR_NAME.keys()
         try:
@@ -1176,6 +1193,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def emptyDeviceGrid(self):
+        """ Empty Device Grid """
         self.grid_1.ClearGrid()
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
@@ -1185,6 +1203,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def emptyNetworkGrid(self):
+        """ Empty Network Grid """
         self.grid_2.ClearGrid()
         if self.grid_2.GetNumberRows() > 0:
             self.grid_2.DeleteRows(0, self.grid_2.GetNumberRows())
@@ -1194,6 +1213,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def addDeviceToDeviceGrid(self, device_info):
+        """ Add device info to Device Grid """
         num = 0
         self.grid_1.AppendRows(1)
         device = {}
@@ -1218,6 +1238,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def addDeviceToNetworkGrid(self, device, deviceInfo):
+        """ Construct network info and add to grid """
         networkInfo = {}
         networkInfo["Security Patch"] = getSecurityPatch(device)
         wifiStatus = getWifiStatus(deviceInfo).split(",")
@@ -1238,6 +1259,7 @@ class NewFrameLayout(wx.Frame):
         self.addToNetworkGrid(networkInfo)
 
     def addToNetworkGrid(self, networkInfo):
+        """ Add info to the network grid """
         num = 0
         self.grid_2.AppendRows(1)
 
@@ -1255,6 +1277,7 @@ class NewFrameLayout(wx.Frame):
             self.grid_2_contents.append(networkInfo)
 
     def toggleColVisibilityInGridOne(self, event):
+        """ Toggle Column Visibility in Device Grid """
         index = (
             self.viewMenuOptions[event.Id] if event.Id in self.viewMenuOptions else None
         )
@@ -1265,6 +1288,7 @@ class NewFrameLayout(wx.Frame):
             self.grid_1.ShowCol(index)
 
     def toggleColVisibilityInGridTwo(self, event):
+        """ Toggle Column Visibility in Network Grid """
         index = (
             self.viewMenuOptions[event.Id] if event.Id in self.viewMenuOptions else None
         )
@@ -1275,10 +1299,12 @@ class NewFrameLayout(wx.Frame):
             self.grid_2.ShowCol(index)
 
     def loadConfigPrompt(self):
+        """ Display message to user to load config """
         wx.MessageBox("Please load a configuration first!", style=wx.OK | wx.ICON_ERROR)
 
     @api_tool_decorator
     def getDeviceTagsFromGrid(self):
+        """ Return the tags from Grid """
         tagList = {}
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
@@ -1295,6 +1321,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def getDeviceAliasFromGrid(self):
+        """ Return a list of Aliases from the Grid """
         aliasList = {}
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
@@ -1305,6 +1332,7 @@ class NewFrameLayout(wx.Frame):
         return aliasList
 
     def onGridActionSelection(self, event):
+        """ When a Grid Action is selected deselect regular Action """
         if event and event.String:
             self.actionChoice.SetSelection(0)
             self.appChoice.Enable(False)
@@ -1312,6 +1340,7 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
 
     def onActionSelection(self, event):
+        """ Depending on Action enable or disable Choice """
         if event and event.String:
             self.gridActions.SetSelection(0)
 
@@ -1323,10 +1352,12 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
 
     def onCellChange(self, event):
+        """ Try to Auto size Columns on change """
         self.grid_1.AutoSizeColumns()
 
     @api_tool_decorator
     def updateTagCell(self, name, tags=None):
+        """ Update the Tag Column in the Device Grid """
         if hasattr(name, "GetValue"):
             tple = name.GetValue()
             name = tple[0]
@@ -1342,6 +1373,7 @@ class NewFrameLayout(wx.Frame):
                         self.grid_1.SetCellValue(rowNum, indx, "")
 
     def showConsole(self, event):
+        """ Toggle Console Display """
         if not self.consoleWin:
             self.consoleWin = Console(parent=self)
             self.clearConsole.Enable(True)
@@ -1351,10 +1383,12 @@ class NewFrameLayout(wx.Frame):
             self.clearConsole.Enable(False)
 
     def onClear(self, event):
+        """ Clear Console """
         if self.consoleWin:
             self.consoleWin.onClear()
 
     def onAbout(self, event):
+        """ About Dialog """
         info = adv.AboutDialogInfo()
 
         info.SetIcon(wx.Icon("Images/logo.png", wx.BITMAP_TYPE_PNG))
@@ -1370,6 +1404,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onCommand(self, event, value="{\n\n}", level=0):
+        """ When the user wants to run a command show the command dialog """
         if level < Globals.MAX_RETRY:
             self.setCursorBusy()
             self.setGaugeValue(0)
@@ -1400,6 +1435,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
 
     def onCommandDone(self, event):
+        """ Tell user to check the Esper Console for detailed results """
         cmdResult = event.GetValue()
         self.setGaugeValue(100)
         if hasattr(cmdResult, "state"):
@@ -1410,6 +1446,7 @@ class NewFrameLayout(wx.Frame):
             )
 
     def confirmCommand(self, cmd, commandType):
+        """ Ask user to confirm the command they want to run """
         deviceSelection = self.deviceChoice.GetSelection()
         groupSelection = self.groupChoice.GetSelection()
         groupToUse = self.groupChoice.GetClientData(groupSelection)
@@ -1455,6 +1492,7 @@ class NewFrameLayout(wx.Frame):
             return False, isGroup
 
     def setStatus(self, status, isError=False):
+        """ Set status bar text """
         self.sbText.SetLabel(status)
         if isError:
             self.sbText.SetForegroundColour(wx.Colour(255, 0, 0))
@@ -1463,6 +1501,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onDeviceGridSort(self, event):
+        """ Sort Device Grid """
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
 
@@ -1494,6 +1533,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onNetworkGridSort(self, event):
+        """ Sort the network grid """
         col = event.Col
         keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
 
@@ -1523,6 +1563,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onUpdate(self, event):
+        """ Given device data perform the specified action """
         evtValue = event.GetValue()
         action = evtValue[0]
         deviceList = evtValue[1]
@@ -1539,6 +1580,7 @@ class NewFrameLayout(wx.Frame):
                 setMulti(self, device, deviceInfo)
 
     def onUpdateComplete(self, event):
+        """ Alert user to chcek the Esper Console for detailed results for some actions """
         action = event.GetValue()
         if action == Globals.SET_KIOSK or action == Globals.SET_MULTI:
             self.Logging("---> Please refer to the Esper Console for detailed results.")
@@ -1552,6 +1594,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onDeviceSelection(self, event):
+        """ When the user selects a device showcase apps related to that device """
         self.SetFocus()
         self.appChoice.Clear()
         self.setGaugeValue(0)
@@ -1594,6 +1637,7 @@ class NewFrameLayout(wx.Frame):
         pass
 
     def setGaugeValue(self, value):
+        """ Attempt to set Gauge to the specififed value """
         if hasattr(value, "GetValue"):
             value = value.GetValue()
         maxValue = self.gauge.GetRange()
@@ -1606,6 +1650,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def performAPIResponse(self, event):
+        """ Once an API has given its response attempt to run the specififed callback """
         self.Logging("---> API Response Returned")
         evtValue = event.GetValue()
         response = evtValue[0]
@@ -1617,6 +1662,7 @@ class NewFrameLayout(wx.Frame):
             callback(*(*cbArgs, response))
 
     def onComplete(self, event):
+        """ Things that should be done once an Action is completed """
         self.setCursorDefault()
         self.setGaugeValue(100)
         self.runBtn.Enable(True)
@@ -1625,11 +1671,13 @@ class NewFrameLayout(wx.Frame):
         self.Logging("---> Completed Action")
 
     def onClearGrids(self, event):
+        """ Empty Grids """
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
 
     @api_tool_decorator
     def loadPref(self):
+        """ Attempt to load preferences from file system """
         if (
             os.path.isfile(self.prefPath)
             and os.path.exists(self.prefPath)
@@ -1646,11 +1694,13 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def savePrefs(self, dialog):
+        """ Save Preferences """
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
 
     def onPref(self, event):
+        """ Update Preferences when they are changed """
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.savePrefs(self.prefDialog)
         if self.preferences["enableDevice"]:
@@ -1660,6 +1710,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def loadRecentMenu(self):
+        """ Populate the Recently Opened Menu """
         if (
             self.preferences
             and "recentAuth" in self.preferences
@@ -1684,10 +1735,12 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def uncheckConsole(self, event):
+        """ Uncheck Console menu item """
         self.consoleView.Check(False)
 
     @api_tool_decorator
     def onFail(self, event):
+        """ Try to sohwcase rows in the grid on which an action failed on """
         failed = event.GetValue()
         red = wx.Colour(255, 0, 0)
         errorBg = wx.Colour(255, 192, 203)
@@ -1698,6 +1751,7 @@ class NewFrameLayout(wx.Frame):
             self.applyTextColorToDevice(failed, red, bgColor=errorBg)
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
+        """ Apply a Text or Bg Color to a Grid Row """
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)

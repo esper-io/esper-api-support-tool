@@ -194,6 +194,7 @@ def setdevicename(
 
 
 def getAllGroups(*args, **kwds):
+    """ Make a API call to get all Groups belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceGroupApi(
             esperclient.ApiClient(Globals.configuration)
@@ -210,6 +211,7 @@ def getAllGroups(*args, **kwds):
 
 
 def getAllDevices(groupToUse, *args, **kwds):
+    """ Make a API call to get all Devices belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceApi(
             esperclient.ApiClient(Globals.configuration)
@@ -227,6 +229,7 @@ def getAllDevices(groupToUse, *args, **kwds):
 
 
 def getAllApplications(*args, **kwds):
+    """ Make a API call to get all Applications belonging to the Enterprise """
     try:
         api_instance = esperclient.ApplicationApi(
             esperclient.ApiClient(Globals.configuration)
@@ -246,6 +249,7 @@ def getAllApplications(*args, **kwds):
 
 
 def getDeviceById(deviceToUse, *args, **kwds):
+    """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_instance = esperclient.DeviceApi(
             esperclient.ApiClient(Globals.configuration)
@@ -265,6 +269,7 @@ def getDeviceById(deviceToUse, *args, **kwds):
 
 
 def iterateThroughGridRows(frame, action):
+    """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
     if action == Globals.MODIFY_ALIAS_AND_TAGS:
         modifyDevice(frame)
 
@@ -312,13 +317,15 @@ def iterateThroughDeviceList(frame, action, api_response, isDevice=False):
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads, action):
+def waitTillThreadsFinish(threads, action, event=wxThread.myEVT_UPDATE_DONE):
+    """ Wait till all threads have finished then send a signal back to the Main thread """
     for t in threads:
         t.join()
-    postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
+    postEventToFrame(event, action)
 
 
 def processDevices(chunk, number_of_devices, action):
+    """ Try to obtain more device info for a given device """
     deviceList = {}
     for device in chunk:
         try:
@@ -336,6 +343,7 @@ def processDevices(chunk, number_of_devices, action):
 
 
 def unpackageDict(deviceInfo, deviceDict):
+    """ Try to merge dicts into one dict, in a single layer """
     for key in deviceDict.keys():
         if type(deviceDict[key]) is dict:
             unpackageDict(deviceInfo, deviceDict[key])
@@ -550,12 +558,14 @@ def setMulti(frame, device, deviceInfo):
 
 @api_tool_decorator
 def postEventToFrame(eventType, eventValue=None):
+    """ Post an Event to the Main Thread """
     evt = wxThread.CustomEvent(eventType, -1, eventValue)
     if Globals.frame:
         wx.PostEvent(Globals.frame, evt)
 
 
 def modifyDevice(frame):
+    """ Start a thread that will attempt to modify device data """
     t = wxThread.GUIThread(
         frame,
         executeDeviceModification,
@@ -569,6 +579,7 @@ def modifyDevice(frame):
 
 @api_tool_decorator
 def executeDeviceModification(frame):
+    """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = api_instance.get_all_devices(
@@ -592,6 +603,7 @@ def executeDeviceModification(frame):
     numNewName = 0
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
     for device in api_response.results:
+        # Tag modification
         if device.device_name in tagsFromGrid.keys():
             tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
             if tags == tagsFromGrid[device.device_name]:
@@ -601,6 +613,7 @@ def executeDeviceModification(frame):
                 wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
             )
             num += 1
+        # Alias modification
         if device.device_name in aliasDic.keys():
             newName = aliasDic[device.device_name]
             logString = str(
@@ -639,6 +652,7 @@ def executeDeviceModification(frame):
 
 
 def getCommandsApiInstance():
+    """ Returns an instace of the Commands API """
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
 
 
@@ -646,6 +660,7 @@ def getCommandsApiInstance():
 def executeUpdateDeviceConfigCommandOnGroup(
     frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
 ):
+    """ Execute a Command on a Group of Devices """
     groupToUse = frame.groupChoice.GetClientData(
         frame.groupChoice.GetSelection()
     )  # Get Device Group ID
@@ -666,6 +681,7 @@ def executeUpdateDeviceConfigCommandOnGroup(
 def executeUpdateDeviceConfigCommandOnDevice(
     frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
 ):
+    """ Execute a Command on a Device """
     deviceToUse = frame.deviceChoice.GetClientData(
         frame.deviceChoice.GetSelection()
     )  # Get Device Group ID
@@ -686,6 +702,7 @@ def executeUpdateDeviceConfigCommandOnDevice(
 def waitForCommandToFinish(
     frame, request_id, ignoreQueue=False, timeout=Globals.COMMAND_TIMEOUT
 ):
+    """ Wait until a Command is done or it times out """
     api_instance = getCommandsApiInstance()
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, request_id
@@ -726,6 +743,7 @@ def waitForCommandToFinish(
 
 
 def ApplyDeviceConfig(frame, config, commandType):
+    """ Attempt to apply a Command given user specifications """
     otherConfig = {}
     for key in config.keys():
         if key not in Globals.COMMAND_ARGS:
