@@ -120,7 +120,7 @@ class CommandDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.GridSizer(1, 1, 0, 0)
         label_1 = wx.StaticText(
-            self.panel_1, wx.ID_ANY, "Please Enter Device Config JSON below:"
+            self.panel_1, wx.ID_ANY, "Please Enter Command JSON below:"
         )
         label_1.SetFont(
             wx.Font(
