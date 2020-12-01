@@ -112,4 +112,4 @@ app = None
 
 """ CSV Save File """
 csv_auth_path = ""
-GRID_DEVICE_INFO_LIST = []
+# GRID_DEVICE_INFO_LIST = []
