@@ -443,7 +443,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_6.Add(self.panel_2, 1, wx.EXPAND, 0)
         self.panel_6.SetSizer(sizer_6)
         grid_sizer_4.Add(self.panel_6, 1, wx.EXPAND, 0)
-        label_6 = wx.StaticText(self.panel_7, wx.ID_ANY, "Command Timeout")
+        label_6 = wx.StaticText(self.panel_7, wx.ID_ANY, "Command Timeout (seconds)")
         sizer_7.Add(label_6, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         grid_sizer_8.Add(
             self.text_ctrl_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
