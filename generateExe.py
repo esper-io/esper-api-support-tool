@@ -2,10 +2,15 @@ import subprocess
 import pathlib
 import os
 
+from Utility.Resource import isModuleInstalled, installRequiredModules
+
 
 if __name__ == "__main__":
     curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
+
+    if not isModuleInstalled("pyinstaller"):
+        installRequiredModules()
 
     if not os.path.exists(dispath):
         os.makedirs(dispath)

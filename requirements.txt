@@ -1,3 +1,4 @@
 wxPython
 requests
 esperclient
+pyinstaller

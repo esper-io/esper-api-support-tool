@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 
 
 def resourcePath(relative_path):
@@ -14,7 +15,23 @@ def resourcePath(relative_path):
 
 
 def isModuleInstalled(module):
-    if module in sys.modules:
-        return True
-    else:
-        return False
+    cmd = "pip list"
+    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    output, error = test.communicate()
+
+    if output:
+        output = output.decode("utf-8")
+        if module in output:
+            return True
+
+    return False
+
+
+def installRequiredModules():
+    cmd = "pip install -r requirements.txt"
+    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    output, error = test.communicate()
+
+    if error:
+        error = error.decode("utf-8")
+        print(error)
