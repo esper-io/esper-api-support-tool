@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 import Common.Globals as Globals
 import wx

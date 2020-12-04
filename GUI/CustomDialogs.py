@@ -382,10 +382,12 @@ class PreferencesDialog(wx.Dialog):
 
         self.panel_7 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_8 = wx.Panel(self.panel_7, wx.ID_ANY)
-        #self.text_ctrl_4 = wx.TextCtrl(
+        # self.text_ctrl_4 = wx.TextCtrl(
         #    self.panel_8, wx.ID_ANY, str(Globals.COMMAND_TIMEOUT)
-        #)
-        self.text_ctrl_4 = wx.SpinCtrl(self.panel_8, id=wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT)
+        # )
+        self.text_ctrl_4 = wx.SpinCtrl(
+            self.panel_8, id=wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT
+        )
 
         self.button_1 = wx.Button(self, wx.ID_APPLY, "Apply")
 
@@ -532,3 +534,92 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMMAND_TIMEOUT
         else:
             return None
+
+
+class ColumnVisibilityDialog(wx.Dialog):
+    def __init__(self, grid, choiceData=[], *args, **kwds):
+        # begin wxGlade: MyDialog.__init__
+        super(ColumnVisibilityDialog, self).__init__(
+            None,
+            wx.ID_ANY,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
+        )
+        self.grid = grid
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
+        self.check_list_box_1 = wx.CheckListBox(
+            self.panel_3,
+            wx.ID_ANY,
+            choices=choiceData,
+            style=wx.LB_HSCROLL | wx.LB_NEEDED_SB,
+        )
+        self.panel_2 = wx.Panel(self, wx.ID_ANY)
+        self.button_1 = wx.Button(self.panel_2, wx.ID_APPLY, "Apply")
+        self.button_2 = wx.Button(self.panel_2, wx.ID_CANCEL, "Cancel")
+
+        self.button_1.Bind(wx.EVT_BUTTON, self.OnApply)
+        self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
+
+        colNum = 0
+        for _ in choiceData:
+            isShown = self.grid.IsColShown(colNum + 1)
+            self.check_list_box_1.Check(colNum, isShown)
+            colNum += 1
+
+        self.__set_properties()
+        self.__do_layout()
+        # end wxGlade
+
+    def OnApply(self, event):
+        if self.IsModal():
+            self.EndModal(event.EventObject.Id)
+        else:
+            self.Close()
+        self.Destroy()
+
+    def OnClose(self, event):
+        if self.IsModal():
+            self.EndModal(event.EventObject.Id)
+        else:
+            self.Close()
+        self.Destroy()
+
+    def isChecked(self, item):
+        return self.check_list_box_1.IsChecked(item)
+
+    def __set_properties(self):
+        # begin wxGlade: MyDialog.__set_properties
+        self.SetTitle("Column Visibility")
+        self.panel_3.SetMinSize((354, 150))
+        self.panel_3.SetBackgroundColour(wx.Colour(255, 119, 255))
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: MyDialog.__do_layout
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.GridSizer(1, 2, 0, 0)
+        grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
+        sizer_3 = wx.StaticBoxSizer(
+            wx.StaticBox(self.panel_1, wx.ID_ANY, "Column Visibility"), wx.VERTICAL
+        )
+        sizer_4 = wx.GridSizer(1, 1, 0, 0)
+        sizer_4.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
+        self.panel_3.SetSizer(sizer_4)
+        sizer_3.Add(self.panel_3, 0, wx.ALL | wx.EXPAND, 5)
+        self.panel_1.SetSizer(sizer_3)
+        sizer_1.Add(self.panel_1, 0, wx.ALL | wx.EXPAND, 5)
+        sizer_2.Add((0, 0), 0, 0, 0)
+        grid_sizer_1.Add(
+            self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5
+        )
+        grid_sizer_1.Add(
+            self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5
+        )
+        sizer_2.Add(grid_sizer_1, 1, wx.EXPAND, 0)
+        self.panel_2.SetSizer(sizer_2)
+        sizer_1.Add(self.panel_2, 1, wx.EXPAND, 0)
+        self.SetSizer(sizer_1)
+        sizer_1.Fit(self)
+        self.Layout()
+        # end wxGlade

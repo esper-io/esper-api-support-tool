@@ -13,6 +13,14 @@
 
         },
         {
+            "name": "Create Executable",
+            "type": "python",
+            "request": "launch",
+            "program": "generateExe.py",
+            "console": "integratedTerminal"
+
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

@@ -48,7 +48,10 @@ from GUI.CustomDialogs import (
     ProgressCheckDialog,
     PreferencesDialog,
     CmdConfirmDialog,
+    ColumnVisibilityDialog,
 )
+
+from Utility.Resource import resourcePath
 
 
 class NewFrameLayout(wx.Frame):
@@ -182,30 +185,12 @@ class NewFrameLayout(wx.Frame):
         self.command = runMenu.Append(commandItem)
 
         viewMenu = wx.Menu()
-        self.viewMenuOptions = {}
-        colNum = 1
-        for header in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            if header == "Device Name":
-                continue
-            item = viewMenu.Append(
-                wx.ID_ANY, "Show %s" % header, "Show %s" % header, kind=wx.ITEM_CHECK
-            )
-            item.Check(True)
-            self.Bind(wx.EVT_MENU, self.toggleColVisibilityInGridTwo, item)
-            self.viewMenuOptions[item.Id] = colNum
-            colNum += 1
-        colNum = 1
-        viewMenu.Append(wx.ID_SEPARATOR)
-        for header in Globals.CSV_TAG_ATTR_NAME.keys():
-            if header == "Esper Name":
-                continue
-            item = viewMenu.Append(
-                wx.ID_ANY, "Show %s" % header, "Show %s" % header, kind=wx.ITEM_CHECK
-            )
-            item.Check(True)
-            self.Bind(wx.EVT_MENU, self.toggleColVisibilityInGridOne, item)
-            self.viewMenuOptions[item.Id] = colNum
-            colNum += 1
+        self.deviceColumns = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Device Columns")
+        )
+        self.networkColumns = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
+        )
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console", kind=wx.ITEM_CHECK)
@@ -241,6 +226,9 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.onPref, self.pref)
+        self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
+        self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
+
         # Menu Bar end
 
         # Tool Bar
@@ -325,7 +313,9 @@ class NewFrameLayout(wx.Frame):
         )
 
         icon = wx.Icon()
-        icon.CopyFromBitmap(wx.Bitmap("Images/icon.png", wx.BITMAP_TYPE_PNG))
+        icon.CopyFromBitmap(
+            wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG)
+        )
         self.SetIcon(icon)
 
         self.loadPref()
@@ -1230,6 +1220,10 @@ class NewFrameLayout(wx.Frame):
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
             self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
+            # if value == "Offline":
+            #     self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(255, 0, 0))
+            # elif value == "Online":
+            #     self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(0, 128, 0))
             num += 1
 
         self.grid_1.AutoSizeColumns()
@@ -1276,27 +1270,41 @@ class NewFrameLayout(wx.Frame):
         if networkInfo not in self.grid_2_contents:
             self.grid_2_contents.append(networkInfo)
 
-    def toggleColVisibilityInGridOne(self, event):
+    def toggleColVisibilityInGridOne(self, event, showState=None):
         """ Toggle Column Visibility in Device Grid """
-        index = (
-            self.viewMenuOptions[event.Id] if event.Id in self.viewMenuOptions else None
-        )
-        isShown = self.grid_1.IsColShown(index)
-        if isShown:
-            self.grid_1.HideCol(index)
-        else:
-            self.grid_1.ShowCol(index)
+        index = None
+        if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
+            index = event
+        if index:
+            if type(showState) == bool:
+                if not showState:
+                    self.grid_1.HideCol(index)
+                else:
+                    self.grid_1.ShowCol(index)
+            else:
+                isShown = self.grid_1.IsColShown(index)
+                if isShown:
+                    self.grid_1.HideCol(index)
+                else:
+                    self.grid_1.ShowCol(index)
 
-    def toggleColVisibilityInGridTwo(self, event):
+    def toggleColVisibilityInGridTwo(self, event, showState):
         """ Toggle Column Visibility in Network Grid """
-        index = (
-            self.viewMenuOptions[event.Id] if event.Id in self.viewMenuOptions else None
-        )
-        isShown = self.grid_2.IsColShown(index)
-        if isShown:
-            self.grid_2.HideCol(index)
-        else:
-            self.grid_2.ShowCol(index)
+        index = None
+        if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
+            index = event
+        if index:
+            if type(showState) == bool:
+                if not showState:
+                    self.grid_2.HideCol(index)
+                else:
+                    self.grid_2.ShowCol(index)
+            else:
+                isShown = self.grid_2.IsColShown(index)
+                if isShown:
+                    self.grid_2.HideCol(index)
+                else:
+                    self.grid_2.ShowCol(index)
 
     def loadConfigPrompt(self):
         """ Display message to user to load config """
@@ -1391,7 +1399,7 @@ class NewFrameLayout(wx.Frame):
         """ About Dialog """
         info = adv.AboutDialogInfo()
 
-        info.SetIcon(wx.Icon("Images/logo.png", wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon(resourcePath("Images/logo.png"), wx.BITMAP_TYPE_PNG))
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
@@ -1764,3 +1772,35 @@ class NewFrameLayout(wx.Frame):
                                     rowNum, colNum, bgColor
                                 )
         self.grid_1.ForceRefresh()
+
+    def onDeviceColumn(self, event):
+        headerLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        if "Esper Name" in headerLabels:
+            headerLabels.remove("Esper Name")
+        if "Device Name" in headerLabels:
+            headerLabels.remove("Device Name")
+
+        with ColumnVisibilityDialog(self.grid_1, choiceData=headerLabels) as dialog:
+            if dialog.ShowModal() == wx.ID_APPLY:
+                colNum = 0
+                for _ in headerLabels:
+                    self.toggleColVisibilityInGridOne(
+                        colNum + 1, showState=dialog.isChecked(colNum)
+                    )
+                    colNum += 1
+
+    def onNetworkColumn(self, event):
+        headerLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
+        if "Esper Name" in headerLabels:
+            headerLabels.remove("Esper Name")
+        if "Device Name" in headerLabels:
+            headerLabels.remove("Device Name")
+
+        with ColumnVisibilityDialog(self.grid_2, choiceData=headerLabels) as dialog:
+            if dialog.ShowModal() == wx.ID_APPLY:
+                colNum = 0
+                for _ in headerLabels:
+                    self.toggleColVisibilityInGridTwo(
+                        colNum + 1, showState=dialog.isChecked(colNum)
+                    )
+                    colNum += 1
