@@ -374,17 +374,22 @@ class PreferencesDialog(wx.Dialog):
 
         self.panel_5 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_5, wx.ID_ANY)
-        self.text_ctrl_3 = wx.TextCtrl(self.panel_3, wx.ID_ANY, str(Globals.limit))
+        self.text_ctrl_3 = wx.SpinCtrl(
+            self.panel_3,
+            id=wx.ID_ANY,
+            min=1000,
+            max=Globals.MAX_LIMIT,
+            initial=Globals.limit,
+        )
 
         self.panel_6 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_2 = wx.Panel(self.panel_6, wx.ID_ANY)
-        self.text_ctrl_2 = wx.TextCtrl(self.panel_2, wx.ID_ANY, str(Globals.offset))
+        self.text_ctrl_2 = wx.SpinCtrl(
+            self.panel_2, id=wx.ID_ANY, min=0, initial=Globals.offset
+        )
 
         self.panel_7 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
         self.panel_8 = wx.Panel(self.panel_7, wx.ID_ANY)
-        # self.text_ctrl_4 = wx.TextCtrl(
-        #    self.panel_8, wx.ID_ANY, str(Globals.COMMAND_TIMEOUT)
-        # )
         self.text_ctrl_4 = wx.SpinCtrl(
             self.panel_8, id=wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT
         )
@@ -521,7 +526,7 @@ class PreferencesDialog(wx.Dialog):
         if key == "enableDevice":
             return True
         elif key == "limit":
-            return Globals.limit
+            return Globals.MAX_LIMIT
         elif key == "offset":
             return Globals.offset
         elif key == "gridDialog":
