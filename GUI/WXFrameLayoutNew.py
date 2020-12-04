@@ -1220,10 +1220,12 @@ class NewFrameLayout(wx.Frame):
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
             self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
-            # if value == "Offline":
-            #     self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(255, 0, 0))
-            # elif value == "Online":
-            #     self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(0, 128, 0))
+            if value == "Offline":
+                self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(255, 0, 0))
+                self.grid_1.SetCellBackgroundColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(255,235,234))
+            elif value == "Online":
+                self.grid_1.SetCellTextColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(0, 128, 0))
+                self.grid_1.SetCellBackgroundColour(self.grid_1.GetNumberRows() - 1, num, wx.Colour(229,248,229))
             num += 1
 
         self.grid_1.AutoSizeColumns()
@@ -1751,7 +1753,7 @@ class NewFrameLayout(wx.Frame):
         """ Try to sohwcase rows in the grid on which an action failed on """
         failed = event.GetValue()
         red = wx.Colour(255, 0, 0)
-        errorBg = wx.Colour(255, 192, 203)
+        errorBg = wx.Colour(255,235,234)
         if type(failed) == list:
             for device in failed:
                 self.applyTextColorToDevice(device, red, bgColor=errorBg)
@@ -1760,12 +1762,13 @@ class NewFrameLayout(wx.Frame):
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
+        statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
                 if (device and esperName == device.device_name) or applyAll:
                     for colNum in range(self.grid_1.GetNumberCols()):
-                        if rowNum < self.grid_1.GetNumberCols():
+                        if rowNum < self.grid_1.GetNumberCols() and colNum != statusIndex:
                             self.grid_1.SetCellTextColour(rowNum, colNum, color)
                             if bgColor:
                                 self.grid_1.SetCellBackgroundColour(
