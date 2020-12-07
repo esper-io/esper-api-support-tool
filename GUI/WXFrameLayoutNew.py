@@ -1553,7 +1553,7 @@ class NewFrameLayout(wx.Frame):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
                 )
-        self.Logging("---> Sorting Device Grid on Column: %s" % keyName)
+        self.Logging("---> Sorting Device Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
         self.setGaugeValue(0)
         self.emptyDeviceGrid()
         num = 1
@@ -1588,7 +1588,7 @@ class NewFrameLayout(wx.Frame):
             self.grid_2_contents = sorted(
                 self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
             )
-        self.Logging("---> Sorting Network Grid on Column: %s" % keyName)
+        self.Logging("---> Sorting Network Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
         self.setGaugeValue(0)
         self.emptyNetworkGrid()
         num = 1
