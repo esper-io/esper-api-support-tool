@@ -1541,8 +1541,7 @@ class NewFrameLayout(wx.Frame):
         else:
             if (
                 self.grid_1_contents
-                and self.grid_1_contents[0]
-                and self.grid_1_contents[0][keyName].isdigit()
+                and all(s[keyName].isdigit() for s in self.grid_1_contents)
             ):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
@@ -1576,8 +1575,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_2.SetSortingColumn(col, bool(not descending))
         if (
             self.grid_2_contents
-            and self.grid_2_contents[0]
-            and self.grid_2_contents[0][keyName].isdigit()
+            and all(s[keyName].isdigit() for s in self.grid_2_contents)
         ):
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
