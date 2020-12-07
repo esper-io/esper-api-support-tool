@@ -1536,9 +1536,14 @@ class NewFrameLayout(wx.Frame):
                 reverse=descending,
             )
         else:
-            self.grid_1_contents = sorted(
-                self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
-            )
+            try:
+                self.grid_1_contents = sorted(
+                    self.grid_1_contents, key=lambda i: i[keyName] and int(i[keyName]), reverse=descending
+                )
+            except:
+                self.grid_1_contents = sorted(
+                    self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
+                )
         self.Logging("---> Sorting Device Grid on Column: %s" % keyName)
         self.setGaugeValue(0)
         self.emptyDeviceGrid()
