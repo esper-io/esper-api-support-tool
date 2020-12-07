@@ -73,6 +73,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_1_contents = []
         self.grid_2_contents = []
         self.apps = []
+        self.isRunning = False
         self.checkConsole = None
         self.preferences = None
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
@@ -1030,6 +1031,7 @@ class NewFrameLayout(wx.Frame):
     def onRun(self, event):
         """ Try to run the specifed Action on a group or device """
         self.setCursorBusy()
+        self.isRunning = True
         self.gauge.Pulse()
         self.runBtn.Enable(False)
         self.frame_toolbar.EnableTool(self.rtool.Id, False)
@@ -1523,6 +1525,8 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onDeviceGridSort(self, event):
         """ Sort Device Grid """
+        if self.isRunning or self.gauge.GetValue() != self.gauge.GetRange():
+            return
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
 
@@ -1565,6 +1569,8 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onNetworkGridSort(self, event):
         """ Sort the network grid """
+        if self.isRunning or self.gauge.GetValue() != self.gauge.GetRange():
+            return
         col = event.Col
         keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
 
@@ -1704,6 +1710,7 @@ class NewFrameLayout(wx.Frame):
 
     def onComplete(self, event):
         """ Things that should be done once an Action is completed """
+        self.isRunning = False
         self.setCursorDefault()
         self.setGaugeValue(100)
         self.runBtn.Enable(True)
