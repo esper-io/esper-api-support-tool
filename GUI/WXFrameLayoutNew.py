@@ -1538,7 +1538,9 @@ class NewFrameLayout(wx.Frame):
         else:
             try:
                 self.grid_1_contents = sorted(
-                    self.grid_1_contents, key=lambda i: i[keyName] and int(i[keyName]), reverse=descending
+                    self.grid_1_contents,
+                    key=lambda i: i[keyName] and int(i[keyName]),
+                    reverse=descending,
                 )
             except:
                 self.grid_1_contents = sorted(
