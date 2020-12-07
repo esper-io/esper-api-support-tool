@@ -566,6 +566,9 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnApply)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
 
+        self.Bind(wx.EVT_LISTBOX, self.OnSelection)
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+
         colNum = 0
         for _ in choiceData:
             isShown = self.grid.IsColShown(colNum + 1)
@@ -575,6 +578,16 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.__set_properties()
         self.__do_layout()
         # end wxGlade
+
+    def OnSelection(self, event):
+        selection = event.GetSelection()
+        self.check_list_box_1.Deselect(selection)
+        checked = list(self.check_list_box_1.GetCheckedItems())
+        if selection in checked:
+            checked.remove(selection)
+        else:
+            checked.append(selection)
+        self.check_list_box_1.SetCheckedItems(tuple(checked))
 
     def OnApply(self, event):
         if self.IsModal():
