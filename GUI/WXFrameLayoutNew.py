@@ -1035,6 +1035,9 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.rtool.Id, False)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
 
+        self.grid_1.UnsetSortingColumn()
+        self.grid_2.UnsetSortingColumn()
+
         self.grid_1_contents = []
         self.grid_2_contents = []
 
@@ -1536,13 +1539,17 @@ class NewFrameLayout(wx.Frame):
                 reverse=descending,
             )
         else:
-            try:
+            if (
+                self.grid_1_contents
+                and self.grid_1_contents[0]
+                and self.grid_1_contents[0][keyName].isdigit()
+            ):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
                     key=lambda i: i[keyName] and int(i[keyName]),
                     reverse=descending,
                 )
-            except:
+            else:
                 self.grid_1_contents = sorted(
                     self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
                 )
@@ -1567,9 +1574,20 @@ class NewFrameLayout(wx.Frame):
         if curSortCol == col:
             descending = True
         self.grid_2.SetSortingColumn(col, bool(not descending))
-        self.grid_2_contents = sorted(
-            self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
-        )
+        if (
+            self.grid_2_contents
+            and self.grid_2_contents[0]
+            and self.grid_2_contents[0][keyName].isdigit()
+        ):
+            self.grid_2_contents = sorted(
+                self.grid_2_contents,
+                key=lambda i: i[keyName] and int(i[keyName]),
+                reverse=descending,
+            )
+        else:
+            self.grid_2_contents = sorted(
+                self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
+            )
         self.Logging("---> Sorting Network Grid on Column: %s" % keyName)
         self.setGaugeValue(0)
         self.emptyNetworkGrid()
