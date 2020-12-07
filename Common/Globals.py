@@ -6,7 +6,11 @@ enterprise_id = ""
 """ Constants """
 VERSION = "0.1"
 TITLE = "Esper API Support Tool"
-limit = 500000  # int | Number of results to return per page. (optional) (default to 20)
+MIN_LIMIT = 1000
+MAX_LIMIT = 500000
+limit = (
+    MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
+)
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 SHOW_GRID_DIALOG = True
 COMMAND_TIMEOUT = 15
