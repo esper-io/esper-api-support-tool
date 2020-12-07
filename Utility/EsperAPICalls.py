@@ -581,6 +581,7 @@ def modifyDevice(frame):
 def executeDeviceModification(frame):
     """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
     try:
         api_response = api_instance.get_all_devices(
             Globals.enterprise_id,
@@ -593,6 +594,7 @@ def executeDeviceModification(frame):
             "---> ERROR: Failed to get devices ids to modify tags and aliases",
         )
         print(e)
+        return
 
     tagsFromGrid = frame.getDeviceTagsFromGrid()
     num = 1
@@ -602,50 +604,51 @@ def executeDeviceModification(frame):
     succeeded = 0
     numNewName = 0
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
-    for device in api_response.results:
-        # Tag modification
-        if device.device_name in tagsFromGrid.keys():
-            tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
-            if tags == tagsFromGrid[device.device_name]:
-                changeSucceeded += 1
-            postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
-            postEventToFrame(
-                wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
-            )
-            num += 1
-        # Alias modification
-        if device.device_name in aliasDic.keys():
-            newName = aliasDic[device.device_name]
-            logString = str(
-                "--->" + str(device.device_name) + " : " + str(newName) + "--->"
-            )
-            if not newName and not device.alias_name:
-                continue
-            if newName != str(device.alias_name):
-                numNewName += 1
-                status = setdevicename(frame, device.id, newName, True)
-                if "Success" in str(status):
-                    logString = logString + " <success>"
-                    succeeded += 1
-                elif "Queued" in str(status):
-                    logString = logString + " <failed, possibly offline>"
-                    postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+    if api_response:
+        for device in api_response.results:
+            # Tag modification
+            if device.device_name in tagsFromGrid.keys():
+                tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
+                if tags == tagsFromGrid[device.device_name]:
+                    changeSucceeded += 1
+                postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
+                )
+                num += 1
+            # Alias modification
+            if device.device_name in aliasDic.keys():
+                newName = aliasDic[device.device_name]
+                logString = str(
+                    "--->" + str(device.device_name) + " : " + str(newName) + "--->"
+                )
+                if not newName and not device.alias_name:
+                    continue
+                if newName != str(device.alias_name):
+                    numNewName += 1
+                    status = setdevicename(frame, device.id, newName, True)
+                    if "Success" in str(status):
+                        logString = logString + " <success>"
+                        succeeded += 1
+                    elif "Queued" in str(status):
+                        logString = logString + " <failed, possibly offline>"
+                        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+                    else:
+                        logString = logString + " <failed>"
+                        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
                 else:
-                    logString = logString + " <failed>"
-                    postEventToFrame(wxThread.myEVT_ON_FAILED, device)
-            else:
-                logString = logString + "(Name already set)"
-            postEventToFrame(
-                wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
-            )
-            num += 1
-            postEventToFrame(wxThread.myEVT_LOG, logString)
-    postEventToFrame(wxThread.myEVT_COMPLETE, None)
-    postEventToFrame(
-        wxThread.myEVT_LOG,
-        "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-        % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
-    )
+                    logString = logString + "(Name already set)"
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
+                )
+                num += 1
+                postEventToFrame(wxThread.myEVT_LOG, logString)
+        postEventToFrame(wxThread.myEVT_COMPLETE, None)
+        postEventToFrame(
+            wxThread.myEVT_LOG,
+            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
+            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
+        )
 
 
 ####End Perform Actions####
