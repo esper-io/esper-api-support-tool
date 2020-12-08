@@ -292,6 +292,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.uncheckConsole)
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
+        self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
         self.statusBar = ESB.EnhancedStatusBar(self, wx.ID_ANY)
         self.statusBar.SetFieldsCount(2)
@@ -1670,6 +1671,7 @@ class NewFrameLayout(wx.Frame):
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""
+        self.onActivate(self, event, skip=False)
         if event.GetActive():
             try:
                 self.GetTopWindow().Raise()
@@ -1716,7 +1718,15 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+        if self.HasFocus():
+            wx.CallLater(3000, self.gauge.SetValue, 0)
         self.Logging("---> Completed Action")
+
+    def onActivate(self, event, skip=True):
+        if not self.isRunning:
+            wx.CallLater(3000, self.gauge.SetValue, 0)
+        if skip:
+            event.Skip()
 
     def onClearGrids(self, event):
         """ Empty Grids """
