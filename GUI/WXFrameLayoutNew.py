@@ -765,6 +765,7 @@ class NewFrameLayout(wx.Frame):
                     self.grid_1.AutoSizeColumns()
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def PopulateConfig(self, auth=None, authItem=None, event=None):
@@ -845,6 +846,7 @@ class NewFrameLayout(wx.Frame):
             )
             self.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     def setCursorDefault(self):
         """ Set cursor icon to default state """
@@ -937,6 +939,7 @@ class NewFrameLayout(wx.Frame):
         self.groupChoice.Enable(True)
         self.actionChoice.Enable(True)
         self.setCursorDefault()
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def PopulateDevices(self, event):
@@ -1003,6 +1006,7 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1027,6 +1031,7 @@ class NewFrameLayout(wx.Frame):
                 self.setGaugeValue(int(num / len(api_response.results) * 100))
                 num += 1
         self.setCursorDefault()
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1188,8 +1193,10 @@ class NewFrameLayout(wx.Frame):
         self.grid_2.AutoSizeColumns()
 
     @api_tool_decorator
-    def emptyDeviceGrid(self):
+    def emptyDeviceGrid(self, emptyContents=True):
         """ Empty Device Grid """
+        if emptyContents:
+            self.grid_1_contents = []
         self.grid_1.ClearGrid()
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
@@ -1198,8 +1205,10 @@ class NewFrameLayout(wx.Frame):
         self.fillDeviceGridHeaders()
 
     @api_tool_decorator
-    def emptyNetworkGrid(self):
+    def emptyNetworkGrid(self, emptyContents=True):
         """ Empty Network Grid """
+        if emptyContents:
+            self.grid_2_contents = []
         self.grid_2.ClearGrid()
         if self.grid_2.GetNumberRows() > 0:
             self.grid_2.DeleteRows(0, self.grid_2.GetNumberRows())
@@ -1527,7 +1536,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onDeviceGridSort(self, event):
         """ Sort Device Grid """
-        if self.isRunning or self.gauge.GetValue() != self.gauge.GetRange():
+        if self.isRunning or (self.gauge.GetValue() != self.gauge.GetRange() and self.gauge.GetValue() != 0):
             return
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
@@ -1560,18 +1569,19 @@ class NewFrameLayout(wx.Frame):
                 )
         self.Logging("---> Sorting Device Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
         self.setGaugeValue(0)
-        self.emptyDeviceGrid()
+        self.emptyDeviceGrid(emptyContents=False)
         num = 1
         for device in self.grid_1_contents:
             self.addDeviceToDeviceGrid(device)
             self.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
             num += 1
         self.grid_1.MakeCellVisible(0, col)
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def onNetworkGridSort(self, event):
         """ Sort the network grid """
-        if self.isRunning or self.gauge.GetValue() != self.gauge.GetRange():
+        if self.isRunning or (self.gauge.GetValue() != self.gauge.GetRange() and self.gauge.GetValue() != 0):
             return
         col = event.Col
         keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
@@ -1596,13 +1606,14 @@ class NewFrameLayout(wx.Frame):
             )
         self.Logging("---> Sorting Network Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
         self.setGaugeValue(0)
-        self.emptyNetworkGrid()
+        self.emptyNetworkGrid(emptyContents=False)
         num = 1
         for info in self.grid_2_contents:
             self.addToNetworkGrid(info)
             self.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
         self.grid_2.MakeCellVisible(0, col)
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     def toogleViewMenuItem(self, event):
         """
