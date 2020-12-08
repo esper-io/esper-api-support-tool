@@ -611,7 +611,9 @@ def executeDeviceModification(frame):
                 tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
                 if tags == tagsFromGrid[device.device_name]:
                     changeSucceeded += 1
-                postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags)
+                )
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
                 )

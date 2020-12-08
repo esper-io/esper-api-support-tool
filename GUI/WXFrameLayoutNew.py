@@ -1536,7 +1536,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onDeviceGridSort(self, event):
         """ Sort Device Grid """
-        if self.isRunning or (self.gauge.GetValue() != self.gauge.GetRange() and self.gauge.GetValue() != 0):
+        if self.isRunning or (
+            self.gauge.GetValue() != self.gauge.GetRange()
+            and self.gauge.GetValue() != 0
+        ):
             return
         col = event.Col
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
@@ -1554,9 +1557,8 @@ class NewFrameLayout(wx.Frame):
                 reverse=descending,
             )
         else:
-            if (
-                self.grid_1_contents
-                and all(s[keyName].isdigit() for s in self.grid_1_contents)
+            if self.grid_1_contents and all(
+                s[keyName].isdigit() for s in self.grid_1_contents
             ):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
@@ -1567,7 +1569,10 @@ class NewFrameLayout(wx.Frame):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
                 )
-        self.Logging("---> Sorting Device Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
+        self.Logging(
+            "---> Sorting Device Grid on Column: %s Order: %s"
+            % (keyName, "Descending" if descending else "Ascending")
+        )
         self.setGaugeValue(0)
         self.emptyDeviceGrid(emptyContents=False)
         num = 1
@@ -1581,7 +1586,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onNetworkGridSort(self, event):
         """ Sort the network grid """
-        if self.isRunning or (self.gauge.GetValue() != self.gauge.GetRange() and self.gauge.GetValue() != 0):
+        if self.isRunning or (
+            self.gauge.GetValue() != self.gauge.GetRange()
+            and self.gauge.GetValue() != 0
+        ):
             return
         col = event.Col
         keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
@@ -1591,9 +1599,8 @@ class NewFrameLayout(wx.Frame):
         if curSortCol == col:
             descending = True
         self.grid_2.SetSortingColumn(col, bool(not descending))
-        if (
-            self.grid_2_contents
-            and all(s[keyName].isdigit() for s in self.grid_2_contents)
+        if self.grid_2_contents and all(
+            s[keyName].isdigit() for s in self.grid_2_contents
         ):
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
@@ -1604,7 +1611,10 @@ class NewFrameLayout(wx.Frame):
             self.grid_2_contents = sorted(
                 self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
             )
-        self.Logging("---> Sorting Network Grid on Column: %s Order: %s" % (keyName, "Descending" if descending else "Ascending"))
+        self.Logging(
+            "---> Sorting Network Grid on Column: %s Order: %s"
+            % (keyName, "Descending" if descending else "Ascending")
+        )
         self.setGaugeValue(0)
         self.emptyNetworkGrid(emptyContents=False)
         num = 1
