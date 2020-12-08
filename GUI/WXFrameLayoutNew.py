@@ -1468,6 +1468,7 @@ class NewFrameLayout(wx.Frame):
                 % cmdResult.state,
                 style=wx.OK,
             )
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     def confirmCommand(self, cmd, commandType):
         """ Ask user to confirm the command they want to run """
@@ -1668,6 +1669,7 @@ class NewFrameLayout(wx.Frame):
                 self.setGaugeValue(int(num / len(self.apps) * 100))
                 num += 1
         self.setGaugeValue(100)
+        wx.CallLater(3000, self.setGaugeValue, 0)
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""
@@ -1718,8 +1720,8 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        if self.HasFocus():
-            wx.CallLater(3000, self.gauge.SetValue, 0)
+        if not self.IsIconized() and self.IsActive():
+            wx.CallLater(3000, self.setGaugeValue, 0)
         self.Logging("---> Completed Action")
 
     def onActivate(self, event, skip=True):
