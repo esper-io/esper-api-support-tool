@@ -35,6 +35,8 @@ if __name__ == "__main__":
     output, error = test.communicate()
 
     if os.path.exists(dispath + "/Main.exe"):
+        if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
+            os.remove(dispath + "/EsperApiSupportTool.exe")
         os.rename(dispath + "/Main.exe", dispath + "/EsperApiSupportTool.exe")
 
     if output:
