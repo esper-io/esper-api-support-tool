@@ -229,6 +229,9 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
         self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
+        
+        self.DragAcceptFiles(True)
+        self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
 
         # Menu Bar end
 
@@ -707,65 +710,69 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
-                num = 0
+                
                 with open(Globals.csv_auth_path, "r") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
-                    header = None
-                    grid_headers = list(Globals.CSV_TAG_ATTR_NAME.keys())
                     data = list(reader)
-                    len_reader = len(data)
-                    rowCount = 1
-                    for row in data:
-                        self.setGaugeValue(int((rowCount) / len_reader * 100))
-                        rowCount += 1
-                        if not all("" == val or val.isspace() for val in row):
-                            if num == 0:
-                                header = row
-                                num += 1
-                                continue
-                            self.grid_1.AppendRows(1)
-                            toolCol = 0
-                            for expectedCol in Globals.CSV_TAG_ATTR_NAME.keys():
-                                fileCol = 0
-                                for colValue in row:
-                                    colName = (
-                                        header[fileCol].replace(" ", "").lower()
-                                        if len(header) > fileCol
-                                        else ""
-                                    )
-                                    if (
-                                        header[fileCol]
-                                        in Globals.CSV_DEPRECATED_HEADER_LABEL
-                                        or header[fileCol]
-                                        not in Globals.CSV_TAG_ATTR_NAME.keys()
-                                    ):
-                                        fileCol += 1
-                                        continue
-                                    if colName == expectedCol.replace(" ", "").lower():
-                                        self.grid_1.SetCellValue(
-                                            self.grid_1.GetNumberRows() - 1,
-                                            toolCol,
-                                            str(colValue),
-                                        )
-                                        isEditable = True
-                                        if (
-                                            grid_headers[toolCol]
-                                            in Globals.CSV_EDITABLE_COL
-                                        ):
-                                            isEditable = False
-                                        self.grid_1.SetReadOnly(
-                                            self.grid_1.GetNumberRows() - 1,
-                                            toolCol,
-                                            isEditable,
-                                        )
-                                    fileCol += 1
-                                toolCol += 1
+                    self.processDeviceCSVUpload(data)
                     self.grid_1.AutoSizeColumns()
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
         wx.CallLater(3000, self.setGaugeValue, 0)
+
+    def processDeviceCSVUpload(self, data):
+        num = 0
+        header = None
+        grid_headers = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        len_reader = len(data)
+        rowCount = 1
+        for row in data:
+            self.setGaugeValue(int((rowCount) / len_reader * 100))
+            rowCount += 1
+            if not all("" == val or val.isspace() for val in row):
+                if num == 0:
+                    header = row
+                    num += 1
+                    continue
+                self.grid_1.AppendRows(1)
+                toolCol = 0
+                for expectedCol in Globals.CSV_TAG_ATTR_NAME.keys():
+                    fileCol = 0
+                    for colValue in row:
+                        colName = (
+                            header[fileCol].replace(" ", "").lower()
+                            if len(header) > fileCol
+                            else ""
+                        )
+                        if (
+                            header[fileCol]
+                            in Globals.CSV_DEPRECATED_HEADER_LABEL
+                            or header[fileCol]
+                            not in Globals.CSV_TAG_ATTR_NAME.keys()
+                        ):
+                            fileCol += 1
+                            continue
+                        if colName == expectedCol.replace(" ", "").lower():
+                            self.grid_1.SetCellValue(
+                                self.grid_1.GetNumberRows() - 1,
+                                toolCol,
+                                str(colValue),
+                            )
+                            isEditable = True
+                            if (
+                                grid_headers[toolCol]
+                                in Globals.CSV_EDITABLE_COL
+                            ):
+                                isEditable = False
+                            self.grid_1.SetReadOnly(
+                                self.grid_1.GetNumberRows() - 1,
+                                toolCol,
+                                isEditable,
+                            )
+                        fileCol += 1
+                    toolCol += 1
 
     @api_tool_decorator
     def PopulateConfig(self, auth=None, authItem=None, event=None):
@@ -1881,3 +1888,22 @@ class NewFrameLayout(wx.Frame):
                         colNum + 1, showState=dialog.isChecked(colNum)
                     )
                     colNum += 1
+
+    @api_tool_decorator
+    def onFileDrop(self, event):
+        for file in event.Files:
+            if file.endswith(".csv"):
+                with open(file, "r") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    data = list(reader)
+                    if "apiHost" in data[0] and "apiKey" in data[0] and "apiPrefix" in data[0] and "enterprise" in data[0]:
+                        Globals.csv_auth_path = file
+                        self.PopulateConfig(auth=file)
+                    else:
+                        if not Globals.enterprise_id:
+                            self.loadConfigPrompt()
+                            return
+                        self.processDeviceCSVUpload(data)
+                        self.grid_1.AutoSizeColumns()
