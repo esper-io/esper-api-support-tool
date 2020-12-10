@@ -113,10 +113,12 @@ class GUIThread(threading.Thread):
         """Overrides Thread.run. Don't call this directly its called internally
         when you call Thread.start().
         """
-        if not self.passArgAsTuple:
+        if not self.passArgAsTuple and self._args:
             self.result = self._target(*self._args)
-        else:
+        elif self.passArgAsTuple and self._args:
             self.result = self._target(self._args)
+        else:
+            self.result = self._target()
 
         if self._callback:
             self.result = (self.result, self._callback, self._cbArgs)
