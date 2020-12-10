@@ -345,7 +345,7 @@ def processDevices(chunk, number_of_devices, action):
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     for key in deviceDict.keys():
-        if type(deviceDict[key]) is dict:
+        if type(deviceDict[key]) is dict and key != "audioSettings":
             unpackageDict(deviceInfo, deviceDict[key])
         else:
             if key.startswith("_"):
