@@ -229,7 +229,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
         self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
-        
+
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
 
@@ -710,7 +710,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
-                
+
                 with open(Globals.csv_auth_path, "r") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
@@ -747,10 +747,8 @@ class NewFrameLayout(wx.Frame):
                             else ""
                         )
                         if (
-                            header[fileCol]
-                            in Globals.CSV_DEPRECATED_HEADER_LABEL
-                            or header[fileCol]
-                            not in Globals.CSV_TAG_ATTR_NAME.keys()
+                            header[fileCol] in Globals.CSV_DEPRECATED_HEADER_LABEL
+                            or header[fileCol] not in Globals.CSV_TAG_ATTR_NAME.keys()
                         ):
                             fileCol += 1
                             continue
@@ -761,10 +759,7 @@ class NewFrameLayout(wx.Frame):
                                 str(colValue),
                             )
                             isEditable = True
-                            if (
-                                grid_headers[toolCol]
-                                in Globals.CSV_EDITABLE_COL
-                            ):
+                            if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
                                 isEditable = False
                             self.grid_1.SetReadOnly(
                                 self.grid_1.GetNumberRows() - 1,
@@ -1898,7 +1893,12 @@ class NewFrameLayout(wx.Frame):
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
                     data = list(reader)
-                    if "apiHost" in data[0] and "apiKey" in data[0] and "apiPrefix" in data[0] and "enterprise" in data[0]:
+                    if (
+                        "apiHost" in data[0]
+                        and "apiKey" in data[0]
+                        and "apiPrefix" in data[0]
+                        and "enterprise" in data[0]
+                    ):
                         Globals.csv_auth_path = file
                         self.PopulateConfig(auth=file)
                     else:
