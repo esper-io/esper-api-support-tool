@@ -1,5 +1,6 @@
 import Common.Globals as Globals
 
+
 def getSecurityPatch(device):
     patch_ver = ""
     if device.software_info:
@@ -132,6 +133,7 @@ def getLocation(device):
         if "locationLongs" in device["location_info"]:
             longitude = device["location_info"]["locationLongs"]
     return latitude, longitude
+
 
 def constructNetworkInfo(device, deviceInfo):
     networkInfo = {}
