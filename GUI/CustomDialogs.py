@@ -438,6 +438,7 @@ class PreferencesDialog(wx.Dialog):
         grid_sizer_3 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_2 = wx.GridSizer(1, 2, 0, 0)
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Enable Device Selection")
+        label_1.SetToolTip("Allow user to specify actions on a single device within a group")
         grid_sizer_2.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
         grid_sizer_2.Add(self.checkbox_1, 0, wx.ALIGN_RIGHT, 0)
         self.panel_3.SetSizer(grid_sizer_2)
@@ -457,11 +458,13 @@ class PreferencesDialog(wx.Dialog):
         self.panel_7.SetSizer(grid_sizer_6)
         sizer_2.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
         label_4 = wx.StaticText(self.panel_6, wx.ID_ANY, "Command Timeout (seconds)")
+        label_4.SetToolTip("How long a command should wait on the status check before skipping.")
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
         grid_sizer_5.Add(self.spin_ctrl_3, 0, wx.ALIGN_RIGHT, 0)
         self.panel_6.SetSizer(grid_sizer_5)
         sizer_2.Add(self.panel_6, 1, wx.ALL | wx.EXPAND, 5)
         label_6 = wx.StaticText(self.panel_8, wx.ID_ANY, "Enable Grid Refresh")
+        label_6.SetToolTip("Allows the Grids to update cell data.\nOnly runs for datasets of %s or less." % Globals.MAX_UPDATE_COUNT)
         grid_sizer_7.Add(label_6, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
         grid_sizer_7.Add(
             self.checkbox_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
@@ -469,6 +472,7 @@ class PreferencesDialog(wx.Dialog):
         self.panel_8.SetSizer(grid_sizer_7)
         sizer_2.Add(self.panel_8, 1, wx.ALL | wx.EXPAND, 5)
         label_3 = wx.StaticText(self.panel_5, wx.ID_ANY, "Grid Refresh Rate (seconds)")
+        label_3.SetToolTip("How often the Grid should update its cell data.")
         grid_sizer_4.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
         grid_sizer_4.Add(
             self.spin_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
