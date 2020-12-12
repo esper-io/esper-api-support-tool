@@ -1,3 +1,5 @@
+import Common.Globals as Globals
+
 def getSecurityPatch(device):
     patch_ver = ""
     if device.software_info:
@@ -130,3 +132,23 @@ def getLocation(device):
         if "locationLongs" in device["location_info"]:
             longitude = device["location_info"]["locationLongs"]
     return latitude, longitude
+
+def constructNetworkInfo(device, deviceInfo):
+    networkInfo = {}
+    networkInfo["Security Patch"] = getSecurityPatch(device)
+    wifiStatus = getWifiStatus(deviceInfo).split(",")
+    networkInfo["[WIFI ACCESS POINTS]"] = wifiStatus[0]
+    networkInfo["[Current WIFI Connection]"] = wifiStatus[1]
+    cellStatus = getCellularStatus(deviceInfo).split(",")
+    networkInfo["[Cellular Access Point]"] = cellStatus[0]
+    networkInfo["Active Connection"] = cellStatus[1]
+    networkInfo["Device Name"] = getDeviceName(device)
+
+    for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
+        if value:
+            if value in deviceInfo:
+                networkInfo[key] = str(deviceInfo[value])
+            else:
+                networkInfo[key] = str([])
+
+    return networkInfo

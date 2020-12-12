@@ -274,11 +274,13 @@ def iterateThroughGridRows(frame, action):
         modifyDevice(frame)
 
 
-def iterateThroughDeviceList(frame, action, api_response, isDevice=False):
+def iterateThroughDeviceList(
+    frame, action, api_response, isDevice=False, isUpdate=False
+):
     """Iterates Through Each Device And Performs A Specified Action"""
     if len(api_response.results):
         number_of_devices = 0
-        if not isDevice:
+        if not isDevice and not isUpdate:
             n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
             if n == 0:
                 n = len(api_response.results)
@@ -293,7 +295,7 @@ def iterateThroughDeviceList(frame, action, api_response, isDevice=False):
                     frame,
                     processDevices,
                     args=(chunk, number_of_devices, action),
-                    eventType=wxThread.myEVT_UPDATE,
+                    eventType=wxThread.myEVT_FETCH,
                 )
                 threads.append(t)
                 t.start()
@@ -409,7 +411,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
-def TakeAction(frame, group, action, label, isDevice=False):
+def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     """Calls API To Perform Action And Logs Result To UI"""
     if not Globals.enterprise_id:
         frame.loadConfigPrompt()
@@ -430,7 +432,7 @@ def TakeAction(frame, group, action, label, isDevice=False):
         action == Globals.SHOW_ALL_AND_GENERATE_REPORT
         or action == Globals.SET_KIOSK
         or action == Globals.SET_MULTI
-    ):
+    ) and not isUpdate:
         frame.emptyDeviceGrid()
         frame.emptyNetworkGrid()
 
@@ -444,7 +446,9 @@ def TakeAction(frame, group, action, label, isDevice=False):
         frame.Logging("---> Making API Request")
         device = getDeviceById(deviceToUse)
         if device:
-            deviceList = iterateThroughDeviceList(frame, action, device, isDevice=True)
+            deviceList = iterateThroughDeviceList(
+                frame, action, device, isDevice=True, isUpdate=isUpdate
+            )
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
@@ -459,30 +463,39 @@ def TakeAction(frame, group, action, label, isDevice=False):
                     else ""
                 )  # Get Device Group ID
                 frame.Logging("---> Making API Request")
-                wxThread.doAPICallInThread(
-                    frame,
-                    getAllDevices,
-                    args=(groupToUse),
-                    eventType=wxThread.myEVT_RESPONSE,
-                    callback=iterateThroughDeviceList,
-                    callbackArgs=(frame, action),
-                    waitForJoin=False,
-                )
+                if isUpdate:
+                    api_response = getAllDevices(groupToUse)
+                    deviceList = iterateThroughDeviceList(
+                        frame, action, api_response, isUpdate=True
+                    )
+                else:
+                    wxThread.doAPICallInThread(
+                        frame,
+                        getAllDevices,
+                        args=(groupToUse),
+                        eventType=wxThread.myEVT_RESPONSE,
+                        callback=iterateThroughDeviceList,
+                        callbackArgs=(frame, action),
+                        waitForJoin=False,
+                    )
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
     if deviceList:
-        for entry in deviceList.values():
-            device = entry[0]
-            deviceInfo = entry[1]
-            if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-                frame.addDeviceToDeviceGrid(deviceInfo)
-                frame.addDeviceToNetworkGrid(device, deviceInfo)
-            elif action == Globals.SET_KIOSK:
-                setKiosk(frame, device, deviceInfo)
-            elif action == Globals.SET_MULTI:
-                setMulti(frame, device, deviceInfo)
-        postEventToFrame(wxThread.myEVT_COMPLETE, None)
+        if isUpdate:
+            postEventToFrame(wxThread.myEVT_UPDATE, deviceList)
+        else:
+            for entry in deviceList.values():
+                device = entry[0]
+                deviceInfo = entry[1]
+                if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                    frame.addDeviceToDeviceGrid(deviceInfo)
+                    frame.addDeviceToNetworkGrid(device, deviceInfo)
+                elif action == Globals.SET_KIOSK:
+                    setKiosk(frame, device, deviceInfo)
+                elif action == Globals.SET_MULTI:
+                    setMulti(frame, device, deviceInfo)
+            postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
 def iterateThroughAllGroups(frame, action, api_instance):

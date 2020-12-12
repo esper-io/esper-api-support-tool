@@ -21,12 +21,7 @@ from Common.decorator import api_tool_decorator
 
 from GUI.consoleWindow import Console
 
-from Utility.deviceInfo import (
-    getSecurityPatch,
-    getWifiStatus,
-    getCellularStatus,
-    getDeviceName,
-)
+from Utility.deviceInfo import constructNetworkInfo
 
 from esperclient import ApiClient
 from esperclient.rest import ApiException
@@ -74,8 +69,14 @@ class NewFrameLayout(wx.Frame):
         self.grid_2_contents = []
         self.apps = []
         self.isRunning = False
+        self.isRunningUpdate = False
+        self.kill = False
+        self.deviceDescending = False
+        self.networkDescending = False
+        self.refresh = None
         self.checkConsole = None
         self.preferences = None
+        self.userEdited = []
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
@@ -201,6 +202,10 @@ class NewFrameLayout(wx.Frame):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log")
         )
         viewMenu.Append(wx.ID_SEPARATOR)
+        self.refreshGrids = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids' Data")
+        )
+        self.Bind(wx.EVT_MENU, self.updateGrids, self.refreshGrids)
         self.clearGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
@@ -266,6 +271,13 @@ class NewFrameLayout(wx.Frame):
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
 
+        ref_icon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR, (16, 16))
+        self.rftool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
+        )
+
+        self.frame_toolbar.AddSeparator()
+
         cmd_icon = wx.ArtProvider.GetBitmap(
             wx.ART_EXECUTABLE_FILE, wx.ART_TOOLBAR, (16, 16)
         )
@@ -278,9 +290,11 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.onSave, stool)
         self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
+        self.Bind(wx.EVT_TOOL, self.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.cmdtool)
         # Tool Bar end
 
+        self.Bind(wxThread.EVT_FETCH, self.onFetch)
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
         self.Bind(wxThread.EVT_UPDATE_DONE, self.onUpdateComplete)
         self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
@@ -345,6 +359,7 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(False)
         self.frame_toolbar.EnableTool(self.rtool.Id, False)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
+        self.frame_toolbar.EnableTool(self.rftool.Id, False)
         self.run.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
@@ -596,6 +611,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def OnQuit(self, e):
         """ Actions to take when frame is closed """
+        self.kill = True
         if self.consoleWin:
             self.consoleWin.Close()
             self.consoleWin.Destroy()
@@ -936,6 +952,7 @@ class NewFrameLayout(wx.Frame):
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+        self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.run.Enable(True)
         self.command.Enable(True)
         self.groupChoice.Enable(True)
@@ -956,6 +973,7 @@ class NewFrameLayout(wx.Frame):
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.rtool.Id, False)
+            self.frame_toolbar.EnableTool(self.rftool.Id, False)
             self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
@@ -963,6 +981,7 @@ class NewFrameLayout(wx.Frame):
         else:
             self.runBtn.Enable(True)
             self.frame_toolbar.EnableTool(self.rtool.Id, True)
+            self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         for app in self.apps:
             self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
@@ -1007,6 +1026,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         wx.CallLater(3000, self.setGaugeValue, 0)
 
@@ -1043,6 +1063,7 @@ class NewFrameLayout(wx.Frame):
         self.gauge.Pulse()
         self.runBtn.Enable(False)
         self.frame_toolbar.EnableTool(self.rtool.Id, False)
+        self.frame_toolbar.EnableTool(self.rftool.Id, False)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
 
         self.grid_1.UnsetSortingColumn()
@@ -1050,6 +1071,7 @@ class NewFrameLayout(wx.Frame):
 
         self.grid_1_contents = []
         self.grid_2_contents = []
+        self.userEdited = []
 
         groupSelection = self.groupChoice.GetSelection()
         deviceSelection = self.deviceChoice.GetSelection()
@@ -1103,6 +1125,8 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on group, %s.'
                 % (actionLabel, groupLabel)
             )
+            Globals.LAST_DEVICE_ID = None
+            Globals.LAST_GROUP_ID = groupSelection
             TakeAction(
                 self,
                 groupSelection,
@@ -1123,6 +1147,8 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on device, %s.'
                 % (actionLabel, deviceLabel)
             )
+            Globals.LAST_DEVICE_ID = deviceSelection
+            Globals.LAST_GROUP_ID = None
             TakeAction(
                 self, deviceSelection, actionSelection, deviceLabel, isDevice=True
             )
@@ -1219,83 +1245,134 @@ class NewFrameLayout(wx.Frame):
         self.fillNetworkGridHeaders()
 
     @api_tool_decorator
-    def addDeviceToDeviceGrid(self, device_info):
+    def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
         """ Add device info to Device Grid """
         num = 0
-        self.grid_1.AppendRows(1)
         device = {}
-
-        for attribute in Globals.CSV_TAG_ATTR_NAME:
-            value = (
-                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                else ""
-            )
-            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-            self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
-            isEditable = True
-            if attribute in Globals.CSV_EDITABLE_COL:
-                isEditable = False
-            self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
-            if value == "Offline":
-                self.grid_1.SetCellTextColour(
-                    self.grid_1.GetNumberRows() - 1, num, wx.Colour(255, 0, 0)
+        if isUpdate:
+            deviceName = device_info[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
+            found = False
+            for rowNum in range(self.grid_1.GetNumberRows()):
+                if rowNum < self.grid_1.GetNumberRows():
+                    esperName = self.grid_1.GetCellValue(rowNum, 0)
+                    if deviceName == esperName:
+                        found = True
+                        deviceListing = list(
+                            filter(
+                                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName
+                                ),
+                                self.grid_1_contents,
+                            )
+                        )
+                        if deviceListing:
+                            deviceListing = deviceListing[0]
+                        else:
+                            self.addDeviceToDeviceGrid(device_info, isUpdate=False)
+                            break
+                        for attribute in Globals.CSV_TAG_ATTR_NAME:
+                            indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(attribute)
+                            cellValue = self.grid_1.GetCellValue(rowNum, indx)
+                            fecthValue = (
+                                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                                else ""
+                            )
+                            if not (rowNum, indx) in self.userEdited and cellValue != str(fecthValue):
+                                self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
+                                self.setStatusCellColor(fecthValue, rowNum, indx)
+                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(fecthValue)
+                            else:
+                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(cellValue)
+                        deviceListing.update(device)
+                        break
+            if not found:
+                self.addDeviceToDeviceGrid(device_info, isUpdate=False)
+        else:
+            self.grid_1.AppendRows(1)
+            for attribute in Globals.CSV_TAG_ATTR_NAME:
+                value = (
+                    device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                    if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                    else ""
                 )
-                self.grid_1.SetCellBackgroundColour(
-                    self.grid_1.GetNumberRows() - 1, num, wx.Colour(255, 235, 234)
-                )
-            elif value == "Online":
-                self.grid_1.SetCellTextColour(
-                    self.grid_1.GetNumberRows() - 1, num, wx.Colour(0, 128, 0)
-                )
-                self.grid_1.SetCellBackgroundColour(
-                    self.grid_1.GetNumberRows() - 1, num, wx.Colour(229, 248, 229)
-                )
-            num += 1
-
+                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+                self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
+                isEditable = True
+                if attribute in Globals.CSV_EDITABLE_COL:
+                    isEditable = False
+                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
+                self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+                num += 1
+            if device not in self.grid_1_contents:
+                self.grid_1_contents.append(device)
         self.grid_1.AutoSizeColumns()
-        if device not in self.grid_1_contents:
-            self.grid_1_contents.append(device)
+
+    def setStatusCellColor(self, value, rowNum, colNum):
+        if value == "Offline":
+            self.grid_1.SetCellTextColour(
+                rowNum, colNum, wx.Colour(255, 0, 0)
+            )
+            self.grid_1.SetCellBackgroundColour(
+                rowNum, colNum, wx.Colour(255, 235, 234)
+            )
+        elif value == "Online":
+            self.grid_1.SetCellTextColour(
+                rowNum, colNum, wx.Colour(0, 128, 0)
+            )
+            self.grid_1.SetCellBackgroundColour(
+                rowNum, colNum, wx.Colour(229, 248, 229)
+            )
 
     @api_tool_decorator
-    def addDeviceToNetworkGrid(self, device, deviceInfo):
+    def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
         """ Construct network info and add to grid """
-        networkInfo = {}
-        networkInfo["Security Patch"] = getSecurityPatch(device)
-        wifiStatus = getWifiStatus(deviceInfo).split(",")
-        networkInfo["[WIFI ACCESS POINTS]"] = wifiStatus[0]
-        networkInfo["[Current WIFI Connection]"] = wifiStatus[1]
-        cellStatus = getCellularStatus(deviceInfo).split(",")
-        networkInfo["[Cellular Access Point]"] = cellStatus[0]
-        networkInfo["Active Connection"] = cellStatus[1]
-        networkInfo["Device Name"] = getDeviceName(device)
+        networkInfo = constructNetworkInfo(device, deviceInfo)
+        self.addToNetworkGrid(networkInfo, isUpdate, device_info=deviceInfo)
 
-        for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
-            if value:
-                if value in deviceInfo:
-                    networkInfo[key] = str(deviceInfo[value])
-                else:
-                    networkInfo[key] = str([])
-
-        self.addToNetworkGrid(networkInfo)
-
-    def addToNetworkGrid(self, networkInfo):
+    def addToNetworkGrid(self, networkInfo, isUpdate=False, device_info=None):
         """ Add info to the network grid """
         num = 0
-        self.grid_2.AppendRows(1)
-
-        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = networkInfo[attribute] if attribute in networkInfo else ""
-            self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
-            isEditable = True
-            if attribute in Globals.CSV_EDITABLE_COL:
-                isEditable = False
-            self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, isEditable)
-            num += 1
-
+        if isUpdate:
+            deviceName = device_info[Globals.CSV_NETWORK_ATTR_NAME["Device Name"]]
+            found = False
+            for rowNum in range(self.grid_2.GetNumberRows()):
+                if rowNum < self.grid_2.GetNumberRows():
+                    esperName = self.grid_2.GetCellValue(rowNum, 0)
+                    if deviceName == esperName:
+                        found = True
+                        deviceListing = list(filter(lambda x: (x["Device Name"] == esperName), self.grid_2_contents))
+                        if deviceListing:
+                            deviceListing = deviceListing[0]
+                        else:
+                            self.addToNetworkGrid(networkInfo, device_info=device_info, isUpdate=False)
+                            break
+                        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(attribute)
+                            cellValue = self.grid_2.GetCellValue(rowNum, indx)
+                            fecthValue = (
+                                networkInfo[attribute]
+                                if attribute in networkInfo
+                                else ""
+                            )
+                            if not (rowNum, indx) in self.userEdited and cellValue != str(fecthValue):
+                                self.grid_2.SetCellValue(rowNum, indx, str(fecthValue))
+                            deviceListing.update(networkInfo)
+                        break
+            if not found:
+                self.addToNetworkGrid(networkInfo, device_info=device_info, isUpdate=False)
+        else:
+            self.grid_2.AppendRows(1)
+            for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+                value = networkInfo[attribute] if attribute in networkInfo else ""
+                self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
+                isEditable = True
+                if attribute in Globals.CSV_EDITABLE_COL:
+                    isEditable = False
+                self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, isEditable)
+                num += 1
+            if networkInfo not in self.grid_2_contents:
+                self.grid_2_contents.append(networkInfo)
         self.grid_2.AutoSizeColumns()
-        if networkInfo not in self.grid_2_contents:
-            self.grid_2_contents.append(networkInfo)
 
     def toggleColVisibilityInGridOne(self, event, showState=None):
         """ Toggle Column Visibility in Device Grid """
@@ -1388,6 +1465,7 @@ class NewFrameLayout(wx.Frame):
 
     def onCellChange(self, event):
         """ Try to Auto size Columns on change """
+        self.userEdited.append((event.Row, event.Col))
         self.grid_1.AutoSizeColumns()
 
     @api_tool_decorator
@@ -1543,20 +1621,22 @@ class NewFrameLayout(wx.Frame):
             and self.gauge.GetValue() != 0
         ):
             return
-        col = event.Col
+        if hasattr(event, "Col"):
+            col = event.Col
+        else:
+            col = event
         keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
 
         curSortCol = self.grid_1.GetSortingColumn()
-        descending = False
-        if curSortCol == col:
-            descending = True
-        self.grid_1.SetSortingColumn(col, bool(not descending))
+        if curSortCol == col and hasattr(event, "Col"):
+            self.deviceDescending = not self.deviceDescending
+        self.grid_1.SetSortingColumn(col, bool(not self.deviceDescending))
 
         if keyName == "androidVersion":
             self.grid_1_contents = sorted(
                 self.grid_1_contents,
                 key=lambda i: list(map(int, i[keyName].split("."))),
-                reverse=descending,
+                reverse=self.deviceDescending,
             )
         else:
             if self.grid_1_contents and all(
@@ -1565,15 +1645,15 @@ class NewFrameLayout(wx.Frame):
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
                     key=lambda i: i[keyName] and int(i[keyName]),
-                    reverse=descending,
+                    reverse=self.deviceDescending,
                 )
             else:
                 self.grid_1_contents = sorted(
-                    self.grid_1_contents, key=lambda i: i[keyName], reverse=descending
+                    self.grid_1_contents, key=lambda i: i[keyName], reverse=self.deviceDescending
                 )
         self.Logging(
             "---> Sorting Device Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if descending else "Ascending")
+            % (keyName, "Descending" if self.deviceDescending else "Ascending")
         )
         self.setGaugeValue(0)
         self.emptyDeviceGrid(emptyContents=False)
@@ -1593,29 +1673,31 @@ class NewFrameLayout(wx.Frame):
             and self.gauge.GetValue() != 0
         ):
             return
-        col = event.Col
+        if hasattr(event, "Col"):
+            col = event.Col
+        else:
+            col = event
         keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
 
         curSortCol = self.grid_2.GetSortingColumn()
-        descending = False
-        if curSortCol == col:
-            descending = True
-        self.grid_2.SetSortingColumn(col, bool(not descending))
+        if curSortCol == col and hasattr(event, "Col"):
+            self.networkDescending = not self.networkDescending
+        self.grid_2.SetSortingColumn(col, bool(not self.networkDescending))
         if self.grid_2_contents and all(
             s[keyName].isdigit() for s in self.grid_2_contents
         ):
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
                 key=lambda i: i[keyName] and int(i[keyName]),
-                reverse=descending,
+                reverse=self.networkDescending,
             )
         else:
             self.grid_2_contents = sorted(
-                self.grid_2_contents, key=lambda i: i[keyName], reverse=descending
+                self.grid_2_contents, key=lambda i: i[keyName], reverse=self.networkDescending
             )
         self.Logging(
             "---> Sorting Network Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if descending else "Ascending")
+            % (keyName, "Descending" if self.networkDescending else "Ascending")
         )
         self.setGaugeValue(0)
         self.emptyNetworkGrid(emptyContents=False)
@@ -1634,7 +1716,7 @@ class NewFrameLayout(wx.Frame):
         return
 
     @api_tool_decorator
-    def onUpdate(self, event):
+    def onFetch(self, event):
         """ Given device data perform the specified action """
         evtValue = event.GetValue()
         action = evtValue[0]
@@ -1742,6 +1824,7 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(100)
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
@@ -1907,3 +1990,73 @@ class NewFrameLayout(wx.Frame):
                             return
                         self.processDeviceCSVUpload(data)
                         self.grid_1.AutoSizeColumns()
+
+    @api_tool_decorator
+    def onUpdate(self, event):
+        if event:
+            deviceList = event.GetValue()
+            for entry in deviceList.values():
+                device = entry[0]
+                deviceInfo = entry[1]
+                self.addDeviceToDeviceGrid(deviceInfo, isUpdate=True)
+                self.addDeviceToNetworkGrid(device, deviceInfo, isUpdate=True)
+            if self.grid_1.GetSortingColumn() != wx.NOT_FOUND:
+                self.onDeviceGridSort(self.grid_1.GetSortingColumn())
+            if self.grid_2.GetSortingColumn() != wx.NOT_FOUND:
+                self.onNetworkGridSort(self.grid_2.GetSortingColumn())
+            self.frame_toolbar.EnableTool(self.rtool.Id, True)
+            self.frame_toolbar.EnableTool(self.rftool.Id, True)
+            self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+            self.runBtn.Enable(True)
+            self.setGaugeValue(100)
+            wx.CallLater(3000, self.setGaugeValue, 0)
+
+    @api_tool_decorator
+    def startUpdateThread(self):
+        if not self.refresh:
+            self.refresh = wxThread.GUIThread(
+                self, self.updateGrids, None, eventType=wxThread.myEVT_UPDATE
+            )
+            self.refresh.start()
+
+    @api_tool_decorator
+    def updateGrids(self, event=None):
+        if event:
+            self.Logging("---> Updating Grids' Data")
+            self.frame_toolbar.EnableTool(self.rtool.Id, False)
+            self.frame_toolbar.EnableTool(self.rftool.Id, False)
+            self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
+            self.runBtn.Enable(False)
+            self.fetchUpdateData(forceUpdate=True)
+        else:
+            while Globals.ENABLE_GRID_UPDATE:
+                time.sleep(Globals.GRID_UPDATE_RATE)
+                if self.kill:
+                    break
+                self.fetchUpdateData()
+            self.refresh = None
+
+    def fetchUpdateData(self, forceUpdate=False):
+        if not self.isRunning and not self.isRunningUpdate and ((self.grid_1_contents and self.grid_2_contents and len(self.grid_1_contents) <= Globals.MAX_UPDATE_COUNT and len(self.grid_2_contents) <= Globals.MAX_UPDATE_COUNT) or forceUpdate):
+            if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
+                self.isRunningUpdate = True
+                self.gauge.Pulse()
+                TakeAction(
+                    self,
+                    Globals.LAST_GROUP_ID,
+                    1,
+                    None,
+                    isUpdate=True
+                )
+            elif Globals.LAST_DEVICE_ID:
+                self.isRunningUpdate = True
+                self.gauge.Pulse()
+                TakeAction(
+                    self,
+                    Globals.LAST_DEVICE_ID,
+                    1,
+                    None,
+                    isDevice=True,
+                    isUpdate=True
+                )
+            self.isRunningUpdate = False
