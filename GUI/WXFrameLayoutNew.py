@@ -1,11 +1,9 @@
 import wx
 import wx.grid as gridlib
 import wx.adv as adv
-import esperclient
 import time
 import csv
 import os.path
-import logging
 import Common.Globals as Globals
 import platform
 import json
