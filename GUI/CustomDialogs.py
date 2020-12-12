@@ -374,7 +374,7 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_4 = wx.SpinCtrl(
             self.panel_4,
             id=wx.ID_ANY,
-            min=1000,
+            min=Globals.MIN_LIMIT,
             max=Globals.MAX_LIMIT,
             initial=Globals.limit,
         )
