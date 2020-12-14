@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import wx
 
 
 def resourcePath(relative_path):
@@ -12,6 +13,23 @@ def resourcePath(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
+
+def createNewFile(filePath):
+    """ Create a new File to write in """
+    if not os.path.exists(filePath):
+        parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
+        if not os.path.exists(parentPath):
+            os.makedirs(parentPath)
+        with open(filePath, "w"):
+            pass
+
+
+def scale_bitmap(bitmap, width, height):
+    image = wx.ImageFromStream(bitmap)
+    image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+    result = wx.BitmapFromImage(image)
+    return result
 
 
 def isModuleInstalled(module):

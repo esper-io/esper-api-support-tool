@@ -44,7 +44,7 @@ from GUI.CustomDialogs import (
     ColumnVisibilityDialog,
 )
 
-from Utility.Resource import resourcePath
+from Utility.Resource import resourcePath, scale_bitmap, createNewFile
 
 
 class NewFrameLayout(wx.Frame):
@@ -242,41 +242,35 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar = wx.ToolBar(self, -1)
         self.SetToolBar(self.frame_toolbar)
 
-        close_icon = self.scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
+        close_icon = scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
         qtool = self.frame_toolbar.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.frame_toolbar.AddSeparator()
 
-        open_icon = self.scale_bitmap(resourcePath("Images/open.png"), 16, 16)
+        open_icon = scale_bitmap(resourcePath("Images/open.png"), 16, 16)
         otool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Open Auth CSV", open_icon, "Open Auth CSV"
         )
         self.frame_toolbar.AddSeparator()
 
-        save_icon = self.scale_bitmap(resourcePath("Images/save.png"), 16, 16)
+        save_icon = scale_bitmap(resourcePath("Images/save.png"), 16, 16)
         stool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Save Device Info", save_icon, "Save Device Info"
         )
-        # saveas_icon = wx.ArtProvider.GetBitmap(
-        #     wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, (16, 16)
-        # )
-        # sstool = self.frame_toolbar.AddTool(
-        #     wx.ID_ANY, "Save Network Info", saveas_icon, "Save Network Info"
-        # )
         self.frame_toolbar.AddSeparator()
 
-        exe_icon = self.scale_bitmap(resourcePath("Images/run.png"), 16, 16)
+        exe_icon = scale_bitmap(resourcePath("Images/run.png"), 16, 16)
         self.rtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
 
-        ref_icon = self.scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
+        ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
         self.rftool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
         )
 
         self.frame_toolbar.AddSeparator()
 
-        cmd_icon = self.scale_bitmap(resourcePath("Images/command.png"), 16, 16)
+        cmd_icon = scale_bitmap(resourcePath("Images/command.png"), 16, 16)
         self.cmdtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Command", cmd_icon, "Run Command"
         )
@@ -284,7 +278,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
         self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
         self.Bind(wx.EVT_TOOL, self.onSaveBoth, stool)
-        # self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.cmdtool)
@@ -550,11 +543,6 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         self.setColorTheme()
 
-    def scale_bitmap(self, bitmap, width, height):
-        image = wx.ImageFromStream(bitmap)
-        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-        result = wx.BitmapFromImage(image)
-        return result
 
     def setColorTheme(self, parent=None):
         """ Set theme color to bypass System Theme (Mac) """
@@ -686,7 +674,7 @@ class NewFrameLayout(wx.Frame):
         gridData = []
         gridData.append(header)
 
-        self.createNewFile(inFile)
+        createNewFile(inFile)
 
         for row in range(numRows):
             rowValues = []
@@ -700,15 +688,6 @@ class NewFrameLayout(wx.Frame):
             writer.writerows(gridData)
 
         self.Logging("---> Info saved to csv file - " + inFile)
-
-    def createNewFile(self, filePath):
-        """ Create a new File to write in """
-        if not os.path.exists(filePath):
-            parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
-            if not os.path.exists(parentPath):
-                os.makedirs(parentPath)
-            with open(filePath, "w"):
-                pass
 
     @api_tool_decorator
     def onUploadCSV(self, event):
@@ -1862,7 +1841,7 @@ class NewFrameLayout(wx.Frame):
             if "lastAuth" in self.preferences and self.preferences["lastAuth"]:
                 self.PopulateConfig(auth=self.preferences["lastAuth"])
         else:
-            self.createNewFile(self.prefPath)
+            createNewFile(self.prefPath)
             self.savePrefs(self.prefDialog)
 
     @api_tool_decorator
