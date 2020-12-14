@@ -902,14 +902,14 @@ class NewFrameLayout(wx.Frame):
             self.configList.AppendText("Enterprise = " + selectedConfig["enterprise"])
 
             if "https" in str(selectedConfig["apiHost"]):
-                Globals.configuration.host = selectedConfig["apiHost"]
+                Globals.configuration.host = selectedConfig["apiHost"].strip()
                 Globals.configuration.api_key["Authorization"] = selectedConfig[
                     "apiKey"
-                ]
+                ].strip()
                 Globals.configuration.api_key_prefix["Authorization"] = selectedConfig[
                     "apiPrefix"
-                ]
-                Globals.enterprise_id = selectedConfig["enterprise"]
+                ].strip()
+                Globals.enterprise_id = selectedConfig["enterprise"].strip()
 
                 self.PopulateGroups()
                 self.PopulateApps()
