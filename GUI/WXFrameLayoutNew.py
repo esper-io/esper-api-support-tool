@@ -242,51 +242,49 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar = wx.ToolBar(self, -1)
         self.SetToolBar(self.frame_toolbar)
 
-        close_icon = wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_TOOLBAR, (16, 16))
+        close_icon = self.scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
         qtool = self.frame_toolbar.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.frame_toolbar.AddSeparator()
 
-        open_icon = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, (16, 16))
+        open_icon = self.scale_bitmap(resourcePath("Images/open.png"), 16, 16)
         otool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Open Auth CSV", open_icon, "Open Auth CSV"
         )
         self.frame_toolbar.AddSeparator()
 
-        save_icon = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, (16, 16))
+        save_icon = self.scale_bitmap(resourcePath("Images/save.png"), 16, 16)
         stool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Save Device Info", save_icon, "Save Device Info"
         )
-        saveas_icon = wx.ArtProvider.GetBitmap(
-            wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, (16, 16)
-        )
-        sstool = self.frame_toolbar.AddTool(
-            wx.ID_ANY, "Save Network Info", saveas_icon, "Save Network Info"
-        )
+        # saveas_icon = wx.ArtProvider.GetBitmap(
+        #     wx.ART_FILE_SAVE_AS, wx.ART_TOOLBAR, (16, 16)
+        # )
+        # sstool = self.frame_toolbar.AddTool(
+        #     wx.ID_ANY, "Save Network Info", saveas_icon, "Save Network Info"
+        # )
         self.frame_toolbar.AddSeparator()
 
-        exe_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR, (16, 16))
+        exe_icon = self.scale_bitmap(resourcePath("Images/run.png"), 16, 16)
         self.rtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
 
-        ref_icon = wx.ArtProvider.GetBitmap(wx.ART_REDO, wx.ART_TOOLBAR, (16, 16))
+        ref_icon = self.scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
         self.rftool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
         )
 
         self.frame_toolbar.AddSeparator()
 
-        cmd_icon = wx.ArtProvider.GetBitmap(
-            wx.ART_EXECUTABLE_FILE, wx.ART_TOOLBAR, (16, 16)
-        )
+        cmd_icon = self.scale_bitmap(resourcePath("Images/command.png"), 16, 16)
         self.cmdtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Command", cmd_icon, "Run Command"
         )
 
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
         self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
-        self.Bind(wx.EVT_TOOL, self.onSave, stool)
-        self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
+        self.Bind(wx.EVT_TOOL, self.onSaveBoth, stool)
+        # self.Bind(wx.EVT_TOOL, self.onSaveAs, sstool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.cmdtool)
@@ -552,6 +550,12 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         self.setColorTheme()
 
+    def scale_bitmap(self, bitmap, width, height):
+        image = wx.ImageFromStream(bitmap)
+        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+        result = wx.BitmapFromImage(image)
+        return result
+
     def setColorTheme(self, parent=None):
         """ Set theme color to bypass System Theme (Mac) """
         white = wx.Colour(255, 255, 255)
@@ -621,6 +625,11 @@ class NewFrameLayout(wx.Frame):
             self.Close()
         self.savePrefs(self.prefDialog)
         self.Destroy()
+
+    @api_tool_decorator
+    def onSaveBoth(self, event):
+        self.onSave(event)
+        self.onSaveAs(event)
 
     @api_tool_decorator
     def onSave(self, event):
