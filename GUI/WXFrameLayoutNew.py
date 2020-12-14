@@ -1993,21 +1993,22 @@ class NewFrameLayout(wx.Frame):
     def onUpdate(self, event):
         if event:
             deviceList = event.GetValue()
-            for entry in deviceList.values():
-                device = entry[0]
-                deviceInfo = entry[1]
-                self.addDeviceToDeviceGrid(deviceInfo, isUpdate=True)
-                self.addDeviceToNetworkGrid(device, deviceInfo, isUpdate=True)
-            if self.grid_1.GetSortingColumn() != wx.NOT_FOUND:
-                self.onDeviceGridSort(self.grid_1.GetSortingColumn())
-            if self.grid_2.GetSortingColumn() != wx.NOT_FOUND:
-                self.onNetworkGridSort(self.grid_2.GetSortingColumn())
-            self.frame_toolbar.EnableTool(self.rtool.Id, True)
-            self.frame_toolbar.EnableTool(self.rftool.Id, True)
-            self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-            self.runBtn.Enable(True)
-            self.setGaugeValue(100)
-            wx.CallLater(3000, self.setGaugeValue, 0)
+            if deviceList:
+                for entry in deviceList.values():
+                    device = entry[0]
+                    deviceInfo = entry[1]
+                    self.addDeviceToDeviceGrid(deviceInfo, isUpdate=True)
+                    self.addDeviceToNetworkGrid(device, deviceInfo, isUpdate=True)
+                if self.grid_1.GetSortingColumn() != wx.NOT_FOUND:
+                    self.onDeviceGridSort(self.grid_1.GetSortingColumn())
+                if self.grid_2.GetSortingColumn() != wx.NOT_FOUND:
+                    self.onNetworkGridSort(self.grid_2.GetSortingColumn())
+                self.frame_toolbar.EnableTool(self.rtool.Id, True)
+                self.frame_toolbar.EnableTool(self.rftool.Id, True)
+                self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+                self.runBtn.Enable(True)
+                self.setGaugeValue(100)
+                wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def startUpdateThread(self):
