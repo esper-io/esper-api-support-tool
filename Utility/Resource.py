@@ -26,9 +26,9 @@ def createNewFile(filePath):
 
 
 def scale_bitmap(bitmap, width, height):
-    image = wx.ImageFromStream(bitmap)
+    image = wx.Image(bitmap)
     image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-    result = wx.BitmapFromImage(image)
+    result = wx.Bitmap(image)
     return result
 
 
