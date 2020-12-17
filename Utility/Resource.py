@@ -1,7 +1,12 @@
 import os
+import requests
 import sys
 import subprocess
 import wx
+import Utility.wxThread as wxThread
+import Common.Globals as Globals
+
+from Common.decorator import api_tool_decorator
 
 
 def resourcePath(relative_path):
@@ -30,6 +35,28 @@ def scale_bitmap(bitmap, width, height):
     image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
     result = wx.Bitmap(image)
     return result
+
+
+@api_tool_decorator
+def postEventToFrame(eventType, eventValue=None):
+    """ Post an Event to the Main Thread """
+    evt = wxThread.CustomEvent(eventType, -1, eventValue)
+    if Globals.frame:
+        wx.PostEvent(Globals.frame, evt)
+
+
+def download(url, file_name, overwrite=True):
+    try:
+        if os.path.exists(file_name) and overwrite:
+            os.remove(file_name)
+    except Exception as e:
+        print(e)
+    # open in binary mode
+    with open(file_name, "wb") as file:
+        # get request
+        response = requests.get(url)
+        # write to file
+        file.write(response.content)
 
 
 def isModuleInstalled(module):

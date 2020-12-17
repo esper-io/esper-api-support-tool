@@ -8,10 +8,19 @@ import Common.Globals as Globals
 import platform
 import json
 import Utility.wxThread as wxThread
+import Utility.EsperTemplateUtil as templateUtil
 import GUI.EnhancedStatusBar as ESB
 import tempfile
 import re
 import ast
+
+from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from GUI.Dialogs.TemplateDialog import TemplateDialog
+from GUI.Dialogs.CommandDialog import CommandDialog
+from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
+from GUI.Dialogs.PreferencesDialog import PreferencesDialog
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
+from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
 from functools import partial
 
@@ -33,15 +42,6 @@ from Utility.EsperAPICalls import (
     getAllDevices,
     getAllGroups,
     getAllApplications,
-)
-
-from GUI.CustomDialogs import (
-    CheckboxMessageBox,
-    CommandDialog,
-    ProgressCheckDialog,
-    PreferencesDialog,
-    CmdConfirmDialog,
-    ColumnVisibilityDialog,
 )
 
 from Utility.Resource import resourcePath, scale_bitmap, createNewFile
@@ -184,6 +184,9 @@ class NewFrameLayout(wx.Frame):
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         self.command = runMenu.Append(commandItem)
 
+        cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
+        self.clone = runMenu.Append(cloneItem)
+
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Device Columns")
@@ -229,6 +232,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onSaveAs, fileSaveAs)
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
+        self.Bind(wx.EVT_MENU, self.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
         self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
@@ -1142,14 +1146,18 @@ class NewFrameLayout(wx.Frame):
             # run grid action
             if self.grid_1.GetNumberRows() > 0:
                 runAction = True
+                result = None
                 if Globals.SHOW_GRID_DIALOG:
                     result = CheckboxMessageBox(
                         "Confirmation",
                         "The %s will attempt to process the action on all devices in the Device Info grid. \n\nContinue?"
                         % Globals.TITLE,
-                    ).ShowModal()
-                    if result != wx.ID_OK:
+                    )
+                    
+                    if result.ShowModal() != wx.ID_OK:
                         runAction = False
+                if result and result.getCheckBoxValue():
+                    Globals.SHOW_GRID_DIALOG = False
                 if runAction:
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % gridLabel
@@ -2047,3 +2055,22 @@ class NewFrameLayout(wx.Frame):
                     isUpdate=True
                 )
             self.isRunningUpdate = False
+
+    def onClone(self, event):
+        with TemplateDialog(self.configChoice, parent=self) as tmpDialog:
+            result = tmpDialog.ShowModal()
+            if result == wx.ID_OK:
+                clone = wxThread.GUIThread(
+                    self, self.clone, tmpDialog, eventType=None
+                )
+                clone.start()
+    
+    def clone(self, tmpDialog):
+        self.setCursorBusy()
+        self.gauge.Pulse()
+        util = templateUtil.EsperTemplateUtil(
+            *tmpDialog.getInputSelections()
+        )
+        util.cloneTemplate()
+        self.setGaugeValue(100)
+        self.setCursorDefault()

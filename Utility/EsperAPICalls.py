@@ -19,10 +19,12 @@ from Utility.deviceInfo import (
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
+from Utility.Resource import postEventToFrame
 
 from esperclient import ApiClient
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
+
 
 ####Esper API Requests####
 def getInfo(request_extension, deviceid):
@@ -210,6 +212,35 @@ def getAllGroups(*args, **kwds):
         )
 
 
+def getDeviceGroupsForHost(config, enterprise_id):
+    try:
+        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
+        api_response = api_instance.get_all_groups(enterprise_id)
+        return api_response
+    except Exception as e:
+        raise e
+
+
+def createDeviceGroupForHost(config, enterprise_id, group):
+    try:
+        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
+        api_response = api_instance.create_group(enterprise_id, data={"name": group})
+        return api_response
+    except Exception as e:
+        raise e
+
+
+def getDeviceGroupForHost(config, enterprise_id, group_id):
+    try:
+        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
+        api_response = api_instance.get_group_by_id(
+            group_id=group_id, enterprise_id=enterprise_id
+        )
+        return api_response
+    except Exception as e:
+        raise e
+
+
 def getAllDevices(groupToUse, *args, **kwds):
     """ Make a API call to get all Devices belonging to the Enterprise """
     try:
@@ -243,6 +274,23 @@ def getAllApplications(*args, **kwds):
         postEventToFrame(wxThread.myEVT_LOG, "---> App API Request Finished")
         return api_response
     except ApiException as e:
+        raise Exception(
+            "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+        )
+
+
+def getAllApplicationsForHost(config, enterprise_id):
+    """ Make a API call to get all Applications belonging to the Enterprise """
+    try:
+        api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
+        api_response = api_instance.get_all_applications(
+            enterprise_id,
+            limit=Globals.limit,
+            offset=0,
+            is_hidden=False,
+        )
+        return api_response
+    except Exception as e:
         raise Exception(
             "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
         )
@@ -567,14 +615,6 @@ def setMulti(frame, device, deviceInfo):
     postEventToFrame(wxThread.myEVT_LOG, logString)
     if failed:
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
-
-
-@api_tool_decorator
-def postEventToFrame(eventType, eventValue=None):
-    """ Post an Event to the Main Thread """
-    evt = wxThread.CustomEvent(eventType, -1, eventValue)
-    if Globals.frame:
-        wx.PostEvent(Globals.frame, evt)
 
 
 def modifyDevice(frame):

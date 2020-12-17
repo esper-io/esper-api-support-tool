@@ -1,0 +1,371 @@
+import requests
+import esperclient
+import os
+import wx
+
+import Utility.wxThread as wxThread
+import Common.Globals as Globals
+
+from Utility.Resource import download
+from Utility.Resource import postEventToFrame
+
+from Utility.EsperAPICalls import (
+    getAllApplicationsForHost,
+    createDeviceGroupForHost,
+    getDeviceGroupsForHost,
+)
+
+from datetime import datetime
+
+from Common.decorator import api_tool_decorator
+
+from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+
+
+class EsperTemplateUtil:
+    def __init__(self, fromInfo=None, toInfo=None, templateName=None, parent=None):
+        self.apiLink = "https://{tenant}-api.esper.cloud/api/v0/enterprise/"
+        self.template_extension = "/devicetemplate/"
+        self.wallpaper_extension = "/wallpaper/"
+        self.deviceGroup_ext = "/devicegroup/"
+        self.limit_extension = "?limit={num}"
+        self.parent = parent
+
+        self.fromKey = fromInfo["apiKey"] if fromInfo else None
+        self.fromEntId = fromInfo["enterprise"] if fromInfo else None
+        self.fromTenant = fromInfo["apiHost"].strip().replace("https://", "").replace("http://", "").replace("-api.esper.cloud/api", "") if fromInfo else None
+        self.toTenant = toInfo["apiHost"].strip().replace("https://", "").replace("http://", "").replace("-api.esper.cloud/api", "") if toInfo else None
+        self.toKey = toInfo["apiKey"] if toInfo else None
+        self.toEntId = toInfo["enterprise"] if toInfo else None
+        self.templateName = templateName
+
+        self.missingApps = ""
+
+    @api_tool_decorator
+    def cloneTemplate(self):
+        fromApi = self.apiLink.format(tenant=self.fromTenant)
+        toApi = self.apiLink.format(tenant=self.toTenant)
+
+        templates = self.getTemplates(fromApi, self.fromKey, self.fromEntId)
+        toTemplates = self.getTemplates(toApi, self.toKey, self.toEntId)
+        toApps = getAllApplicationsForHost(
+            self.getEsperConfig(toApi, self.toKey), self.toEntId
+        )
+
+        templateFound = None
+        maxId = len(toTemplates["results"]) + 1
+        templateExist = list(
+            filter(lambda x: x["name"] == self.templateName, toTemplates["results"])
+        )
+        if templateExist:
+            raise Exception("Template already exists")
+        for template in templates["results"]:
+            if template["name"] == self.templateName:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "Found template matching the given name:\t%s" % self.templateName,
+                )
+                templateFound = self.getTemplate(
+                    fromApi, self.fromKey, self.fromEntId, template["id"]
+                )
+                break
+
+        if templateFound:
+            templateFound["id"] = maxId + 1
+            templateFound["enterprise"] = self.toEntId
+            toDeviceGroups = getDeviceGroupsForHost(
+                self.getEsperConfig(toApi, self.toKey), self.toEntId
+            )
+            allDeviceGroupId = None
+            found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
+                templateFound, toDeviceGroups, allDeviceGroupId
+            )
+            if not found:
+                postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
+                createDeviceGroupForHost(
+                    toApi,
+                    self.toKey,
+                    self.toEntId,
+                    templateFound["template"]["deviceGroup"]["name"],
+                )
+                toDeviceGroups = getDeviceGroupsForHost(
+                    self.getEsperConfig(toApi, self.toKey), self.toEntId
+                )
+                _, templateFound, _ = self.checkDeviceGroup(
+                    templateFound, toDeviceGroups, allDeviceGroupId
+                )
+
+            postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
+            bgList = []
+            for bg in templateFound["template"]["brand"]["wallpapers"]:
+                newBg = self.uploadWallpaper(toApi, self.toKey, self.toEntId, bg)
+                newBg["enterprise"] = self.toEntId
+                newBg["wallpaper"] = newBg["id"]
+                bgList.append(newBg)
+            templateFound["template"]["brand"]["wallpapers"] = bgList
+
+            templateFound = self.checkTemplate(templateFound, toApps.results)
+            result = None
+            res = None
+            if Globals.SHOW_TEMPLATE_DIALOG:
+                result = CheckboxMessageBox(
+                    "Confirmation",
+                    "The %s will attempt to clone to template.\nThe following apps are missing: %s\n\nContinue?"
+                    % (Globals.TITLE, self.missingApps if self.missingApps else None),
+                )
+                res = result.ShowModal()
+            else:
+                res = wx.ID_OK
+            if res == wx.ID_OK:
+                postEventToFrame(wxThread.myEVT_LOG, "Attempting to copy template...")
+                res = self.createTemplate(toApi, self.toKey, self.toEntId, templateFound)
+                if "errors" not in res:
+                    postEventToFrame(
+                        wxThread.myEVT_LOG, "Template sucessfully created.\n\n%s" % res
+                    )
+                else:
+                    postEventToFrame(
+                        wxThread.myEVT_LOG, "Failed to recreate Template.\n\n%s" % res
+                    )
+            if result and result.getCheckBoxValue():
+                Globals.SHOW_TEMPLATE_DIALOG = False
+        else:
+            postEventToFrame(
+                wxThread.myEVT_LOG, "Template was not found. Check arguements."
+            )
+
+    def getEsperConfig(self, host, apiKey, auth="Bearer"):
+        configuration = esperclient.Configuration()
+        configuration.host = host.replace("/v0/enterprise/", "")
+        configuration.api_key["Authorization"] = apiKey
+        configuration.api_key_prefix["Authorization"] = auth
+        return configuration
+
+    @api_tool_decorator
+    def uploadWallpaper(self, link, key, enterprise_id, bg):
+        json_resp = None
+        files = None
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+            }
+            download(bg["url"], "wallpaper.jpeg")
+            if os.path.exists("wallpaper.jpeg"):
+                payload = {
+                    "orientation": bg["orientation"],
+                    "enterprise": enterprise_id,
+                }
+                url = (
+                    link
+                    + enterprise_id
+                    + self.wallpaper_extension
+                    + self.limit_extension.format(num=Globals.limit)
+                )
+                files = {"image_file": open("wallpaper.jpeg", "rb")}
+                postEventToFrame(
+                    wxThread.myEVT_LOG, "Attempting to upload wallpaper..."
+                )
+                resp = requests.post(url, headers=headers, data=payload, files=files)
+                if resp.ok:
+                    postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Succeeded!")
+                    json_resp = resp.json()
+                else:
+                    postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Failed!")
+                    resp.raise_for_status()
+        except Exception as e:
+            raise e
+        finally:
+            if files:
+                files["image_file"].close()
+        try:
+            if os.path.exists("wallpaper.jpeg"):
+                os.remove("wallpaper.jpeg")
+        except Exception as e:
+            print(e)
+        if json_resp:
+            return json_resp
+
+    def checkDeviceGroup(self, templateFound, toDeviceGroups, allDeviceGroupId):
+        found = False
+        for group in toDeviceGroups.results:
+            if group.name == templateFound["template"]["deviceGroup"]["name"]:
+                found = True
+                templateFound["template"]["deviceGroup"] = group.id
+            if group.name == "All devices":
+                allDeviceGroupId = group.id
+        return found, templateFound, allDeviceGroupId
+
+    def checkTemplate(self, template, apps):
+        newTemplate = {}
+        newTemplate["application"] = {
+            "appMode": template["template"]["application"]["appMode"],
+            "startOnBoot": template["template"]["application"]["startOnBoot"],
+            "apps": [],
+        }
+        if template["template"]["application"]["apps"]:
+            for app in template["template"]["application"]["apps"]:
+                if ("isGPlay" in app and app["isGPlay"]) or (
+                    "is_g_play" in app and app["is_g_play"]
+                ):
+                    newTemplate["application"]["apps"].append(app)
+                else:
+                    found = False
+                    for toApp in apps:
+                        if toApp.application_name == app["applicationName"]:
+                            found = True
+                            versionId = list(
+                                filter(
+                                    lambda x: x.version_code == app["versionName"],
+                                    toApp.versions,
+                                )
+                            )
+                            if not versionId:
+                                versionId = toApp.versions[0].id
+                            else:
+                                versionId = versionId[0].id
+                            newTemplate["application"]["apps"].append(
+                                {
+                                    "is_g_play": False,
+                                    "id": toApp.id,
+                                    "app_version": versionId,
+                                }
+                            )
+                            postEventToFrame(
+                                wxThread.myEVT_LOG,
+                                "Added the '%s' app to the template"
+                                % app["applicationName"],
+                            )
+                            break
+                    if not found:
+                        postEventToFrame(
+                            wxThread.myEVT_LOG,
+                            "To Enterprise is missing app, %s, not adding to template"
+                            % app["applicationName"],
+                        )
+                        self.missingApps += str(app["applicationName"]) + ","
+
+        newTemplate["brand"] = template["template"]["brand"]
+
+        newTemplate["devicePolicy"] = template["template"]["devicePolicy"]
+        if "id" in newTemplate["devicePolicy"]:
+            del newTemplate["devicePolicy"]["id"]
+
+        tmp_pw_len = template["template"]["securityPolicy"]["devicePasswordPolicy"][
+            "minimumPasswordLength"
+        ]
+        pw_len = tmp_pw_len if tmp_pw_len else 4
+        newTemplate["securityPolicy"] = template["template"]["securityPolicy"]
+        if not newTemplate["securityPolicy"]["devicePasswordPolicy"][
+            "minimumPasswordLength"
+        ]:
+            newTemplate["securityPolicy"]["devicePasswordPolicy"][
+                "minimumPasswordLength"
+            ] = pw_len
+
+        newTemplate["settings"] = template["template"]["settings"]
+        if "id" in newTemplate["settings"]:
+            del newTemplate["settings"]["id"]
+        newTemplate["deviceGroup"] = template["template"]["deviceGroup"]
+        newTemplate = self.processDict(newTemplate)
+        template["template"] = newTemplate
+        template["is_active"] = False
+        template["created_on"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        template["updated_on"] = template["created_on"]
+        return template
+
+    def processDict(self, dicton):
+        if "id" in dicton and "wallpaper" not in dicton:
+            del dicton["id"]
+
+        newDict = dicton.copy()
+        for key in dicton.keys():
+            res = [char for char in key if char.isupper()]
+            newKey = key
+            for c in res:
+                newKey = newKey.replace(c, "_%s" % c.lower())
+            if type(dicton[key]) is dict:
+                newDict[newKey] = self.processDict(dicton[key])
+            elif type(dicton[key]) is list:
+                newList = []
+                for data in dicton[key]:
+                    if type(data) is dict:
+                        newList.append(self.processDict(data))
+                newDict[newKey] = newList
+            else:
+                newDict[newKey] = dicton[key]
+            if newKey != key:
+                del newDict[key]
+        return newDict
+
+    @api_tool_decorator
+    def getTemplates(self, link, key, enterprise_id):
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+            if not link.endswith("/v0/enterprise/") or not link.endswith(
+                "v0/enterprise/"
+            ):
+                if not link.endswith("/"):
+                    link = link + "/"
+                link = link + "v0/enterprise/"
+            url = (
+                link
+                + enterprise_id
+                + self.template_extension
+                + self.limit_extension.format(num=Globals.limit)
+            )
+            resp = requests.get(url, headers=headers)
+            json_resp = resp.json()
+            return json_resp
+        except Exception as e:
+            raise e
+
+    @api_tool_decorator
+    def getTemplate(self, link, key, enterprise_id, template_id):
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+            if not link.endswith("/v0/enterprise/") or not link.endswith(
+                "v0/enterprise/"
+            ):
+                if not link.endswith("/"):
+                    link = link + "/"
+                link = link + "v0/enterprise/"
+            url = link + enterprise_id + self.template_extension + str(template_id)
+            resp = requests.get(url, headers=headers)
+            json_resp = resp.json()
+            return json_resp
+        except Exception as e:
+            raise e
+
+    @api_tool_decorator
+    def createTemplate(self, link, key, enterprise_id, template):
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+            url = link + enterprise_id + self.template_extension
+            resp = requests.post(url, headers=headers, json=template)
+            json_resp = resp.json()
+            return json_resp
+        except Exception as e:
+            raise e
+
+    @api_tool_decorator
+    def updateTemplate(self, link, key, enterprise_id, template):
+        try:
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+            url = link + enterprise_id + self.template_extension
+            resp = requests.patch(url, headers=headers, json=template)
+            json_resp = resp.json()
+            return json_resp
+        except Exception as e:
+            raise e
