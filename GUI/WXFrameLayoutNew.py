@@ -548,7 +548,6 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         self.setColorTheme()
 
-
     def setColorTheme(self, parent=None):
         """ Set theme color to bypass System Theme (Mac) """
         white = wx.Colour(255, 255, 255)
@@ -1154,7 +1153,7 @@ class NewFrameLayout(wx.Frame):
                         "The %s will attempt to process the action on all devices in the Device Info grid. \n\nContinue?"
                         % Globals.TITLE,
                     )
-                    
+
                     if result.ShowModal() != wx.ID_OK:
                         runAction = False
                 if result and result.getCheckBoxValue():
@@ -1254,7 +1253,9 @@ class NewFrameLayout(wx.Frame):
                         found = True
                         deviceListing = list(
                             filter(
-                                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName
+                                lambda x: (
+                                    x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
+                                    == esperName
                                 ),
                                 self.grid_1_contents,
                             )
@@ -1265,19 +1266,32 @@ class NewFrameLayout(wx.Frame):
                             self.addDeviceToDeviceGrid(device_info, isUpdate=False)
                             break
                         for attribute in Globals.CSV_TAG_ATTR_NAME:
-                            indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(attribute)
+                            indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(
+                                attribute
+                            )
                             cellValue = self.grid_1.GetCellValue(rowNum, indx)
                             fecthValue = (
                                 device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
                                 if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
                                 else ""
                             )
-                            if not (rowNum, indx) in self.userEdited and cellValue != str(fecthValue):
+                            if (
+                                not (
+                                    rowNum,
+                                    indx,
+                                )
+                                in self.userEdited
+                                and cellValue != str(fecthValue)
+                            ):
                                 self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
                                 self.setStatusCellColor(fecthValue, rowNum, indx)
-                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(fecthValue)
+                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
+                                    fecthValue
+                                )
                             else:
-                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(cellValue)
+                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
+                                    cellValue
+                                )
                         deviceListing.update(device)
                         break
             if not found:
@@ -1291,11 +1305,15 @@ class NewFrameLayout(wx.Frame):
                     else ""
                 )
                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-                self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
+                self.grid_1.SetCellValue(
+                    self.grid_1.GetNumberRows() - 1, num, str(value)
+                )
                 isEditable = True
                 if attribute in Globals.CSV_EDITABLE_COL:
                     isEditable = False
-                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
+                self.grid_1.SetReadOnly(
+                    self.grid_1.GetNumberRows() - 1, num, isEditable
+                )
                 self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
                 num += 1
             if device not in self.grid_1_contents:
@@ -1304,16 +1322,12 @@ class NewFrameLayout(wx.Frame):
 
     def setStatusCellColor(self, value, rowNum, colNum):
         if value == "Offline":
-            self.grid_1.SetCellTextColour(
-                rowNum, colNum, wx.Colour(255, 0, 0)
-            )
+            self.grid_1.SetCellTextColour(rowNum, colNum, wx.Colour(255, 0, 0))
             self.grid_1.SetCellBackgroundColour(
                 rowNum, colNum, wx.Colour(255, 235, 234)
             )
         elif value == "Online":
-            self.grid_1.SetCellTextColour(
-                rowNum, colNum, wx.Colour(0, 128, 0)
-            )
+            self.grid_1.SetCellTextColour(rowNum, colNum, wx.Colour(0, 128, 0))
             self.grid_1.SetCellBackgroundColour(
                 rowNum, colNum, wx.Colour(229, 248, 229)
             )
@@ -1335,35 +1349,57 @@ class NewFrameLayout(wx.Frame):
                     esperName = self.grid_2.GetCellValue(rowNum, 0)
                     if deviceName == esperName:
                         found = True
-                        deviceListing = list(filter(lambda x: (x["Device Name"] == esperName), self.grid_2_contents))
+                        deviceListing = list(
+                            filter(
+                                lambda x: (x["Device Name"] == esperName),
+                                self.grid_2_contents,
+                            )
+                        )
                         if deviceListing:
                             deviceListing = deviceListing[0]
                         else:
-                            self.addToNetworkGrid(networkInfo, device_info=device_info, isUpdate=False)
+                            self.addToNetworkGrid(
+                                networkInfo, device_info=device_info, isUpdate=False
+                            )
                             break
                         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(attribute)
+                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(
+                                attribute
+                            )
                             cellValue = self.grid_2.GetCellValue(rowNum, indx)
                             fecthValue = (
                                 networkInfo[attribute]
                                 if attribute in networkInfo
                                 else ""
                             )
-                            if not (rowNum, indx) in self.userEdited and cellValue != str(fecthValue):
+                            if (
+                                not (
+                                    rowNum,
+                                    indx,
+                                )
+                                in self.userEdited
+                                and cellValue != str(fecthValue)
+                            ):
                                 self.grid_2.SetCellValue(rowNum, indx, str(fecthValue))
                             deviceListing.update(networkInfo)
                         break
             if not found:
-                self.addToNetworkGrid(networkInfo, device_info=device_info, isUpdate=False)
+                self.addToNetworkGrid(
+                    networkInfo, device_info=device_info, isUpdate=False
+                )
         else:
             self.grid_2.AppendRows(1)
             for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
                 value = networkInfo[attribute] if attribute in networkInfo else ""
-                self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
+                self.grid_2.SetCellValue(
+                    self.grid_2.GetNumberRows() - 1, num, str(value)
+                )
                 isEditable = True
                 if attribute in Globals.CSV_EDITABLE_COL:
                     isEditable = False
-                self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, isEditable)
+                self.grid_2.SetReadOnly(
+                    self.grid_2.GetNumberRows() - 1, num, isEditable
+                )
                 num += 1
             if networkInfo not in self.grid_2_contents:
                 self.grid_2_contents.append(networkInfo)
@@ -1644,7 +1680,9 @@ class NewFrameLayout(wx.Frame):
                 )
             else:
                 self.grid_1_contents = sorted(
-                    self.grid_1_contents, key=lambda i: i[keyName], reverse=self.deviceDescending
+                    self.grid_1_contents,
+                    key=lambda i: i[keyName],
+                    reverse=self.deviceDescending,
                 )
         self.Logging(
             "---> Sorting Device Grid on Column: %s Order: %s"
@@ -1688,7 +1726,9 @@ class NewFrameLayout(wx.Frame):
             )
         else:
             self.grid_2_contents = sorted(
-                self.grid_2_contents, key=lambda i: i[keyName], reverse=self.networkDescending
+                self.grid_2_contents,
+                key=lambda i: i[keyName],
+                reverse=self.networkDescending,
             )
         self.Logging(
             "---> Sorting Network Grid on Column: %s Order: %s"
@@ -2034,27 +2074,28 @@ class NewFrameLayout(wx.Frame):
             self.refresh = None
 
     def fetchUpdateData(self, forceUpdate=False):
-        if not self.isRunning and not self.isRunningUpdate and ((self.grid_1_contents and self.grid_2_contents and len(self.grid_1_contents) <= Globals.MAX_UPDATE_COUNT and len(self.grid_2_contents) <= Globals.MAX_UPDATE_COUNT) or forceUpdate):
+        if (
+            not self.isRunning
+            and not self.isRunningUpdate
+            and (
+                (
+                    self.grid_1_contents
+                    and self.grid_2_contents
+                    and len(self.grid_1_contents) <= Globals.MAX_UPDATE_COUNT
+                    and len(self.grid_2_contents) <= Globals.MAX_UPDATE_COUNT
+                )
+                or forceUpdate
+            )
+        ):
             if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
                 self.gauge.Pulse()
-                TakeAction(
-                    self,
-                    Globals.LAST_GROUP_ID,
-                    1,
-                    None,
-                    isUpdate=True
-                )
+                TakeAction(self, Globals.LAST_GROUP_ID, 1, None, isUpdate=True)
             elif Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
                 self.gauge.Pulse()
                 TakeAction(
-                    self,
-                    Globals.LAST_DEVICE_ID,
-                    1,
-                    None,
-                    isDevice=True,
-                    isUpdate=True
+                    self, Globals.LAST_DEVICE_ID, 1, None, isDevice=True, isUpdate=True
                 )
             self.isRunningUpdate = False
 
@@ -2063,17 +2104,21 @@ class NewFrameLayout(wx.Frame):
             result = self.tmpDialog.ShowModal()
             if result == wx.ID_OK:
                 clone = wxThread.GUIThread(
-                    self, self.prepareClone, self.tmpDialog, eventType=None, passArgAsTuple=True
+                    self,
+                    self.prepareClone,
+                    self.tmpDialog,
+                    eventType=None,
+                    passArgAsTuple=True,
                 )
                 clone.start()
-    
+
     def prepareClone(self, tmpDialog):
         self.setCursorBusy()
         self.gauge.Pulse()
-        util = templateUtil.EsperTemplateUtil(
-            *tmpDialog.getInputSelections()
+        util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
+        util.prepareTemplate(
+            tmpDialog.sourceTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate
         )
-        util.prepareTemplate(tmpDialog.sourceTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate)
 
     def confirmClone(self, event):
         result = None
@@ -2090,7 +2135,10 @@ class NewFrameLayout(wx.Frame):
             res = wx.ID_OK
         if res == wx.ID_OK:
             clone = wxThread.GUIThread(
-                self, self.createClone, (util, templateFound, toApi, toKey, toEntId), eventType=None
+                self,
+                self.createClone,
+                (util, templateFound, toApi, toKey, toEntId),
+                eventType=None,
             )
             clone.start()
         if result and result.getCheckBoxValue():
