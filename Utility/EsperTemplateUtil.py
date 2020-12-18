@@ -124,8 +124,14 @@ class EsperTemplateUtil:
                 )
             else:
                 templateFound["template"]["device_group"] = allDeviceGroupId
-                postEventToFrame(wxThread.myEVT_LOG, "Failed to recreate Device Group, using All Device group!")
-                wx.MessageBox("Failed to recreate Device Group, using All Device group!", style=wx.OK | wx.ICON_ERROR)
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "Failed to recreate Device Group, using All Device group!",
+                )
+                wx.MessageBox(
+                    "Failed to recreate Device Group, using All Device group!",
+                    style=wx.OK | wx.ICON_ERROR,
+                )
         return templateFound
 
     @api_tool_decorator
@@ -179,10 +185,16 @@ class EsperTemplateUtil:
                     json_resp = resp.json()
                 else:
                     postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Failed!")
-                    wx.MessageBox("Wallpaper upload Failed! Source: %s" % bg["url"], style=wx.OK | wx.ICON_ERROR)
+                    wx.MessageBox(
+                        "Wallpaper upload Failed! Source: %s" % bg["url"],
+                        style=wx.OK | wx.ICON_ERROR,
+                    )
                     resp.raise_for_status()
             else:
-                wx.MessageBox("Failed to download wallpaper for uploading", style=wx.OK | wx.ICON_ERROR)
+                wx.MessageBox(
+                    "Failed to download wallpaper for uploading",
+                    style=wx.OK | wx.ICON_ERROR,
+                )
         except Exception as e:
             raise e
         finally:
