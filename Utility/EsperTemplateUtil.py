@@ -81,9 +81,6 @@ class EsperTemplateUtil:
         if templateFound:
             templateFound["id"] = maxId + 1
             templateFound["enterprise"] = self.toEntId
-            # templateFound = self.processDeviceGroup(templateFound)
-            # templateFound = self.processWallpapers(templateFound)
-
             templateFound = self.checkTemplate(templateFound, toApps.results)
             postEventToFrame(
                 wxThread.myEVT_CONFIRM_CLONE,
@@ -112,18 +109,23 @@ class EsperTemplateUtil:
         )
         if not found:
             postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
-            createDeviceGroupForHost(
+            res = createDeviceGroupForHost(
                 self.toApi,
                 self.toKey,
                 self.toEntId,
                 templateFound["template"]["deviceGroup"]["name"],
             )
-            toDeviceGroups = getDeviceGroupsForHost(
-                self.getEsperConfig(self.toApi, self.toKey), self.toEntId
-            )
-            _, templateFound, _ = self.checkDeviceGroup(
-                templateFound, toDeviceGroups, allDeviceGroupId
-            )
+            if res:
+                toDeviceGroups = getDeviceGroupsForHost(
+                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                )
+                _, templateFound, _ = self.checkDeviceGroup(
+                    templateFound, toDeviceGroups, allDeviceGroupId
+                )
+            else:
+                templateFound["template"]["device_group"] = allDeviceGroupId
+                postEventToFrame(wxThread.myEVT_LOG, "Failed to recreate Device Group, using All Device group!")
+                wx.MessageBox("Failed to recreate Device Group, using All Device group!", style=wx.OK | wx.ICON_ERROR)
         return templateFound
 
     @api_tool_decorator
@@ -133,9 +135,10 @@ class EsperTemplateUtil:
             bgList = []
             for bg in templateFound["template"]["brand"]["wallpapers"]:
                 newBg = self.uploadWallpaper(self.toApi, self.toKey, self.toEntId, bg)
-                newBg["enterprise"] = self.toEntId
-                newBg["wallpaper"] = newBg["id"]
-                bgList.append(newBg)
+                if newBg:
+                    newBg["enterprise"] = self.toEntId
+                    newBg["wallpaper"] = newBg["id"]
+                    bgList.append(newBg)
             templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
 
@@ -176,7 +179,10 @@ class EsperTemplateUtil:
                     json_resp = resp.json()
                 else:
                     postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Failed!")
+                    wx.MessageBox("Wallpaper upload Failed! Source: %s" % bg["url"], style=wx.OK | wx.ICON_ERROR)
                     resp.raise_for_status()
+            else:
+                wx.MessageBox("Failed to download wallpaper for uploading", style=wx.OK | wx.ICON_ERROR)
         except Exception as e:
             raise e
         finally:
