@@ -21,7 +21,9 @@ class TemplateDialog(wx.Dialog):
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
 
-        self.SetSize((765, 540))
+        size = (600, 500)
+        self.SetSize(size)
+        self.SetMinSize(size)
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         self.panel_5 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.choice_1 = self.choice_1 = wx.Choice(
@@ -119,12 +121,15 @@ class TemplateDialog(wx.Dialog):
         self.Destroy()
 
     def OnSelection(self, event):
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
         selection = event.GetSelection()
         name = self.check_list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         if template:
             self.chosenTemplate = self.getTemplate(template[0])
             self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+            self.text_ctrl_1.ShowPosition(0)
 
         if (
             self.choice_1.GetString(self.choice_1.GetSelection())
@@ -136,6 +141,8 @@ class TemplateDialog(wx.Dialog):
             self.button_1.Enable(True)
         else:
             self.button_1.Enable(False)
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
 
     def onChoice1Select(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
