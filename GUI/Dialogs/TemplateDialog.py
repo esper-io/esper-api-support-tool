@@ -16,6 +16,7 @@ class TemplateDialog(wx.Dialog):
         self.sourceTemplate = []
         self.destTemplate = []
         self.configMenuOpt = configMenuOpt
+        self.chosenTemplate = None
 
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
@@ -30,8 +31,15 @@ class TemplateDialog(wx.Dialog):
         self.choice_2 = wx.Choice(
             self.panel_6, wx.ID_ANY, choices=choices, style=wx.CB_SORT
         )
-        self.check_list_box_1 = wx.ListBox(self.panel_2, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_SINGLE)
-        self.text_ctrl_1 = wx.TextCtrl(self.panel_2, wx.ID_ANY, "", style=wx.HSCROLL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP)
+        self.check_list_box_1 = wx.ListBox(
+            self.panel_2, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_SINGLE
+        )
+        self.text_ctrl_1 = wx.TextCtrl(
+            self.panel_2,
+            wx.ID_ANY,
+            "",
+            style=wx.HSCROLL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
+        )
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.button_1 = wx.Button(self.panel_4, wx.ID_OK, "Clone")
         self.button_2 = wx.Button(self.panel_4, wx.ID_CANCEL, "Cancel")
@@ -63,7 +71,9 @@ class TemplateDialog(wx.Dialog):
         grid_sizer_2 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_5 = wx.StaticBoxSizer(wx.StaticBox(self.panel_2, wx.ID_ANY, "Source Template"), wx.VERTICAL)
+        sizer_5 = wx.StaticBoxSizer(
+            wx.StaticBox(self.panel_2, wx.ID_ANY, "Source Template"), wx.VERTICAL
+        )
         grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
@@ -95,9 +105,11 @@ class TemplateDialog(wx.Dialog):
         self.Centre()
 
     def getInputSelections(self):
-        return self.configMenuOpt[self.choice_1.GetString(self.choice_1.GetSelection())],\
-            self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],\
-            self.check_list_box_1.GetString(self.check_list_box_1.GetSelection())
+        return (
+            self.configMenuOpt[self.choice_1.GetString(self.choice_1.GetSelection())],
+            self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
+            self.check_list_box_1.GetString(self.check_list_box_1.GetSelection()),
+        )
 
     def OnClose(self, event):
         if self.IsModal():
@@ -111,10 +123,12 @@ class TemplateDialog(wx.Dialog):
         name = self.check_list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         if template:
-            self.text_ctrl_1.AppendText(json.dumps(self.getTemplate(template[0]), indent=2))
+            self.chosenTemplate = self.getTemplate(template[0])
+            self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
 
         if (
-            self.choice_1.GetString(self.choice_1.GetSelection()) != self.choice_2.GetString(self.choice_2.GetSelection())
+            self.choice_1.GetString(self.choice_1.GetSelection())
+            != self.choice_2.GetString(self.choice_2.GetSelection())
             and self.choice_1.GetString(self.choice_1.GetSelection())
             and self.choice_2.GetString(self.choice_2.GetSelection())
             and self.check_list_box_1.GetSelection()
@@ -134,7 +148,8 @@ class TemplateDialog(wx.Dialog):
                 self.check_list_box_1.Append(template["name"])
 
         if (
-            self.choice_1.GetString(self.choice_1.GetSelection()) == self.choice_2.GetString(self.choice_2.GetSelection())
+            self.choice_1.GetString(self.choice_1.GetSelection())
+            == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.check_list_box_1.GetSelection()
@@ -152,7 +167,8 @@ class TemplateDialog(wx.Dialog):
         if event.String:
             self.destTemplate = self.getTemplates(self.configMenuOpt[event.String])
         if (
-            self.choice_1.GetString(self.choice_1.GetSelection()) == self.choice_2.GetString(self.choice_2.GetSelection())
+            self.choice_1.GetString(self.choice_1.GetSelection())
+            == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
             or self.check_list_box_1.GetSelection()
@@ -172,6 +188,9 @@ class TemplateDialog(wx.Dialog):
 
     def getTemplate(self, template):
         util = templateUtil.EsperTemplateUtil()
-        dataSrc = self.configMenuOpt[self.choice_1.GetString(self.choice_1.GetSelection())]
-        return util.getTemplate(dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"])
-
+        dataSrc = self.configMenuOpt[
+            self.choice_1.GetString(self.choice_1.GetSelection())
+        ]
+        return util.getTemplate(
+            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
+        )

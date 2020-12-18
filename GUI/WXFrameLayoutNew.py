@@ -301,6 +301,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.updateTagCell)
         self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.uncheckConsole)
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
+        self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
@@ -1813,13 +1814,14 @@ class NewFrameLayout(wx.Frame):
 
     def onComplete(self, event):
         """ Things that should be done once an Action is completed """
-        self.isRunning = False
         self.setCursorDefault()
         self.setGaugeValue(100)
-        self.runBtn.Enable(True)
-        self.frame_toolbar.EnableTool(self.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.rftool.Id, True)
-        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+        if self.isRunning:
+            self.runBtn.Enable(True)
+            self.frame_toolbar.EnableTool(self.rtool.Id, True)
+            self.frame_toolbar.EnableTool(self.rftool.Id, True)
+            self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
+        self.isRunning = False
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
         self.Logging("---> Completed Action")
@@ -2057,20 +2059,51 @@ class NewFrameLayout(wx.Frame):
             self.isRunningUpdate = False
 
     def onClone(self, event):
-        with TemplateDialog(self.configChoice, parent=self) as tmpDialog:
-            result = tmpDialog.ShowModal()
+        with TemplateDialog(self.configChoice, parent=self) as self.tmpDialog:
+            result = self.tmpDialog.ShowModal()
             if result == wx.ID_OK:
                 clone = wxThread.GUIThread(
-                    self, self.clone, tmpDialog, eventType=None
+                    self, self.prepareClone, self.tmpDialog, eventType=None, passArgAsTuple=True
                 )
                 clone.start()
     
-    def clone(self, tmpDialog):
+    def prepareClone(self, tmpDialog):
         self.setCursorBusy()
         self.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(
             *tmpDialog.getInputSelections()
         )
-        util.cloneTemplate()
-        self.setGaugeValue(100)
-        self.setCursorDefault()
+        util.prepareTemplate(tmpDialog.sourceTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate)
+
+    def confirmClone(self, event):
+        result = None
+        res = None
+        (util, toApi, toKey, toEntId, templateFound, missingApps) = event.GetValue()
+        if Globals.SHOW_TEMPLATE_DIALOG:
+            result = CheckboxMessageBox(
+                "Confirmation",
+                "The %s will attempt to clone to template.\nThe following apps are missing: %s\n\nContinue?"
+                % (Globals.TITLE, missingApps if missingApps else None),
+            )
+            res = result.ShowModal()
+        else:
+            res = wx.ID_OK
+        if res == wx.ID_OK:
+            clone = wxThread.GUIThread(
+                self, self.createClone, (util, templateFound, toApi, toKey, toEntId), eventType=None
+            )
+            clone.start()
+        if result and result.getCheckBoxValue():
+            Globals.SHOW_TEMPLATE_DIALOG = False
+        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
+        wx.PostEvent(self, evt)
+
+    def createClone(self, util, templateFound, toApi, toKey, toEntId):
+        templateFound = util.processDeviceGroup(templateFound)
+        templateFound = util.processWallpapers(templateFound)
+        self.Logging("Attempting to copy template...")
+        res = util.createTemplate(toApi, toKey, toEntId, templateFound)
+        if "errors" not in res:
+            self.Logging("Template sucessfully created.")
+        else:
+            self.Logging("ERROR: Failed to recreate Template.%s" % res)

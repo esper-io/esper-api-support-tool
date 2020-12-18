@@ -191,7 +191,10 @@ class PreferencesDialog(wx.Dialog):
             Globals.offset = self.prefs["offset"]
         if "gridDialog" in self.prefs and type(self.prefs["gridDialog"]) == bool:
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
-        if "templateDialog" in self.prefs and type(self.prefs["templateDialog"]) == bool:
+        if (
+            "templateDialog" in self.prefs
+            and type(self.prefs["templateDialog"]) == bool
+        ):
             Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateDialog"]
         if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
@@ -212,9 +215,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs[
             "gridDialog"
         ] = Globals.SHOW_GRID_DIALOG  # update pref value to match global value
-        self.prefs[
-            "templateDialog"
-        ] = Globals.SHOW_TEMPLATE_DIALOG
+        self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
         self.prefs["recentAuth"] = list(dict.fromkeys(self.prefs["recentAuth"]))
         if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
             self.prefs["recentAuth"] = self.prefs["recentAuth"][

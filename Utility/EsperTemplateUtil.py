@@ -33,8 +33,24 @@ class EsperTemplateUtil:
 
         self.fromKey = fromInfo["apiKey"] if fromInfo else None
         self.fromEntId = fromInfo["enterprise"] if fromInfo else None
-        self.fromTenant = fromInfo["apiHost"].strip().replace("https://", "").replace("http://", "").replace("-api.esper.cloud/api", "") if fromInfo else None
-        self.toTenant = toInfo["apiHost"].strip().replace("https://", "").replace("http://", "").replace("-api.esper.cloud/api", "") if toInfo else None
+        self.fromTenant = (
+            fromInfo["apiHost"]
+            .strip()
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace("-api.esper.cloud/api", "")
+            if fromInfo
+            else None
+        )
+        self.toTenant = (
+            toInfo["apiHost"]
+            .strip()
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace("-api.esper.cloud/api", "")
+            if toInfo
+            else None
+        )
         self.toKey = toInfo["apiKey"] if toInfo else None
         self.toEntId = toInfo["enterprise"] if toInfo else None
         self.templateName = templateName
@@ -42,97 +58,86 @@ class EsperTemplateUtil:
         self.missingApps = ""
 
     @api_tool_decorator
-    def cloneTemplate(self):
-        fromApi = self.apiLink.format(tenant=self.fromTenant)
-        toApi = self.apiLink.format(tenant=self.toTenant)
+    def prepareTemplate(self, src, dest, chosenTemplate):
+        self.fromApi = self.apiLink.format(tenant=self.fromTenant)
+        self.toApi = self.apiLink.format(tenant=self.toTenant)
 
-        templates = self.getTemplates(fromApi, self.fromKey, self.fromEntId)
-        toTemplates = self.getTemplates(toApi, self.toKey, self.toEntId)
+        templates = src  # self.getTemplates(fromApi, self.fromKey, self.fromEntId)
+        toTemplates = dest  # self.getTemplates(toApi, self.toKey, self.toEntId)
         toApps = getAllApplicationsForHost(
-            self.getEsperConfig(toApi, self.toKey), self.toEntId
+            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
         )
 
         templateFound = None
-        maxId = len(toTemplates["results"]) + 1
+        maxId = len(toTemplates) + 1
         templateExist = list(
-            filter(lambda x: x["name"] == self.templateName, toTemplates["results"])
+            filter(lambda x: x["name"] == self.templateName, toTemplates)
         )
         if templateExist:
             raise Exception("Template already exists")
-        for template in templates["results"]:
-            if template["name"] == self.templateName:
-                postEventToFrame(
-                    wxThread.myEVT_LOG,
-                    "Found template matching the given name:\t%s" % self.templateName,
-                )
-                templateFound = self.getTemplate(
-                    fromApi, self.fromKey, self.fromEntId, template["id"]
-                )
-                break
+
+        templateFound = chosenTemplate
 
         if templateFound:
             templateFound["id"] = maxId + 1
             templateFound["enterprise"] = self.toEntId
-            toDeviceGroups = getDeviceGroupsForHost(
-                self.getEsperConfig(toApi, self.toKey), self.toEntId
-            )
-            allDeviceGroupId = None
-            found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
-                templateFound, toDeviceGroups, allDeviceGroupId
-            )
-            if not found:
-                postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
-                createDeviceGroupForHost(
-                    toApi,
-                    self.toKey,
-                    self.toEntId,
-                    templateFound["template"]["deviceGroup"]["name"],
-                )
-                toDeviceGroups = getDeviceGroupsForHost(
-                    self.getEsperConfig(toApi, self.toKey), self.toEntId
-                )
-                _, templateFound, _ = self.checkDeviceGroup(
-                    templateFound, toDeviceGroups, allDeviceGroupId
-                )
-
-            postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
-            bgList = []
-            for bg in templateFound["template"]["brand"]["wallpapers"]:
-                newBg = self.uploadWallpaper(toApi, self.toKey, self.toEntId, bg)
-                newBg["enterprise"] = self.toEntId
-                newBg["wallpaper"] = newBg["id"]
-                bgList.append(newBg)
-            templateFound["template"]["brand"]["wallpapers"] = bgList
+            # templateFound = self.processDeviceGroup(templateFound)
+            # templateFound = self.processWallpapers(templateFound)
 
             templateFound = self.checkTemplate(templateFound, toApps.results)
-            result = None
-            res = None
-            if Globals.SHOW_TEMPLATE_DIALOG:
-                result = CheckboxMessageBox(
-                    "Confirmation",
-                    "The %s will attempt to clone to template.\nThe following apps are missing: %s\n\nContinue?"
-                    % (Globals.TITLE, self.missingApps if self.missingApps else None),
-                )
-                res = result.ShowModal()
-            else:
-                res = wx.ID_OK
-            if res == wx.ID_OK:
-                postEventToFrame(wxThread.myEVT_LOG, "Attempting to copy template...")
-                res = self.createTemplate(toApi, self.toKey, self.toEntId, templateFound)
-                if "errors" not in res:
-                    postEventToFrame(
-                        wxThread.myEVT_LOG, "Template sucessfully created.\n\n%s" % res
-                    )
-                else:
-                    postEventToFrame(
-                        wxThread.myEVT_LOG, "Failed to recreate Template.\n\n%s" % res
-                    )
-            if result and result.getCheckBoxValue():
-                Globals.SHOW_TEMPLATE_DIALOG = False
+            postEventToFrame(
+                wxThread.myEVT_CONFIRM_CLONE,
+                (
+                    self,
+                    self.toApi,
+                    self.toKey,
+                    self.toEntId,
+                    templateFound,
+                    self.missingApps,
+                ),
+            )
         else:
             postEventToFrame(
                 wxThread.myEVT_LOG, "Template was not found. Check arguements."
             )
+
+    @api_tool_decorator
+    def processDeviceGroup(self, templateFound):
+        toDeviceGroups = getDeviceGroupsForHost(
+            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+        )
+        allDeviceGroupId = None
+        found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
+            templateFound, toDeviceGroups, allDeviceGroupId
+        )
+        if not found:
+            postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
+            createDeviceGroupForHost(
+                self.toApi,
+                self.toKey,
+                self.toEntId,
+                templateFound["template"]["deviceGroup"]["name"],
+            )
+            toDeviceGroups = getDeviceGroupsForHost(
+                self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+            )
+            _, templateFound, _ = self.checkDeviceGroup(
+                templateFound, toDeviceGroups, allDeviceGroupId
+            )
+        return templateFound
+
+    @api_tool_decorator
+    def processWallpapers(self, templateFound):
+        if self.toApi and self.toKey and self.toEntId:
+            postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
+            bgList = []
+            for bg in templateFound["template"]["brand"]["wallpapers"]:
+                newBg = self.uploadWallpaper(self.toApi, self.toKey, self.toEntId, bg)
+                newBg["enterprise"] = self.toEntId
+                newBg["wallpaper"] = newBg["id"]
+                bgList.append(newBg)
+            templateFound["template"]["brand"]["wallpapers"] = bgList
+        return templateFound
 
     def getEsperConfig(self, host, apiKey, auth="Bearer"):
         configuration = esperclient.Configuration()
@@ -188,9 +193,12 @@ class EsperTemplateUtil:
     def checkDeviceGroup(self, templateFound, toDeviceGroups, allDeviceGroupId):
         found = False
         for group in toDeviceGroups.results:
-            if group.name == templateFound["template"]["deviceGroup"]["name"]:
+            if (
+                "name" in templateFound["template"]["device_group"]
+                and group.name == templateFound["template"]["device_group"]["name"]
+            ):
                 found = True
-                templateFound["template"]["deviceGroup"] = group.id
+                templateFound["template"]["device_group"] = group.id
             if group.name == "All devices":
                 allDeviceGroupId = group.id
         return found, templateFound, allDeviceGroupId
