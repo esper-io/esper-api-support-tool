@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import Common.Globals as Globals
 import Utility.EsperTemplateUtil as templateUtil
 import wx

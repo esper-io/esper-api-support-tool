@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import wx
 import wx.grid as gridlib
 import wx.adv as adv
@@ -2116,9 +2118,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
-        util.prepareTemplate(
-            tmpDialog.sourceTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate
-        )
+        util.prepareTemplate(tmpDialog.destTemplate, tmpDialog.chosenTemplate)
 
     def confirmClone(self, event):
         result = None
@@ -2153,5 +2153,6 @@ class NewFrameLayout(wx.Frame):
         res = util.createTemplate(toApi, toKey, toEntId, templateFound)
         if "errors" not in res:
             self.Logging("Template sucessfully created.")
+            wx.MessageBox("Template sucessfully created.", style=wx.OK,)
         else:
             self.Logging("ERROR: Failed to recreate Template.%s" % res)

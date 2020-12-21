@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import requests
 import esperclient
 import os
@@ -27,21 +29,8 @@ class EsperTemplateUtil:
         self.apiLink = "https://{tenant}-api.esper.cloud/api/v0/enterprise/"
         self.template_extension = "/devicetemplate/"
         self.wallpaper_extension = "/wallpaper/"
-        self.deviceGroup_ext = "/devicegroup/"
         self.limit_extension = "?limit={num}"
         self.parent = parent
-
-        self.fromKey = fromInfo["apiKey"] if fromInfo else None
-        self.fromEntId = fromInfo["enterprise"] if fromInfo else None
-        self.fromTenant = (
-            fromInfo["apiHost"]
-            .strip()
-            .replace("https://", "")
-            .replace("http://", "")
-            .replace("-api.esper.cloud/api", "")
-            if fromInfo
-            else None
-        )
         self.toTenant = (
             toInfo["apiHost"]
             .strip()
@@ -58,12 +47,12 @@ class EsperTemplateUtil:
         self.missingApps = ""
 
     @api_tool_decorator
-    def prepareTemplate(self, src, dest, chosenTemplate):
-        self.fromApi = self.apiLink.format(tenant=self.fromTenant)
+    def prepareTemplate(self, dest=None, chosenTemplate=None):
         self.toApi = self.apiLink.format(tenant=self.toTenant)
 
-        templates = src  # self.getTemplates(fromApi, self.fromKey, self.fromEntId)
-        toTemplates = dest  # self.getTemplates(toApi, self.toKey, self.toEntId)
+        toTemplates = (
+            dest if dest else self.getTemplates(self.toApi, self.toKey, self.toEntId)
+        )
         toApps = getAllApplicationsForHost(
             self.getEsperConfig(self.toApi, self.toKey), self.toEntId
         )
