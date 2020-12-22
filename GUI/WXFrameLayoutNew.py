@@ -2153,6 +2153,7 @@ class NewFrameLayout(wx.Frame):
         res = util.createTemplate(toApi, toKey, toEntId, templateFound)
         if "errors" not in res:
             self.Logging("Template sucessfully created.")
-            wx.MessageBox("Template sucessfully created.", style=wx.OK,)
+            wx.MessageBox("Template sucessfully created.", style=wx.OK | wx.ICON_INFORMATION)
         else:
             self.Logging("ERROR: Failed to recreate Template.%s" % res)
+            wx.MessageBox("Template sucessfully created.", style=wx.OK | wx.ICON_ERROR)
