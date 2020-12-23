@@ -111,8 +111,7 @@ class EsperTemplateUtil:
         if not found:
             postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
             res = createDeviceGroupForHost(
-                self.toApi,
-                self.toKey,
+                self.getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
                 templateFound["template"]["deviceGroup"]["name"],
             )

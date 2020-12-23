@@ -1597,12 +1597,6 @@ class NewFrameLayout(wx.Frame):
         """ Ask user to confirm the command they want to run """
         deviceSelection = self.deviceChoice.GetSelection()
         groupSelection = self.groupChoice.GetSelection()
-        groupToUse = self.groupChoice.GetClientData(groupSelection)
-        deviceToUse = (
-            self.deviceChoice.GetClientData(deviceSelection)
-            if deviceSelection > 0
-            else ""
-        )
         groupLabel = (
             self.groupChoice.Items[groupSelection]
             if len(self.groupChoice.Items) > 0
