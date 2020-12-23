@@ -25,7 +25,7 @@ from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 
 
 class EsperTemplateUtil:
-    def __init__(self, fromInfo=None, toInfo=None, templateName=None, parent=None):
+    def __init__(self, toInfo=None, templateName=None, parent=None):
         self.apiLink = "https://{tenant}-api.esper.cloud/api/v0/enterprise/"
         self.template_extension = "/devicetemplate/"
         self.wallpaper_extension = "/wallpaper/"
@@ -62,26 +62,38 @@ class EsperTemplateUtil:
         templateExist = list(
             filter(lambda x: x["name"] == self.templateName, toTemplates)
         )
-        if templateExist:
-            raise Exception("Template already exists")
-
         templateFound = chosenTemplate
 
         if templateFound:
-            templateFound["id"] = maxId + 1
             templateFound["enterprise"] = self.toEntId
             templateFound = self.checkTemplate(templateFound, toApps.results)
-            postEventToFrame(
-                wxThread.myEVT_CONFIRM_CLONE,
-                (
-                    self,
-                    self.toApi,
-                    self.toKey,
-                    self.toEntId,
-                    templateFound,
-                    self.missingApps,
-                ),
-            )
+
+            if templateExist:
+                templateFound["id"] = templateExist[0]["id"]
+                postEventToFrame(
+                    wxThread.myEVT_CONFIRM_CLONE_UPDATE,
+                    (
+                        self,
+                        self.toApi,
+                        self.toKey,
+                        self.toEntId,
+                        templateFound,
+                        self.missingApps,
+                    ),
+                )
+            else:
+                templateFound["id"] = maxId + 1
+                postEventToFrame(
+                    wxThread.myEVT_CONFIRM_CLONE,
+                    (
+                        self,
+                        self.toApi,
+                        self.toKey,
+                        self.toEntId,
+                        templateFound,
+                        self.missingApps,
+                    ),
+                )
         else:
             postEventToFrame(
                 wxThread.myEVT_LOG, "Template was not found. Check arguements."
@@ -378,7 +390,7 @@ class EsperTemplateUtil:
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
             }
-            url = link + enterprise_id + self.template_extension
+            url = link + enterprise_id + self.template_extension + str(template["id"])
             resp = requests.patch(url, headers=headers, json=template)
             json_resp = resp.json()
             return json_resp

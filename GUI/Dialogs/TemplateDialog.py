@@ -138,7 +138,7 @@ class TemplateDialog(wx.Dialog):
             != self.choice_2.GetString(self.choice_2.GetSelection())
             and self.choice_1.GetString(self.choice_1.GetSelection())
             and self.choice_2.GetString(self.choice_2.GetSelection())
-            and self.check_list_box_1.GetSelection()
+            and self.check_list_box_1.GetSelection() != wx.NOT_FOUND
         ):
             self.button_1.Enable(True)
         else:
@@ -161,7 +161,7 @@ class TemplateDialog(wx.Dialog):
             == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
-            or not self.check_list_box_1.GetSelection()
+            or not self.check_list_box_1.GetSelection() == wx.NOT_FOUND
         ):
             self.button_1.Enable(False)
         else:
@@ -180,7 +180,7 @@ class TemplateDialog(wx.Dialog):
             == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
-            or self.check_list_box_1.GetSelection()
+            or self.check_list_box_1.GetSelection() == wx.NOT_FOUND
         ):
             self.button_1.Enable(False)
         else:
@@ -189,7 +189,7 @@ class TemplateDialog(wx.Dialog):
         self.SetCursor(myCursor)
 
     def getTemplates(self, dataSrc):
-        util = templateUtil.EsperTemplateUtil(dataSrc, None, None)
+        util = templateUtil.EsperTemplateUtil(dataSrc, None)
         tempList = util.getTemplates(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
         )

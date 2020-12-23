@@ -304,6 +304,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.uncheckConsole)
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
+        self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
@@ -2137,23 +2138,57 @@ class NewFrameLayout(wx.Frame):
             clone = wxThread.GUIThread(
                 self,
                 self.createClone,
-                (util, templateFound, toApi, toKey, toEntId),
+                (util, templateFound, toApi, toKey, toEntId, False),
                 eventType=None,
             )
             clone.start()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
-        wx.PostEvent(self, evt)
 
-    def createClone(self, util, templateFound, toApi, toKey, toEntId):
+    def confirmCloneUpdate(self, event):
+        result = None
+        res = None
+        (util, toApi, toKey, toEntId, templateFound, missingApps) = event.GetValue()
+        if Globals.SHOW_TEMPLATE_UPDATE:
+            result = CheckboxMessageBox(
+                "Confirmation",
+                "The Template already exists on the destination endpoint.\nThe following apps are missing: %s\n\nWould you like to update th template?"
+                % (missingApps if missingApps else None),
+            )
+            res = result.ShowModal()
+        else:
+            res = wx.ID_OK
+        if res == wx.ID_OK:
+            clone = wxThread.GUIThread(
+                self,
+                self.createClone,
+                (util, templateFound, toApi, toKey, toEntId, True),
+                eventType=None,
+            )
+            clone.start()
+        if result and result.getCheckBoxValue():
+            Globals.SHOW_TEMPLATE_UPDATE = False
+
+    def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False):
         templateFound = util.processDeviceGroup(templateFound)
         templateFound = util.processWallpapers(templateFound)
         self.Logging("Attempting to copy template...")
-        res = util.createTemplate(toApi, toKey, toEntId, templateFound)
-        if "errors" not in res:
-            self.Logging("Template sucessfully created.")
-            wx.MessageBox("Template sucessfully created.", style=wx.OK | wx.ICON_INFORMATION)
+        res = None
+        if update:
+            res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
         else:
-            self.Logging("ERROR: Failed to recreate Template.%s" % res)
-            wx.MessageBox("Template sucessfully created.", style=wx.OK | wx.ICON_ERROR)
+            res = util.createTemplate(toApi, toKey, toEntId, templateFound)
+        if "errors" not in res:
+            action = "created" if not update else "updated."
+            self.Logging("Template sucessfully %s." % action)
+            wx.MessageBox(
+                "Template sucessfully %s." % action, style=wx.OK | wx.ICON_INFORMATION
+            )
+        else:
+            action = "recreate" if not update else "update"
+            self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
+            wx.MessageBox(
+                "ERROR: Failed to %s Template." % action, style=wx.OK | wx.ICON_ERROR
+            )
+        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
+        wx.PostEvent(self, evt)

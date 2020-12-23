@@ -16,6 +16,7 @@ limit = (
 offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
+SHOW_TEMPLATE_UPDATE = True
 COMMAND_TIMEOUT = 15
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5

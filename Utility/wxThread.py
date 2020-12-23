@@ -49,6 +49,9 @@ EVT_ON_FAILED = wx.PyEventBinder(myEVT_ON_FAILED, 1)
 myEVT_CONFIRM_CLONE = wx.NewEventType()
 EVT_CONFIRM_CLONE = wx.PyEventBinder(myEVT_CONFIRM_CLONE, 1)
 
+myEVT_CONFIRM_CLONE_UPDATE = wx.NewEventType()
+EVT_CONFIRM_CLONE_UPDATE = wx.PyEventBinder(myEVT_CONFIRM_CLONE_UPDATE, 1)
+
 
 def doAPICallInThread(
     frame,
