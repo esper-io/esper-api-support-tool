@@ -45,7 +45,11 @@ class TemplateDialog(wx.Dialog):
             self.panel_2,
             wx.ID_ANY,
             "",
-            style=wx.HSCROLL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
+            style=wx.HSCROLL
+            | wx.TE_MULTILINE
+            | wx.TE_READONLY
+            | wx.TE_WORDWRAP
+            | wx.TE_AUTO_URL,
         )
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.button_1 = wx.Button(self.panel_4, wx.ID_OK, "Clone")
