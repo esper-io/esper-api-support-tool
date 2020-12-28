@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
 import Utility.EsperTemplateUtil as templateUtil
+import Utility.wxThread as wxThread
 import wx
 import json
 
@@ -19,6 +19,9 @@ class TemplateDialog(wx.Dialog):
         self.destTemplate = []
         self.configMenuOpt = configMenuOpt
         self.chosenTemplate = None
+        self.selectThread = None
+        self.choice1thread = None
+        self.choice2thread = None
 
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
@@ -122,6 +125,14 @@ class TemplateDialog(wx.Dialog):
             self.Close()
         self.Destroy()
 
+    def populateTemplatePreview(self, template):
+        if type(template) == list:
+            template = template[0]
+        self.chosenTemplate = self.getTemplate(template)
+        self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+        self.text_ctrl_1.ShowPosition(0)
+        self.checkInputValues()
+
     def OnSelection(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -129,64 +140,47 @@ class TemplateDialog(wx.Dialog):
         name = self.check_list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         if template:
-            self.chosenTemplate = self.getTemplate(template[0])
-            self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
-            self.text_ctrl_1.ShowPosition(0)
+            self.selectThread = wxThread.GUIThread(
+                self, self.populateTemplatePreview, (template)
+            )
+            self.selectThread.start()
 
-        if (
-            self.choice_1.GetString(self.choice_1.GetSelection())
-            != self.choice_2.GetString(self.choice_2.GetSelection())
-            and self.choice_1.GetString(self.choice_1.GetSelection())
-            and self.choice_2.GetString(self.choice_2.GetSelection())
-            and self.check_list_box_1.GetSelection() != wx.NOT_FOUND
-        ):
-            self.button_1.Enable(True)
-        else:
-            self.button_1.Enable(False)
-        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-        self.SetCursor(myCursor)
+    def populateSourceTempaltes(self, srcName):
+        if srcName:
+            self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
+            for template in self.sourceTemplate:
+                self.check_list_box_1.Append(template["name"])
+        self.checkInputValues()
 
     def onChoice1Select(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.sourceTemplate = []
         self.check_list_box_1.Clear()
-        if event.String:
-            self.sourceTemplate = self.getTemplates(self.configMenuOpt[event.String])
-            for template in self.sourceTemplate:
-                self.check_list_box_1.Append(template["name"])
+        self.choice1thread = wxThread.GUIThread(
+            self,
+            self.populateSourceTempaltes,
+            (event.String if event.String else None),
+            passArgAsTuple=True,
+        )
+        self.choice1thread.start()
 
-        if (
-            self.choice_1.GetString(self.choice_1.GetSelection())
-            == self.choice_2.GetString(self.choice_2.GetSelection())
-            or not self.choice_1.GetString(self.choice_1.GetSelection())
-            or not self.choice_2.GetString(self.choice_2.GetSelection())
-            or not self.check_list_box_1.GetSelection() == wx.NOT_FOUND
-        ):
-            self.button_1.Enable(False)
-        else:
-            self.button_1.Enable(True)
-        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-        self.SetCursor(myCursor)
+    def fetchDestTempaltes(self, destName):
+        if destName:
+            self.destTemplate = self.getTemplates(self.configMenuOpt[destName])
+        self.checkInputValues()
 
     def onChoice2Select(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.destTemplate = []
-        if event.String:
-            self.destTemplate = self.getTemplates(self.configMenuOpt[event.String])
-        if (
-            self.choice_1.GetString(self.choice_1.GetSelection())
-            == self.choice_2.GetString(self.choice_2.GetSelection())
-            or not self.choice_1.GetString(self.choice_1.GetSelection())
-            or not self.choice_2.GetString(self.choice_2.GetSelection())
-            or self.check_list_box_1.GetSelection() == wx.NOT_FOUND
-        ):
-            self.button_1.Enable(False)
-        else:
-            self.button_1.Enable(True)
-        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-        self.SetCursor(myCursor)
+        self.choice2thread = wxThread.GUIThread(
+            self,
+            self.fetchDestTempaltes,
+            (event.String if event.String else None),
+            passArgAsTuple=True,
+        )
+        self.choice2thread.start()
 
     def getTemplates(self, dataSrc):
         util = templateUtil.EsperTemplateUtil(dataSrc, None)
@@ -203,3 +197,17 @@ class TemplateDialog(wx.Dialog):
         return util.getTemplate(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
         )
+
+    def checkInputValues(self):
+        if (
+            self.choice_1.GetString(self.choice_1.GetSelection())
+            == self.choice_2.GetString(self.choice_2.GetSelection())
+            or not self.choice_1.GetString(self.choice_1.GetSelection())
+            or not self.choice_2.GetString(self.choice_2.GetSelection())
+            or self.check_list_box_1.GetSelection() == wx.NOT_FOUND
+        ):
+            self.button_1.Enable(False)
+        else:
+            self.button_1.Enable(True)
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
