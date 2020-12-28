@@ -2100,14 +2100,7 @@ class NewFrameLayout(wx.Frame):
         with TemplateDialog(self.configChoice, parent=self) as self.tmpDialog:
             result = self.tmpDialog.ShowModal()
             if result == wx.ID_OK:
-                clone = wxThread.GUIThread(
-                    self,
-                    self.prepareClone,
-                    self.tmpDialog,
-                    eventType=None,
-                    passArgAsTuple=True,
-                )
-                clone.start()
+                self.prepareClone(self.tmpDialog)
 
     def prepareClone(self, tmpDialog):
         self.setCursorBusy()

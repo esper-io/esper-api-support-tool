@@ -113,7 +113,7 @@ class EsperTemplateUtil:
             res = createDeviceGroupForHost(
                 self.getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
-                templateFound["template"]["deviceGroup"]["name"],
+                templateFound["template"]["device_group"]["name"],
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
@@ -138,14 +138,17 @@ class EsperTemplateUtil:
     def processWallpapers(self, templateFound):
         if self.toApi and self.toKey and self.toEntId:
             postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
-            bgList = []
-            for bg in templateFound["template"]["brand"]["wallpapers"]:
-                newBg = self.uploadWallpaper(self.toApi, self.toKey, self.toEntId, bg)
-                if newBg:
-                    newBg["enterprise"] = self.toEntId
-                    newBg["wallpaper"] = newBg["id"]
-                    bgList.append(newBg)
-            templateFound["template"]["brand"]["wallpapers"] = bgList
+            if templateFound["template"]["brand"]:
+                bgList = []
+                for bg in templateFound["template"]["brand"]["wallpapers"]:
+                    newBg = self.uploadWallpaper(
+                        self.toApi, self.toKey, self.toEntId, bg
+                    )
+                    if newBg:
+                        newBg["enterprise"] = self.toEntId
+                        newBg["wallpaper"] = newBg["id"]
+                        bgList.append(newBg)
+                templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
 
     def getEsperConfig(self, host, apiKey, auth="Bearer"):
@@ -223,11 +226,23 @@ class EsperTemplateUtil:
 
     def checkTemplate(self, template, apps):
         newTemplate = {}
+        startOn = list(
+            filter(
+                lambda x: x.package_name
+                == template["template"]["application"]["startOnBoot"],
+                apps,
+            )
+        )
         newTemplate["application"] = {
-            "appMode": template["template"]["application"]["appMode"],
-            "startOnBoot": template["template"]["application"]["startOnBoot"],
+            "appMode": template["template"]["application"]["appMode"]
+            if startOn
+            else "MULTI_APP",
+            "startOnBoot": template["template"]["application"]["startOnBoot"]
+            if startOn
+            else None,
             "apps": [],
         }
+
         if template["template"]["application"]["apps"]:
             for app in template["template"]["application"]["apps"]:
                 if ("isGPlay" in app and app["isGPlay"]) or (

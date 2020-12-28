@@ -117,7 +117,6 @@ class TemplateDialog(wx.Dialog):
 
     def getInputSelections(self):
         return (
-            self.configMenuOpt[self.choice_1.GetString(self.choice_1.GetSelection())],
             self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
             self.check_list_box_1.GetString(self.check_list_box_1.GetSelection()),
         )
@@ -164,7 +163,7 @@ class TemplateDialog(wx.Dialog):
         self.choice1thread = wxThread.GUIThread(
             self,
             self.populateSourceTempaltes,
-            (event.String if event.String else None),
+            (event.String if event.String else False),
             passArgAsTuple=True,
         )
         self.choice1thread.start()
@@ -181,7 +180,7 @@ class TemplateDialog(wx.Dialog):
         self.choice2thread = wxThread.GUIThread(
             self,
             self.fetchDestTempaltes,
-            (event.String if event.String else None),
+            (event.String if event.String else False),
             passArgAsTuple=True,
         )
         self.choice2thread.start()
