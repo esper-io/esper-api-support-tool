@@ -61,6 +61,16 @@ def download(url, file_name, overwrite=True):
         file.write(response.content)
 
 
+def deleteFile(file):
+    try:
+        if os.path.exists(file):
+            os.remove(file)
+            return True
+    except Exception as e:
+        print(e)
+    return False
+
+
 def isModuleInstalled(module):
     cmd = "pip list"
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)

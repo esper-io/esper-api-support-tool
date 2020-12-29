@@ -4,24 +4,26 @@ import requests
 import esperclient
 import os
 import wx
+import time
 
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
-from Utility.Resource import download
+from Utility.Resource import download, deleteFile
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
     getAllApplicationsForHost,
     createDeviceGroupForHost,
     getDeviceGroupsForHost,
+    uploadApplicationForHost,
 )
 
 from datetime import datetime
 
 from Common.decorator import api_tool_decorator
 
-from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from esperclient import InlineResponse201
 
 
 class EsperTemplateUtil:
@@ -48,6 +50,9 @@ class EsperTemplateUtil:
 
     @api_tool_decorator
     def prepareTemplate(self, dest=None, chosenTemplate=None):
+        if self.parent and self.parent.gauge:
+            self.parent.gauge.Pulse()
+
         self.toApi = self.apiLink.format(tenant=self.toTenant)
 
         toTemplates = (
@@ -66,7 +71,12 @@ class EsperTemplateUtil:
 
         if templateFound:
             templateFound["enterprise"] = self.toEntId
-            templateFound = self.checkTemplate(templateFound, toApps.results)
+            templateFound = self.checkTemplate(
+                templateFound,
+                toApps.results,
+                self.getEsperConfig(self.toApi, self.toKey),
+                self.toEntId,
+            )
 
             if templateExist:
                 templateFound["id"] = templateExist[0]["id"]
@@ -203,11 +213,7 @@ class EsperTemplateUtil:
         finally:
             if files:
                 files["image_file"].close()
-        try:
-            if os.path.exists("wallpaper.jpeg"):
-                os.remove("wallpaper.jpeg")
-        except Exception as e:
-            print(e)
+        deleteFile("wallpaper.jpeg")
         if json_resp:
             return json_resp
 
@@ -224,7 +230,7 @@ class EsperTemplateUtil:
                 allDeviceGroupId = group.id
         return found, templateFound, allDeviceGroupId
 
-    def checkTemplate(self, template, apps):
+    def checkTemplate(self, template, apps, config, entId):
         newTemplate = {}
         startOn = list(
             filter(
@@ -244,8 +250,6 @@ class EsperTemplateUtil:
             "startOnBoot": bootVal,
             "apps": [],
         }
-        if not bootVal:
-            self.missingApps += "Missing Start-Up App (Multi-App Mode enforced); "
 
         if template["template"]["application"]["apps"]:
             for app in template["template"]["application"]["apps"]:
@@ -256,7 +260,10 @@ class EsperTemplateUtil:
                 else:
                     found = False
                     for toApp in apps:
-                        if toApp.application_name == app["applicationName"]:
+                        if (
+                            toApp.application_name == app["applicationName"]
+                            or toApp.package_name == app["packageName"]
+                        ):
                             found = True
                             versionId = list(
                                 filter(
@@ -282,13 +289,46 @@ class EsperTemplateUtil:
                             )
                             break
                     if not found:
-                        postEventToFrame(
-                            wxThread.myEVT_LOG,
-                            "To Enterprise is missing app, %s, not adding to template"
-                            % app["applicationName"],
-                        )
-                        self.missingApps += str(app["applicationName"]) + ", "
+                        try:
+                            postEventToFrame(
+                                wxThread.myEVT_LOG,
+                                "Attempting to download apk to upload to endpoint",
+                            )
+                            file = "%s.apk" % app["applicationName"]
+                            deleteFile(file)
+                            download(app["downloadUrl"], file)
+                            res = uploadApplicationForHost(config, entId, file)
+                            if type(res) != InlineResponse201:
+                                raise Exception("Upload failed!")
+                            deleteFile(file)
 
+                            if (
+                                template["template"]["application"]["startOnBoot"]
+                                == app["packageName"]
+                            ):
+                                newTemplate["application"]["appMode"] = template[
+                                    "template"
+                                ]["application"]["appMode"]
+                                newTemplate["application"]["startOnBoot"] = template[
+                                    "template"
+                                ]["application"]["startOnBoot"]
+                                time.sleep(10)
+                        except Exception as e:
+                            print(e)
+                            postEventToFrame(
+                                wxThread.myEVT_LOG,
+                                "To Enterprise is missing app, %s, not adding to template"
+                                % app["applicationName"],
+                            )
+                            self.missingApps += str(app["applicationName"]) + ", "
+
+        if (
+            not newTemplate["application"]["startOnBoot"]
+            and template["template"]["application"]["startOnBoot"]
+        ):
+            self.missingApps = (
+                "Missing Start-Up App (Multi-App Mode enforced); " + self.missingApps
+            )
         newTemplate["brand"] = template["template"]["brand"]
 
         newTemplate["devicePolicy"] = template["template"]["devicePolicy"]

@@ -143,10 +143,10 @@ class TemplateDialog(wx.Dialog):
         name = self.check_list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         if template:
-            self.selectThread = wxThread.GUIThread(
-                self, self.populateTemplatePreview, (template)
-            )
-            self.selectThread.start()
+            self.chosenTemplate = self.getTemplate(template[0])
+        self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+        self.text_ctrl_1.ShowPosition(0)
+        self.checkInputValues()
 
     def populateSourceTempaltes(self, srcName):
         if srcName:

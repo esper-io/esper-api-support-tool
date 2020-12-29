@@ -214,6 +214,15 @@ def getAllGroups(*args, **kwds):
         )
 
 
+def uploadApplicationForHost(config, enterprise_id, file):
+    try:
+        api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
+        api_response = api_instance.upload(enterprise_id, file)
+        return api_response
+    except ApiException as e:
+        raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
+
+
 def getDeviceGroupsForHost(config, enterprise_id):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))

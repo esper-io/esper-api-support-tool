@@ -70,6 +70,7 @@ class NewFrameLayout(wx.Frame):
         self.apps = []
         self.isRunning = False
         self.isRunningUpdate = False
+        self.isForceUpdate = False
         self.kill = False
         self.deviceDescending = False
         self.networkDescending = False
@@ -2042,8 +2043,10 @@ class NewFrameLayout(wx.Frame):
                 self.frame_toolbar.EnableTool(self.rftool.Id, True)
                 self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
                 self.runBtn.Enable(True)
-                self.setGaugeValue(100)
-                wx.CallLater(3000, self.setGaugeValue, 0)
+                if self.isForceUpdate:
+                    self.isForceUpdate = False
+                    self.setGaugeValue(100)
+                    wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def startUpdateThread(self):
@@ -2061,6 +2064,7 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.rftool.Id, False)
             self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
             self.runBtn.Enable(False)
+            self.gauge.Pulse()
             self.fetchUpdateData(forceUpdate=True)
         else:
             while Globals.ENABLE_GRID_UPDATE:
@@ -2071,6 +2075,8 @@ class NewFrameLayout(wx.Frame):
             self.refresh = None
 
     def fetchUpdateData(self, forceUpdate=False):
+        if self.isForceUpdate:
+            self.isForceUpdate = forceUpdate
         if (
             not self.isRunning
             and not self.isRunningUpdate
@@ -2086,11 +2092,9 @@ class NewFrameLayout(wx.Frame):
         ):
             if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
-                self.gauge.Pulse()
                 TakeAction(self, Globals.LAST_GROUP_ID, 1, None, isUpdate=True)
             elif Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
-                self.gauge.Pulse()
                 TakeAction(
                     self, Globals.LAST_DEVICE_ID, 1, None, isDevice=True, isUpdate=True
                 )
@@ -2104,9 +2108,17 @@ class NewFrameLayout(wx.Frame):
 
     def prepareClone(self, tmpDialog):
         self.setCursorBusy()
+        self.isRunning = True
         self.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
-        util.prepareTemplate(tmpDialog.destTemplate, tmpDialog.chosenTemplate)
+        # util.prepareTemplate(tmpDialog.destTemplate, tmpDialog.chosenTemplate)
+        clone = wxThread.GUIThread(
+            self,
+            util.prepareTemplate,
+            (tmpDialog.destTemplate, tmpDialog.chosenTemplate),
+            eventType=None,
+        )
+        clone.start()
 
     def confirmClone(self, event):
         result = None
@@ -2129,6 +2141,10 @@ class NewFrameLayout(wx.Frame):
                 eventType=None,
             )
             clone.start()
+        else:
+            self.isRunning = False
+            self.setGaugeValue(0)
+            self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
 
@@ -2153,6 +2169,10 @@ class NewFrameLayout(wx.Frame):
                 eventType=None,
             )
             clone.start()
+        else:
+            self.isRunning = False
+            self.setGaugeValue(0)
+            self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_UPDATE = False
 
@@ -2177,5 +2197,6 @@ class NewFrameLayout(wx.Frame):
             wx.MessageBox(
                 "ERROR: Failed to %s Template." % action, style=wx.OK | wx.ICON_ERROR
             )
+        self.isRunning = False
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
         wx.PostEvent(self, evt)
