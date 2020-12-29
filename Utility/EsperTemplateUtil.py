@@ -233,15 +233,19 @@ class EsperTemplateUtil:
                 apps,
             )
         )
+        bootVal = (
+            template["template"]["application"]["startOnBoot"] if startOn else None
+        )
+        appModeVal = (
+            template["template"]["application"]["appMode"] if startOn else "MULTI_APP"
+        )
         newTemplate["application"] = {
-            "appMode": template["template"]["application"]["appMode"]
-            if startOn
-            else "MULTI_APP",
-            "startOnBoot": template["template"]["application"]["startOnBoot"]
-            if startOn
-            else None,
+            "appMode": appModeVal,
+            "startOnBoot": bootVal,
             "apps": [],
         }
+        if not bootVal:
+            self.missingApps += "Missing Start-Up App (Multi-App Mode enforced); "
 
         if template["template"]["application"]["apps"]:
             for app in template["template"]["application"]["apps"]:
@@ -283,7 +287,7 @@ class EsperTemplateUtil:
                             "To Enterprise is missing app, %s, not adding to template"
                             % app["applicationName"],
                         )
-                        self.missingApps += str(app["applicationName"]) + ","
+                        self.missingApps += str(app["applicationName"]) + ", "
 
         newTemplate["brand"] = template["template"]["brand"]
 
