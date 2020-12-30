@@ -261,7 +261,10 @@ class NewFrameLayout(wx.Frame):
 
         save_icon = scale_bitmap(resourcePath("Images/save.png"), 16, 16)
         stool = self.frame_toolbar.AddTool(
-            wx.ID_ANY, "Save Device Info", save_icon, "Save Device Info"
+            wx.ID_ANY,
+            "Save Device & Network Info",
+            save_icon,
+            "Save Device & Network Info",
         )
         self.frame_toolbar.AddSeparator()
 
@@ -633,7 +636,7 @@ class NewFrameLayout(wx.Frame):
         if self.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
-                "Save CSV as...",
+                "Save Device Info CSV as...",
                 os.getcwd(),
                 "",
                 "*.csv",
@@ -657,7 +660,7 @@ class NewFrameLayout(wx.Frame):
         if self.grid_2.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
-                "Save CSV as...",
+                "Save Network Info CSV as...",
                 os.getcwd(),
                 "",
                 "*.csv",
