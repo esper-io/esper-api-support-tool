@@ -29,6 +29,8 @@ DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmati
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
 
+ESPER_LINK = "https://esper.io/"
+
 DEVS = ["Jonathan Featherston", "James Schaefer", "Chris Stirrat"]
 
 """ Actions """

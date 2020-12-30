@@ -61,6 +61,15 @@ def download(url, file_name, overwrite=True):
         file.write(response.content)
 
 
+def checkEsperInternetConnection():
+    try:
+        requests.get(Globals.ESPER_LINK)
+        return True
+    except Exception as e:
+        print(e)
+    return False
+
+
 def deleteFile(file):
     try:
         if os.path.exists(file):

@@ -46,7 +46,12 @@ from Utility.EsperAPICalls import (
     getAllApplications,
 )
 
-from Utility.Resource import resourcePath, scale_bitmap, createNewFile
+from Utility.Resource import (
+    resourcePath,
+    scale_bitmap,
+    createNewFile,
+    checkEsperInternetConnection,
+)
 
 
 class NewFrameLayout(wx.Frame):
@@ -345,6 +350,9 @@ class NewFrameLayout(wx.Frame):
         self.Raise()
         self.Iconize(False)
         self.SetFocus()
+
+        internetCheck = wxThread.GUIThread(self, self.checkForInternetAccess, None)
+        internetCheck.start()
 
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
@@ -1552,7 +1560,7 @@ class NewFrameLayout(wx.Frame):
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
         info.SetCopyright("(C) 2020 Esper - All Rights Reserved")
-        info.SetWebSite("https://esper.io/")
+        info.SetWebSite(Globals.ESPER_LINK)
         for dev in Globals.DEVS:
             info.AddDeveloper(dev)
 
@@ -2208,3 +2216,12 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = False
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
         wx.PostEvent(self, evt)
+
+    def checkForInternetAccess(self):
+        while not self.kill:
+            if not checkEsperInternetConnection():
+                wx.MessageBox(
+                    "ERROR: An internet connection is required when using the tool!",
+                    style=wx.OK | wx.ICON_ERROR,
+                )
+            time.sleep(5)
