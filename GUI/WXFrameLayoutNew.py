@@ -81,7 +81,8 @@ class NewFrameLayout(wx.Frame):
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
-        self.SetSize((900, 600))
+        self.SetSize((900, 700))
+        self.SetMinSize((900, 700))
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_5 = wx.Panel(self.panel_1, wx.ID_ANY)
@@ -587,6 +588,10 @@ class NewFrameLayout(wx.Frame):
                 self.consoleWin.Logging(entry)
             if "error" in entry.lower():
                 isError = True
+            if len(entry) >= Globals.MAX_STATUS_CHAR:
+                longEntryMsg = "....(See console for details)"
+                entry = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
+                entry += longEntryMsg
             self.setStatus(entry, isError)
         except:
             pass
