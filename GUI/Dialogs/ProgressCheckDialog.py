@@ -5,7 +5,7 @@ import wx
 
 
 class ProgressCheckDialog(wx.Dialog):
-    def __init__(self, *args, **kwds):
+    def __init__(self):
         # begin wxGlade: MyDialog.__init__
         super(ProgressCheckDialog, self).__init__(
             None,

@@ -197,7 +197,7 @@ def setdevicename(
     return status
 
 
-def getAllGroups(*args, **kwds):
+def getAllGroups():
     """ Make a API call to get all Groups belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceGroupApi(
@@ -252,7 +252,7 @@ def getDeviceGroupForHost(config, enterprise_id, group_id):
         raise e
 
 
-def getAllDevices(groupToUse, *args, **kwds):
+def getAllDevices(groupToUse):
     """ Make a API call to get all Devices belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceApi(
@@ -270,7 +270,7 @@ def getAllDevices(groupToUse, *args, **kwds):
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
 
-def getAllApplications(*args, **kwds):
+def getAllApplications():
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
         api_instance = esperclient.ApplicationApi(
@@ -307,7 +307,7 @@ def getAllApplicationsForHost(config, enterprise_id):
         )
 
 
-def getDeviceById(deviceToUse, *args, **kwds):
+def getDeviceById(deviceToUse):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_instance = esperclient.DeviceApi(

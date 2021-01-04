@@ -5,7 +5,7 @@ import wx
 
 
 class ColumnVisibilityDialog(wx.Dialog):
-    def __init__(self, grid, choiceData=[], *args, **kwds):
+    def __init__(self, grid, choiceData=[]):
         # begin wxGlade: MyDialog.__init__
         super(ColumnVisibilityDialog, self).__init__(
             None,

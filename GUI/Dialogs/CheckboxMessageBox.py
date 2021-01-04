@@ -5,7 +5,7 @@ import wx
 
 
 class CheckboxMessageBox(wx.Dialog):
-    def __init__(self, title, caption, *args, **kwds):
+    def __init__(self, title, caption):
         super(CheckboxMessageBox, self).__init__(
             None,
             wx.ID_ANY,

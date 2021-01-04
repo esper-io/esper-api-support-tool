@@ -3,14 +3,11 @@
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 import Common.Globals as Globals
 import wx
-import sys
-import os
-import platform
 
 
 class MyApp(wx.App):
     def OnInit(self):
-        Globals.frame = FrameLayout(None, wx.ID_ANY, "")
+        Globals.frame = FrameLayout()
         self.SetTopWindow(Globals.frame)
         Globals.frame.Show()
         return True

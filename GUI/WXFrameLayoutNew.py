@@ -6,16 +6,20 @@ import wx.adv as adv
 import time
 import csv
 import os.path
-import Common.Globals as Globals
 import platform
 import json
-import Utility.wxThread as wxThread
-import Utility.EsperTemplateUtil as templateUtil
-import GUI.EnhancedStatusBar as ESB
 import tempfile
 import re
 import ast
 
+import Common.Globals as Globals
+import GUI.EnhancedStatusBar as ESB
+import Utility.wxThread as wxThread
+import Utility.EsperTemplateUtil as templateUtil
+
+from functools import partial
+
+from GUI.consoleWindow import Console
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.TemplateDialog import TemplateDialog
 from GUI.Dialogs.CommandDialog import CommandDialog
@@ -24,16 +28,9 @@ from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
-from functools import partial
-
 from Common.decorator import api_tool_decorator
 
-from GUI.consoleWindow import Console
-
 from Utility.deviceInfo import constructNetworkInfo
-
-from esperclient import ApiClient
-from esperclient.rest import ApiException
 from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
@@ -55,7 +52,7 @@ from Utility.Resource import (
 
 
 class NewFrameLayout(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self):
         self.configMenuOptions = []
         self.WINDOWS = True
         self.prefPath = ""

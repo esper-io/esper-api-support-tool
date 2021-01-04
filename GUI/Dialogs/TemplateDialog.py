@@ -7,7 +7,7 @@ import json
 
 
 class TemplateDialog(wx.Dialog):
-    def __init__(self, configMenuOpt, parent=None, *args, **kwds):
+    def __init__(self, configMenuOpt, parent=None):
         # begin wxGlade: MyDialog.__init__
         super(TemplateDialog, self).__init__(
             None,
@@ -19,7 +19,6 @@ class TemplateDialog(wx.Dialog):
         self.destTemplate = []
         self.configMenuOpt = configMenuOpt
         self.chosenTemplate = None
-        self.selectThread = None
         self.choice1thread = None
         self.choice2thread = None
 
@@ -131,9 +130,10 @@ class TemplateDialog(wx.Dialog):
     def populateTemplatePreview(self, template):
         if type(template) == list:
             template = template[0]
-        self.chosenTemplate = self.getTemplate(template)
-        self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
-        self.text_ctrl_1.ShowPosition(0)
+        if template:
+            self.chosenTemplate = self.getTemplate(template)
+            self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+            self.text_ctrl_1.ShowPosition(0)
         self.checkInputValues()
 
     def OnSelection(self, event):
@@ -142,11 +142,7 @@ class TemplateDialog(wx.Dialog):
         selection = event.GetSelection()
         name = self.check_list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
-        if template:
-            self.chosenTemplate = self.getTemplate(template[0])
-        self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
-        self.text_ctrl_1.ShowPosition(0)
-        self.checkInputValues()
+        self.populateTemplatePreview(template)
 
     def populateSourceTempaltes(self, srcName):
         if srcName:

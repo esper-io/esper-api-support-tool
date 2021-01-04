@@ -5,7 +5,7 @@ import wx
 
 
 class CmdConfirmDialog(wx.Dialog):
-    def __init__(self, commandType, cmdFormatted, applyToType, applyTo, *args, **kwds):
+    def __init__(self, commandType, cmdFormatted, applyToType, applyTo):
         # begin wxGlade: MyDialog.__init__
         super(CmdConfirmDialog, self).__init__(
             None,

@@ -5,7 +5,7 @@ import wx
 
 
 class PreferencesDialog(wx.Dialog):
-    def __init__(self, prefDict, parent=None, *args, **kwds):
+    def __init__(self, prefDict, parent=None):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,

@@ -5,7 +5,7 @@ import wx
 
 
 class CommandDialog(wx.Dialog):
-    def __init__(self, title, value="{\n\n}", *args, **kwds):
+    def __init__(self, title, value="{\n\n}"):
         super(CommandDialog, self).__init__(
             None,
             wx.ID_ANY,
