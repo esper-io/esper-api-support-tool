@@ -313,7 +313,8 @@ class EsperTemplateUtil:
         if "id" in newTemplate["settings"]:
             del newTemplate["settings"]["id"]
         newTemplate["deviceGroup"] = template["template"]["deviceGroup"]
-        newTemplate = self.processDict(newTemplate)
+        newTemplate = self.processDictKeyValuePairs(newTemplate, template["template"])
+        newTemplate = self.processDictKeyNames(newTemplate)
         template["template"] = newTemplate
         template["is_active"] = False
         template["created_on"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -412,7 +413,21 @@ class EsperTemplateUtil:
             )
             self.missingApps += str(app["applicationName"]) + ", "
 
-    def processDict(self, dicton):
+    def processDictKeyValuePairs(self, newTemplate, template):
+        newTempKeys = newTemplate.keys()
+        tempKeys = template.keys()
+        for key in tempKeys:
+            if key not in newTempKeys and (key != "id" and key != "url"):
+                if type(template[key]) is dict:
+                    newTemplate[key] = {}
+                    newTemplate[key] = self.processDictKeyValuePairs(
+                        newTemplate[key], template[key]
+                    )
+                else:
+                    newTemplate[key] = template[key]
+        return newTemplate
+
+    def processDictKeyNames(self, dicton):
         if "id" in dicton and "wallpaper" not in dicton:
             del dicton["id"]
 
@@ -423,12 +438,12 @@ class EsperTemplateUtil:
             for c in res:
                 newKey = newKey.replace(c, "_%s" % c.lower())
             if type(dicton[key]) is dict:
-                newDict[newKey] = self.processDict(dicton[key])
+                newDict[newKey] = self.processDictKeyNames(dicton[key])
             elif type(dicton[key]) is list:
                 newList = []
                 for data in dicton[key]:
                     if type(data) is dict:
-                        newList.append(self.processDict(data))
+                        newList.append(self.processDictKeyNames(data))
                 newDict[newKey] = newList
             else:
                 newDict[newKey] = dicton[key]
