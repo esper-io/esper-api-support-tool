@@ -19,7 +19,7 @@ class ApiToolLog:
 
     def LogError(self, e, exc_type, exc_value, exc_traceback):
         with open(self.logPath, "a") as myfile:
-            myfile.write("%s\t: An Error has occured: %s\n" % (date.today(), e))
+            myfile.write("\n%s\t: An Error has occured: %s\n" % (date.today(), e))
             myfile.write(str(exc_type))
             myfile.write(str(exc_value))
             for line in exc_traceback:
