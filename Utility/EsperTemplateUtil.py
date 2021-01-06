@@ -269,77 +269,21 @@ class EsperTemplateUtil:
             "managedGooglePlayDisabled": manageGPlay,
         }
 
+        missingAppThreads = []
         if template["template"]["application"]["apps"]:
-            for app in template["template"]["application"]["apps"]:
-                if ("isGPlay" in app and app["isGPlay"]) or (
-                    "is_g_play" in app and app["is_g_play"]
-                ):
-                    newTemplate["application"]["apps"].append(app)
-                else:
-                    found = False
-                    for toApp in apps:
-                        if (
-                            toApp.application_name == app["applicationName"]
-                            or toApp.package_name == app["packageName"]
-                        ):
-                            found = True
-                            versionId = list(
-                                filter(
-                                    lambda x: x.version_code == app["versionName"],
-                                    toApp.versions,
-                                )
-                            )
-                            if not versionId:
-                                versionId = toApp.versions[0].id
-                            else:
-                                versionId = versionId[0].id
-                            newTemplate["application"]["apps"].append(
-                                {
-                                    "is_g_play": False,
-                                    "id": toApp.id,
-                                    "app_version": versionId,
-                                }
-                            )
-                            postEventToFrame(
-                                wxThread.myEVT_LOG,
-                                "Added the '%s' app to the template"
-                                % app["applicationName"],
-                            )
-                            break
-                    if not found:
-                        try:
-                            postEventToFrame(
-                                wxThread.myEVT_LOG,
-                                "Attempting to download apk to upload to endpoint",
-                            )
-                            file = "%s.apk" % app["applicationName"]
-                            deleteFile(file)
-                            download(app["downloadUrl"], file)
-                            res = uploadApplicationForHost(config, entId, file)
-                            if type(res) != InlineResponse201:
-                                raise Exception("Upload failed!")
-                            deleteFile(file)
+            self.processMissingApplications(
+                template, newTemplate, apps, config, entId, missingAppThreads
+            )
 
-                            if (
-                                template["template"]["application"]["startOnBoot"]
-                                == app["packageName"]
-                            ):
-                                newTemplate["application"]["appMode"] = template[
-                                    "template"
-                                ]["application"]["appMode"]
-                                newTemplate["application"]["startOnBoot"] = template[
-                                    "template"
-                                ]["application"]["startOnBoot"]
-                                time.sleep(10)
-                        except Exception as e:
-                            print(e)
-                            postEventToFrame(
-                                wxThread.myEVT_LOG,
-                                "To Enterprise is missing app, %s, not adding to template"
-                                % app["applicationName"],
-                            )
-                            self.missingApps += str(app["applicationName"]) + ", "
+            for t in missingAppThreads:
+                t.join()
 
+            if missingAppThreads:
+                apps = getAllApplicationsForHost(
+                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                ).results
+            newTemplate["application"]["apps"] = []
+            self.processApplications(template, newTemplate, apps)
         if (
             not newTemplate["application"]["startOnBoot"]
             and template["template"]["application"]["startOnBoot"]
@@ -375,6 +319,98 @@ class EsperTemplateUtil:
         template["created_on"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         template["updated_on"] = template["created_on"]
         return template
+
+    def processMissingApplications(
+        self, template, newTemplate, apps, config, entId, missingAppThreads
+    ):
+        for app in template["template"]["application"]["apps"]:
+            if ("isGPlay" in app and app["isGPlay"]) or (
+                "is_g_play" in app and app["is_g_play"]
+            ):
+                newTemplate["application"]["apps"].append(app)
+            else:
+                found = False
+                for toApp in apps:
+                    if (
+                        toApp.application_name == app["applicationName"]
+                        or toApp.package_name == app["packageName"]
+                    ):
+                        found = True
+                if not found:
+                    upload = wxThread.GUIThread(
+                        self.parent,
+                        self.uploadMissingApk,
+                        (app, template, newTemplate, config, entId),
+                    )
+                    missingAppThreads.append(upload)
+                    upload.start()
+
+    def processApplications(self, template, newTemplate, apps):
+        for app in template["template"]["application"]["apps"]:
+            if ("isGPlay" in app and app["isGPlay"]) or (
+                "is_g_play" in app and app["is_g_play"]
+            ):
+                newTemplate["application"]["apps"].append(app)
+            else:
+                for toApp in apps:
+                    if (
+                        toApp.application_name == app["applicationName"]
+                        or toApp.package_name == app["packageName"]
+                    ):
+                        versionId = list(
+                            filter(
+                                lambda x: x.version_code == app["versionName"],
+                                toApp.versions,
+                            )
+                        )
+                        if not versionId:
+                            versionId = toApp.versions[0].id
+                        else:
+                            versionId = versionId[0].id
+                        newTemplate["application"]["apps"].append(
+                            {
+                                "is_g_play": False,
+                                "id": toApp.id,
+                                "app_version": versionId,
+                            }
+                        )
+                        postEventToFrame(
+                            wxThread.myEVT_LOG,
+                            "Added the '%s' app to the template"
+                            % app["applicationName"],
+                        )
+                        break
+
+    def uploadMissingApk(self, app, template, newTemplate, config, entId):
+        try:
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "Attempting to download %s to upload to endpoint" % app["packageName"],
+            )
+            file = "%s.apk" % app["applicationName"]
+            deleteFile(file)
+            download(app["downloadUrl"], file)
+            res = uploadApplicationForHost(config, entId, file)
+            if type(res) != InlineResponse201:
+                deleteFile(file)
+                raise Exception("Upload failed!")
+            deleteFile(file)
+
+            if template["template"]["application"]["startOnBoot"] == app["packageName"]:
+                newTemplate["application"]["appMode"] = template["template"][
+                    "application"
+                ]["appMode"]
+                newTemplate["application"]["startOnBoot"] = template["template"][
+                    "application"
+                ]["startOnBoot"]
+        except Exception as e:
+            print(e)
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "To Enterprise is missing app, %s, not adding to template"
+                % app["applicationName"],
+            )
+            self.missingApps += str(app["applicationName"]) + ", "
 
     def processDict(self, dicton):
         if "id" in dicton and "wallpaper" not in dicton:

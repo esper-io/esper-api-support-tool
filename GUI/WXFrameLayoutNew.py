@@ -2208,7 +2208,8 @@ class NewFrameLayout(wx.Frame):
             action = "recreate" if not update else "update"
             self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
             wx.MessageBox(
-                "ERROR: Failed to %s Template." % action, style=wx.OK | wx.ICON_ERROR
+                "ERROR: Failed to %s Template. Please try again." % action,
+                style=wx.OK | wx.ICON_ERROR,
             )
         self.isRunning = False
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
