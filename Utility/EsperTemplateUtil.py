@@ -245,10 +245,28 @@ class EsperTemplateUtil:
         appModeVal = (
             template["template"]["application"]["appMode"] if startOn else "MULTI_APP"
         )
+        manageGPlay = True
+        launchOnStartVal = None
+        preloadVal = []
+        whitelistVal = []
+        if "managedGooglePlayDisabled" in template["template"]["application"]:
+            manageGPlay = template["template"]["application"][
+                "managedGooglePlayDisabled"
+            ]
+        if "launchOnStart" in template["template"]["application"]:
+            launchOnStartVal = template["template"]["application"]["launchOnStart"]
+        if "preloadApps" in template["template"]["application"]:
+            preloadVal = template["template"]["application"]["preloadApps"]
+        if "whitelistPreload" in template["template"]["application"]:
+            whitelistVal = template["template"]["application"]["whitelistPreload"]
         newTemplate["application"] = {
             "appMode": appModeVal,
             "startOnBoot": bootVal,
             "apps": [],
+            "whitelistPreload": whitelistVal,
+            "preloadApps": preloadVal,
+            "launchOnStart": launchOnStartVal,
+            "managedGooglePlayDisabled": manageGPlay,
         }
 
         if template["template"]["application"]["apps"]:
