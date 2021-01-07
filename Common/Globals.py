@@ -31,8 +31,6 @@ available on the Esper Console Dashboard."""
 
 ESPER_LINK = "https://esper.io/"
 
-DEVS = ["Jonathan Featherston", "James Schaefer", "Chris Stirrat"]
-
 """ Actions """
 GENERAL_ACTIONS = [
     "",
