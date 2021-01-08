@@ -11,6 +11,7 @@ import json
 import tempfile
 import re
 import ast
+import webbrowser
 
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
@@ -221,6 +222,9 @@ class NewFrameLayout(wx.Frame):
         helpMenu = wx.Menu()
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         self.Bind(wx.EVT_MENU, self.onAbout, about)
+
+        help = helpMenu.Append(wx.ID_HELP, "Help", "&Help")
+        self.Bind(wx.EVT_MENU, self.onHelp, help)
 
         self.menubar.Append(fileMenu, "&File")
         self.menubar.Append(editMenu, "&Edit")
@@ -2087,6 +2091,7 @@ class NewFrameLayout(wx.Frame):
                 self.fetchUpdateData()
             self.refresh = None
 
+    @api_tool_decorator
     def fetchUpdateData(self, forceUpdate=False):
         if self.isForceUpdate:
             self.isForceUpdate = forceUpdate
@@ -2113,12 +2118,14 @@ class NewFrameLayout(wx.Frame):
                 )
             self.isRunningUpdate = False
 
+    @api_tool_decorator
     def onClone(self, event):
         with TemplateDialog(self.configChoice, parent=self) as self.tmpDialog:
             result = self.tmpDialog.ShowModal()
             if result == wx.ID_OK:
                 self.prepareClone(self.tmpDialog)
 
+    @api_tool_decorator
     def prepareClone(self, tmpDialog):
         self.setCursorBusy()
         self.isRunning = True
@@ -2133,6 +2140,7 @@ class NewFrameLayout(wx.Frame):
         )
         clone.start()
 
+    @api_tool_decorator
     def confirmClone(self, event):
         result = None
         res = None
@@ -2161,6 +2169,7 @@ class NewFrameLayout(wx.Frame):
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
 
+    @api_tool_decorator
     def confirmCloneUpdate(self, event):
         result = None
         res = None
@@ -2189,6 +2198,7 @@ class NewFrameLayout(wx.Frame):
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_UPDATE = False
 
+    @api_tool_decorator
     def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False):
         templateFound = util.processDeviceGroup(templateFound)
         templateFound = util.processWallpapers(templateFound)
@@ -2223,3 +2233,7 @@ class NewFrameLayout(wx.Frame):
                     style=wx.OK | wx.ICON_ERROR,
                 )
             time.sleep(5)
+
+    @api_tool_decorator
+    def onHelp(self, event):
+        webbrowser.open(Globals.HELP_LINK)
