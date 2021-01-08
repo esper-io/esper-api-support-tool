@@ -4,10 +4,7 @@ import requests
 import esperclient
 import time
 import json
-import os.path
 import Common.Globals as Globals
-import string
-import platform
 import Utility.wxThread as wxThread
 import wx
 
