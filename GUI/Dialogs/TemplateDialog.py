@@ -38,7 +38,10 @@ class TemplateDialog(wx.Dialog):
             self.panel_6, wx.ID_ANY, choices=choices, style=wx.CB_SORT
         )
         self.check_list_box_1 = wx.ListBox(
-            self.panel_2, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_SINGLE
+            self.panel_2,
+            wx.ID_ANY,
+            choices=[],
+            style=wx.LB_NEEDED_SB | wx.LB_SINGLE | wx.LB_SORT,
         )
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_2,
