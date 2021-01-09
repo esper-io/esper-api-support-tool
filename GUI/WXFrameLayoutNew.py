@@ -641,6 +641,7 @@ class NewFrameLayout(wx.Frame):
                             style=wx.ICON_ERROR,
                         )
                 else:
+                    self.readAuthCSV()
                     if self.auth_data:
                         isValid = True
 
@@ -1920,15 +1921,19 @@ class NewFrameLayout(wx.Frame):
         self.emptyNetworkGrid()
 
     @api_tool_decorator
+    def readAuthCSV(self):
+        with open(Globals.csv_auth_path, "r") as csvFile:
+            reader = csv.reader(
+                csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+            )
+            self.auth_data = list(reader)
+
+    @api_tool_decorator
     def loadPref(self):
         """ Attempt to load preferences from file system """
         if os.path.exists(self.authPath):
             Globals.csv_auth_path = self.authPath
-            with open(Globals.csv_auth_path, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                self.auth_data = list(reader)
+            self.readAuthCSV()
         else:
             createNewFile(self.authPath)
             with open(self.authPath, "w", newline="") as csvfile:
