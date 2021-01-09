@@ -850,3 +850,22 @@ def ApplyDeviceConfig(frame, config, commandType):
     if t:
         frame.gauge.Pulse()
         t.start()
+
+
+def validateConfiguration(host, entId, key, prefix="Bearer"):
+    configuration = esperclient.Configuration()
+    configuration.host = host
+    configuration.api_key["Authorization"] = key
+    configuration.api_key_prefix["Authorization"] = prefix
+
+    api_instance = esperclient.EnterpriseApi(esperclient.ApiClient(configuration))
+    enterprise_id = entId
+
+    try:
+        # Fetch all devices in an enterprise
+        api_response = api_instance.get_enterprise(enterprise_id)
+        if hasattr(api_response, "id"):
+            return True
+    except ApiException as e:
+        print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
+    return False

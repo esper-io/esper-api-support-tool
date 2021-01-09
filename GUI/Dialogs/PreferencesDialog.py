@@ -19,8 +19,6 @@ class PreferencesDialog(wx.Dialog):
             "limit",
             "offset",
             "gridDialog",
-            "recentAuth",
-            "lastAuth",
             "updateRate",
         ]
 
@@ -157,10 +155,6 @@ class PreferencesDialog(wx.Dialog):
             "enableDevice": self.checkbox_1.IsChecked(),
             "limit": self.spin_ctrl_4.GetValue(),
             "offset": self.spin_ctrl_1.GetValue(),
-            "recentAuth": self.prefs["recentAuth"]
-            if self.prefs and self.prefs["recentAuth"]
-            else [Globals.csv_auth_path],
-            "lastAuth": Globals.csv_auth_path,
             "gridDialog": Globals.SHOW_GRID_DIALOG,
             "templateDialog": Globals.SHOW_TEMPLATE_DIALOG,
             "templateUpdate": Globals.SHOW_TEMPLATE_UPDATE,
@@ -206,7 +200,7 @@ class PreferencesDialog(wx.Dialog):
             Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateUpdate"]
         if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
-        if "updateRate" in self.prefs and self.prefs["commandTimeout"]:
+        if "updateRate" in self.prefs and self.prefs["updateRate"]:
             Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
         if "enableGridUpdate" in self.prefs and self.prefs["commandTimeout"]:
             self.checkbox_2.SetValue(self.prefs["enableGridUpdate"])
@@ -225,12 +219,6 @@ class PreferencesDialog(wx.Dialog):
         ] = Globals.SHOW_GRID_DIALOG  # update pref value to match global value
         self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
-        self.prefs["recentAuth"] = list(dict.fromkeys(self.prefs["recentAuth"]))
-        if len(self.prefs["recentAuth"]) > Globals.MAX_RECENT_ITEMS:
-            self.prefs["recentAuth"] = self.prefs["recentAuth"][
-                len(self.prefs["recentAuth"])
-                - Globals.MAX_RECENT_ITEMS : len(self.prefs["recentAuth"])
-            ]
 
         return self.prefs
 
@@ -247,10 +235,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHOW_TEMPLATE_DIALOG
         elif key == "templateUpdate":
             return Globals.SHOW_TEMPLATE_UPDATE
-        elif key == "recentAuth":
-            return [Globals.csv_auth_path] if Globals.csv_auth_path else []
-        elif key == "lastAuth":
-            return Globals.csv_auth_path
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
         elif key == "updateRate":

@@ -28,6 +28,7 @@ from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
+from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
 from Common.decorator import api_tool_decorator
 
@@ -42,6 +43,7 @@ from Utility.EsperAPICalls import (
     getAllDevices,
     getAllGroups,
     getAllApplications,
+    validateConfiguration,
 )
 
 from Utility.Resource import (
@@ -63,9 +65,14 @@ class NewFrameLayout(wx.Frame):
                 "%s\\EsperApiTool\\prefs.json"
                 % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
             )
+            self.authPath = (
+                "%s\\EsperApiTool\\auth.csv"
+                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+            )
         else:
             self.WINDOWS = False
             self.prefPath = "%s/EsperApiTool/prefs.json" % tempfile.gettempdir()
+            self.authPath = "%s/EsperApiTool/auth.csv" % tempfile.gettempdir()
         self.configChoice = {}
         self.consoleWin = None
         self.grid_1_contents = []
@@ -80,6 +87,7 @@ class NewFrameLayout(wx.Frame):
         self.refresh = None
         self.checkConsole = None
         self.preferences = None
+        self.auth_data = None
         self.userEdited = []
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
@@ -153,15 +161,13 @@ class NewFrameLayout(wx.Frame):
         self.menubar = wx.MenuBar()
 
         fileMenu = wx.Menu()
-        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Open Auth CSV\tCtrl+O")
+        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+O")
         fileOpenAuth = fileMenu.Append(foa)
 
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+D")
         fileOpenConfig = fileMenu.Append(foc)
 
         self.recent = wx.Menu()
-        self.loadRecentMenu()
-        fileMenu.Append(wx.ID_ANY, "&Open Recent Auth", self.recent)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device Info As\tCtrl+S")
@@ -234,8 +240,8 @@ class NewFrameLayout(wx.Frame):
         self.menubar.Append(helpMenu, "&Help")
         self.SetMenuBar(self.menubar)
 
-        self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
-        self.Bind(wx.EVT_MENU, self.OnOpen, fileOpenAuth)
+        self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
+        self.Bind(wx.EVT_MENU, self.AddEndpoint, fileOpenAuth)
         self.Bind(wx.EVT_MENU, self.onUploadCSV, fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.OnQuit, fileItem)
         self.Bind(wx.EVT_MENU, self.onSave, fileSave)
@@ -262,7 +268,7 @@ class NewFrameLayout(wx.Frame):
 
         open_icon = scale_bitmap(resourcePath("Images/open.png"), 16, 16)
         otool = self.frame_toolbar.AddTool(
-            wx.ID_ANY, "Open Auth CSV", open_icon, "Open Auth CSV"
+            wx.ID_ANY, "Add New Endpoint", open_icon, "Add New Endpoint"
         )
         self.frame_toolbar.AddSeparator()
 
@@ -293,7 +299,7 @@ class NewFrameLayout(wx.Frame):
         )
 
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
-        self.Bind(wx.EVT_TOOL, self.OnOpen, otool)
+        self.Bind(wx.EVT_TOOL, self.AddEndpoint, otool)
         self.Bind(wx.EVT_TOOL, self.onSaveBoth, stool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.rftool)
@@ -606,22 +612,37 @@ class NewFrameLayout(wx.Frame):
             pass
 
     @api_tool_decorator
-    def OnOpen(self, event):
+    def AddEndpoint(self, event):
         """ Try to open and load an Auth CSV """
-        # otherwise ask the user what new file to open
-        with wx.FileDialog(
-            self,
-            "Open Auth CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-        ) as fileDialog:
-
-            if fileDialog.ShowModal() == wx.ID_CANCEL:
-                return  # the user changed their mind
-
-            # Proceed loading the file chosen by the user
-            Globals.csv_auth_path = fileDialog.GetPath()
-            self.PopulateConfig()
+        isValid = False
+        errorMsg = None
+        name = host = entId = key = None
+        while not isValid:
+            with NewEndpointDialog(
+                errorMsg=errorMsg, name=name, host=host, entId=entId, key=key
+            ) as dialog:
+                res = dialog.ShowModal()
+                if res == wx.ID_APPLY:
+                    name, host, entId, key, prefix = dialog.getInputValues()
+                    csvRow = dialog.getCSVRowEntry()
+                    isValid = validateConfiguration(host, entId, key, prefix=prefix)
+                    if isValid:
+                        if not self.auth_data or not csvRow in self.auth_data:
+                            with open(self.authPath, "a", newline="") as csvfile:
+                                writer = csv.writer(
+                                    csvfile, quoting=csv.QUOTE_NONNUMERIC
+                                )
+                                writer.writerow(csvRow)
+                            self.auth_data = [csvRow]
+                        self.PopulateConfig(auth=self.authPath)
+                    else:
+                        wx.MessageBox(
+                            "ERROR: Invalid input in Configuration. Check inputs!",
+                            style=wx.ICON_ERROR,
+                        )
+                else:
+                    if self.auth_data:
+                        isValid = True
 
     @api_tool_decorator
     def OnQuit(self, e):
@@ -797,14 +818,12 @@ class NewFrameLayout(wx.Frame):
                     toolCol += 1
 
     @api_tool_decorator
-    def PopulateConfig(self, auth=None, authItem=None, event=None):
+    def PopulateConfig(self, auth=None, event=None):
         """Populates Configuration From CSV"""
         self.Logging("--->Loading Configurations from %s" % Globals.csv_auth_path)
         if auth:
             if Globals.csv_auth_path != auth:
                 Globals.csv_auth_path = auth
-            else:
-                return
         configfile = Globals.csv_auth_path
 
         for item in self.configMenuOptions:
@@ -827,6 +846,7 @@ class NewFrameLayout(wx.Frame):
                     self.Logging(
                         "--->ERROR: Empty Auth File, please select a proper Auth CSV file!"
                     )
+                    self.AddEndpoint(None)
                     return
 
                 for row in auth_csv_reader:
@@ -849,17 +869,11 @@ class NewFrameLayout(wx.Frame):
                             "No Loaded Configurations",
                         )
                         self.configMenuOptions.append(defaultConfigVal)
-                        self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
+                        self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
                         return
             self.Logging(
                 "--->**** Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
             )
-            if Globals.csv_auth_path in self.preferences["recentAuth"]:
-                self.preferences["recentAuth"].remove(Globals.csv_auth_path)
-                if authItem:
-                    self.recent.Delete(authItem)
-            self.preferences["recentAuth"].append(Globals.csv_auth_path)
-            self.preferences["lastAuth"] = Globals.csv_auth_path
             self.loadRecentMenu()
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
@@ -874,7 +888,7 @@ class NewFrameLayout(wx.Frame):
                 wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
             )
             self.configMenuOptions.append(defaultConfigVal)
-            self.Bind(wx.EVT_MENU, self.OnOpen, defaultConfigVal)
+            self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     def setCursorDefault(self):
@@ -906,26 +920,7 @@ class NewFrameLayout(wx.Frame):
                 if item != menuItem:
                     item.Check(False)
 
-            self.configList.Clear()
-            self.configList.AppendText("API Host = " + selectedConfig["apiHost"] + "\n")
-            self.configList.AppendText("API key = " + selectedConfig["apiKey"] + "\n")
-            self.configList.AppendText(
-                "API Prefix = " + selectedConfig["apiPrefix"] + "\n"
-            )
-            self.configList.AppendText("Enterprise = " + selectedConfig["enterprise"])
-
-            if "https" in str(selectedConfig["apiHost"]):
-                Globals.configuration.host = selectedConfig["apiHost"].strip()
-                Globals.configuration.api_key["Authorization"] = selectedConfig[
-                    "apiKey"
-                ].strip()
-                Globals.configuration.api_key_prefix["Authorization"] = selectedConfig[
-                    "apiPrefix"
-                ].strip()
-                Globals.enterprise_id = selectedConfig["enterprise"].strip()
-
-                self.PopulateGroups()
-                self.PopulateApps()
+            self.fillInConfigListing(selectedConfig)
 
             self.groupChoice.Enable(True)
             self.actionChoice.Enable(True)
@@ -936,6 +931,38 @@ class NewFrameLayout(wx.Frame):
             print(e)
             menuItem.Check(False)
         self.setCursorDefault()
+
+    @api_tool_decorator
+    def fillInConfigListing(self, config):
+        self.configList.Clear()
+        host = key = entId = prefix = ""
+        if type(config) is dict or isinstance(config, dict):
+            host = config["apiHost"]
+            key = config["apiKey"]
+            prefix = config["apiPrefix"]
+            entId = config["enterprise"]
+        elif type(config) is tuple or isinstance(config, tuple):
+            host = config[0]
+            key = config[1]
+            prefix = config[2]
+            entId = config[3]
+
+        if host and key and prefix and entId:
+            self.configList.AppendText("API Host = " + host + "\n")
+            self.configList.AppendText("API key = " + key + "\n")
+            self.configList.AppendText("API Prefix = " + prefix + "\n")
+            self.configList.AppendText("Enterprise = " + entId)
+
+            if "https" in str(host):
+                Globals.configuration.host = host.strip()
+                Globals.configuration.api_key["Authorization"] = key.strip()
+                Globals.configuration.api_key_prefix["Authorization"] = prefix.strip()
+                Globals.enterprise_id = entId.strip()
+
+                self.PopulateGroups()
+                self.PopulateApps()
+        else:
+            wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
 
     @api_tool_decorator
     def PopulateGroups(self):
@@ -1895,6 +1922,22 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def loadPref(self):
         """ Attempt to load preferences from file system """
+        if os.path.exists(self.authPath):
+            Globals.csv_auth_path = self.authPath
+            with open(Globals.csv_auth_path, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                self.auth_data = list(reader)
+        else:
+            createNewFile(self.authPath)
+            with open(self.authPath, "w", newline="") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerow(
+                    ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
+                )
+        self.PopulateConfig()
+
         if (
             os.path.isfile(self.prefPath)
             and os.path.exists(self.prefPath)
@@ -1903,8 +1946,6 @@ class NewFrameLayout(wx.Frame):
             with open(self.prefPath) as jsonFile:
                 self.preferences = json.load(jsonFile)
             self.prefDialog.SetPrefs(self.preferences)
-            if "lastAuth" in self.preferences and self.preferences["lastAuth"]:
-                self.PopulateConfig(auth=self.preferences["lastAuth"])
         else:
             createNewFile(self.prefPath)
             self.savePrefs(self.prefDialog)
@@ -2131,7 +2172,6 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = True
         self.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
-        # util.prepareTemplate(tmpDialog.destTemplate, tmpDialog.chosenTemplate)
         clone = wxThread.GUIThread(
             self,
             util.prepareTemplate,
