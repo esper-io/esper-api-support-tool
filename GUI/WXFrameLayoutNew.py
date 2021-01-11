@@ -2301,21 +2301,22 @@ class NewFrameLayout(wx.Frame):
             result = list(filter(lambda x: value in x, self.auth_data))
             if result:
                 result = result[0]
-            res = wx.MessageBox(
-                "Are you sure you want to remove the configuration with the Enterprise Id of: %s"
-                % value,
-                style=wx.YES_NO | wx.ICON_WARNING,
-            )
-            if res == wx.YES:
-                self.auth_data.remove(result)
-                with open(self.authPath, "w", newline="") as csvfile:
-                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerows(self.auth_data)
-                for child in self.configMenu.GetMenuItems():
-                    if value in self.configChoice[child.GetItemLabel()].values():
-                        self.configMenu.Delete(child)
-                self.PopulateConfig()
-                wx.MessageBox(
-                    "The configuration has been removed.",
-                    style=wx.OK | wx.ICON_INFORMATION,
+            if value:
+                res = wx.MessageBox(
+                    "Are you sure you want to remove the configuration with the Enterprise Id of: %s"
+                    % value,
+                    style=wx.YES_NO | wx.ICON_WARNING,
                 )
+                if res == wx.YES:
+                    self.auth_data.remove(result)
+                    with open(self.authPath, "w", newline="") as csvfile:
+                        writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                        writer.writerows(self.auth_data)
+                    for child in self.configMenu.GetMenuItems():
+                        if value in self.configChoice[child.GetItemLabel()].values():
+                            self.configMenu.Delete(child)
+                    self.PopulateConfig()
+                    wx.MessageBox(
+                        "The configuration has been removed.",
+                        style=wx.OK | wx.ICON_INFORMATION,
+                    )
