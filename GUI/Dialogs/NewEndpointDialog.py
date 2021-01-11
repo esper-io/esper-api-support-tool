@@ -62,7 +62,6 @@ class NewEndpointDialog(wx.Dialog):
         if key:
             self.text_ctrl_4.SetValue(str(key))
         self.text_ctrl_4.Bind(wx.EVT_TEXT, self.checkInputs)
-        self.text_ctrl_4.Bind(wx.EVT_TEXT_, self.checkInputs)
         sizer_3.Add(self.text_ctrl_4, 0, wx.ALL | wx.EXPAND, 5)
 
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
