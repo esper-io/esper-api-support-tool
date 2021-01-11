@@ -145,6 +145,8 @@ class NewFrameLayout(wx.Frame):
             )
         )
 
+        self.configList.Bind(wx.EVT_KEY_DOWN, self.RemoveEndpoint)
+
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
 
         self.Bind(wx.EVT_COMBOBOX, self.onActionSelection, self.actionChoice)
@@ -378,6 +380,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
         self.frame_toolbar.EnableTool(self.rftool.Id, False)
         self.run.Enable(False)
+        self.clone.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
 
@@ -623,21 +626,27 @@ class NewFrameLayout(wx.Frame):
             ) as dialog:
                 res = dialog.ShowModal()
                 if res == wx.ID_APPLY:
-                    name, host, entId, key, prefix = dialog.getInputValues()
-                    csvRow = dialog.getCSVRowEntry()
-                    isValid = validateConfiguration(host, entId, key, prefix=prefix)
-                    if isValid:
-                        if not self.auth_data or not csvRow in self.auth_data:
-                            with open(self.authPath, "a", newline="") as csvfile:
-                                writer = csv.writer(
-                                    csvfile, quoting=csv.QUOTE_NONNUMERIC
-                                )
-                                writer.writerow(csvRow)
-                            self.auth_data = [csvRow]
-                        self.PopulateConfig(auth=self.authPath)
-                    else:
+                    try:
+                        name, host, entId, key, prefix = dialog.getInputValues()
+                        csvRow = dialog.getCSVRowEntry()
+                        isValid = validateConfiguration(host, entId, key, prefix=prefix)
+                        if isValid:
+                            if not self.auth_data or not csvRow in self.auth_data:
+                                with open(self.authPath, "a", newline="") as csvfile:
+                                    writer = csv.writer(
+                                        csvfile, quoting=csv.QUOTE_NONNUMERIC
+                                    )
+                                    writer.writerow(csvRow)
+                                self.auth_data = [csvRow]
+                            self.PopulateConfig(auth=self.authPath)
+                        else:
+                            wx.MessageBox(
+                                "ERROR: Invalid input in Configuration. Check inputs!",
+                                style=wx.ICON_ERROR,
+                            )
+                    except:
                         wx.MessageBox(
-                            "ERROR: Invalid input in Configuration. Check inputs!",
+                            "ERROR: An error occured when attempting to aff the endpoint. Check inputs values and your internet connection.",
                             style=wx.ICON_ERROR,
                         )
                 else:
@@ -993,6 +1002,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.run.Enable(True)
+        self.clone.Enable(True)
         self.command.Enable(True)
         self.groupChoice.Enable(True)
         self.actionChoice.Enable(True)
@@ -2282,3 +2292,30 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onHelp(self, event):
         webbrowser.open(Globals.HELP_LINK)
+
+    def RemoveEndpoint(self, event):
+        value = None
+        if event.KeyCode == 127:
+            value = self.configList.GetValue()
+            value = value.split("\n")[3].replace("Enterprise = ", "")
+            result = list(filter(lambda x: value in x, self.auth_data))
+            if result:
+                result = result[0]
+            res = wx.MessageBox(
+                "Are you sure you want to remove the configuration with the Enterprise Id of: %s"
+                % value,
+                style=wx.YES_NO | wx.ICON_WARNING,
+            )
+            if res == wx.YES:
+                self.auth_data.remove(result)
+                with open(self.authPath, "w", newline="") as csvfile:
+                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                    writer.writerows(self.auth_data)
+                for child in self.configMenu.GetMenuItems():
+                    if value in self.configChoice[child.GetItemLabel()].values():
+                        self.configMenu.Delete(child)
+                self.PopulateConfig()
+                wx.MessageBox(
+                    "The configuration has been removed.",
+                    style=wx.OK | wx.ICON_INFORMATION,
+                )

@@ -30,6 +30,7 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_1.SetFocus()
         if name:
             self.text_ctrl_1.SetValue(str(name))
+        self.text_ctrl_1.Bind(wx.EVT_TEXT, self.checkInputs)
         sizer_3.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
         label_2 = wx.StaticText(
@@ -42,6 +43,7 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_2 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
         if host:
             self.text_ctrl_2.SetValue(str(host))
+        self.text_ctrl_2.Bind(wx.EVT_TEXT, self.checkInputs)
         sizer_3.Add(self.text_ctrl_2, 0, wx.ALL | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Enterprise Id")
@@ -50,6 +52,7 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_3 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
         if entId:
             self.text_ctrl_3.SetValue(str(entId))
+        self.text_ctrl_3.Bind(wx.EVT_TEXT, self.checkInputs)
         sizer_3.Add(self.text_ctrl_3, 0, wx.ALL | wx.EXPAND, 5)
 
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "API Key (Bearer Token)")
@@ -58,6 +61,8 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_4 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
         if key:
             self.text_ctrl_4.SetValue(str(key))
+        self.text_ctrl_4.Bind(wx.EVT_TEXT, self.checkInputs)
+        self.text_ctrl_4.Bind(wx.EVT_TEXT_, self.checkInputs)
         sizer_3.Add(self.text_ctrl_4, 0, wx.ALL | wx.EXPAND, 5)
 
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
@@ -81,8 +86,9 @@ class NewEndpointDialog(wx.Dialog):
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
-        self.button_APPLY = wx.Button(self, wx.ID_APPLY, "")
-        sizer_2.AddButton(self.button_APPLY)
+        self.button_APPLY = wx.Button(self, wx.ID_ADD, "")
+        self.button_APPLY.Enable(False)
+        sizer_2.Add(self.button_APPLY, 0, 0, 0)
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
 
         sizer_2.Realize()
@@ -116,5 +122,15 @@ class NewEndpointDialog(wx.Dialog):
         entId = str(self.text_ctrl_3.GetValue())
         key = str(self.text_ctrl_4.GetValue())
         prefix = "Bearer"
-        # return "%s,%s,%s,%s,%s" % (name, host, entId, key, prefix)
         return [name, host, entId, key, prefix]
+
+    def checkInputs(self, event):
+        if (
+            self.text_ctrl_4.GetValue()
+            and self.text_ctrl_3.GetValue()
+            and self.text_ctrl_2.GetValue()
+            and self.text_ctrl_1.GetValue()
+        ):
+            self.button_APPLY.Enable(True)
+        else:
+            self.button_APPLY.Enable(False)
