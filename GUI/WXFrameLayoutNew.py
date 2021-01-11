@@ -231,7 +231,8 @@ class NewFrameLayout(wx.Frame):
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
-        help = helpMenu.Append(wx.ID_HELP, "Help", "&Help")
+        helpItem = wx.MenuItem(helpMenu, wx.ID_ANY, "&Help\tF1")
+        help = helpMenu.Append(helpItem)
         self.Bind(wx.EVT_MENU, self.onHelp, help)
 
         self.menubar.Append(fileMenu, "&File")
@@ -2299,7 +2300,7 @@ class NewFrameLayout(wx.Frame):
 
     def RemoveEndpoint(self, event):
         value = None
-        if event.KeyCode == 127:
+        if event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")[3].replace("Enterprise = ", "")
             result = list(filter(lambda x: value in x, self.auth_data))
