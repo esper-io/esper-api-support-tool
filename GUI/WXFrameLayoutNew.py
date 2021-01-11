@@ -268,7 +268,7 @@ class NewFrameLayout(wx.Frame):
         qtool = self.frame_toolbar.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.frame_toolbar.AddSeparator()
 
-        open_icon = scale_bitmap(resourcePath("Images/open.png"), 16, 16)
+        open_icon = scale_bitmap(resourcePath("Images/add.png"), 16, 16)
         otool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Add New Endpoint", open_icon, "Add New Endpoint"
         )
@@ -625,7 +625,7 @@ class NewFrameLayout(wx.Frame):
                 errorMsg=errorMsg, name=name, host=host, entId=entId, key=key
             ) as dialog:
                 res = dialog.ShowModal()
-                if res == wx.ID_APPLY:
+                if res == wx.ID_ADD:
                     try:
                         name, host, entId, key, prefix = dialog.getInputValues()
                         csvRow = dialog.getCSVRowEntry()
@@ -637,8 +637,12 @@ class NewFrameLayout(wx.Frame):
                                         csvfile, quoting=csv.QUOTE_NONNUMERIC
                                     )
                                     writer.writerow(csvRow)
-                                self.auth_data = [csvRow]
+                            self.readAuthCSV()
                             self.PopulateConfig(auth=self.authPath)
+                            wx.MessageBox(
+                                "Endpoint has been added",
+                                style=wx.ICON_INFORMATION,
+                            )
                         else:
                             wx.MessageBox(
                                 "ERROR: Invalid input in Configuration. Check inputs!",

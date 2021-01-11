@@ -1,3 +1,6 @@
+The Esper API Support Tool makes use of Esper’s API to programmatically take control and monitor your Enterprise’s Android-based Dedicated Devices providing features that may not currently available on the Esper Console Dashboard.
+
+
 Link to Useage Documentation: https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit?usp=sharing
 
 
