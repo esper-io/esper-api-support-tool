@@ -108,18 +108,22 @@ class NewEndpointDialog(wx.Dialog):
             self.Close()
 
     def getInputValues(self):
-        name = str(self.text_ctrl_1.GetValue())
-        host = "https://%s-api.esper.cloud/api" % str(self.text_ctrl_2.GetValue())
-        entId = str(self.text_ctrl_3.GetValue())
-        key = str(self.text_ctrl_4.GetValue())
+        name = str(self.text_ctrl_1.GetValue().strip())
+        host = "https://%s-api.esper.cloud/api" % str(
+            self.text_ctrl_2.GetValue().strip()
+        )
+        entId = str(self.text_ctrl_3.GetValue().strip())
+        key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
         return name, host, entId, key, prefix
 
     def getCSVRowEntry(self):
-        name = str(self.text_ctrl_1.GetValue())
-        host = "https://%s-api.esper.cloud/api" % str(self.text_ctrl_2.GetValue())
-        entId = str(self.text_ctrl_3.GetValue())
-        key = str(self.text_ctrl_4.GetValue())
+        name = str(self.text_ctrl_1.GetValue().strip())
+        host = "https://%s-api.esper.cloud/api" % str(
+            self.text_ctrl_2.GetValue().strip()
+        )
+        entId = str(self.text_ctrl_3.GetValue().strip())
+        key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
         return [name, host, entId, key, prefix]
 
