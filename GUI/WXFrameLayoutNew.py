@@ -44,6 +44,7 @@ from Utility.EsperAPICalls import (
     getAllGroups,
     getAllApplications,
     validateConfiguration,
+    powerOffDevice,
 )
 
 from Utility.Resource import (
@@ -1627,7 +1628,11 @@ class NewFrameLayout(wx.Frame):
                         config = None
                         try:
                             config, commandType = cmdDialog.GetValue()
-                            cmd = json.loads(config)
+                            configParts = config.split("_-_")
+                            cmd = [
+                                json.loads(configParts[0]),
+                                json.loads(configParts[1]),
+                            ]
                         except:
                             wx.MessageBox(
                                 "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
@@ -1825,6 +1830,8 @@ class NewFrameLayout(wx.Frame):
                 setKiosk(self, device, deviceInfo)
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
+            elif action == Globals.POWER_OFF:
+                powerOffDevice(self, device, deviceInfo)
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """

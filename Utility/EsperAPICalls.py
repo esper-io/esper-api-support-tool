@@ -18,11 +18,11 @@ from Utility.deviceInfo import (
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import postEventToFrame
+from Utility.Resource import postEventToFrame, runSubprocessPOpen
 
-from esperclient import ApiClient
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
+from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 
 ####Esper API Requests####
@@ -551,6 +551,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                     setKiosk(frame, device, deviceInfo)
                 elif action == Globals.SET_MULTI:
                     setMulti(frame, device, deviceInfo)
+                elif action == Globals.POWER_OFF:
+                    powerOffDevice(frame, device, deviceInfo)
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
@@ -724,7 +726,7 @@ def getCommandsApiInstance():
 
 @api_tool_decorator
 def executeUpdateDeviceConfigCommandOnGroup(
-    frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
+    frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Group of Devices """
     groupToUse = frame.groupChoice.GetClientData(
@@ -737,6 +739,8 @@ def executeUpdateDeviceConfigCommandOnGroup(
         groups=[groupToUse],
         command=command_type,
         command_args=command_args,
+        schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+        schedule_args=schedule,
     )
     api_instance = getCommandsApiInstance()
     api_response = api_instance.create_command(Globals.enterprise_id, request)
@@ -745,7 +749,7 @@ def executeUpdateDeviceConfigCommandOnGroup(
 
 @api_tool_decorator
 def executeUpdateDeviceConfigCommandOnDevice(
-    frame, command_args, command_type="UPDATE_DEVICE_CONFIG"
+    frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Device """
     deviceToUse = frame.deviceChoice.GetClientData(
@@ -758,6 +762,8 @@ def executeUpdateDeviceConfigCommandOnDevice(
         devices=[deviceToUse],
         command=command_type,
         command_args=command_args,
+        schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+        schedule_args=schedule,
     )
     api_instance = getCommandsApiInstance()
     api_response = api_instance.create_command(Globals.enterprise_id, request)
@@ -811,40 +817,60 @@ def waitForCommandToFinish(
 def ApplyDeviceConfig(frame, config, commandType):
     """ Attempt to apply a Command given user specifications """
     otherConfig = {}
-    for key in config.keys():
+    cmdConfig = config[0]
+    scheduleConfig = config[1]
+    for key in cmdConfig.keys():
         if key not in Globals.COMMAND_ARGS:
             otherConfig[key] = config[key]
 
     command_args = V0CommandArgs(
-        app_state=config["app_state"] if "app_state" in config else None,
-        app_version=config["app_version"] if "app_version" in config else None,
-        device_alias_name=config["device_alias_name"]
-        if "device_alias_name" in config
+        app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,
+        app_version=cmdConfig["app_version"] if "app_version" in cmdConfig else None,
+        device_alias_name=cmdConfig["device_alias_name"]
+        if "device_alias_name" in cmdConfig
         else None,
         custom_settings_config=otherConfig,
-        package_name=config["package_name"] if "package_name" in config else None,
-        policy_url=config["policy_url"] if "policy_url" in config else None,
-        state=config["state"] if "state" in config else None,
-        message=config["message"] if "message" in config else None,
-        wifi_access_points=config["wifi_access_points"]
-        if "wifi_access_points" in config
+        package_name=cmdConfig["package_name"] if "package_name" in cmdConfig else None,
+        policy_url=cmdConfig["policy_url"] if "policy_url" in cmdConfig else None,
+        state=cmdConfig["state"] if "state" in cmdConfig else None,
+        message=cmdConfig["message"] if "message" in cmdConfig else None,
+        wifi_access_points=cmdConfig["wifi_access_points"]
+        if "wifi_access_points" in cmdConfig
         else None,
     )
     result, isGroup = frame.confirmCommand(command_args, commandType)
-
+    schedule = V0CommandScheduleArgs(
+        name=scheduleConfig["name"] if "name" in scheduleConfig else None,
+        start_datetime=scheduleConfig["start_datetime"]
+        if "start_datetime" in scheduleConfig
+        else None,
+        end_datetime=scheduleConfig["end_datetime"]
+        if "end_datetime" in scheduleConfig
+        else None,
+        time_type=scheduleConfig["time_type"]
+        if "time_type" in scheduleConfig
+        else None,
+        window_start_time=scheduleConfig["window_start_time"]
+        if "window_start_time" in scheduleConfig
+        else None,
+        window_end_time=scheduleConfig["window_end_time"]
+        if "window_end_time" in scheduleConfig
+        else None,
+        days=scheduleConfig["days"] if "days" in scheduleConfig else None,
+    )
     t = None
     if result and isGroup:
         t = wxThread.GUIThread(
             frame,
             executeUpdateDeviceConfigCommandOnGroup,
-            args=(frame, command_args, commandType),
+            args=(frame, command_args, schedule, commandType),
             eventType=wxThread.myEVT_COMMAND,
         )
     elif result and not isGroup:
         t = wxThread.GUIThread(
             frame,
             executeUpdateDeviceConfigCommandOnDevice,
-            args=(frame, command_args, commandType),
+            args=(frame, command_args, schedule, commandType),
             eventType=wxThread.myEVT_COMMAND,
         )
     if t:
@@ -869,3 +895,7 @@ def validateConfiguration(host, entId, key, prefix="Bearer"):
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
     return False
+
+
+def powerOffDevice(frame, device, device_info):
+    out, err = runSubprocessPOpen()

@@ -82,8 +82,7 @@ def deleteFile(file):
 
 def isModuleInstalled(module):
     cmd = "pip list"
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    output, error = test.communicate()
+    output, _ = runSubprocessPOpen(cmd)
 
     if output:
         output = output.decode("utf-8")
@@ -95,9 +94,14 @@ def isModuleInstalled(module):
 
 def installRequiredModules():
     cmd = "pip install -r requirements.txt"
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    output, error = test.communicate()
+    _, error = runSubprocessPOpen(cmd)
 
     if error:
         error = error.decode("utf-8")
         print(error)
+
+
+def runSubprocessPOpen(cmd):
+    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    output, error = test.communicate()
+    return output, error
