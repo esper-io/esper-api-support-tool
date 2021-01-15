@@ -37,10 +37,12 @@ GENERAL_ACTIONS = [
     "Show - Device Info & Network And Secruity Report",
     "Action -> Set Kiosk Mode",
     "Action -> Set Multi-App Mode",
+    # "Action -> Power off Device",
 ]
 SHOW_ALL_AND_GENERATE_REPORT = 1
 SET_KIOSK = 2
 SET_MULTI = 3
+# POWER_OFF = 4
 
 GRID_ACTIONS = [
     "",
@@ -74,7 +76,7 @@ COMMAND_TYPES = [
     "SET_DEVICE_LOCKDOWN_STATE",
     "SET_APP_STATE",
     "WIPE",
-    "UPDATE_LATEST_DPC",
+    # "UPDATE_LATEST_DPC",
 ]
 
 """ URL Requests and Extensions """
