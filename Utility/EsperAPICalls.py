@@ -898,4 +898,5 @@ def validateConfiguration(host, entId, key, prefix="Bearer"):
 
 
 def powerOffDevice(frame, device, device_info):
-    out, err = runSubprocessPOpen()
+    # out, err = runSubprocessPOpen()
+    pass
