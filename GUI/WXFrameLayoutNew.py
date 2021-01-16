@@ -212,7 +212,9 @@ class NewFrameLayout(wx.Frame):
         )
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Show Console Log", kind=wx.ITEM_CHECK)
+            wx.MenuItem(
+                viewMenu, wx.ID_ANY, "&Show Console Log\tCtrl+L", kind=wx.ITEM_CHECK
+            )
         )
         self.Bind(wx.EVT_MENU, self.showConsole, self.consoleView)
         self.clearConsole = viewMenu.Append(
