@@ -937,6 +937,8 @@ class NewFrameLayout(wx.Frame):
             for item in menuItem.Menu.MenuItems:
                 if item != menuItem:
                     item.Check(False)
+                else:
+                    item.Check(True)
 
             self.fillInConfigListing(selectedConfig)
 
