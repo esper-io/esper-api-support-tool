@@ -83,7 +83,7 @@ def deleteFile(file):
 
 
 def isModuleInstalled(module):
-    cmd = "pip list"
+    cmd = "%s list" % "pip" if platform.system() == "Windows" else "pip3"
     runAsShell = False if platform.system() == "Windows" else True
     output, _ = runSubprocessPOpen(cmd, shell=runAsShell)
 
@@ -96,7 +96,11 @@ def isModuleInstalled(module):
 
 
 def installRequiredModules():
-    cmd = "pip install -r requirements.txt"
+    cmd = (
+        "%s install -r requirements.txt" % "pip"
+        if platform.system() == "Windows"
+        else "pip3"
+    )
     runAsShell = False if platform.system() == "Windows" else True
     _, error = runSubprocessPOpen(cmd, shell=runAsShell)
 
