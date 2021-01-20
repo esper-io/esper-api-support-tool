@@ -76,7 +76,7 @@ COMMAND_TYPES = [
     "SET_DEVICE_LOCKDOWN_STATE",
     "SET_APP_STATE",
     "WIPE",
-    # "UPDATE_LATEST_DPC",
+    "UPDATE_LATEST_DPC",
 ]
 
 """ URL Requests and Extensions """

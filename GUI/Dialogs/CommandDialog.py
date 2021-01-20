@@ -111,10 +111,10 @@ class CommandDialog(wx.Dialog):
         self.cmdTypeBox = wx.ComboBox(
             self.panel_3,
             wx.ID_ANY,
-            choices=[],
+            choices=Globals.COMMAND_TYPES,
             style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SIMPLE | wx.CB_SORT,
         )
-        sizer_5.Add(self.cmdTypeBox, 0, wx.ALL | wx.EXPAND, 5)
+        sizer_5.Add(self.cmdTypeBox, 0, wx.ALL | wx.SHAPED, 5)
 
         static_line_1 = wx.StaticLine(self.panel_1, wx.ID_ANY)
         sizer_2.Add(static_line_1, 0, wx.EXPAND, 0)
@@ -122,12 +122,12 @@ class CommandDialog(wx.Dialog):
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2.Add(sizer_4, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
-        self.okBtn = wx.Button(self.panel_1, wx.ID_ANY, "OK")
+        self.okBtn = wx.Button(self.panel_1, wx.ID_OK, "OK")
         sizer_4.Add(self.okBtn, 0, wx.ALL, 5)
 
         sizer_4.Add((20, 20), 0, wx.ALL, 5)
 
-        self.cancelBtn = wx.Button(self.panel_1, wx.ID_ANY, "Cancel")
+        self.cancelBtn = wx.Button(self.panel_1, wx.ID_CANCEL, "Cancel")
         sizer_4.Add(self.cancelBtn, 0, wx.ALL, 5)
 
         self.panel_3.SetSizer(sizer_5)
@@ -150,6 +150,7 @@ class CommandDialog(wx.Dialog):
         self.SetSizer(sizer_1)
 
         self.Layout()
+        self.Centre()
 
     def GetValue(self):
         return (
