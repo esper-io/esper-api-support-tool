@@ -27,10 +27,6 @@ if __name__ == "__main__":
         dispath,
         "--add-data",
         curDirPath + "/Images;Images/",
-        "--add-data",
-        curDirPath + "/Images/icon.png;Images/",
-        "--add-data",
-        curDirPath + "/Images/logo.png;Images/",
         curDirPath + "/Main.py",
     ]
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
@@ -40,6 +36,10 @@ if __name__ == "__main__":
         if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
             os.remove(dispath + "/EsperApiSupportTool.exe")
         os.rename(dispath + "/Main.exe", dispath + "/EsperApiSupportTool.exe")
+    elif os.path.exists(dispath + "/Main.app"):
+        if os.path.exists(dispath + "/EsperApiSupportTool.app"):
+            os.remove(dispath + "/EsperApiSupportTool.app")
+        os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
 
     if output:
         output = output.decode("utf-8")
