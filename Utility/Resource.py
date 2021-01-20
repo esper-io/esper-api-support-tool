@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import os
+import platform
 import requests
+import shlex
 import sys
 import subprocess
 import wx
@@ -82,7 +84,8 @@ def deleteFile(file):
 
 def isModuleInstalled(module):
     cmd = "pip list"
-    output, _ = runSubprocessPOpen(cmd)
+    runAsShell = False if platform.system() == "Windows" else True
+    output, _ = runSubprocessPOpen(cmd, shell=runAsShell)
 
     if output:
         output = output.decode("utf-8")
@@ -94,14 +97,15 @@ def isModuleInstalled(module):
 
 def installRequiredModules():
     cmd = "pip install -r requirements.txt"
-    _, error = runSubprocessPOpen(cmd)
+    runAsShell = False if platform.system() == "Windows" else True
+    _, error = runSubprocessPOpen(cmd, shell=runAsShell)
 
     if error:
         error = error.decode("utf-8")
         print(error)
 
 
-def runSubprocessPOpen(cmd):
-    test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+def runSubprocessPOpen(cmd, shell=False):
+    test = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, shell=shell)
     output, error = test.communicate()
     return output, error
