@@ -1600,6 +1600,7 @@ class NewFrameLayout(wx.Frame):
         if self.consoleWin:
             self.consoleWin.onClear()
 
+    @api_tool_decorator
     def onAbout(self, event):
         """ About Dialog """
         info = adv.AboutDialogInfo()
@@ -1610,8 +1611,6 @@ class NewFrameLayout(wx.Frame):
         info.SetDescription(Globals.DESCRIPTION)
         info.SetCopyright("(C) 2020 Esper - All Rights Reserved")
         info.SetWebSite(Globals.ESPER_LINK)
-        for dev in Globals.DEVS:
-            info.AddDeveloper(dev)
 
         adv.AboutBox(info)
 
