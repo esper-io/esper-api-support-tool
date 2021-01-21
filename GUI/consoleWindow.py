@@ -29,8 +29,10 @@ class Console(wx.Frame):
         )
         panel = wx.Panel(self, -1)
 
-        self.loggingList = wx.ListBox(
-            panel, wx.ID_ANY, choices=[], style=wx.LB_NEEDED_SB | wx.LB_HSCROLL
+        self.loggingList = wx.TextCtrl(
+            panel,
+            wx.ID_ANY,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL | wx.TE_BESTWRAP,
         )
 
         self.loggingList.SetFont(
@@ -49,9 +51,10 @@ class Console(wx.Frame):
         panel.SetSizer(grid_sizer_2)
 
         for entry in Globals.LOGLIST:
-            self.loggingList.Append(entry)
+            self.loggingList.AppendText(entry)
+            self.loggingList.AppendText("\n")
             if self.WINDOWS:
-                self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
+                self.loggingList.ShowPosition(self.loggingList.GetNumberOfLines() - 1)
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
@@ -73,7 +76,8 @@ class Console(wx.Frame):
 
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
-        self.loggingList.Append(entry)
+        self.loggingList.AppendText(entry)
+        self.loggingList.AppendText("\n")
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
         if entry:
