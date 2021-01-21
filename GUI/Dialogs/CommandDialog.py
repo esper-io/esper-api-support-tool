@@ -17,6 +17,7 @@ class CommandDialog(wx.Dialog):
             | wx.RESIZE_BORDER,
         )
         self.SetSize((500, 400))
+        self.SetTitle(title)
         emptyJson = "{\n\n}"
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -56,7 +57,7 @@ class CommandDialog(wx.Dialog):
         sizer_3 = wx.GridSizer(1, 1, 0, 0)
 
         self.text_ctrl_1 = wx.TextCtrl(
-            self.panel_2, wx.ID_ANY, "{\n\n}", style=wx.TE_MULTILINE
+            self.panel_2, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
         )
         self.text_ctrl_1.SetFocus()
         sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
@@ -86,7 +87,7 @@ class CommandDialog(wx.Dialog):
         sizer_9 = wx.GridSizer(1, 1, 0, 0)
 
         self.text_ctrl_2 = wx.TextCtrl(
-            self.panel_4, wx.ID_ANY, "{\n\n}\n", style=wx.TE_MULTILINE
+            self.panel_4, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
         )
         sizer_9.Add(self.text_ctrl_2, 0, wx.EXPAND, 0)
 
