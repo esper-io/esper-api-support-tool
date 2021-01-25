@@ -307,12 +307,19 @@ class NewFrameLayout(wx.Frame):
             wx.ID_ANY, "Run Command", cmd_icon, "Run Command"
         )
 
+        self.frame_toolbar.AddStretchableSpace()
+        self.search = wx.SearchCtrl(self.frame_toolbar)
+        self.frame_toolbar.AddControl(self.search)
+        self.search.ShowCancelButton(True)
+
         self.Bind(wx.EVT_TOOL, self.OnQuit, qtool)
         self.Bind(wx.EVT_TOOL, self.AddEndpoint, otool)
         self.Bind(wx.EVT_TOOL, self.onSaveBoth, stool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.cmdtool)
+        self.search.Bind(wx.EVT_SEARCH, self.onSearch)
+        self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         # Tool Bar end
 
         self.Bind(wxThread.EVT_FETCH, self.onFetch)
@@ -1797,6 +1804,7 @@ class NewFrameLayout(wx.Frame):
             self.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
             num += 1
         self.grid_1.MakeCellVisible(0, col)
+        self.onSearch(self.search.GetValue())
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
@@ -1843,6 +1851,7 @@ class NewFrameLayout(wx.Frame):
             self.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
         self.grid_2.MakeCellVisible(0, col)
+        self.onSearch(self.search.GetValue())
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     def toogleViewMenuItem(self, event):
@@ -2082,7 +2091,7 @@ class NewFrameLayout(wx.Frame):
                 if (device and esperName == device.device_name) or applyAll:
                     for colNum in range(self.grid_1.GetNumberCols()):
                         if (
-                            rowNum < self.grid_1.GetNumberCols()
+                            colNum < self.grid_1.GetNumberCols()
                             and colNum != statusIndex
                         ):
                             self.grid_1.SetCellTextColour(rowNum, colNum, color)
@@ -2370,3 +2379,44 @@ class NewFrameLayout(wx.Frame):
                         "The configuration has been removed.",
                         style=wx.OK | wx.ICON_INFORMATION,
                     )
+
+    @api_tool_decorator
+    def onSearch(self, event):
+        queryString = ""
+        if hasattr(event, "GetString"):
+            queryString = event.GetString()
+        elif isinstance(event, str):
+            queryString = event
+        if hasattr(event, "EventType") and (
+            (wx.EVT_TEXT.typeId == event.EventType and not queryString)
+            or wx.EVT_SEARCH.typeId == event.EventType
+            or wx.EVT_SEARCH_CANCEL.typeId == event.EventType
+        ):
+            white = wx.Colour(255, 255, 255)
+            self.applyTextColorMatchingGridRow(self.grid_1, queryString, white, True)
+            self.applyTextColorMatchingGridRow(self.grid_2, queryString, white, True)
+        if queryString:
+            light_yellow = wx.Colour(255, 255, 224)
+            self.applyTextColorMatchingGridRow(self.grid_1, queryString, light_yellow)
+            self.applyTextColorMatchingGridRow(self.grid_2, queryString, light_yellow)
+            self.Logging("--> Search for %s completed" % queryString)
+        else:
+            self.search.SetValue("")
+
+    def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
+        """ Apply a Text or Bg Color to a Grid Row """
+        statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
+        for rowNum in range(grid.GetNumberRows()):
+            if rowNum < grid.GetNumberRows():
+                match = []
+                [
+                    match.append(grid.GetCellValue(rowNum, colNum))
+                    if query.lower() in grid.GetCellValue(rowNum, colNum).lower()
+                    else None
+                    for colNum in range(grid.GetNumberCols())
+                ]
+                if match or applyAll:
+                    for colNum in range(grid.GetNumberCols()):
+                        if colNum < grid.GetNumberCols() and colNum != statusIndex:
+                            grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
+        grid.ForceRefresh()
