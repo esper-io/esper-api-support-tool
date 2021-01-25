@@ -20,6 +20,8 @@ import Utility.EsperTemplateUtil as templateUtil
 
 from functools import partial
 
+from datetime import datetime
+
 from GUI.consoleWindow import Console
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.TemplateDialog import TemplateDialog
@@ -45,6 +47,7 @@ from Utility.EsperAPICalls import (
     getAllApplications,
     validateConfiguration,
     powerOffDevice,
+    getTokenInfo,
 )
 
 from Utility.Resource import (
@@ -635,12 +638,38 @@ class NewFrameLayout(wx.Frame):
                         csvRow = dialog.getCSVRowEntry()
                         isValid = validateConfiguration(host, entId, key, prefix=prefix)
                         if isValid:
-                            if not self.auth_data or not csvRow in self.auth_data:
+                            matchingConfig = list(
+                                filter(
+                                    lambda x: x[2] == entId or x[0] == name,
+                                    self.auth_data,
+                                )
+                            )
+                            if (
+                                not self.auth_data or not csvRow in self.auth_data
+                            ) and not matchingConfig:
                                 with open(self.authPath, "a", newline="") as csvfile:
                                     writer = csv.writer(
                                         csvfile, quoting=csv.QUOTE_NONNUMERIC
                                     )
                                     writer.writerow(csvRow)
+                            elif csvRow in self.auth_data or matchingConfig:
+                                self.auth_data = [
+                                    csvRow if x == matchingConfig[0] else x
+                                    for x in self.auth_data
+                                ]
+                                with open(self.authPath, "w", newline="") as csvfile:
+                                    writer = csv.writer(
+                                        csvfile, quoting=csv.QUOTE_NONNUMERIC
+                                    )
+                                    res = []
+                                    [
+                                        res.append(x)
+                                        for x in self.auth_data
+                                        if x not in res
+                                    ]
+                                    self.auth_data = res
+                                    writer.writerows(self.auth_data)
+
                             self.readAuthCSV()
                             self.PopulateConfig(auth=self.authPath)
                             wx.MessageBox(
@@ -654,7 +683,7 @@ class NewFrameLayout(wx.Frame):
                             )
                     except:
                         wx.MessageBox(
-                            "ERROR: An error occured when attempting to aff the endpoint. Check inputs values and your internet connection.",
+                            "ERROR: An error occured when attempting to add the endpoint. Check inputs values and your internet connection.",
                             style=wx.ICON_ERROR,
                         )
                 else:
@@ -978,6 +1007,12 @@ class NewFrameLayout(wx.Frame):
                 Globals.configuration.api_key["Authorization"] = key.strip()
                 Globals.configuration.api_key_prefix["Authorization"] = prefix.strip()
                 Globals.enterprise_id = entId.strip()
+
+                res = getTokenInfo()
+                if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+                    raise Exception(
+                        "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
+                    )
 
                 self.PopulateGroups()
                 self.PopulateApps()

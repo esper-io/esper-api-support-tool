@@ -321,6 +321,15 @@ def getDeviceById(deviceToUse):
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
 
 
+def getTokenInfo():
+    api_instance = esperclient.TokenApi(esperclient.ApiClient(Globals.configuration))
+    try:
+        api_response = api_instance.get_token_info()
+        return api_response
+    except ApiException as e:
+        print("Exception when calling TokenApi->get_token_info: %s\n" % e)
+
+
 ####End Esper API Requests####
 
 
@@ -878,6 +887,7 @@ def ApplyDeviceConfig(frame, config, commandType):
         t.start()
 
 
+@api_tool_decorator
 def validateConfiguration(host, entId, key, prefix="Bearer"):
     configuration = esperclient.Configuration()
     configuration.host = host
