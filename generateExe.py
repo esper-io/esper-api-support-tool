@@ -2,6 +2,7 @@
 
 import subprocess
 import pathlib
+import platform
 import os
 
 from Utility.Resource import isModuleInstalled, installRequiredModules
@@ -22,11 +23,13 @@ if __name__ == "__main__":
         "--noconfirm",
         "--onefile",
         "--windowed",
+        "--icon",
+        curDirPath + "/Images/icon.png",
         "--clean",
         "--distpath",
         dispath,
         "--add-data",
-        curDirPath + "/Images;Images/",
+        curDirPath + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
         curDirPath + "/Main.py",
     ]
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)

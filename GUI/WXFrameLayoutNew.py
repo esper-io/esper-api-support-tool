@@ -294,12 +294,12 @@ class NewFrameLayout(wx.Frame):
         self.rtool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
-
+        self.frame_toolbar.AddSeparator()
+        
         ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
         self.rftool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
         )
-
         self.frame_toolbar.AddSeparator()
 
         cmd_icon = scale_bitmap(resourcePath("Images/command.png"), 16, 16)

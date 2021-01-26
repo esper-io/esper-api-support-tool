@@ -83,12 +83,16 @@ def deleteFile(file):
 
 
 def isModuleInstalled(module):
-    cmd = "%s list" % "pip" if platform.system() == "Windows" else "pip3"
-    runAsShell = False if platform.system() == "Windows" else True
-    output, _ = runSubprocessPOpen(cmd, shell=runAsShell)
+    cmd = "%s list" % ("pip" if platform.system() == "Windows" else "pip3")
+    output = None
+    if platform.system() == "Windows":
+        output, _ = runSubprocessPOpen(cmd)
+    else:
+        output, _ = runOsPOpen(cmd)
 
     if output:
-        output = output.decode("utf-8")
+        if hasattr(output, "decode"):
+            output = output.decode("utf-8")
         if module in output:
             return True
 
@@ -97,19 +101,35 @@ def isModuleInstalled(module):
 
 def installRequiredModules():
     cmd = (
-        "%s install -r requirements.txt" % "pip"
+        "%s install -r requirements.txt" % ("pip"
         if platform.system() == "Windows"
-        else "pip3"
+        else "pip3")
     )
-    runAsShell = False if platform.system() == "Windows" else True
-    _, error = runSubprocessPOpen(cmd, shell=runAsShell)
+    error = None
+    if platform.system() == "Windows":
+        _, error = runSubprocessPOpen(cmd)
+    else:
+        _, error = runOsPOpen(cmd)
 
     if error:
-        error = error.decode("utf-8")
+        if hasattr(error, "decode"):
+            error = error.decode("utf-8")
         print(error)
 
 
 def runSubprocessPOpen(cmd, shell=False):
-    test = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, shell=shell)
-    output, error = test.communicate()
+    output = error = None
+    if platform.system() == "Windows":
+        if isinstance(cmd, str):
+            cmd = shlex.split(cmd)
+        test = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=shell)
+        output, error = test.communicate()
+    return output, error
+
+def runOsPOpen(cmd):
+    output = error = None
+    if not isinstance(cmd, str):
+        cmd = " ".join(cmd)
+    out = os.popen(cmd)
+    output = out.read()
     return output, error
