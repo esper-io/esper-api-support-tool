@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
     if not isModuleInstalled("pyinstaller"):
         installRequiredModules()
+        raise Exception("Required Modules Installed. Please rerun the script.")
 
     if not os.path.exists(dispath):
         os.makedirs(dispath)

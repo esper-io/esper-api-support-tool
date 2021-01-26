@@ -100,10 +100,8 @@ def isModuleInstalled(module):
 
 
 def installRequiredModules():
-    cmd = (
-        "%s install -r requirements.txt" % ("pip"
-        if platform.system() == "Windows"
-        else "pip3")
+    cmd = "%s install -r requirements.txt" % (
+        "pip" if platform.system() == "Windows" else "pip3"
     )
     error = None
     if platform.system() == "Windows":
@@ -125,6 +123,7 @@ def runSubprocessPOpen(cmd, shell=False):
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=shell)
         output, error = test.communicate()
     return output, error
+
 
 def runOsPOpen(cmd):
     output = error = None
