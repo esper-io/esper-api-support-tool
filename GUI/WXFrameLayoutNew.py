@@ -63,6 +63,7 @@ class NewFrameLayout(wx.Frame):
         self.configMenuOptions = []
         self.WINDOWS = True
         self.prefPath = ""
+        self.authPath = ""
         if platform.system() == "Windows":
             self.WINDOWS = True
             self.prefPath = (
@@ -75,8 +76,12 @@ class NewFrameLayout(wx.Frame):
             )
         else:
             self.WINDOWS = False
-            self.prefPath = "%s/EsperApiTool/prefs.json" % tempfile.gettempdir()
-            self.authPath = "%s/EsperApiTool/auth.csv" % tempfile.gettempdir()
+            self.prefPath = "%s/EsperApiTool/prefs.json" % os.path.expanduser(
+                "~/Desktop/"
+            )
+            self.authPath = "%s/EsperApiTool/auth.csv" % os.path.expanduser(
+                "~/Desktop/"
+            )
         self.configChoice = {}
         self.consoleWin = None
         self.grid_1_contents = []
@@ -295,7 +300,7 @@ class NewFrameLayout(wx.Frame):
             wx.ID_ANY, "Run Action", exe_icon, "Run Action"
         )
         self.frame_toolbar.AddSeparator()
-        
+
         ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
         self.rftool = self.frame_toolbar.AddTool(
             wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
