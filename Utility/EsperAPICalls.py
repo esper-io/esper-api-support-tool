@@ -560,8 +560,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                     setKiosk(frame, device, deviceInfo)
                 elif action == Globals.SET_MULTI:
                     setMulti(frame, device, deviceInfo)
-                elif action == Globals.POWER_OFF:
-                    powerOffDevice(frame, device, deviceInfo)
+                # elif action == Globals.POWER_OFF:
+                #    powerOffDevice(frame, device, deviceInfo)
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
@@ -830,7 +830,7 @@ def ApplyDeviceConfig(frame, config, commandType):
     scheduleConfig = config[1]
     for key in cmdConfig.keys():
         if key not in Globals.COMMAND_ARGS:
-            otherConfig[key] = config[key]
+            otherConfig[key] = cmdConfig[key]
 
     command_args = V0CommandArgs(
         app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,

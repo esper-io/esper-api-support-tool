@@ -112,7 +112,10 @@ class NewFrameLayout(wx.Frame):
         )
         self.panel_7 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.groupChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7,
+            wx.ID_ANY,
+            choices=[],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
         )
         self.actionChoice = wx.ComboBox(
             self.panel_7,
@@ -121,10 +124,16 @@ class NewFrameLayout(wx.Frame):
             choices=Globals.GENERAL_ACTIONS,
         )
         self.deviceChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7,
+            wx.ID_ANY,
+            choices=[],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
         )
         self.appChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7,
+            wx.ID_ANY,
+            choices=[],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
         )
         self.gridActions = wx.ComboBox(
             self.panel_7,
@@ -1882,8 +1891,8 @@ class NewFrameLayout(wx.Frame):
                 setKiosk(self, device, deviceInfo)
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
-            elif action == Globals.POWER_OFF:
-                powerOffDevice(self, device, deviceInfo)
+            # elif action == Globals.POWER_OFF:
+            #     powerOffDevice(self, device, deviceInfo)
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
