@@ -1938,7 +1938,7 @@ class NewFrameLayout(wx.Frame):
             #     powerOffDevice(self, device, deviceInfo)
         if action == Globals.CLEAR_APP_DATA:
             wx.MessageBox(
-                "Clear App Data Command has been sent to the device(s). Please check event feeds for command status.",
+                "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
                 style=wx.ICON_INFORMATION,
             )
 
