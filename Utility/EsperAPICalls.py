@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from logging import exception
 import requests
 import esperclient
 import time
@@ -922,53 +923,60 @@ def powerOffDevice(frame, device, device_info):
 
 
 def clearAppData(frame, device):
-    headers = {
-        "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-        "Content-Type": "application/json",
-    }
-    url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
-        Globals.configuration.host.split("-api")[0].replace("https://", ""),
-        Globals.enterprise_id,
-    )
-    appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
-    _, apps = getdeviceapps(device.id)
-    cmdArgs = {}
-    for app in apps["results"]:
-        if app["package_name"] == appToUse:
-            cmdArgs["package_name"] = app["package_name"]
-            cmdArgs["application_name"] = app["app_name"]
-            cmdArgs["version_code"] = app["version_code"]
-            cmdArgs["version_name"] = app["version_name"]
-            if app["app_type"] == "GOOGLE":
-                cmdArgs["is_g_play"] = True
-            else:
-                cmdArgs["is_g_play"] = False
-            break
+    json_resp = None
+    try:
+        headers = {
+            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
+            "Content-Type": "application/json",
+        }
+        url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
+            Globals.configuration.host.split("-api")[0].replace("https://", ""),
+            Globals.enterprise_id,
+        )
+        appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+        _, apps = getdeviceapps(device.id)
+        cmdArgs = {}
+        for app in apps["results"]:
+            if app["package_name"] == appToUse:
+                cmdArgs["package_name"] = app["package_name"]
+                cmdArgs["application_name"] = app["app_name"]
+                cmdArgs["version_code"] = app["version_code"]
+                cmdArgs["version_name"] = app["version_name"]
+                if app["app_type"] == "GOOGLE":
+                    cmdArgs["is_g_play"] = True
+                else:
+                    cmdArgs["is_g_play"] = False
+                break
 
-    reqData = {
-        "command_type": "DEVICE",
-        "command_args": cmdArgs,
-        "devices": [device.id],
-        "groups": [],
-        "device_type": "all",
-        "command": "CLEAR_APP_DATA",
-    }
-    resp = requests.post(url, headers=headers, json=reqData)
-    json_resp = resp.json()
-    if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        prettyReponse = "Response {result}".format(
-            result=json.dumps(json_resp, indent=4, sort_keys=True)
-        )
-        print(prettyReponse)
-        ApiToolLog().LogResponse(prettyReponse)
-    if resp.status_code < 300:
+        reqData = {
+            "command_type": "DEVICE",
+            "command_args": cmdArgs,
+            "devices": [device.id],
+            "groups": [],
+            "device_type": "all",
+            "command": "CLEAR_APP_DATA",
+        }
+        resp = requests.post(url, headers=headers, json=reqData)
+        json_resp = resp.json()
+        if Globals.PRINT_RESPONSES or resp.status_code > 300:
+            prettyReponse = "Response {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
+            print(prettyReponse)
+            ApiToolLog().LogResponse(prettyReponse)
+        if resp.status_code < 300:
+            frame.Logging(
+                "---> Clear %s App Data Command has been sent to %s"
+                % (cmdArgs["application_name"], device.alias_name)
+            )
+        else:
+            frame.Logging(
+                "ERROR: Failed to send Clear %s App Data Command to %s"
+                % (cmdArgs["application_name"], device.alias_name)
+            )
+    except exception as e:
+        ApiToolLog().LogError(e)
         frame.Logging(
-            "---> Clear %s App Data Command has been sent to %s"
-            % (cmdArgs["application_name"], device.alias_name)
-        )
-    else:
-        frame.Logging(
-            "ERROR: Failed to send Clear %s App Data Command to %s"
-            % (cmdArgs["application_name"], device.alias_name)
+            "ERROR: Failed to send Clear App Data Command to %s" % (device.alias_name)
         )
     return json_resp

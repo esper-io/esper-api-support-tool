@@ -1936,6 +1936,11 @@ class NewFrameLayout(wx.Frame):
                 clearAppData(self, device)
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
+        if action == Globals.CLEAR_APP_DATA:
+            wx.MessageBox(
+                "Clear App Data Command has been sent to the device(s)",
+                style=wx.ICON_INFORMATION,
+            )
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
