@@ -1933,7 +1933,7 @@ class NewFrameLayout(wx.Frame):
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
             elif action == Globals.CLEAR_APP_DATA:
-                clearAppData(self, device, deviceInfo)
+                clearAppData(self, device)
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
 

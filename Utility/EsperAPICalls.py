@@ -568,7 +568,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                 elif action == Globals.SET_MULTI:
                     setMulti(frame, device, deviceInfo)
                 elif action == Globals.CLEAR_APP_DATA:
-                    clearAppData(frame, device, deviceInfo)
+                    clearAppData(frame, device)
                 # elif action == Globals.POWER_OFF:
                 #    powerOffDevice(frame, device, deviceInfo)
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
@@ -921,7 +921,7 @@ def powerOffDevice(frame, device, device_info):
     pass
 
 
-def clearAppData(frame, device, device_info):
+def clearAppData(frame, device):
     headers = {
         "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
         "Content-Type": "application/json",
