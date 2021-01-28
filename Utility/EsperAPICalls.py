@@ -934,7 +934,7 @@ def clearAppData(frame, device, device_info):
     _, apps = getdeviceapps(device.id)
     cmdArgs = {}
     for app in apps["results"]:
-        if app.package_name == appToUse:
+        if app["package_name"] == appToUse:
             cmdArgs["package_name"] = app["package_name"]
             cmdArgs["application_name"] = app["app_name"]
             cmdArgs["version_code"] = app["version_code"]
@@ -961,5 +961,14 @@ def clearAppData(frame, device, device_info):
         )
         print(prettyReponse)
         ApiToolLog().LogResponse(prettyReponse)
-
+    if resp.status_code < 300:
+        frame.Logging(
+            "Clear %s App Data Command has been sent to %s"
+            % (cmdArgs["application_name"], device.alias_name)
+        )
+    else:
+        frame.Logging(
+            "FAILED: to send Clear %s App Data Command to %s"
+            % (cmdArgs["application_name"], device.alias_name)
+        )
     return json_resp
