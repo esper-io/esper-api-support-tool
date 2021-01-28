@@ -963,12 +963,12 @@ def clearAppData(frame, device, device_info):
         ApiToolLog().LogResponse(prettyReponse)
     if resp.status_code < 300:
         frame.Logging(
-            "Clear %s App Data Command has been sent to %s"
+            "---> Clear %s App Data Command has been sent to %s"
             % (cmdArgs["application_name"], device.alias_name)
         )
     else:
         frame.Logging(
-            "FAILED: to send Clear %s App Data Command to %s"
+            "ERROR: Failed to send Clear %s App Data Command to %s"
             % (cmdArgs["application_name"], device.alias_name)
         )
     return json_resp
