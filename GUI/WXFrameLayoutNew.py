@@ -523,7 +523,7 @@ class NewFrameLayout(wx.Frame):
         label_4 = wx.StaticText(
             self.panel_7,
             wx.ID_ANY,
-            "Application for Kiosk Mode",
+            "Applications:",
             style=wx.ALIGN_LEFT | wx.ST_ELLIPSIZE_END,
         )
         label_4.SetFont(
