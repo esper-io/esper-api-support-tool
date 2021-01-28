@@ -126,12 +126,18 @@ def getdeviceapps(deviceid):
     json_resp = getInfo(Globals.DEVICE_APP_LIST_REQUEST_EXTENSION, deviceid)
     if len(json_resp["results"]):
         for app in json_resp["results"]:
-            applist.append(
-                app["application"]["application_name"]
-                + " v"
-                + app["application"]["version"]["version_code"]
-            )
-    return applist
+            if "application" in app:
+                applist.append(
+                    app["application"]["application_name"]
+                    + " v"
+                    + app["application"]["version"]["version_code"]
+                )
+            else:
+                entry = {app["app_name"]: app["package_name"]}
+                if entry not in Globals.frame.apps:
+                    Globals.frame.apps.append(entry)
+                applist.append(app["app_name"] + " v" + app["version_code"])
+    return applist, json_resp
 
 
 def getkioskmodeapp(deviceid):
@@ -458,7 +464,8 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         if device.tags is None:
             device.tags = []
 
-    deviceInfo.update({"Apps": str(getdeviceapps(device.id))})
+    apps, _ = getdeviceapps(device.id)
+    deviceInfo.update({"Apps": str(apps)})
 
     if kioskMode == 1 and device.status == 1:
         deviceInfo.update({"KioskApp": str(getkioskmodeapp(device.id))})
@@ -560,6 +567,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                     setKiosk(frame, device, deviceInfo)
                 elif action == Globals.SET_MULTI:
                     setMulti(frame, device, deviceInfo)
+                elif action == Globals.CLEAR_APP_DATA:
+                    clearAppData(frame, device, deviceInfo)
                 # elif action == Globals.POWER_OFF:
                 #    powerOffDevice(frame, device, deviceInfo)
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
@@ -910,3 +919,47 @@ def validateConfiguration(host, entId, key, prefix="Bearer"):
 def powerOffDevice(frame, device, device_info):
     # out, err = runSubprocessPOpen()
     pass
+
+
+def clearAppData(frame, device, device_info):
+    headers = {
+        "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
+        "Content-Type": "application/json",
+    }
+    url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
+        Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        Globals.enterprise_id,
+    )
+    appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+    _, apps = getdeviceapps(device.id)
+    cmdArgs = {}
+    for app in apps["results"]:
+        if app.package_name == appToUse:
+            cmdArgs["package_name"] = app["package_name"]
+            cmdArgs["application_name"] = app["app_name"]
+            cmdArgs["version_code"] = app["version_code"]
+            cmdArgs["version_name"] = app["version_name"]
+            if app["app_type"] == "GOOGLE":
+                cmdArgs["is_g_play"] = True
+            else:
+                cmdArgs["is_g_play"] = False
+            break
+
+    reqData = {
+        "command_type": "DEVICE",
+        "command_args": cmdArgs,
+        "devices": [device.id],
+        "groups": [],
+        "device_type": "all",
+        "command": "CLEAR_APP_DATA",
+    }
+    resp = requests.post(url, headers=headers, json=reqData)
+    json_resp = resp.json()
+    if Globals.PRINT_RESPONSES or resp.status_code > 300:
+        prettyReponse = "Response {result}".format(
+            result=json.dumps(json_resp, indent=4, sort_keys=True)
+        )
+        print(prettyReponse)
+        ApiToolLog().LogResponse(prettyReponse)
+
+    return json_resp

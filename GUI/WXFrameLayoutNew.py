@@ -48,6 +48,7 @@ from Utility.EsperAPICalls import (
     validateConfiguration,
     powerOffDevice,
     getTokenInfo,
+    clearAppData,
 )
 
 from Utility.Resource import (
@@ -86,6 +87,7 @@ class NewFrameLayout(wx.Frame):
         self.consoleWin = None
         self.grid_1_contents = []
         self.grid_2_contents = []
+        self.devices = []
         self.apps = []
         self.isRunning = False
         self.isRunningUpdate = False
@@ -1083,6 +1085,7 @@ class NewFrameLayout(wx.Frame):
             "--->Attemptting to populate devices of selected group (%s)..."
             % event.String
         )
+        self.devices = []
         self.deviceChoice.Clear()
         self.appChoice.Clear()
         if not self.preferences or self.preferences["enableDevice"] == True:
@@ -1098,8 +1101,9 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.rtool.Id, True)
             self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        for app in self.apps:
-            self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
+        # for app in self.apps:
+        #     if app:
+        #         self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
         clientData = (
             event.ClientData
             if event and event.ClientData
@@ -1122,7 +1126,9 @@ class NewFrameLayout(wx.Frame):
                 self.deviceChoice.Enable(True)
             else:
                 self.deviceChoice.Enable(False)
-            self.deviceChoice.Append("", "")
+            if not "" in self.devices:
+                self.devices.append("")
+                self.deviceChoice.Append("", "")
             num = 1
             for device in api_response.results:
                 name = "%s %s %s" % (
@@ -1130,20 +1136,23 @@ class NewFrameLayout(wx.Frame):
                     device.hardware_info["model"],
                     device.device_name,
                 )
-                self.deviceChoice.Append(name, device.id)
-                if not self.preferences or self.preferences["enableDevice"] == True:
-                    self.setGaugeValue(int(num / len(api_response.results) * 100))
-                num += 1
+                if name and not name in self.devices:
+                    self.devices.append(name)
+                    self.deviceChoice.Append(name, device.id)
+                    if not self.preferences or self.preferences["enableDevice"] == True:
+                        self.setGaugeValue(int(num / len(api_response.results) * 100))
+                    num += 1
+                    wxThread.doAPICallInThread(
+                        self,
+                        getdeviceapps,
+                        args=(device.id),
+                        eventType=wxThread.myEVT_APPS,
+                        waitForJoin=False,
+                    )
         else:
             self.deviceChoice.Append("No Devices Found", "")
             self.deviceChoice.Enable(False)
             self.Logging("---> No Devices found in group")
-        self.setCursorDefault()
-        self.runBtn.Enable(True)
-        self.frame_toolbar.EnableTool(self.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.rftool.Id, True)
-        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1159,15 +1168,35 @@ class NewFrameLayout(wx.Frame):
     def addAppsToAppChoice(self, event):
         """ Populate App Choice """
         api_response = event.GetValue()
-        self.appChoice.Append("", "")
-        if len(api_response.results):
+        if not "" in self.apps:
+            self.apps.append("")
+            self.appChoice.Append("", "")
+        results = None
+        if hasattr(api_response, "results"):
+            results = api_response.results
+        else:
+            results = api_response[1]["results"]
+        if len(results):
             num = 1
-            for app in api_response.results:
-                self.appChoice.Append(app.application_name, app.package_name)
-                self.apps.append({app.application_name: app.package_name})
-                self.setGaugeValue(int(num / len(api_response.results) * 100))
+            for app in results:
+                entry = None
+                if hasattr(app, "application_name"):
+                    if app.application_name not in self.appChoice.Items:
+                        self.appChoice.Append(app.application_name, app.package_name)
+                    entry = {app.application_name: app.package_name}
+                else:
+                    if app["app_name"] not in self.appChoice.Items:
+                        self.appChoice.Append(app["app_name"], app["package_name"])
+                    entry = {app["app_name"]: app["package_name"]}
+                if entry not in self.apps:
+                    self.apps.append(entry)
+                self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
         self.setCursorDefault()
+        self.runBtn.Enable(True)
+        self.frame_toolbar.EnableTool(self.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.rftool.Id, True)
+        self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
@@ -1230,7 +1259,12 @@ class NewFrameLayout(wx.Frame):
             and actionSelection > 0
         ):
             # run action on group
-            if actionSelection == Globals.SET_KIOSK and appSelection < 0:
+            if (
+                actionSelection == Globals.SET_KIOSK
+                or actionSelection == Globals.CLEAR_APP_DATA
+            ) and (
+                appSelection < 0 or appLabel == "No available app(s) on this device"
+            ):
                 wx.MessageBox(
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
@@ -1250,7 +1284,10 @@ class NewFrameLayout(wx.Frame):
             )
         elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
             # run action on device
-            if actionSelection == Globals.SET_KIOSK and (
+            if (
+                actionSelection == Globals.SET_KIOSK
+                or actionSelection == Globals.CLEAR_APP_DATA
+            ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
                 wx.MessageBox(
@@ -1612,7 +1649,11 @@ class NewFrameLayout(wx.Frame):
         if event and event.String:
             self.gridActions.SetSelection(0)
 
-            if event and event.String == Globals.GENERAL_ACTIONS[Globals.SET_KIOSK]:
+            if (
+                event
+                and event.String == Globals.GENERAL_ACTIONS[Globals.SET_KIOSK]
+                or event.String == Globals.GENERAL_ACTIONS[Globals.CLEAR_APP_DATA]
+            ):
                 self.appChoice.Enable(True)
             else:
                 self.appChoice.SetSelection(-1)
@@ -1891,6 +1932,8 @@ class NewFrameLayout(wx.Frame):
                 setKiosk(self, device, deviceInfo)
             elif action == Globals.SET_MULTI:
                 setMulti(self, device, deviceInfo)
+            elif action == Globals.CLEAR_APP_DATA:
+                clearAppData(self, device, deviceInfo)
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
 
@@ -1917,7 +1960,7 @@ class NewFrameLayout(wx.Frame):
         if self.deviceChoice.GetSelection() > 0:
             deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
 
-            appList = getdeviceapps(deviceId)
+            appList, _ = getdeviceapps(deviceId)
             if len(appList) == 0:
                 self.appChoice.Append("No available app(s) on this device")
                 self.appChoice.SetSelection(0)

@@ -37,11 +37,13 @@ GENERAL_ACTIONS = [
     "Show - Device Info & Network And Secruity Report",
     "Action -> Set Kiosk Mode",
     "Action -> Set Multi-App Mode",
+    "Action -> Clear App Data"
     # "Action -> Power off Device",
 ]
 SHOW_ALL_AND_GENERATE_REPORT = 1
 SET_KIOSK = 2
 SET_MULTI = 3
+CLEAR_APP_DATA = 4
 # POWER_OFF = 4
 
 GRID_ACTIONS = [
@@ -83,7 +85,7 @@ COMMAND_TYPES = [
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/device/{device_id}"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
-DEVICE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
+DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
