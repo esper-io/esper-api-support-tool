@@ -325,6 +325,7 @@ class NewFrameLayout(wx.Frame):
 
         self.frame_toolbar.AddStretchableSpace()
         self.search = wx.SearchCtrl(self.frame_toolbar)
+        self.search.SetDescriptiveText("Search Grids")
         self.frame_toolbar.AddControl(self.search)
         self.search.ShowCancelButton(True)
 
