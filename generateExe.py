@@ -19,20 +19,37 @@ if __name__ == "__main__":
     if not os.path.exists(dispath):
         os.makedirs(dispath)
 
-    cmd = [
-        "pyinstaller",
-        "--noconfirm",
-        "--onefile",
-        "--windowed",
-        "--icon",
-        curDirPath + "/Images/icon.png",
-        "--clean",
-        "--distpath",
-        dispath,
-        "--add-data",
-        curDirPath + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
-        curDirPath + "/Main.py",
-    ]
+    cmd = []
+    if platform.system() == "Windows":
+        cmd = [
+            "pyinstaller",
+            "--noconfirm",
+            "--onefile",
+            "--windowed",
+            "--clean",
+            "--distpath",
+            dispath,
+            "--add-data",
+            curDirPath
+            + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+            curDirPath + "/Main.py",
+        ]
+    else:
+        cmd = [
+            "pyinstaller",
+            "--noconfirm",
+            "--onefile",
+            "--windowed",
+            "--icon",
+            curDirPath + "/Images/icon.png",
+            "--clean",
+            "--distpath",
+            dispath,
+            "--add-data",
+            curDirPath
+            + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+            curDirPath + "/Main.py",
+        ]
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = test.communicate()
 
