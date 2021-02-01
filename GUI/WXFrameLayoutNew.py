@@ -813,6 +813,7 @@ class NewFrameLayout(wx.Frame):
             self.loadConfigPrompt()
             return
 
+        self.setCursorBusy()
         self.emptyDeviceGrid()
         self.emptyNetworkGrid()
         self.setGaugeValue(0)
@@ -840,6 +841,7 @@ class NewFrameLayout(wx.Frame):
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
         wx.CallLater(3000, self.setGaugeValue, 0)
+        self.setCursorDefault()
 
     def processDeviceCSVUpload(self, data):
         num = 0
@@ -980,6 +982,7 @@ class NewFrameLayout(wx.Frame):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
+        self.setCursorBusy()
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."
