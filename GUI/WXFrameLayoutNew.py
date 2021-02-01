@@ -1006,7 +1006,6 @@ class NewFrameLayout(wx.Frame):
             )
             print(e)
             menuItem.Check(False)
-        self.setCursorDefault()
 
     @api_tool_decorator
     def fillInConfigListing(self, config):
@@ -1041,10 +1040,22 @@ class NewFrameLayout(wx.Frame):
                         "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
                     )
 
-                self.PopulateGroups()
-                self.PopulateApps()
+                groupThread = self.PopulateGroups()
+                appThread = self.PopulateApps()
+                threads = [groupThread, appThread]
+                wxThread.GUIThread(
+                    self,
+                    self.waitForThreadsThenSetCursorDefault,
+                    threads,
+                    passArgAsTuple=True,
+                ).start()
         else:
             wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
+
+    def waitForThreadsThenSetCursorDefault(self, threads):
+        for thread in threads:
+            thread.join()
+        self.setCursorDefault()
 
     @api_tool_decorator
     def PopulateGroups(self):
@@ -1054,9 +1065,10 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         self.gauge.Pulse()
         self.groupChoice.Clear()
-        wxThread.doAPICallInThread(
+        thread = wxThread.doAPICallInThread(
             self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
         )
+        return thread
 
     @api_tool_decorator
     def addGroupsToGroupChoice(self, event):
@@ -1078,7 +1090,6 @@ class NewFrameLayout(wx.Frame):
         self.command.Enable(True)
         self.groupChoice.Enable(True)
         self.actionChoice.Enable(True)
-        self.setCursorDefault()
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
@@ -1164,9 +1175,10 @@ class NewFrameLayout(wx.Frame):
         self.Logging("--->Attemptting to populate apps...")
         self.setCursorBusy()
         self.appChoice.Clear()
-        wxThread.doAPICallInThread(
+        thread = wxThread.doAPICallInThread(
             self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
         )
+        return thread
 
     @api_tool_decorator
     def addAppsToAppChoice(self, event):
