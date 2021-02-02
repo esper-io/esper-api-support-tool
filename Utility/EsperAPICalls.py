@@ -124,6 +124,8 @@ def getdevicetags(deviceid):
 def getdeviceapps(deviceid):
     """Retrieves List Of Installed Apps"""
     applist = []
+    if Globals.frame:
+        Globals.frame.Logging("---> Fetching Apps on Device Through API")
     json_resp = getInfo(Globals.DEVICE_APP_LIST_REQUEST_EXTENSION, deviceid)
     if len(json_resp["results"]):
         for app in json_resp["results"]:

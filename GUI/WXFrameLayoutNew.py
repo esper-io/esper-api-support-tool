@@ -1056,6 +1056,7 @@ class NewFrameLayout(wx.Frame):
         for thread in threads:
             thread.join()
         self.setCursorDefault()
+        self.setGaugeValue(100)
 
     @api_tool_decorator
     def PopulateGroups(self):
@@ -1146,6 +1147,7 @@ class NewFrameLayout(wx.Frame):
                 self.devices.append("")
                 self.deviceChoice.Append("", "")
             num = 1
+            threads = []
             for device in api_response.results:
                 name = "%s %s %s" % (
                     device.hardware_info["manufacturer"],
@@ -1155,16 +1157,19 @@ class NewFrameLayout(wx.Frame):
                 if name and not name in self.devices:
                     self.devices.append(name)
                     self.deviceChoice.Append(name, device.id)
-                    if not self.preferences or self.preferences["enableDevice"] == True:
-                        self.setGaugeValue(int(num / len(api_response.results) * 100))
                     num += 1
-                    wxThread.doAPICallInThread(
+                    thread = wxThread.doAPICallInThread(
                         self,
                         getdeviceapps,
                         args=(device.id),
                         eventType=wxThread.myEVT_APPS,
                         waitForJoin=False,
                     )
+                    threads.append(thread)
+
+            for thread in threads:
+                if not self.preferences or self.preferences["enableDevice"] == True:
+                    self.setGaugeValue(int(num / len(api_response.results) * 100))
         else:
             self.deviceChoice.Append("No Devices Found", "")
             self.deviceChoice.Enable(False)
@@ -1208,7 +1213,7 @@ class NewFrameLayout(wx.Frame):
                     entry = {app["app_name"]: app["package_name"]}
                 if entry not in self.apps:
                     self.apps.append(entry)
-                self.setGaugeValue(int(num / len(results) * 100))
+                # self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
@@ -1978,10 +1983,11 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.appChoice.Clear()
         self.setGaugeValue(0)
+        self.setCursorBusy()
         num = 1
         if self.deviceChoice.GetSelection() > 0:
             deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
-
+            self.runBtn.Enable(False)
             appList, _ = getdeviceapps(deviceId)
             if len(appList) == 0:
                 self.appChoice.Append("No available app(s) on this device")
@@ -1996,10 +2002,13 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         else:
             for app in self.apps:
-                self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
+                if app:
+                    self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
                 self.setGaugeValue(int(num / len(self.apps) * 100))
                 num += 1
+        self.runBtn.Enable(True)
         self.setGaugeValue(100)
+        self.setCursorDefault()
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     def MacReopenApp(self, event):
