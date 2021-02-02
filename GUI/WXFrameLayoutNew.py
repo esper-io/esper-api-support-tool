@@ -1138,6 +1138,7 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, event):
         """ Populate Device Choice """
         api_response = event.GetValue()
+        self.gauge.Pulse()
         if len(api_response.results):
             if not self.preferences or self.preferences["enableDevice"] == True:
                 self.deviceChoice.Enable(True)
@@ -1219,7 +1220,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        # wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1982,7 +1983,7 @@ class NewFrameLayout(wx.Frame):
         """ When the user selects a device showcase apps related to that device """
         self.SetFocus()
         self.appChoice.Clear()
-        self.setGaugeValue(0)
+        self.gauge.Pulse()
         self.setCursorBusy()
         num = 1
         if self.deviceChoice.GetSelection() > 0:
