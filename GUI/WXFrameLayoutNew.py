@@ -1103,6 +1103,7 @@ class NewFrameLayout(wx.Frame):
         self.devices = []
         self.deviceChoice.Clear()
         self.appChoice.Clear()
+        self.setCursorBusy()
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.rtool.Id, False)
@@ -1168,6 +1169,7 @@ class NewFrameLayout(wx.Frame):
             self.deviceChoice.Append("No Devices Found", "")
             self.deviceChoice.Enable(False)
             self.Logging("---> No Devices found in group")
+        self.setCursorDefault()
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1208,7 +1210,6 @@ class NewFrameLayout(wx.Frame):
                     self.apps.append(entry)
                 self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
-        self.setCursorDefault()
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.rftool.Id, True)
