@@ -269,7 +269,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.AddEndpoint, fileOpenAuth)
         self.Bind(wx.EVT_MENU, self.onUploadCSV, fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.OnQuit, fileItem)
-        self.Bind(wx.EVT_MENU, self.onSave, fileSave)
+        self.Bind(wx.EVT_MENU, self.onSaveBoth, fileSave)
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.onClone, self.clone)
