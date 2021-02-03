@@ -769,6 +769,7 @@ class NewFrameLayout(wx.Frame):
                 headers = []
                 headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
                 headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
+                headers.remove("Device Name")
 
                 gridData = []
                 gridData.append(headers)

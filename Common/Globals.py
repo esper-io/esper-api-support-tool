@@ -98,7 +98,7 @@ CSV_TAG_ATTR_NAME = {
     "Android Version": "androidVersion",
     "Status": "Status",
     "Mode": "Mode",
-    "Serial": "Serial",
+    "Serial Number": "Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
