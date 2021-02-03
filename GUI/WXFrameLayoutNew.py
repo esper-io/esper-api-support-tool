@@ -739,7 +739,7 @@ class NewFrameLayout(wx.Frame):
         if self.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
-                "Save Device Info CSV as...",
+                "Save Device and Network Info CSV as...",
                 os.getcwd(),
                 "",
                 "*.csv",
