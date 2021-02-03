@@ -1243,7 +1243,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onRun(self, event):
         """ Try to run the specifed Action on a group or device """
-        if self.isBusy:
+        if self.isBusy or not self.runBtn.IsEnabled():
             return
         self.setCursorBusy()
         self.isRunning = True
