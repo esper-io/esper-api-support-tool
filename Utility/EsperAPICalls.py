@@ -124,8 +124,6 @@ def getdevicetags(deviceid):
 def getdeviceapps(deviceid):
     """Retrieves List Of Installed Apps"""
     applist = []
-    if Globals.frame:
-        Globals.frame.Logging("---> Fetching Apps on Device Through API")
     json_resp = getInfo(Globals.DEVICE_APP_LIST_REQUEST_EXTENSION, deviceid)
     if len(json_resp["results"]):
         for app in json_resp["results"]:
@@ -950,33 +948,34 @@ def clearAppData(frame, device):
                     cmdArgs["is_g_play"] = False
                 break
 
-        reqData = {
-            "command_type": "DEVICE",
-            "command_args": cmdArgs,
-            "devices": [device.id],
-            "groups": [],
-            "device_type": "all",
-            "command": "CLEAR_APP_DATA",
-        }
-        resp = requests.post(url, headers=headers, json=reqData)
-        json_resp = resp.json()
-        if Globals.PRINT_RESPONSES or resp.status_code > 300:
-            prettyReponse = "Response {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
-            print(prettyReponse)
-            ApiToolLog().LogResponse(prettyReponse)
-        if resp.status_code < 300:
-            frame.Logging(
-                "---> Clear %s App Data Command has been sent to %s"
-                % (cmdArgs["application_name"], device.alias_name)
-            )
+        if cmdArgs:
+            reqData = {
+                "command_type": "DEVICE",
+                "command_args": cmdArgs,
+                "devices": [device.id],
+                "groups": [],
+                "device_type": "all",
+                "command": "CLEAR_APP_DATA",
+            }
+            resp = requests.post(url, headers=headers, json=reqData)
+            json_resp = resp.json()
+            if Globals.PRINT_RESPONSES or resp.status_code > 300:
+                prettyReponse = "Response {result}".format(
+                    result=json.dumps(json_resp, indent=4, sort_keys=True)
+                )
+                print(prettyReponse)
+                ApiToolLog().LogResponse(prettyReponse)
+            if resp.status_code < 300:
+                frame.Logging(
+                    "---> Clear %s App Data Command has been sent to %s"
+                    % (cmdArgs["application_name"], device.alias_name)
+                )
         else:
             frame.Logging(
                 "ERROR: Failed to send Clear %s App Data Command to %s"
-                % (cmdArgs["application_name"], device.alias_name)
+                % (frame.appChoice.GetValue(), device.alias_name)
             )
-    except exception as e:
+    except Exception as e:
         ApiToolLog().LogError(e)
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (device.alias_name)

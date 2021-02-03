@@ -89,6 +89,7 @@ class NewFrameLayout(wx.Frame):
         self.grid_2_contents = []
         self.devices = []
         self.apps = []
+        self.isBusy = False
         self.isRunning = False
         self.isRunningUpdate = False
         self.isForceUpdate = False
@@ -153,6 +154,8 @@ class NewFrameLayout(wx.Frame):
         self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
         self.panel_9 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
+
+        self.runBtn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
         self.configList.SetFont(
             wx.Font(
@@ -967,6 +970,7 @@ class NewFrameLayout(wx.Frame):
     def setCursorDefault(self):
         """ Set cursor icon to default state """
         try:
+            self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
         except:
@@ -974,6 +978,7 @@ class NewFrameLayout(wx.Frame):
 
     def setCursorBusy(self):
         """ Set cursor icon to busy state """
+        self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
 
@@ -1238,6 +1243,8 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onRun(self, event):
         """ Try to run the specifed Action on a group or device """
+        if self.isBusy:
+            return
         self.setCursorBusy()
         self.isRunning = True
         self.gauge.Pulse()
@@ -1972,11 +1979,6 @@ class NewFrameLayout(wx.Frame):
                 clearAppData(self, device)
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
-        if action == Globals.CLEAR_APP_DATA:
-            wx.MessageBox(
-                "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
-                style=wx.ICON_INFORMATION,
-            )
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
@@ -1990,6 +1992,11 @@ class NewFrameLayout(wx.Frame):
                     self.checkConsole = None
                 except Exception as e:
                     print(e)
+        if action == Globals.CLEAR_APP_DATA:
+            wx.MessageBox(
+                "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
+                style=wx.ICON_INFORMATION,
+            )
 
     @api_tool_decorator
     def onDeviceSelection(self, event):
@@ -2002,7 +2009,9 @@ class NewFrameLayout(wx.Frame):
         if self.deviceChoice.GetSelection() > 0:
             deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
             self.runBtn.Enable(False)
+            self.Logging("---> Fetching Apps on Device Through API")
             appList, _ = getdeviceapps(deviceId)
+            self.Logging("---> Finished Fetching Apps on Device Through API")
             if len(appList) == 0:
                 self.appChoice.Append("No available app(s) on this device")
                 self.appChoice.SetSelection(0)
