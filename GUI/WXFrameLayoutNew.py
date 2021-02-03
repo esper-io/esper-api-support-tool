@@ -176,7 +176,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
         self.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
-        self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
+        # self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -195,11 +195,8 @@ class NewFrameLayout(wx.Frame):
         self.recent = wx.Menu()
 
         fileMenu.Append(wx.ID_SEPARATOR)
-        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device Info As\tCtrl+S")
+        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
         fileSave = fileMenu.Append(fs)
-
-        fsa = wx.MenuItem(fileMenu, wx.ID_SAVEAS, "&Save Network Info As\tCtrl+Shift+S")
-        fileSaveAs = fileMenu.Append(fsa)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
@@ -273,13 +270,16 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onUploadCSV, fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.OnQuit, fileItem)
         self.Bind(wx.EVT_MENU, self.onSave, fileSave)
-        self.Bind(wx.EVT_MENU, self.onSaveAs, fileSaveAs)
         self.Bind(wx.EVT_MENU, self.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.onPref, self.pref)
         self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
         self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
+        self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
+        self.grid_1.GetGridWindow().Bind(
+            gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange
+        )
 
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
@@ -736,12 +736,6 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onSaveBoth(self, event):
-        self.onSave(event)
-        self.onSaveAs(event)
-
-    @api_tool_decorator
-    def onSave(self, event):
-        """Sends Device Info To Frame For Logging"""
         if self.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
@@ -756,58 +750,62 @@ class NewFrameLayout(wx.Frame):
             dlg.Destroy()
 
             if result == wx.ID_OK:  # Save button was pressed
-                self.save(inFile, self.grid_1, Globals.CSV_TAG_ATTR_NAME.keys())
+                gridDeviceData = []
+                for device in self.grid_1_contents:
+                    tempDict = {}
+                    tempDict.update(device)
+                    deviceListing = list(
+                        filter(
+                            lambda x: (
+                                x["Device Name"]
+                                == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
+                            ),
+                            self.grid_2_contents,
+                        )
+                    )
+                    if deviceListing:
+                        tempDict.update(deviceListing[0])
+                    gridDeviceData.append(tempDict)
+                headers = []
+                headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
+                headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
+
+                gridData = []
+                gridData.append(headers)
+
+                createNewFile(inFile)
+
+                for deviceData in gridDeviceData:
+                    rowValues = []
+                    for header in headers:
+                        value = ""
+                        if header in deviceData:
+                            value = deviceData[header]
+                        else:
+                            if header in Globals.CSV_TAG_ATTR_NAME.keys():
+                                if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
+                                    value = deviceData[
+                                        Globals.CSV_TAG_ATTR_NAME[header]
+                                    ]
+                            if header in Globals.CSV_NETWORK_ATTR_NAME.keys():
+                                if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
+                                    value = deviceData[
+                                        Globals.CSV_NETWORK_ATTR_NAME[header]
+                                    ]
+                        rowValues.append(value)
+                    gridData.append(rowValues)
+
+                with open(inFile, "w", newline="") as csvfile:
+                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                    writer.writerows(gridData)
+
+                self.Logging("---> Info saved to csv file - " + inFile)
+
                 return True
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
                 return False
-
-    @api_tool_decorator
-    def onSaveAs(self, event):
-        """ Save Network Grid data """
-        if self.grid_2.GetNumberRows() > 0:
-            dlg = wx.FileDialog(
-                self,
-                "Save Network Info CSV as...",
-                os.getcwd(),
-                "",
-                "*.csv",
-                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-            )
-            result = dlg.ShowModal()
-            inFile = dlg.GetPath()
-            dlg.Destroy()
-
-            if result == wx.ID_OK:  # Save button was pressed
-                self.save(inFile, self.grid_2, Globals.CSV_NETWORK_ATTR_NAME.keys())
-                return True
-            elif (
-                result == wx.ID_CANCEL
-            ):  # Either the cancel button was pressed or the window was closed
-                return False
-
-    def save(self, inFile, grid, header):
-        """ Save Grid data into CSV file """
-        numRows = grid.GetNumberRows()
-        numCols = grid.GetNumberCols()
-        gridData = []
-        gridData.append(header)
-
-        createNewFile(inFile)
-
-        for row in range(numRows):
-            rowValues = []
-            for col in range(numCols):
-                value = grid.GetCellValue(row, col)
-                rowValues.append(value)
-            gridData.append(rowValues)
-
-        with open(inFile, "w", newline="") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
-
-        self.Logging("---> Info saved to csv file - " + inFile)
 
     @api_tool_decorator
     def onUploadCSV(self, event):
@@ -1470,6 +1468,7 @@ class NewFrameLayout(wx.Frame):
                         else:
                             self.addDeviceToDeviceGrid(device_info, isUpdate=False)
                             break
+                        deviceListing.update(device)
                         for attribute in Globals.CSV_TAG_ATTR_NAME:
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(
                                 attribute
@@ -1490,6 +1489,13 @@ class NewFrameLayout(wx.Frame):
                             ):
                                 self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
                                 self.setStatusCellColor(fecthValue, rowNum, indx)
+                                self.setAlteredCellColor(
+                                    self.grid_1,
+                                    device_info,
+                                    rowNum,
+                                    attribute,
+                                    indx,
+                                )
                                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
                                     fecthValue
                                 )
@@ -1497,18 +1503,20 @@ class NewFrameLayout(wx.Frame):
                                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
                                     cellValue
                                 )
-                        deviceListing.update(device)
                         break
             if not found:
                 self.addDeviceToDeviceGrid(device_info, isUpdate=False)
         else:
             self.grid_1.AppendRows(1)
+            esperName = ""
             for attribute in Globals.CSV_TAG_ATTR_NAME:
                 value = (
                     device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
                     if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
                     else ""
                 )
+                if "Esper Name" == attribute:
+                    esperName = value
                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
                 self.grid_1.SetCellValue(
                     self.grid_1.GetNumberRows() - 1, num, str(value)
@@ -1520,8 +1528,21 @@ class NewFrameLayout(wx.Frame):
                     self.grid_1.GetNumberRows() - 1, num, isEditable
                 )
                 self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+                self.setAlteredCellColor(
+                    self.grid_1,
+                    device_info,
+                    self.grid_1.GetNumberRows() - 1,
+                    attribute,
+                    num,
+                )
                 num += 1
-            if device not in self.grid_1_contents:
+            deviceListing = list(
+                filter(
+                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                    self.grid_1_contents,
+                )
+            )
+            if device not in self.grid_1_contents and not deviceListing:
                 self.grid_1_contents.append(device)
         self.grid_1.AutoSizeColumns()
 
@@ -1536,6 +1557,15 @@ class NewFrameLayout(wx.Frame):
             self.grid_1.SetCellBackgroundColour(
                 rowNum, colNum, wx.Colour(229, 248, 229)
             )
+
+    def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
+        light_blue = wx.Colour(204, 255, 255)
+        if attribute == "Alias" and "OriginalAlias" in device_info:
+            # grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            pass
+        if attribute == "Tags" and "OriginalTags" in device_info:
+            # grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            pass
 
     @api_tool_decorator
     def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
@@ -2500,7 +2530,7 @@ class NewFrameLayout(wx.Frame):
             queryString = event
         if hasattr(event, "EventType") and (
             (wx.EVT_TEXT.typeId == event.EventType and not queryString)
-            or wx.EVT_SEARCH.typeId == event.EventType
+            or (wx.EVT_SEARCH.typeId == event.EventType and not queryString)
             or wx.EVT_SEARCH_CANCEL.typeId == event.EventType
         ):
             white = wx.Colour(255, 255, 255)
@@ -2516,6 +2546,8 @@ class NewFrameLayout(wx.Frame):
 
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
+        white = wx.Colour(255, 255, 255)
+        light_yellow = wx.Colour(255, 255, 224)
         statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
         for rowNum in range(grid.GetNumberRows()):
             if rowNum < grid.GetNumberRows():
@@ -2528,6 +2560,89 @@ class NewFrameLayout(wx.Frame):
                 ]
                 if match or applyAll:
                     for colNum in range(grid.GetNumberCols()):
-                        if colNum < grid.GetNumberCols() and colNum != statusIndex:
+                        if (
+                            colNum < grid.GetNumberCols()
+                            and colNum != statusIndex
+                            and (
+                                grid.GetCellBackgroundColour(rowNum, colNum) == white
+                                or (
+                                    applyAll
+                                    and grid.GetCellBackgroundColour(rowNum, colNum)
+                                    == light_yellow
+                                )
+                            )
+                        ):
                             grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
         grid.ForceRefresh()
+
+    def onGridMotion(self, event):
+        indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
+        indx2 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
+        grid_win = self.grid_1.GetTargetWindow()
+
+        x, y = self.grid_1.CalcUnscrolledPosition(event.GetX(), event.GetY())
+        coords = self.grid_1.XYToCell(x, y)
+        col = coords[1]
+
+        if col == indx1 or col == indx2:
+            grid_win.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        else:
+            grid_win.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+        event.Skip()
+
+    def onCellChange(self, event):
+        light_blue = wx.Colour(204, 255, 255)
+        white = wx.Colour(255, 255, 255)
+        indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
+        indx2 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
+        x, y = self.grid_1.GetGridCursorCoords()
+        esperName = self.grid_1.GetCellValue(x, 0)
+        deviceListing = list(
+            filter(
+                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                self.grid_1_contents,
+            )
+        )
+        if deviceListing:
+            if (
+                (
+                    y == indx2
+                    and not "OriginalAlias" in deviceListing[0]
+                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Alias"]]
+                    != self.grid_1.GetCellValue(x, y)
+                )
+                or (
+                    y == indx2
+                    and "OriginalAlias" in deviceListing[0]
+                    and deviceListing[0]["OriginalAlias"]
+                    != self.grid_1.GetCellValue(x, y)
+                )
+                or (
+                    y == indx1
+                    and not "OriginalTags" in deviceListing[0]
+                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Tags"]]
+                    != self.grid_1.GetCellValue(x, y)
+                )
+                or (
+                    y == indx1
+                    and "OriginalTags" in deviceListing[0]
+                    and deviceListing[0]["OriginalTags"]
+                    != self.grid_1.GetCellValue(x, y)
+                )
+            ):
+                self.grid_1.SetCellBackgroundColour(x, y, light_blue)
+                if y == indx2:
+                    deviceListing[0][
+                        Globals.CSV_TAG_ATTR_NAME["Alias"]
+                    ] = self.grid_1.GetCellValue(x, y)
+                if y == indx1:
+                    deviceListing[0][
+                        Globals.CSV_TAG_ATTR_NAME["Tags"]
+                    ] = self.grid_1.GetCellValue(x, y)
+                if y == indx2 and not "OriginalAlias" in deviceListing[0]:
+                    deviceListing[0]["OriginalAlias"] = event.GetString()
+                if y == indx1 and not "OriginalTags" in deviceListing[0]:
+                    deviceListing[0]["OriginalTags"] = event.GetString()
+            else:
+                self.grid_1.SetCellBackgroundColour(x, y, white)
+        event.Skip()
