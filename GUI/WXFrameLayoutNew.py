@@ -982,6 +982,9 @@ class NewFrameLayout(wx.Frame):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
+        self.groupChoice.Clear()
+        self.deviceChoice.Clear()
+        self.appChoice.Clear()
         self.setCursorBusy()
         try:
             self.Logging(
@@ -996,7 +999,15 @@ class NewFrameLayout(wx.Frame):
                 else:
                     item.Check(True)
 
-            self.fillInConfigListing(selectedConfig)
+            filledIn = False
+            for _ in range(Globals.MAX_RETRY):
+                if not filledIn:
+                    filledIn = self.fillInConfigListing(selectedConfig)
+                else:
+                    break
+
+            if not filledIn:
+                raise Exception("Failed to load configuration")
 
             self.groupChoice.Enable(True)
             self.actionChoice.Enable(True)
@@ -1049,8 +1060,10 @@ class NewFrameLayout(wx.Frame):
                     threads,
                     passArgAsTuple=True,
                 ).start()
+                return True
         else:
             wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
+            return False
 
     def waitForThreadsThenSetCursorDefault(self, threads):
         for thread in threads:
