@@ -2135,11 +2135,12 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def readAuthCSV(self):
-        with open(Globals.csv_auth_path, "r") as csvFile:
-            reader = csv.reader(
-                csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-            )
-            self.auth_data = list(reader)
+        if os.path.exists(Globals.csv_auth_path):
+            with open(Globals.csv_auth_path, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                self.auth_data = list(reader)
 
     @api_tool_decorator
     def loadPref(self):
@@ -2154,6 +2155,7 @@ class NewFrameLayout(wx.Frame):
                 writer.writerow(
                     ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
                 )
+            self.AddEndpoint(None)
         self.PopulateConfig()
 
         if (
