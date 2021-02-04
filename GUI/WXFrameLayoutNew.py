@@ -118,7 +118,7 @@ class NewFrameLayout(wx.Frame):
             self.panel_7,
             wx.ID_ANY,
             choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.actionChoice = wx.ComboBox(
             self.panel_7,
@@ -130,13 +130,13 @@ class NewFrameLayout(wx.Frame):
             self.panel_7,
             wx.ID_ANY,
             choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.appChoice = wx.ComboBox(
             self.panel_7,
             wx.ID_ANY,
             choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.gridActions = wx.ComboBox(
             self.panel_7,
@@ -665,12 +665,14 @@ class NewFrameLayout(wx.Frame):
                         csvRow = dialog.getCSVRowEntry()
                         isValid = validateConfiguration(host, entId, key, prefix=prefix)
                         if isValid:
-                            matchingConfig = list(
-                                filter(
-                                    lambda x: x[2] == entId or x[0] == name,
-                                    self.auth_data,
+                            matchingConfig = []
+                            if self.auth_data:
+                                matchingConfig = list(
+                                    filter(
+                                        lambda x: x[2] == entId or x[0] == name,
+                                        self.auth_data,
+                                    )
                                 )
-                            )
                             if (
                                 not self.auth_data or not csvRow in self.auth_data
                             ) and not matchingConfig:
