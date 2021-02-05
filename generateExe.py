@@ -53,14 +53,20 @@ if __name__ == "__main__":
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = test.communicate()
 
-    if os.path.exists(dispath + "/Main.exe"):
-        if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
-            os.remove(dispath + "/EsperApiSupportTool.exe")
-        os.rename(dispath + "/Main.exe", dispath + "/EsperApiSupportTool.exe")
-    elif os.path.exists(dispath + "/Main.app"):
-        if os.path.exists(dispath + "/EsperApiSupportTool.app"):
-            os.remove(dispath + "/EsperApiSupportTool.app")
-        os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
+    try:
+        if os.path.exists(dispath + "/Main.exe"):
+            if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
+                os.remove(dispath + "/EsperApiSupportTool.exe")
+            os.rename(dispath + "/Main.exe", dispath + "/EsperApiSupportTool.exe")
+        elif os.path.exists(dispath + "/Main.app"):
+            if os.path.exists(dispath + "/EsperApiSupportTool.app"):
+                if os.path.isfile(dispath + "/EsperApiSupportTool.app"):
+                    os.remove(dispath + "/EsperApiSupportTool.app")
+                else:
+                    os.rmdir(dispath + "/EsperApiSupportTool.app")
+            os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
+    except:
+        pass
 
     if output:
         output = output.decode("utf-8")
