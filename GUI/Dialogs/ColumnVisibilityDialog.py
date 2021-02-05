@@ -30,7 +30,7 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
 
         self.Bind(wx.EVT_LISTBOX, self.OnSelection)
-        self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+        # self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         colNum = 0
         for _ in choiceData:

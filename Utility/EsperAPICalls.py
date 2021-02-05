@@ -922,17 +922,41 @@ def powerOffDevice(frame, device, device_info):
     pass
 
 
-def clearAppData(frame, device):
+def postEsperCommand(command_data, useV0=True):
     json_resp = None
+    resp = None
     try:
         headers = {
             "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
             "Content-Type": "application/json",
         }
-        url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
-            Globals.configuration.host.split("-api")[0].replace("https://", ""),
-            Globals.enterprise_id,
-        )
+        url = ""
+        if useV0:
+            url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
+                Globals.configuration.host.split("-api")[0].replace("https://", ""),
+                Globals.enterprise_id,
+            )
+        else:
+            url = "https://%s-api.esper.cloud/api/enterprise/%s/command/" % (
+                Globals.configuration.host.split("-api")[0].replace("https://", ""),
+                Globals.enterprise_id,
+            )
+        resp = requests.post(url, headers=headers, json=command_data)
+        json_resp = resp.json()
+        if Globals.PRINT_RESPONSES or resp.status_code > 300:
+            prettyReponse = "Response {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
+            print(prettyReponse)
+            ApiToolLog().LogResponse(prettyReponse)
+    except Exception as e:
+        ApiToolLog().LogError(e)
+    return resp, json_resp
+
+
+def clearAppData(frame, device):
+    json_resp = None
+    try:
         appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
         _, apps = getdeviceapps(device.id)
         cmdArgs = {}
@@ -957,14 +981,15 @@ def clearAppData(frame, device):
                 "device_type": "all",
                 "command": "CLEAR_APP_DATA",
             }
-            resp = requests.post(url, headers=headers, json=reqData)
-            json_resp = resp.json()
+            resp, json_resp = postEsperCommand(reqData)
             if Globals.PRINT_RESPONSES or resp.status_code > 300:
                 prettyReponse = "Response {result}".format(
                     result=json.dumps(json_resp, indent=4, sort_keys=True)
                 )
                 print(prettyReponse)
                 ApiToolLog().LogResponse(prettyReponse)
+            if resp.status_code > 300:
+                postEventToFrame(wxThread.myEVT_ON_FAILED, device)
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
@@ -980,4 +1005,5 @@ def clearAppData(frame, device):
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (device.alias_name)
         )
+        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
     return json_resp

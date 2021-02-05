@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
+from Utility.ApiToolLogging import ApiToolLog
+
 import Common.Globals as Globals
 import wx
 
@@ -15,5 +17,8 @@ class MyApp(wx.App):
 
 if __name__ == "__main__":
     """Launches Main App"""
-    Globals.app = MyApp(0)
-    Globals.app.MainLoop()
+    try:
+        Globals.app = MyApp(0)
+        Globals.app.MainLoop()
+    except Exception as e:
+        ApiToolLog().LogError(e)
