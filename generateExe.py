@@ -63,9 +63,13 @@ if __name__ == "__main__":
                 if os.path.isfile(dispath + "/EsperApiSupportTool.app"):
                     os.remove(dispath + "/EsperApiSupportTool.app")
                 else:
+                    os.removedirs
                     os.rmdir(dispath + "/EsperApiSupportTool.app")
             os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
     except:
+        print(
+            "FAILED to remove old executeable or rename the newly generated executable"
+        )
         pass
 
     if output:
