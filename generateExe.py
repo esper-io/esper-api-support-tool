@@ -4,6 +4,7 @@ import subprocess
 import pathlib
 import platform
 import os
+import shutil
 
 from Utility.Resource import isModuleInstalled, installRequiredModules
 
@@ -63,8 +64,7 @@ if __name__ == "__main__":
                 if os.path.isfile(dispath + "/EsperApiSupportTool.app"):
                     os.remove(dispath + "/EsperApiSupportTool.app")
                 else:
-                    os.removedirs
-                    os.rmdir(dispath + "/EsperApiSupportTool.app")
+                    shutil.rmtree(dispath + "/EsperApiSupportTool.app")
             os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
     except:
         print(
