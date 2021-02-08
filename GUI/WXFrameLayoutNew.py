@@ -115,10 +115,7 @@ class NewFrameLayout(wx.Frame):
         )
         self.panel_7 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.groupChoice = wx.ComboBox(
-            self.panel_7,
-            wx.ID_ANY,
-            choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.actionChoice = wx.ComboBox(
             self.panel_7,
@@ -127,16 +124,10 @@ class NewFrameLayout(wx.Frame):
             choices=Globals.GENERAL_ACTIONS,
         )
         self.deviceChoice = wx.ComboBox(
-            self.panel_7,
-            wx.ID_ANY,
-            choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.appChoice = wx.ComboBox(
-            self.panel_7,
-            wx.ID_ANY,
-            choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         self.gridActions = wx.ComboBox(
             self.panel_7,
@@ -176,7 +167,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions)
         self.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
-        # self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
+        self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -277,9 +268,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onDeviceColumn, self.deviceColumns)
         self.Bind(wx.EVT_MENU, self.onNetworkColumn, self.networkColumns)
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
-        self.grid_1.GetGridWindow().Bind(
-            gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange
-        )
 
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
@@ -1095,6 +1083,10 @@ class NewFrameLayout(wx.Frame):
         """ Populate Group Choice """
         results = event.GetValue().results
         num = 1
+        # results = sorted(
+        #    results,
+        #    key=lambda i: i.name,
+        # )
         if len(results):
             for group in results:
                 self.groupChoice.Append(group.name, group.id)
@@ -1168,6 +1160,10 @@ class NewFrameLayout(wx.Frame):
                 self.deviceChoice.Append("", "")
             num = 1
             threads = []
+            # api_response.results = sorted(
+            #    api_response.results,
+            #    key=lambda i: i.device_name,
+            # )
             for device in api_response.results:
                 name = "%s %s %s" % (
                     device.hardware_info["manufacturer"],
@@ -1219,6 +1215,16 @@ class NewFrameLayout(wx.Frame):
             results = api_response.results
         else:
             results = api_response[1]["results"]
+        """if hasattr(results[0], "application_name"):
+            results = sorted(
+                results,
+                key=lambda i: i.application_name,
+            )
+        else:
+            results = sorted(
+                results,
+                key=lambda i: i["app_name"],
+            )"""
         if len(results):
             num = 1
             for app in results:
@@ -1256,10 +1262,6 @@ class NewFrameLayout(wx.Frame):
 
         self.grid_1.UnsetSortingColumn()
         self.grid_2.UnsetSortingColumn()
-
-        self.grid_1_contents = []
-        self.grid_2_contents = []
-        self.userEdited = []
 
         groupSelection = self.groupChoice.GetSelection()
         deviceSelection = self.deviceChoice.GetSelection()
@@ -1318,6 +1320,9 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on group, %s.'
                 % (actionLabel, groupLabel)
             )
+            self.grid_1_contents = []
+            self.grid_2_contents = []
+            self.userEdited = []
             Globals.LAST_DEVICE_ID = None
             Globals.LAST_GROUP_ID = groupSelection
             TakeAction(
@@ -1343,6 +1348,9 @@ class NewFrameLayout(wx.Frame):
                 '---> Attempting to run action, "%s", on device, %s.'
                 % (actionLabel, deviceLabel)
             )
+            self.grid_1_contents = []
+            self.grid_2_contents = []
+            self.userEdited = []
             Globals.LAST_DEVICE_ID = deviceSelection
             Globals.LAST_GROUP_ID = None
             TakeAction(
@@ -1374,6 +1382,7 @@ class NewFrameLayout(wx.Frame):
                         bgColor=wx.Colour(255, 255, 255),
                         applyAll=True,
                     )
+                    self.search.SetValue("")
                     iterateThroughGridRows(self, gridSelection)
             else:
                 wx.MessageBox(
@@ -1704,12 +1713,20 @@ class NewFrameLayout(wx.Frame):
     def getDeviceAliasFromGrid(self):
         """ Return a list of Aliases from the Grid """
         aliasList = {}
+        indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
-                indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
-                alias = self.grid_1.GetCellValue(rowNum, indx)
-                aliasList[esperName] = alias
+                if esperName not in aliasList.keys():
+                    alias = self.grid_1.GetCellValue(rowNum, indx)
+                    aliasList[esperName] = alias
+        return aliasList
+
+    def getDeviceAliasFromList(self):
+        aliasList = {}
+        for device in self.grid_1_contents:
+            if device["EsperName"] not in aliasList:
+                aliasList[device["EsperName"]] = device["Alias"]
         return aliasList
 
     def onGridActionSelection(self, event):
@@ -1739,7 +1756,10 @@ class NewFrameLayout(wx.Frame):
     def onCellChange(self, event):
         """ Try to Auto size Columns on change """
         self.userEdited.append((event.Row, event.Col))
-        self.grid_1.AutoSizeColumns()
+        editor = self.grid_1.GetCellEditor(event.Row, event.Col)
+        if not editor.IsCreated():
+            self.grid_1.AutoSizeColumns()
+        self.onCellEdit(event)
 
     @api_tool_decorator
     def updateTagCell(self, name, tags=None):
@@ -2222,11 +2242,19 @@ class NewFrameLayout(wx.Frame):
         failed = event.GetValue()
         red = wx.Colour(255, 0, 0)
         errorBg = wx.Colour(255, 235, 234)
+        orange = wx.Colour(255, 165, 0)
+        warnBg = wx.Colour(255, 241, 216)
         if type(failed) == list:
             for device in failed:
-                self.applyTextColorToDevice(device, red, bgColor=errorBg)
+                if "Queued" in device:
+                    self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
+                else:
+                    self.applyTextColorToDevice(device, red, bgColor=errorBg)
         elif failed:
-            self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+            if "Queued" in failed:
+                self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
+            else:
+                self.applyTextColorToDevice(failed, red, bgColor=errorBg)
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
@@ -2595,7 +2623,7 @@ class NewFrameLayout(wx.Frame):
             grid_win.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
         event.Skip()
 
-    def onCellChange(self, event):
+    def onCellEdit(self, event):
         light_blue = wx.Colour(204, 255, 255)
         white = wx.Colour(255, 255, 255)
         indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")

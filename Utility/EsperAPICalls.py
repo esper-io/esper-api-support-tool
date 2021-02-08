@@ -599,6 +599,7 @@ def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
     failed = False
+    warning = False
     if deviceInfo["Mode"] == "Multi":
         if deviceInfo["Status"] == "Online":
             appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
@@ -610,6 +611,9 @@ def setKiosk(frame, device, deviceInfo):
             status = toggleKioskMode(frame, device.id, appToUse, True)
             if "Success" in str(status):
                 logString = logString + " <success>"
+            elif "Queued" in str(status):
+                logString = logString + " <failed, possibly offline>"
+                warning = True
             else:
                 logString = logString + " <failed>"
                 failed = True
@@ -620,6 +624,8 @@ def setKiosk(frame, device, deviceInfo):
     postEventToFrame(wxThread.myEVT_LOG, logString)
     if failed:
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
+    if warning:
+        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
 
 
 def setMulti(frame, device, deviceInfo):
@@ -629,11 +635,15 @@ def setMulti(frame, device, deviceInfo):
         + " ,->Multi->"
     )
     failed = False
+    warning = False
     if deviceInfo["Mode"] == "Kiosk":
         if deviceInfo["Status"] == "Online":
             status = toggleKioskMode(frame, device.id, {}, False)
             if "Success" in str(status):
                 logString = logString + " <success>"
+            elif "Queued" in str(status):
+                logString = logString + " <failed, possibly offline>"
+                warning = True
             else:
                 logString = logString + " <failed>"
                 failed = True
@@ -644,6 +654,8 @@ def setMulti(frame, device, deviceInfo):
     postEventToFrame(wxThread.myEVT_LOG, logString)
     if failed:
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
+    if warning:
+        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
 
 
 def modifyDevice(frame):
@@ -681,7 +693,7 @@ def executeDeviceModification(frame):
     tagsFromGrid = frame.getDeviceTagsFromGrid()
     num = 1
     changeSucceeded = 0
-    aliasDic = frame.getDeviceAliasFromGrid()
+    aliasDic = frame.getDeviceAliasFromList()
     logString = ""
     succeeded = 0
     numNewName = 0
@@ -716,7 +728,7 @@ def executeDeviceModification(frame):
                         succeeded += 1
                     elif "Queued" in str(status):
                         logString = logString + " <failed, possibly offline>"
-                        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+                        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
                     else:
                         logString = logString + " <failed>"
                         postEventToFrame(wxThread.myEVT_ON_FAILED, device)
