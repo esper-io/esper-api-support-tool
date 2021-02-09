@@ -1084,8 +1084,8 @@ class NewFrameLayout(wx.Frame):
         results = event.GetValue().results
         num = 1
         # results = sorted(
-        #    results,
-        #    key=lambda i: i.name,
+        #     results,
+        #     key=lambda i: i.name.lower(),
         # )
         if len(results):
             for group in results:
@@ -1161,8 +1161,8 @@ class NewFrameLayout(wx.Frame):
             num = 1
             threads = []
             # api_response.results = sorted(
-            #    api_response.results,
-            #    key=lambda i: i.device_name,
+            #     api_response.results,
+            #     key=lambda i: i.device_name.lower(),
             # )
             for device in api_response.results:
                 name = "%s %s %s" % (
@@ -1215,16 +1215,16 @@ class NewFrameLayout(wx.Frame):
             results = api_response.results
         else:
             results = api_response[1]["results"]
-        """if hasattr(results[0], "application_name"):
-            results = sorted(
-                results,
-                key=lambda i: i.application_name,
-            )
-        else:
-            results = sorted(
-                results,
-                key=lambda i: i["app_name"],
-            )"""
+        # if hasattr(results[0], "application_name"):
+        #     results = sorted(
+        #         results,
+        #         key=lambda i: i.application_name.lower(),
+        #     )
+        # else:
+        #     results = sorted(
+        #         results,
+        #         key=lambda i: i["app_name"].lower(),
+        #     )
         if len(results):
             num = 1
             for app in results:
