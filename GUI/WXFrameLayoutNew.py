@@ -707,6 +707,8 @@ class NewFrameLayout(wx.Frame):
                     self.readAuthCSV()
                     if self.auth_data:
                         isValid = True
+                    if not self.IsShown():
+                        self.OnQuit(None)
 
     @api_tool_decorator
     def OnQuit(self, e):
@@ -719,8 +721,9 @@ class NewFrameLayout(wx.Frame):
         if self.prefDialog:
             self.prefDialog.Close()
             self.prefDialog.Destroy()
-        if e.EventType != wx.EVT_CLOSE.typeId:
-            self.Close()
+        if e:
+            if e.EventType != wx.EVT_CLOSE.typeId:
+                self.Close()
         self.savePrefs(self.prefDialog)
         self.Destroy()
 
@@ -2177,6 +2180,9 @@ class NewFrameLayout(wx.Frame):
                 )
             self.AddEndpoint(None)
         self.PopulateConfig()
+
+        if self.kill:
+            return
 
         if (
             os.path.isfile(self.prefPath)
