@@ -415,6 +415,9 @@ class NewFrameLayout(wx.Frame):
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
 
+        if self.kill:
+            return
+
         self.frame_toolbar.Realize()
         self.panel_1.SetMinSize((400, 900))
         self.panel_2.SetMinSize((2000, 800))
@@ -708,6 +711,7 @@ class NewFrameLayout(wx.Frame):
                     if self.auth_data:
                         isValid = True
                     if not self.IsShown():
+                        isValid = True
                         self.OnQuit(None)
 
     @api_tool_decorator
@@ -2172,6 +2176,8 @@ class NewFrameLayout(wx.Frame):
             Globals.csv_auth_path = self.authPath
             self.readAuthCSV()
         else:
+            if self.kill:
+                return
             createNewFile(self.authPath)
             with open(self.authPath, "w", newline="") as csvfile:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
