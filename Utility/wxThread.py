@@ -60,6 +60,7 @@ def doAPICallInThread(
     eventType=myEVT_UPDATE,
     callback=None,
     callbackArgs=None,
+    optCallbackArgs=None,
     waitForJoin=True,
 ):
     t = GUIThread(
@@ -69,6 +70,7 @@ def doAPICallInThread(
         eventType=eventType,
         passArgAsTuple=True,
         callback=callback,
+        optCallbackArgs=optCallbackArgs,
         callbackArgs=callbackArgs,
     )
     t.start()
@@ -99,10 +101,12 @@ class GUIThread(threading.Thread):
         parent,
         target,
         args,
+        optArgs=None,
         eventType=None,
         passArgAsTuple=False,
         callback=None,
         callbackArgs=None,
+        optCallbackArgs=None,
     ):
         """
         @param parent: The gui object that should recieve the value
@@ -113,11 +117,13 @@ class GUIThread(threading.Thread):
         self._parent = parent
         self._target = target
         self._args = args
+        self._optArgs = optArgs
         self.eventType = eventType
         self.passArgAsTuple = passArgAsTuple
         self.result = None
         self._callback = callback
         self._cbArgs = callbackArgs
+        self._optCbArgs = optCallbackArgs
         self.daemon = True
 
     def run(self):
@@ -125,7 +131,11 @@ class GUIThread(threading.Thread):
         when you call Thread.start().
         """
         if self._target:
-            if not self.passArgAsTuple and self._args:
+            if not self.passArgAsTuple and self._args and self._optArgs:
+                self.result = self._target(*self._args, *self._optArgs)
+            elif self.passArgAsTuple and self._args and self._optArgs:
+                self.result = self._target(self._args, self._optArgs)
+            elif not self.passArgAsTuple and self._args:
                 self.result = self._target(*self._args)
             elif self.passArgAsTuple and self._args:
                 self.result = self._target(self._args)
@@ -133,7 +143,7 @@ class GUIThread(threading.Thread):
                 self.result = self._target()
 
         if self._callback:
-            self.result = (self.result, self._callback, self._cbArgs)
+            self.result = (self.result, self._callback, self._cbArgs, self._optCbArgs)
 
         if self.eventType:
             evt = CustomEvent(self.eventType, -1, self.result)

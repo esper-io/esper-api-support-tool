@@ -17,7 +17,7 @@ offset = 0  # int | The initial index from which to return the results. (optiona
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
-COMMAND_TIMEOUT = 15
+COMMAND_TIMEOUT = 30
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
 MAX_STATUS_CHAR = 80
@@ -85,6 +85,7 @@ COMMAND_TYPES = [
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/device/{device_id}"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
 DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 
 """ CSV Headers """

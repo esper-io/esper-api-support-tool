@@ -27,6 +27,16 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 
 ####Esper API Requests####
+def logBadResponse(url, resp, json_resp):
+    if Globals.PRINT_RESPONSES or resp.status_code > 300:
+        print(url)
+        prettyReponse = "Response {result}".format(
+            result=json.dumps(json_resp, indent=4, sort_keys=True)
+        )
+        print(prettyReponse)
+        ApiToolLog().LogResponse(prettyReponse)
+
+
 def getInfo(request_extension, deviceid):
     """Sends Request For Device Info JSON"""
     headers = {
@@ -43,12 +53,7 @@ def getInfo(request_extension, deviceid):
     )
     resp = requests.get(url, headers=headers)
     json_resp = resp.json()
-    if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        prettyReponse = "Response {result}".format(
-            result=json.dumps(json_resp, indent=4, sort_keys=True)
-        )
-        print(prettyReponse)
-        ApiToolLog().LogResponse(prettyReponse)
+    logBadResponse(url, resp, json_resp)
 
     return json_resp
 
@@ -69,12 +74,7 @@ def patchInfo(request_extension, deviceid, tags):
     )
     resp = requests.patch(url, headers=headers, data=json.dumps({"tags": tags}))
     json_resp = resp.json()
-    if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        prettyReponse = "Response {result}".format(
-            result=json.dumps(json_resp, indent=4, sort_keys=True)
-        )
-        print(prettyReponse)
-        ApiToolLog().LogResponse(prettyReponse)
+    logBadResponse(url, resp, json_resp)
     return json_resp
 
 
@@ -87,7 +87,9 @@ def iskioskmode(deviceid):
     return kioskmode
 
 
-def toggleKioskMode(frame, deviceid, appToUse, isKiosk):
+def toggleKioskMode(
+    frame, deviceid, appToUse, isKiosk, timeout=Globals.COMMAND_TIMEOUT
+):
     """Toggles Kiosk Mode On/Off"""
     api_instance = getCommandsApiInstance()
     if isKiosk:
@@ -121,11 +123,16 @@ def getdevicetags(deviceid):
     return tags
 
 
-def getdeviceapps(deviceid):
+def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
     applist = []
-    json_resp = getInfo(Globals.DEVICE_APP_LIST_REQUEST_EXTENSION, deviceid)
-    if len(json_resp["results"]):
+    extention = (
+        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
+        if useEnterprise
+        else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
+    )
+    json_resp = getInfo(extention, deviceid)
+    if len(json_resp["results"]) and createAppList:
         for app in json_resp["results"]:
             if "application" in app:
                 applist.append(
@@ -134,7 +141,10 @@ def getdeviceapps(deviceid):
                     + app["application"]["version"]["version_code"]
                 )
             else:
-                entry = {app["app_name"]: app["package_name"]}
+                entry = {
+                    app["app_name"]: app["package_name"],
+                    "app_name": app["app_name"],
+                }
                 if entry not in Globals.frame.apps:
                     Globals.frame.apps.append(entry)
                 applist.append(app["app_name"] + " v" + app["version_code"])
@@ -258,16 +268,32 @@ def getDeviceGroupForHost(config, enterprise_id, group_id):
 
 def getAllDevices(groupToUse):
     """ Make a API call to get all Devices belonging to the Enterprise """
+    if not groupToUse:
+        return None
     try:
         api_instance = esperclient.DeviceApi(
             esperclient.ApiClient(Globals.configuration)
         )
-        api_response = api_instance.get_all_devices(
-            Globals.enterprise_id,
-            group=groupToUse,
-            limit=Globals.limit,
-            offset=Globals.offset,
-        )
+        api_response = None
+        if type(groupToUse) == list:
+            for group in groupToUse:
+                response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    group=group,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+                if not api_response:
+                    api_response = response
+                else:
+                    api_response.results = api_response.results + response.results
+        else:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                group=groupToUse,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
         postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
@@ -317,10 +343,21 @@ def getDeviceById(deviceToUse):
         api_instance = esperclient.DeviceApi(
             esperclient.ApiClient(Globals.configuration)
         )
-        api_response = api_instance.get_device_by_id(
-            Globals.enterprise_id, device_id=deviceToUse
-        )
-        if api_response:
+        api_response_list = []
+        api_response = None
+        if type(deviceToUse) == list:
+            for device in deviceToUse:
+                api_response = api_instance.get_device_by_id(
+                    Globals.enterprise_id, device_id=device
+                )
+                api_response_list.append(api_response)
+        else:
+            api_response = api_instance.get_device_by_id(
+                Globals.enterprise_id, device_id=deviceToUse
+            )
+        if api_response and api_response_list:
+            api_response.results = api_response_list
+        elif api_response:
             api_response.results = [api_response]
         postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
         return api_response
@@ -483,6 +520,18 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     return deviceInfo
 
 
+def logActionExecution(frame, action, selection=None):
+    actionName = ""
+    if frame.actionChoice.GetValue() in Globals.GRID_ACTIONS:
+        actionName = '"%s"' % str(Globals.GRID_ACTIONS[action])
+    elif frame.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
+        actionName = '"%s"' % str(Globals.GENERAL_ACTIONS[action])
+    if selection:
+        frame.Logging("---> Starting Execution " + actionName + " on " + str(selection))
+    else:
+        frame.Logging("---> Starting Execution " + actionName)
+
+
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
 def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     """Calls API To Perform Action And Logs Result To UI"""
@@ -490,51 +539,44 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         frame.loadConfigPrompt()
 
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    actionName = ""
-    if frame.actionChoice.GetValue() in Globals.GRID_ACTIONS:
-        actionName = '"%s"' % str(Globals.GRID_ACTIONS[action])
-    elif frame.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
-        actionName = '"%s"' % str(Globals.GENERAL_ACTIONS[action])
-    frame.Logging(
-        "---> Starting Execution "
-        + actionName
-        + " on "
-        + frame.groupChoice.GetString(group)
-    )
+    logActionExecution(frame, action, group)
     if (
-        action == Globals.SHOW_ALL_AND_GENERATE_REPORT
-        or action == Globals.SET_KIOSK
-        or action == Globals.SET_MULTI
+        action
+        == Globals.SHOW_ALL_AND_GENERATE_REPORT
+        # or action == Globals.SET_KIOSK
+        # or action == Globals.SET_MULTI
     ) and not isUpdate:
         frame.emptyDeviceGrid()
         frame.emptyNetworkGrid()
 
     deviceList = None
     if isDevice:
-        deviceToUse = (
-            frame.deviceChoice.GetClientData(group)
-            if frame.deviceChoice.GetClientData(group)
-            else ""
-        )
+        deviceToUse = group
         frame.Logging("---> Making API Request")
-        device = getDeviceById(deviceToUse)
-        if device:
-            deviceList = iterateThroughDeviceList(
-                frame, action, device, isDevice=True, isUpdate=isUpdate
-            )
+        # device = getDeviceById(deviceToUse)
+        # if device:
+        # deviceList = iterateThroughDeviceList(
+        #     frame, action, device, isDevice=True, isUpdate=isUpdate
+        # )
+        wxThread.doAPICallInThread(
+            frame,
+            getDeviceById,
+            args=(deviceToUse),
+            eventType=wxThread.myEVT_RESPONSE,
+            callback=iterateThroughDeviceList,
+            callbackArgs=(frame, action),
+            optCallbackArgs=(False, isUpdate),
+            waitForJoin=False,
+        )
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
         if label == "All devices":
-            iterateThroughAllGroups(frame, action, api_instance)
+            iterateThroughAllGroups(frame, action, api_instance, group)
         else:
             # Iterate Through Each Device in Group VIA Api Request
             try:
-                groupToUse = (
-                    frame.groupChoice.GetClientData(group)
-                    if frame.groupChoice.GetClientData(group)
-                    else ""
-                )  # Get Device Group ID
+                groupToUse = group
                 frame.Logging("---> Making API Request")
                 if isUpdate:
                     api_response = getAllDevices(groupToUse)
@@ -575,24 +617,27 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
-def iterateThroughAllGroups(frame, action, api_instance):
-    for index, value in enumerate(frame.groupChoice.Strings):
-        groupToUse = frame.groupChoice.GetClientData(index)  # Get Device Group ID
-        if value != "All devices":
-            continue
-        try:
-            frame.Logging("---> Making API Request")
-            wxThread.doAPICallInThread(
-                frame,
-                getAllDevices,
-                args=(groupToUse),
-                eventType=wxThread.myEVT_RESPONSE,
-                callback=iterateThroughDeviceList,
-                callbackArgs=(frame, action),
-                waitForJoin=False,
-            )
-        except ApiException as e:
-            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+def iterateThroughAllGroups(frame, action, api_instance, group=None):
+    # for index, value in enumerate(frame.groups):
+    # groupToUse = frame.groupChoice.GetClientData(index)  # Get Device Group ID
+    groupToUse = None
+    if group:
+        groupToUse = group[0]
+    # if value != "All devices":
+    #     continue
+    try:
+        frame.Logging("---> Making API Request")
+        wxThread.doAPICallInThread(
+            frame,
+            getAllDevices,
+            args=(groupToUse),
+            eventType=wxThread.myEVT_RESPONSE,
+            callback=iterateThroughDeviceList,
+            callbackArgs=(frame, action),
+            waitForJoin=False,
+        )
+    except ApiException as e:
+        print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
 
 def setKiosk(frame, device, deviceInfo):
@@ -600,27 +645,25 @@ def setKiosk(frame, device, deviceInfo):
     logString = ""
     failed = False
     warning = False
-    if deviceInfo["Mode"] == "Multi":
-        if deviceInfo["Status"] == "Online":
-            appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
-            logString = (
-                str("--->" + str(device.device_name) + " " + str(device.alias_name))
-                + " ->Kiosk->"
-                + str(appToUse)
-            )
-            status = toggleKioskMode(frame, device.id, appToUse, True)
-            if "Success" in str(status):
-                logString = logString + " <success>"
-            elif "Queued" in str(status):
-                logString = logString + " <failed, possibly offline>"
-                warning = True
-            else:
-                logString = logString + " <failed>"
-                failed = True
-        else:
-            logString = logString + "(Device offline, skipping)"
+    appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+    logString = (
+        str("--->" + str(device.device_name) + " " + str(device.alias_name))
+        + " ->Kiosk->"
+        + str(appToUse)
+    )
+    stateStatus = setAppState(device.id, appToUse, "SHOW")
+    timeout = Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
+    status = toggleKioskMode(frame, device.id, appToUse, True, timeout)
+    if "Success" in str(status):
+        logString = logString + " <success>"
+    elif "Queued" in str(status):
+        logString = logString + " <warning, check back on the device>"
+        warning = True
     else:
-        logString = logString + "(Already Kiosk mode, skipping)"
+        logString = logString + " <failed>"
+        failed = True
+    if deviceInfo["Status"] != "Online":
+        logString = logString + " (Device offline)"
     postEventToFrame(wxThread.myEVT_LOG, logString)
     if failed:
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
@@ -637,20 +680,19 @@ def setMulti(frame, device, deviceInfo):
     failed = False
     warning = False
     if deviceInfo["Mode"] == "Kiosk":
-        if deviceInfo["Status"] == "Online":
-            status = toggleKioskMode(frame, device.id, {}, False)
-            if "Success" in str(status):
-                logString = logString + " <success>"
-            elif "Queued" in str(status):
-                logString = logString + " <failed, possibly offline>"
-                warning = True
-            else:
-                logString = logString + " <failed>"
-                failed = True
+        status = toggleKioskMode(frame, device.id, {}, False)
+        if "Success" in str(status):
+            logString = logString + " <success>"
+        elif "Queued" in str(status):
+            logString = logString + " <warning, check back on the device>"
+            warning = True
         else:
-            logString = logString + "(Device offline, skipping)"
+            logString = logString + " <failed>"
+            failed = True
     else:
         logString = logString + "(Already Multi mode, skipping)"
+    if deviceInfo["Status"] != "Online":
+        logString = logString + " (Device offline)"
     postEventToFrame(wxThread.myEVT_LOG, logString)
     if failed:
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
@@ -739,7 +781,7 @@ def executeDeviceModification(frame):
                         logString = logString + " <failed>"
                         postEventToFrame(wxThread.myEVT_ON_FAILED, device)
                 else:
-                    logString = logString + "(Name already set)"
+                    logString = logString + " (Alias Name already set)"
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
                 )
@@ -766,22 +808,26 @@ def executeUpdateDeviceConfigCommandOnGroup(
     frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Group of Devices """
-    groupToUse = frame.groupChoice.GetClientData(
-        frame.groupChoice.GetSelection()
-    )  # Get Device Group ID
-    request = esperclient.V0CommandRequest(
-        enterprise=Globals.enterprise_id,
-        command_type="GROUP",
-        device_type="all",
-        groups=[groupToUse],
-        command=command_type,
-        command_args=command_args,
-        schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
-        schedule_args=schedule,
-    )
-    api_instance = getCommandsApiInstance()
-    api_response = api_instance.create_command(Globals.enterprise_id, request)
-    return waitForCommandToFinish(frame, api_response.id)
+    # groupToUse = frame.groupChoice.GetClientData(
+    #     frame.groupChoice.GetSelection()
+    # )  # Get Device Group ID
+    statusList = []
+    for groupToUse in frame.selectedGroupsList:
+        request = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="GROUP",
+            device_type="all",
+            groups=[groupToUse],
+            command=command_type,
+            command_args=command_args,
+            schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+            schedule_args=schedule,
+        )
+        api_instance = getCommandsApiInstance()
+        api_response = api_instance.create_command(Globals.enterprise_id, request)
+        last_status = waitForCommandToFinish(frame, api_response.id)
+        statusList.append("%s : %s" % (groupToUse, last_status))
+    return statusList
 
 
 @api_tool_decorator
@@ -789,22 +835,26 @@ def executeUpdateDeviceConfigCommandOnDevice(
     frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Device """
-    deviceToUse = frame.deviceChoice.GetClientData(
-        frame.deviceChoice.GetSelection()
-    )  # Get Device Group ID
-    request = esperclient.V0CommandRequest(
-        enterprise=Globals.enterprise_id,
-        command_type="DEVICE",
-        device_type="all",
-        devices=[deviceToUse],
-        command=command_type,
-        command_args=command_args,
-        schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
-        schedule_args=schedule,
-    )
-    api_instance = getCommandsApiInstance()
-    api_response = api_instance.create_command(Globals.enterprise_id, request)
-    return waitForCommandToFinish(frame, api_response.id)
+    # deviceToUse = frame.deviceChoice.GetClientData(
+    #     frame.deviceChoice.GetSelection()
+    # )  # Get Device Group ID
+    statusList = []
+    for deviceToUse in frame.selectedDevicesList:
+        request = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="DEVICE",
+            device_type="all",
+            devices=[deviceToUse],
+            command=command_type,
+            command_args=command_args,
+            schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+            schedule_args=schedule,
+        )
+        api_instance = getCommandsApiInstance()
+        api_response = api_instance.create_command(Globals.enterprise_id, request)
+        last_status = waitForCommandToFinish(frame, api_response.id)
+        statusList.append("%s : %s" % (deviceToUse, last_status))
+    return statusList
 
 
 @api_tool_decorator
@@ -825,6 +875,7 @@ def waitForCommandToFinish(
         "Command TimeOut",
         "Command Cancelled",
         "Command Queued",
+        "Command Scheduled",
     ]
     if ignoreQueue:
         stateList.remove("Command Queued")
@@ -961,12 +1012,7 @@ def postEsperCommand(command_data, useV0=True):
             )
         resp = requests.post(url, headers=headers, json=command_data)
         json_resp = resp.json()
-        if Globals.PRINT_RESPONSES or resp.status_code > 300:
-            prettyReponse = "Response {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
-            print(prettyReponse)
-            ApiToolLog().LogResponse(prettyReponse)
+        logBadResponse(url, resp, json_resp)
     except Exception as e:
         ApiToolLog().LogError(e)
     return resp, json_resp
@@ -1000,28 +1046,79 @@ def clearAppData(frame, device):
                 "command": "CLEAR_APP_DATA",
             }
             resp, json_resp = postEsperCommand(reqData)
-            if Globals.PRINT_RESPONSES or resp.status_code > 300:
-                prettyReponse = "Response {result}".format(
-                    result=json.dumps(json_resp, indent=4, sort_keys=True)
-                )
-                print(prettyReponse)
-                ApiToolLog().LogResponse(prettyReponse)
+            logBadResponse(url, resp, json_resp)
             if resp.status_code > 300:
                 postEventToFrame(wxThread.myEVT_ON_FAILED, device)
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
-                    % (cmdArgs["application_name"], device.alias_name)
+                    % (cmdArgs["application_name"], device.device_name)
                 )
         else:
             frame.Logging(
                 "ERROR: Failed to send Clear %s App Data Command to %s"
-                % (frame.appChoice.GetValue(), device.alias_name)
+                % (frame.appChoice.GetValue(), device.device_name)
             )
     except Exception as e:
         ApiToolLog().LogError(e)
         frame.Logging(
-            "ERROR: Failed to send Clear App Data Command to %s" % (device.alias_name)
+            "ERROR: Failed to send Clear App Data Command to %s" % (device.device_name)
         )
         postEventToFrame(wxThread.myEVT_ON_FAILED, device)
     return json_resp
+
+
+def getDeviceApplicationById(device_id, application_id):
+    try:
+        headers = {
+            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
+            "Content-Type": "application/json",
+        }
+        url = "https://%s-api.esper.cloud/api/enterprise/%s/device/%s/app/%s" % (
+            Globals.configuration.host.split("-api")[0].replace("https://", ""),
+            Globals.enterprise_id,
+            device_id,
+            application_id,
+        )
+        resp = requests.get(url, headers=headers)
+        json_resp = resp.json()
+        logBadResponse(url, resp, json_resp)
+    except Exception as e:
+        ApiToolLog().LogError(e)
+    return resp, json_resp
+
+
+def setAppState(device_id, pkg_name, state="HIDE"):
+    pkgName = pkg_name
+    appVer = None
+    _, app = getdeviceapps(device_id, createAppList=False)
+    app = list(
+        filter(
+            lambda x: x["package_name"] == pkg_name,
+            app["results"],
+        )
+    )
+    if app:
+        app = app[0]
+    if "application" in app:
+        appVer = app["application"]["version"]["version_code"]
+    else:
+        appVer = app["version_code"]
+    if pkgName and appVer:
+        args = V0CommandArgs(
+            app_state=state,
+            app_version=appVer,
+            package_name=pkgName,
+        )
+        args.version_code = appVer
+        request = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="DEVICE",
+            device_type="all",
+            devices=[device_id],
+            command="SET_APP_STATE",
+            command_args=args,
+        )
+        api_instance = getCommandsApiInstance()
+        api_response = api_instance.create_command(Globals.enterprise_id, request)
+        return waitForCommandToFinish(Globals.frame, api_response.id)

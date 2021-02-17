@@ -87,7 +87,10 @@ class NewFrameLayout(wx.Frame):
         self.consoleWin = None
         self.grid_1_contents = []
         self.grid_2_contents = []
-        self.devices = []
+        self.selectedDevicesList = []
+        self.devices = {}
+        self.selectedGroupsList = []
+        self.groups = {}
         self.apps = []
         self.isBusy = False
         self.isRunning = False
@@ -102,12 +105,14 @@ class NewFrameLayout(wx.Frame):
         self.auth_data = None
         self.userEdited = []
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
+        self.groupMultiDialog = None
+        self.deviceMultiDialog = None
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 700))
         self.SetMinSize((900, 700))
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        """self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_5 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_5, wx.ID_ANY)
         self.configList = wx.TextCtrl(
@@ -159,7 +164,256 @@ class NewFrameLayout(wx.Frame):
             )
         )
 
-        self.configList.Bind(wx.EVT_KEY_DOWN, self.RemoveEndpoint)
+        self.configList.Bind(wx.EVT_KEY_DOWN, self.RemoveEndpoint)"""
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+
+        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
+
+        sizer_1 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_4.Add(sizer_1, 0, wx.EXPAND, 0)
+
+        self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_2 = wx.BoxSizer(wx.VERTICAL)
+
+        self.panel_3 = wx.Panel(self.panel_2, wx.ID_ANY)
+        sizer_2.Add(self.panel_3, 0, wx.EXPAND, 0)
+
+        grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
+
+        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Configuration:")
+        label_1.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
+        grid_sizer_1.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 0)
+
+        remove_icon = scale_bitmap(resourcePath("Images/remove.png"), 16, 16)
+        self.removeEndpointBtn = wx.BitmapButton(
+            self.panel_3,
+            wx.ID_ANY,
+            remove_icon,  # size=(16, 16)
+        )
+        # wx.Button(self.panel_3, wx.ID_ANY, "", size=(16, 16))
+        grid_sizer_1.Add(
+            self.removeEndpointBtn,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
+            0,
+        )
+        self.removeEndpointBtn.SetToolTip("Remove Endpoint from %s" % Globals.TITLE)
+        self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
+        self.removeEndpointBtn.Enable(False)
+
+        # self.removeEndpointBtn.SetBitmap(remove_icon)
+        # self.removeEndpointBtn.SetBitmapMargins((2, 2))
+        # self.removeEndpointBtn.SetInitialSize()
+
+        self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
+        sizer_2.Add(self.panel_4, 1, wx.EXPAND, 0)
+
+        grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
+
+        self.configList = wx.TextCtrl(
+            self.panel_4, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY
+        )
+        self.configList.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "",
+            )
+        )
+        grid_sizer_2.Add(self.configList, 0, wx.EXPAND, 0)
+        self.configList.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "",
+            )
+        )
+
+        self.panel_8 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_1.Add(self.panel_8, 1, wx.ALL | wx.EXPAND, 5)
+
+        grid_sizer_6 = wx.BoxSizer(wx.VERTICAL)
+
+        self.groupChoice = wx.Button(self.panel_8, wx.ID_ANY, "Select Group(s)")
+        self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
+        self.groupChoice.SetToolTip(
+            "Select which group(s) you wish to run an action on."
+        )
+        self.groupChoice.SetFocus()
+        grid_sizer_6.Add(self.groupChoice, 0, wx.EXPAND, 0)
+
+        self.panel_13 = wx.Panel(self.panel_8, wx.ID_ANY)
+        grid_sizer_6.Add(self.panel_13, 1, wx.EXPAND | wx.TOP, 5)
+
+        grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
+
+        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[])
+        self.selectedGroups.SetToolTip("Currently Selected Group(s)")
+        grid_sizer_8.Add(self.selectedGroups, 0, wx.EXPAND, 0)
+
+        self.panel_9 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_1.Add(self.panel_9, 1, wx.ALL | wx.EXPAND, 5)
+
+        grid_sizer_3 = wx.BoxSizer(wx.VERTICAL)
+
+        self.deviceChoice = wx.Button(
+            self.panel_9, wx.ID_ANY, "Select Device(s) [Optional]"
+        )
+        self.deviceChoice.SetToolTip(
+            "Select which device(s) you specifically wish to run an action on, optional."
+        )
+        self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
+        grid_sizer_3.Add(self.deviceChoice, 0, wx.EXPAND, 0)
+
+        self.panel_12 = wx.Panel(self.panel_9, wx.ID_ANY)
+        grid_sizer_3.Add(self.panel_12, 1, wx.EXPAND | wx.TOP, 5)
+
+        grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
+
+        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[])
+        self.selectedDevices.SetToolTip("Currently Selected Device(s)")
+        grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
+
+        self.panel_10 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_1.Add(self.panel_10, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_5 = wx.BoxSizer(wx.VERTICAL)
+
+        label_5 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Action:")
+        label_5.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
+        sizer_5.Add(label_5, 0, wx.EXPAND, 0)
+
+        self.actionChoice = wx.ComboBox(
+            self.panel_10,
+            wx.ID_ANY,
+            choices=Globals.GENERAL_ACTIONS,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY,
+        )
+        sizer_5.Add(self.actionChoice, 0, wx.EXPAND, 0)
+
+        label_4 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Application:")
+        label_4.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
+        sizer_5.Add(label_4, 0, wx.EXPAND, 0)
+
+        self.appChoice = wx.ComboBox(
+            self.panel_10, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
+        )
+        sizer_5.Add(self.appChoice, 0, wx.EXPAND, 0)
+
+        label_6 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Grid Action:")
+        label_6.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
+        sizer_5.Add(label_6, 0, wx.EXPAND, 0)
+
+        self.gridActions = wx.ComboBox(
+            self.panel_10,
+            wx.ID_ANY,
+            choices=Globals.GRID_ACTIONS,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY,
+        )
+        sizer_5.Add(self.gridActions, 0, wx.EXPAND, 0)
+
+        self.panel_11 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_1.Add(self.panel_11, 1, wx.EXPAND, 0)
+
+        grid_sizer_5 = wx.GridSizer(1, 1, 0, 0)
+
+        self.runBtn = wx.Button(self.panel_11, wx.ID_ANY, "Run")
+        grid_sizer_5.Add(self.runBtn, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.panel_14 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_4.Add(self.panel_14, 1, wx.EXPAND, 0)
+
+        sizer_6 = wx.BoxSizer(wx.VERTICAL)
+
+        label_7 = wx.StaticText(self.panel_14, wx.ID_ANY, "Network Info:")
+        label_7.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
+        sizer_6.Add(label_7, 0, wx.EXPAND, 0)
+
+        self.grid_2 = wx.grid.Grid(self.panel_14, wx.ID_ANY, size=(1, 1))
+        sizer_6.Add(self.grid_2, 1, wx.EXPAND, 0)
+
+        label_8 = wx.StaticText(self.panel_14, wx.ID_ANY, "Device Info:")
+        label_8.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
+        sizer_6.Add(label_8, 0, wx.EXPAND, 0)
+
+        self.grid_1 = wx.grid.Grid(self.panel_14, wx.ID_ANY, size=(1, 1))
+        sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
+
+        self.panel_14.SetSizer(sizer_6)
+
+        self.panel_11.SetSizer(grid_sizer_5)
+
+        self.panel_10.SetSizer(sizer_5)
+
+        self.panel_12.SetSizer(grid_sizer_7)
+
+        self.panel_9.SetSizer(grid_sizer_3)
+
+        self.panel_13.SetSizer(grid_sizer_8)
+
+        self.panel_8.SetSizer(grid_sizer_6)
+
+        self.panel_4.SetSizer(grid_sizer_2)
+
+        self.panel_3.SetSizer(grid_sizer_1)
+
+        self.panel_2.SetSizer(sizer_2)
+
+        sizer_1.AddGrowableRow(0)
+        sizer_1.AddGrowableRow(1)
+        sizer_1.AddGrowableRow(2)
+        sizer_1.AddGrowableRow(3)
+        sizer_1.AddGrowableRow(4)
+
+        self.panel_1.SetSizer(sizer_4)
 
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
 
@@ -377,7 +631,9 @@ class NewFrameLayout(wx.Frame):
 
         self.loadPref()
         self.__set_properties()
-        self.__do_layout()
+        # self.__do_layout()
+        self.Layout()
+        self.Centre()
         self.Raise()
         self.Iconize(False)
         self.SetFocus()
@@ -419,8 +675,8 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.frame_toolbar.Realize()
-        self.panel_1.SetMinSize((400, 900))
-        self.panel_2.SetMinSize((2000, 800))
+        # self.panel_1.SetMinSize((400, 900))
+        # self.panel_2.SetMinSize((2000, 800))
         self.Maximize(True)
 
     def __do_layout(self):
@@ -626,6 +882,7 @@ class NewFrameLayout(wx.Frame):
         """ Frame UI Logging """
         try:
             entry = entry.replace("\n", " ")
+            shortMsg = entry
             Globals.LOGLIST.append(entry)
             if self.consoleWin:
                 self.consoleWin.Logging(entry)
@@ -633,9 +890,9 @@ class NewFrameLayout(wx.Frame):
                 isError = True
             if len(entry) >= Globals.MAX_STATUS_CHAR:
                 longEntryMsg = "....(See console for details)"
-                entry = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
-                entry += longEntryMsg
-            self.setStatus(entry, isError)
+                shortMsg = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
+                shortMsg += longEntryMsg
+            self.setStatus(shortMsg, entry, isError)
         except:
             pass
 
@@ -1011,8 +1268,9 @@ class NewFrameLayout(wx.Frame):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
-        self.groupChoice.Clear()
-        self.deviceChoice.Clear()
+        self.removeEndpointBtn.Enable(False)
+        # self.groupChoice.Clear()
+        # self.deviceChoice.Clear()
         self.appChoice.Clear()
         self.setCursorBusy()
         try:
@@ -1040,6 +1298,7 @@ class NewFrameLayout(wx.Frame):
 
             self.groupChoice.Enable(True)
             self.actionChoice.Enable(True)
+            self.removeEndpointBtn.Enable(True)
         except Exception as e:
             self.Logging(
                 "--->****An Error has occured while loading the configuration, please try again."
@@ -1086,17 +1345,28 @@ class NewFrameLayout(wx.Frame):
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
-                    threads,
-                    passArgAsTuple=True,
+                    (threads, 0),
                 ).start()
                 return True
         else:
             wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
             return False
 
-    def waitForThreadsThenSetCursorDefault(self, threads):
-        for thread in threads:
-            thread.join()
+    def waitForThreadsThenSetCursorDefault(self, threads, source=None):
+        if threads:
+            for thread in threads:
+                thread.join()
+        if source == 1:
+            self.sortAndPopulateAppChoice()
+            self.Logging("---> Application list populated")
+            if not self.preferences or self.preferences["enableDevice"] == True:
+                self.deviceChoice.Enable(True)
+            else:
+                self.deviceChoice.Enable(False)
+            if not self.devices:
+                self.selectedDevices.Append("No Devices Found", "")
+                self.deviceChoice.Enable(False)
+                self.Logging("---> No Devices found")
         self.setCursorDefault()
         self.setGaugeValue(100)
 
@@ -1107,7 +1377,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.setGaugeValue(0)
         self.gauge.Pulse()
-        self.groupChoice.Clear()
+        # self.groupChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
         )
@@ -1118,13 +1388,14 @@ class NewFrameLayout(wx.Frame):
         """ Populate Group Choice """
         results = event.GetValue().results
         num = 1
-        # results = sorted(
-        #     results,
-        #     key=lambda i: i.name.lower(),
-        # )
+        results = sorted(
+            results,
+            key=lambda i: i.name.lower(),
+        )
         if len(results):
             for group in results:
-                self.groupChoice.Append(group.name, group.id)
+                # self.groupChoice.Append(group.name, group.id)
+                self.groups[group.name] = group.id
                 self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
             self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.groupChoice)
@@ -1143,13 +1414,7 @@ class NewFrameLayout(wx.Frame):
     def PopulateDevices(self, event):
         """ Populate Device Choice """
         self.SetFocus()
-        self.Logging(
-            "--->Attemptting to populate devices of selected group (%s)..."
-            % event.String
-        )
-        self.devices = []
-        self.deviceChoice.Clear()
-        self.appChoice.Clear()
+        self.Logging("--->Attemptting to populate devices of selected group(s)")
         self.setCursorBusy()
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.runBtn.Enable(False)
@@ -1164,21 +1429,21 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.rtool.Id, True)
             self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        # for app in self.apps:
-        #     if app:
-        #         self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
-        clientData = (
-            event.ClientData
-            if event and event.ClientData
-            else self.groupChoice.GetClientData(event.Int)
-        )
-        wxThread.doAPICallInThread(
+        threads = []
+        for clientData in self.selectedGroupsList:
+            thread = wxThread.doAPICallInThread(
+                self,
+                getAllDevices,
+                args=(clientData),
+                eventType=wxThread.myEVT_DEVICE,
+                waitForJoin=False,
+            )
+            threads.append(thread)
+        wxThread.GUIThread(
             self,
-            getAllDevices,
-            args=(clientData),
-            eventType=wxThread.myEVT_DEVICE,
-            waitForJoin=False,
-        )
+            self.waitForThreadsThenSetCursorDefault,
+            (threads, 1),
+        ).start()
 
     @api_tool_decorator
     def addDevicesToDeviceChoice(self, event):
@@ -1186,19 +1451,12 @@ class NewFrameLayout(wx.Frame):
         api_response = event.GetValue()
         self.gauge.Pulse()
         if len(api_response.results):
-            if not self.preferences or self.preferences["enableDevice"] == True:
-                self.deviceChoice.Enable(True)
-            else:
-                self.deviceChoice.Enable(False)
-            if not "" in self.devices:
-                self.devices.append("")
-                self.deviceChoice.Append("", "")
             num = 1
             threads = []
-            # api_response.results = sorted(
-            #     api_response.results,
-            #     key=lambda i: i.device_name.lower(),
-            # )
+            api_response.results = sorted(
+                api_response.results,
+                key=lambda i: i.device_name.lower(),
+            )
             for device in api_response.results:
                 name = "%s %s %s" % (
                     device.hardware_info["manufacturer"],
@@ -1206,8 +1464,7 @@ class NewFrameLayout(wx.Frame):
                     device.device_name,
                 )
                 if name and not name in self.devices:
-                    self.devices.append(name)
-                    self.deviceChoice.Append(name, device.id)
+                    self.devices[name] = device.id
                     num += 1
                     thread = wxThread.doAPICallInThread(
                         self,
@@ -1218,14 +1475,11 @@ class NewFrameLayout(wx.Frame):
                     )
                     threads.append(thread)
 
+            self.Logging("---> Attempting to populate Application list")
             for thread in threads:
+                thread.join()
                 if not self.preferences or self.preferences["enableDevice"] == True:
                     self.setGaugeValue(int(num / len(api_response.results) * 100))
-        else:
-            self.deviceChoice.Append("No Devices Found", "")
-            self.deviceChoice.Enable(False)
-            self.Logging("---> No Devices found in group")
-        self.setCursorDefault()
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1242,36 +1496,35 @@ class NewFrameLayout(wx.Frame):
     def addAppsToAppChoice(self, event):
         """ Populate App Choice """
         api_response = event.GetValue()
-        if not "" in self.apps:
-            self.apps.append("")
-            self.appChoice.Append("", "")
         results = None
         if hasattr(api_response, "results"):
             results = api_response.results
         else:
             results = api_response[1]["results"]
-        # if hasattr(results[0], "application_name"):
-        #     results = sorted(
-        #         results,
-        #         key=lambda i: i.application_name.lower(),
-        #     )
-        # else:
-        #     results = sorted(
-        #         results,
-        #         key=lambda i: i["app_name"].lower(),
-        #     )
+        if hasattr(results[0], "application_name"):
+            results = sorted(
+                results,
+                key=lambda i: i.application_name.lower(),
+            )
+        else:
+            results = sorted(
+                results,
+                key=lambda i: i["app_name"].lower(),
+            )
         if len(results):
             num = 1
             for app in results:
                 entry = None
                 if hasattr(app, "application_name"):
-                    if app.application_name not in self.appChoice.Items:
-                        self.appChoice.Append(app.application_name, app.package_name)
-                    entry = {app.application_name: app.package_name}
+                    entry = {
+                        "app_name": app.application_name,
+                        app.application_name: app.package_name,
+                    }
                 else:
-                    if app["app_name"] not in self.appChoice.Items:
-                        self.appChoice.Append(app["app_name"], app["package_name"])
-                    entry = {app["app_name"]: app["package_name"]}
+                    entry = {
+                        "app_name": app["app_name"],
+                        app["app_name"]: app["package_name"],
+                    }
                 if entry not in self.apps:
                     self.apps.append(entry)
                 # self.setGaugeValue(int(num / len(results) * 100))
@@ -1281,6 +1534,16 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
         # wx.CallLater(3000, self.setGaugeValue, 0)
+
+    def sortAndPopulateAppChoice(self):
+        self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
+        self.appChoice.Clear()
+        self.appChoice.Append("", "")
+        for entry in self.apps:
+            for key, value in entry.items():
+                if key != "app_name" and key not in self.appChoice.Items:
+                    self.appChoice.Append(key, value)
+                    break
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1298,24 +1561,22 @@ class NewFrameLayout(wx.Frame):
         self.grid_1.UnsetSortingColumn()
         self.grid_2.UnsetSortingColumn()
 
-        groupSelection = self.groupChoice.GetSelection()
-        deviceSelection = self.deviceChoice.GetSelection()
         gridSelection = self.gridActions.GetSelection()
         appSelection = self.appChoice.GetSelection()
         actionSelection = self.actionChoice.GetSelection()
 
-        groupLabel = (
-            self.groupChoice.Items[groupSelection]
-            if len(self.groupChoice.Items) > 0
-            and self.groupChoice.Items[groupSelection]
-            else ""
-        )
-        deviceLabel = (
-            self.deviceChoice.Items[deviceSelection]
-            if len(self.deviceChoice.Items) > 0
-            and self.deviceChoice.Items[deviceSelection]
-            else ""
-        )
+        # groupLabel = (
+        #     self.groupChoice.Items[groupSelection]
+        #     if len(self.groupChoice.Items) > 0
+        #     and self.groupChoice.Items[groupSelection]
+        #     else ""
+        # )
+        # deviceLabel = (
+        #     self.deviceChoice.Items[deviceSelection]
+        #     if len(self.deviceChoice.Items) > 0
+        #     and self.deviceChoice.Items[deviceSelection]
+        #     else ""
+        # )
         appLabel = (
             self.appChoice.Items[appSelection]
             if len(self.appChoice.Items) > 0 and self.appChoice.Items[appSelection]
@@ -1334,8 +1595,8 @@ class NewFrameLayout(wx.Frame):
         )
         self.setGaugeValue(0)
         if (
-            groupSelection >= 0
-            and deviceSelection <= 0
+            self.selectedGroupsList
+            and not self.selectedDevicesList
             and gridSelection <= 0
             and actionSelection > 0
         ):
@@ -1351,22 +1612,28 @@ class NewFrameLayout(wx.Frame):
                 )
                 self.setCursorDefault()
                 return
-            self.Logging(
-                '---> Attempting to run action, "%s", on group, %s.'
-                % (actionLabel, groupLabel)
-            )
             self.grid_1_contents = []
             self.grid_2_contents = []
             self.userEdited = []
             Globals.LAST_DEVICE_ID = None
-            Globals.LAST_GROUP_ID = groupSelection
+            Globals.LAST_GROUP_ID = self.selectedGroupsList
+
+            groupLabel = ""
+            for groupId in self.selectedGroupsList:
+                groupLabel = list(self.groups.keys())[
+                    list(self.groups.values()).index(groupId)
+                ]
+                self.Logging(
+                    '---> Attempting to run action, "%s", on group, %s.'
+                    % (actionLabel, groupLabel)
+                )
             TakeAction(
                 self,
-                groupSelection,
+                self.selectedGroupsList,
                 actionSelection,
                 groupLabel,
             )
-        elif deviceSelection > 0 and gridSelection <= 0 and actionSelection > 0:
+        elif self.selectedDevicesList and gridSelection <= 0 and actionSelection > 0:
             # run action on device
             if (
                 actionSelection == Globals.SET_KIOSK
@@ -1379,17 +1646,21 @@ class NewFrameLayout(wx.Frame):
                 )
                 self.setCursorDefault()
                 return
-            self.Logging(
-                '---> Attempting to run action, "%s", on device, %s.'
-                % (actionLabel, deviceLabel)
-            )
             self.grid_1_contents = []
             self.grid_2_contents = []
             self.userEdited = []
-            Globals.LAST_DEVICE_ID = deviceSelection
+            Globals.LAST_DEVICE_ID = self.selectedDevicesList
             Globals.LAST_GROUP_ID = None
+            for deviceId in self.selectedDevicesList:
+                deviceLabel = list(self.devices.keys())[
+                    list(self.devices.values()).index(deviceId)
+                ]
+                self.Logging(
+                    '---> Attempting to run action, "%s", on device, %s.'
+                    % (actionLabel, deviceLabel)
+                )
             TakeAction(
-                self, deviceSelection, actionSelection, deviceLabel, isDevice=True
+                self, self.selectedDevicesList, actionSelection, None, isDevice=True
             )
         elif gridSelection > 0:
             # run grid action
@@ -1899,40 +2170,56 @@ class NewFrameLayout(wx.Frame):
         cmdResult = event.GetValue()
         self.setGaugeValue(100)
         if hasattr(cmdResult, "state"):
-            wx.MessageBox(
-                "Command State: %s \n\n Check the console for detailed command results."
-                % cmdResult.state,
-                style=wx.OK,
-            )
+            # wx.MessageBox(
+            #     "Command State: %s \n\n Check the console for detailed command results."
+            #     % cmdResult,
+            #     style=wx.OK,
+            # )
+            dlg = wx.RichMessageDialog(self, "")
+            dlg.ShowDetailedText(str(cmdResult).replace("[", "").replace("]", ""))
+            dlg.ShowModal()
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     def confirmCommand(self, cmd, commandType):
         """ Ask user to confirm the command they want to run """
-        deviceSelection = self.deviceChoice.GetSelection()
-        groupSelection = self.groupChoice.GetSelection()
-        groupLabel = (
-            self.groupChoice.Items[groupSelection]
-            if len(self.groupChoice.Items) > 0
-            and self.groupChoice.Items[groupSelection]
-            else ""
-        )
-        deviceLabel = (
-            self.deviceChoice.Items[deviceSelection]
-            if len(self.deviceChoice.Items) > 0
-            and self.deviceChoice.Items[deviceSelection]
-            else ""
-        )
+        # deviceSelection = self.deviceChoice.GetSelection()
+        # groupSelection = self.groupChoice.GetSelection()
+        # groupLabel = (
+        #     self.groupChoice.Items[groupSelection]
+        #     if len(self.groupChoice.Items) > 0
+        #     and self.groupChoice.Items[groupSelection]
+        #     else ""
+        # )
+        # deviceLabel = (
+        #     self.deviceChoice.Items[deviceSelection]
+        #     if len(self.deviceChoice.Items) > 0
+        #     and self.deviceChoice.Items[deviceSelection]
+        #     else ""
+        # )
         modal = None
         isGroup = False
         cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
         cmdFormatted = json.dumps(cmd_dict, indent=2)
         label = ""
         applyTo = ""
-        if deviceSelection > 0 and deviceLabel:
-            label = deviceLabel
+        commaSeperated = ", "
+        if len(self.selectedDevicesList) > 0:
+            selections = self.deviceMultiDialog.GetSelections()
+            choices = list(self.devices.keys())
+            label = ""
+            for device in selections:
+                label += choices[device] + commaSeperated
+            if label.endswith(", "):
+                label = label[0 : len(label) - len(commaSeperated)]
             applyTo = "device"
-        elif groupSelection >= 0 and groupLabel:
-            label = groupLabel
+        elif len(self.selectedGroupsList) >= 0:
+            selections = self.groupMultiDialog.GetSelections()
+            choices = list(self.groups.keys())
+            label = ""
+            for group in selections:
+                label += choices[group] + commaSeperated
+            if label.endswith(", "):
+                label = label[0 : len(label) - len(commaSeperated)]
             applyTo = "group"
             isGroup = True
         modal = wx.NO
@@ -1946,9 +2233,11 @@ class NewFrameLayout(wx.Frame):
         else:
             return False, isGroup
 
-    def setStatus(self, status, isError=False):
+    def setStatus(self, status, orgingalMsg, isError=False):
         """ Set status bar text """
         self.sbText.SetLabel(status)
+        if orgingalMsg:
+            self.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
         if isError:
             self.sbText.SetForegroundColour(wx.Colour(255, 0, 0))
         else:
@@ -2103,23 +2392,41 @@ class NewFrameLayout(wx.Frame):
             )
 
     @api_tool_decorator
-    def onDeviceSelection(self, event):
+    def onDeviceSelections(self, event):
         """ When the user selects a device showcase apps related to that device """
         self.SetFocus()
-        self.appChoice.Clear()
+        # self.appChoice.Clear()
         self.gauge.Pulse()
         self.setCursorBusy()
         num = 1
-        if self.deviceChoice.GetSelection() > 0:
-            deviceId = self.deviceChoice.GetClientData(self.deviceChoice.GetSelection())
+        if len(self.selectedDevicesList) > 0:
             self.runBtn.Enable(False)
+            wxThread.GUIThread(
+                self,
+                self.addDevicesApps,
+                self.selectedDevicesList,
+                eventType=wxThread.myEVT_COMPLETE,
+                passArgAsTuple=True,
+            ).start()
+        else:
+            self.sortAndPopulateAppChoice()
+            # for app in self.apps:
+            #     if app:
+            #         self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
+            #     self.setGaugeValue(int(num / len(self.apps) * 100))
+            #     num += 1
+        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        wx.PostEvent(self, evt)
+
+    def addDevicesApps(self, deviceId):
+        num = 1
+        appAdded = False
+        for deviceId in self.selectedDevicesList:
             self.Logging("---> Fetching Apps on Device Through API")
             appList, _ = getdeviceapps(deviceId)
             self.Logging("---> Finished Fetching Apps on Device Through API")
-            if len(appList) == 0:
-                self.appChoice.Append("No available app(s) on this device")
-                self.appChoice.SetSelection(0)
             for app in appList:
+                appAdded = True
                 app_name = app.split(" v")[0]
                 d = [k for k in self.apps if app_name in k]
                 if d:
@@ -2127,16 +2434,11 @@ class NewFrameLayout(wx.Frame):
                     self.appChoice.Append(app_name, d[app_name])
                 self.setGaugeValue(int(num / len(appList) * 100))
                 num += 1
-        else:
-            for app in self.apps:
-                if app:
-                    self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
-                self.setGaugeValue(int(num / len(self.apps) * 100))
-                num += 1
-        self.runBtn.Enable(True)
-        self.setGaugeValue(100)
-        self.setCursorDefault()
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        if not appAdded:
+            self.appChoice.Append("No available app(s) on this device")
+            self.appChoice.SetSelection(0)
+        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        wx.PostEvent(self, evt)
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""
@@ -2170,20 +2472,28 @@ class NewFrameLayout(wx.Frame):
     def performAPIResponse(self, event):
         """ Once an API has given its response attempt to run the specififed callback """
         self.Logging("---> API Response Returned")
+        self.gauge.Pulse()
         evtValue = event.GetValue()
         response = evtValue[0]
         callback = evtValue[1]
         cbArgs = evtValue[2]
+        optCbArgs = evtValue[3]
 
         if callback:
             self.Logging("---> Attempting to Process API Response")
-            callback(*(*cbArgs, response))
+            if optCbArgs:
+                callback(*(*cbArgs, response, *optCbArgs))
+            else:
+                callback(*(*cbArgs, response))
 
     def onComplete(self, event):
         """ Things that should be done once an Action is completed """
+        enable = False
+        if event:
+            enable = event.GetValue()
         self.setCursorDefault()
         self.setGaugeValue(100)
-        if self.isRunning:
+        if self.isRunning or enable:
             self.runBtn.Enable(True)
             self.frame_toolbar.EnableTool(self.rtool.Id, True)
             self.frame_toolbar.EnableTool(self.rftool.Id, True)
@@ -2294,7 +2604,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFail(self, event):
-        """ Try to sohwcase rows in the grid on which an action failed on """
+        """ Try to showcase rows in the grid on which an action failed on """
         failed = event.GetValue()
         red = wx.Colour(255, 0, 0)
         errorBg = wx.Colour(255, 235, 234)
@@ -2302,15 +2612,23 @@ class NewFrameLayout(wx.Frame):
         warnBg = wx.Colour(255, 241, 216)
         if type(failed) == list:
             for device in failed:
-                if "Queued" in device:
-                    self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
-                else:
-                    self.applyTextColorToDevice(device, red, bgColor=errorBg)
+                try:
+                    if "Queued" in device:
+                        self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
+                    else:
+                        self.applyTextColorToDevice(device, red, bgColor=errorBg)
+                except Exception as e:
+                    print(e)
+                    print(device)
         elif failed:
-            if "Queued" in failed:
-                self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
-            else:
-                self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+            try:
+                if "Queued" in failed:
+                    self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
+                else:
+                    self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+            except Exception as e:
+                print(e)
+                print(failed)
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
@@ -2455,12 +2773,12 @@ class NewFrameLayout(wx.Frame):
         ):
             if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
-                TakeAction(self, Globals.LAST_GROUP_ID, 1, None, isUpdate=True)
+                for groupId in Globals.LAST_GROUP_ID:
+                    TakeAction(self, groupId, 1, None, isUpdate=True)
             elif Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
-                TakeAction(
-                    self, Globals.LAST_DEVICE_ID, 1, None, isDevice=True, isUpdate=True
-                )
+                for deviceId in Globals.LAST_DEVICE_ID:
+                    TakeAction(self, deviceId, 1, None, isDevice=True, isUpdate=True)
             self.isRunningUpdate = False
 
     @api_tool_decorator
@@ -2735,3 +3053,63 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.grid_1.SetCellBackgroundColour(x, y, white)
         event.Skip()
+
+    def onGroupSelection(self, event):
+        choices = list(self.groups.keys())
+        if self.groupMultiDialog:
+            self.groupMultiDialog.Close()
+            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog = None
+        if not self.groupMultiDialog:
+            self.groupMultiDialog = wx.MultiChoiceDialog(
+                self, "Select Group(s)", "", choices
+            )
+            self.groupMultiDialog.SetSize(400, 300)
+            # style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.OK | wx.CANCEL | wx.CENTER
+
+        if self.groupMultiDialog.ShowModal() == wx.ID_OK:
+            self.selectedGroups.Clear()
+            self.selectedDevices.Clear()
+            self.selectedGroupsList = []
+            self.selectedDevicesList = []
+            selections = self.groupMultiDialog.GetSelections()
+            for group in selections:
+                groupName = choices[group]
+                groupId = self.groups[groupName]
+                self.selectedGroups.Append(groupName)
+                if groupName.lower() == "all devices":
+                    self.selectedGroups.Clear()
+                    self.selectedGroupsList = []
+                    self.selectedGroups.Append(groupName)
+                    self.selectedGroupsList.append(groupId)
+                    break
+                if groupId not in self.selectedGroupsList:
+                    self.selectedGroupsList.append(groupId)
+
+        self.setCursorBusy()
+        self.devices = {}
+        self.PopulateDevices(None)
+
+    def onDeviceSelection(self, event):
+        choices = list(self.devices.keys())
+        if self.deviceMultiDialog:
+            self.deviceMultiDialog.Close()
+            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog = None
+        if not self.deviceMultiDialog:
+            self.deviceMultiDialog = wx.MultiChoiceDialog(
+                self, "Select Device(s)", "", choices
+            )
+            self.deviceMultiDialog.SetSize(400, 300)
+        if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
+            self.appChoice.Clear()
+            self.selectedDevices.Clear()
+            self.selectedDevicesList = []
+            selections = self.deviceMultiDialog.GetSelections()
+            for device in selections:
+                deviceName = choices[device]
+                deviceId = self.devices[deviceName]
+                self.selectedDevices.Append(deviceName)
+                if deviceId not in self.selectedDevicesList:
+                    self.selectedDevicesList.append(deviceId)
+        self.onDeviceSelections(None)
