@@ -1709,10 +1709,15 @@ class NewFrameLayout(wx.Frame):
                 indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
-                for r in re.findall(r"'.+?'|[\w-]+", tags):
-                    processedTag = r.replace("'", "")  # strip qoutes around tag
+                for r in re.findall(r"\".+?\"|[\w\d '-+\\/^%$#!@$%^&]+", tags):
+                    processedTag = r.strip()
+                    while processedTag.startswith('"') or processedTag.startswith("'"):
+                        processedTag = processedTag[1 : len(processedTag)]
+                    while processedTag.endswith('"') or processedTag.endswith("'"):
+                        processedTag = processedTag[0 : len(processedTag) - 1]
+                    # processedTag = r.replace("'", "")  # strip qoutes around tag
                     if processedTag:
-                        properTagList.append(processedTag)
+                        properTagList.append(processedTag.strip())
                 tagList[esperName] = properTagList
         return tagList
 
