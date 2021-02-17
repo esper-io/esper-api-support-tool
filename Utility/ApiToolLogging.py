@@ -4,7 +4,7 @@ import tempfile
 import platform
 import sys
 
-from datetime import date
+from datetime import datetime
 from traceback import print_exc, extract_tb, format_list
 
 
@@ -25,7 +25,7 @@ class ApiToolLog:
             exc_traceback = format_list(extract_tb(exc_traceback))
 
         with open(self.logPath, "a") as myfile:
-            myfile.write("\n%s\t: An Error has occured: %s\n" % (date.today(), e))
+            myfile.write("\n%s\t: An Error has occured: %s\n" % (datetime.now(), e))
             myfile.write(str(exc_type))
             myfile.write(str(exc_value))
             for line in exc_traceback:
