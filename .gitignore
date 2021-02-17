@@ -4,8 +4,12 @@
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
 
 # Node artifact files
-node_modules/
-dist/
+node_modules/*
+dist/*
+
+# Executable Generation
+build/*
+*.spec
 
 # Compiled Java class files
 *.class
@@ -40,6 +44,7 @@ Thumbs.db
 *.exe
 *.war
 *.pdf
+*.zip
 
 # Large media files
 *.mp4

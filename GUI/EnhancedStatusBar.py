@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 # --------------------------------------------------------------------------- #
 # ENHANCEDSTATUSBAR wxPython IMPLEMENTATION
 # Python Code By:

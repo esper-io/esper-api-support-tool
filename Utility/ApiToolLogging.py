@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+
 import tempfile
 import platform
+import sys
 
-from datetime import date
+from datetime import datetime
+from traceback import print_exc, extract_tb, format_list
 
 
 class ApiToolLog:
@@ -15,9 +19,13 @@ class ApiToolLog:
         else:
             self.logPath = "%s/EsperApiTool/ApiTool.log" % tempfile.gettempdir()
 
-    def LogError(self, e, exc_type, exc_value, exc_traceback):
+    def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
+        if exc_type == None or exc_value == None or exc_traceback == None:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            exc_traceback = format_list(extract_tb(exc_traceback))
+
         with open(self.logPath, "a") as myfile:
-            myfile.write("%s\t: An Error has occured: %s\n" % (date.today(), e))
+            myfile.write("\n%s\t: An Error has occured: %s\n" % (datetime.now(), e))
             myfile.write(str(exc_type))
             myfile.write(str(exc_value))
             for line in exc_traceback:

@@ -1,6 +1,7 @@
+#!/usr/bin/env python
+
 import Common.Globals as Globals
 import sys
-import tempfile
 import time
 import wx
 
