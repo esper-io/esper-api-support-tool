@@ -882,13 +882,25 @@ class NewFrameLayout(wx.Frame):
                             fileCol += 1
                             continue
                         if colName == expectedCol.replace(" ", "").lower():
-                            if (
-                                expectedCol == "Tags"
-                                and "," in colValue
-                                and '"' not in colValue
-                                and "'" not in colValue
-                            ):
-                                colValue = '"' + colValue + '"'
+                            if expectedCol == "Tags":
+                                try:
+                                    ast.literal_eval(colValue)
+                                except:
+                                    if (
+                                        expectedCol == "Tags"
+                                        and "," in colValue
+                                        and (
+                                            (
+                                                colValue.count('"') % 2 != 0
+                                                or colValue.count("'") % 2 != 0
+                                            )
+                                            or (
+                                                '"' not in colValue
+                                                or "'" not in colValue
+                                            )
+                                        )
+                                    ):
+                                        colValue = '"' + colValue + '"'
                             self.grid_1.SetCellValue(
                                 self.grid_1.GetNumberRows() - 1,
                                 toolCol,
