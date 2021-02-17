@@ -701,7 +701,10 @@ def executeDeviceModification(frame):
     if api_response:
         for device in api_response.results:
             # Tag modification
-            if device.device_name in tagsFromGrid.keys():
+            if (
+                device.device_name in tagsFromGrid.keys()
+                or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
+            ):
                 tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
                 if tags == tagsFromGrid[device.device_name]:
                     changeSucceeded += 1
@@ -713,7 +716,10 @@ def executeDeviceModification(frame):
                 )
                 num += 1
             # Alias modification
-            if device.device_name in aliasDic.keys():
+            if (
+                device.device_name in aliasDic.keys()
+                or device.hardware_info["serialNumber"] in aliasDic.keys()
+            ):
                 newName = aliasDic[device.device_name]
                 logString = str(
                     "--->" + str(device.device_name) + " : " + str(newName) + "--->"

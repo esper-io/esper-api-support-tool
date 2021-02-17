@@ -866,13 +866,29 @@ class NewFrameLayout(wx.Frame):
                             if len(header) > fileCol
                             else ""
                         )
+                        if colName == "storenumber":
+                            colName = "Alias"
+                            header[fileCol] = "Alias"
+                        if colName == "tag":
+                            colName = "Tags"
+                            header[fileCol] = "Tags"
                         if (
-                            header[fileCol] in Globals.CSV_DEPRECATED_HEADER_LABEL
-                            or header[fileCol] not in Globals.CSV_TAG_ATTR_NAME.keys()
+                            fileCol > len(header)
+                            or header[fileCol].strip()
+                            in Globals.CSV_DEPRECATED_HEADER_LABEL
+                            or header[fileCol].strip()
+                            not in Globals.CSV_TAG_ATTR_NAME.keys()
                         ):
                             fileCol += 1
                             continue
                         if colName == expectedCol.replace(" ", "").lower():
+                            if (
+                                expectedCol == "Tags"
+                                and "," in colValue
+                                and '"' not in colValue
+                                and "'" not in colValue
+                            ):
+                                colValue = '"' + colValue + '"'
                             self.grid_1.SetCellValue(
                                 self.grid_1.GetNumberRows() - 1,
                                 toolCol,
@@ -1703,9 +1719,12 @@ class NewFrameLayout(wx.Frame):
     def getDeviceTagsFromGrid(self):
         """ Return the tags from Grid """
         tagList = {}
+        en_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Esper Name")
+        sn_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, 0)
+                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
                 indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
@@ -1718,7 +1737,10 @@ class NewFrameLayout(wx.Frame):
                     # processedTag = r.replace("'", "")  # strip qoutes around tag
                     if processedTag:
                         properTagList.append(processedTag.strip())
-                tagList[esperName] = properTagList
+                if esperName:
+                    tagList[esperName] = properTagList
+                elif serialNum:
+                    tagList[serialNum] = properTagList
         return tagList
 
     @api_tool_decorator
@@ -1726,12 +1748,17 @@ class NewFrameLayout(wx.Frame):
         """ Return a list of Aliases from the Grid """
         aliasList = {}
         indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
+        en_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Esper Name")
+        sn_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, 0)
-                if esperName not in aliasList.keys():
-                    alias = self.grid_1.GetCellValue(rowNum, indx)
+                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                alias = self.grid_1.GetCellValue(rowNum, indx)
+                if esperName and esperName not in aliasList.keys():
                     aliasList[esperName] = alias
+                elif serialNum and serialNum not in aliasList.keys():
+                    aliasList[serialNum] = alias
         return aliasList
 
     def getDeviceAliasFromList(self):
