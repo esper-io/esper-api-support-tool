@@ -1775,9 +1775,12 @@ class NewFrameLayout(wx.Frame):
 
     def getDeviceAliasFromList(self):
         aliasList = {}
-        for device in self.grid_1_contents:
-            if device["EsperName"] not in aliasList:
-                aliasList[device["EsperName"]] = device["Alias"]
+        if self.grid_1_contents:
+            for device in self.grid_1_contents:
+                if device["EsperName"] not in aliasList:
+                    aliasList[device["EsperName"]] = device["Alias"]
+        else:
+            aliasList = self.getDeviceAliasFromGrid()
         return aliasList
 
     def onGridActionSelection(self, event):

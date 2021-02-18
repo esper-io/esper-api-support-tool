@@ -730,9 +730,9 @@ def executeDeviceModification(frame):
             ):
                 newName = None
                 if device.device_name in aliasDic:
-                    aliasDic[device.device_name]
+                    newName = aliasDic[device.device_name]
                 else:
-                    aliasDic[device.hardware_info["serialNumber"]]
+                    newName = aliasDic[device.hardware_info["serialNumber"]]
                 logString = str(
                     "--->" + str(device.device_name) + " : " + str(newName) + "--->"
                 )
