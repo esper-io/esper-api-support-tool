@@ -1080,7 +1080,7 @@ class NewFrameLayout(wx.Frame):
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
 
-                with open(Globals.csv_auth_path, "r") as csvFile:
+                with open(Globals.csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
@@ -1586,6 +1586,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
                 return
             self.grid_1_contents = []
             self.grid_2_contents = []
@@ -1620,6 +1621,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
                 return
             self.grid_1_contents = []
             self.grid_2_contents = []
@@ -1671,12 +1673,14 @@ class NewFrameLayout(wx.Frame):
                     style=wx.OK | wx.ICON_ERROR,
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
         else:
             wx.MessageBox(
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
             self.setCursorDefault()
+            self.runBtn.Enable(True)
 
     @api_tool_decorator
     def fillDeviceGridHeaders(self):
@@ -2020,9 +2024,12 @@ class NewFrameLayout(wx.Frame):
 
     def getDeviceAliasFromList(self):
         aliasList = {}
-        for device in self.grid_1_contents:
-            if device["EsperName"] not in aliasList:
-                aliasList[device["EsperName"]] = device["Alias"]
+        if self.grid_1_contents:
+            for device in self.grid_1_contents:
+                if device["EsperName"] not in aliasList:
+                    aliasList[device["EsperName"]] = device["Alias"]
+        else:
+            aliasList = self.getDeviceAliasFromGrid()
         return aliasList
 
     def onGridActionSelection(self, event):
@@ -2566,23 +2573,17 @@ class NewFrameLayout(wx.Frame):
         warnBg = wx.Colour(255, 241, 216)
         if type(failed) == list:
             for device in failed:
-                try:
-                    if "Queued" in device:
-                        self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
-                    else:
-                        self.applyTextColorToDevice(device, red, bgColor=errorBg)
-                except Exception as e:
-                    print(e)
-                    print(device)
-        elif failed:
-            try:
-                if "Queued" in failed:
-                    self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
+                if "Queued" in device:
+                    self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
                 else:
-                    self.applyTextColorToDevice(failed, red, bgColor=errorBg)
-            except Exception as e:
-                print(e)
-                print(failed)
+                    self.applyTextColorToDevice(device, red, bgColor=errorBg)
+        elif type(failed) == tuple:
+            if "Queued" in failed:
+                self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
+            else:
+                self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+        elif failed:
+            self.applyTextColorToDevice(failed, red, bgColor=errorBg)
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
