@@ -705,7 +705,12 @@ def executeDeviceModification(frame):
                 device.device_name in tagsFromGrid.keys()
                 or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
             ):
-                tags = setdevicetags(device.id, tagsFromGrid[device.device_name])
+                tagsFromCell = None
+                if device.device_name in tagsFromGrid:
+                    tagsFromGrid[device.device_name]
+                else:
+                    tagsFromGrid[device.hardware_info["serialNumber"]]
+                tags = setdevicetags(device.id, tagsFromCell)
                 if tags == tagsFromGrid[device.device_name]:
                     changeSucceeded += 1
                 postEventToFrame(
@@ -720,7 +725,11 @@ def executeDeviceModification(frame):
                 device.device_name in aliasDic.keys()
                 or device.hardware_info["serialNumber"] in aliasDic.keys()
             ):
-                newName = aliasDic[device.device_name]
+                newName = None
+                if device.device_name in aliasDic:
+                    aliasDic[device.device_name]
+                else:
+                    aliasDic[device.hardware_info["serialNumber"]]
                 logString = str(
                     "--->" + str(device.device_name) + " : " + str(newName) + "--->"
                 )
