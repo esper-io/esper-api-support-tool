@@ -2956,6 +2956,8 @@ class NewFrameLayout(wx.Frame):
         white = wx.Colour(255, 255, 255)
         light_yellow = wx.Colour(255, 255, 224)
         statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
+        if grid != self.grid_1:
+            statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
             if rowNum < grid.GetNumberRows():
                 match = []
