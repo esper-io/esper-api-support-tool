@@ -30,6 +30,9 @@ available on the Esper Console Dashboard."""
 
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit#heading=h.50j8ygvoempc"
+UPDATE_LINK = (
+    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+)
 
 """ Actions """
 GENERAL_ACTIONS = [

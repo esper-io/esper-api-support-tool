@@ -11,6 +11,7 @@ import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
+from pathlib import Path
 
 
 def resourcePath(relative_path):
@@ -70,6 +71,43 @@ def checkEsperInternetConnection():
     except Exception as e:
         print(e)
     return False
+
+
+def checkForUpdate():
+    try:
+        response = requests.get(Globals.UPDATE_LINK)
+        json_resp = response.json()
+        return json_resp
+    except Exception as e:
+        print(e)
+    return None
+
+
+def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1024):
+    if not filepath:
+        filepath = str(os.path.join(Path.home(), "Downloads"))
+    fullPath = os.path.join(filepath, fileName)
+    num = 1
+    while os.path.exists(fullPath):
+        parts = fileName.split(".")
+        parts.insert(1, (" (%s)" % num))
+        parts[len(parts) - 1] = ".%s" % parts[len(parts) - 1]
+        fileName = "".join(parts)
+        fullPath = os.path.join(filepath, fileName)
+        num += 1
+    parentPath = os.path.abspath(os.path.join(fullPath, os.pardir))
+    if not os.path.exists(parentPath):
+        os.makedirs(parentPath)
+    try:
+        r = requests.get(url, stream=True, allow_redirects=redirects)
+        with open(fullPath, "wb") as file:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    file.write(chunk)
+        return fullPath
+    except Exception as e:
+        print(e)
+    return None
 
 
 def deleteFile(file):

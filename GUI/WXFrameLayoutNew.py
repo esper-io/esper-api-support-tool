@@ -52,10 +52,12 @@ from Utility.EsperAPICalls import (
 )
 
 from Utility.Resource import (
+    downloadFileFromUrl,
     resourcePath,
     scale_bitmap,
     createNewFile,
     checkEsperInternetConnection,
+    checkForUpdate,
 )
 
 
@@ -111,60 +113,6 @@ class NewFrameLayout(wx.Frame):
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 700))
         self.SetMinSize((900, 700))
-
-        """self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        self.panel_5 = wx.Panel(self.panel_1, wx.ID_ANY)
-        self.panel_3 = wx.Panel(self.panel_5, wx.ID_ANY)
-        self.configList = wx.TextCtrl(
-            self.panel_3, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY
-        )
-        self.panel_7 = wx.Panel(self.panel_1, wx.ID_ANY)
-        self.groupChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
-        )
-        self.actionChoice = wx.ComboBox(
-            self.panel_7,
-            wx.ID_ANY,
-            style=wx.CB_DROPDOWN | wx.CB_READONLY,
-            choices=Globals.GENERAL_ACTIONS,
-        )
-        self.deviceChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
-        )
-        self.appChoice = wx.ComboBox(
-            self.panel_7, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
-        )
-        self.gridActions = wx.ComboBox(
-            self.panel_7,
-            wx.ID_ANY,
-            choices=Globals.GRID_ACTIONS,
-            style=wx.CB_DROPDOWN | wx.CB_READONLY,
-        )
-        self.panel_6 = wx.Panel(self.panel_1, wx.ID_ANY)
-        self.panel_8 = wx.Panel(self.panel_6, wx.ID_ANY)
-        self.runBtn = wx.Button(
-            self.panel_8, wx.ID_ANY, "Run", style=wx.EXPAND | wx.SHAPED
-        )
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
-        self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
-        self.panel_9 = wx.Panel(self.panel_2, wx.ID_ANY)
-        self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
-
-        self.runBtn.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-
-        self.configList.SetFont(
-            wx.Font(
-                11,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "",
-            )
-        )
-
-        self.configList.Bind(wx.EVT_KEY_DOWN, self.RemoveEndpoint)"""
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
 
@@ -455,10 +403,10 @@ class NewFrameLayout(wx.Frame):
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
         self.run = runMenu.Append(runItem)
-
+        runMenu.Append(wx.ID_SEPARATOR)
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         self.command = runMenu.Append(commandItem)
-
+        runMenu.Append(wx.ID_SEPARATOR)
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
 
@@ -490,12 +438,21 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onClearGrids, self.clearGrids)
 
         helpMenu = wx.Menu()
-        about = helpMenu.Append(wx.ID_HELP, "About", "&About")
-        self.Bind(wx.EVT_MENU, self.onAbout, about)
 
         helpItem = wx.MenuItem(helpMenu, wx.ID_ANY, "&Help\tF1")
         help = helpMenu.Append(helpItem)
         self.Bind(wx.EVT_MENU, self.onHelp, help)
+
+        helpMenu.Append(wx.ID_SEPARATOR)
+
+        checkUpdate = wx.MenuItem(helpMenu, wx.ID_ANY, "&Check For Updates")
+        help = helpMenu.Append(checkUpdate)
+        self.Bind(wx.EVT_MENU, self.onUpdateCheck, checkUpdate)
+
+        helpMenu.Append(wx.ID_SEPARATOR)
+
+        about = helpMenu.Append(wx.ID_HELP, "About", "&About")
+        self.Bind(wx.EVT_MENU, self.onAbout, about)
 
         self.menubar.Append(fileMenu, "&File")
         self.menubar.Append(editMenu, "&Edit")
@@ -531,9 +488,15 @@ class NewFrameLayout(wx.Frame):
         qtool = self.frame_toolbar.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.frame_toolbar.AddSeparator()
 
-        open_icon = scale_bitmap(resourcePath("Images/add.png"), 16, 16)
+        add_icon = scale_bitmap(resourcePath("Images/add.png"), 16, 16)
+        atool = self.frame_toolbar.AddTool(
+            wx.ID_ANY, "Add New Endpoint", add_icon, "Add New Endpoint"
+        )
+        self.frame_toolbar.AddSeparator()
+
+        open_icon = scale_bitmap(resourcePath("Images/open.png"), 16, 16)
         otool = self.frame_toolbar.AddTool(
-            wx.ID_ANY, "Add New Endpoint", open_icon, "Add New Endpoint"
+            wx.ID_ANY, "Open Device CSV", open_icon, "Open Device CSV"
         )
         self.frame_toolbar.AddSeparator()
 
@@ -1224,7 +1187,6 @@ class NewFrameLayout(wx.Frame):
             self.Logging(
                 "--->**** Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
             )
-            self.loadRecentMenu()
             defaultConfigItem = self.configMenuOptions[0]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -2534,31 +2496,6 @@ class NewFrameLayout(wx.Frame):
             self.deviceChoice.Enable(False)
 
     @api_tool_decorator
-    def loadRecentMenu(self):
-        """ Populate the Recently Opened Menu """
-        if (
-            self.preferences
-            and "recentAuth" in self.preferences
-            and not all("" == s or s.isspace() for s in self.preferences["recentAuth"])
-        ):
-            recentItems = self.recent.GetMenuItems()
-            for child in recentItems:
-                self.recent.Delete(child)
-            notExist = []
-            revList = self.preferences["recentAuth"]
-            revList.reverse()
-            for auth in revList:
-                if auth and os.path.isfile(auth) and os.path.exists(auth):
-                    item = self.recent.Append(wx.ID_ANY, auth)
-                    self.Bind(
-                        wx.EVT_MENU, partial(self.PopulateConfig, auth, item), item
-                    )
-                if not os.path.exists(auth):
-                    notExist.append(auth)
-            for auth in notExist:
-                self.preferences["recentAuth"].remove(auth)
-
-    @api_tool_decorator
     def uncheckConsole(self, event):
         """ Uncheck Console menu item """
         self.consoleView.Check(False)
@@ -3069,3 +3006,45 @@ class NewFrameLayout(wx.Frame):
                 if deviceId not in self.selectedDevicesList:
                     self.selectedDevicesList.append(deviceId)
         self.onDeviceSelections(None)
+
+    @api_tool_decorator
+    def onUpdateCheck(self, event):
+        update = wxThread.GUIThread(self, self.updateCheck, None)
+        update.start()
+
+    def updateCheck(self):
+        icon = wx.ICON_INFORMATION
+        msg = ""
+        json = checkForUpdate()
+        if json:
+            tagVersion = json["tag_name"].replace("v", "")
+            if float(tagVersion) > float(Globals.VERSION):
+                downloadURL = ""
+                name = ""
+                assets = json["assets"]
+                for asset in assets:
+                    name = asset["name"]
+                    if "win" in name.lower() and self.WINDOWS:
+                        downloadURL = asset["browser_download_url"]
+                        break
+                    elif "mac" in name.lower() and not self.WINDOWS:
+                        downloadURL = asset["browser_download_url"]
+                        break
+                if downloadURL:
+                    result = downloadFileFromUrl(downloadURL, name)
+                    if result:
+                        msg = (
+                            "Download Succeeded! File should be located at:\n\n%s"
+                            % result
+                        )
+                    else:
+                        icon = wx.ICON_ERROR
+                        msg = "An error occured while downloading the update. Please try again later."
+            else:
+                msg = "You are up-to-date!"
+        else:
+            icon = wx.ICON_ERROR
+            msg = (
+                "An error occured while downloading the update. Please try again later."
+            )
+        wx.MessageBox(msg, style=icon)
