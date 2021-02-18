@@ -706,12 +706,15 @@ def executeDeviceModification(frame):
                 or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
             ):
                 tagsFromCell = None
+                key = None
                 if device.device_name in tagsFromGrid:
-                    tagsFromGrid[device.device_name]
+                    key = device.device_name
+                    tagsFromCell = tagsFromGrid[key]
                 else:
-                    tagsFromGrid[device.hardware_info["serialNumber"]]
+                    key = device.hardware_info["serialNumber"]
+                    tagsFromCell = tagsFromGrid[key]
                 tags = setdevicetags(device.id, tagsFromCell)
-                if tags == tagsFromGrid[device.device_name]:
+                if tags == tagsFromGrid[key]:
                     changeSucceeded += 1
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags)
