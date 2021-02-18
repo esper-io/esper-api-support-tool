@@ -830,7 +830,7 @@ class NewFrameLayout(wx.Frame):
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
 
-                with open(Globals.csv_auth_path, "r") as csvFile:
+                with open(Globals.csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
@@ -2297,7 +2297,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFail(self, event):
-        """ Try to sohwcase rows in the grid on which an action failed on """
+        """ Try to showcase rows in the grid on which an action failed on """
         failed = event.GetValue()
         red = wx.Colour(255, 0, 0)
         errorBg = wx.Colour(255, 235, 234)
@@ -2309,11 +2309,13 @@ class NewFrameLayout(wx.Frame):
                     self.applyTextColorToDevice(device[0], orange, bgColor=warnBg)
                 else:
                     self.applyTextColorToDevice(device, red, bgColor=errorBg)
-        elif failed:
+        elif type(failed) == tuple:
             if "Queued" in failed:
                 self.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
             else:
                 self.applyTextColorToDevice(failed, red, bgColor=errorBg)
+        elif failed:
+            self.applyTextColorToDevice(failed, red, bgColor=errorBg)
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
