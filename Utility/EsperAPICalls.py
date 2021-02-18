@@ -540,12 +540,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
 
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     logActionExecution(frame, action, group)
-    if (
-        action
-        == Globals.SHOW_ALL_AND_GENERATE_REPORT
-        # or action == Globals.SET_KIOSK
-        # or action == Globals.SET_MULTI
-    ) and not isUpdate:
+    if (action == Globals.SHOW_ALL_AND_GENERATE_REPORT) and not isUpdate:
         frame.emptyDeviceGrid()
         frame.emptyNetworkGrid()
 

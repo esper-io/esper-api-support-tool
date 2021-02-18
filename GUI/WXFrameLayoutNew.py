@@ -200,9 +200,8 @@ class NewFrameLayout(wx.Frame):
         self.removeEndpointBtn = wx.BitmapButton(
             self.panel_3,
             wx.ID_ANY,
-            remove_icon,  # size=(16, 16)
+            remove_icon,
         )
-        # wx.Button(self.panel_3, wx.ID_ANY, "", size=(16, 16))
         grid_sizer_1.Add(
             self.removeEndpointBtn,
             0,
@@ -212,10 +211,6 @@ class NewFrameLayout(wx.Frame):
         self.removeEndpointBtn.SetToolTip("Remove Endpoint from %s" % Globals.TITLE)
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.removeEndpointBtn.Enable(False)
-
-        # self.removeEndpointBtn.SetBitmap(remove_icon)
-        # self.removeEndpointBtn.SetBitmapMargins((2, 2))
-        # self.removeEndpointBtn.SetInitialSize()
 
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         sizer_2.Add(self.panel_4, 1, wx.EXPAND, 0)
@@ -675,8 +670,6 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.frame_toolbar.Realize()
-        # self.panel_1.SetMinSize((400, 900))
-        # self.panel_2.SetMinSize((2000, 800))
         self.Maximize(True)
 
     def __do_layout(self):
@@ -1269,8 +1262,6 @@ class NewFrameLayout(wx.Frame):
         menuItem = self.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
         self.removeEndpointBtn.Enable(False)
-        # self.groupChoice.Clear()
-        # self.deviceChoice.Clear()
         self.appChoice.Clear()
         self.setCursorBusy()
         try:
@@ -1377,7 +1368,6 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.setGaugeValue(0)
         self.gauge.Pulse()
-        # self.groupChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self, getAllGroups, eventType=wxThread.myEVT_GROUP, waitForJoin=False
         )
@@ -1394,7 +1384,6 @@ class NewFrameLayout(wx.Frame):
         )
         if len(results):
             for group in results:
-                # self.groupChoice.Append(group.name, group.id)
                 self.groups[group.name] = group.id
                 self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
@@ -1527,13 +1516,11 @@ class NewFrameLayout(wx.Frame):
                     }
                 if entry not in self.apps:
                     self.apps.append(entry)
-                # self.setGaugeValue(int(num / len(results) * 100))
                 num += 1
         self.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.cmdtool.Id, True)
-        # wx.CallLater(3000, self.setGaugeValue, 0)
 
     def sortAndPopulateAppChoice(self):
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
@@ -1565,18 +1552,6 @@ class NewFrameLayout(wx.Frame):
         appSelection = self.appChoice.GetSelection()
         actionSelection = self.actionChoice.GetSelection()
 
-        # groupLabel = (
-        #     self.groupChoice.Items[groupSelection]
-        #     if len(self.groupChoice.Items) > 0
-        #     and self.groupChoice.Items[groupSelection]
-        #     else ""
-        # )
-        # deviceLabel = (
-        #     self.deviceChoice.Items[deviceSelection]
-        #     if len(self.deviceChoice.Items) > 0
-        #     and self.deviceChoice.Items[deviceSelection]
-        #     else ""
-        # )
         appLabel = (
             self.appChoice.Items[appSelection]
             if len(self.appChoice.Items) > 0 and self.appChoice.Items[appSelection]
@@ -1879,10 +1854,10 @@ class NewFrameLayout(wx.Frame):
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
         light_blue = wx.Colour(204, 255, 255)
         if attribute == "Alias" and "OriginalAlias" in device_info:
-            # grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            grid.SetCellBackgroundColour(rowNum, indx, light_blue)
             pass
         if attribute == "Tags" and "OriginalTags" in device_info:
-            # grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            grid.SetCellBackgroundColour(rowNum, indx, light_blue)
             pass
 
     @api_tool_decorator
@@ -2017,7 +1992,6 @@ class NewFrameLayout(wx.Frame):
                         processedTag = processedTag[1 : len(processedTag)]
                     while processedTag.endswith('"') or processedTag.endswith("'"):
                         processedTag = processedTag[0 : len(processedTag) - 1]
-                    # processedTag = r.replace("'", "")  # strip qoutes around tag
                     if processedTag:
                         properTagList.append(processedTag.strip())
                 if esperName:
@@ -2136,7 +2110,6 @@ class NewFrameLayout(wx.Frame):
             self.setCursorBusy()
             self.setGaugeValue(0)
 
-            # groupSelection = self.groupChoice.GetSelection()
             if self.selectedGroupsList:
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
                     result = cmdDialog.ShowModal()
@@ -2183,20 +2156,6 @@ class NewFrameLayout(wx.Frame):
 
     def confirmCommand(self, cmd, commandType):
         """ Ask user to confirm the command they want to run """
-        # deviceSelection = self.deviceChoice.GetSelection()
-        # groupSelection = self.groupChoice.GetSelection()
-        # groupLabel = (
-        #     self.groupChoice.Items[groupSelection]
-        #     if len(self.groupChoice.Items) > 0
-        #     and self.groupChoice.Items[groupSelection]
-        #     else ""
-        # )
-        # deviceLabel = (
-        #     self.deviceChoice.Items[deviceSelection]
-        #     if len(self.deviceChoice.Items) > 0
-        #     and self.deviceChoice.Items[deviceSelection]
-        #     else ""
-        # )
         modal = None
         isGroup = False
         cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
@@ -2396,7 +2355,6 @@ class NewFrameLayout(wx.Frame):
     def onDeviceSelections(self, event):
         """ When the user selects a device showcase apps related to that device """
         self.SetFocus()
-        # self.appChoice.Clear()
         self.gauge.Pulse()
         self.setCursorBusy()
         num = 1
@@ -2411,11 +2369,6 @@ class NewFrameLayout(wx.Frame):
             ).start()
         else:
             self.sortAndPopulateAppChoice()
-            # for app in self.apps:
-            #     if app:
-            #         self.appChoice.Append(list(app.keys())[0], list(app.values())[0])
-            #     self.setGaugeValue(int(num / len(self.apps) * 100))
-            #     num += 1
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
         wx.PostEvent(self, evt)
 
@@ -3068,7 +3021,6 @@ class NewFrameLayout(wx.Frame):
                 self, "Select Group(s)", "", choices
             )
             self.groupMultiDialog.SetSize(400, 300)
-            # style = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.OK | wx.CANCEL | wx.CENTER
 
         if self.groupMultiDialog.ShowModal() == wx.ID_OK:
             self.selectedGroups.Clear()
