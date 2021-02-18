@@ -110,7 +110,7 @@ def toggleKioskMode(
     )
 
     status = response.results[0].state
-    status = waitForCommandToFinish(frame, api_response.id)
+    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
     return status
 
 
@@ -804,7 +804,7 @@ def getCommandsApiInstance():
 
 
 @api_tool_decorator
-def executeUpdateDeviceConfigCommandOnGroup(
+def executeCommandOnGroup(
     frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Group of Devices """
@@ -825,13 +825,16 @@ def executeUpdateDeviceConfigCommandOnGroup(
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        last_status = waitForCommandToFinish(frame, api_response.id)
-        statusList.append("%s : %s" % (groupToUse, last_status))
+        last_status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
+        if hasattr(last_status, "state"):
+            statusList.append({"group": groupToUse, "status": last_status.state})
+        else:
+            statusList.append({"group": groupToUse, "status": last_status})
     return statusList
 
 
 @api_tool_decorator
-def executeUpdateDeviceConfigCommandOnDevice(
+def executeCommandOnDevice(
     frame, command_args, schedule=None, command_type="UPDATE_DEVICE_CONFIG"
 ):
     """ Execute a Command on a Device """
@@ -852,8 +855,11 @@ def executeUpdateDeviceConfigCommandOnDevice(
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        last_status = waitForCommandToFinish(frame, api_response.id)
-        statusList.append("%s : %s" % (deviceToUse, last_status))
+        last_status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
+        if hasattr(last_status, "state"):
+            statusList.append({"group": deviceToUse, "status": last_status.state})
+        else:
+            statusList.append({"group": deviceToUse, "status": last_status})
     return statusList
 
 
@@ -866,40 +872,45 @@ def waitForCommandToFinish(
     response = api_instance.get_command_request_status(
         Globals.enterprise_id, request_id
     )
-    status = response.results[0]
-    postEventToFrame(wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state))
-
-    stateList = [
-        "Command Success",
-        "Command Failure",
-        "Command TimeOut",
-        "Command Cancelled",
-        "Command Queued",
-        "Command Scheduled",
-    ]
-    if ignoreQueue:
-        stateList.remove("Command Queued")
-
-    start = time.perf_counter()
-    while status.state not in stateList:
-        end = time.perf_counter()
-        duration = end - start
-        if duration >= timeout:
-            postEventToFrame(
-                wxThread.myEVT_LOG,
-                "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
-                % str(status.state),
-            )
-            break
-        response = api_instance.get_command_request_status(
-            Globals.enterprise_id, request_id
-        )
+    if response.results:
         status = response.results[0]
         postEventToFrame(
             wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
         )
-        time.sleep(3)
-    return status
+
+        stateList = [
+            "Command Success",
+            "Command Failure",
+            "Command TimeOut",
+            "Command Cancelled",
+            "Command Queued",
+            "Command Scheduled",
+        ]
+        if ignoreQueue:
+            stateList.remove("Command Queued")
+
+        start = time.perf_counter()
+        while status.state not in stateList:
+            end = time.perf_counter()
+            duration = end - start
+            if duration >= timeout:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
+                    % str(status.state),
+                )
+                break
+            response = api_instance.get_command_request_status(
+                Globals.enterprise_id, request_id
+            )
+            status = response.results[0]
+            postEventToFrame(
+                wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
+            )
+            time.sleep(3)
+        return status
+    else:
+        return response.results
 
 
 def ApplyDeviceConfig(frame, config, commandType):
@@ -950,14 +961,14 @@ def ApplyDeviceConfig(frame, config, commandType):
     if result and isGroup:
         t = wxThread.GUIThread(
             frame,
-            executeUpdateDeviceConfigCommandOnGroup,
+            executeCommandOnGroup,
             args=(frame, command_args, schedule, commandType),
             eventType=wxThread.myEVT_COMMAND,
         )
     elif result and not isGroup:
         t = wxThread.GUIThread(
             frame,
-            executeUpdateDeviceConfigCommandOnDevice,
+            executeCommandOnDevice,
             args=(frame, command_args, schedule, commandType),
             eventType=wxThread.myEVT_COMMAND,
         )
@@ -1046,7 +1057,7 @@ def clearAppData(frame, device):
                 "command": "CLEAR_APP_DATA",
             }
             resp, json_resp = postEsperCommand(reqData)
-            logBadResponse(url, resp, json_resp)
+            logBadResponse(resp.request.url, resp, json_resp)
             if resp.status_code > 300:
                 postEventToFrame(wxThread.myEVT_ON_FAILED, device)
             if resp.status_code < 300:
@@ -1121,4 +1132,4 @@ def setAppState(device_id, pkg_name, state="HIDE"):
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        return waitForCommandToFinish(Globals.frame, api_response.id)
+        return waitForCommandToFinish(Globals.frame, api_response.id, ignoreQueue=True)

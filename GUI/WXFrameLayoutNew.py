@@ -2136,8 +2136,8 @@ class NewFrameLayout(wx.Frame):
             self.setCursorBusy()
             self.setGaugeValue(0)
 
-            groupSelection = self.groupChoice.GetSelection()
-            if groupSelection >= 0:
+            # groupSelection = self.groupChoice.GetSelection()
+            if self.selectedGroupsList:
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
                     result = cmdDialog.ShowModal()
                     if result == wx.ID_OK:
@@ -2169,13 +2169,14 @@ class NewFrameLayout(wx.Frame):
         """ Tell user to check the Esper Console for detailed results """
         cmdResult = event.GetValue()
         self.setGaugeValue(100)
-        if hasattr(cmdResult, "state"):
-            # wx.MessageBox(
-            #     "Command State: %s \n\n Check the console for detailed command results."
-            #     % cmdResult,
-            #     style=wx.OK,
-            # )
-            dlg = wx.RichMessageDialog(self, "")
+        if cmdResult:
+            dlg = wx.RichMessageDialog(
+                self, "Command has been fired. Check the Esper Console for details."
+            )
+            result = ""
+            for res in cmdResult:
+                result += json.dumps(str(res), indent=2)
+                result += "\n\n"
             dlg.ShowDetailedText(str(cmdResult).replace("[", "").replace("]", ""))
             dlg.ShowModal()
         wx.CallLater(3000, self.setGaugeValue, 0)
