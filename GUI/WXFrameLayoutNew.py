@@ -1350,6 +1350,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
                 return
             self.Logging(
                 '---> Attempting to run action, "%s", on group, %s.'
@@ -1378,6 +1379,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
                 return
             self.Logging(
                 '---> Attempting to run action, "%s", on device, %s.'
@@ -1425,12 +1427,14 @@ class NewFrameLayout(wx.Frame):
                     style=wx.OK | wx.ICON_ERROR,
                 )
                 self.setCursorDefault()
+                self.runBtn.Enable(True)
         else:
             wx.MessageBox(
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
             self.setCursorDefault()
+            self.runBtn.Enable(True)
 
     @api_tool_decorator
     def fillDeviceGridHeaders(self):
