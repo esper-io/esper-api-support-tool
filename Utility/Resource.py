@@ -10,7 +10,7 @@ import wx
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
-from Common.decorator import api_tool_decorator
+from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
 
@@ -42,12 +42,14 @@ def scale_bitmap(bitmap, width, height):
     return result
 
 
-@api_tool_decorator
 def postEventToFrame(eventType, eventValue=None):
     """ Post an Event to the Main Thread """
-    evt = wxThread.CustomEvent(eventType, -1, eventValue)
-    if Globals.frame:
-        wx.PostEvent(Globals.frame, evt)
+    try:
+        evt = wxThread.CustomEvent(eventType, -1, eventValue)
+        if Globals.frame:
+            wx.PostEvent(Globals.frame, evt)
+    except Exception as e:
+        ApiToolLog.LogError(e)
 
 
 def download(url, file_name, overwrite=True):
@@ -56,6 +58,7 @@ def download(url, file_name, overwrite=True):
             os.remove(file_name)
     except Exception as e:
         print(e)
+        ApiToolLog.LogError(e)
     # open in binary mode
     with open(file_name, "wb") as file:
         # get request
@@ -80,6 +83,7 @@ def checkForUpdate():
         return json_resp
     except Exception as e:
         print(e)
+
     return None
 
 
@@ -107,6 +111,7 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         return fullPath
     except Exception as e:
         print(e)
+        ApiToolLog.LogError(e)
     return None
 
 
@@ -117,6 +122,7 @@ def deleteFile(file):
             return True
     except Exception as e:
         print(e)
+        ApiToolLog.LogError(e)
     return False
 
 

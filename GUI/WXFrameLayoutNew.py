@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.ApiToolLogging import ApiToolLog
 import wx
 import wx.grid as gridlib
 import wx.adv as adv
@@ -109,6 +110,7 @@ class NewFrameLayout(wx.Frame):
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
+        self.isCheckingForUpdates = False
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 700))
@@ -3009,13 +3011,20 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onUpdateCheck(self, event):
-        update = wxThread.GUIThread(self, self.updateCheck, None)
-        update.start()
+        if not self.isCheckingForUpdates:
+            update = wxThread.GUIThread(self, self.updateCheck, None)
+            update.start()
+            self.isCheckingForUpdates = True
 
     def updateCheck(self):
         icon = wx.ICON_INFORMATION
         msg = ""
-        json = checkForUpdate()
+        json = None
+        try:
+            json = checkForUpdate()
+        except Exception as e:
+            print(e)
+            ApiToolLog.LogError(e)
         if json:
             tagVersion = json["tag_name"].replace("v", "")
             if float(tagVersion) > float(Globals.VERSION):
@@ -3031,7 +3040,12 @@ class NewFrameLayout(wx.Frame):
                         downloadURL = asset["browser_download_url"]
                         break
                 if downloadURL:
-                    result = downloadFileFromUrl(downloadURL, name)
+                    result = None
+                    try:
+                        result = downloadFileFromUrl(downloadURL, name)
+                    except Exception as e:
+                        print(e)
+                        ApiToolLog.LogError(e)
                     if result:
                         msg = (
                             "Download Succeeded! File should be located at:\n\n%s"
@@ -3048,3 +3062,4 @@ class NewFrameLayout(wx.Frame):
                 "An error occured while downloading the update. Please try again later."
             )
         wx.MessageBox(msg, style=icon)
+        self.isCheckingForUpdates = False
