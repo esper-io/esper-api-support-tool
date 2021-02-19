@@ -543,6 +543,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if (action == Globals.SHOW_ALL_AND_GENERATE_REPORT) and not isUpdate:
         frame.emptyDeviceGrid()
         frame.emptyNetworkGrid()
+        frame.CSVUploaded = False
 
     deviceList = None
     if isDevice:

@@ -111,6 +111,7 @@ class NewFrameLayout(wx.Frame):
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
         self.isCheckingForUpdates = False
+        self.CSVUploaded = False
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((900, 700))
@@ -1058,6 +1059,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
 
     def processDeviceCSVUpload(self, data):
+        self.CSVUploaded = True
         num = 0
         header = None
         grid_headers = list(Globals.CSV_TAG_ATTR_NAME.keys())
@@ -2177,9 +2179,13 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onDeviceGridSort(self, event):
         """ Sort Device Grid """
-        if self.isRunning or (
-            self.gauge.GetValue() != self.gauge.GetRange()
-            and self.gauge.GetValue() != 0
+        if (
+            self.isRunning
+            or (
+                self.gauge.GetValue() != self.gauge.GetRange()
+                and self.gauge.GetValue() != 0
+            )
+            or self.CSVUploaded
         ):
             return
         if hasattr(event, "Col"):
@@ -2232,9 +2238,13 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onNetworkGridSort(self, event):
         """ Sort the network grid """
-        if self.isRunning or (
-            self.gauge.GetValue() != self.gauge.GetRange()
-            and self.gauge.GetValue() != 0
+        if (
+            self.isRunning
+            or (
+                self.gauge.GetValue() != self.gauge.GetRange()
+                and self.gauge.GetValue() != 0
+            )
+            or self.CSVUploaded
         ):
             return
         if hasattr(event, "Col"):
@@ -2639,7 +2649,15 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.cmdtool.Id, False)
             self.runBtn.Enable(False)
             self.gauge.Pulse()
-            self.fetchUpdateData(forceUpdate=True)
+            # self.fetchUpdateData(forceUpdate=True)
+            thread = wxThread.GUIThread(
+                self,
+                self.fetchUpdateData,
+                (True),
+                passArgAsTuple=True,
+                eventType=None,
+            )
+            thread.start()
         else:
             while Globals.ENABLE_GRID_UPDATE:
                 time.sleep(Globals.GRID_UPDATE_RATE)
@@ -2650,6 +2668,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def fetchUpdateData(self, forceUpdate=False):
+        threads = []
         if self.isForceUpdate:
             self.isForceUpdate = forceUpdate
         if (
@@ -2668,12 +2687,31 @@ class NewFrameLayout(wx.Frame):
             if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
                 for groupId in Globals.LAST_GROUP_ID:
-                    TakeAction(self, groupId, 1, None, isUpdate=True)
+                    # TakeAction(self, groupId, 1, None, isUpdate=True)
+                    thread = wxThread.GUIThread(
+                        self,
+                        TakeAction,
+                        (self, groupId, 1, None, False, True),
+                        eventType=None,
+                    )
+                    thread.start()
+                    threads.append(thread)
             elif Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
                 for deviceId in Globals.LAST_DEVICE_ID:
-                    TakeAction(self, deviceId, 1, None, isDevice=True, isUpdate=True)
+                    thread = wxThread.GUIThread(
+                        self,
+                        TakeAction,
+                        (self, deviceId, 1, None, True, True),
+                        eventType=None,
+                    )
+                    thread.start()
+                    threads.append(thread)
+                    # TakeAction(self, deviceId, 1, None, isDevice=True, isUpdate=True)
             self.isRunningUpdate = False
+        for thread in threads:
+            if thread:
+                thread.join()
 
     @api_tool_decorator
     def onClone(self, event):
