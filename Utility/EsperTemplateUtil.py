@@ -9,7 +9,7 @@ import time
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
-from Utility.Resource import download, deleteFile
+from Utility.Resource import download, deleteFile, joinThreadList
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
@@ -275,8 +275,7 @@ class EsperTemplateUtil:
                 template, newTemplate, apps, config, entId, missingAppThreads
             )
 
-            for t in missingAppThreads:
-                t.join()
+            joinThreadList(missingAppThreads)
 
             if missingAppThreads:
                 apps = getAllApplicationsForHost(

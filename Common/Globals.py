@@ -10,6 +10,7 @@ VERSION = "0.17"
 TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
+MIN_SIZE = (900, 700)
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

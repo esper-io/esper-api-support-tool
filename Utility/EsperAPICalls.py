@@ -9,17 +9,10 @@ import Common.Globals as Globals
 import Utility.wxThread as wxThread
 import wx
 
-from Utility.deviceInfo import (
-    getSecurityPatch,
-    getWifiStatus,
-    getCellularStatus,
-    getDeviceName,
-)
-
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import postEventToFrame, runSubprocessPOpen
+from Utility.Resource import joinThreadList, postEventToFrame, runSubprocessPOpen
 
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
@@ -137,17 +130,23 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
             if "application" in app:
                 applist.append(
                     app["application"]["application_name"]
-                    + " v"
+                    + " (%s) v" % app["application"]["package_name"]
                     + app["application"]["version"]["version_code"]
                 )
             else:
                 entry = {
-                    app["app_name"]: app["package_name"],
+                    app["app_name"]
+                    + " (%s)" % app["package_name"]: app["package_name"],
                     "app_name": app["app_name"],
+                    "app_state": app["state"],
                 }
-                if entry not in Globals.frame.apps:
-                    Globals.frame.apps.append(entry)
-                applist.append(app["app_name"] + " v" + app["version_code"])
+                if entry not in Globals.frame.sidePanel.deviceApps:
+                    Globals.frame.sidePanel.deviceApps.append(entry)
+                applist.append(
+                    app["app_name"]
+                    + " (%s) v" % app["package_name"]
+                    + app["version_code"]
+                )
     return applist, json_resp
 
 
@@ -430,8 +429,7 @@ def iterateThroughDeviceList(
 @api_tool_decorator
 def waitTillThreadsFinish(threads, action, event=wxThread.myEVT_UPDATE_DONE):
     """ Wait till all threads have finished then send a signal back to the Main thread """
-    for t in threads:
-        t.join()
+    joinThreadList(threads)
     postEventToFrame(event, action)
 
 
@@ -522,9 +520,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
 def logActionExecution(frame, action, selection=None):
     actionName = ""
-    if frame.actionChoice.GetValue() in Globals.GRID_ACTIONS:
+    if frame.sidePanel.actionChoice.GetValue() in Globals.GRID_ACTIONS:
         actionName = '"%s"' % str(Globals.GRID_ACTIONS[action])
-    elif frame.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
+    elif frame.sidePanel.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
         actionName = '"%s"' % str(Globals.GENERAL_ACTIONS[action])
     if selection:
         frame.Logging("---> Starting Execution " + actionName + " on " + str(selection))
@@ -541,8 +539,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     logActionExecution(frame, action, group)
     if (action == Globals.SHOW_ALL_AND_GENERATE_REPORT) and not isUpdate:
-        frame.emptyDeviceGrid()
-        frame.emptyNetworkGrid()
+        frame.gridPanel.emptyDeviceGrid()
+        frame.gridPanel.emptyNetworkGrid()
         frame.CSVUploaded = False
 
     deviceList = None
@@ -600,8 +598,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                 device = entry[0]
                 deviceInfo = entry[1]
                 if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-                    frame.addDeviceToDeviceGrid(deviceInfo)
-                    frame.addDeviceToNetworkGrid(device, deviceInfo)
+                    frame.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    frame.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                 elif action == Globals.SET_KIOSK:
                     setKiosk(frame, device, deviceInfo)
                 elif action == Globals.SET_MULTI:
@@ -728,10 +726,10 @@ def executeDeviceModification(frame):
         print(e)
         return
 
-    tagsFromGrid = frame.getDeviceTagsFromGrid()
+    tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
     num = 1
     changeSucceeded = 0
-    aliasDic = frame.getDeviceAliasFromList()
+    aliasDic = frame.gridPanel.getDeviceAliasFromList()
     logString = ""
     succeeded = 0
     numNewName = 0
@@ -820,7 +818,7 @@ def executeCommandOnGroup(
     #     frame.groupChoice.GetSelection()
     # )  # Get Device Group ID
     statusList = []
-    for groupToUse in frame.selectedGroupsList:
+    for groupToUse in frame.sidePanel.selectedGroupsList:
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="GROUP",
@@ -850,7 +848,7 @@ def executeCommandOnDevice(
     #     frame.deviceChoice.GetSelection()
     # )  # Get Device Group ID
     statusList = []
-    for deviceToUse in frame.selectedDevicesList:
+    for deviceToUse in frame.sidePanel.selectedDevicesList:
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="DEVICE",

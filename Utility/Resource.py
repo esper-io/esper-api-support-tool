@@ -176,3 +176,9 @@ def runOsPOpen(cmd):
     out = os.popen(cmd)
     output = out.read()
     return output, error
+
+def joinThreadList(threads):
+    if threads:
+        for thread in threads:
+            if thread:
+                thread.join()

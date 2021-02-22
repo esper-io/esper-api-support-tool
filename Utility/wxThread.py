@@ -22,8 +22,8 @@ EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
 myEVT_GROUP = wx.NewEventType()
 EVT_GROUP = wx.PyEventBinder(myEVT_GROUP, 1)
 
-myEVT_DEVICE = wx.NewEventType()
-EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
+# myEVT_DEVICE = wx.NewEventType()
+# EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
 
 myEVT_APPS = wx.NewEventType()
 EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
@@ -108,11 +108,6 @@ class GUIThread(threading.Thread):
         callbackArgs=None,
         optCallbackArgs=None,
     ):
-        """
-        @param parent: The gui object that should recieve the value
-        @param target: The function to run
-        @param args: Arguements for target function
-        """
         threading.Thread.__init__(self)
         self._parent = parent
         self._target = target

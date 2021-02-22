@@ -161,6 +161,8 @@ class PreferencesDialog(wx.Dialog):
             "commandTimeout": self.spin_ctrl_3.GetValue(),
             "updateRate": self.spin_ctrl_2.GetValue(),
             "enableGridUpdate": self.checkbox_2.IsChecked(),
+            "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
+            "isMaximized": self.parent.IsMaximized() if self.parent else False,
         }
 
         Globals.limit = self.prefs["limit"]
@@ -207,6 +209,20 @@ class PreferencesDialog(wx.Dialog):
             Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
             if Globals.ENABLE_GRID_UPDATE and self.parent != None:
                 self.parent.startUpdateThread()
+        if "windowSize" in self.prefs and self.prefs["windowSize"]:
+            if self.parent:
+                size = tuple(
+                    int(num)
+                    for num in self.prefs["windowSize"]
+                    .replace("(", "")
+                    .replace(")", "")
+                    .replace("...", "")
+                    .split(", ")
+                )
+                self.parent.SetSize(size)
+        if "isMaximized" in self.prefs and self.prefs["isMaximized"]:
+            if self.parent:
+                self.parent.Maximize(self.prefs["isMaximized"])
 
     def GetPrefs(self):
         if not self.prefs:
@@ -217,6 +233,10 @@ class PreferencesDialog(wx.Dialog):
         self.prefs[
             "gridDialog"
         ] = Globals.SHOW_GRID_DIALOG  # update pref value to match global value
+        self.prefs["windowSize"] = (
+            str(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE
+        )
+        self.prefs["isMaximized"] = self.parent.IsMaximized() if self.parent else False
         self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
 
@@ -241,5 +261,9 @@ class PreferencesDialog(wx.Dialog):
             return Globals.GRID_UPDATE_RATE
         elif key == "enableGridUpdate":
             return True
+        elif key == "windowSize":
+            return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
+        elif key == "isMaximized":
+            return self.parent.IsMaximized() if self.parent else False
         else:
             return None
