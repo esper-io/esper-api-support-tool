@@ -151,6 +151,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.frame_toolbar.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.frame_toolbar.cmdtool)
         self.frame_toolbar.search.Bind(wx.EVT_SEARCH, self.onSearch)
+        self.frame_toolbar.search.Bind(wx.EVT_CHAR, self.onChar)
         self.frame_toolbar.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         # Tool Bar end
 
@@ -515,7 +516,7 @@ class NewFrameLayout(wx.Frame):
         rowCount = 1
         num = 0
         for row in data:
-            self.setGaugeValue(int((rowCount) / len_reader * 100))
+            self.setGaugeValue(int(float((rowCount) / len_reader) * 100))
             rowCount += 1
             if not all("" == val or val.isspace() for val in row):
                 if num == 0:
@@ -615,7 +616,7 @@ class NewFrameLayout(wx.Frame):
                     return
 
                 for row in auth_csv_reader:
-                    self.setGaugeValue(int(num / maxRow * 100))
+                    self.setGaugeValue(int(float(num / maxRow) * 100))
                     num += 1
                     if "name" in row:
                         self.sidePanel.configChoice[row["name"]] = row
@@ -760,25 +761,51 @@ class NewFrameLayout(wx.Frame):
     def waitForThreadsThenSetCursorDefault(self, threads, source=None):
         joinThreadList(threads)
         if source == 1:
-            self.sidePanel.sortAndPopulateAppChoice()
-            self.Logging("---> Application list populated")
-            if not self.preferences or self.preferences["enableDevice"] == True:
-                self.sidePanel.deviceChoice.Enable(True)
-            else:
-                self.sidePanel.deviceChoice.Enable(False)
             if not self.sidePanel.devices:
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")
                 self.sidePanel.deviceChoice.Enable(False)
                 self.Logging("---> No Devices found")
+            else:
+                newThreads = []
+                self.Logging("---> Attempting to populate Application list")
+                self.gauge.Pulse()
+                for deviceId in self.sidePanel.devices.values():
+                    thread = wxThread.doAPICallInThread(
+                        self,
+                        getdeviceapps,
+                        args=(deviceId),
+                        eventType=wxThread.myEVT_APPS,
+                        waitForJoin=False,
+                    )
+                    newThreads.append(thread)
+                num = 0
+                for thread in newThreads:
+                    thread.join()
+                    num += 1
+                    if not self.preferences or self.preferences["enableDevice"] == True:
+                        self.setGaugeValue(int(float(num / len(newThreads) / 2) * 100))
+                self.sidePanel.sortAndPopulateAppChoice()
+                self.Logging("---> Application list populated")
+            if not self.preferences or self.preferences["enableDevice"] == True:
+                self.sidePanel.deviceChoice.Enable(True)
+            else:
+                self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
+        self.sidePanel.runBtn.Enable(True)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
+        self.menubar.run.Enable(True)
+        self.menubar.clone.Enable(True)
+        self.menubar.command.Enable(True)
         self.setCursorDefault()
         self.setGaugeValue(100)
 
     @api_tool_decorator
     def PopulateGroups(self):
         """ Populate Group Choice """
-        self.Logging("--->Attemptting to populate groups...")
+        self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
         self.setGaugeValue(0)
         self.gauge.Pulse()
@@ -799,25 +826,25 @@ class NewFrameLayout(wx.Frame):
         if len(results):
             for group in results:
                 self.sidePanel.groups[group.name] = group.id
-                self.setGaugeValue(int(num / len(results) * 100))
+                self.setGaugeValue(int(float(num / len(results)) * 100))
                 num += 1
-            self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.sidePanel.groupChoice)
-        self.sidePanel.runBtn.Enable(True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-        self.menubar.run.Enable(True)
-        self.menubar.clone.Enable(True)
-        self.menubar.command.Enable(True)
+            # self.Bind(wx.EVT_COMBOBOX, self.PopulateDevices, self.sidePanel.groupChoice)
+        # self.sidePanel.runBtn.Enable(True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
+        # self.menubar.run.Enable(True)
+        # self.menubar.clone.Enable(True)
+        # self.menubar.command.Enable(True)
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        # wx.CallLater(3000, self.setGaugeValue, 0)
 
     @api_tool_decorator
     def PopulateDevices(self, event):
         """ Populate Device Choice """
         self.SetFocus()
-        self.Logging("--->Attemptting to populate devices of selected group(s)")
+        self.Logging("--->Attempting to populate devices of selected group(s)")
         self.setCursorBusy()
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.sidePanel.runBtn.Enable(False)
@@ -826,7 +853,6 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
-            self.setCursorBusy()
         else:
             self.sidePanel.runBtn.Enable(True)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
@@ -868,25 +894,26 @@ class NewFrameLayout(wx.Frame):
                 if name and not name in self.sidePanel.devices:
                     self.sidePanel.devices[name] = device.id
                     num += 1
-                    thread = wxThread.doAPICallInThread(
-                        self,
-                        getdeviceapps,
-                        args=(device.id),
-                        eventType=wxThread.myEVT_APPS,
-                        waitForJoin=False,
-                    )
-                    threads.append(thread)
+            #         thread = wxThread.doAPICallInThread(
+            #             self,
+            #             getdeviceapps,
+            #             args=(device.id),
+            #             eventType=wxThread.myEVT_APPS,
+            #             waitForJoin=False,
+            #         )
+            #         threads.append(thread)
 
-            self.Logging("---> Attempting to populate Application list")
-            for thread in threads:
-                thread.join()
-                if not self.preferences or self.preferences["enableDevice"] == True:
-                    self.setGaugeValue(int(num / len(api_response.results) * 100))
+            # self.Logging("---> Attempting to populate Application list")
+            # self.gauge.Pulse()
+            # for thread in threads:
+            #     thread.join()
+            #     if not self.preferences or self.preferences["enableDevice"] == True:
+            #         self.setGaugeValue(int(num / len(api_response.results) * 100))
 
     @api_tool_decorator
     def PopulateApps(self):
         """ Populate App Choice """
-        self.Logging("--->Attemptting to populate apps...")
+        self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
         self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
@@ -936,10 +963,10 @@ class NewFrameLayout(wx.Frame):
                     if entry not in self.sidePanel.deviceApps:
                         self.sidePanel.deviceApps.append(entry)
                 num += 1
-        self.sidePanel.runBtn.Enable(True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+        # self.sidePanel.runBtn.Enable(True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
+        # self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1295,7 +1322,7 @@ class NewFrameLayout(wx.Frame):
                 if d:
                     d = d[0]
                     self.sidePanel.appChoice.Append(app_name, d[app_name])
-                self.setGaugeValue(int(num / len(appList) * 100))
+                self.setGaugeValue(int(float(num / len(appList)) * 100))
                 num += 1
         if not appAdded:
             self.sidePanel.appChoice.Append("No available app(s) on this device")
@@ -1707,17 +1734,27 @@ class NewFrameLayout(wx.Frame):
                 )
             time.sleep(15)
 
+    def onChar(self, event):
+        event.Skip()
+        wx.CallAfter(self.onSearch, wx.EVT_CHAR.typeId)
+
     @api_tool_decorator
-    def onSearch(self, event):
+    def onSearch(self, event=None):
         queryString = ""
         if hasattr(event, "GetString"):
             queryString = event.GetString()
         elif isinstance(event, str):
             queryString = event
-        if hasattr(event, "EventType") and (
-            (wx.EVT_TEXT.typeId == event.EventType and not queryString)
-            or (wx.EVT_SEARCH.typeId == event.EventType and not queryString)
-            or wx.EVT_SEARCH_CANCEL.typeId == event.EventType
+        else:
+            queryString = self.frame_toolbar.search.GetValue()
+        if (
+            hasattr(event, "EventType")
+            and (
+                (wx.EVT_TEXT.typeId == event.EventType and not queryString)
+                or (wx.EVT_SEARCH.typeId == event.EventType and not queryString)
+                or wx.EVT_SEARCH_CANCEL.typeId == event.EventType
+            )
+            or wx.EVT_CHAR.typeId == event
         ):
             white = wx.Colour(255, 255, 255)
             self.gridPanel.applyTextColorMatchingGridRow(
@@ -1736,4 +1773,4 @@ class NewFrameLayout(wx.Frame):
             )
             self.Logging("--> Search for %s completed" % queryString)
         else:
-            self.search.SetValue("")
+            self.frame_toolbar.search.SetValue("")

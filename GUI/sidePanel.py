@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-from Utility.Resource import resourcePath, scale_bitmap
 import csv
 import wx
 import Common.Globals as Globals
+
+from Utility.Resource import resourcePath, scale_bitmap
+from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 
 
 class SidePanel(wx.Panel):
@@ -305,10 +307,12 @@ class SidePanel(wx.Panel):
             self.groupMultiDialog.Destroy()
             self.groupMultiDialog = None
         if not self.groupMultiDialog:
-            self.groupMultiDialog = wx.MultiChoiceDialog(
-                self, "Select Group(s)", "", choices
+            self.groupMultiDialog = MultiSelectSearchDlg(
+                self.parentFrame,
+                choices,
+                label="Select Group(s)",
+                title="Select Group(s)",
             )
-            self.groupMultiDialog.SetSize(400, 300)
 
         if self.groupMultiDialog.ShowModal() == wx.ID_OK:
             self.selectedGroups.Clear()
@@ -316,22 +320,23 @@ class SidePanel(wx.Panel):
             self.selectedGroupsList = []
             self.selectedDevicesList = []
             selections = self.groupMultiDialog.GetSelections()
-            for group in selections:
-                groupName = choices[group]
-                groupId = self.groups[groupName]
-                self.selectedGroups.Append(groupName)
-                if groupName.lower() == "all devices":
-                    self.selectedGroups.Clear()
-                    self.selectedGroupsList = []
+            if selections:
+                for groupName in selections:
+                    groupId = self.groups[groupName]
                     self.selectedGroups.Append(groupName)
-                    self.selectedGroupsList.append(groupId)
-                    break
-                if groupId not in self.selectedGroupsList:
-                    self.selectedGroupsList.append(groupId)
+                    if groupName.lower() == "all devices":
+                        self.selectedGroups.Clear()
+                        self.selectedGroupsList = []
+                        self.selectedGroups.Append(groupName)
+                        self.selectedGroupsList.append(groupId)
+                        break
+                    if groupId not in self.selectedGroupsList:
+                        self.selectedGroupsList.append(groupId)
 
-        self.parentFrame.setCursorBusy()
-        self.devices = {}
-        self.parentFrame.PopulateDevices(None)
+        if self.selectedGroupsList:
+            self.parentFrame.setCursorBusy()
+            self.devices = {}
+            self.parentFrame.PopulateDevices(None)
 
     def onDeviceSelection(self, event):
         choices = list(self.devices.keys())
@@ -340,18 +345,19 @@ class SidePanel(wx.Panel):
             self.deviceMultiDialog.Destroy()
             self.deviceMultiDialog = None
         if not self.deviceMultiDialog:
-            self.deviceMultiDialog = wx.MultiChoiceDialog(
-                self, "Select Device(s)", "", choices
+            self.deviceMultiDialog = MultiSelectSearchDlg(
+                self.parentFrame,
+                choices,
+                label="Select Device(s)",
+                title="Select Device(s)",
             )
-            self.deviceMultiDialog.SetSize(400, 300)
         if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
             self.appChoice.Clear()
             self.selectedDevices.Clear()
             self.selectedDevicesList = []
             self.deviceApps = []
             selections = self.deviceMultiDialog.GetSelections()
-            for device in selections:
-                deviceName = choices[device]
+            for deviceName in selections:
                 deviceId = self.devices[deviceName]
                 self.selectedDevices.Append(deviceName)
                 if deviceId not in self.selectedDevicesList:
@@ -363,8 +369,13 @@ class SidePanel(wx.Panel):
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         self.appChoice.Clear()
         self.appChoice.Append("", "")
+        percent = self.parentFrame.gauge.GetValue()
+        num = 0
         for entry in self.apps:
             for key, value in entry.items():
                 if key != "app_name" and key not in self.appChoice.Items:
                     self.appChoice.Append(key, value)
                     break
+            num += 1
+            val = percent + int(float(num / len(self.apps) / 2) * 100)
+            self.parentFrame.setGaugeValue(val)
