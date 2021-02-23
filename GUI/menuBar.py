@@ -24,10 +24,10 @@ class ToolMenuBar(wx.MenuBar):
         self.isCheckingForUpdates = False
 
         fileMenu = wx.Menu()
-        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+O")
+        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
         self.fileOpenAuth = fileMenu.Append(foa)
 
-        foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+D")
+        foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         self.fileOpenConfig = fileMenu.Append(foc)
 
         self.recent = wx.Menu()
