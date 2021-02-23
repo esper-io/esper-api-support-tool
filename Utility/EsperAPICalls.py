@@ -249,7 +249,9 @@ def uploadApplicationForHost(config, enterprise_id, file):
 def getDeviceGroupsForHost(config, enterprise_id):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
-        api_response = api_instance.get_all_groups(enterprise_id)
+        api_response = api_instance.get_all_groups(
+            enterprise_id, limit=Globals.limit, offset=Globals.offset
+        )
         return api_response
     except Exception as e:
         raise e

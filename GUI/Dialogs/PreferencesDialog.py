@@ -295,9 +295,15 @@ class PreferencesDialog(wx.Dialog):
             if self.parent:
                 self.parent.Maximize(self.prefs["isMaximized"])
         if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
-            if self.prefs["getAllApps"].lower() == "false":
+            if (
+                isinstance(self.prefs["getAllApps"], str)
+                and self.prefs["getAllApps"].lower() == "false"
+            ) or not self.prefs["getAllApps"]:
                 Globals.USE_ENTERPRISE_APP = False
-            elif self.prefs["getAllApps"].lower() == "true":
+            elif (
+                isinstance(self.prefs["getAllApps"], str)
+                and self.prefs["getAllApps"].lower()
+            ) == "true" or self.prefs["getAllApps"]:
                 Globals.USE_ENTERPRISE_APP = True
             else:
                 Globals.USE_ENTERPRISE_APP = True
