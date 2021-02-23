@@ -146,7 +146,8 @@ class NewFrameLayout(wx.Frame):
         self.SetToolBar(self.frame_toolbar)
 
         self.Bind(wx.EVT_TOOL, self.OnQuit, self.frame_toolbar.qtool)
-        self.Bind(wx.EVT_TOOL, self.AddEndpoint, self.frame_toolbar.otool)
+        self.Bind(wx.EVT_TOOL, self.AddEndpoint, self.frame_toolbar.atool)
+        self.Bind(wx.EVT_TOOL, self.onUploadCSV, self.frame_toolbar.otool)
         self.Bind(wx.EVT_TOOL, self.onSaveBoth, self.frame_toolbar.stool)
         self.Bind(wx.EVT_TOOL, self.onRun, self.frame_toolbar.rtool)
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.frame_toolbar.rftool)
