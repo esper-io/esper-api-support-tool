@@ -1619,6 +1619,8 @@ class NewFrameLayout(wx.Frame):
                     # TakeAction(self, deviceId, 1, None, isDevice=True, isUpdate=True)
             self.isRunningUpdate = False
         joinThreadList(threads)
+        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        wx.PostEvent(self, evt)
 
     @api_tool_decorator
     def onClone(self, event):
