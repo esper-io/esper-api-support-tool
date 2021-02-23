@@ -430,7 +430,7 @@ def iterateThroughDeviceList(
             t.start()
         else:
             deviceList = processDevices(
-                api_response.results, number_of_devices, action
+                api_response.results, number_of_devices, action, isUpdate=isUpdate
             )[1]
             return deviceList
     else:
@@ -445,7 +445,7 @@ def waitTillThreadsFinish(threads, action, event=wxThread.myEVT_UPDATE_DONE):
     postEventToFrame(event, action)
 
 
-def processDevices(chunk, number_of_devices, action):
+def processDevices(chunk, number_of_devices, action, isUpdate=False):
     """ Try to obtain more device info for a given device """
     deviceList = {}
     for device in chunk:
@@ -460,8 +460,9 @@ def processDevices(chunk, number_of_devices, action):
             #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
-    evt = wxThread.CustomEvent(wxThread.myEVT_FETCH, -1, (action, deviceList))
-    Globals.frame.onFetch(evt)
+    if not isUpdate:
+        evt = wxThread.CustomEvent(wxThread.myEVT_FETCH, -1, (action, deviceList))
+        Globals.frame.onFetch(evt)
     return (action, deviceList)
 
 
