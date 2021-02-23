@@ -54,7 +54,7 @@ class SidePanel(wx.Panel):
         remove_icon = scale_bitmap(resourcePath("Images/remove.png"), 16, 16)
         self.removeEndpointBtn = wx.BitmapButton(
             self.panel_3,
-            wx.ID_ANY,
+            wx.ID_DELETE,
             remove_icon,
         )
         grid_sizer_1.Add(
@@ -274,10 +274,12 @@ class SidePanel(wx.Panel):
 
     def RemoveEndpoint(self, event):
         value = None
-        if event.KeyCode == wx.WXK_DELETE:
+        if (
+            event.GetEventType() == wx.EVT_BUTTON.typeId and event.Id == wx.ID_DELETE
+        ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")[3].replace("Enterprise = ", "")
-            result = list(filter(lambda x: value in x, self.auth_data))
+            result = list(filter(lambda x: value in x, self.parentFrame.auth_data))
             if result:
                 result = result[0]
             if value:
@@ -287,14 +289,14 @@ class SidePanel(wx.Panel):
                     style=wx.YES_NO | wx.ICON_WARNING,
                 )
                 if res == wx.YES:
-                    self.auth_data.remove(result)
-                    with open(self.authPath, "w", newline="") as csvfile:
+                    self.parentFrame.auth_data.remove(result)
+                    with open(self.parentFrame.authPath, "w", newline="") as csvfile:
                         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                        writer.writerows(self.auth_data)
-                    for child in self.menubar.configMenu.GetMenuItems():
+                        writer.writerows(self.parentFrame.auth_data)
+                    for child in self.parentFrame.menubar.configMenu.GetMenuItems():
                         if value in self.configChoice[child.GetItemLabel()].values():
-                            self.menubar.configMenu.Delete(child)
-                    self.PopulateConfig()
+                            self.parentFrame.menubar.configMenu.Delete(child)
+                    self.parentFrame.PopulateConfig()
                     wx.MessageBox(
                         "The configuration has been removed.",
                         style=wx.OK | wx.ICON_INFORMATION,
