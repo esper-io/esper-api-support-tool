@@ -128,6 +128,13 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     if len(json_resp["results"]) and createAppList:
         for app in json_resp["results"]:
             if "application" in app:
+                version = (
+                    app["application"]["version"]["version_code"][
+                        1 : len(app["application"]["version"]["version_code"])
+                    ]
+                    if app["application"]["version"]["version_code"].startswith("v")
+                    else app["application"]["version"]["version_code"]
+                )
                 applist.append(
                     app["application"]["application_name"]
                     + (
@@ -135,7 +142,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                         if Globals.SHOW_PKG_NAME
                         else " v"
                     )
-                    + app["application"]["version"]["version_code"]
+                    + version
                 )
             else:
                 appName = app["app_name"]
@@ -148,6 +155,11 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 }
                 if entry not in Globals.frame.sidePanel.deviceApps:
                     Globals.frame.sidePanel.deviceApps.append(entry)
+                version = (
+                    app["version_code"][1 : len(app["version_code"])]
+                    if app["version_code"].startswith("v")
+                    else app["version_code"]
+                )
                 applist.append(
                     app["app_name"]
                     + (
@@ -155,7 +167,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                         if Globals.SHOW_PKG_NAME
                         else " v"
                     )
-                    + app["version_code"]
+                    + version
                 )
     return applist, json_resp
 
