@@ -52,6 +52,7 @@ from Utility.EsperAPICalls import (
 )
 
 from Utility.Resource import (
+    limitActiveThreads,
     resourcePath,
     createNewFile,
     checkEsperInternetConnection,
@@ -778,6 +779,7 @@ class NewFrameLayout(wx.Frame):
                         waitForJoin=False,
                     )
                     newThreads.append(thread)
+                    limitActiveThreads(newThreads)
                 num = 0
                 for thread in newThreads:
                     thread.join()
@@ -879,8 +881,6 @@ class NewFrameLayout(wx.Frame):
         """ Populate Device Choice """
         api_response = getAllDevices(groupId)
         if len(api_response.results):
-            num = 1
-            threads = []
             api_response.results = sorted(
                 api_response.results,
                 key=lambda i: i.device_name.lower(),
@@ -893,22 +893,6 @@ class NewFrameLayout(wx.Frame):
                 )
                 if name and not name in self.sidePanel.devices:
                     self.sidePanel.devices[name] = device.id
-                    num += 1
-            #         thread = wxThread.doAPICallInThread(
-            #             self,
-            #             getdeviceapps,
-            #             args=(device.id),
-            #             eventType=wxThread.myEVT_APPS,
-            #             waitForJoin=False,
-            #         )
-            #         threads.append(thread)
-
-            # self.Logging("---> Attempting to populate Application list")
-            # self.gauge.Pulse()
-            # for thread in threads:
-            #     thread.join()
-            #     if not self.preferences or self.preferences["enableDevice"] == True:
-            #         self.setGaugeValue(int(num / len(api_response.results) * 100))
 
     @api_tool_decorator
     def PopulateApps(self):
@@ -1250,24 +1234,41 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onFetch(self, event):
         """ Given device data perform the specified action """
+        self.gauge.Pulse()
         evtValue = event.GetValue()
         action = evtValue[0]
         deviceList = evtValue[1]
+        threads = []
         for entry in deviceList.values():
-            self.gauge.Pulse()
             device = entry[0]
             deviceInfo = entry[1]
             if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
                 self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                 self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
             elif action == Globals.SET_KIOSK:
-                setKiosk(self, device, deviceInfo)
+                # setKiosk(self, device, deviceInfo)
+                thread = wxThread.GUIThread(
+                    self,
+                    setKiosk,
+                    (self, device, deviceInfo),
+                )
+                thread.start()
+                threads.append(thread)
             elif action == Globals.SET_MULTI:
-                setMulti(self, device, deviceInfo)
+                # setMulti(self, device, deviceInfo)
+                thread = wxThread.GUIThread(
+                    self,
+                    setMulti,
+                    (self, device, deviceInfo),
+                )
+                thread.start()
+                threads.append(thread)
             elif action == Globals.CLEAR_APP_DATA:
                 clearAppData(self, device)
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
+            limitActiveThreads(threads)
+        joinThreadList(threads)
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """

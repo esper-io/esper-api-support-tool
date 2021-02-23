@@ -5,6 +5,7 @@ import platform
 import requests
 import shlex
 import sys
+import time
 import subprocess
 import wx
 import Utility.wxThread as wxThread
@@ -177,8 +178,22 @@ def runOsPOpen(cmd):
     output = out.read()
     return output, error
 
+
 def joinThreadList(threads):
     if threads:
         for thread in threads:
             if thread:
                 thread.join()
+
+
+def limitActiveThreads(threads, max_alive=25, sleep=1):
+    Globals.lock.acquire()
+    numAlive = 0
+    for thread in threads:
+        if thread.is_alive():
+            numAlive += 1
+    if numAlive >= max_alive:
+        for thread in threads:
+            thread.join()
+        time.sleep(1)
+    Globals.lock.release()

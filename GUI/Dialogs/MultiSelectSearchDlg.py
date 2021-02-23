@@ -36,6 +36,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.search = wx.SearchCtrl(self.panel_3, wx.ID_ANY, "")
         self.search.ShowCancelButton(True)
         grid_sizer_2.Add(self.search, 0, wx.ALIGN_RIGHT, 0)
+        self.search.SetFocus()
 
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
         sizer_3.Add(self.panel_2, 1, wx.EXPAND | wx.TOP, 5)

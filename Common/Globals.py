@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import esperclient
+import threading
 
 configuration = esperclient.Configuration()
 enterprise_id = ""
@@ -11,6 +12,7 @@ TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
 MIN_SIZE = (900, 700)
+lock = threading.Lock()
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

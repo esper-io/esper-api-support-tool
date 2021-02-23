@@ -403,7 +403,7 @@ def iterateThroughDeviceList(
                     frame,
                     processDevices,
                     args=(chunk, number_of_devices, action),
-                    eventType=wxThread.myEVT_FETCH,
+                    # eventType=wxThread.myEVT_FETCH,
                 )
                 threads.append(t)
                 t.start()
@@ -448,6 +448,8 @@ def processDevices(chunk, number_of_devices, action):
             #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
+    evt = wxThread.CustomEvent(wxThread.myEVT_FETCH, -1, (action, deviceList))
+    Globals.frame.onFetch(evt)
     return (action, deviceList)
 
 
@@ -639,10 +641,12 @@ def setKiosk(frame, device, deviceInfo):
     logString = ""
     failed = False
     warning = False
-    appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+    appToUse = frame.sidePanel.appChoice.GetClientData(
+        frame.sidePanel.appChoice.GetSelection()
+    )
     logString = (
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
-        + " ->Kiosk->"
+        + " -> Kiosk ->"
         + str(appToUse)
     )
     stateStatus = setAppState(device.id, appToUse, "SHOW")
@@ -651,7 +655,9 @@ def setKiosk(frame, device, deviceInfo):
     if "Success" in str(status):
         logString = logString + " <success>"
     elif "Queued" in str(status):
-        logString = logString + " <warning, check back on the device>"
+        logString = (
+            logString + " <warning, check back on the device (%s)>" % device.device_name
+        )
         warning = True
     else:
         logString = logString + " <failed>"
@@ -669,7 +675,7 @@ def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
     logString = (
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
-        + " ,->Multi->"
+        + " -> Multi ->"
     )
     failed = False
     warning = False
@@ -678,13 +684,16 @@ def setMulti(frame, device, deviceInfo):
         if "Success" in str(status):
             logString = logString + " <success>"
         elif "Queued" in str(status):
-            logString = logString + " <warning, check back on the device>"
+            logString = (
+                logString
+                + " <warning, check back on the device (%s)>" % device.device_name
+            )
             warning = True
         else:
             logString = logString + " <failed>"
             failed = True
     else:
-        logString = logString + "(Already Multi mode, skipping)"
+        logString = logString + " (Already Multi mode, skipping)"
     if deviceInfo["Status"] != "Online":
         logString = logString + " (Device offline)"
     postEventToFrame(wxThread.myEVT_LOG, logString)
@@ -1038,7 +1047,9 @@ def postEsperCommand(command_data, useV0=True):
 def clearAppData(frame, device):
     json_resp = None
     try:
-        appToUse = frame.appChoice.GetClientData(frame.appChoice.GetSelection())
+        appToUse = frame.sidePanel.appChoice.GetClientData(
+            frame.sidePanel.appChoice.GetSelection()
+        )
         _, apps = getdeviceapps(device.id)
         cmdArgs = {}
         for app in apps["results"]:
@@ -1074,7 +1085,7 @@ def clearAppData(frame, device):
         else:
             frame.Logging(
                 "ERROR: Failed to send Clear %s App Data Command to %s"
-                % (frame.appChoice.GetValue(), device.device_name)
+                % (frame.sidePanel.appChoice.GetValue(), device.device_name)
             )
     except Exception as e:
         ApiToolLog().LogError(e)
