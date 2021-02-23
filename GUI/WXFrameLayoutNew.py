@@ -477,14 +477,24 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
-
-                with open(Globals.csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-                    self.processDeviceCSVUpload(data)
-                    self.gridPanel.grid_1.AutoSizeColumns()
+                try:
+                    with open(
+                        Globals.csv_auth_path, "r", encoding="utf-8-sig"
+                    ) as csvFile:
+                        reader = csv.reader(
+                            csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                        )
+                        data = list(reader)
+                        self.processDeviceCSVUpload(data)
+                        self.gridPanel.grid_1.AutoSizeColumns()
+                except UnicodeDecodeError as e:
+                    with open(Globals.csv_auth_path, "r") as csvFile:
+                        reader = csv.reader(
+                            csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                        )
+                        data = list(reader)
+                        self.processDeviceCSVUpload(data)
+                        self.gridPanel.grid_1.AutoSizeColumns()
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
         wx.CallLater(3000, self.setGaugeValue, 0)
@@ -542,10 +552,19 @@ class NewFrameLayout(wx.Frame):
                             colName = "Tags"
                             header[fileCol] = "Tags"
                         if (
+                            expectedCol == "Device Name"
+                            and colName == "espername"
+                            and grid == self.gridPanel.grid_2
+                        ):
+                            colName = "devicename"
+                        if (
                             fileCol > len(header)
                             or header[fileCol].strip()
                             in Globals.CSV_DEPRECATED_HEADER_LABEL
-                            or header[fileCol].strip() not in headers.keys()
+                            or (
+                                header[fileCol].strip() not in headers.keys()
+                                and colName != "devicename"
+                            )
                         ):
                             fileCol += 1
                             continue
@@ -1404,8 +1423,16 @@ class NewFrameLayout(wx.Frame):
 
     def onClearGrids(self, event):
         """ Empty Grids """
-        self.gridPanel.emptyDeviceGrid()
-        self.gridPanel.emptyNetworkGrid()
+        thread = wxThread.GUIThread(
+            self, self.gridPanel.emptyDeviceGrid, None, eventType=None
+        )
+        thread.start()
+        netThread = wxThread.GUIThread(
+            self, self.gridPanel.emptyNetworkGrid, None, eventType=None
+        )
+        netThread.start()
+        # self.gridPanel.emptyDeviceGrid()
+        # self.gridPanel.emptyNetworkGrid()
 
     @api_tool_decorator
     def readAuthCSV(self):
