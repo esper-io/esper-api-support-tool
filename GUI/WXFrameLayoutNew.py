@@ -949,19 +949,23 @@ class NewFrameLayout(wx.Frame):
             for app in results:
                 entry = None
                 if hasattr(app, "application_name"):
+                    appName = app.application_name
+                    appPkgName = appName + (" (%s)" % app.package_name)
                     entry = {
                         "app_name": app.application_name,
-                        app.application_name
-                        + " (%s)" % app.package_name: app.package_name,
+                        appName: app.package_name,
+                        appPkgName: app.package_name,
                         "app_state": app.state,
                     }
                     if entry not in self.sidePanel.enterpriseApps:
                         self.sidePanel.enterpriseApps.append(entry)
                 else:
+                    appName = app["app_name"]
+                    appPkgName = appName + (" (%s)" % app["package_name"])
                     entry = {
                         "app_name": app["app_name"],
-                        app["app_name"]
-                        + " (%s)" % app["package_name"]: app["package_name"],
+                        appName: app["package_name"],
+                        appPkgName: app["package_name"],
                         "app_state": app["state"],
                     }
                     if entry not in self.sidePanel.deviceApps:
@@ -1334,7 +1338,9 @@ class NewFrameLayout(wx.Frame):
         appAdded = False
         for deviceId in self.sidePanel.selectedDevicesList:
             self.Logging("---> Fetching Apps on Device Through API")
-            appList, _ = getdeviceapps(deviceId)
+            appList, _ = getdeviceapps(
+                deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
+            )
             self.Logging("---> Finished Fetching Apps on Device Through API")
             for app in appList:
                 appAdded = True
@@ -1482,11 +1488,22 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
+        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Preferences' Saved")
+        wx.PostEvent(self, evt)
 
     def onPref(self, event):
         """ Update Preferences when they are changed """
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
-            self.savePrefs(self.prefDialog)
+            save = wxThread.GUIThread(
+                self,
+                self.savePrefs,
+                (self.prefDialog),
+                passArgAsTuple=True,
+                eventType=None,
+            )
+            save.start()
+            # self.savePrefs(self.prefDialog)
+            self.sidePanel.sortAndPopulateAppChoice()
         if self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
         else:

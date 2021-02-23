@@ -26,6 +26,8 @@ MAX_RETRY = 5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
+USE_ENTERPRISE_APP = True
+SHOW_PKG_NAME = False
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
 your enterprise's Android-based Dedicated Devices providing features that are not currently

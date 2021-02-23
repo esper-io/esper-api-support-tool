@@ -130,21 +130,31 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
             if "application" in app:
                 applist.append(
                     app["application"]["application_name"]
-                    + " (%s) v" % app["application"]["package_name"]
+                    + (
+                        " (%s) v" % app["application"]["package_name"]
+                        if Globals.SHOW_PKG_NAME
+                        else " v"
+                    )
                     + app["application"]["version"]["version_code"]
                 )
             else:
+                appName = app["app_name"]
+                appPkgName = appName + (" (%s)" % app["package_name"])
                 entry = {
-                    app["app_name"]
-                    + " (%s)" % app["package_name"]: app["package_name"],
                     "app_name": app["app_name"],
+                    appName: app["package_name"],
+                    appPkgName: app["package_name"],
                     "app_state": app["state"],
                 }
                 if entry not in Globals.frame.sidePanel.deviceApps:
                     Globals.frame.sidePanel.deviceApps.append(entry)
                 applist.append(
                     app["app_name"]
-                    + " (%s) v" % app["package_name"]
+                    + (
+                        " (%s) v" % app["package_name"]
+                        if Globals.SHOW_PKG_NAME
+                        else " v"
+                    )
                     + app["version_code"]
                 )
     return applist, json_resp
@@ -502,7 +512,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         if device.tags is None:
             device.tags = []
 
-    apps, _ = getdeviceapps(device.id)
+    apps, _ = getdeviceapps(device.id, True, Globals.USE_ENTERPRISE_APP)
     deviceInfo.update({"Apps": str(apps)})
 
     if kioskMode == 1 and device.status == 1:
@@ -1050,7 +1060,7 @@ def clearAppData(frame, device):
         appToUse = frame.sidePanel.appChoice.GetClientData(
             frame.sidePanel.appChoice.GetSelection()
         )
-        _, apps = getdeviceapps(device.id)
+        _, apps = getdeviceapps(device.id, createAppList=False, useEnterprise=True)
         cmdArgs = {}
         for app in apps["results"]:
             if app["package_name"] == appToUse:
@@ -1119,7 +1129,7 @@ def getDeviceApplicationById(device_id, application_id):
 def setAppState(device_id, pkg_name, state="HIDE"):
     pkgName = pkg_name
     appVer = None
-    _, app = getdeviceapps(device_id, createAppList=False)
+    _, app = getdeviceapps(device_id, createAppList=False, useEnterprise=True)
     app = list(
         filter(
             lambda x: x["package_name"] == pkg_name,

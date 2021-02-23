@@ -375,7 +375,15 @@ class SidePanel(wx.Panel):
         num = 0
         for entry in self.apps:
             for key, value in entry.items():
-                if key != "app_name" and key not in self.appChoice.Items:
+                if (
+                    key != "app_name"
+                    and key != "app_state"
+                    and key not in self.appChoice.Items
+                    and (
+                        (Globals.SHOW_PKG_NAME and " (" in key)
+                        or (not Globals.SHOW_PKG_NAME and " (" not in key)
+                    )
+                ):
                     self.appChoice.Append(key, value)
                     break
             num += 1
