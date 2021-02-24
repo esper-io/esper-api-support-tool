@@ -698,6 +698,11 @@ class NewFrameLayout(wx.Frame):
         """Populate Frame Layout With Device Configuration"""
         menuItem = self.menubar.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
+        self.sidePanel.groups = {}
+        self.sidePanel.devices = {}
+        self.sidePanel.clearGroupAndDeviceSelections()
+        self.sidePanel.destroyMultiChoiceDialogs()
+        self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
         self.sidePanel.appChoice.Clear()
         self.setCursorBusy()
@@ -724,9 +729,9 @@ class NewFrameLayout(wx.Frame):
             if not filledIn:
                 raise Exception("Failed to load configuration")
 
-            self.sidePanel.groupChoice.Enable(True)
-            self.sidePanel.actionChoice.Enable(True)
-            self.sidePanel.removeEndpointBtn.Enable(True)
+            # self.sidePanel.groupChoice.Enable(True)
+            # self.sidePanel.actionChoice.Enable(True)
+            # self.sidePanel.removeEndpointBtn.Enable(True)
         except Exception as e:
             self.Logging(
                 "--->****An Error has occured while loading the configuration, please try again."
@@ -783,6 +788,10 @@ class NewFrameLayout(wx.Frame):
 
     def waitForThreadsThenSetCursorDefault(self, threads, source=None):
         joinThreadList(threads)
+        if source == 0:
+            self.sidePanel.groupChoice.Enable(True)
+            self.sidePanel.actionChoice.Enable(True)
+            self.sidePanel.removeEndpointBtn.Enable(True)
         if source == 1:
             if not self.sidePanel.devices:
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")

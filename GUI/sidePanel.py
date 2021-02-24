@@ -302,6 +302,22 @@ class SidePanel(wx.Panel):
                         style=wx.OK | wx.ICON_INFORMATION,
                     )
 
+    def clearGroupAndDeviceSelections(self):
+        self.selectedGroups.Clear()
+        self.selectedDevices.Clear()
+        self.selectedGroupsList = []
+        self.selectedDevicesList = []
+
+    def destroyMultiChoiceDialogs(self):
+        if self.groupMultiDialog:
+            self.groupMultiDialog.Close()
+            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog = None
+        if self.deviceMultiDialog:
+            self.deviceMultiDialog.Close()
+            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog = None
+
     def onGroupSelection(self, event):
         choices = list(self.groups.keys())
         if self.groupMultiDialog:
@@ -317,10 +333,7 @@ class SidePanel(wx.Panel):
             )
 
         if self.groupMultiDialog.ShowModal() == wx.ID_OK:
-            self.selectedGroups.Clear()
-            self.selectedDevices.Clear()
-            self.selectedGroupsList = []
-            self.selectedDevicesList = []
+            self.clearGroupAndDeviceSelections()
             selections = self.groupMultiDialog.GetSelections()
             if selections:
                 for groupName in selections:
