@@ -487,6 +487,8 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
 
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
+    if not deviceDict:
+        return deviceInfo
     for key in deviceDict.keys():
         if type(deviceDict[key]) is dict:
             unpackageDict(deviceInfo, deviceDict[key])
