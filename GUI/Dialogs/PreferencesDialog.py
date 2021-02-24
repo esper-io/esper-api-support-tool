@@ -183,8 +183,12 @@ class PreferencesDialog(wx.Dialog):
         self.panel_5.SetSizer(grid_sizer_4)
         sizer_2.Add(self.panel_5, 1, wx.ALL | wx.EXPAND, 5)
 
-        label_7 = wx.StaticText(self.panel_9, wx.ID_ANY, "Fetch All Applications")
-        label_7.SetToolTip("Fetches all applications, including those that are hidden.")
+        label_7 = wx.StaticText(
+            self.panel_9, wx.ID_ANY, "Fetch All Installed Applications"
+        )
+        label_7.SetToolTip(
+            "Fetches all installed applications, including those that are hidden."
+        )
         grid_sizer_8.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
         grid_sizer_8.Add(
             self.checkbox_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
