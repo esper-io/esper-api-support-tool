@@ -185,7 +185,9 @@ def getkioskmodeapp(deviceid):
 def getNetworkInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = json_resp["results"][0]["data"]
+    respData = None
+    if json_resp["results"]:
+        respData = json_resp["results"][0]["data"]
     network_event = ""
     if "networkEvent" in respData:
         network_event = respData["networkEvent"]
@@ -195,7 +197,9 @@ def getNetworkInfo(deviceid):
 def getLocationInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = json_resp["results"][0]["data"]
+    respData = None
+    if json_resp["results"]:
+        respData = json_resp["results"][0]["data"]
     location_event = ""
     if "locationEvent" in respData:
         location_event = respData["locationEvent"]
@@ -472,6 +476,7 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
             #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
+            ApiToolLog().LogError(e)
     if not isUpdate:
         evt = wxThread.CustomEvent(wxThread.myEVT_FETCH, -1, (action, deviceList))
         Globals.frame.onFetch(evt)

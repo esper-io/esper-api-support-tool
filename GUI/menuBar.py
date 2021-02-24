@@ -142,7 +142,7 @@ class ToolMenuBar(wx.MenuBar):
             json = checkForUpdate()
         except Exception as e:
             print(e)
-            ApiToolLog.LogError(e)
+            ApiToolLog().LogError(e)
         if json:
             tagVersion = json["tag_name"].replace("v", "")
             if float(tagVersion) > float(Globals.VERSION):
@@ -163,7 +163,7 @@ class ToolMenuBar(wx.MenuBar):
                         result = downloadFileFromUrl(downloadURL, name)
                     except Exception as e:
                         print(e)
-                        ApiToolLog.LogError(e)
+                        ApiToolLog().LogError(e)
                     if result:
                         msg = (
                             "Download Succeeded! File should be located at:\n\n%s"

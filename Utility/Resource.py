@@ -50,7 +50,7 @@ def postEventToFrame(eventType, eventValue=None):
         if Globals.frame:
             wx.PostEvent(Globals.frame, evt)
     except Exception as e:
-        ApiToolLog.LogError(e)
+        ApiToolLog().LogError(e)
 
 
 def download(url, file_name, overwrite=True):
@@ -59,7 +59,7 @@ def download(url, file_name, overwrite=True):
             os.remove(file_name)
     except Exception as e:
         print(e)
-        ApiToolLog.LogError(e)
+        ApiToolLog().LogError(e)
     # open in binary mode
     with open(file_name, "wb") as file:
         # get request
@@ -112,7 +112,7 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         return fullPath
     except Exception as e:
         print(e)
-        ApiToolLog.LogError(e)
+        ApiToolLog().LogError(e)
     return None
 
 
@@ -123,7 +123,7 @@ def deleteFile(file):
             return True
     except Exception as e:
         print(e)
-        ApiToolLog.LogError(e)
+        ApiToolLog().LogError(e)
     return False
 
 
