@@ -9,6 +9,7 @@ import time
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
+from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import download, deleteFile, joinThreadList
 from Utility.Resource import postEventToFrame
 
@@ -405,6 +406,7 @@ class EsperTemplateUtil:
                 ]["startOnBoot"]
         except Exception as e:
             print(e)
+            ApiToolLog().LogError(e)
             postEventToFrame(
                 wxThread.myEVT_LOG,
                 "To Enterprise is missing app, %s, not adding to template"

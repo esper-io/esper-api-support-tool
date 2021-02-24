@@ -392,6 +392,7 @@ def getDeviceById(deviceToUse):
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
+        ApiToolLog().LogError(e)
 
 
 def getTokenInfo():
@@ -401,6 +402,7 @@ def getTokenInfo():
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
+        ApiToolLog().LogError(e)
 
 
 ####End Esper API Requests####
@@ -625,6 +627,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                     )
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+                ApiToolLog().LogError(e)
 
     if deviceList:
         if isUpdate:
@@ -668,6 +671,7 @@ def iterateThroughAllGroups(frame, action, api_instance, group=None):
         )
     except ApiException as e:
         print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+        ApiToolLog().LogError(e)
 
 
 def setKiosk(frame, device, deviceInfo):
@@ -767,6 +771,7 @@ def executeDeviceModification(frame):
             "---> ERROR: Failed to get devices ids to modify tags and aliases",
         )
         print(e)
+        ApiToolLog().LogError(e)
         return
 
     tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
@@ -1043,6 +1048,7 @@ def validateConfiguration(host, entId, key, prefix="Bearer"):
             return True
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
+        ApiToolLog().LogError(e)
     return False
 
 

@@ -35,6 +35,7 @@ from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
 from Common.decorator import api_tool_decorator
 
+from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
@@ -731,6 +732,7 @@ class NewFrameLayout(wx.Frame):
                 "--->****An Error has occured while loading the configuration, please try again."
             )
             print(e)
+            ApiToolLog().LogError(e)
             menuItem.Check(False)
 
     @api_tool_decorator
@@ -1306,6 +1308,7 @@ class NewFrameLayout(wx.Frame):
                     self.checkConsole = None
                 except Exception as e:
                     print(e)
+                    ApiToolLog().LogError(e)
         if action == Globals.CLEAR_APP_DATA:
             wx.MessageBox(
                 "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
