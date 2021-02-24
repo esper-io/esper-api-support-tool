@@ -97,8 +97,8 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         parts = fileName.split(".")
         parts.insert(1, (" (%s)" % num))
         parts[len(parts) - 1] = ".%s" % parts[len(parts) - 1]
-        fileName = "".join(parts)
-        fullPath = os.path.join(filepath, fileName)
+        tmpFileName = "".join(parts)
+        fullPath = os.path.join(filepath, tmpFileName)
         num += 1
     parentPath = os.path.abspath(os.path.join(fullPath, os.pardir))
     if not os.path.exists(parentPath):
