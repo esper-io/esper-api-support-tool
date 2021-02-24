@@ -284,7 +284,7 @@ class SidePanel(wx.Panel):
                 result = result[0]
             if value:
                 res = wx.MessageBox(
-                    "Are you sure you want to remove the configuration with the Enterprise Id of: %s"
+                    "Are you sure you want to remove the configuration with the Enterprise Id of: %s?\nThis action cannot be undone once accepted."
                     % value,
                     style=wx.YES_NO | wx.ICON_WARNING,
                 )
