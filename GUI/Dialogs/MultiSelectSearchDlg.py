@@ -153,6 +153,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if "All devices" in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
+            self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices):
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         else:
@@ -168,6 +169,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if "All devices" in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
+            self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices):
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         else:
