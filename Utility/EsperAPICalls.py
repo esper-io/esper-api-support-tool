@@ -175,9 +175,11 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
 def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = json_resp["results"][0]["data"]
+    respData = None
+    if json_resp["results"]:
+        respData = json_resp["results"][0]["data"]
     appName = ""
-    if "kioskAppName" in respData:
+    if respData and "kioskAppName" in respData:
         appName = respData["kioskAppName"]
     return appName
 
@@ -189,7 +191,7 @@ def getNetworkInfo(deviceid):
     if json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     network_event = ""
-    if "networkEvent" in respData:
+    if respData and "networkEvent" in respData:
         network_event = respData["networkEvent"]
     return network_event
 
@@ -201,7 +203,7 @@ def getLocationInfo(deviceid):
     if json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     location_event = ""
-    if "locationEvent" in respData:
+    if respData and "locationEvent" in respData:
         location_event = respData["locationEvent"]
     return location_event, respData
 
@@ -209,7 +211,7 @@ def getLocationInfo(deviceid):
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""
     json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags)
-    if "tags" in json_resp:
+    if json_resp and "tags" in json_resp:
         tags = json_resp["tags"]
     return tags
 
