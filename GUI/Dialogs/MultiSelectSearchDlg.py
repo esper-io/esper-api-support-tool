@@ -14,7 +14,6 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetSize((400, 300))
         self.SetTitle(title)
 
-        # self.Parent = parent
         self.originalChoices = choices
         self.selected = []
 
@@ -23,7 +22,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
+        sizer_3 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
         sizer_3.Add(self.panel_3, 1, wx.EXPAND, 0)
@@ -31,12 +30,30 @@ class MultiSelectSearchDlg(wx.Dialog):
         grid_sizer_2 = wx.GridSizer(1, 2, 0, 0)
 
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, label)
+        label_1.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_2.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.search = wx.SearchCtrl(self.panel_3, wx.ID_ANY, "")
+        self.panel_4 = wx.Panel(self.panel_1, wx.ID_ANY)
+        sizer_3.Add(self.panel_4, 1, wx.EXPAND, 0)
+
+        sizer_4 = wx.GridSizer(1, 2, 0, 0)
+
+        self.checkbox_1 = wx.CheckBox(self.panel_4, wx.ID_ANY, "Select All")
+        self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onSelectAll)
+        sizer_4.Add(self.checkbox_1, 0, wx.EXPAND, 5)
+
+        self.search = wx.SearchCtrl(self.panel_4, wx.ID_ANY, "")
         self.search.ShowCancelButton(True)
-        grid_sizer_2.Add(self.search, 0, wx.ALIGN_RIGHT, 0)
-        self.search.SetFocus()
+        sizer_4.Add(self.search, 0, wx.ALIGN_RIGHT, 0)
 
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
         sizer_3.Add(self.panel_2, 1, wx.EXPAND | wx.TOP, 5)
@@ -62,9 +79,11 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.panel_2.SetSizer(grid_sizer_1)
 
+        self.panel_4.SetSizer(sizer_4)
+
         self.panel_3.SetSizer(grid_sizer_2)
 
-        sizer_3.AddGrowableRow(1)
+        sizer_3.AddGrowableRow(2)
         sizer_3.AddGrowableCol(0)
         self.panel_1.SetSizer(sizer_3)
 
@@ -129,7 +148,15 @@ class MultiSelectSearchDlg(wx.Dialog):
             checked.append(selection)
             if not selectionStr in self.selected:
                 self.selected.append(selectionStr)
+        self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
+
+        if "All devices" in self.selected:
+            self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
+        elif len(self.selected) != len(self.originalChoices):
+            self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
+        else:
+            self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
     def OnBoxSelection(self, event):
         selection = event.GetSelection()
@@ -139,5 +166,26 @@ class MultiSelectSearchDlg(wx.Dialog):
         elif not selectionStr in self.selected:
             self.selected.append(selectionStr)
 
+        if "All devices" in self.selected:
+            self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
+        elif len(self.selected) != len(self.originalChoices):
+            self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
+        else:
+            self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
+
     def GetSelections(self):
         return self.selected
+
+    def onSelectAll(self, event):
+        event.Skip()
+        wx.CallAfter(self.onSelectEvent)
+
+    def onSelectEvent(self):
+        if self.checkbox_1.IsChecked():
+            if "All devices" in self.originalChoices:
+                self.selected = ["All devices"]
+            else:
+                self.selected = self.originalChoices
+        else:
+            self.selected = []
+        self.check_list_box_1.SetCheckedStrings(self.selected)
