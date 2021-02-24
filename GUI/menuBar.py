@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from Utility.Resource import resourcePath
 from Common.decorator import api_tool_decorator
 import Utility.wxThread as wxThread
@@ -5,6 +7,7 @@ import wx
 import wx.adv as adv
 import Common.Globals as Globals
 import webbrowser
+import platform
 
 
 from Utility.ApiToolLogging import ApiToolLog
@@ -22,6 +25,10 @@ class ToolMenuBar(wx.MenuBar):
         self.configMenuOptions = []
 
         self.isCheckingForUpdates = False
+        self.WINDOWS = False
+
+        if platform.system() == "Windows":
+            self.WINDOWS = True
 
         fileMenu = wx.Menu()
         foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
@@ -145,7 +152,7 @@ class ToolMenuBar(wx.MenuBar):
             ApiToolLog().LogError(e)
         if json:
             tagVersion = json["tag_name"].replace("v", "")
-            if float(tagVersion) > float(Globals.VERSION):
+            if float(tagVersion) > float(Globals.VERSION.replace("v", "")):
                 downloadURL = ""
                 name = ""
                 assets = json["assets"]
@@ -166,7 +173,7 @@ class ToolMenuBar(wx.MenuBar):
                         ApiToolLog().LogError(e)
                     if result:
                         msg = (
-                            "Download Succeeded! File should be located at:\n\n%s"
+                            "Download Succeeded! File should be located at:\n\n%s\nPlease open the executable from the download!"
                             % result
                         )
                     else:
