@@ -22,8 +22,8 @@ EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
 myEVT_GROUP = wx.NewEventType()
 EVT_GROUP = wx.PyEventBinder(myEVT_GROUP, 1)
 
-myEVT_DEVICE = wx.NewEventType()
-EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
+# myEVT_DEVICE = wx.NewEventType()
+# EVT_DEVICE = wx.PyEventBinder(myEVT_DEVICE, 1)
 
 myEVT_APPS = wx.NewEventType()
 EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
@@ -60,16 +60,19 @@ def doAPICallInThread(
     eventType=myEVT_UPDATE,
     callback=None,
     callbackArgs=None,
+    optCallbackArgs=None,
     waitForJoin=True,
+    name=None,
 ):
     t = GUIThread(
         frame,
         func,
         args=args,
         eventType=eventType,
-        passArgAsTuple=True,
         callback=callback,
+        optCallbackArgs=optCallbackArgs,
         callbackArgs=callbackArgs,
+        name=name,
     )
     t.start()
     if waitForJoin:
@@ -99,41 +102,70 @@ class GUIThread(threading.Thread):
         parent,
         target,
         args,
+        optArgs=None,
         eventType=None,
-        passArgAsTuple=False,
         callback=None,
         callbackArgs=None,
+        optCallbackArgs=None,
+        name=None,
     ):
-        """
-        @param parent: The gui object that should recieve the value
-        @param target: The function to run
-        @param args: Arguements for target function
-        """
         threading.Thread.__init__(self)
         self._parent = parent
         self._target = target
         self._args = args
+        self._optArgs = optArgs
         self.eventType = eventType
-        self.passArgAsTuple = passArgAsTuple
         self.result = None
         self._callback = callback
         self._cbArgs = callbackArgs
+        self._optCbArgs = optCallbackArgs
         self.daemon = True
+
+        if name:
+            self.name = name
+
+        self.parent = threading.current_thread()
+
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def isStopped(self):
+        if self.parent and hasattr(self.parent, "isStopped"):
+            return self._stop_event.is_set() or self.parent.isStopped()
+        return self._stop_event.is_set()
 
     def run(self):
         """Overrides Thread.run. Don't call this directly its called internally
         when you call Thread.start().
         """
         if self._target:
-            if not self.passArgAsTuple and self._args:
-                self.result = self._target(*self._args)
-            elif self.passArgAsTuple and self._args:
-                self.result = self._target(self._args)
+            if self._optArgs:
+                if type(self._args) == tuple and type(self._optArgs) == tuple:
+                    self.result = self._target(*self._args, *self._optArgs)
+                elif type(self._args) != tuple and type(self._optArgs) == tuple:
+                    self.result = self._target(self._args, *self._optArgs)
+                elif type(self._args) == tuple and type(self._optArgs) != tuple:
+                    self.result = self._target(*self._args, self._optArgs)
+                elif type(self._args) != tuple and type(self._optArgs) != tuple:
+                    self.result = self._target(self._args, self._optArgs)
+            elif self._args:
+                if type(self._args) != tuple:
+                    self.result = self._target(self._args)
+                elif type(self._args) == tuple:
+                    self.result = self._target(*self._args)
             else:
                 self.result = self._target()
 
+        if self.isStopped():
+            return
+
         if self._callback:
-            self.result = (self.result, self._callback, self._cbArgs)
+            self.result = (self.result, self._callback, self._cbArgs, self._optCbArgs)
+
+        if self.isStopped():
+            return
 
         if self.eventType:
             evt = CustomEvent(self.eventType, -1, self.result)

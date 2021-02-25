@@ -169,7 +169,6 @@ class TemplateDialog(wx.Dialog):
             self,
             self.populateSourceTempaltes,
             (event.String if event.String else False),
-            passArgAsTuple=True,
         )
         self.choice1thread.start()
 
@@ -186,7 +185,6 @@ class TemplateDialog(wx.Dialog):
             self,
             self.fetchDestTempaltes,
             (event.String if event.String else False),
-            passArgAsTuple=True,
         )
         self.choice2thread.start()
 

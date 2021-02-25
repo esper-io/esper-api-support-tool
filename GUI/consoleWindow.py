@@ -57,10 +57,19 @@ class Console(wx.Frame):
                 self.loggingList.ShowPosition(self.loggingList.GetNumberOfLines() - 1)
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.SetBackgroundColour(wx.Colour(100, 100, 100))
         self.Centre()
         self.Show()
+
+    def onEscapePressed(self, event):
+        keycode = event.GetKeyCode()
+        if (
+            self.HasFocus() or self.loggingList.HasFocus()
+        ) and keycode == wx.WXK_ESCAPE:
+            self.onClose(event)
 
     def onClose(self, event):
         evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)

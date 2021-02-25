@@ -5,6 +5,7 @@ import pathlib
 import platform
 import os
 import shutil
+import Common.Globals as Globals
 
 from Utility.Resource import isModuleInstalled, installRequiredModules
 
@@ -58,18 +59,50 @@ if __name__ == "__main__":
         if os.path.exists(dispath + "/Main.exe"):
             if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
                 os.remove(dispath + "/EsperApiSupportTool.exe")
-            os.rename(dispath + "/Main.exe", dispath + "/EsperApiSupportTool.exe")
+            if os.path.exists(
+                dispath
+                + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-")
+            ):
+                os.remove(
+                    dispath
+                    + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-")
+                )
+            os.rename(
+                dispath + "/Main.exe",
+                dispath
+                + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-"),
+            )
         elif os.path.exists(dispath + "/Main.app"):
             if os.path.exists(dispath + "/EsperApiSupportTool.app"):
                 if os.path.isfile(dispath + "/EsperApiSupportTool.app"):
                     os.remove(dispath + "/EsperApiSupportTool.app")
                 else:
                     shutil.rmtree(dispath + "/EsperApiSupportTool.app")
-            os.rename(dispath + "/Main.app", dispath + "/EsperApiSupportTool.app")
-    except:
+                if os.path.isfile(
+                    dispath
+                    + "/%s_EsperApiSupportTool.app" % Globals.VERSION.replace(".", "-")
+                ):
+                    os.remove(
+                        dispath
+                        + "/%s_EsperApiSupportTool.app"
+                        % Globals.VERSION.replace(".", "-")
+                    )
+                else:
+                    shutil.rmtree(
+                        dispath
+                        + "/%s_EsperApiSupportTool.app"
+                        % Globals.VERSION.replace(".", "-")
+                    )
+            os.rename(
+                dispath + "/Main.app",
+                dispath
+                + "/%s_EsperApiSupportTool.app" % Globals.VERSION.replace(".", "-"),
+            )
+    except Exception as e:
         print(
             "FAILED to remove old executeable or rename the newly generated executable"
         )
+        print(e)
         pass
 
     if output:

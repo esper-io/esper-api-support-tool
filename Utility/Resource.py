@@ -5,12 +5,14 @@ import platform
 import requests
 import shlex
 import sys
+import time
 import subprocess
 import wx
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
-from Common.decorator import api_tool_decorator
+from Utility.ApiToolLogging import ApiToolLog
+from pathlib import Path
 
 
 def resourcePath(relative_path):
@@ -41,12 +43,15 @@ def scale_bitmap(bitmap, width, height):
     return result
 
 
-@api_tool_decorator
 def postEventToFrame(eventType, eventValue=None):
     """ Post an Event to the Main Thread """
-    evt = wxThread.CustomEvent(eventType, -1, eventValue)
-    if Globals.frame:
-        wx.PostEvent(Globals.frame, evt)
+    if eventType:
+        try:
+            evt = wxThread.CustomEvent(eventType, -1, eventValue)
+            if Globals.frame:
+                wx.PostEvent(Globals.frame, evt)
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
 
 def download(url, file_name, overwrite=True):
@@ -55,6 +60,7 @@ def download(url, file_name, overwrite=True):
             os.remove(file_name)
     except Exception as e:
         print(e)
+        ApiToolLog().LogError(e)
     # open in binary mode
     with open(file_name, "wb") as file:
         # get request
@@ -72,6 +78,45 @@ def checkEsperInternetConnection():
     return False
 
 
+def checkForUpdate():
+    try:
+        response = requests.get(Globals.UPDATE_LINK)
+        json_resp = response.json()
+        return json_resp
+    except Exception as e:
+        print(e)
+
+    return None
+
+
+def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1024):
+    if not filepath:
+        filepath = str(os.path.join(Path.home(), "Downloads"))
+    fullPath = os.path.join(filepath, fileName)
+    num = 1
+    while os.path.exists(fullPath):
+        parts = fileName.split(".")
+        parts.insert(1, (" (%s)" % num))
+        parts[len(parts) - 1] = ".%s" % parts[len(parts) - 1]
+        tmpFileName = "".join(parts)
+        fullPath = os.path.join(filepath, tmpFileName)
+        num += 1
+    parentPath = os.path.abspath(os.path.join(fullPath, os.pardir))
+    if not os.path.exists(parentPath):
+        os.makedirs(parentPath)
+    try:
+        r = requests.get(url, stream=True, allow_redirects=redirects)
+        with open(fullPath, "wb") as file:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    file.write(chunk)
+        return fullPath
+    except Exception as e:
+        print(e)
+        ApiToolLog().LogError(e)
+    return None
+
+
 def deleteFile(file):
     try:
         if os.path.exists(file):
@@ -79,6 +124,7 @@ def deleteFile(file):
             return True
     except Exception as e:
         print(e)
+        ApiToolLog().LogError(e)
     return False
 
 
@@ -132,3 +178,23 @@ def runOsPOpen(cmd):
     out = os.popen(cmd)
     output = out.read()
     return output, error
+
+
+def joinThreadList(threads):
+    if threads:
+        for thread in threads:
+            if thread:
+                thread.join()
+
+
+def limitActiveThreads(threads, max_alive=25, sleep=1):
+    Globals.lock.acquire()
+    numAlive = 0
+    for thread in threads:
+        if thread.is_alive():
+            numAlive += 1
+    if numAlive >= max_alive:
+        for thread in threads:
+            thread.join()
+        time.sleep(1)
+    Globals.lock.release()
