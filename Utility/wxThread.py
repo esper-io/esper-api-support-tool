@@ -61,7 +61,6 @@ def doAPICallInThread(
     callback=None,
     callbackArgs=None,
     optCallbackArgs=None,
-    passArgAsTuple=True,
     waitForJoin=True,
     name=None,
 ):
@@ -70,7 +69,6 @@ def doAPICallInThread(
         func,
         args=args,
         eventType=eventType,
-        passArgAsTuple=passArgAsTuple,
         callback=callback,
         optCallbackArgs=optCallbackArgs,
         callbackArgs=callbackArgs,
@@ -106,7 +104,6 @@ class GUIThread(threading.Thread):
         args,
         optArgs=None,
         eventType=None,
-        passArgAsTuple=False,
         callback=None,
         callbackArgs=None,
         optCallbackArgs=None,
@@ -118,7 +115,6 @@ class GUIThread(threading.Thread):
         self._args = args
         self._optArgs = optArgs
         self.eventType = eventType
-        self.passArgAsTuple = passArgAsTuple
         self.result = None
         self._callback = callback
         self._cbArgs = callbackArgs
@@ -145,14 +141,20 @@ class GUIThread(threading.Thread):
         when you call Thread.start().
         """
         if self._target:
-            if not self.passArgAsTuple and self._args and self._optArgs:
-                self.result = self._target(*self._args, *self._optArgs)
-            elif self.passArgAsTuple and self._args and self._optArgs:
-                self.result = self._target(self._args, self._optArgs)
-            elif not self.passArgAsTuple and self._args:
-                self.result = self._target(*self._args)
-            elif self.passArgAsTuple and self._args:
-                self.result = self._target(self._args)
+            if self._optArgs:
+                if type(self._args) == tuple and type(self._optArgs) == tuple:
+                    self.result = self._target(*self._args, *self._optArgs)
+                elif type(self._args) != tuple and type(self._optArgs) == tuple:
+                    self.result = self._target(self._args, *self._optArgs)
+                elif type(self._args) == tuple and type(self._optArgs) != tuple:
+                    self.result = self._target(*self._args, self._optArgs)
+                elif type(self._args) != tuple and type(self._optArgs) != tuple:
+                    self.result = self._target(self._args, self._optArgs)
+            elif self._args:
+                if type(self._args) != tuple:
+                    self.result = self._target(self._args)
+                elif type(self._args) == tuple:
+                    self.result = self._target(*self._args)
             else:
                 self.result = self._target()
 

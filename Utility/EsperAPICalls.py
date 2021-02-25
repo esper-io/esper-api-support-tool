@@ -759,7 +759,6 @@ def modifyDevice(frame):
         executeDeviceModification,
         args=(frame),
         eventType=None,
-        passArgAsTuple=True,
     )
     t.start()
     return t

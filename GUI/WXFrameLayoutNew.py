@@ -798,7 +798,7 @@ class NewFrameLayout(wx.Frame):
             wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
             return False
 
-    def waitForThreadsThenSetCursorDefault(self, threads, source=None):
+    def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None):
         joinThreadList(threads)
         if source == 0:
             self.sidePanel.groupChoice.Enable(True)
@@ -818,7 +818,6 @@ class NewFrameLayout(wx.Frame):
                         self,
                         getdeviceapps,
                         args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
-                        passArgAsTuple=False,
                         eventType=wxThread.myEVT_APPS,
                         waitForJoin=False,
                         name="GetDeviceAppsToPopulateApps",
@@ -840,6 +839,9 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
+        if source == 3:
+            postEventToFrame(wxThread.myEVT_COMPLETE, True)
+            postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
         self.sidePanel.runBtn.Enable(True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
@@ -1334,9 +1336,11 @@ class NewFrameLayout(wx.Frame):
             # elif action == Globals.POWER_OFF:
             #     powerOffDevice(self, device, deviceInfo)
             limitActiveThreads(threads)
-        joinThreadList(threads)
-        postEventToFrame(wxThread.myEVT_COMPLETE, True)
-        postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
+        wxThread.GUIThread(
+            self,
+            self.waitForThreadsThenSetCursorDefault,
+            (threads, 3, action),
+        ).start()
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
@@ -1549,7 +1553,6 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.savePrefs,
                 (self.prefDialog),
-                passArgAsTuple=True,
                 eventType=None,
             )
             save.start()
@@ -1666,7 +1669,6 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.fetchUpdateData,
                 (True),
-                passArgAsTuple=True,
                 eventType=None,
                 name="fetchUpdateData",
             )

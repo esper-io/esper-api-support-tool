@@ -310,12 +310,12 @@ class GridPanel(wx.Panel):
         self.emptyNetworkGrid(emptyContents=False)
         num = 1
         for info in self.grid_2_contents:
-            self.parentFrame.addToNetworkGrid(info)
+            self.addToNetworkGrid(info)
             self.parentFrame.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
         self.grid_2.MakeCellVisible(0, col)
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        wx.CallLater(3000, self.parentFrame.setGaugeValue, 0)
 
     def toogleViewMenuItem(self, event):
         """
