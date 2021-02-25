@@ -63,6 +63,7 @@ def doAPICallInThread(
     optCallbackArgs=None,
     passArgAsTuple=True,
     waitForJoin=True,
+    name=None,
 ):
     t = GUIThread(
         frame,
@@ -73,6 +74,7 @@ def doAPICallInThread(
         callback=callback,
         optCallbackArgs=optCallbackArgs,
         callbackArgs=callbackArgs,
+        name=name,
     )
     t.start()
     if waitForJoin:
@@ -108,6 +110,7 @@ class GUIThread(threading.Thread):
         callback=None,
         callbackArgs=None,
         optCallbackArgs=None,
+        name=None,
     ):
         threading.Thread.__init__(self)
         self._parent = parent
@@ -121,6 +124,21 @@ class GUIThread(threading.Thread):
         self._cbArgs = callbackArgs
         self._optCbArgs = optCallbackArgs
         self.daemon = True
+
+        if name:
+            self.name = name
+
+        self.parent = threading.current_thread()
+
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def isStopped(self):
+        if self.parent and hasattr(self.parent, "isStopped"):
+            return self._stop_event.is_set() or self.parent.isStopped()
+        return self._stop_event.is_set()
 
     def run(self):
         """Overrides Thread.run. Don't call this directly its called internally
@@ -138,8 +156,14 @@ class GUIThread(threading.Thread):
             else:
                 self.result = self._target()
 
+        if self.isStopped():
+            return
+
         if self._callback:
             self.result = (self.result, self._callback, self._cbArgs, self._optCbArgs)
+
+        if self.isStopped():
+            return
 
         if self.eventType:
             evt = CustomEvent(self.eventType, -1, self.result)

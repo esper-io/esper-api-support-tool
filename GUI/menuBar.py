@@ -109,6 +109,7 @@ class ToolMenuBar(wx.MenuBar):
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
+        self.ConfigMenuPosition = 3
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")
@@ -193,3 +194,11 @@ class ToolMenuBar(wx.MenuBar):
     def uncheckConsole(self, event):
         """ Uncheck Console menu item """
         self.consoleView.Check(False)
+
+    @api_tool_decorator
+    def disableConfigMenu(self):
+        self.EnableTop(self.ConfigMenuPosition, False)
+
+    @api_tool_decorator
+    def enableConfigMenu(self):
+        self.EnableTop(self.ConfigMenuPosition, True)

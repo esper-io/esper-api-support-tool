@@ -2,6 +2,7 @@
 
 import Common.Globals as Globals
 import re
+import threading
 import wx
 import wx.grid as gridlib
 
@@ -432,6 +433,9 @@ class GridPanel(wx.Panel):
                         if deviceListing:
                             deviceListing = deviceListing[0]
                         else:
+                            if hasattr(threading.current_thread(), "isStopped"):
+                                if threading.current_thread().isStopped():
+                                    return
                             self.addDeviceToDeviceGrid(device_info, isUpdate=False)
                             break
                         deviceListing.update(device)
@@ -453,6 +457,9 @@ class GridPanel(wx.Panel):
                                 in self.userEdited
                                 and cellValue != str(fecthValue)
                             ):
+                                if hasattr(threading.current_thread(), "isStopped"):
+                                    if threading.current_thread().isStopped():
+                                        return
                                 self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
                                 self.setStatusCellColor(fecthValue, rowNum, indx)
                                 self.setAlteredCellColor(
@@ -470,8 +477,12 @@ class GridPanel(wx.Panel):
                                     cellValue
                                 )
                         break
-            if not found:
-                self.addDeviceToDeviceGrid(device_info, isUpdate=False)
+            # Don't add if not found as potential Endpoint swap could have occurred
+            # if not found:
+            #     if hasattr(threading.current_thread(), "isStopped"):
+            #         if threading.current_thread().isStopped():
+            #             return
+            #     self.addDeviceToDeviceGrid(device_info, isUpdate=False)
         else:
             self.grid_1.AppendRows(1)
             esperName = ""
@@ -484,6 +495,9 @@ class GridPanel(wx.Panel):
                 if "Esper Name" == attribute:
                     esperName = value
                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+                if hasattr(threading.current_thread(), "isStopped"):
+                    if threading.current_thread().isStopped():
+                        return
                 self.grid_1.SetCellValue(
                     self.grid_1.GetNumberRows() - 1, num, str(value)
                 )

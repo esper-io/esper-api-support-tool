@@ -7,6 +7,7 @@ import time
 import json
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
+import threading
 import wx
 
 from Common.decorator import api_tool_decorator
@@ -415,7 +416,7 @@ def iterateThroughGridRows(frame, action):
 
 
 def iterateThroughDeviceList(
-    frame, action, api_response, isDevice=False, isUpdate=False
+    frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
     """Iterates Through Each Device And Performs A Specified Action"""
     if len(api_response.results):
@@ -444,7 +445,7 @@ def iterateThroughDeviceList(
             t = wxThread.GUIThread(
                 frame,
                 waitTillThreadsFinish,
-                args=(tuple(threads), action),
+                args=(tuple(threads), action, entId),
                 eventType=wxThread.myEVT_FETCH,
             )
             t.start()
@@ -454,12 +455,15 @@ def iterateThroughDeviceList(
             )[1]
             return deviceList
     else:
+        if hasattr(threading.current_thread(), "isStopped"):
+            if threading.current_thread().isStopped():
+                return
         frame.Logging("---> No devices found for group")
         wx.MessageBox("No devices found for group.", style=wx.ICON_INFORMATION)
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads, action, event=None):
+def waitTillThreadsFinish(threads, action, entId, event=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
     deviceList = {}
@@ -467,7 +471,7 @@ def waitTillThreadsFinish(threads, action, event=None):
         if type(thread.result) == tuple:
             deviceList = {**deviceList, **thread.result[1]}
     postEventToFrame(event, action)
-    return (action, deviceList)
+    return (action, entId, deviceList)
 
 
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
@@ -576,7 +580,10 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if not Globals.enterprise_id:
         frame.loadConfigPrompt()
 
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    if frame:
+        frame.menubar.disableConfigMenu()
+
+    # api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     logActionExecution(frame, action, group)
     if (action == Globals.SHOW_ALL_AND_GENERATE_REPORT) and not isUpdate:
         frame.gridPanel.emptyDeviceGrid()
@@ -599,8 +606,9 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             eventType=wxThread.myEVT_RESPONSE,
             callback=iterateThroughDeviceList,
             callbackArgs=(frame, action),
-            optCallbackArgs=(False, isUpdate),
+            optCallbackArgs=(Globals.enterprise_id, False, isUpdate),
             waitForJoin=False,
+            name="iterateThroughDeviceListForDevice",
         )
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
@@ -612,7 +620,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             if isUpdate:
                 api_response = getAllDevices(groupToUse)
                 deviceList = iterateThroughDeviceList(
-                    frame, action, api_response, isUpdate=True
+                    frame, action, api_response, Globals.enterprise_id, isUpdate=True
                 )
             else:
                 wxThread.doAPICallInThread(
@@ -622,7 +630,9 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
                     eventType=wxThread.myEVT_RESPONSE,
                     callback=iterateThroughDeviceList,
                     callbackArgs=(frame, action),
+                    optCallbackArgs=(Globals.enterprise_id),
                     waitForJoin=False,
+                    name="iterateThroughDeviceListForGroup",
                 )
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -665,8 +675,10 @@ def iterateThroughAllGroups(frame, action, api_instance, group=None):
             args=(groupToUse),
             eventType=wxThread.myEVT_RESPONSE,
             callback=iterateThroughDeviceList,
-            callbackArgs=(frame, action),
+            callbackArgs=(frame, action, Globals.enterprise_id),
+            optCallbackArgs=(Globals.enterprise_id),
             waitForJoin=False,
+            name="iterateThroughDeviceListForAllDeviceGroup",
         )
     except ApiException as e:
         print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -956,7 +968,8 @@ def waitForCommandToFinish(
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, request_id
             )
-            status = response.results[0]
+            if response and response.results:
+                status = response.results[0]
             postEventToFrame(
                 wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
             )
@@ -1026,6 +1039,7 @@ def ApplyDeviceConfig(frame, config, commandType):
             eventType=wxThread.myEVT_COMMAND,
         )
     if t:
+        frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
         t.start()
 
