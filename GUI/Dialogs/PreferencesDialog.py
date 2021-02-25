@@ -82,19 +82,22 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
             Globals.USE_ENTERPRISE_APP = False
             if (
-                prefDict["getAllApps"].lower() == "true"
-                or prefDict["getAllApps"] == True
-            ):
+                isinstance(self.prefs["getAllApps"], str)
+                and prefDict["getAllApps"].lower() == "true"
+            ) or prefDict["getAllApps"] == True:
                 self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
                 Globals.USE_ENTERPRISE_APP = False
             else:
-                self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
+                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
 
         if not prefDict or (prefDict and not prefDict["showPkg"]):
             self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.SHOW_PKG_NAME = False
         elif prefDict and prefDict["showPkg"]:
-            if prefDict["showPkg"].lower() == "true" or prefDict["showPkg"] == True:
+            if (
+                isinstance(self.prefs["showPkg"], str)
+                and prefDict["showPkg"].lower() == "true"
+            ) or prefDict["showPkg"] == True:
                 self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_PKG_NAME = False
             else:
@@ -303,21 +306,33 @@ class PreferencesDialog(wx.Dialog):
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower() == "false"
             ) or not self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = False
+                Globals.USE_ENTERPRISE_APP = True
+                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
             elif (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower()
             ) == "true" or self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = True
+                Globals.USE_ENTERPRISE_APP = False
+                self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
             else:
                 Globals.USE_ENTERPRISE_APP = True
+                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
         if "showPkg" in self.prefs and self.prefs["showPkg"]:
-            if self.prefs["showPkg"].lower() == "false":
+            if (
+                isinstance(self.prefs["getAllApps"], str)
+                and self.prefs["showPkg"].lower() == "false"
+            ) or not self.prefs["showPkg"]:
                 Globals.SHOW_PKG_NAME = False
-            elif self.prefs["showPkg"].lower() == "true":
+                self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
+            elif (
+                isinstance(self.prefs["getAllApps"], str)
+                and self.prefs["showPkg"].lower() == "true"
+            ) or self.prefs["showPkg"]:
                 Globals.SHOW_PKG_NAME = True
+                self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
             else:
                 Globals.SHOW_PKG_NAME = True
+                self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
 
     def GetPrefs(self):
         if not self.prefs:

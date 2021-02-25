@@ -1532,8 +1532,12 @@ class NewFrameLayout(wx.Frame):
                 eventType=None,
             )
             save.start()
-            # self.savePrefs(self.prefDialog)
-            self.sidePanel.sortAndPopulateAppChoice()
+            if self.sidePanel.selectedGroupsList:
+                self.sidePanel.knownApps = []
+                self.PopulateDevices(None)
+            if self.sidePanel.selectedDevicesList:
+                self.sidePanel.selectedDeviceApps = []
+                self.onDeviceSelections(None)
         if self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
         else:
