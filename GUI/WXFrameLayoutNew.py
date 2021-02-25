@@ -1348,7 +1348,6 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.gauge.Pulse()
         self.setCursorBusy()
-        num = 1
         if len(self.sidePanel.selectedDevicesList) > 0:
             self.sidePanel.runBtn.Enable(False)
             wxThread.GUIThread(
@@ -1357,8 +1356,9 @@ class NewFrameLayout(wx.Frame):
                 args=None,
                 eventType=wxThread.myEVT_COMPLETE,
             ).start()
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
-        wx.PostEvent(self, evt)
+        else:
+            evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+            wx.PostEvent(self, evt)
 
     def addDevicesApps(self):
         num = 1
@@ -1384,8 +1384,8 @@ class NewFrameLayout(wx.Frame):
         if not appAdded:
             self.sidePanel.appChoice.Append("No available app(s) on this device")
             self.sidePanel.appChoice.SetSelection(0)
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
-        wx.PostEvent(self, evt)
+        # evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        # wx.PostEvent(self, evt)
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""

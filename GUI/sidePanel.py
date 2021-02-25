@@ -332,6 +332,7 @@ class SidePanel(wx.Panel):
             )
 
         if self.groupMultiDialog.ShowModal() == wx.ID_OK:
+            self.knownApps = []
             self.clearGroupAndDeviceSelections()
             selections = self.groupMultiDialog.GetSelections()
             if selections:
