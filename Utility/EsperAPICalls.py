@@ -153,8 +153,8 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     appPkgName: app["package_name"],
                     "app_state": app["state"],
                 }
-                if entry not in Globals.frame.sidePanel.deviceApps:
-                    Globals.frame.sidePanel.deviceApps.append(entry)
+                if entry not in Globals.frame.sidePanel.knownApps:
+                    Globals.frame.sidePanel.knownApps.append(entry)
                 version = (
                     app["version_code"][1 : len(app["version_code"])]
                     if app["version_code"].startswith("v")
@@ -445,7 +445,7 @@ def iterateThroughDeviceList(
                 frame,
                 waitTillThreadsFinish,
                 args=(tuple(threads), action),
-                eventType=wxThread.myEVT_COMPLETE,
+                eventType=wxThread.myEVT_FETCH,
             )
             t.start()
         else:
@@ -459,10 +459,15 @@ def iterateThroughDeviceList(
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads, action, event=wxThread.myEVT_UPDATE_DONE):
+def waitTillThreadsFinish(threads, action, event=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
+    deviceList = {}
+    for thread in threads:
+        if type(thread.result) == tuple:
+            deviceList = {**deviceList, **thread.result[1]}
     postEventToFrame(event, action)
+    return (action, deviceList)
 
 
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
@@ -481,9 +486,6 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
-    if not isUpdate:
-        evt = wxThread.CustomEvent(wxThread.myEVT_FETCH, -1, (action, deviceList))
-        Globals.frame.onFetch(evt)
     return (action, deviceList)
 
 
@@ -603,31 +605,28 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     elif action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
     else:
-        if label == "All devices":
-            iterateThroughAllGroups(frame, action, api_instance, group)
-        else:
-            # Iterate Through Each Device in Group VIA Api Request
-            try:
-                groupToUse = group
-                frame.Logging("---> Making API Request")
-                if isUpdate:
-                    api_response = getAllDevices(groupToUse)
-                    deviceList = iterateThroughDeviceList(
-                        frame, action, api_response, isUpdate=True
-                    )
-                else:
-                    wxThread.doAPICallInThread(
-                        frame,
-                        getAllDevices,
-                        args=(groupToUse),
-                        eventType=wxThread.myEVT_RESPONSE,
-                        callback=iterateThroughDeviceList,
-                        callbackArgs=(frame, action),
-                        waitForJoin=False,
-                    )
-            except ApiException as e:
-                print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-                ApiToolLog().LogError(e)
+        # Iterate Through Each Device in Group VIA Api Request
+        try:
+            groupToUse = group
+            frame.Logging("---> Making API Request")
+            if isUpdate:
+                api_response = getAllDevices(groupToUse)
+                deviceList = iterateThroughDeviceList(
+                    frame, action, api_response, isUpdate=True
+                )
+            else:
+                wxThread.doAPICallInThread(
+                    frame,
+                    getAllDevices,
+                    args=(groupToUse),
+                    eventType=wxThread.myEVT_RESPONSE,
+                    callback=iterateThroughDeviceList,
+                    callbackArgs=(frame, action),
+                    waitForJoin=False,
+                )
+        except ApiException as e:
+            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+            ApiToolLog().LogError(e)
 
     if deviceList:
         if isUpdate:

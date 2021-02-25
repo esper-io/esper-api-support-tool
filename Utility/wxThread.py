@@ -61,6 +61,7 @@ def doAPICallInThread(
     callback=None,
     callbackArgs=None,
     optCallbackArgs=None,
+    passArgAsTuple=True,
     waitForJoin=True,
 ):
     t = GUIThread(
@@ -68,7 +69,7 @@ def doAPICallInThread(
         func,
         args=args,
         eventType=eventType,
-        passArgAsTuple=True,
+        passArgAsTuple=passArgAsTuple,
         callback=callback,
         optCallbackArgs=optCallbackArgs,
         callbackArgs=callbackArgs,

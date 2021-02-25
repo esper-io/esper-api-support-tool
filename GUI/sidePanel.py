@@ -18,9 +18,8 @@ class SidePanel(wx.Panel):
         self.devices = {}
         self.selectedGroupsList = []
         self.groups = {}
-        self.enterpriseApps = []
-        self.deviceApps = []
-        self.apps = []
+        self.selectedDeviceApps = []
+        self.knownApps = []
 
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
@@ -370,7 +369,7 @@ class SidePanel(wx.Panel):
             self.appChoice.Clear()
             self.selectedDevices.Clear()
             self.selectedDevicesList = []
-            self.deviceApps = []
+            self.selectedDeviceApps = []
             selections = self.deviceMultiDialog.GetSelections()
             for deviceName in selections:
                 deviceId = self.devices[deviceName]
@@ -380,7 +379,10 @@ class SidePanel(wx.Panel):
         self.parentFrame.onDeviceSelections(None)
 
     def sortAndPopulateAppChoice(self):
-        self.apps = self.enterpriseApps + self.deviceApps
+        if not self.selectedDevicesList:
+            self.apps = self.knownApps
+        else:
+            self.apps = self.selectedDeviceApps
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         self.appChoice.Clear()
         self.appChoice.Append("", "")

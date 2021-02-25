@@ -45,12 +45,13 @@ def scale_bitmap(bitmap, width, height):
 
 def postEventToFrame(eventType, eventValue=None):
     """ Post an Event to the Main Thread """
-    try:
-        evt = wxThread.CustomEvent(eventType, -1, eventValue)
-        if Globals.frame:
-            wx.PostEvent(Globals.frame, evt)
-    except Exception as e:
-        ApiToolLog().LogError(e)
+    if eventType:
+        try:
+            evt = wxThread.CustomEvent(eventType, -1, eventValue)
+            if Globals.frame:
+                wx.PostEvent(Globals.frame, evt)
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
 
 def download(url, file_name, overwrite=True):

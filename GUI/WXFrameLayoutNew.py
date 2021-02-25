@@ -54,6 +54,7 @@ from Utility.EsperAPICalls import (
 
 from Utility.Resource import (
     limitActiveThreads,
+    postEventToFrame,
     resourcePath,
     createNewFile,
     checkEsperInternetConnection,
@@ -805,7 +806,8 @@ class NewFrameLayout(wx.Frame):
                     thread = wxThread.doAPICallInThread(
                         self,
                         getdeviceapps,
-                        args=(deviceId),
+                        args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
+                        passArgAsTuple=False,
                         eventType=wxThread.myEVT_APPS,
                         waitForJoin=False,
                     )
@@ -925,27 +927,34 @@ class NewFrameLayout(wx.Frame):
                 if name and not name in self.sidePanel.devices:
                     self.sidePanel.devices[name] = device.id
 
-    @api_tool_decorator
-    def PopulateApps(self):
-        """ Populate App Choice """
-        self.Logging("--->Attempting to populate apps...")
-        self.setCursorBusy()
-        self.sidePanel.appChoice.Clear()
-        thread = wxThread.doAPICallInThread(
-            self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
-        )
-        return thread
+    # @api_tool_decorator
+    # def PopulateApps(self):
+    #     """ Populate App Choice """
+    #     self.Logging("--->Attempting to populate apps...")
+    #     self.setCursorBusy()
+    #     self.sidePanel.appChoice.Clear()
+    #     thread = wxThread.doAPICallInThread(
+    #         self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
+    #     )
+    #     return thread
 
     @api_tool_decorator
     def addAppsToAppChoice(self, event):
         """ Populate App Choice """
         api_response = event.GetValue()
         results = None
+
         if hasattr(api_response, "results"):
             results = api_response.results
         else:
             results = api_response[1]["results"]
-        if hasattr(results[0], "application_name"):
+
+        if results and type(results[0]) == dict and "application" in results[0]:
+            results = sorted(
+                results,
+                key=lambda i: i["application"]["application_name"].lower(),
+            )
+        elif results and hasattr(results[0], "application_name"):
             results = sorted(
                 results,
                 key=lambda i: i.application_name.lower(),
@@ -955,11 +964,23 @@ class NewFrameLayout(wx.Frame):
                 results,
                 key=lambda i: i["app_name"].lower(),
             )
+
         if len(results):
             num = 1
             for app in results:
                 entry = None
-                if hasattr(app, "application_name"):
+                if type(app) == dict and "application" in app:
+                    appName = app["application"]["application_name"]
+                    appPkgName = appName + (
+                        " (%s)" % app["application"]["package_name"]
+                    )
+                    entry = {
+                        "app_name": app["application"]["application_name"],
+                        appName: app["application"]["package_name"],
+                        appPkgName: app["application"]["package_name"],
+                        "app_state": None,
+                    }
+                elif hasattr(app, "application_name"):
                     appName = app.application_name
                     appPkgName = appName + (" (%s)" % app.package_name)
                     entry = {
@@ -968,8 +989,6 @@ class NewFrameLayout(wx.Frame):
                         appPkgName: app.package_name,
                         "app_state": app.state,
                     }
-                    if entry not in self.sidePanel.enterpriseApps:
-                        self.sidePanel.enterpriseApps.append(entry)
                 else:
                     appName = app["app_name"]
                     appPkgName = appName + (" (%s)" % app["package_name"])
@@ -979,13 +998,11 @@ class NewFrameLayout(wx.Frame):
                         appPkgName: app["package_name"],
                         "app_state": app["state"],
                     }
-                    if entry not in self.sidePanel.deviceApps:
-                        self.sidePanel.deviceApps.append(entry)
+                if entry not in self.sidePanel.selectedDeviceApps:
+                    self.sidePanel.selectedDeviceApps.append(entry)
+                if entry not in self.sidePanel.knownApps:
+                    self.sidePanel.knownApps.append(entry)
                 num += 1
-        # self.sidePanel.runBtn.Enable(True)
-        # self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-        # self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-        # self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1304,6 +1321,7 @@ class NewFrameLayout(wx.Frame):
             #     powerOffDevice(self, device, deviceInfo)
             limitActiveThreads(threads)
         joinThreadList(threads)
+        postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
@@ -1336,31 +1354,31 @@ class NewFrameLayout(wx.Frame):
             wxThread.GUIThread(
                 self,
                 self.addDevicesApps,
-                self.sidePanel.selectedDevicesList,
+                args=None,
                 eventType=wxThread.myEVT_COMPLETE,
-                passArgAsTuple=True,
             ).start()
-        # else:
-        #    self.sidePanel.sortAndPopulateAppChoice()
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
         wx.PostEvent(self, evt)
 
-    def addDevicesApps(self, deviceId):
+    def addDevicesApps(self):
         num = 1
         appAdded = False
+        self.sidePanel.deviceApps = []
         for deviceId in self.sidePanel.selectedDevicesList:
             self.Logging("---> Fetching Apps on Device Through API")
             appList, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
             self.Logging("---> Finished Fetching Apps on Device Through API")
+
             for app in appList:
                 appAdded = True
                 app_name = app.split(" v")[0]
-                d = [k for k in self.sidePanel.apps if app_name in k]
+                d = [k for k in self.sidePanel.knownApps if app_name in k]
                 if d:
                     d = d[0]
-                    self.sidePanel.appChoice.Append(app_name, d[app_name])
+                    if d not in self.sidePanel.selectedDeviceApps:
+                        self.sidePanel.selectedDeviceApps.append(d)
                 self.setGaugeValue(int(float(num / len(appList)) * 100))
                 num += 1
         if not appAdded:
@@ -1634,6 +1652,8 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def fetchUpdateData(self, forceUpdate=False):
+        if not self.gridPanel.grid_1_contents and not self.gridPanel.grid_2_contents:
+            return
         threads = []
         if self.isForceUpdate:
             self.isForceUpdate = forceUpdate
