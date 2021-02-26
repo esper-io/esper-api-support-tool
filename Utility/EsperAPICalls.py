@@ -128,7 +128,19 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     json_resp = getInfo(extention, deviceid)
     if len(json_resp["results"]) and createAppList:
         for app in json_resp["results"]:
+            entry = None
             if "application" in app:
+                appName = app["application"]["application_name"]
+                appPkgName = appName + (" (%s)" % app["application"]["package_name"])
+                entry = {
+                    "app_name": app["application"]["application_name"],
+                    appName: app["application"]["package_name"],
+                    appPkgName: app["application"]["package_name"],
+                }
+                if entry not in Globals.frame.sidePanel.selectedDeviceApps:
+                    Globals.frame.sidePanel.selectedDeviceApps.append(entry)
+                if entry not in Globals.frame.sidePanel.enterpriseApps:
+                    Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
                     app["application"]["version"]["version_code"][
                         1 : len(app["application"]["version"]["version_code"])
@@ -154,8 +166,6 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     appPkgName: app["package_name"],
                     "app_state": app["state"],
                 }
-                if entry not in Globals.frame.sidePanel.knownApps:
-                    Globals.frame.sidePanel.knownApps.append(entry)
                 version = (
                     app["version_code"][1 : len(app["version_code"])]
                     if app["version_code"].startswith("v")
@@ -170,6 +180,8 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     )
                     + version
                 )
+            if entry and entry not in Globals.frame.sidePanel.knownApps:
+                Globals.frame.sidePanel.knownApps.append(entry)
     return applist, json_resp
 
 

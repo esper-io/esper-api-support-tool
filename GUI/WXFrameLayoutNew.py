@@ -1009,6 +1009,8 @@ class NewFrameLayout(wx.Frame):
                         appPkgName: app["package_name"],
                         "app_state": app["state"],
                     }
+                if entry not in self.sidePanel.enterpriseApps:
+                    self.sidePanel.enterpriseApps.append(entry)
                 if entry not in self.sidePanel.selectedDeviceApps:
                     self.sidePanel.selectedDeviceApps.append(entry)
                 if entry not in self.sidePanel.knownApps:
@@ -1384,23 +1386,21 @@ class NewFrameLayout(wx.Frame):
         num = 1
         appAdded = False
         self.sidePanel.deviceApps = []
+        self.sidePanel.apps = self.sidePanel.knownApps + self.sidePanel.enterpriseApps
         for deviceId in self.sidePanel.selectedDevicesList:
-            self.Logging("---> Fetching Apps on Device Through API")
+            # self.Logging("---> Fetching Apps on Device Through API")
             appList, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
-            self.Logging("---> Finished Fetching Apps on Device Through API")
+            # self.Logging("---> Finished Fetching Apps on Device Through API")
 
             for app in appList:
                 appAdded = True
                 app_name = app.split(" v")[0]
-                entry = [app for app in self.sidePanel.knownApps if app_name in app]
+                entry = [app for app in self.sidePanel.apps if app_name in app]
                 if entry:
                     entry = entry[0]
-                else:
-                    entry = {}
-                    pass
-                if entry not in self.sidePanel.selectedDeviceApps:
+                if entry and entry not in self.sidePanel.selectedDeviceApps:
                     self.sidePanel.selectedDeviceApps.append(entry)
             self.setGaugeValue(
                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
