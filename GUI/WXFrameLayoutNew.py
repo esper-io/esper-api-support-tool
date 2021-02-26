@@ -786,7 +786,7 @@ class NewFrameLayout(wx.Frame):
                     )
 
                 groupThread = self.PopulateGroups()
-                appThread = None  # self.PopulateApps()
+                appThread = self.PopulateApps()
                 threads = [groupThread, appThread]
                 wxThread.GUIThread(
                     self,
@@ -810,26 +810,26 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
                 self.Logging("---> No Devices found")
             else:
-                newThreads = []
-                self.Logging("---> Attempting to populate Application list")
-                self.gauge.Pulse()
-                for deviceId in self.sidePanel.devices.values():
-                    thread = wxThread.doAPICallInThread(
-                        self,
-                        getdeviceapps,
-                        args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
-                        eventType=wxThread.myEVT_APPS,
-                        waitForJoin=False,
-                        name="GetDeviceAppsToPopulateApps",
-                    )
-                    newThreads.append(thread)
-                    limitActiveThreads(newThreads)
-                num = 0
-                for thread in newThreads:
-                    thread.join()
-                    num += 1
-                    if not self.preferences or self.preferences["enableDevice"] == True:
-                        self.setGaugeValue(int(float(num / len(newThreads) / 2) * 100))
+                # newThreads = []
+                # self.Logging("---> Attempting to populate Application list")
+                # self.gauge.Pulse()
+                # for deviceId in self.sidePanel.devices.values():
+                #     thread = wxThread.doAPICallInThread(
+                #         self,
+                #         getdeviceapps,
+                #         args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
+                #         eventType=wxThread.myEVT_APPS,
+                #         waitForJoin=False,
+                #         name="GetDeviceAppsToPopulateApps",
+                #     )
+                #     newThreads.append(thread)
+                #     limitActiveThreads(newThreads)
+                # num = 0
+                # for thread in newThreads:
+                #     thread.join()
+                #     num += 1
+                #     if not self.preferences or self.preferences["enableDevice"] == True:
+                #         self.setGaugeValue(int(float(num / len(newThreads) / 2) * 100))
                 self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
                 self.menubar.enableConfigMenu()
@@ -840,6 +840,7 @@ class NewFrameLayout(wx.Frame):
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
         if source == 3:
+            self.gridPanel.autoSizeGridsColumns()
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
             postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
         self.sidePanel.runBtn.Enable(True)
@@ -938,16 +939,16 @@ class NewFrameLayout(wx.Frame):
                 if name and not name in self.sidePanel.devices:
                     self.sidePanel.devices[name] = device.id
 
-    # @api_tool_decorator
-    # def PopulateApps(self):
-    #     """ Populate App Choice """
-    #     self.Logging("--->Attempting to populate apps...")
-    #     self.setCursorBusy()
-    #     self.sidePanel.appChoice.Clear()
-    #     thread = wxThread.doAPICallInThread(
-    #         self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
-    #     )
-    #     return thread
+    @api_tool_decorator
+    def PopulateApps(self):
+        """ Populate App Choice """
+        self.Logging("--->Attempting to populate apps...")
+        self.setCursorBusy()
+        self.sidePanel.appChoice.Clear()
+        thread = wxThread.doAPICallInThread(
+            self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
+        )
+        return thread
 
     @api_tool_decorator
     def addAppsToAppChoice(self, event):
@@ -998,7 +999,6 @@ class NewFrameLayout(wx.Frame):
                         "app_name": app.application_name,
                         appName: app.package_name,
                         appPkgName: app.package_name,
-                        "app_state": app.state,
                     }
                 else:
                     appName = app["app_name"]
@@ -1393,18 +1393,19 @@ class NewFrameLayout(wx.Frame):
             for app in appList:
                 appAdded = True
                 app_name = app.split(" v")[0]
-                d = [k for k in self.sidePanel.knownApps if app_name in k]
-                if d:
-                    d = d[0]
-                    if d not in self.sidePanel.selectedDeviceApps:
-                        self.sidePanel.selectedDeviceApps.append(d)
+                entry = [app for app in self.sidePanel.knownApps if app_name in app]
+                if entry:
+                    entry = entry[0]
+                else:
+                    entry = {}
+                    pass
+                if entry not in self.sidePanel.selectedDeviceApps:
+                    self.sidePanel.selectedDeviceApps.append(entry)
                 self.setGaugeValue(int(float(num / len(appList)) * 100))
                 num += 1
         if not appAdded:
             self.sidePanel.appChoice.Append("No available app(s) on this device")
             self.sidePanel.appChoice.SetSelection(0)
-        # evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
-        # wx.PostEvent(self, evt)
 
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""

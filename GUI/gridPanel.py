@@ -524,7 +524,7 @@ class GridPanel(wx.Panel):
             )
             if device not in self.grid_1_contents and not deviceListing:
                 self.grid_1_contents.append(device)
-        self.grid_1.AutoSizeColumns()
+        # self.grid_1.AutoSizeColumns()
 
     def setStatusCellColor(self, value, rowNum, colNum):
         if value == "Offline":
@@ -618,7 +618,7 @@ class GridPanel(wx.Panel):
                 num += 1
             if networkInfo not in self.grid_2_contents:
                 self.grid_2_contents.append(networkInfo)
-        self.grid_2.AutoSizeColumns()
+        # self.grid_2.AutoSizeColumns()
 
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """

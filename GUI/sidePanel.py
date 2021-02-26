@@ -386,6 +386,8 @@ class SidePanel(wx.Panel):
             self.apps = self.knownApps
         else:
             self.apps = self.selectedDeviceApps
+        if not self.apps:
+            self.apps = self.knownApps + self.selectedDeviceApps
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         self.appChoice.Clear()
         self.appChoice.Append("", "")
