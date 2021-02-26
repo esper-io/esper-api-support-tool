@@ -262,6 +262,7 @@ class GridPanel(wx.Panel):
             self.addDeviceToDeviceGrid(device)
             self.parentFrame.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
             num += 1
+        self.grid_1.AutoSizeColumns()
         self.grid_1.MakeCellVisible(0, col)
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
         wx.CallLater(3000, self.parentFrame.setGaugeValue, 0)
@@ -313,6 +314,7 @@ class GridPanel(wx.Panel):
             self.addToNetworkGrid(info)
             self.parentFrame.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
             num += 1
+        self.grid_2.AutoSizeColumns()
         self.grid_2.MakeCellVisible(0, col)
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
         wx.CallLater(3000, self.parentFrame.setGaugeValue, 0)

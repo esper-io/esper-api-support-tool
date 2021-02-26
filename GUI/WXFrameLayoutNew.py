@@ -48,7 +48,6 @@ from Utility.EsperAPICalls import (
     getAllGroups,
     getAllApplications,
     validateConfiguration,
-    # powerOffDevice,
     getTokenInfo,
     clearAppData,
 )
@@ -420,6 +419,9 @@ class NewFrameLayout(wx.Frame):
                 headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
                 headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
                 headers.remove("Device Name")
+                headersNoDup = []
+                [headersNoDup.append(x) for x in headers if x not in headersNoDup]
+                headers = headersNoDup
 
                 gridData = []
                 gridData.append(headers)
@@ -978,44 +980,51 @@ class NewFrameLayout(wx.Frame):
             )
 
         if len(results):
-            num = 1
             for app in results:
-                entry = None
-                if type(app) == dict and "application" in app:
-                    appName = app["application"]["application_name"]
-                    appPkgName = appName + (
-                        " (%s)" % app["application"]["package_name"]
-                    )
-                    entry = {
-                        "app_name": app["application"]["application_name"],
-                        appName: app["application"]["package_name"],
-                        appPkgName: app["application"]["package_name"],
-                        "app_state": None,
-                    }
-                elif hasattr(app, "application_name"):
-                    appName = app.application_name
-                    appPkgName = appName + (" (%s)" % app.package_name)
-                    entry = {
-                        "app_name": app.application_name,
-                        appName: app.package_name,
-                        appPkgName: app.package_name,
-                    }
-                else:
-                    appName = app["app_name"]
-                    appPkgName = appName + (" (%s)" % app["package_name"])
-                    entry = {
-                        "app_name": app["app_name"],
-                        appName: app["package_name"],
-                        appPkgName: app["package_name"],
-                        "app_state": app["state"],
-                    }
-                if entry not in self.sidePanel.enterpriseApps:
-                    self.sidePanel.enterpriseApps.append(entry)
-                if entry not in self.sidePanel.selectedDeviceApps:
-                    self.sidePanel.selectedDeviceApps.append(entry)
-                if entry not in self.sidePanel.knownApps:
-                    self.sidePanel.knownApps.append(entry)
-                num += 1
+                self.addAppToAppList(app)
+
+    def addAppToAppList(self, app):
+        entry = None
+        if type(app) == dict and "application" in app:
+            appName = app["application"]["application_name"]
+            appPkgName = appName + (" (%s)" % app["application"]["package_name"])
+            entry = {
+                "app_name": app["application"]["application_name"],
+                appName: app["application"]["package_name"],
+                appPkgName: app["application"]["package_name"],
+                "app_state": None,
+            }
+        elif hasattr(app, "application_name"):
+            appName = app.application_name
+            appPkgName = appName + (" (%s)" % app.package_name)
+            entry = {
+                "app_name": app.application_name,
+                appName: app.package_name,
+                appPkgName: app.package_name,
+            }
+        else:
+            appName = app["app_name"]
+            appPkgName = appName + (" (%s)" % app["package_name"])
+            entry = {
+                "app_name": app["app_name"],
+                appName: app["package_name"],
+                appPkgName: app["package_name"],
+                "app_state": app["state"],
+            }
+        if entry and entry not in self.sidePanel.enterpriseApps:
+            self.sidePanel.enterpriseApps.append(entry)
+        if (
+            entry
+            and self.sidePanel.selectedDevicesList
+            and entry not in self.sidePanel.selectedDeviceApps
+        ):
+            self.sidePanel.selectedDeviceApps.append(entry)
+        if (
+            entry
+            and self.sidePanel.selectedGroupsList
+            and entry not in self.sidePanel.knownApps
+        ):
+            self.sidePanel.knownApps.append(entry)
 
     @api_tool_decorator
     def onRun(self, event):
@@ -1335,8 +1344,6 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
             elif action == Globals.CLEAR_APP_DATA:
                 clearAppData(self, device)
-            # elif action == Globals.POWER_OFF:
-            #     powerOffDevice(self, device, deviceInfo)
             limitActiveThreads(threads)
         wxThread.GUIThread(
             self,
@@ -1388,11 +1395,9 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceApps = []
         self.sidePanel.apps = self.sidePanel.knownApps + self.sidePanel.enterpriseApps
         for deviceId in self.sidePanel.selectedDevicesList:
-            # self.Logging("---> Fetching Apps on Device Through API")
             appList, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
-            # self.Logging("---> Finished Fetching Apps on Device Through API")
 
             for app in appList:
                 appAdded = True
@@ -1682,6 +1687,9 @@ class NewFrameLayout(wx.Frame):
                 time.sleep(Globals.GRID_UPDATE_RATE)
                 if self.kill:
                     break
+                if hasattr(threading.current_thread(), "isStopped"):
+                    if threading.current_thread().isStopped():
+                        break
                 self.fetchUpdateData()
             self.refresh = None
 

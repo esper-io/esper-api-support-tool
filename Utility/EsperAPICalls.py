@@ -31,12 +31,16 @@ def logBadResponse(url, resp, json_resp):
         ApiToolLog().LogResponse(prettyReponse)
 
 
-def getInfo(request_extension, deviceid):
-    """Sends Request For Device Info JSON"""
-    headers = {
+def getHeader():
+    return {
         "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
         "Content-Type": "application/json",
     }
+
+
+def getInfo(request_extension, deviceid):
+    """Sends Request For Device Info JSON"""
+    headers = getHeader()
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
@@ -52,12 +56,20 @@ def getInfo(request_extension, deviceid):
     return json_resp
 
 
+def fetchGroupName(groupURL):
+    headers = getHeader()
+    resp = requests.get(groupURL, headers=headers)
+    json_resp = resp.json()
+    logBadResponse(groupURL, resp, json_resp)
+
+    if "name" in json_resp:
+        return json_resp["name"]
+    return None
+
+
 def patchInfo(request_extension, deviceid, tags):
     """Pushes Data To Device Info JSON"""
-    headers = {
-        "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-        "Content-Type": "application/json",
-    }
+    headers = getHeader()
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
@@ -526,6 +538,19 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     deviceInfo.update({"EsperName": device.device_name})
     deviceDict = device.__dict__
     unpackageDict(deviceInfo, deviceDict)
+
+    if device.groups:
+        groupNames = []
+        for groupURL in device.groups:
+            groupName = fetchGroupName(groupURL)
+            if groupName:
+                groupNames.append(groupName)
+        if len(groupNames) == 1:
+            deviceInfo["groups"] = groupNames[0]
+        elif len(groupNames) == 0:
+            deviceInfo["groups"] = ""
+        else:
+            deviceInfo["groups"] = groupNames
 
     if bool(device.alias_name):
         deviceInfo.update({"Alias": device.alias_name})
@@ -1085,10 +1110,7 @@ def postEsperCommand(command_data, useV0=True):
     json_resp = None
     resp = None
     try:
-        headers = {
-            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-            "Content-Type": "application/json",
-        }
+        headers = getHeader()
         url = ""
         if useV0:
             url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
@@ -1162,10 +1184,7 @@ def clearAppData(frame, device):
 
 def getDeviceApplicationById(device_id, application_id):
     try:
-        headers = {
-            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-            "Content-Type": "application/json",
-        }
+        headers = getHeader()
         url = "https://%s-api.esper.cloud/api/enterprise/%s/device/%s/app/%s" % (
             Globals.configuration.host.split("-api")[0].replace("https://", ""),
             Globals.enterprise_id,

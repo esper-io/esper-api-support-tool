@@ -7,7 +7,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.175"
+VERSION = "v0.176"
 TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
@@ -102,6 +102,7 @@ CSV_EDITABLE_COL = ["Alias", "Tags"]
 CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
+    "Group": "groups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
@@ -117,6 +118,7 @@ CSV_TAG_ATTR_NAME = {
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
+    "Group": "groups",
     "Security Patch": "securityPatchLevel",
     "[WIFI ACCESS POINTS]": "",
     "[Current WIFI Connection]": "",
