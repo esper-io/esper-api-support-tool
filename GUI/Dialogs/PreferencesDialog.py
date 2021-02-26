@@ -20,6 +20,11 @@ class PreferencesDialog(wx.Dialog):
             "offset",
             "gridDialog",
             "updateRate",
+            "enableGridUpdate",
+            "windowSize",
+            "isMaximized",
+            "getAllApps",
+            "showPkg",
         ]
 
         self.SetSize((500, 400))
@@ -69,11 +74,14 @@ class PreferencesDialog(wx.Dialog):
         if prefDict and not prefDict["enableGridUpdate"]:
             self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.ENABLE_GRID_UPDATE = False
-        else:
+        elif prefDict and prefDict["enableGridUpdate"]:
             self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
             Globals.ENABLE_GRID_UPDATE = True
             if Globals.ENABLE_GRID_UPDATE and self.parent != None:
                 self.parent.startUpdateThread()
+        else:
+            self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.ENABLE_GRID_UPDATE = False
 
         if not prefDict or (prefDict and not prefDict["getAllApps"]):
             self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
@@ -372,7 +380,7 @@ class PreferencesDialog(wx.Dialog):
         elif key == "updateRate":
             return Globals.GRID_UPDATE_RATE
         elif key == "enableGridUpdate":
-            return True
+            return Globals.ENABLE_GRID_UPDATE
         elif key == "windowSize":
             return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":

@@ -7,7 +7,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.173"
+VERSION = "v0.174"
 TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
@@ -141,5 +141,5 @@ LAST_DEVICE_ID = None
 LAST_GROUP_ID = None
 GRID_UPDATE_RATE = 60
 MAX_GRID_UPDATE_RATE = 3600
-ENABLE_GRID_UPDATE = True
+ENABLE_GRID_UPDATE = False
 MAX_UPDATE_COUNT = 500

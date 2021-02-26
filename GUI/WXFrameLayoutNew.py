@@ -1374,6 +1374,7 @@ class NewFrameLayout(wx.Frame):
                 self.addDevicesApps,
                 args=None,
                 eventType=wxThread.myEVT_COMPLETE,
+                eventArg=True,
             ).start()
         else:
             evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
@@ -1401,8 +1402,10 @@ class NewFrameLayout(wx.Frame):
                     pass
                 if entry not in self.sidePanel.selectedDeviceApps:
                     self.sidePanel.selectedDeviceApps.append(entry)
-                self.setGaugeValue(int(float(num / len(appList)) * 100))
-                num += 1
+            self.setGaugeValue(
+                int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
+            )
+            num += 1
         if not appAdded:
             self.sidePanel.appChoice.Append("No available app(s) on this device")
             self.sidePanel.appChoice.SetSelection(0)
