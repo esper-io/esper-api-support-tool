@@ -104,6 +104,8 @@ class GUIThread(threading.Thread):
         args,
         optArgs=None,
         eventType=None,
+        eventArg=None,
+        sendEventArgInsteadOfResult=False,
         callback=None,
         callbackArgs=None,
         optCallbackArgs=None,
@@ -115,6 +117,8 @@ class GUIThread(threading.Thread):
         self._args = args
         self._optArgs = optArgs
         self.eventType = eventType
+        self.eventArg = eventArg
+        self.sendEventArgInsteadOfResult = sendEventArgInsteadOfResult
         self.result = None
         self._callback = callback
         self._cbArgs = callbackArgs
@@ -168,5 +172,9 @@ class GUIThread(threading.Thread):
             return
 
         if self.eventType:
-            evt = CustomEvent(self.eventType, -1, self.result)
+            evt = None
+            if self.sendEventArgInsteadOfResult:
+                evt = CustomEvent(self.eventType, -1, self.eventArg)
+            else:
+                evt = CustomEvent(self.eventType, -1, self.result)
             wx.PostEvent(self._parent, evt)

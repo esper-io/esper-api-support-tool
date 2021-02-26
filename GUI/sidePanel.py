@@ -18,6 +18,7 @@ class SidePanel(wx.Panel):
         self.devices = {}
         self.selectedGroupsList = []
         self.groups = {}
+        self.enterpriseApps = []
         self.selectedDeviceApps = []
         self.knownApps = []
 
@@ -383,9 +384,11 @@ class SidePanel(wx.Panel):
 
     def sortAndPopulateAppChoice(self):
         if not self.selectedDevicesList:
-            self.apps = self.knownApps
+            self.apps = self.enterpriseApps
         else:
             self.apps = self.selectedDeviceApps
+        if not self.apps:
+            self.apps = self.knownApps + self.selectedDeviceApps + self.enterpriseApps
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         self.appChoice.Clear()
         self.appChoice.Append("", "")

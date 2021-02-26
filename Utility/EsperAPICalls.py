@@ -31,12 +31,16 @@ def logBadResponse(url, resp, json_resp):
         ApiToolLog().LogResponse(prettyReponse)
 
 
-def getInfo(request_extension, deviceid):
-    """Sends Request For Device Info JSON"""
-    headers = {
+def getHeader():
+    return {
         "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
         "Content-Type": "application/json",
     }
+
+
+def getInfo(request_extension, deviceid):
+    """Sends Request For Device Info JSON"""
+    headers = getHeader()
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
@@ -52,12 +56,20 @@ def getInfo(request_extension, deviceid):
     return json_resp
 
 
+def fetchGroupName(groupURL):
+    headers = getHeader()
+    resp = requests.get(groupURL, headers=headers)
+    json_resp = resp.json()
+    logBadResponse(groupURL, resp, json_resp)
+
+    if "name" in json_resp:
+        return json_resp["name"]
+    return None
+
+
 def patchInfo(request_extension, deviceid, tags):
     """Pushes Data To Device Info JSON"""
-    headers = {
-        "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-        "Content-Type": "application/json",
-    }
+    headers = getHeader()
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
@@ -128,7 +140,19 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     json_resp = getInfo(extention, deviceid)
     if len(json_resp["results"]) and createAppList:
         for app in json_resp["results"]:
+            entry = None
             if "application" in app:
+                appName = app["application"]["application_name"]
+                appPkgName = appName + (" (%s)" % app["application"]["package_name"])
+                entry = {
+                    "app_name": app["application"]["application_name"],
+                    appName: app["application"]["package_name"],
+                    appPkgName: app["application"]["package_name"],
+                }
+                if entry not in Globals.frame.sidePanel.selectedDeviceApps:
+                    Globals.frame.sidePanel.selectedDeviceApps.append(entry)
+                if entry not in Globals.frame.sidePanel.enterpriseApps:
+                    Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
                     app["application"]["version"]["version_code"][
                         1 : len(app["application"]["version"]["version_code"])
@@ -154,8 +178,6 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     appPkgName: app["package_name"],
                     "app_state": app["state"],
                 }
-                if entry not in Globals.frame.sidePanel.knownApps:
-                    Globals.frame.sidePanel.knownApps.append(entry)
                 version = (
                     app["version_code"][1 : len(app["version_code"])]
                     if app["version_code"].startswith("v")
@@ -170,6 +192,8 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     )
                     + version
                 )
+            if entry and entry not in Globals.frame.sidePanel.knownApps:
+                Globals.frame.sidePanel.knownApps.append(entry)
     return applist, json_resp
 
 
@@ -514,6 +538,19 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     deviceInfo.update({"EsperName": device.device_name})
     deviceDict = device.__dict__
     unpackageDict(deviceInfo, deviceDict)
+
+    if device.groups:
+        groupNames = []
+        for groupURL in device.groups:
+            groupName = fetchGroupName(groupURL)
+            if groupName:
+                groupNames.append(groupName)
+        if len(groupNames) == 1:
+            deviceInfo["groups"] = groupNames[0]
+        elif len(groupNames) == 0:
+            deviceInfo["groups"] = ""
+        else:
+            deviceInfo["groups"] = groupNames
 
     if bool(device.alias_name):
         deviceInfo.update({"Alias": device.alias_name})
@@ -1073,10 +1110,7 @@ def postEsperCommand(command_data, useV0=True):
     json_resp = None
     resp = None
     try:
-        headers = {
-            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-            "Content-Type": "application/json",
-        }
+        headers = getHeader()
         url = ""
         if useV0:
             url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
@@ -1150,10 +1184,7 @@ def clearAppData(frame, device):
 
 def getDeviceApplicationById(device_id, application_id):
     try:
-        headers = {
-            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-            "Content-Type": "application/json",
-        }
+        headers = getHeader()
         url = "https://%s-api.esper.cloud/api/enterprise/%s/device/%s/app/%s" % (
             Globals.configuration.host.split("-api")[0].replace("https://", ""),
             Globals.enterprise_id,

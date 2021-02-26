@@ -20,6 +20,11 @@ class PreferencesDialog(wx.Dialog):
             "offset",
             "gridDialog",
             "updateRate",
+            "enableGridUpdate",
+            "windowSize",
+            "isMaximized",
+            "getAllApps",
+            "showPkg",
         ]
 
         self.SetSize((500, 400))
@@ -69,11 +74,14 @@ class PreferencesDialog(wx.Dialog):
         if prefDict and not prefDict["enableGridUpdate"]:
             self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.ENABLE_GRID_UPDATE = False
-        else:
+        elif prefDict and prefDict["enableGridUpdate"]:
             self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
             Globals.ENABLE_GRID_UPDATE = True
             if Globals.ENABLE_GRID_UPDATE and self.parent != None:
                 self.parent.startUpdateThread()
+        else:
+            self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.ENABLE_GRID_UPDATE = False
 
         if not prefDict or (prefDict and not prefDict["getAllApps"]):
             self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
@@ -282,7 +290,7 @@ class PreferencesDialog(wx.Dialog):
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         if "updateRate" in self.prefs and self.prefs["updateRate"]:
             Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-        if "enableGridUpdate" in self.prefs and self.prefs["commandTimeout"]:
+        if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
             self.checkbox_2.SetValue(self.prefs["enableGridUpdate"])
             Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
             if Globals.ENABLE_GRID_UPDATE and self.parent != None:
@@ -306,14 +314,14 @@ class PreferencesDialog(wx.Dialog):
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower() == "false"
             ) or not self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = True
-                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.USE_ENTERPRISE_APP = False
+                self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
             elif (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower()
             ) == "true" or self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = False
-                self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
+                Globals.USE_ENTERPRISE_APP = True
+                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
             else:
                 Globals.USE_ENTERPRISE_APP = True
                 self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
@@ -372,7 +380,7 @@ class PreferencesDialog(wx.Dialog):
         elif key == "updateRate":
             return Globals.GRID_UPDATE_RATE
         elif key == "enableGridUpdate":
-            return True
+            return Globals.ENABLE_GRID_UPDATE
         elif key == "windowSize":
             return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":
