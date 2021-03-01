@@ -469,7 +469,7 @@ def iterateThroughDeviceList(
             t = wxThread.GUIThread(
                 frame,
                 waitTillThreadsFinish,
-                args=(tuple(threads), action, entId),
+                args=(tuple(threads), action, entId, 1),
                 eventType=wxThread.myEVT_FETCH,
             )
             t.start()
@@ -487,15 +487,31 @@ def iterateThroughDeviceList(
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads, action, entId, event=None):
+def waitTillThreadsFinish(threads, action, entId, source, event=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
-    deviceList = {}
-    for thread in threads:
-        if type(thread.result) == tuple:
-            deviceList = {**deviceList, **thread.result[1]}
-    postEventToFrame(event, action)
-    return (action, entId, deviceList)
+    if source == 1:
+        deviceList = {}
+        for thread in threads:
+            if type(thread.result) == tuple:
+                deviceList = {**deviceList, **thread.result[1]}
+        postEventToFrame(event, action)
+        return (action, entId, deviceList)
+    if source == 2:
+        postEventToFrame(wxThread.myEVT_COMPLETE, None)
+        changeSucceeded = succeeded = numNewName = 0
+        tagsFromGrid = None
+        for thread in threads:
+            if type(thread.result) == tuple:
+                changeSucceeded += thread.result[0]
+                succeeded += thread.result[1]
+                numNewName += thread.result[2]
+                tagsFromGrid = thread.result[3]
+        postEventToFrame(
+            wxThread.myEVT_LOG,
+            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
+            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
+        )
 
 
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
@@ -822,78 +838,140 @@ def executeDeviceModification(frame):
         return
 
     tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
-    num = 1
-    changeSucceeded = 0
     aliasDic = frame.gridPanel.getDeviceAliasFromList()
-    logString = ""
-    succeeded = 0
-    numNewName = 0
+    frame.gauge.SetValue(1)
+
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
     if api_response:
-        for device in api_response.results:
-            # Tag modification
-            if (
-                device.device_name in tagsFromGrid.keys()
-                or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
-            ):
-                tagsFromCell = None
-                key = None
-                if device.device_name in tagsFromGrid:
-                    key = device.device_name
-                    tagsFromCell = tagsFromGrid[key]
-                else:
-                    key = device.hardware_info["serialNumber"]
-                    tagsFromCell = tagsFromGrid[key]
-                tags = setdevicetags(device.id, tagsFromCell)
-                if tags == tagsFromGrid[key]:
-                    changeSucceeded += 1
-                postEventToFrame(
-                    wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags)
-                )
-                postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
-                )
-                num += 1
-            # Alias modification
-            if (
-                device.device_name in aliasDic.keys()
-                or device.hardware_info["serialNumber"] in aliasDic.keys()
-            ):
-                newName = None
-                if device.device_name in aliasDic:
-                    newName = aliasDic[device.device_name]
-                else:
-                    newName = aliasDic[device.hardware_info["serialNumber"]]
-                logString = str(
-                    "--->" + str(device.device_name) + " : " + str(newName) + "--->"
-                )
-                if not newName and not device.alias_name:
-                    continue
-                if newName != str(device.alias_name):
-                    numNewName += 1
-                    status = setdevicename(frame, device.id, newName, True)
-                    if "Success" in str(status):
-                        logString = logString + " <success>"
-                        succeeded += 1
-                    elif "Queued" in str(status):
-                        logString = logString + " <failed, possibly offline>"
-                        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
-                    else:
-                        logString = logString + " <failed>"
-                        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
-                else:
-                    logString = logString + " (Alias Name already set)"
-                postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / maxGaugeAction * 100)
-                )
-                num += 1
-                postEventToFrame(wxThread.myEVT_LOG, logString)
-        postEventToFrame(wxThread.myEVT_COMPLETE, None)
-        postEventToFrame(
-            wxThread.myEVT_LOG,
-            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
+        api_response.results = list(
+            filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
         )
+        n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+        if n == 0:
+            n = len(api_response.results)
+        splitResults = [
+            api_response.results[i * n : (i + 1) * n]
+            for i in range((len(api_response.results) + n - 1) // n)
+        ]
+
+        threads = []
+        for chunk in splitResults:
+            t = wxThread.GUIThread(
+                frame,
+                processDeviceModificationForList,
+                args=(frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction),
+            )
+            threads.append(t)
+            t.start()
+
+        t = wxThread.GUIThread(
+            frame,
+            waitTillThreadsFinish,
+            args=(tuple(threads), -1, -1, 2),
+        )
+        t.start()
+
+
+def processDeviceModificationForList(
+    frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction
+):
+    changeSucceeded = 0
+    succeeded = 0
+    numNewName = 0
+    for device in chunk:
+        # changeSucceeded += changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction)
+        # numNewName, succeeded += changeAliasForDevice(device, aliasDic, frame, maxGaugeAction)
+        t = wxThread.GUIThread(
+            frame,
+            changeTagsForDevice,
+            args=(device, tagsFromGrid, frame, maxGaugeAction),
+        )
+        t.start()
+        t2 = wxThread.GUIThread(
+            frame,
+            changeAliasForDevice,
+            args=(device, aliasDic, frame, maxGaugeAction),
+        )
+        t2.start()
+        joinThreadList([t, t2])
+        if t.result:
+            changeSucceeded += t.result
+        if t2.result:
+            numNewName += t2.result[0]
+            succeeded += t2.result[1]
+
+    return (changeSucceeded, succeeded, numNewName, tagsFromGrid)
+
+
+def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
+    numNewName = 0
+    succeeded = 0
+    logString = ""
+    # Alias modification
+    if (
+        device.device_name in aliasDic.keys()
+        or device.hardware_info["serialNumber"] in aliasDic.keys()
+    ):
+        newName = None
+        if device.device_name in aliasDic:
+            newName = aliasDic[device.device_name]
+        else:
+            newName = aliasDic[device.hardware_info["serialNumber"]]
+        logString = str(
+            "--->" + str(device.device_name) + " : " + str(newName) + "--->"
+        )
+        if not newName and not device.alias_name:
+            return
+        if newName != str(device.alias_name):
+            numNewName += 1
+            status = ""
+            try:
+                status = setdevicename(frame, device.id, newName, False)
+            except Exception as e:
+                ApiToolLog().LogError(e)
+            if "Success" in str(status):
+                logString = logString + " <success>"
+                succeeded += 1
+            elif "Queued" in str(status):
+                logString = logString + " <Queued> Make sure device is online."
+                postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+            else:
+                logString = logString + " <failed>"
+                postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+        else:
+            logString = logString + " (Alias Name already set)"
+        postEventToFrame(
+            wxThread.myEVT_UPDATE_GAUGE,
+            int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
+        )
+        postEventToFrame(wxThread.myEVT_LOG, logString)
+    return (numNewName, succeeded)
+
+
+def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
+    # Tag modification
+    changeSucceeded = 0
+    if (
+        device.device_name in tagsFromGrid.keys()
+        or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
+    ):
+        tagsFromCell = None
+        key = None
+        if device.device_name in tagsFromGrid:
+            key = device.device_name
+            tagsFromCell = tagsFromGrid[key]
+        else:
+            key = device.hardware_info["serialNumber"]
+            tagsFromCell = tagsFromGrid[key]
+        tags = setdevicetags(device.id, tagsFromCell)
+        if tags == tagsFromGrid[key]:
+            changeSucceeded += 1
+        postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
+        postEventToFrame(
+            wxThread.myEVT_UPDATE_GAUGE,
+            int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
+        )
+    return changeSucceeded
 
 
 ####End Perform Actions####
