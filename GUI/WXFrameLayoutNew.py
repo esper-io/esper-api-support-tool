@@ -815,7 +815,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 if (
                     self.preferences
-                    and "enableDevice" in self.preferences
+                    and "getAppsForEachDevice" in self.preferences
                     and self.preferences["getAppsForEachDevice"]
                 ):
                     newThreads = []
