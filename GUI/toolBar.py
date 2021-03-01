@@ -45,6 +45,9 @@ class ToolsToolBar(wx.ToolBar):
 
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
+        size = self.search.GetSize()
+        size.SetWidth(size.GetWidth() * 2)
+        self.search.SetSize(size)
         self.search.SetDescriptiveText("Search Grids")
         self.AddControl(self.search)
         self.search.ShowCancelButton(True)
