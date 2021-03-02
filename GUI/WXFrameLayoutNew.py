@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 import threading
 import wx
 import time
@@ -18,6 +19,8 @@ import Utility.EsperTemplateUtil as templateUtil
 
 from functools import partial
 
+from Common.enum import Color, whom
+
 from datetime import datetime
 
 from GUI.sidePanel import SidePanel
@@ -31,6 +34,7 @@ from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
+from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 
 from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
@@ -51,7 +55,7 @@ from Utility.EsperAPICalls import (
     getTokenInfo,
     clearAppData,
 )
-
+from Utility.CollectionsApi import preformEqlSearch
 from Utility.Resource import (
     limitActiveThreads,
     postEventToFrame,
@@ -135,6 +139,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onCommand, self.menubar.command)
         self.Bind(wx.EVT_MENU, self.onClone, self.menubar.clone)
         self.Bind(wx.EVT_MENU, self.onPref, self.menubar.pref)
+        # self.Bind(wx.EVT_MENU, self.onDeviceQuery, self.menubar.deviceQuery)
+        self.Bind(wx.EVT_MENU, self.onCollection, self.menubar.collection)
         self.Bind(
             wx.EVT_MENU, self.gridPanel.onDeviceColumn, self.menubar.deviceColumns
         )
@@ -225,7 +231,7 @@ class NewFrameLayout(wx.Frame):
 
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
-        self.SetBackgroundColour(wx.Colour(192, 192, 192))
+        self.SetBackgroundColour(Color.grey.value)
         self.SetThemeEnabled(False)
 
         self.sidePanel.actionChoice.SetSelection(1)
@@ -252,8 +258,6 @@ class NewFrameLayout(wx.Frame):
 
     def setColorTheme(self, parent=None):
         """ Set theme color to bypass System Theme (Mac) """
-        white = wx.Colour(255, 255, 255)
-        black = wx.Colour(0, 0, 0)
         if not parent:
             parent = self
         for child in parent.GetChildren():
@@ -263,8 +267,8 @@ class NewFrameLayout(wx.Frame):
                 and type(child) != wx.ComboBox
             ):
                 if type(child) != wx.StaticText:
-                    child.SetBackgroundColour(white)
-                child.SetForegroundColour(black)
+                    child.SetBackgroundColour(Color.white.value)
+                child.SetForegroundColour(Color.black.value)
             if child.GetChildren():
                 self.setColorTheme(child)
 
@@ -1176,8 +1180,8 @@ class NewFrameLayout(wx.Frame):
                     )
                     self.gridPanel.applyTextColorToDevice(
                         None,
-                        wx.Colour(0, 0, 0),
-                        bgColor=wx.Colour(255, 255, 255),
+                        Color.black.value,
+                        bgColor=Color.white.value,
                         applyAll=True,
                     )
                     self.frame_toolbar.search.SetValue("")
@@ -1311,9 +1315,9 @@ class NewFrameLayout(wx.Frame):
         if orgingalMsg:
             self.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
         if isError:
-            self.sbText.SetForegroundColour(wx.Colour(255, 0, 0))
+            self.sbText.SetForegroundColour(Color.red.value)
         else:
-            self.sbText.SetForegroundColour(wx.Colour(0, 0, 0))
+            self.sbText.SetForegroundColour(Color.black.value)
 
     @api_tool_decorator
     def onFetch(self, event):
@@ -1591,25 +1595,29 @@ class NewFrameLayout(wx.Frame):
     def onFail(self, event):
         """ Try to showcase rows in the grid on which an action failed on """
         failed = event.GetValue()
-        red = wx.Colour(255, 0, 0)
-        errorBg = wx.Colour(255, 235, 234)
-        orange = wx.Colour(255, 165, 0)
-        warnBg = wx.Colour(255, 241, 216)
         if type(failed) == list:
             for device in failed:
                 if "Queued" in device:
                     self.gridPanel.applyTextColorToDevice(
-                        device[0], orange, bgColor=warnBg
+                        device[0], Color.orange.value, bgColor=Color.warnBg.value
                     )
                 else:
-                    self.gridPanel.applyTextColorToDevice(device, red, bgColor=errorBg)
+                    self.gridPanel.applyTextColorToDevice(
+                        device, Color.red.value, bgColor=Color.errorBg.value
+                    )
         elif type(failed) == tuple:
             if "Queued" in failed:
-                self.gridPanel.applyTextColorToDevice(failed[0], orange, bgColor=warnBg)
+                self.gridPanel.applyTextColorToDevice(
+                    failed[0], Color.orange.value, bgColor=Color.warnBg.value
+                )
             else:
-                self.gridPanel.applyTextColorToDevice(failed, red, bgColor=errorBg)
+                self.gridPanel.applyTextColorToDevice(
+                    failed, Color.red.value, bgColor=Color.errorBg.value
+                )
         elif failed:
-            self.gridPanel.applyTextColorToDevice(failed, red, bgColor=errorBg)
+            self.gridPanel.applyTextColorToDevice(
+                failed, Color.red.value, bgColor=Color.errorBg.value
+            )
 
     @api_tool_decorator
     def onFileDrop(self, event):
@@ -1865,7 +1873,7 @@ class NewFrameLayout(wx.Frame):
             if not checkEsperInternetConnection():
                 wx.MessageBox(
                     "ERROR: An internet connection is required when using the tool!",
-                    style=wx.OK | wx.ICON_ERROR,
+                    style=wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
                 )
             time.sleep(15)
 
@@ -1891,21 +1899,31 @@ class NewFrameLayout(wx.Frame):
             )
             or wx.EVT_CHAR.typeId == event
         ):
-            white = wx.Colour(255, 255, 255)
             self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_1, queryString, white, True
+                self.gridPanel.grid_1, queryString, Color.white.value, True
             )
             self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_2, queryString, white, True
+                self.gridPanel.grid_2, queryString, Color.white.value, True
             )
         if queryString:
-            light_yellow = wx.Colour(255, 255, 224)
             self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_1, queryString, light_yellow
+                self.gridPanel.grid_1, queryString, Color.lightYellow.value
             )
             self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_2, queryString, light_yellow
+                self.gridPanel.grid_2, queryString, Color.lightYellow.value
             )
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
+
+    def onDeviceQuery(self, event):
+        with LargeTextEntryDialog(
+            self, "Enter EQL Device Query:", "EQL Device Query"
+        ) as textDialog:
+            if textDialog.ShowModal() == wx.ID_OK:
+                preformEqlSearch(textDialog.GetValue(), whom.device.name)
+
+    def onCollection(self, event):
+        with CollectionsDialog(self) as dlg:
+            if dlg.ShowModal() == wx.ID_EXECUTE:
+                pass

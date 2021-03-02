@@ -5,6 +5,8 @@ import Common.Globals as Globals
 import platform
 import Utility.wxThread as wxThread
 
+from Common.enum import Color
+
 
 class Console(wx.Frame):
     def __init__(self, parent=None):
@@ -60,7 +62,7 @@ class Console(wx.Frame):
         self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
-        self.SetBackgroundColour(wx.Colour(100, 100, 100))
+        self.SetBackgroundColour(Color.darkGrey.value)
         self.Centre()
         self.Show()
 

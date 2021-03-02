@@ -29,6 +29,7 @@ class PreferencesDialog(wx.Dialog):
             "isMaximized",
             "getAllApps",
             "showPkg",
+            # "reachQueueStateOnly"
             # "getAppsForEachDevice"
         ]
 
@@ -50,10 +51,9 @@ class PreferencesDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(
             self.window_1_pane_1,
             wx.ID_ANY,
-            choices=["General", "Grid", "Application"],
+            choices=["General", "Grid", "Application", "Command"],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
-        self.list_box_1.SetSelection(0)
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
 
         self.window_1_pane_2 = wx.ScrolledWindow(
@@ -64,9 +64,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
         self.general = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
 
         self.panel_3 = wx.Panel(self.general, wx.ID_ANY)
         sizer_6.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 5)
@@ -93,6 +94,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_2 = wx.StaticText(self.panel_5, wx.ID_ANY, "API Request Limit")
+        label_2.SetToolTip("Max amount of results that the API will return.")
         sizer_8.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_6 = wx.Panel(self.panel_5, wx.ID_ANY)
@@ -117,6 +119,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_4 = wx.StaticText(self.panel_9, wx.ID_ANY, "API Request Offset")
+        label_4.SetToolTip("Page of results the API sends back (starts at 0)")
         sizer_10.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_10 = wx.Panel(self.panel_9, wx.ID_ANY)
@@ -131,27 +134,56 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
-        self.panel_11 = wx.Panel(self.general, wx.ID_ANY)
-        sizer_6.Add(self.panel_11, 1, wx.ALL | wx.EXPAND, 5)
+        self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.command.Hide()
+        sizer_5.Add(self.command, 1, wx.EXPAND, 0)
 
-        sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_14 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        label_5 = wx.StaticText(self.panel_11, wx.ID_ANY, "Command Timeout (seconds)")
-        label_5.SetToolTip(
+        self.panel_25 = wx.Panel(self.command, wx.ID_ANY)
+        sizer_14.Add(self.panel_25, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_21 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_12 = wx.StaticText(self.panel_25, wx.ID_ANY, "Command Timeout (seconds)")
+        label_12.SetToolTip(
             "How long a command should wait on the status check before skipping."
         )
-        sizer_11.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_21.Add(label_12, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_12 = wx.Panel(self.panel_11, wx.ID_ANY)
-        sizer_11.Add(self.panel_12, 1, wx.EXPAND, 0)
+        self.panel_26 = wx.Panel(self.panel_25, wx.ID_ANY)
+        sizer_21.Add(self.panel_26, 1, wx.EXPAND, 0)
 
-        grid_sizer_5 = wx.GridSizer(1, 1, 0, 0)
+        grid_sizer_12 = wx.GridSizer(1, 1, 0, 0)
 
-        self.spin_ctrl_3 = wx.SpinCtrl(
-            self.panel_12, wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT
+        self.spin_ctrl_6 = wx.SpinCtrl(
+            self.panel_26, wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT
         )
-        grid_sizer_5.Add(
-            self.spin_ctrl_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        grid_sizer_12.Add(
+            self.spin_ctrl_6, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+
+        self.panel_27 = wx.Panel(self.command, wx.ID_ANY)
+        sizer_14.Add(self.panel_27, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_22 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_13 = wx.StaticText(
+            self.panel_27, wx.ID_ANY, "Ignore Queued Command State"
+        )
+        label_13.SetToolTip(
+            "Once the command has reached the Queued state, don't wait for the other state changes."
+        )
+        sizer_22.Add(label_13, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_28 = wx.Panel(self.panel_27, wx.ID_ANY)
+        sizer_22.Add(self.panel_28, 1, wx.EXPAND, 0)
+
+        grid_sizer_13 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_5 = wx.CheckBox(self.panel_28, wx.ID_ANY, "")
+        grid_sizer_13.Add(
+            self.checkbox_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
         self.grid = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -196,22 +228,15 @@ class PreferencesDialog(wx.Dialog):
 
         grid_sizer_10 = wx.GridSizer(1, 1, 0, 0)
 
-        self.spin_ctrl_7 = wx.SpinCtrl(
-            self.panel_22,
-            wx.ID_ANY,
-            min=Globals.GRID_UPDATE_RATE,
-            max=Globals.MAX_GRID_UPDATE_RATE,
-            initial=Globals.GRID_UPDATE_RATE,
-        )
+        self.spin_ctrl_7 = wx.SpinCtrl(self.panel_22, wx.ID_ANY, "0", min=0, max=100)
         grid_sizer_10.Add(
             self.spin_ctrl_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
-        self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)  # wx.BoxSizer(wx.VERTICAL)
+        sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)
 
         self.panel_7 = wx.Panel(self.app, wx.ID_ANY)
         sizer_9.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
@@ -258,38 +283,37 @@ class PreferencesDialog(wx.Dialog):
         self.panel_15 = wx.Panel(self.app, wx.ID_ANY)
         sizer_9.Add(self.panel_15, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_14 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_15 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_6 = wx.StaticText(
+        label_7 = wx.StaticText(
             self.panel_15, wx.ID_ANY, "Get Applications for Each Device"
         )
-        label_6.SetToolTip("Fetch all applications for every device within a group")
-        sizer_14.Add(label_6, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        label_7.SetToolTip("Fetch all applications for every device within a group")
+        sizer_15.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_16 = wx.Panel(self.panel_15, wx.ID_ANY)
-        sizer_14.Add(self.panel_16, 1, wx.EXPAND, 0)
+        sizer_15.Add(self.panel_16, 1, wx.EXPAND, 0)
 
         grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
 
-        self.checkbox_5 = wx.CheckBox(self.panel_16, wx.ID_ANY, "")
-        grid_sizer_7.Add(self.checkbox_5, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+        self.checkbox_6 = wx.CheckBox(self.panel_16, wx.ID_ANY, "")
+        grid_sizer_7.Add(self.checkbox_6, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
         self.button_APPLY = wx.Button(self, wx.ID_APPLY, "")
         sizer_2.AddButton(self.button_APPLY)
-        self.button_APPLY.Bind(wx.EVT_BUTTON, self.OnApply)
 
         sizer_2.Realize()
+
+        self.panel_16.SetSizer(grid_sizer_7)
+
+        self.panel_15.SetSizer(sizer_15)
 
         self.panel_14.SetSizer(grid_sizer_6)
 
         self.panel_13.SetSizer(sizer_13)
-
-        self.panel_15.SetSizer(sizer_14)
-
-        self.panel_16.SetSizer(grid_sizer_7)
 
         self.panel_8.SetSizer(grid_sizer_3)
 
@@ -309,9 +333,16 @@ class PreferencesDialog(wx.Dialog):
         sizer_16.AddGrowableCol(0)
         self.grid.SetSizer(sizer_16)
 
-        self.panel_12.SetSizer(grid_sizer_5)
+        self.panel_28.SetSizer(grid_sizer_13)
 
-        self.panel_11.SetSizer(sizer_11)
+        self.panel_27.SetSizer(sizer_22)
+
+        self.panel_26.SetSizer(grid_sizer_12)
+
+        self.panel_25.SetSizer(sizer_21)
+
+        sizer_14.AddGrowableCol(0)
+        self.command.SetSizer(sizer_14)
 
         self.panel_10.SetSizer(grid_sizer_4)
 
@@ -388,19 +419,55 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_PKG_NAME = False
 
+        if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
+            self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SHOW_PKG_NAME = False
+        elif prefDict and prefDict["getAppsForEachDevice"]:
+            if (
+                isinstance(self.prefs["getAppsForEachDevice"], str)
+                and prefDict["getAppsForEachDevice"].lower() == "true"
+            ) or prefDict["getAppsForEachDevice"] == True:
+                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GET_APP_EACH_DEVICE = True
+            else:
+                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GET_APP_EACH_DEVICE = False
+
+        if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
+            self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SHOW_PKG_NAME = False
+        elif prefDict and prefDict["reachQueueStateOnly"]:
+            if (
+                isinstance(self.prefs["reachQueueStateOnly"], str)
+                and prefDict["reachQueueStateOnly"].lower() == "true"
+            ) or prefDict["reachQueueStateOnly"] == True:
+                self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REACH_QUEUED_ONLY = True
+            else:
+                self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REACH_QUEUED_ONLY = False
+
     def showMatchingPanel(self, event):
         event.Skip()
         if event.GetString() == "Grid":
             self.app.Hide()
             self.general.Hide()
+            self.command.Hide()
             self.grid.Show()
+        elif event.GetString() == "Command":
+            self.app.Hide()
+            self.general.Hide()
+            self.grid.Hide()
+            self.command.Show()
         elif event.GetString() == "General":
             self.app.Hide()
             self.grid.Hide()
+            self.command.Hide()
             self.general.Show()
         elif event.GetString() == "Application":
             self.grid.Hide()
             self.general.Hide()
+            self.command.Hide()
             self.app.Show()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
@@ -420,7 +487,8 @@ class PreferencesDialog(wx.Dialog):
             "isMaximized": self.parent.IsMaximized() if self.parent else False,
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
-            # "getAppsForEachDevice": self.checkbox_5.IsChecked(),
+            "reachQueueStateOnly": self.checkbox_5.IsChecked(),
+            # "getAppsForEachDevice": self.checkbox_6.IsChecked(),
         }
 
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
@@ -527,6 +595,7 @@ class PreferencesDialog(wx.Dialog):
             if key not in self.prefs.keys():
                 self.prefs[key] = self.getDefaultKeyValue(key)
 
+        self.prefs["reachQueueStateOnly"] = Globals.REACH_QUEUED_ONLY
         # self.prefs["getAppsForEachDevice"] = self.checkbox_5.IsChecked()
         self.prefs["getAllApps"] = Globals.USE_ENTERPRISE_APP
         self.prefs["showPkg"] = Globals.SHOW_PKG_NAME
@@ -570,6 +639,8 @@ class PreferencesDialog(wx.Dialog):
         elif key == "showPkg":
             return Globals.SHOW_PKG_NAME
         elif key == "getAppsForEachDevice":
-            return False
+            return Globals.GET_APP_EACH_DEVICE
+        elif key == "reachQueueStateOnly":
+            return Globals.REACH_QUEUED_ONLY
         else:
             return None

@@ -42,7 +42,7 @@ def getInfo(request_extension, deviceid):
     """Sends Request For Device Info JSON"""
     headers = getHeader()
     url = (
-        Globals.BASE_REQUEST_URL.format(
+        Globals.BASE_DEVICE_URL.format(
             configuration_host=Globals.configuration.host,
             enterprise_id=Globals.enterprise_id,
             device_id=deviceid,
@@ -54,6 +54,10 @@ def getInfo(request_extension, deviceid):
     logBadResponse(url, resp, json_resp)
 
     return json_resp
+
+
+def getDeviceDetail(deviceId):
+    return getInfo("/?format=json&show_policy=true", deviceId)
 
 
 def fetchGroupName(groupURL):
@@ -71,7 +75,7 @@ def patchInfo(request_extension, deviceid, tags):
     """Pushes Data To Device Info JSON"""
     headers = getHeader()
     url = (
-        Globals.BASE_REQUEST_URL.format(
+        Globals.BASE_DEVICE_URL.format(
             configuration_host=Globals.configuration.host,
             enterprise_id=Globals.enterprise_id,
             device_id=deviceid,
@@ -116,7 +120,8 @@ def toggleKioskMode(
     )
 
     status = response.results[0].state
-    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
+    ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=ignoreQueued)
     return status
 
 
@@ -555,6 +560,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     deviceDict = device.__dict__
     unpackageDict(deviceInfo, deviceDict)
 
+    detailInfo = getDeviceDetail(device.id)
+    unpackageDict(deviceInfo, detailInfo)
+
     if device.groups:
         groupNames = []
         for groupURL in device.groups:
@@ -926,7 +934,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             numNewName += 1
             status = ""
             try:
-                status = setdevicename(frame, device.id, newName, False)
+                ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+                status = setdevicename(frame, device.id, newName, ignoreQueued)
             except Exception as e:
                 ApiToolLog().LogError(e)
             if "Success" in str(status):
@@ -1004,7 +1013,10 @@ def executeCommandOnGroup(
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        last_status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
+        ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+        last_status = waitForCommandToFinish(
+            frame, api_response.id, ignoreQueue=ignoreQueued
+        )
         if hasattr(last_status, "state"):
             statusList.append({"group": groupToUse, "status": last_status.state})
         else:
@@ -1034,7 +1046,10 @@ def executeCommandOnDevice(
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        last_status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=True)
+        ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+        last_status = waitForCommandToFinish(
+            frame, api_response.id, ignoreQueue=ignoreQueued
+        )
         if hasattr(last_status, "state"):
             statusList.append({"group": deviceToUse, "status": last_status.state})
         else:
@@ -1310,4 +1325,7 @@ def setAppState(device_id, pkg_name, state="HIDE"):
         )
         api_instance = getCommandsApiInstance()
         api_response = api_instance.create_command(Globals.enterprise_id, request)
-        return waitForCommandToFinish(Globals.frame, api_response.id, ignoreQueue=True)
+        ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+        return waitForCommandToFinish(
+            Globals.frame, api_response.id, ignoreQueue=ignoreQueued
+        )

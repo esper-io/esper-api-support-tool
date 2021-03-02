@@ -11,6 +11,7 @@ VERSION = "v0.176"
 TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
+MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
 limit = (
@@ -20,14 +21,12 @@ offset = 0  # int | The initial index from which to return the results. (optiona
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
-COMMAND_TIMEOUT = 30
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
-USE_ENTERPRISE_APP = True
-SHOW_PKG_NAME = False
+
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
 your enterprise's Android-based Dedicated Devices providing features that are not currently
@@ -90,7 +89,8 @@ COMMAND_TYPES = [
 ]
 
 """ URL Requests and Extensions """
-BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/device/{device_id}"
+BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
+BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
 DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
@@ -107,6 +107,7 @@ CSV_TAG_ATTR_NAME = {
     "Model": "model",
     "Android Version": "androidVersion",
     "Status": "Status",
+    "Esper Version": "esper_client",
     "Mode": "Mode",
     "Serial Number": "Serial",
     "IMEI 1": "imei1",
@@ -141,7 +142,13 @@ csv_auth_path = ""
 
 LAST_DEVICE_ID = None
 LAST_GROUP_ID = None
+
+""" Preferences """
+COMMAND_TIMEOUT = 30
 GRID_UPDATE_RATE = 60
 MAX_GRID_UPDATE_RATE = 3600
 ENABLE_GRID_UPDATE = False
-MAX_UPDATE_COUNT = 500
+USE_ENTERPRISE_APP = True
+SHOW_PKG_NAME = False
+REACH_QUEUED_ONLY = False
+GET_APP_EACH_DEVICE = False

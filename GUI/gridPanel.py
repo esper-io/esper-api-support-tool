@@ -8,6 +8,7 @@ import wx.grid as gridlib
 
 
 from Common.decorator import api_tool_decorator
+from Common.enum import Color
 from Utility.deviceInfo import constructNetworkInfo
 from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
@@ -151,8 +152,6 @@ class GridPanel(wx.Panel):
         self.onCellEdit(event)
 
     def onCellEdit(self, event):
-        light_blue = wx.Colour(204, 255, 255)
-        white = wx.Colour(255, 255, 255)
         indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
         indx2 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
         x, y = self.grid_1.GetGridCursorCoords()
@@ -190,7 +189,7 @@ class GridPanel(wx.Panel):
                     != self.grid_1.GetCellValue(x, y)
                 )
             ):
-                self.grid_1.SetCellBackgroundColour(x, y, light_blue)
+                self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
                 if y == indx2:
                     deviceListing[0][
                         Globals.CSV_TAG_ATTR_NAME["Alias"]
@@ -204,7 +203,7 @@ class GridPanel(wx.Panel):
                 if y == indx1 and not "OriginalTags" in deviceListing[0]:
                     deviceListing[0]["OriginalTags"] = event.GetString()
             else:
-                self.grid_1.SetCellBackgroundColour(x, y, white)
+                self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
         event.Skip()
 
     @api_tool_decorator
@@ -347,8 +346,6 @@ class GridPanel(wx.Panel):
 
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
-        white = wx.Colour(255, 255, 255)
-        light_yellow = wx.Colour(255, 255, 224)
         statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
         if grid != self.grid_1:
             statusIndex = -1
@@ -367,11 +364,12 @@ class GridPanel(wx.Panel):
                             colNum < grid.GetNumberCols()
                             and colNum != statusIndex
                             and (
-                                grid.GetCellBackgroundColour(rowNum, colNum) == white
+                                grid.GetCellBackgroundColour(rowNum, colNum)
+                                == Color.white.value
                                 or (
                                     applyAll
                                     and grid.GetCellBackgroundColour(rowNum, colNum)
-                                    == light_yellow
+                                    == Color.lightYellow.value
                                 )
                             )
                         ):
@@ -530,23 +528,18 @@ class GridPanel(wx.Panel):
 
     def setStatusCellColor(self, value, rowNum, colNum):
         if value == "Offline":
-            self.grid_1.SetCellTextColour(rowNum, colNum, wx.Colour(255, 0, 0))
-            self.grid_1.SetCellBackgroundColour(
-                rowNum, colNum, wx.Colour(255, 235, 234)
-            )
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.red.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
         elif value == "Online":
-            self.grid_1.SetCellTextColour(rowNum, colNum, wx.Colour(0, 128, 0))
-            self.grid_1.SetCellBackgroundColour(
-                rowNum, colNum, wx.Colour(229, 248, 229)
-            )
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.green.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
 
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
-        light_blue = wx.Colour(204, 255, 255)
         if attribute == "Alias" and "OriginalAlias" in device_info:
-            grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
             pass
         if attribute == "Tags" and "OriginalTags" in device_info:
-            grid.SetCellBackgroundColour(rowNum, indx, light_blue)
+            grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
             pass
 
     @api_tool_decorator
