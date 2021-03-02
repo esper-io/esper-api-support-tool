@@ -67,6 +67,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
         self.general = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
         sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
