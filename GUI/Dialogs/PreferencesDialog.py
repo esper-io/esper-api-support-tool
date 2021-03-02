@@ -488,9 +488,11 @@ class PreferencesDialog(wx.Dialog):
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
             "reachQueueStateOnly": self.checkbox_5.IsChecked(),
-            # "getAppsForEachDevice": self.checkbox_6.IsChecked(),
+            "getAppsForEachDevice": self.checkbox_6.IsChecked(),
         }
 
+        Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
+        Globals.GET_APP_EACH_DEVICE = self.presfs["getAppsForEachDevice"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]
