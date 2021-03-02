@@ -28,6 +28,7 @@ class CollectionsDialog(wx.Dialog):
         self.parentFrame = parent
 
         self.prevSelection = None
+        self.selectedCollection = None
 
         self.collResp, self.collections = fetchCollectionList()
 
@@ -113,6 +114,7 @@ class CollectionsDialog(wx.Dialog):
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT, 0)
 
         self.button_2 = wx.Button(self, wx.ID_ANY, "Execute EQL")
+        self.button_2.Enable(False)
         sizer_2.Add(self.button_2, 0, wx.ALL, 5)
 
         sizer_2.Realize()
@@ -170,7 +172,9 @@ class CollectionsDialog(wx.Dialog):
             self.list_box_1.Deselect(currentSelection)
             self.text_ctrl_1.SetValue("")
             self.prevSelection = None
+            self.button_2.Enable(False)
             return
+        self.button_2.Enable(True)
         self.prevSelection = self.list_box_1.GetSelection()
         id = None
         selectionStr = self.list_box_1.GetString(currentSelection)
@@ -255,10 +259,15 @@ class CollectionsDialog(wx.Dialog):
     def updateCollectionList(self):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
+        self.button_2.Enable(False)
         self.prevSelection = None
+        self.selectedCollection = None
         self.collResp, self.collections = fetchCollectionList()
         self.list_box_1.Clear()
         for collection in self.collections:
             self.list_box_1.Append(collection)
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
+
+    def getSelection(self):
+        return self.selectedCollection
