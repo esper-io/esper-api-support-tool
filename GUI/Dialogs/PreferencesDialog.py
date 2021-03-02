@@ -29,8 +29,11 @@ class PreferencesDialog(wx.Dialog):
             "isMaximized",
             "getAllApps",
             "showPkg",
-            # "reachQueueStateOnly"
-            # "getAppsForEachDevice"
+            "reachQueueStateOnly",
+            "getAppsForEachDevice",
+            "gridDialog",
+            "templateDialog",
+            "templateUpdate",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -51,7 +54,7 @@ class PreferencesDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(
             self.window_1_pane_1,
             wx.ID_ANY,
-            choices=["General", "Grid", "Application", "Command"],
+            choices=["General", "Grid", "Application", "Command", "Prompts"],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
@@ -299,6 +302,51 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_6 = wx.CheckBox(self.panel_16, wx.ID_ANY, "")
         grid_sizer_7.Add(self.checkbox_6, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.prompts.Hide()
+        sizer_5.Add(self.prompts, 1, wx.EXPAND, 0)
+
+        sizer_19 = wx.FlexGridSizer(2, 1, 0, 0)
+
+        self.panel_29 = wx.Panel(self.prompts, wx.ID_ANY)
+        sizer_19.Add(self.panel_29, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_23 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_14 = wx.StaticText(self.panel_29, wx.ID_ANY, "Grid Confirmation Prompt")
+        sizer_23.Add(label_14, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_30 = wx.Panel(self.panel_29, wx.ID_ANY)
+        sizer_23.Add(self.panel_30, 1, wx.EXPAND, 0)
+
+        grid_sizer_14 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_8 = wx.CheckBox(self.panel_30, wx.ID_ANY, "")
+        grid_sizer_14.Add(self.checkbox_8, 0, wx.ALIGN_RIGHT, 0)
+
+        self.panel_31 = wx.Panel(self.prompts, wx.ID_ANY)
+        sizer_19.Add(self.panel_31, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_24 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_15 = wx.StaticText(
+            self.panel_31, wx.ID_ANY, "Template Confirmation Prompt"
+        )
+        label_15.SetToolTip(
+            "Once the command has reached the Queued state, don't wait for the other state changes."
+        )
+        sizer_24.Add(label_15, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_32 = wx.Panel(self.panel_31, wx.ID_ANY)
+        sizer_24.Add(self.panel_32, 1, wx.EXPAND, 0)
+
+        grid_sizer_15 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_7 = wx.CheckBox(self.panel_32, wx.ID_ANY, "")
+        grid_sizer_15.Add(
+            self.checkbox_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
@@ -306,6 +354,17 @@ class PreferencesDialog(wx.Dialog):
         sizer_2.AddButton(self.button_APPLY)
 
         sizer_2.Realize()
+
+        self.panel_32.SetSizer(grid_sizer_15)
+
+        self.panel_31.SetSizer(sizer_24)
+
+        self.panel_30.SetSizer(grid_sizer_14)
+
+        self.panel_29.SetSizer(sizer_23)
+
+        sizer_19.AddGrowableCol(0)
+        self.prompts.SetSizer(sizer_19)
 
         self.panel_16.SetSizer(grid_sizer_7)
 
@@ -447,28 +506,85 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
 
+        if not prefDict or (
+            prefDict
+            and not prefDict["templateDialog"]
+            and not prefDict["templateUpdate"]
+        ):
+            self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
+            Globals.SHOW_TEMPLATE_DIALOG = True
+            Globals.SHOW_TEMPLATE_UPDATE = True
+        elif prefDict and prefDict["templateDialog"]:
+            if (
+                isinstance(self.prefs["templateDialog"], str)
+                and prefDict["templateDialog"].lower() == "true"
+            ) or prefDict["templateDialog"] == True:
+                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_TEMPLATE_DIALOG = True
+                Globals.SHOW_TEMPLATE_UPDATE = True
+            else:
+                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_TEMPLATE_DIALOG = False
+                Globals.SHOW_TEMPLATE_UPDATE = False
+        elif prefDict and prefDict["templateUpdate"]:
+            if (
+                isinstance(self.prefs["templateUpdate"], str)
+                and prefDict["templateUpdate"].lower() == "true"
+            ) or prefDict["templateUpdate"] == True:
+                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_TEMPLATE_DIALOG = True
+                Globals.SHOW_TEMPLATE_UPDATE = True
+            else:
+                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_TEMPLATE_DIALOG = False
+                Globals.SHOW_TEMPLATE_UPDATE = False
+
+        if not prefDict or (prefDict and not prefDict["gridDialog"]):
+            self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
+            Globals.SHOW_GRID_DIALOG = True
+        elif prefDict and prefDict["gridDialog"]:
+            if (
+                isinstance(self.prefs["gridDialog"], str)
+                and prefDict["gridDialog"].lower() == "true"
+            ) or prefDict["gridDialog"] == True:
+                self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_GRID_DIALOG = True
+            else:
+                self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_GRID_DIALOG = False
+
     def showMatchingPanel(self, event):
         event.Skip()
         if event.GetString() == "Grid":
             self.app.Hide()
             self.general.Hide()
             self.command.Hide()
+            self.prompts.Hide()
             self.grid.Show()
         elif event.GetString() == "Command":
             self.app.Hide()
             self.general.Hide()
             self.grid.Hide()
+            self.prompts.Hide()
             self.command.Show()
         elif event.GetString() == "General":
             self.app.Hide()
             self.grid.Hide()
             self.command.Hide()
+            self.prompts.Hide()
             self.general.Show()
         elif event.GetString() == "Application":
             self.grid.Hide()
             self.general.Hide()
             self.command.Hide()
+            self.prompts.Hide()
             self.app.Show()
+        elif event.GetString() == "Prompts":
+            self.app.Hide()
+            self.general.Hide()
+            self.command.Hide()
+            self.prompts.Show()
+            self.grid.Hide()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
 
@@ -477,9 +593,9 @@ class PreferencesDialog(wx.Dialog):
             "enableDevice": self.checkbox_1.IsChecked(),
             "limit": self.spin_ctrl_1.GetValue(),
             "offset": self.spin_ctrl_2.GetValue(),
-            "gridDialog": Globals.SHOW_GRID_DIALOG,
-            "templateDialog": Globals.SHOW_TEMPLATE_DIALOG,
-            "templateUpdate": Globals.SHOW_TEMPLATE_UPDATE,
+            "gridDialog": self.checkbox_8.IsChecked(),
+            "templateDialog": self.checkbox_7.IsChecked(),
+            "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_3.GetValue(),
             "updateRate": self.spin_ctrl_7.GetValue(),
             "enableGridUpdate": self.checkbox_3.IsChecked(),
@@ -491,6 +607,9 @@ class PreferencesDialog(wx.Dialog):
             "getAppsForEachDevice": self.checkbox_6.IsChecked(),
         }
 
+        Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
+        Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
+        Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
         Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
         Globals.GET_APP_EACH_DEVICE = self.presfs["getAppsForEachDevice"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
