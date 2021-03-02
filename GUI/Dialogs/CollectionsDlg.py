@@ -161,6 +161,8 @@ class CollectionsDialog(wx.Dialog):
     def checkInputs(self):
         if self.text_ctrl_3.GetValue() and self.text_ctrl_2.GetValue():
             self.button_3.Enable(True)
+        else:
+            self.button_3.Enable(False)
 
     def onSelection(self, event):
         currentSelection = self.list_box_1.GetSelection()
