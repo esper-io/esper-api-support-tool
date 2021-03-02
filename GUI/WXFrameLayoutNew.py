@@ -873,6 +873,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def PopulateGroups(self):
         """ Populate Group Choice """
+        self.sidePanel.groupChoice.Enable(False)
         self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
         self.setGaugeValue(0)

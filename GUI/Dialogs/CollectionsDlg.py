@@ -156,6 +156,7 @@ class CollectionsDialog(wx.Dialog):
         if currentSelection == self.prevSelection:
             self.list_box_1.Deselect(currentSelection)
             self.text_ctrl_1.SetValue("")
+            self.prevSelection = None
             return
         self.prevSelection = self.list_box_1.GetSelection()
         id = None
@@ -165,11 +166,15 @@ class CollectionsDialog(wx.Dialog):
                 id = collection["id"]
                 break
         if id:
+            myCursor = wx.Cursor(wx.CURSOR_WAIT)
+            self.SetCursor(myCursor)
             self.selectedCollection = retrieveCollection(id, returnJson=True)
             self.text_ctrl_1.SetValue(self.selectedCollection["eql"])
             self.text_ctrl_3.SetValue(self.selectedCollection["name"])
         elif self.parentFrame and hasattr(self.parentFrame, "Logging"):
             self.parentFrame.Logging("Failed to find matching collection", isError=True)
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
 
     def createCollection(self, event):
         error = False
@@ -191,11 +196,12 @@ class CollectionsDialog(wx.Dialog):
                     break
             if id:
                 updateCollection(
+                    id,
                     {
                         "name": self.text_ctrl_3.GetValue(),
                         "description": self.selectedCollection["description"],
                         "eql": self.text_ctrl_2.GetValue(),
-                    }
+                    },
                 )
             elif self.parentFrame and hasattr(self.parentFrame, "Logging"):
                 self.parentFrame.Logging(
@@ -212,6 +218,8 @@ class CollectionsDialog(wx.Dialog):
             )
         self.text_ctrl_2.SetBackgroundColour(Color.white.value)
         self.text_ctrl_3.SetBackgroundColour(Color.white.value)
+        self.text_ctrl_3.SetValue(""),
+        self.text_ctrl_2.SetValue(""),
         self.updateCollectionList()
 
     def deleteCollection(self, event):
@@ -230,7 +238,12 @@ class CollectionsDialog(wx.Dialog):
         self.updateCollectionList()
 
     def updateCollectionList(self):
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
+        self.prevSelection = None
         self.collResp, self.collections = fetchCollectionList()
         self.list_box_1.Clear()
         for collection in self.collections:
             self.list_box_1.Append(collection)
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)

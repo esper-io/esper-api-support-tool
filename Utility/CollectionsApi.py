@@ -90,7 +90,7 @@ def updateCollection(collectionId, jsonData, returnJson=False):
         id=collectionId,
     )
 
-    resp = requests.post(url, headers=headers, json=jsonData)
+    resp = requests.patch(url, headers=headers, json=jsonData)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
