@@ -695,14 +695,7 @@ class PreferencesDialog(wx.Dialog):
                 if self.prefs["windowPosition"] == "1":
                     self.parent.Centre()
                 else:
-                    pos = tuple(
-                        int(num)
-                        for num in self.prefs["windowPosition"]
-                        .replace("( ", "")
-                        .replace(")", "")
-                        .replace("...", "")
-                        .split(", ")
-                    )
+                    pos = tuple(self.prefs["windowPosition"])
                     self.parent.SetPosition(wx.Point(pos[0], pos[1]))
         if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
             if (
