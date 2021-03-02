@@ -26,6 +26,7 @@ class PreferencesDialog(wx.Dialog):
             "updateRate",
             "enableGridUpdate",
             "windowSize",
+            "windowPosition",
             "isMaximized",
             "getAllApps",
             "showPkg",
@@ -608,6 +609,7 @@ class PreferencesDialog(wx.Dialog):
             "updateRate": self.spin_ctrl_7.GetValue(),
             "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
+            "windowPosition": self.parent.GetPosition() if self.parent else wx.CENTRE,
             "isMaximized": self.parent.IsMaximized() if self.parent else False,
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
@@ -684,6 +686,9 @@ class PreferencesDialog(wx.Dialog):
         if "isMaximized" in self.prefs and self.prefs["isMaximized"]:
             if self.parent:
                 self.parent.Maximize(self.prefs["isMaximized"])
+        if "windowPosition" in self.prefs and self.prefs["windowPosition"]:
+            if self.parent:
+                self.parent.SetPosition(self.prefs["windowPosition"])
         if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
             if (
                 isinstance(self.prefs["getAllApps"], str)
@@ -763,6 +768,8 @@ class PreferencesDialog(wx.Dialog):
             return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":
             return self.parent.IsMaximized() if self.parent else False
+        elif key == "windowPosition":
+            return self.parent.GetPosition() if self.parent else wx.CENTRE
         elif key == "getAllApps":
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":
