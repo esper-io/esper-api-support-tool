@@ -231,7 +231,13 @@ class PreferencesDialog(wx.Dialog):
 
         grid_sizer_10 = wx.GridSizer(1, 1, 0, 0)
 
-        self.spin_ctrl_7 = wx.SpinCtrl(self.panel_22, wx.ID_ANY, "0", min=0, max=100)
+        self.spin_ctrl_7 = wx.SpinCtrl(
+            self.panel_22,
+            wx.ID_ANY,
+            min=Globals.GRID_UPDATE_RATE,
+            max=Globals.MAX_GRID_UPDATE_RATE,
+            initial=Globals.GRID_UPDATE_RATE,
+        )
         grid_sizer_10.Add(
             self.spin_ctrl_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
@@ -598,7 +604,7 @@ class PreferencesDialog(wx.Dialog):
             "gridDialog": self.checkbox_8.IsChecked(),
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
-            "commandTimeout": self.spin_ctrl_3.GetValue(),
+            "commandTimeout": self.spin_ctrl_6.GetValue(),
             "updateRate": self.spin_ctrl_7.GetValue(),
             "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
