@@ -198,3 +198,25 @@ def limitActiveThreads(threads, max_alive=25, sleep=1):
             thread.join()
         time.sleep(1)
     Globals.lock.release()
+
+
+def ipv6Tomac(ipv6):
+    # remove subnet info if given
+    subnetIndex = ipv6.find("/")
+    if subnetIndex != -1:
+        ipv6 = ipv6[:subnetIndex]
+
+    ipv6Parts = ipv6.split(":")
+    macParts = []
+    for ipv6Part in ipv6Parts[-4:]:
+        while len(ipv6Part) < 4:
+            ipv6Part = "0" + ipv6Part
+        macParts.append(ipv6Part[:2])
+        macParts.append(ipv6Part[-2:])
+
+    # modify parts to match MAC value
+    macParts[0] = "%02x" % (int(macParts[0], 16) ^ 2)
+    del macParts[4]
+    del macParts[3]
+
+    return ":".join(macParts)

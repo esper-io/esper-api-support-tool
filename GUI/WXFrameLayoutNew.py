@@ -219,7 +219,7 @@ class NewFrameLayout(wx.Frame):
         self.loadPref()
         self.__set_properties()
         self.Layout()
-        self.Centre()
+        # self.Centre()
         self.Raise()
         self.Iconize(False)
         self.SetFocus()
@@ -1399,6 +1399,7 @@ class NewFrameLayout(wx.Frame):
                 args=None,
                 eventType=wxThread.myEVT_COMPLETE,
                 eventArg=True,
+                sendEventArgInsteadOfResult=True,
             ).start()
         else:
             evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
@@ -1554,9 +1555,20 @@ class NewFrameLayout(wx.Frame):
             and os.path.exists(self.prefPath)
             and os.access(self.prefPath, os.R_OK)
         ):
-            with open(self.prefPath) as jsonFile:
-                self.preferences = json.load(jsonFile)
-            self.prefDialog.SetPrefs(self.preferences)
+            if os.path.getsize(self.prefPath) > 2:
+                with open(self.prefPath) as jsonFile:
+                    if jsonFile:
+                        try:
+                            self.preferences = json.load(jsonFile)
+                        except Exception as e:
+                            ApiToolLog().LogError(e)
+                            self.Logging(
+                                "Preference file possibly has been corrupted and is malformed!",
+                                isError=True,
+                            )
+                self.prefDialog.SetPrefs(self.preferences)
+            else:
+                self.Logging("Missing or empty preference file!", isError=True)
         else:
             createNewFile(self.prefPath)
             self.savePrefs(self.prefDialog)

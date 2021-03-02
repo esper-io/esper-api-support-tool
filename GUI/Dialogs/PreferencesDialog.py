@@ -609,7 +609,9 @@ class PreferencesDialog(wx.Dialog):
             "updateRate": self.spin_ctrl_7.GetValue(),
             "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
-            "windowPosition": self.parent.GetPosition() if self.parent else wx.CENTRE,
+            "windowPosition": tuple(self.parent.GetPosition())
+            if self.parent
+            else str(wx.CENTRE),
             "isMaximized": self.parent.IsMaximized() if self.parent else False,
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
@@ -644,6 +646,8 @@ class PreferencesDialog(wx.Dialog):
 
     def SetPrefs(self, prefs):
         self.prefs = prefs
+        if not self.prefs:
+            return
 
         if "enableDevice" in self.prefs:
             self.checkbox_1.SetValue(self.prefs["enableDevice"])
@@ -688,7 +692,18 @@ class PreferencesDialog(wx.Dialog):
                 self.parent.Maximize(self.prefs["isMaximized"])
         if "windowPosition" in self.prefs and self.prefs["windowPosition"]:
             if self.parent:
-                self.parent.SetPosition(self.prefs["windowPosition"])
+                if self.prefs["windowPosition"] == "1":
+                    self.parent.Centre()
+                else:
+                    pos = tuple(
+                        int(num)
+                        for num in self.prefs["windowPosition"]
+                        .replace("( ", "")
+                        .replace(")", "")
+                        .replace("...", "")
+                        .split(", ")
+                    )
+                    self.parent.SetPosition(wx.Point(pos[0], pos[1]))
         if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
             if (
                 isinstance(self.prefs["getAllApps"], str)
@@ -769,7 +784,7 @@ class PreferencesDialog(wx.Dialog):
         elif key == "isMaximized":
             return self.parent.IsMaximized() if self.parent else False
         elif key == "windowPosition":
-            return self.parent.GetPosition() if self.parent else wx.CENTRE
+            return tuple(self.parent.GetPosition()) if self.parent else str(wx.CENTRE)
         elif key == "getAllApps":
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":

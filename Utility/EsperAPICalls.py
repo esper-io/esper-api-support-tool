@@ -13,7 +13,7 @@ import wx
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import joinThreadList, postEventToFrame, runSubprocessPOpen
+from Utility.Resource import joinThreadList, postEventToFrame, ipv6Tomac
 
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
@@ -616,6 +616,11 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     location_info, resp_json = getLocationInfo(device.id)
     network_info = getNetworkInfo(device.id)
     unpackageDict(deviceInfo, resp_json)
+
+    deviceInfo["macAddress"] = []
+    for ip in deviceInfo["ipAddress"]:
+        if ip.endswith("/64"):
+            deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})

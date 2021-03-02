@@ -121,7 +121,8 @@ CSV_NETWORK_ATTR_NAME = {
     "Bluetooth State": "bluetoothState",
     "Paired Devices": "pairedDevices",
     "Connected Devices": "connectedDevices",
-    "Wifi Mac Address": "wifiMacAddress",
+    "Wifi Mac Id": "wifiMacAddress",
+    "IPv6 Mac Address(es)": "macAddress",
 }
 
 """ WxPython Frame """
