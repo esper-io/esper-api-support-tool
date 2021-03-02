@@ -111,7 +111,11 @@ def deleteCollection(collectionId, returnJson=False):
     )
 
     resp = requests.delete(url, headers=headers)
-    jsonResp = resp.json()
+    jsonResp = None
+    try:
+        jsonResp = resp.json()
+    except:
+        pass
     logBadResponse(url, resp, jsonResp)
 
     if returnJson:

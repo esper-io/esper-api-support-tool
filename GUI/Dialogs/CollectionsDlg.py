@@ -93,6 +93,7 @@ class CollectionsDialog(wx.Dialog):
 
         self.button_3 = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Create")
         self.button_3.SetToolTip("Create Collection")
+        self.button_3.Enable(False)
         sizer_5.Add(self.button_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
 
         self.panel_3 = wx.Panel(self, wx.ID_ANY)
@@ -150,6 +151,16 @@ class CollectionsDialog(wx.Dialog):
         self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.onSelection)
         self.button_1.Bind(wx.EVT_BUTTON, self.deleteCollection)
         self.button_3.Bind(wx.EVT_BUTTON, self.createCollection)
+        self.text_ctrl_2.Bind(wx.EVT_CHAR, self.onInput)
+        self.text_ctrl_3.Bind(wx.EVT_CHAR, self.onInput)
+
+    def onInput(self, event):
+        event.Skip()
+        wx.CallAfter(self.checkInputs)
+
+    def checkInputs(self):
+        if self.text_ctrl_3.GetValue() and self.text_ctrl_2.GetValue():
+            self.button_3.Enable(True)
 
     def onSelection(self, event):
         currentSelection = self.list_box_1.GetSelection()
@@ -179,10 +190,10 @@ class CollectionsDialog(wx.Dialog):
     def createCollection(self, event):
         error = False
         if not self.text_ctrl_3.GetValue():
-            self.text_ctrl_3.SetBackgroundColour(Color.red.value)
+            self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
             error = True
-        if not self.text_ctrl_2:
-            self.text_ctrl_2.SetBackgroundColour(Color.red.value)
+        if not self.text_ctrl_2.GetValue():
+            self.text_ctrl_2.SetBackgroundColour(Color.lightRed.value)
             error = True
         if error:
             return
@@ -230,7 +241,9 @@ class CollectionsDialog(wx.Dialog):
                 id = collection["id"]
                 break
         if id:
-            deleteCollection()
+            myCursor = wx.Cursor(wx.CURSOR_WAIT)
+            self.SetCursor(myCursor)
+            deleteCollection(id)
             if self.parentFrame and hasattr(self.parentFrame, "Logging"):
                 self.parentFrame.Logging("Collection has been deleted")
         elif self.parentFrame and hasattr(self.parentFrame, "Logging"):
