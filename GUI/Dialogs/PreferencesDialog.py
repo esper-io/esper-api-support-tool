@@ -351,6 +351,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
         self.button_APPLY = wx.Button(self, wx.ID_APPLY, "")
+        self.button_APPLY.Bind(wx.EVT_BUTTON, self.OnApply)
         sizer_2.AddButton(self.button_APPLY)
 
         sizer_2.Realize()
