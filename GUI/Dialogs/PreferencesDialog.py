@@ -80,7 +80,7 @@ class PreferencesDialog(wx.Dialog):
 
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Enable Device Selection")
         label_1.SetToolTip(
-            "Allow user to specify actions on a single device within a group"
+            "Allow user to specify actions on a selections of devices within a group."
         )
         sizer_7.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -98,7 +98,7 @@ class PreferencesDialog(wx.Dialog):
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_2 = wx.StaticText(self.panel_5, wx.ID_ANY, "API Request Limit")
-        label_2.SetToolTip("Max amount of results that the API will return.")
+        label_2.SetToolTip("Maximum amount of results that the API will return.")
         sizer_8.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_6 = wx.Panel(self.panel_5, wx.ID_ANY)
@@ -173,10 +173,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_22 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_13 = wx.StaticText(
-            self.panel_27, wx.ID_ANY, "Ignore Queued Command State"
+            self.panel_27, wx.ID_ANY, "Reach Queued Command State Only"
         )
         label_13.SetToolTip(
-            "Once the command has reached the Queued state, don't wait for the other state changes."
+            "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes."
         )
         sizer_22.Add(label_13, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -203,7 +203,7 @@ class PreferencesDialog(wx.Dialog):
 
         label_9 = wx.StaticText(self.panel_19, wx.ID_ANY, "Enable Grid Refresh")
         label_9.SetToolTip(
-            "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less."
+            "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
             % Globals.MAX_UPDATE_COUNT
         )
         sizer_17.Add(label_9, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -299,7 +299,9 @@ class PreferencesDialog(wx.Dialog):
         label_7 = wx.StaticText(
             self.panel_15, wx.ID_ANY, "Get Applications for Each Device"
         )
-        label_7.SetToolTip("Fetch all applications for every device within a group")
+        label_7.SetToolTip(
+            "Fetch all applications for every device within a group.\nPerformance may be slower."
+        )
         sizer_15.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_16 = wx.Panel(self.panel_15, wx.ID_ANY)
@@ -339,9 +341,6 @@ class PreferencesDialog(wx.Dialog):
 
         label_15 = wx.StaticText(
             self.panel_31, wx.ID_ANY, "Template Confirmation Prompt"
-        )
-        label_15.SetToolTip(
-            "Once the command has reached the Queued state, don't wait for the other state changes."
         )
         sizer_24.Add(label_15, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
