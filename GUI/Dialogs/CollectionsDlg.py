@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from Utility.Resource import resourcePath, scale_bitmap
 from Common.enum import Color
 import wx
 import Common.Globals as Globals
@@ -7,7 +8,7 @@ import Common.Globals as Globals
 from Utility.CollectionsApi import (
     fetchCollectionList,
     createCollection,
-    retrieveCollection,
+    # retrieveCollection,
     updateCollection,
     deleteCollection,
 )
@@ -47,8 +48,22 @@ class CollectionsDialog(wx.Dialog):
 
         sizer_4 = wx.FlexGridSizer(3, 1, 0, 0)
 
+        grid_sizer_3 = wx.GridSizer(1, 2, 0, 0)
+        sizer_4.Add(grid_sizer_3, 1, wx.EXPAND, 0)
+
         label_2 = wx.StaticText(self.window_1_pane_1, wx.ID_ANY, "List of Collections:")
-        sizer_4.Add(label_2, 0, 0, 0)
+        grid_sizer_3.Add(label_2, 0, 0, 0)
+
+        refresh = scale_bitmap(resourcePath("Images/refresh.png"), 14, 14)
+        self.bitmap_button_1 = wx.BitmapButton(
+            self.window_1_pane_1,
+            wx.ID_ANY,
+            refresh,
+        )
+        self.bitmap_button_1.SetMinSize((20, 20))
+        grid_sizer_3.Add(
+            self.bitmap_button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
 
         self.list_box_1 = wx.ListBox(
             self.window_1_pane_1, wx.ID_ANY, choices=self.collections
@@ -80,6 +95,7 @@ class CollectionsDialog(wx.Dialog):
         grid_sizer_2.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
 
         self.text_ctrl_3 = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "")
+        self.text_ctrl_3.SetFocus()
         grid_sizer_2.Add(self.text_ctrl_3, 0, wx.EXPAND, 0)
 
         self.panel_4 = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -107,7 +123,12 @@ class CollectionsDialog(wx.Dialog):
         )
         sizer_7.Add(label_3, 0, 0, 0)
 
-        self.text_ctrl_1 = wx.TextCtrl(self.panel_3, wx.ID_ANY, "")
+        self.text_ctrl_1 = wx.TextCtrl(
+            self.panel_3,
+            wx.ID_ANY,
+            "",
+            style=wx.TE_BESTWRAP | wx.TE_MULTILINE | wx.TE_READONLY,
+        )
         sizer_7.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 3)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -153,9 +174,12 @@ class CollectionsDialog(wx.Dialog):
         self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.onSelection)
         self.button_1.Bind(wx.EVT_BUTTON, self.deleteCollection)
         self.button_3.Bind(wx.EVT_BUTTON, self.createCollection)
+        self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onInput)
         self.text_ctrl_2.Bind(wx.EVT_CHAR, self.onInput)
         self.text_ctrl_3.Bind(wx.EVT_CHAR, self.onInput)
         self.button_2.Bind(wx.EVT_BUTTON, self.onExecute)
+        self.Bind(wx.EVT_CLOSE, self.onExecute)
+        self.bitmap_button_1.Bind(wx.EVT_BUTTON, self.updateCollectionList)
 
     def onExecute(self, event):
         if self.IsModal():
@@ -169,7 +193,26 @@ class CollectionsDialog(wx.Dialog):
         wx.CallAfter(self.checkInputs)
 
     def checkInputs(self):
-        if self.text_ctrl_3.GetValue() and self.text_ctrl_2.GetValue():
+        matchNames = list(
+            filter(
+                lambda x: x["name"] == self.text_ctrl_3.GetValue(),
+                self.collResp["results"],
+            )
+        )
+        if matchNames and not self.checkbox_1.IsChecked():
+            self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
+        elif not matchNames or self.checkbox_1.IsChecked():
+            self.text_ctrl_3.SetBackgroundColour(Color.white.value)
+        if not self.text_ctrl_3.GetValue():
+            self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
+        if not self.text_ctrl_2.GetValue():
+            self.text_ctrl_2.SetBackgroundColour(Color.lightRed.value)
+        if (
+            self.text_ctrl_3.GetValue()
+            and self.text_ctrl_2.GetValue()
+            and not self.text_ctrl_2.GetBackgroundColour() == Color.lightRed.value
+            and not self.text_ctrl_3.GetBackgroundColour() == Color.lightRed.value
+        ):
             self.button_3.Enable(True)
         else:
             self.button_3.Enable(False)
@@ -183,17 +226,17 @@ class CollectionsDialog(wx.Dialog):
             self.button_2.Enable(False)
             return
         self.prevSelection = self.list_box_1.GetSelection()
-        id = None
+        self.selectedCollection = None
         selectionStr = self.list_box_1.GetString(currentSelection)
         for collection in self.collResp["results"]:
             if collection["name"] == selectionStr:
-                id = collection["id"]
+                self.selectedCollection = collection
                 break
-        if id:
+        if self.selectedCollection:
             self.button_2.Enable(False)
             myCursor = wx.Cursor(wx.CURSOR_WAIT)
             self.SetCursor(myCursor)
-            self.selectedCollection = retrieveCollection(id, returnJson=True)
+            # self.selectedCollection = retrieveCollection(id, returnJson=True)
             self.text_ctrl_1.SetValue(self.selectedCollection["eql"])
             self.text_ctrl_3.SetValue(self.selectedCollection["name"])
             self.button_2.Enable(True)
@@ -265,7 +308,7 @@ class CollectionsDialog(wx.Dialog):
             self.parentFrame.Logging("Failed to find matching collection", isError=True)
         self.updateCollectionList()
 
-    def updateCollectionList(self):
+    def updateCollectionList(self, event=None):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.button_2.Enable(False)
@@ -273,10 +316,14 @@ class CollectionsDialog(wx.Dialog):
         self.selectedCollection = None
         self.collResp, self.collections = fetchCollectionList()
         self.list_box_1.Clear()
+        self.text_ctrl_1.SetValue("")
         for collection in self.collections:
             self.list_box_1.Append(collection)
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
     def getSelectionEql(self):
-        return self.selectedCollection["eql"]
+        if self.selectedCollection and "eql" in self.selectedCollection:
+            return self.selectedCollection["eql"]
+        else:
+            return None

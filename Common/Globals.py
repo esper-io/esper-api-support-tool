@@ -14,6 +14,7 @@ MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
+gauge_lock = threading.Lock()
 
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5

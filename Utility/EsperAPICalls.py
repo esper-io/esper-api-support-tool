@@ -524,7 +524,13 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
                 deviceList = {**deviceList, **thread.result}
         postEventToFrame(
             wxThread.myEVT_FETCH,
-            (Globals.SHOW_ALL_AND_GENERATE_REPORT, Globals.enterprise_id, deviceList),
+            (
+                Globals.SHOW_ALL_AND_GENERATE_REPORT,
+                Globals.enterprise_id,
+                deviceList,
+                True,
+                len(deviceList) * 2,
+            ),
         )
 
 
@@ -536,24 +542,14 @@ def processCollectionDevices(collectionList):
         collectionList["results"][i * n : (i + 1) * n]
         for i in range((len(collectionList["results"]) + n - 1) // n)
     ]
-    if collectionList["results"]:
-        # for device in collectionList["results"]:
-        #     try:
-        #         deviceInfo = {}
-        #         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-
-        #         deviceList[num] = [device, deviceInfo]
-        #         num += 1
-        #     except Exception as e:
-        #         print(e)
-        #         ApiToolLog().LogError(e)
+    if splitResults:
         threads = []
         number_of_devices = 0
         for chunk in splitResults:
             t = wxThread.GUIThread(
                 Globals.frame,
                 fillInDeviceInfoDict,
-                args=(chunk, number_of_devices),
+                args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
             )
             threads.append(t)
             t.start()
@@ -578,10 +574,9 @@ def processCollectionDevices(collectionList):
             wxThread.myEVT_MESSAGE_BOX,
             ("No devices found for EQL query.", wx.ICON_INFORMATION),
         )
-    # return (Globals.SHOW_ALL_AND_GENERATE_REPORT, Globals.enterprise_id, deviceList)
 
 
-def fillInDeviceInfoDict(chunk, number_of_devices):
+def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     deviceList = {}
     for device in chunk:
         try:
@@ -590,6 +585,10 @@ def fillInDeviceInfoDict(chunk, number_of_devices):
 
             deviceList[number_of_devices] = [device, deviceInfo]
             number_of_devices += 1
+            Globals.gauge_lock.acquire()
+            value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
+            Globals.frame.setGaugeValue(value)
+            Globals.gauge_lock.release()
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)

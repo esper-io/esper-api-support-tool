@@ -140,7 +140,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onCommand, self.menubar.command)
         self.Bind(wx.EVT_MENU, self.onClone, self.menubar.clone)
         self.Bind(wx.EVT_MENU, self.onPref, self.menubar.pref)
-        # self.Bind(wx.EVT_MENU, self.onDeviceQuery, self.menubar.deviceQuery)
+        self.Bind(wx.EVT_MENU, self.onEqlQuery, self.menubar.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.menubar.collection)
         self.Bind(
             wx.EVT_MENU, self.gridPanel.onDeviceColumn, self.menubar.deviceColumns
@@ -251,6 +251,8 @@ class NewFrameLayout(wx.Frame):
         self.menubar.clone.Enable(False)
         self.menubar.command.Enable(False)
         self.menubar.clearConsole.Enable(False)
+        self.menubar.collection.Enable(False)
+        self.menubar.eqlQuery.Enable(False)
 
         if self.kill:
             return
@@ -869,6 +871,8 @@ class NewFrameLayout(wx.Frame):
         self.menubar.run.Enable(True)
         self.menubar.clone.Enable(True)
         self.menubar.command.Enable(True)
+        self.menubar.collection.Enable(True)
+        self.menubar.eqlQuery.Enable(True)
         self.setCursorDefault()
         self.setGaugeValue(100)
 
@@ -1052,10 +1056,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.isRunning = True
         self.gauge.Pulse()
-        self.sidePanel.runBtn.Enable(False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
+        self.toggleEnabledState(False)
 
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
@@ -1100,7 +1101,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
-                self.sidePanel.runBtn.Enable(True)
+                self.toggleEnabledState(True)
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1139,7 +1140,7 @@ class NewFrameLayout(wx.Frame):
                     "Please select a valid application", style=wx.OK | wx.ICON_ERROR
                 )
                 self.setCursorDefault()
-                self.sidePanel.runBtn.Enable(True)
+                self.toggleEnabledState(True)
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1195,14 +1196,14 @@ class NewFrameLayout(wx.Frame):
                     style=wx.OK | wx.ICON_ERROR,
                 )
                 self.setCursorDefault()
-                self.sidePanel.runBtn.Enable(True)
+                self.toggleEnabledState(True)
         else:
             wx.MessageBox(
                 "Please select an action to perform on a group or device!",
                 style=wx.OK | wx.ICON_ERROR,
             )
             self.setCursorDefault()
-            self.sidePanel.runBtn.Enable(True)
+            self.toggleEnabledState(True)
 
     def loadConfigPrompt(self):
         """ Display message to user to load config """
@@ -1327,11 +1328,18 @@ class NewFrameLayout(wx.Frame):
         """ Given device data perform the specified action """
         self.gauge.Pulse()
         evtValue = event.GetValue()
-        if type(evtValue) == tuple and len(evtValue) == 3:
+        if type(evtValue) == tuple and len(evtValue) >= 3:
+            threads = []
             action = evtValue[0]
             entId = evtValue[1]
             deviceList = evtValue[2]
-            threads = []
+            updateGauge = False
+            maxGauge = None
+
+            if len(evtValue) == 5:
+                updateGauge = evtValue[3]
+                maxGauge = evtValue[4]
+
             for entry in deviceList.values():
                 if entId != Globals.enterprise_id:
                     self.onClearGrids(None)
@@ -1364,6 +1372,9 @@ class NewFrameLayout(wx.Frame):
                 elif action == Globals.CLEAR_APP_DATA:
                     clearAppData(self, device)
                 limitActiveThreads(threads)
+
+                if updateGauge:
+                    self.setGaugeValue(int(self.gauge.GetValue() + 1 / maxGauge * 100))
             wxThread.GUIThread(
                 self,
                 self.waitForThreadsThenSetCursorDefault,
@@ -1496,10 +1507,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.setGaugeValue(100)
         if self.isRunning or enable:
-            self.sidePanel.runBtn.Enable(True)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+            self.toggleEnabledState(True)
         self.isRunning = False
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
@@ -1679,10 +1687,7 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.onNetworkGridSort(
                         self.gridPanel.grid_2.GetSortingColumn()
                     )
-                self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-                self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-                self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
-                self.sidePanel.runBtn.Enable(True)
+                self.toggleEnabledState(True)
                 if self.isForceUpdate:
                     self.isForceUpdate = False
                     self.setGaugeValue(100)
@@ -1704,10 +1709,7 @@ class NewFrameLayout(wx.Frame):
     def updateGrids(self, event=None):
         if event:
             self.Logging("---> Updating Grids' Data")
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, False)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
-            self.sidePanel.runBtn.Enable(False)
+            self.toggleEnabledState(False)
             self.gauge.Pulse()
             thread = wxThread.GUIThread(
                 self,
@@ -1932,28 +1934,43 @@ class NewFrameLayout(wx.Frame):
         else:
             self.frame_toolbar.search.SetValue("")
 
-    def onDeviceQuery(self, event):
+    def onEqlQuery(self, event):
+        self.setGaugeValue(0)
+        self.onClearGrids(None)
         with LargeTextEntryDialog(
             self, "Enter EQL Device Query:", "EQL Device Query"
         ) as textDialog:
             if textDialog.ShowModal() == wx.ID_OK:
-                preformEqlSearch(textDialog.GetValue(), whom.device.name)
+                eql = textDialog.GetValue()
+                if eql:
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.gauge.Pulse()
+                    wxThread.doAPICallInThread(
+                        self,
+                        processCollectionDevices,
+                        args=(deviceListResp),
+                        eventType=None,
+                        waitForJoin=False,
+                        name="eqlIterateThroughDeviceList",
+                    )
 
     def onCollection(self, event):
+        self.setGaugeValue(0)
+        self.onClearGrids(None)
         with CollectionsDialog(self) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
-                deviceListResp = preformEqlSearch(
-                    dlg.getSelectionEql(), None, returnJson=True
-                )
-                wxThread.doAPICallInThread(
-                    self,
-                    processCollectionDevices,
-                    args=(deviceListResp),
-                    eventType=None,
-                    # eventType=wxThread.myEVT_FETCH,
-                    waitForJoin=False,
-                    name="collectionIterateThroughDeviceList",
-                )
+                eql = dlg.getSelectionEql()
+                if eql:
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.gauge.Pulse()
+                    wxThread.doAPICallInThread(
+                        self,
+                        processCollectionDevices,
+                        args=(deviceListResp),
+                        eventType=None,
+                        waitForJoin=False,
+                        name="collectionIterateThroughDeviceList",
+                    )
 
     def displayMessageBox(self, event):
         value = event.GetValue()
@@ -1968,3 +1985,13 @@ class NewFrameLayout(wx.Frame):
 
         if msg:
             wx.MessageBox(msg, style=sty)
+
+    def toggleEnabledState(self, state):
+        self.sidePanel.runBtn.Enable(state)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, state)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
+
+        self.menubar.collection.Enable(state)
+        self.menubar.eqlQuery.Enable(state)
+        self.menubar.run.Enable(state)
