@@ -5,10 +5,17 @@ from Utility.EsperAPICalls import getHeader, logBadResponse
 
 
 def preformEqlSearch(query, who, returnJson=False):
+    # api/v0/enterprise/{ent-id}/collection/search/?q={eql_query}
     headers = getHeader()
 
-    url = "https://{host}-api.esper.cloud/api/v0/{whom}/search/?q={query}".format(
+    if not who:
+        who = "collection"
+
+    query = query.replace('"', "%22").replace(" ", "%20")
+
+    url = "https://{host}-api.esper.cloud/api/v0/enterprise/{entId}/{whom}/search/?q={query}".format(
         host=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        entId=Globals.enterprise_id,
         whom=who,
         query=query,
     )

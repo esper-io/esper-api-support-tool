@@ -29,6 +29,7 @@ class Color(Enum):
     red = wx.Colour(255, 0, 0)
     orange = wx.Colour(255, 165, 0)
     green = wx.Colour(0, 128, 0)
+    purple = wx.Colour(128, 0, 128)
 
     darkGrey = wx.Colour(100, 100, 100)
 
@@ -36,6 +37,8 @@ class Color(Enum):
     lightYellow = wx.Colour(255, 255, 224)
     lightGreen = wx.Colour(229, 248, 229)
     lightRed = wx.Colour(255, 235, 234)
+    lightOrange = wx.Colour(255, 241, 216)
+    lightPurple = wx.Colour(255, 226, 255)
 
     errorBg = wx.Colour(255, 235, 234)
     warnBg = wx.Colour(255, 241, 216)

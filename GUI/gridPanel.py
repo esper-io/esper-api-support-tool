@@ -533,6 +533,18 @@ class GridPanel(wx.Panel):
         elif value == "Online":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.green.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+        elif value == "Unspecified":
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
+        elif value == "Provisioning":
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.orange.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
+        elif value == "Wipe In-Progress":
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.purple.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
+        elif value == "Unkown":
+            self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
+            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
 
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
         if attribute == "Alias" and "OriginalAlias" in device_info:

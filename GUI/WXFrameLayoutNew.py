@@ -45,6 +45,7 @@ from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
     ApplyDeviceConfig,
+    processCollectionDevices,
     setKiosk,
     setMulti,
     getdeviceapps,
@@ -213,6 +214,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
+        self.Bind(wxThread.EVT_MESSAGE_BOX, self.displayMessageBox)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
@@ -1325,47 +1327,48 @@ class NewFrameLayout(wx.Frame):
         """ Given device data perform the specified action """
         self.gauge.Pulse()
         evtValue = event.GetValue()
-        action = evtValue[0]
-        entId = evtValue[1]
-        deviceList = evtValue[2]
-        threads = []
-        for entry in deviceList.values():
-            if entId != Globals.enterprise_id:
-                self.onClearGrids(None)
-                break
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
+        if type(evtValue) == tuple and len(evtValue) == 3:
+            action = evtValue[0]
+            entId = evtValue[1]
+            deviceList = evtValue[2]
+            threads = []
+            for entry in deviceList.values():
+                if entId != Globals.enterprise_id:
                     self.onClearGrids(None)
                     break
-            device = entry[0]
-            deviceInfo = entry[1]
-            if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
-                self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-            elif action == Globals.SET_KIOSK:
-                thread = wxThread.GUIThread(
-                    self,
-                    setKiosk,
-                    (self, device, deviceInfo),
-                )
-                thread.start()
-                threads.append(thread)
-            elif action == Globals.SET_MULTI:
-                thread = wxThread.GUIThread(
-                    self,
-                    setMulti,
-                    (self, device, deviceInfo),
-                )
-                thread.start()
-                threads.append(thread)
-            elif action == Globals.CLEAR_APP_DATA:
-                clearAppData(self, device)
-            limitActiveThreads(threads)
-        wxThread.GUIThread(
-            self,
-            self.waitForThreadsThenSetCursorDefault,
-            (threads, 3, action),
-        ).start()
+                if hasattr(threading.current_thread(), "isStopped"):
+                    if threading.current_thread().isStopped():
+                        self.onClearGrids(None)
+                        break
+                device = entry[0]
+                deviceInfo = entry[1]
+                if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                elif action == Globals.SET_KIOSK:
+                    thread = wxThread.GUIThread(
+                        self,
+                        setKiosk,
+                        (self, device, deviceInfo),
+                    )
+                    thread.start()
+                    threads.append(thread)
+                elif action == Globals.SET_MULTI:
+                    thread = wxThread.GUIThread(
+                        self,
+                        setMulti,
+                        (self, device, deviceInfo),
+                    )
+                    thread.start()
+                    threads.append(thread)
+                elif action == Globals.CLEAR_APP_DATA:
+                    clearAppData(self, device)
+                limitActiveThreads(threads)
+            wxThread.GUIThread(
+                self,
+                self.waitForThreadsThenSetCursorDefault,
+                (threads, 3, action),
+            ).start()
 
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
@@ -1939,4 +1942,29 @@ class NewFrameLayout(wx.Frame):
     def onCollection(self, event):
         with CollectionsDialog(self) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
-                pass
+                deviceListResp = preformEqlSearch(
+                    dlg.getSelectionEql(), None, returnJson=True
+                )
+                wxThread.doAPICallInThread(
+                    self,
+                    processCollectionDevices,
+                    args=(deviceListResp),
+                    eventType=None,
+                    # eventType=wxThread.myEVT_FETCH,
+                    waitForJoin=False,
+                    name="collectionIterateThroughDeviceList",
+                )
+
+    def displayMessageBox(self, event):
+        value = event.GetValue()
+        msg = ""
+        sty = wx.ICON_INFORMATION
+        if type(value) == tuple:
+            msg = value[0]
+            if len(value) > 1:
+                sty = value[1]
+        elif isinstance(value, str):
+            msg = value
+
+        if msg:
+            wx.MessageBox(msg, style=sty)

@@ -517,6 +517,83 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
             % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
         )
+    if source == 3:
+        deviceList = {}
+        for thread in threads:
+            if type(thread.result) == dict:
+                deviceList = {**deviceList, **thread.result}
+        postEventToFrame(
+            wxThread.myEVT_FETCH,
+            (Globals.SHOW_ALL_AND_GENERATE_REPORT, Globals.enterprise_id, deviceList),
+        )
+
+
+def processCollectionDevices(collectionList):
+    n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
+    if n == 0:
+        n = len(collectionList["results"])
+    splitResults = [
+        collectionList["results"][i * n : (i + 1) * n]
+        for i in range((len(collectionList["results"]) + n - 1) // n)
+    ]
+    if collectionList["results"]:
+        # for device in collectionList["results"]:
+        #     try:
+        #         deviceInfo = {}
+        #         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+
+        #         deviceList[num] = [device, deviceInfo]
+        #         num += 1
+        #     except Exception as e:
+        #         print(e)
+        #         ApiToolLog().LogError(e)
+        threads = []
+        number_of_devices = 0
+        for chunk in splitResults:
+            t = wxThread.GUIThread(
+                Globals.frame,
+                fillInDeviceInfoDict,
+                args=(chunk, number_of_devices),
+            )
+            threads.append(t)
+            t.start()
+            number_of_devices += len(chunk)
+
+        t = wxThread.GUIThread(
+            Globals.frame,
+            waitTillThreadsFinish,
+            args=(
+                tuple(threads),
+                Globals.SHOW_ALL_AND_GENERATE_REPORT,
+                Globals.enterprise_id,
+                3,
+            ),
+            eventType=wxThread.myEVT_FETCH,
+        )
+        t.start()
+    else:
+        if Globals.frame:
+            Globals.frame.Logging("---> No devices found for EQL query")
+        postEventToFrame(
+            wxThread.myEVT_MESSAGE_BOX,
+            ("No devices found for EQL query.", wx.ICON_INFORMATION),
+        )
+    # return (Globals.SHOW_ALL_AND_GENERATE_REPORT, Globals.enterprise_id, deviceList)
+
+
+def fillInDeviceInfoDict(chunk, number_of_devices):
+    deviceList = {}
+    for device in chunk:
+        try:
+            deviceInfo = {}
+            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+
+            deviceList[number_of_devices] = [device, deviceInfo]
+            number_of_devices += 1
+        except Exception as e:
+            print(e)
+            ApiToolLog().LogError(e)
+    return deviceList
 
 
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
@@ -555,20 +632,46 @@ def unpackageDict(deviceInfo, deviceDict):
 
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
-    kioskMode = iskioskmode(device.id)
-    deviceInfo.update({"EsperName": device.device_name})
-    deviceDict = device.__dict__
-    unpackageDict(deviceInfo, deviceDict)
+    deviceId = None
+    deviceName = None
+    deviceGroups = None
+    deviceAlias = None
+    deviceStatus = None
+    deviceHardware = None
+    deviceTags = None
+    if type(device) == dict:
+        deviceId = device["id"]
+        deviceName = device["name"]
+        deviceGroups = device["group"]
+        deviceAlias = device["alias"]
+        deviceStatus = device["status"]
+        deviceHardware = device["hardware"]
+        deviceTags = device["tags"]
+    else:
+        deviceId = device.id
+        deviceName = device.device_name
+        deviceGroups = device.groups
+        deviceAlias = device.alias_name
+        deviceStatus = device.status
+        deviceHardware = device.hardware_info
+        deviceTags = device.tags
+        deviceDict = device.__dict__
+        unpackageDict(deviceInfo, deviceDict)
+    kioskMode = iskioskmode(deviceId)
+    deviceInfo.update({"EsperName": deviceName})
 
-    detailInfo = getDeviceDetail(device.id)
+    detailInfo = getDeviceDetail(deviceId)
     unpackageDict(deviceInfo, detailInfo)
 
-    if device.groups:
+    if deviceGroups:
         groupNames = []
-        for groupURL in device.groups:
-            groupName = fetchGroupName(groupURL)
-            if groupName:
-                groupNames.append(groupName)
+        if type(deviceGroups) == list:
+            for groupURL in deviceGroups:
+                groupName = fetchGroupName(groupURL)
+                if groupName:
+                    groupNames.append(groupName)
+        elif type(deviceGroups) == dict and "name" in deviceGroups:
+            groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
             deviceInfo["groups"] = groupNames[0]
         elif len(groupNames) == 0:
@@ -576,51 +679,86 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         else:
             deviceInfo["groups"] = groupNames
 
-    if bool(device.alias_name):
-        deviceInfo.update({"Alias": device.alias_name})
+    if bool(deviceAlias):
+        deviceInfo.update({"Alias": deviceAlias})
     else:
         deviceInfo.update({"Alias": ""})
 
-    if device.status == 1:
-        deviceInfo.update({"Status": "Online"})
+    if isinstance(deviceStatus, str):
+        if deviceStatus.lower() == "online":
+            deviceInfo.update({"Status": "Online"})
+        elif "unspecified" in deviceStatus.lower():
+            deviceInfo.update({"Status": "Unspecified"})
+        elif "provisioning" in deviceStatus.lower():
+            deviceInfo.update({"Status": "Provisioning"})
+        elif deviceStatus.lower() == "offline":
+            deviceInfo.update({"Status": "Offline"})
+        elif "wipe" in deviceStatus.lower():
+            deviceInfo.update({"Status": "Wipe In-Progress"})
+        else:
+            deviceInfo.update({"Status": "Unknown"})
     else:
-        deviceInfo.update({"Status": "Offline"})
+        if deviceStatus == 1:
+            deviceInfo.update({"Status": "Online"})
+        elif deviceStatus == 0:
+            deviceInfo.update({"Status": "Unspecified"})
+        elif deviceStatus > 1 and deviceStatus < 60:
+            deviceInfo.update({"Status": "Provisioning"})
+        elif deviceStatus == 60:
+            deviceInfo.update({"Status": "Offline"})
+        elif deviceStatus == 70:
+            deviceInfo.update({"Status": "Wipe In-Progress"})
+        else:
+            deviceInfo.update({"Status": "Unknown"})
 
     if kioskMode == 1:
         deviceInfo.update({"Mode": "Kiosk"})
     else:
         deviceInfo.update({"Mode": "Multi"})
 
-    if bool(device.hardware_info["serialNumber"]):
-        deviceInfo.update({"Serial": str(device.hardware_info["serialNumber"])})
+    hdwareKey = None
+    if "serial_number" in deviceHardware:
+        hdwareKey = "serial_number"
+    elif "serialNumber" in deviceHardware:
+        hdwareKey = "serialNumber"
+
+    if hdwareKey and bool(deviceHardware[hdwareKey]):
+        deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
     else:
         deviceInfo.update({"Serial": ""})
 
-    if bool(device.tags):
+    if bool(deviceTags):
         # Add Functionality For Modifying Multiple Tags
-        deviceInfo.update({"Tags": device.tags})
+        deviceInfo.update({"Tags": deviceTags})
     else:
         deviceInfo.update({"Tags": ""})
 
-        if device.tags is None:
+        if hasattr(device, "tags") and device.tags is None:
             device.tags = []
 
-    apps, _ = getdeviceapps(device.id, True, Globals.USE_ENTERPRISE_APP)
+    apps, _ = getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     deviceInfo.update({"Apps": str(apps)})
 
-    if kioskMode == 1 and device.status == 1:
-        deviceInfo.update({"KioskApp": str(getkioskmodeapp(device.id))})
+    if kioskMode == 1 and deviceStatus == 1:
+        deviceInfo.update({"KioskApp": str(getkioskmodeapp(deviceId))})
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    location_info, resp_json = getLocationInfo(device.id)
-    network_info = getNetworkInfo(device.id)
+    location_info, resp_json = getLocationInfo(deviceId)
+    network_info = getNetworkInfo(deviceId)
     unpackageDict(deviceInfo, resp_json)
 
     deviceInfo["macAddress"] = []
-    for ip in deviceInfo["ipAddress"]:
-        if ip.endswith("/64"):
-            deviceInfo["macAddress"].append(ipv6Tomac(ip))
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+        deviceInfo["ipAddress"] = deviceInfo[ipKey]
+    if ipKey:
+        for ip in deviceInfo[ipKey]:
+            if ip.endswith("/64"):
+                deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})
