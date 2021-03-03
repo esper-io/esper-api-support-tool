@@ -182,7 +182,6 @@ class CollectionsDialog(wx.Dialog):
             self.prevSelection = None
             self.button_2.Enable(False)
             return
-        self.button_2.Enable(True)
         self.prevSelection = self.list_box_1.GetSelection()
         id = None
         selectionStr = self.list_box_1.GetString(currentSelection)
@@ -191,11 +190,13 @@ class CollectionsDialog(wx.Dialog):
                 id = collection["id"]
                 break
         if id:
+            self.button_2.Enable(False)
             myCursor = wx.Cursor(wx.CURSOR_WAIT)
             self.SetCursor(myCursor)
             self.selectedCollection = retrieveCollection(id, returnJson=True)
             self.text_ctrl_1.SetValue(self.selectedCollection["eql"])
             self.text_ctrl_3.SetValue(self.selectedCollection["name"])
+            self.button_2.Enable(True)
         elif self.parentFrame and hasattr(self.parentFrame, "Logging"):
             self.parentFrame.Logging("Failed to find matching collection", isError=True)
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)

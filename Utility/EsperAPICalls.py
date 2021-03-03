@@ -647,6 +647,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceStatus = device["status"]
         deviceHardware = device["hardware"]
         deviceTags = device["tags"]
+        unpackageDict(deviceInfo, device)
     else:
         deviceId = device.id
         deviceName = device.device_name
@@ -762,6 +763,15 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
 
     return deviceInfo
 

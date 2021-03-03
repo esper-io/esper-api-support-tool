@@ -47,20 +47,31 @@ def getDeviceName(device):
 
 
 def getWifiStatus(deviceInfo):
-    wifi_event = deviceInfo["network_event"]
+    wifi_event = None
+    if "network_event" in deviceInfo:
+        wifi_event = deviceInfo["network_event"]
+    if "network" in deviceInfo:
+        wifi_event = deviceInfo["network"]
     wifi_string = ""
     current_wifi_connection = "Wifi Disconnected"
     current_wifi_configurations = ""
 
-    # Configured Networks
-    if "configuredWifiNetworks" in wifi_event:
-        for access_point in wifi_event["configuredWifiNetworks"]:
-            current_wifi_configurations += access_point + " "
+    if wifi_event:
+        # Configured Networks
+        if "configuredWifiNetworks" in wifi_event:
+            for access_point in wifi_event["configuredWifiNetworks"]:
+                current_wifi_configurations += access_point + " "
+        if "wifi_access_points" in wifi_event:
+            for access_point in wifi_event["wifi_access_points"]:
+                current_wifi_configurations += access_point + " "
 
-    # Connected Network
-    if "wifiNetworkInfo" in wifi_event:
-        if "<unknown ssid>" not in wifi_event["wifiNetworkInfo"]["wifiSSID"]:
-            ssid = wifi_event["wifiNetworkInfo"]["wifiSSID"] + ": Connected"
+        # Connected Network
+        if "wifiNetworkInfo" in wifi_event:
+            if "<unknown ssid>" not in wifi_event["wifiNetworkInfo"]["wifiSSID"]:
+                ssid = wifi_event["wifiNetworkInfo"]["wifiSSID"] + ": Connected"
+                current_wifi_connection = ssid
+        if "ssid" in wifi_event:
+            ssid = wifi_event["ssid"] + ": Connected"
             current_wifi_connection = ssid
 
     wifi_string = (
@@ -85,6 +96,8 @@ def getCellularStatus(deviceInfo):
 
     if "currentActiveConnection" in network_event:
         current_active_connection = network_event["currentActiveConnection"]
+    if "active_connection" in network_event:
+        current_active_connection = network_event["active_connection"]
 
     simoperator = ""
     if "cellularNetworkInfo" in network_event:
@@ -100,6 +113,23 @@ def getCellularStatus(deviceInfo):
             + ","
             + current_active_connection
         )
+    elif "cellular" in network_event:
+        cellularNetworkInfo = network_event["cellular"]
+        connection_status = cellularNetworkInfo["status"]
+        if (
+            "sim_operator" in cellularNetworkInfo
+            and len(cellularNetworkInfo["sim_operator"]) > 0
+        ):
+            simoperator = cellularNetworkInfo["sim_operator"][0] + ":"
+        cellular_connections = (
+            "["
+            + simoperator
+            + connection_status
+            + "]"
+            + ","
+            + current_active_connection
+        )
+
     cellular_connections = "Cellular:" + cellular_connections
     return cellular_connections + "," + current_active_connection
 
