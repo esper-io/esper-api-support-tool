@@ -5,7 +5,9 @@ import wx
 
 
 class CmdConfirmDialog(wx.Dialog):
-    def __init__(self, commandType, cmdFormatted, applyToType, applyTo):
+    def __init__(
+        self, commandType, cmdFormatted, schType, schFormatted, applyToType, applyTo
+    ):
         # begin wxGlade: MyDialog.__init__
         super(CmdConfirmDialog, self).__init__(
             None,
@@ -20,7 +22,7 @@ class CmdConfirmDialog(wx.Dialog):
         self.text_ctrl_1 = wx.TextCtrl(
             self.window_1_pane_1,
             wx.ID_ANY,
-            cmdFormatted,
+            (cmdFormatted + "\n\n" + schFormatted),
             style=wx.HSCROLL
             | wx.TE_LEFT
             | wx.TE_MULTILINE
@@ -36,7 +38,7 @@ class CmdConfirmDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
 
         self.__set_properties()
-        self.__do_layout(commandType, applyToType, applyTo)
+        self.__do_layout(commandType, schType, applyToType, applyTo)
         # end wxGlade
 
     def __set_properties(self):
@@ -48,7 +50,7 @@ class CmdConfirmDialog(wx.Dialog):
         self.button_2.SetFocus()
         # end wxGlade
 
-    def __do_layout(self, commandType, applyToType, applyTo):
+    def __do_layout(self, commandType, schType, applyToType, applyTo):
         # begin wxGlade: MyDialog.__do_layout
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
@@ -70,11 +72,23 @@ class CmdConfirmDialog(wx.Dialog):
         sizer_9.Add(label_2, 0, wx.EXPAND, 0)
         static_line_2 = wx.StaticLine(self.panel_8, wx.ID_ANY)
         sizer_9.Add(static_line_2, 0, wx.EXPAND, 0)
+        label = ""
+        if schType.startswith("i"):
+            label = (
+                "About to try applying an %s %s command on the %s, %s, continue?"
+                % (schType.lower(), commandType, applyToType, applyTo)
+            )
+        else:
+            label = "About to try applying a %s %s command on the %s, %s, continue?" % (
+                schType.lower(),
+                commandType,
+                applyToType,
+                applyTo,
+            )
         label_5 = wx.StaticText(
             self.panel_8,
             wx.ID_ANY,
-            "About to try applying the %s command on the %s, %s, continue?"
-            % (commandType, applyToType, applyTo),
+            label,
             style=wx.ALIGN_LEFT,
         )
         label_5.Wrap(475)

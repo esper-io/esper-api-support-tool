@@ -15,6 +15,8 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
 gauge_lock = threading.Lock()
+grid1_lock = threading.Lock()
+grid2_lock = threading.Lock()
 
 MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
@@ -66,9 +68,9 @@ COMMAND_TYPES = [
     "UPDATE_DEVICE_CONFIG",
     # "INSTALL",
     # "UNINSTALL",
-    "SET_NEW_POLICY",
-    "ADD_WIFI_AP",
-    "REMOVE_WIFI_AP",
+    # "SET_NEW_POLICY",
+    # "ADD_WIFI_AP",
+    # "REMOVE_WIFI_AP",
     "SET_KIOSK_APP",
     "SET_DEVICE_LOCKDOWN_STATE",
     "SET_APP_STATE",

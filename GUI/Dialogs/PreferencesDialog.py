@@ -622,7 +622,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
         Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
-        Globals.GET_APP_EACH_DEVICE = self.presfs["getAppsForEachDevice"]
+        Globals.GET_APP_EACH_DEVICE = self.prefs["getAppsForEachDevice"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]

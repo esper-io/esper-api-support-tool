@@ -44,7 +44,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
-    ApplyDeviceConfig,
+    createCommand,
     processCollectionDevices,
     setKiosk,
     setMulti,
@@ -162,7 +162,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.updateGrids, self.frame_toolbar.rftool)
         self.Bind(wx.EVT_TOOL, self.onCommand, self.frame_toolbar.cmdtool)
         self.frame_toolbar.search.Bind(wx.EVT_SEARCH, self.onSearch)
-        self.frame_toolbar.search.Bind(wx.EVT_CHAR, self.onChar)
+        self.frame_toolbar.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.frame_toolbar.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         # Tool Bar end
 
@@ -860,6 +860,8 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
+            self.sidePanel.actionChoice.SetSelection(0)
+            self.sidePanel.gridActions.SetSelection(1)
         if source == 3:
             self.gridPanel.autoSizeGridsColumns()
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
@@ -1235,24 +1237,31 @@ class NewFrameLayout(wx.Frame):
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
                     result = cmdDialog.ShowModal()
                     if result == wx.ID_OK:
-                        cmd = None
+                        cmdArgs = None
                         commandType = None
-                        config = None
+                        schArgs = None
+                        schType = None
                         try:
-                            config, commandType = cmdDialog.GetValue()
-                            configParts = config.split("_-_")
-                            cmd = [
-                                json.loads(configParts[0]),
-                                json.loads(configParts[1]),
-                            ]
+                            # config, commandType = cmdDialog.GetValue()
+                            (
+                                cmdArgs,
+                                commandType,
+                                schArgs,
+                                schType,
+                            ) = cmdDialog.GetValue()
+                            # configParts = config.split("_-_")
+                            # cmd = [
+                            #     json.loads(cmdArgs),
+                            #     json.loads(schArgs),
+                            # ]
                         except:
                             wx.MessageBox(
                                 "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
                                 style=wx.OK | wx.ICON_ERROR,
                             )
-                            self.onCommand(event, config, level + 1)
-                        if cmd != None:
-                            ApplyDeviceConfig(self, cmd, commandType)
+                            # self.onCommand(event, config, level + 1)
+                        if cmdArgs != None:
+                            createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
                 wx.MessageBox(
                     "Please select an group and or device", style=wx.OK | wx.ICON_ERROR
@@ -1276,12 +1285,14 @@ class NewFrameLayout(wx.Frame):
             dlg.ShowModal()
         wx.CallLater(3000, self.setGaugeValue, 0)
 
-    def confirmCommand(self, cmd, commandType):
+    def confirmCommand(self, cmd, commandType, schedule, schType):
         """ Ask user to confirm the command they want to run """
         modal = None
         isGroup = False
         cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
+        sch_dict = ast.literal_eval(str(schedule).replace("\n", ""))
         cmdFormatted = json.dumps(cmd_dict, indent=2)
+        schFormatted = json.dumps(sch_dict, indent=2)
         label = ""
         applyTo = ""
         commaSeperated = ", "
@@ -1303,7 +1314,9 @@ class NewFrameLayout(wx.Frame):
             applyTo = "group"
             isGroup = True
         modal = wx.NO
-        with CmdConfirmDialog(commandType, cmdFormatted, applyTo, label) as dialog:
+        with CmdConfirmDialog(
+            commandType, cmdFormatted, schType, schFormatted, applyTo, label
+        ) as dialog:
             res = dialog.ShowModal()
             if res == wx.ID_OK:
                 modal = wx.YES
@@ -1888,14 +1901,14 @@ class NewFrameLayout(wx.Frame):
 
     def checkForInternetAccess(self):
         while not self.kill:
-            if not checkEsperInternetConnection():
+            if not checkEsperInternetConnection() and self.IsShownOnScreen():
                 wx.MessageBox(
                     "ERROR: An internet connection is required when using the tool!",
                     style=wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
                 )
             time.sleep(15)
 
-    def onChar(self, event):
+    def onSearchChar(self, event):
         event.Skip()
         wx.CallAfter(self.onSearch, wx.EVT_CHAR.typeId)
 
