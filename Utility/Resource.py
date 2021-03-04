@@ -183,7 +183,7 @@ def runOsPOpen(cmd):
 def joinThreadList(threads):
     if threads:
         for thread in threads:
-            if thread:
+            if thread and thread.is_alive():
                 thread.join()
 
 
