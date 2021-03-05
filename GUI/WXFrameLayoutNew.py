@@ -1249,17 +1249,12 @@ class NewFrameLayout(wx.Frame):
                                 schArgs,
                                 schType,
                             ) = cmdDialog.GetValue()
-                            # configParts = config.split("_-_")
-                            # cmd = [
-                            #     json.loads(cmdArgs),
-                            #     json.loads(schArgs),
-                            # ]
-                        except:
+                        except Exception as e:
                             wx.MessageBox(
                                 "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
                                 style=wx.OK | wx.ICON_ERROR,
                             )
-                            # self.onCommand(event, config, level + 1)
+                            ApiToolLog().LogError(e)
                         if cmdArgs != None:
                             createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:

@@ -165,7 +165,7 @@ class CommandDialog(wx.Dialog):
         self.panel_13 = wx.Panel(self.schedule, wx.ID_ANY)
         sizer_10.Add(self.panel_13, 1, wx.EXPAND, 0)
 
-        grid_sizer_6 = wx.FlexGridSizer(5, 1, 0, 0)
+        grid_sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_14 = wx.Panel(self.panel_13, wx.ID_ANY)
         grid_sizer_6.Add(self.panel_14, 1, wx.EXPAND, 0)
@@ -176,7 +176,13 @@ class CommandDialog(wx.Dialog):
         sizer_11.Add(label_9, 0, 0, 0)
 
         self.choice_4 = wx.Choice(
-            self.panel_14, wx.ID_ANY, choices=["Window", "Reocurring", "Immediate"]
+            self.panel_14,
+            wx.ID_ANY,
+            choices=[
+                "Immediate",
+                "Window",
+                "Reocurring",
+            ],
         )
         self.choice_4.SetSelection(0)
         sizer_11.Add(self.choice_4, 0, wx.EXPAND, 0)
@@ -242,53 +248,6 @@ class CommandDialog(wx.Dialog):
         self.timepicker_ctrl_4 = wx.adv.TimePickerCtrl(self.panel_22, wx.ID_ANY)
         sizer_15.Add(self.timepicker_ctrl_4, 0, 0, 0)
 
-        self.panel_17 = wx.Panel(self.panel_13, wx.ID_ANY)
-        grid_sizer_6.Add(self.panel_17, 1, wx.EXPAND, 0)
-
-        grid_sizer_11 = wx.GridSizer(2, 1, 0, 0)
-
-        self.panel_23 = wx.Panel(self.panel_17, wx.ID_ANY)
-        grid_sizer_11.Add(self.panel_23, 1, wx.EXPAND, 0)
-
-        grid_sizer_12 = wx.GridSizer(2, 1, 0, 0)
-
-        label_13 = wx.StaticText(self.panel_23, wx.ID_ANY, "Window Start Datetime")
-        grid_sizer_12.Add(label_13, 0, 0, 0)
-
-        self.panel_24 = wx.Panel(self.panel_23, wx.ID_ANY)
-        grid_sizer_12.Add(self.panel_24, 1, wx.EXPAND, 0)
-
-        sizer_16 = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.datepicker_ctrl_5 = wx.adv.DatePickerCtrl(self.panel_24, wx.ID_ANY)
-        sizer_16.Add(self.datepicker_ctrl_5, 0, 0, 0)
-
-        sizer_16.Add((20, 20), 0, wx.EXPAND, 0)
-
-        self.timepicker_ctrl_6 = wx.adv.TimePickerCtrl(self.panel_24, wx.ID_ANY)
-        sizer_16.Add(self.timepicker_ctrl_6, 0, 0, 0)
-
-        self.panel_25 = wx.Panel(self.panel_17, wx.ID_ANY)
-        grid_sizer_11.Add(self.panel_25, 1, wx.EXPAND, 0)
-
-        grid_sizer_13 = wx.GridSizer(2, 1, 0, 0)
-
-        label_14 = wx.StaticText(self.panel_25, wx.ID_ANY, "Window End Datetime")
-        grid_sizer_13.Add(label_14, 0, 0, 0)
-
-        self.panel_26 = wx.Panel(self.panel_25, wx.ID_ANY)
-        grid_sizer_13.Add(self.panel_26, 1, wx.EXPAND, 0)
-
-        sizer_17 = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.datepicker_ctrl_7 = wx.adv.DatePickerCtrl(self.panel_26, wx.ID_ANY)
-        sizer_17.Add(self.datepicker_ctrl_7, 0, 0, 0)
-
-        sizer_17.Add((20, 20), 0, wx.EXPAND, 0)
-
-        self.timepicker_ctrl_8 = wx.adv.TimePickerCtrl(self.panel_26, wx.ID_ANY)
-        sizer_17.Add(self.timepicker_ctrl_8, 0, 0, 0)
-
         self.panel_12 = wx.Panel(self.panel_13, wx.ID_ANY)
         grid_sizer_6.Add(self.panel_12, 1, wx.EXPAND, 0)
 
@@ -332,16 +291,6 @@ class CommandDialog(wx.Dialog):
         grid_sizer_7.AddGrowableCol(0)
         self.panel_12.SetSizer(grid_sizer_7)
 
-        self.panel_26.SetSizer(sizer_17)
-
-        self.panel_25.SetSizer(grid_sizer_13)
-
-        self.panel_24.SetSizer(sizer_16)
-
-        self.panel_23.SetSizer(grid_sizer_12)
-
-        self.panel_17.SetSizer(grid_sizer_11)
-
         self.panel_22.SetSizer(sizer_15)
 
         self.panel_21.SetSizer(grid_sizer_10)
@@ -356,7 +305,7 @@ class CommandDialog(wx.Dialog):
 
         self.panel_14.SetSizer(sizer_11)
 
-        grid_sizer_6.AddGrowableRow(4)
+        grid_sizer_6.AddGrowableRow(3)
         grid_sizer_6.AddGrowableCol(0)
         self.panel_13.SetSizer(grid_sizer_6)
 
@@ -407,165 +356,24 @@ class CommandDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+        self.datepicker_ctrl_1.Enable(False)
+        self.timepicker_ctrl_2.Enable(False)
+        self.datepicker_ctrl_3.Enable(False)
+        self.timepicker_ctrl_4.Enable(False)
+        self.check_list_box_1.Enable(False)
+        self.button_OK.Enable(False)
+
         self.choice_1.Bind(wx.EVT_CHOICE, self.onCommandType)
         self.choice_3.Bind(wx.EVT_CHOICE, self.onDeviceState)
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
 
-        self.datepicker_ctrl_1.Bind(wx.adv.EVT_DATE_CHANGED, self.onStartDateTime)
-        self.timepicker_ctrl_2.Bind(wx.adv.EVT_TIME_CHANGED, self.onStartDateTime)
-
-        self.datepicker_ctrl_3.Bind(wx.adv.EVT_DATE_CHANGED, self.onEndDateTime)
-        self.timepicker_ctrl_4.Bind(wx.adv.EVT_TIME_CHANGED, self.onEndDateTime)
-
-        self.datepicker_ctrl_5.Bind(wx.adv.EVT_DATE_CHANGED, self.onWinStartDateTime)
-        self.timepicker_ctrl_6.Bind(wx.adv.EVT_TIME_CHANGED, self.onWinStartDateTime)
-
-        self.datepicker_ctrl_7.Bind(wx.adv.EVT_DATE_CHANGED, self.onWinEndDateTime)
-        self.timepicker_ctrl_8.Bind(wx.adv.EVT_TIME_CHANGED, self.onWinEndDateTime)
-
         self.choice_4.Bind(wx.EVT_CHOICE, self.onScheduleType)
 
-        self.startDateTime = None
-        self.endDateTime = None
-        self.winStartDateTime = None
-        self.winEndDateTime = None
-        # self.SetSize((500, 400))
-        # self.SetTitle(title)
-        # emptyJson = "{\n\n}"
-
-        # sizer_1 = wx.BoxSizer(wx.VERTICAL)
-
-        # self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        # sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
-
-        # sizer_2 = wx.BoxSizer(wx.VERTICAL)
-
-        # grid_sizer_1 = wx.GridSizer(2, 1, 0, 0)
-        # sizer_2.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-
-        # self.window_1 = wx.SplitterWindow(self.panel_1, wx.ID_ANY)
-        # self.window_1.SetMinimumPaneSize(20)
-        # grid_sizer_1.Add(self.window_1, 1, wx.ALL | wx.EXPAND, 5)
-
-        # self.window_1_pane_1 = wx.Panel(self.window_1, wx.ID_ANY)
-
-        # sizer_7 = wx.BoxSizer(wx.VERTICAL)
-
-        # label_1 = wx.StaticText(self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:")
-        # label_1.SetFont(
-        #     wx.Font(
-        #         11,
-        #         wx.FONTFAMILY_DEFAULT,
-        #         wx.FONTSTYLE_NORMAL,
-        #         wx.FONTWEIGHT_LIGHT,
-        #         0,
-        #         "",
-        #     )
-        # )
-        # sizer_7.Add(label_1, 0, wx.ALL, 5)
-
-        # self.panel_2 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
-        # sizer_7.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
-
-        # sizer_3 = wx.GridSizer(1, 1, 0, 0)
-
-        # self.text_ctrl_1 = wx.TextCtrl(
-        #     self.panel_2, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
-        # )
-        # self.text_ctrl_1.SetFocus()
-        # sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
-
-        # self.window_1_pane_2 = wx.Panel(self.window_1, wx.ID_ANY)
-
-        # sizer_8 = wx.BoxSizer(wx.VERTICAL)
-
-        # label_3 = wx.StaticText(
-        #     self.window_1_pane_2, wx.ID_ANY, "Enter Schedule Args JSON:"
-        # )
-        # label_3.SetFont(
-        #     wx.Font(
-        #         11,
-        #         wx.FONTFAMILY_DEFAULT,
-        #         wx.FONTSTYLE_NORMAL,
-        #         wx.FONTWEIGHT_LIGHT,
-        #         0,
-        #         "",
-        #     )
-        # )
-        # sizer_8.Add(label_3, 0, wx.ALL, 5)
-
-        # self.panel_4 = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
-        # sizer_8.Add(self.panel_4, 1, wx.ALL | wx.EXPAND, 5)
-
-        # sizer_9 = wx.GridSizer(1, 1, 0, 0)
-
-        # self.text_ctrl_2 = wx.TextCtrl(
-        #     self.panel_4, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
-        # )
-        # sizer_9.Add(self.text_ctrl_2, 0, wx.EXPAND, 0)
-
-        # self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
-        # grid_sizer_1.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 5)
-
-        # sizer_5 = wx.BoxSizer(wx.VERTICAL)
-
-        # label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Command Type")
-        # label_2.SetFont(
-        #     wx.Font(
-        #         11,
-        #         wx.FONTFAMILY_DEFAULT,
-        #         wx.FONTSTYLE_NORMAL,
-        #         wx.FONTWEIGHT_LIGHT,
-        #         0,
-        #         "",
-        #     )
-        # )
-        # sizer_5.Add(label_2, 0, wx.ALL, 5)
-
-        # self.cmdTypeBox = wx.ComboBox(
-        #     self.panel_3,
-        #     wx.ID_ANY,
-        #     choices=Globals.COMMAND_TYPES,
-        #     style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SIMPLE | wx.CB_SORT,
-        # )
-        # sizer_5.Add(self.cmdTypeBox, 0, wx.ALL | wx.SHAPED, 5)
-
-        # static_line_1 = wx.StaticLine(self.panel_1, wx.ID_ANY)
-        # sizer_2.Add(static_line_1, 0, wx.EXPAND, 0)
-
-        # sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        # sizer_2.Add(sizer_4, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
-
-        # self.okBtn = wx.Button(self.panel_1, wx.ID_OK, "OK")
-        # sizer_4.Add(self.okBtn, 0, wx.ALL, 5)
-
-        # sizer_4.Add((20, 20), 0, wx.ALL, 5)
-
-        # self.cancelBtn = wx.Button(self.panel_1, wx.ID_CANCEL, "Cancel")
-        # sizer_4.Add(self.cancelBtn, 0, wx.ALL, 5)
-
-        # self.panel_3.SetSizer(sizer_5)
-
-        # self.panel_4.SetSizer(sizer_9)
-
-        # self.window_1_pane_2.SetSizer(sizer_8)
-
-        # self.panel_2.SetSizer(sizer_3)
-
-        # self.window_1_pane_1.SetSizer(sizer_7)
-
-        # self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
-
-        # self.panel_1.SetSizer(sizer_2)
-
-        # self.okBtn.Bind(wx.EVT_BUTTON, self.OnClose)
-        # self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnClose)
-
-        # self.SetSizer(sizer_1)
-
-        # self.Layout()
-        # self.Centre()
+        self.startDate = None
+        self.endDate = None
+        self.winStartTime = None
+        self.winEndTime = None
 
     def onCommandType(self, event):
         type = event.String
@@ -583,6 +391,7 @@ class CommandDialog(wx.Dialog):
         elif type.lower() == "set_kiosk_app":
             self.text_ctrl_2.Enable(True)
             self.text_ctrl_3.Enable(True)
+        self.button_OK.Enable(True)
 
     def onDeviceState(self, event):
         state = event.String
@@ -594,12 +403,25 @@ class CommandDialog(wx.Dialog):
 
     def onScheduleType(self, event):
         type = event.String
+        self.datepicker_ctrl_1.Enable(False)
+        self.timepicker_ctrl_2.Enable(False)
+        self.datepicker_ctrl_3.Enable(False)
+        self.timepicker_ctrl_4.Enable(False)
+        self.check_list_box_1.Enable(False)
+        if type.lower() == "window":
+            self.datepicker_ctrl_1.Enable(True)
+            self.timepicker_ctrl_2.Enable(True)
+            self.datepicker_ctrl_3.Enable(True)
+            self.timepicker_ctrl_4.Enable(True)
+        elif type.lower() == "reocurring":
+            self.datepicker_ctrl_1.Enable(True)
+            self.datepicker_ctrl_3.Enable(True)
+            self.check_list_box_1.Enable(True)
+        elif type.lower() == "immediate":
+            pass
 
-    def onStartDateTime(self, event):
-        datetime.now(tz.tzutc()).strftime("%Y-%m-%dT%H:%M:%SZ")
-        self.startDateTime = None
-
-        self.startDateTime = datetime(
+    def getStartDateTime(self):
+        fullDateTime = datetime(
             self.datepicker_ctrl_1.GetValue().GetYear(),
             self.datepicker_ctrl_1.GetValue().GetMonth(),
             self.datepicker_ctrl_1.GetValue().GetDay(),
@@ -607,9 +429,16 @@ class CommandDialog(wx.Dialog):
             second=self.timepicker_ctrl_2.GetValue().GetSecond(),
             tzinfo=tz.tzutc(),
         )
+        date = fullDateTime.strftime("%Y-%m-%dT%H:%M:%SZ").split("T")[0]
+        time = self.timepicker_ctrl_2.GetValue().Format(
+            "%H:%M:%S",
+            wx.DateTime.TimeZone(0),
+        )
+        date = date + "T" + time + "Z"
+        return date, time
 
-    def onEndDateTime(self, event):
-        self.endDateTime = datetime(
+    def getEndDateTime(self):
+        fullDateTime = datetime(
             self.datepicker_ctrl_3.GetValue().GetYear(),
             self.datepicker_ctrl_3.GetValue().GetMonth(),
             self.datepicker_ctrl_3.GetValue().GetDay(),
@@ -617,26 +446,13 @@ class CommandDialog(wx.Dialog):
             second=self.timepicker_ctrl_4.GetValue().GetSecond(),
             tzinfo=tz.tzutc(),
         )
-
-    def onWinStartDateTime(self, event):
-        self.winStartDateTime = datetime(
-            self.datepicker_ctrl_7.GetValue().GetYear(),
-            self.datepicker_ctrl_7.GetValue().GetMonth(),
-            self.datepicker_ctrl_7.GetValue().GetDay(),
-            hour=self.timepicker_ctrl_6.GetValue().GetHour(),
-            second=self.timepicker_ctrl_6.GetValue().GetSecond(),
-            tzinfo=tz.tzutc(),
+        date = fullDateTime.strftime("%Y-%m-%dT%H:%M:%SZ").split("T")[0]
+        time = self.timepicker_ctrl_4.GetValue().Format(
+            "%H:%M:%S",
+            wx.DateTime.TimeZone(0),
         )
-
-    def onWinEndDateTime(self, event):
-        self.winEndDateTime = datetime(
-            self.datepicker_ctrl_7.GetValue().GetYear(),
-            self.datepicker_ctrl_7.GetValue().GetMonth(),
-            self.datepicker_ctrl_7.GetValue().GetDay(),
-            hour=self.timepicker_ctrl_8.GetValue().GetHour(),
-            second=self.timepicker_ctrl_8.GetValue().GetSecond(),
-            tzinfo=tz.tzutc(),
-        )
+        date = date + "T" + time + "Z"
+        return date, time
 
     def GetValue(self):
         command_args = V0CommandArgs(
@@ -650,14 +466,24 @@ class CommandDialog(wx.Dialog):
             message=self.text_ctrl_4.GetValue(),
             wifi_access_points=None,
         )
+        dayList = (
+            list(self.check_list_box_1.GetCheckedStrings())
+            if self.check_list_box_1.IsEnabled()
+            else None
+        )
+
+        if self.choice_4.GetStringSelection().lower() != "immediate":
+            self.startDate, self.winStartTime = self.getStartDateTime()
+            self.endDate, self.winEndTime = self.getEndDateTime()
+
         schedule_args = V0CommandScheduleArgs(
             name=self.choice_1.GetStringSelection(),
-            start_datetime=self.startDateTime,
-            end_datetime=self.endDateTime,
+            start_datetime=self.startDate,
+            end_datetime=self.endDate,
             time_type=self.choice_5.GetStringSelection(),
-            window_start_time=self.winStartDateTime,
-            window_end_time=self.winEndDateTime,
-            days=list(self.check_list_box_1.GetCheckedStrings()),
+            window_start_time=self.winStartTime,
+            window_end_time=self.winEndTime,
+            days=dayList,
         )
         return (
             command_args,
