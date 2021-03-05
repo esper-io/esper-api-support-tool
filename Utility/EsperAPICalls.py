@@ -1270,48 +1270,8 @@ def waitForCommandToFinish(
 
 def createCommand(frame, command_args, commandType, schedule, schType):
     """ Attempt to apply a Command given user specifications """
-    # otherConfig = {}
-    # cmdConfig = config[0]
-    # scheduleConfig = config[1]
-    # for key in cmdConfig.keys():
-    #     if key not in Globals.COMMAND_ARGS:
-    #         otherConfig[key] = cmdConfig[key]
-
-    # command_args = V0CommandArgs(
-    #     app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,
-    #     app_version=cmdConfig["app_version"] if "app_version" in cmdConfig else None,
-    #     device_alias_name=cmdConfig["device_alias_name"]
-    #     if "device_alias_name" in cmdConfig
-    #     else None,
-    #     custom_settings_config=otherConfig,
-    #     package_name=cmdConfig["package_name"] if "package_name" in cmdConfig else None,
-    #     policy_url=cmdConfig["policy_url"] if "policy_url" in cmdConfig else None,
-    #     state=cmdConfig["state"] if "state" in cmdConfig else None,
-    #     message=cmdConfig["message"] if "message" in cmdConfig else None,
-    #     wifi_access_points=cmdConfig["wifi_access_points"]
-    #     if "wifi_access_points" in cmdConfig
-    #     else None,
-    # )
     result, isGroup = frame.confirmCommand(command_args, commandType, schedule, schType)
-    # schedule = V0CommandScheduleArgs(
-    #     name=scheduleConfig["name"] if "name" in scheduleConfig else None,
-    #     start_datetime=scheduleConfig["start_datetime"]
-    #     if "start_datetime" in scheduleConfig
-    #     else None,
-    #     end_datetime=scheduleConfig["end_datetime"]
-    #     if "end_datetime" in scheduleConfig
-    #     else None,
-    #     time_type=scheduleConfig["time_type"]
-    #     if "time_type" in scheduleConfig
-    #     else None,
-    #     window_start_time=scheduleConfig["window_start_time"]
-    #     if "window_start_time" in scheduleConfig
-    #     else None,
-    #     window_end_time=scheduleConfig["window_end_time"]
-    #     if "window_end_time" in scheduleConfig
-    #     else None,
-    #     days=scheduleConfig["days"] if "days" in scheduleConfig else None,
-    # )
+
     if schType.lower() == "immediate":
         schType = esperclient.V0CommandScheduleEnum.IMMEDIATE
     elif schType.lower() == "window":
