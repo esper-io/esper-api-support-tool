@@ -38,6 +38,8 @@ from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
 from Common.decorator import api_tool_decorator
 
+from pathlib import Path
+
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
     TakeAction,
@@ -82,6 +84,7 @@ class NewFrameLayout(wx.Frame):
         self.isForceUpdate = False
         self.kill = False
         self.CSVUploaded = False
+        self.defaultDir = ""
 
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
@@ -334,6 +337,7 @@ class NewFrameLayout(wx.Frame):
                 os.getcwd(),
                 "",
                 "*.csv",
+                defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
             result = dlg.ShowModal()
@@ -341,6 +345,7 @@ class NewFrameLayout(wx.Frame):
             dlg.Destroy()
 
             if result == wx.ID_OK:  # Save button was pressed
+                self.defaultDir = Path(dlg.GetPath()).parent
                 gridDeviceData = []
                 for device in self.gridPanel.grid_1_contents:
                     tempDict = {}
@@ -420,11 +425,13 @@ class NewFrameLayout(wx.Frame):
             "Open Device CSV File",
             wildcard="CSV files (*.csv)|*.csv",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+            defaultDir=str(self.defaultDir),
         ) as fileDialog:
             result = fileDialog.ShowModal()
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
                 Globals.csv_auth_path = fileDialog.GetPath()
+                self.defaultDir = Path(fileDialog.GetPath()).parent
                 self.Logging(
                     "--->Attempting to load device data from %s" % Globals.csv_auth_path
                 )
@@ -467,10 +474,6 @@ class NewFrameLayout(wx.Frame):
         )
         deviceThread.start()
         netThread.start()
-        indx = self.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GRID_ACTIONS.keys())[1]
-        )
-        self.sidePanel.actionChoice.SetSelection(indx)
         wxThread.GUIThread(
             self,
             self.waitForThreadsThenSetCursorDefault,
@@ -794,14 +797,10 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
-            # self.sidePanel.actionChoice.SetSelection(0)
-            # self.sidePanel.gridActions.SetSelection(1)
-            num = 0
-            for item in self.sidePanel.actionChoice.GetItems():
-                if "tags" in item and "alias" in item:
-                    self.sidePanel.actionChoice.SetSelection(num)
-                    break
-                num += 1
+            indx = self.sidePanel.actionChoice.GetItems().index(
+                list(Globals.GRID_ACTIONS.keys())[1]
+            )
+            self.sidePanel.actionChoice.SetSelection(indx)
         if source == 3:
             self.gridPanel.autoSizeGridsColumns()
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
