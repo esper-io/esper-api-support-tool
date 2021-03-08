@@ -79,6 +79,7 @@ class GridPanel(wx.Panel):
         self.grid_2.UseNativeColHeader()
         self.grid_1.DisableDragRowSize()
         self.grid_2.DisableDragRowSize()
+        self.enableGridProperties()
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
 
@@ -426,7 +427,6 @@ class GridPanel(wx.Panel):
     def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
         """ Add device info to Device Grid """
         Globals.grid1_lock.acquire()
-        self.grid_1.Enable(False)
         num = 0
         device = {}
         if isUpdate:
@@ -537,7 +537,6 @@ class GridPanel(wx.Panel):
             )
             if device not in self.grid_1_contents and not deviceListing:
                 self.grid_1_contents.append(device)
-        self.grid_1.Enable(True)
         Globals.grid1_lock.release()
 
     def setStatusCellColor(self, value, rowNum, colNum):
@@ -767,6 +766,7 @@ class GridPanel(wx.Panel):
     def updateTagCell(self, name, tags=None):
         """ Update the Tag Column in the Device Grid """
         Globals.grid1_lock.acquire()
+        self.disableGridProperties()
         name = tags = None
         if hasattr(name, "GetValue"):
             tple = name.GetValue()
@@ -782,4 +782,31 @@ class GridPanel(wx.Panel):
                             self.grid_1.SetCellValue(rowNum, indx, str(tags))
                         else:
                             self.grid_1.SetCellValue(rowNum, indx, "")
+        self.enableGridProperties()
         Globals.grid1_lock.release()
+
+    def disableGridProperties(
+        self, disableGrid=True, disableColSize=True, disableColMove=True
+    ):
+        if disableGrid:
+            self.grid_1.Enable(False)
+            self.grid_2.Enable(False)
+        if disableColSize:
+            self.grid_1.DisableDragColSize()
+            self.grid_2.DisableDragColSize()
+        if disableColMove:
+            self.grid_1.DisableDragColMove()
+            self.grid_2.DisableDragColMove()
+
+    def enableGridProperties(
+        self, enableGrid=True, enableColSize=True, enableColMove=True
+    ):
+        if enableGrid:
+            self.grid_1.Enable(True)
+            self.grid_2.Enable(True)
+        if enableColSize:
+            self.grid_1.EnableDragColSize()
+            self.grid_2.EnableDragColSize()
+        if enableColMove:
+            self.grid_1.EnableDragColMove()
+            self.grid_2.EnableDragColMove()

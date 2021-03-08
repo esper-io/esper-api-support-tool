@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.EsperAPICalls import processCollectionDevices
+from Utility.EastUtility import processCollectionDevices
 from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import resourcePath
@@ -99,7 +99,9 @@ class ToolMenuBar(wx.MenuBar):
         self.refreshGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids' Data")
         )
-
+        self.colSize = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
+        )
         self.clearGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
@@ -154,7 +156,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
-
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
+        )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.onDeviceColumn, self.deviceColumns
         )
@@ -249,14 +253,16 @@ class ToolMenuBar(wx.MenuBar):
         self.EnableTop(self.ConfigMenuPosition, True)
 
     def onEqlQuery(self, event):
-        self.setGaugeValue(0)
-        self.onClearGrids(None)
-        with LargeTextEntryDialog(self, "Enter EQL Query:", "EQL Query") as textDialog:
+        self.parentFrame.setGaugeValue(0)
+        self.parentFrame.onClearGrids(None)
+        with LargeTextEntryDialog(
+            self.parentFrame, "Enter EQL Query:", "EQL Query"
+        ) as textDialog:
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
                 if eql:
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.gauge.Pulse()
+                    self.parentFrame.gauge.Pulse()
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,
@@ -267,14 +273,14 @@ class ToolMenuBar(wx.MenuBar):
                     )
 
     def onCollection(self, event):
-        self.setGaugeValue(0)
-        self.onClearGrids(None)
-        with CollectionsDialog(self) as dlg:
+        self.parentFrame.setGaugeValue(0)
+        self.parentFrame.onClearGrids(None)
+        with CollectionsDialog(self.parentFrame) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.gauge.Pulse()
+                    self.parentFrame.gauge.Pulse()
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,

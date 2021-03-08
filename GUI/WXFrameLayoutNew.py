@@ -42,8 +42,6 @@ from pathlib import Path
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
-    TakeAction,
-    iterateThroughGridRows,
     createCommand,
     setKiosk,
     setMulti,
@@ -54,6 +52,10 @@ from Utility.EsperAPICalls import (
     validateConfiguration,
     getTokenInfo,
     clearAppData,
+)
+from Utility.EastUtility import (
+    TakeAction,
+    iterateThroughGridRows,
 )
 from Utility.Resource import (
     checkForInternetAccess,
@@ -802,6 +804,7 @@ class NewFrameLayout(wx.Frame):
             )
             self.sidePanel.actionChoice.SetSelection(indx)
         if source == 3:
+            self.gridPanel.enableGridProperties()
             self.gridPanel.autoSizeGridsColumns()
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
             postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
@@ -1294,6 +1297,7 @@ class NewFrameLayout(wx.Frame):
                 device = entry[0]
                 deviceInfo = entry[1]
                 if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+                    self.gridPanel.disableGridProperties()
                     self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                     self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                 elif action == GeneralActions.SET_KIOSK.value:

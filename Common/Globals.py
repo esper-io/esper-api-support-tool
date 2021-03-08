@@ -93,7 +93,6 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
-    "Agent Version": "esper_client",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
