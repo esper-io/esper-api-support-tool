@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 import threading
 import wx
 import time
@@ -19,7 +18,7 @@ import Utility.EsperTemplateUtil as templateUtil
 
 from functools import partial
 
-from Common.enum import Color, whom
+from Common.enum import Color, GeneralActions, GridActions
 
 from datetime import datetime
 
@@ -34,7 +33,6 @@ from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
-from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 
 from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
@@ -45,7 +43,6 @@ from Utility.EsperAPICalls import (
     TakeAction,
     iterateThroughGridRows,
     createCommand,
-    processCollectionDevices,
     setKiosk,
     setMulti,
     getdeviceapps,
@@ -56,14 +53,14 @@ from Utility.EsperAPICalls import (
     getTokenInfo,
     clearAppData,
 )
-from Utility.CollectionsApi import preformEqlSearch
 from Utility.Resource import (
+    checkForInternetAccess,
     limitActiveThreads,
     postEventToFrame,
     resourcePath,
     createNewFile,
-    checkEsperInternetConnection,
     joinThreadList,
+    displayMessageBox,
 )
 
 
@@ -125,45 +122,13 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onRun, self.sidePanel.runBtn)
 
         # Menu Bar
-        self.menubar = ToolMenuBar()
+        self.menubar = ToolMenuBar(self)
         self.SetMenuBar(self.menubar)
-
-        self.Bind(wx.EVT_MENU, self.showConsole, self.menubar.consoleView)
-        self.Bind(wx.EVT_MENU, self.updateGrids, self.menubar.refreshGrids)
-        self.Bind(wx.EVT_MENU, self.onClearGrids, self.menubar.clearGrids)
-        self.Bind(wx.EVT_MENU, self.AddEndpoint, self.menubar.defaultConfigVal)
-        self.Bind(wx.EVT_MENU, self.AddEndpoint, self.menubar.fileOpenAuth)
-        self.Bind(wx.EVT_MENU, self.onUploadCSV, self.menubar.fileOpenConfig)
-        self.Bind(wx.EVT_MENU, self.OnQuit, self.menubar.fileItem)
-        self.Bind(wx.EVT_MENU, self.onSaveBoth, self.menubar.fileSave)
-        self.Bind(wx.EVT_MENU, self.onRun, self.menubar.run)
-        self.Bind(wx.EVT_MENU, self.onCommand, self.menubar.command)
-        self.Bind(wx.EVT_MENU, self.onClone, self.menubar.clone)
-        self.Bind(wx.EVT_MENU, self.onPref, self.menubar.pref)
-        self.Bind(wx.EVT_MENU, self.onEqlQuery, self.menubar.eqlQuery)
-        self.Bind(wx.EVT_MENU, self.onCollection, self.menubar.collection)
-        self.Bind(
-            wx.EVT_MENU, self.gridPanel.onDeviceColumn, self.menubar.deviceColumns
-        )
-        self.Bind(
-            wx.EVT_MENU, self.gridPanel.onNetworkColumn, self.menubar.networkColumns
-        )
         # Menu Bar end
 
         # Tool Bar
         self.frame_toolbar = ToolsToolBar(self, -1)  # wx.ToolBar(self, -1)
         self.SetToolBar(self.frame_toolbar)
-
-        self.Bind(wx.EVT_TOOL, self.OnQuit, self.frame_toolbar.qtool)
-        self.Bind(wx.EVT_TOOL, self.AddEndpoint, self.frame_toolbar.atool)
-        self.Bind(wx.EVT_TOOL, self.onUploadCSV, self.frame_toolbar.otool)
-        self.Bind(wx.EVT_TOOL, self.onSaveBoth, self.frame_toolbar.stool)
-        self.Bind(wx.EVT_TOOL, self.onRun, self.frame_toolbar.rtool)
-        self.Bind(wx.EVT_TOOL, self.updateGrids, self.frame_toolbar.rftool)
-        self.Bind(wx.EVT_TOOL, self.onCommand, self.frame_toolbar.cmdtool)
-        self.frame_toolbar.search.Bind(wx.EVT_SEARCH, self.onSearch)
-        self.frame_toolbar.search.Bind(wx.EVT_CHAR, self.onSearchChar)
-        self.frame_toolbar.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         # Tool Bar end
 
         # Status Bar
@@ -214,20 +179,21 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
-        self.Bind(wxThread.EVT_MESSAGE_BOX, self.displayMessageBox)
+        self.Bind(wxThread.EVT_MESSAGE_BOX, displayMessageBox)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
         self.loadPref()
         self.__set_properties()
         self.Layout()
-        # self.Centre()
+        self.Centre()
         self.Raise()
         self.Iconize(False)
         self.SetFocus()
 
+        self.menubar.checkCollectionEnabled()
         internetCheck = wxThread.GUIThread(
-            self, self.checkForInternetAccess, None, name="InternetCheck"
+            self, checkForInternetAccess, (self), name="InternetCheck"
         )
         internetCheck.start()
 
@@ -236,45 +202,10 @@ class NewFrameLayout(wx.Frame):
         self.SetBackgroundColour(Color.grey.value)
         self.SetThemeEnabled(False)
 
-        self.sidePanel.actionChoice.SetSelection(1)
-        self.sidePanel.gridActions.SetSelection(0)
-
-        self.sidePanel.actionChoice.Enable(False)
-        self.sidePanel.deviceChoice.Enable(False)
-        self.sidePanel.groupChoice.Enable(False)
-        self.sidePanel.appChoice.Enable(False)
-        self.sidePanel.runBtn.Enable(False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, False)
-        self.menubar.run.Enable(False)
-        self.menubar.clone.Enable(False)
-        self.menubar.command.Enable(False)
-        self.menubar.clearConsole.Enable(False)
-        self.menubar.collection.Enable(False)
-        self.menubar.eqlQuery.Enable(False)
-
         if self.kill:
             return
 
         self.frame_toolbar.Realize()
-        # self.Maximize(True)
-
-    def setColorTheme(self, parent=None):
-        """ Set theme color to bypass System Theme (Mac) """
-        if not parent:
-            parent = self
-        for child in parent.GetChildren():
-            if (
-                type(child) != wx.Panel
-                and type(child) != wx.Button
-                and type(child) != wx.ComboBox
-            ):
-                if type(child) != wx.StaticText:
-                    child.SetBackgroundColour(Color.white.value)
-                child.SetForegroundColour(Color.black.value)
-            if child.GetChildren():
-                self.setColorTheme(child)
 
     def onLog(self, event):
         """ Event trying to log data """
@@ -352,19 +283,22 @@ class NewFrameLayout(wx.Frame):
 
                             self.readAuthCSV()
                             self.PopulateConfig(auth=self.authPath)
-                            wx.MessageBox(
-                                "Endpoint has been added",
-                                style=wx.ICON_INFORMATION,
+                            displayMessageBox(
+                                ("Endpoint has been added", wx.ICON_INFORMATION)
                             )
                         else:
-                            wx.MessageBox(
-                                "ERROR: Invalid input in Configuration. Check inputs!",
-                                style=wx.ICON_ERROR,
+                            displayMessageBox(
+                                (
+                                    "ERROR: Invalid input in Configuration. Check inputs!",
+                                    wx.ICON_ERROR,
+                                )
                             )
                     except:
-                        wx.MessageBox(
-                            "ERROR: An error occured when attempting to add the endpoint. Check inputs values and your internet connection.",
-                            style=wx.ICON_ERROR,
+                        displayMessageBox(
+                            (
+                                "ERROR: An error occured when attempting to add the endpoint. Check inputs values and your internet connection.",
+                                wx.ICON_ERROR,
+                            )
                         )
                 else:
                     self.readAuthCSV()
@@ -472,7 +406,9 @@ class NewFrameLayout(wx.Frame):
     def onUploadCSV(self, event):
         """ Upload device CSV to the device Grid """
         if not Globals.enterprise_id:
-            self.loadConfigPrompt()
+            displayMessageBox(
+                ("Please load a configuration first!", wx.OK | wx.ICON_ERROR)
+            )
             return
 
         self.setCursorBusy()
@@ -531,6 +467,10 @@ class NewFrameLayout(wx.Frame):
         )
         deviceThread.start()
         netThread.start()
+        indx = self.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GRID_ACTIONS.keys())[1]
+        )
+        self.sidePanel.actionChoice.SetSelection(indx)
         wxThread.GUIThread(
             self,
             self.waitForThreadsThenSetCursorDefault,
@@ -721,8 +661,6 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.appChoice.Clear()
         self.setCursorBusy()
 
-        import threading
-
         for thread in threading.enumerate():
             if thread.name == "fetchUpdateDataActionThread":
                 if hasattr(thread, "stop"):
@@ -750,10 +688,6 @@ class NewFrameLayout(wx.Frame):
 
             if not filledIn:
                 raise Exception("Failed to load configuration")
-
-            # self.sidePanel.groupChoice.Enable(True)
-            # self.sidePanel.actionChoice.Enable(True)
-            # self.sidePanel.removeEndpointBtn.Enable(True)
         except Exception as e:
             self.Logging(
                 "--->****An Error has occured while loading the configuration, please try again."
@@ -806,7 +740,7 @@ class NewFrameLayout(wx.Frame):
                 ).start()
                 return True
         else:
-            wx.MessageBox("Invalid Configuration", style=wx.ICON_ERROR)
+            displayMessageBox(("Invalid Configuration", wx.ICON_ERROR))
             return False
 
     def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None):
@@ -860,21 +794,19 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
             self.gridPanel.autoSizeGridsColumns()
-            self.sidePanel.actionChoice.SetSelection(0)
-            self.sidePanel.gridActions.SetSelection(1)
+            # self.sidePanel.actionChoice.SetSelection(0)
+            # self.sidePanel.gridActions.SetSelection(1)
+            num = 0
+            for item in self.sidePanel.actionChoice.GetItems():
+                if "tags" in item and "alias" in item:
+                    self.sidePanel.actionChoice.SetSelection(num)
+                    break
+                num += 1
         if source == 3:
             self.gridPanel.autoSizeGridsColumns()
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
             postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
-        self.sidePanel.runBtn.Enable(True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
-        self.menubar.run.Enable(True)
-        self.menubar.clone.Enable(True)
-        self.menubar.command.Enable(True)
-        self.menubar.collection.Enable(True)
-        self.menubar.eqlQuery.Enable(True)
+        self.toggleEnabledState(True)
         self.setCursorDefault()
         self.setGaugeValue(100)
 
@@ -1063,9 +995,10 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
 
-        gridSelection = self.sidePanel.gridActions.GetSelection()
+        # gridSelection = self.sidePanel.gridActions.GetSelection()
         appSelection = self.sidePanel.appChoice.GetSelection()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
+        actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
         appLabel = (
             self.sidePanel.appChoice.Items[appSelection]
@@ -1073,12 +1006,12 @@ class NewFrameLayout(wx.Frame):
             and self.sidePanel.appChoice.Items[appSelection]
             else ""
         )
-        gridLabel = (
-            self.sidePanel.gridActions.Items[gridSelection]
-            if len(self.sidePanel.gridActions.Items) > 0
-            and self.sidePanel.gridActions.Items[gridSelection]
-            else ""
-        )
+        # gridLabel = (
+        #     self.sidePanel.gridActions.Items[gridSelection]
+        #     if len(self.sidePanel.gridActions.Items) > 0
+        #     and self.sidePanel.gridActions.Items[gridSelection]
+        #     else ""
+        # )
         actionLabel = (
             self.sidePanel.actionChoice.Items[actionSelection]
             if len(self.sidePanel.actionChoice.Items) > 0
@@ -1089,18 +1022,18 @@ class NewFrameLayout(wx.Frame):
         if (
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
-            and gridSelection <= 0
+            # and gridSelection <= 0
             and actionSelection > 0
         ):
             # run action on group
             if (
-                actionSelection == Globals.SET_KIOSK
-                or actionSelection == Globals.CLEAR_APP_DATA
+                actionClientData == GeneralActions.SET_KIOSK
+                or actionClientData == GeneralActions.CLEAR_APP_DATA
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
-                wx.MessageBox(
-                    "Please select a valid application", style=wx.OK | wx.ICON_ERROR
+                displayMessageBox(
+                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
                 )
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
@@ -1123,23 +1056,23 @@ class NewFrameLayout(wx.Frame):
             TakeAction(
                 self,
                 self.sidePanel.selectedGroupsList,
-                actionSelection,
+                actionClientData,
                 groupLabel,
             )
         elif (
             self.sidePanel.selectedDevicesList
-            and gridSelection <= 0
+            # and gridSelection <= 0
             and actionSelection > 0
         ):
             # run action on device
             if (
-                actionSelection == Globals.SET_KIOSK
-                or actionSelection == Globals.CLEAR_APP_DATA
+                actionClientData == GeneralActions.SET_KIOSK
+                or actionClientData == GeneralActions.CLEAR_APP_DATA
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
-                wx.MessageBox(
-                    "Please select a valid application", style=wx.OK | wx.ICON_ERROR
+                displayMessageBox(
+                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
                 )
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
@@ -1160,11 +1093,11 @@ class NewFrameLayout(wx.Frame):
             TakeAction(
                 self,
                 self.sidePanel.selectedDevicesList,
-                actionSelection,
+                actionClientData,
                 None,
                 isDevice=True,
             )
-        elif gridSelection > 0:
+        elif actionClientData > GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
                 runAction = True
@@ -1182,7 +1115,8 @@ class NewFrameLayout(wx.Frame):
                     Globals.SHOW_GRID_DIALOG = False
                 if runAction:
                     self.Logging(
-                        '---> Attempting to run grid action, "%s".' % gridLabel
+                        '---> Attempting to run grid action, "%s".'
+                        % GridActions.MODIFY_ALIAS_AND_TAGS.name
                     )
                     self.gridPanel.applyTextColorToDevice(
                         None,
@@ -1191,25 +1125,25 @@ class NewFrameLayout(wx.Frame):
                         applyAll=True,
                     )
                     self.frame_toolbar.search.SetValue("")
-                    iterateThroughGridRows(self, gridSelection)
+                    iterateThroughGridRows(self, actionClientData)
             else:
-                wx.MessageBox(
-                    "Make sure the grid has data to perform an action on",
-                    style=wx.OK | wx.ICON_ERROR,
+                displayMessageBox(
+                    (
+                        "Make sure the grid has data to perform an action on",
+                        wx.OK | wx.ICON_ERROR,
+                    )
                 )
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
         else:
-            wx.MessageBox(
-                "Please select an action to perform on a group or device!",
-                style=wx.OK | wx.ICON_ERROR,
+            displayMessageBox(
+                (
+                    "Please select an action to perform on a group or device!",
+                    wx.OK | wx.ICON_ERROR,
+                )
             )
             self.setCursorDefault()
             self.toggleEnabledState(True)
-
-    def loadConfigPrompt(self):
-        """ Display message to user to load config """
-        wx.MessageBox("Please load a configuration first!", style=wx.OK | wx.ICON_ERROR)
 
     def showConsole(self, event):
         """ Toggle Console Display """
@@ -1242,7 +1176,6 @@ class NewFrameLayout(wx.Frame):
                         schArgs = None
                         schType = None
                         try:
-                            # config, commandType = cmdDialog.GetValue()
                             (
                                 cmdArgs,
                                 commandType,
@@ -1250,17 +1183,20 @@ class NewFrameLayout(wx.Frame):
                                 schType,
                             ) = cmdDialog.GetValue()
                         except Exception as e:
-                            wx.MessageBox(
-                                "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
-                                style=wx.OK | wx.ICON_ERROR,
+                            displayMessageBox(
+                                (
+                                    "An error occurred while process the inputted JSON object, please make sure it is formatted correctly",
+                                    wx.OK | wx.ICON_ERROR,
+                                )
                             )
                             ApiToolLog().LogError(e)
                         if cmdArgs != None:
                             createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
-                wx.MessageBox(
-                    "Please select an group and or device", style=wx.OK | wx.ICON_ERROR
+                displayMessageBox(
+                    ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
                 )
+
             self.setCursorDefault()
 
     def onCommandDone(self, event):
@@ -1358,10 +1294,10 @@ class NewFrameLayout(wx.Frame):
                         break
                 device = entry[0]
                 deviceInfo = entry[1]
-                if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                     self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                     self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                elif action == Globals.SET_KIOSK:
+                elif action == GeneralActions.SET_KIOSK.value:
                     thread = wxThread.GUIThread(
                         self,
                         setKiosk,
@@ -1369,7 +1305,7 @@ class NewFrameLayout(wx.Frame):
                     )
                     thread.start()
                     threads.append(thread)
-                elif action == Globals.SET_MULTI:
+                elif action == GeneralActions.SET_MULTI.value:
                     thread = wxThread.GUIThread(
                         self,
                         setMulti,
@@ -1377,7 +1313,7 @@ class NewFrameLayout(wx.Frame):
                     )
                     thread.start()
                     threads.append(thread)
-                elif action == Globals.CLEAR_APP_DATA:
+                elif action == GeneralActions.CLEAR_APP_DATA.value:
                     clearAppData(self, device)
                 limitActiveThreads(threads)
 
@@ -1392,7 +1328,10 @@ class NewFrameLayout(wx.Frame):
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
         action = event.GetValue()
-        if action == Globals.SET_KIOSK or action == Globals.SET_MULTI:
+        if (
+            action == GeneralActions.SET_KIOSK.value
+            or action == GeneralActions.SET_MULTI.value
+        ):
             self.Logging("---> Please refer to the Esper Console for detailed results.")
             if not self.checkConsole:
                 try:
@@ -1402,10 +1341,12 @@ class NewFrameLayout(wx.Frame):
                 except Exception as e:
                     print(e)
                     ApiToolLog().LogError(e)
-        if action == Globals.CLEAR_APP_DATA:
-            wx.MessageBox(
-                "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
-                style=wx.ICON_INFORMATION,
+        if action == GeneralActions.CLEAR_APP_DATA.value:
+            displayMessageBox(
+                (
+                    "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
+                    wx.ICON_INFORMATION,
+                )
             )
 
     @api_tool_decorator
@@ -1670,7 +1611,12 @@ class NewFrameLayout(wx.Frame):
                         self.PopulateConfig(auth=file)
                     else:
                         if not Globals.enterprise_id:
-                            self.loadConfigPrompt()
+                            displayMessageBox(
+                                (
+                                    "Please load a configuration first!",
+                                    wx.OK | wx.ICON_ERROR,
+                                )
+                            )
                             return
                         self.processDeviceCSVUpload(data)
                         self.gridPanel.grid_1.AutoSizeColumns()
@@ -1880,32 +1826,21 @@ class NewFrameLayout(wx.Frame):
         if "errors" not in res:
             action = "created" if not update else "updated."
             self.Logging("Template sucessfully %s." % action)
-            wx.MessageBox(
-                "Template sucessfully %s." % action, style=wx.OK | wx.ICON_INFORMATION
+            displayMessageBox(
+                ("Template sucessfully %s." % action, wx.OK | wx.ICON_INFORMATION)
             )
         else:
             action = "recreate" if not update else "update"
             self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
-            wx.MessageBox(
-                "ERROR: Failed to %s Template. Please try again." % action,
-                style=wx.OK | wx.ICON_ERROR,
+            displayMessageBox(
+                (
+                    "ERROR: Failed to %s Template. Please try again." % action,
+                    wx.OK | wx.ICON_ERROR,
+                )
             )
         self.isRunning = False
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
         wx.PostEvent(self, evt)
-
-    def checkForInternetAccess(self):
-        while not self.kill:
-            if not checkEsperInternetConnection() and self.IsShownOnScreen():
-                wx.MessageBox(
-                    "ERROR: An internet connection is required when using the tool!",
-                    style=wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
-                )
-            time.sleep(15)
-
-    def onSearchChar(self, event):
-        event.Skip()
-        wx.CallAfter(self.onSearch, wx.EVT_CHAR.typeId)
 
     @api_tool_decorator
     def onSearch(self, event=None):
@@ -1942,58 +1877,6 @@ class NewFrameLayout(wx.Frame):
         else:
             self.frame_toolbar.search.SetValue("")
 
-    def onEqlQuery(self, event):
-        self.setGaugeValue(0)
-        self.onClearGrids(None)
-        with LargeTextEntryDialog(
-            self, "Enter EQL Device Query:", "EQL Device Query"
-        ) as textDialog:
-            if textDialog.ShowModal() == wx.ID_OK:
-                eql = textDialog.GetValue()
-                if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.gauge.Pulse()
-                    wxThread.doAPICallInThread(
-                        self,
-                        processCollectionDevices,
-                        args=(deviceListResp),
-                        eventType=None,
-                        waitForJoin=False,
-                        name="eqlIterateThroughDeviceList",
-                    )
-
-    def onCollection(self, event):
-        self.setGaugeValue(0)
-        self.onClearGrids(None)
-        with CollectionsDialog(self) as dlg:
-            if dlg.ShowModal() == wx.ID_EXECUTE:
-                eql = dlg.getSelectionEql()
-                if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.gauge.Pulse()
-                    wxThread.doAPICallInThread(
-                        self,
-                        processCollectionDevices,
-                        args=(deviceListResp),
-                        eventType=None,
-                        waitForJoin=False,
-                        name="collectionIterateThroughDeviceList",
-                    )
-
-    def displayMessageBox(self, event):
-        value = event.GetValue()
-        msg = ""
-        sty = wx.ICON_INFORMATION
-        if type(value) == tuple:
-            msg = value[0]
-            if len(value) > 1:
-                sty = value[1]
-        elif isinstance(value, str):
-            msg = value
-
-        if msg:
-            wx.MessageBox(msg, style=sty)
-
     def toggleEnabledState(self, state):
         self.sidePanel.runBtn.Enable(state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
@@ -2003,3 +1886,5 @@ class NewFrameLayout(wx.Frame):
         self.menubar.collection.Enable(state)
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
+        self.menubar.clone.Enable(state)
+        self.menubar.command.Enable(state)

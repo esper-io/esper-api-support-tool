@@ -4,7 +4,7 @@ import wx
 
 from enum import Enum
 
-"""
+
 class GeneralActions(Enum):
     SHOW_ALL_AND_GENERATE_REPORT = 1
     SET_KIOSK = 2
@@ -13,8 +13,7 @@ class GeneralActions(Enum):
 
 
 class GridActions(Enum):
-    MODIFY_ALIAS_AND_TAGS = 1
-"""
+    MODIFY_ALIAS_AND_TAGS = 30
 
 
 class whom(Enum):

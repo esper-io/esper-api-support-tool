@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.enum import GeneralActions
 from logging import exception
 import requests
 import esperclient
@@ -525,7 +526,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
         postEventToFrame(
             wxThread.myEVT_FETCH,
             (
-                Globals.SHOW_ALL_AND_GENERATE_REPORT,
+                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
                 Globals.enterprise_id,
                 deviceList,
                 True,
@@ -560,7 +561,7 @@ def processCollectionDevices(collectionList):
             waitTillThreadsFinish,
             args=(
                 tuple(threads),
-                Globals.SHOW_ALL_AND_GENERATE_REPORT,
+                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
                 Globals.enterprise_id,
                 3,
             ),
@@ -777,10 +778,11 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
 def logActionExecution(frame, action, selection=None):
     actionName = ""
-    if frame.sidePanel.actionChoice.GetValue() in Globals.GRID_ACTIONS:
-        actionName = '"%s"' % str(Globals.GRID_ACTIONS[action])
-    elif frame.sidePanel.actionChoice.GetValue() in Globals.GENERAL_ACTIONS:
-        actionName = '"%s"' % str(Globals.GENERAL_ACTIONS[action])
+    if (
+        frame.sidePanel.actionChoice.GetValue() in Globals.GRID_ACTIONS
+        or frame.sidePanel.actionChoice.GetValue() in Globals.GENERAL_ACTIONS
+    ):
+        actionName = '"%s"' % frame.sidePanel.actionChoice.GetValue()
     if selection:
         frame.Logging("---> Starting Execution " + actionName + " on " + str(selection))
     else:
@@ -798,7 +800,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
 
     # api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     logActionExecution(frame, action, group)
-    if (action == Globals.SHOW_ALL_AND_GENERATE_REPORT) and not isUpdate:
+    if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value) and not isUpdate:
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
         frame.CSVUploaded = False
@@ -858,14 +860,14 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             for entry in deviceList.values():
                 device = entry[0]
                 deviceInfo = entry[1]
-                if action == Globals.SHOW_ALL_AND_GENERATE_REPORT:
+                if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                     frame.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                     frame.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                elif action == Globals.SET_KIOSK:
+                elif action == GeneralActions.SET_KIOSK.value:
                     setKiosk(frame, device, deviceInfo)
-                elif action == Globals.SET_MULTI:
+                elif action == GeneralActions.SET_MULTI.value:
                     setMulti(frame, device, deviceInfo)
-                elif action == Globals.CLEAR_APP_DATA:
+                elif action == GeneralActions.CLEAR_APP_DATA.value:
                     clearAppData(frame, device)
                 # elif action == Globals.POWER_OFF:
                 #    powerOffDevice(frame, device, deviceInfo)

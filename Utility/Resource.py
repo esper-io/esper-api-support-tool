@@ -78,6 +78,18 @@ def checkEsperInternetConnection():
     return False
 
 
+def checkForInternetAccess(frame):
+    while not frame.kill:
+        if not checkEsperInternetConnection() and frame.IsShownOnScreen():
+            displayMessageBox(
+                (
+                    "ERROR: An internet connection is required when using the tool!",
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
+                )
+            )
+        time.sleep(15)
+
+
 def checkForUpdate():
     try:
         response = requests.get(Globals.UPDATE_LINK)
@@ -220,3 +232,22 @@ def ipv6Tomac(ipv6):
     del macParts[3]
 
     return ":".join(macParts)
+
+
+def displayMessageBox(event):
+    value = None
+    if hasattr(event, "GetValue"):
+        value = event.GetValue()
+    elif type(event) == tuple:
+        value = event
+    msg = ""
+    sty = wx.ICON_INFORMATION
+    if type(value) == tuple:
+        msg = value[0]
+        if len(value) > 1:
+            sty = value[1]
+    elif isinstance(value, str):
+        msg = value
+
+    if msg:
+        wx.MessageBox(msg, style=sty)

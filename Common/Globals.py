@@ -3,6 +3,8 @@
 import esperclient
 import threading
 
+from Common.enum import GridActions, GeneralActions
+
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
@@ -29,25 +31,18 @@ your enterprise's Android-based Dedicated Devices providing features that are no
 available on the Esper Console Dashboard."""
 
 """ Actions """
-GENERAL_ACTIONS = [
-    "",
-    "Show - Device Info & Network And Secruity Report",
-    "Action -> Set Kiosk Mode",
-    "Action -> Set Multi-App Mode",
-    "Action -> Clear App Data"
-    # "Action -> Power off Device",
-]
-SHOW_ALL_AND_GENERATE_REPORT = 1
-SET_KIOSK = 2
-SET_MULTI = 3
-CLEAR_APP_DATA = 4
-# POWER_OFF = 4
+GENERAL_ACTIONS = {
+    "": -1,
+    "Show - Device Info & Network And Secruity Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
+    "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
+    "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
+}
 
-GRID_ACTIONS = [
-    "",
-    "Action -> Modify Device Alias & Tags",
-]
-MODIFY_ALIAS_AND_TAGS = 1
+GRID_ACTIONS = {
+    "": "-1",
+    "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
+}
 
 LOGLIST = []
 
@@ -98,6 +93,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
+    "Agent Version": "esper_client",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",

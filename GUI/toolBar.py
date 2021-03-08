@@ -45,9 +45,32 @@ class ToolsToolBar(wx.ToolBar):
 
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
+        self.AddControl(self.search)
+
+        self.__set_properties()
+
+    def __set_properties(self):
         size = self.search.GetSize()
         size.SetWidth(size.GetWidth() * 2)
         self.search.SetSize(size)
         self.search.SetDescriptiveText("Search Grids")
-        self.AddControl(self.search)
         self.search.ShowCancelButton(True)
+
+        self.EnableTool(self.rtool.Id, False)
+        self.EnableTool(self.cmdtool.Id, False)
+        self.EnableTool(self.rftool.Id, False)
+
+        self.Bind(wx.EVT_TOOL, self.Parent.OnQuit, self.qtool)
+        self.Bind(wx.EVT_TOOL, self.Parent.AddEndpoint, self.atool)
+        self.Bind(wx.EVT_TOOL, self.Parent.onUploadCSV, self.otool)
+        self.Bind(wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
+        self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
+        self.Bind(wx.EVT_TOOL, self.Parent.updateGrids, self.rftool)
+        self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
+        self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
+        self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
+        self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
+
+    def onSearchChar(self, event):
+        event.Skip()
+        wx.CallAfter(self.Parent.onSearch, wx.EVT_CHAR.typeId)

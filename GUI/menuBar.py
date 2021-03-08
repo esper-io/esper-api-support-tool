@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from Utility.EsperAPICalls import processCollectionDevices
+from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import resourcePath
 from Common.decorator import api_tool_decorator
 import Utility.wxThread as wxThread
@@ -19,10 +23,11 @@ from Utility.Resource import (
 
 
 class ToolMenuBar(wx.MenuBar):
-    def __init__(self, style=0):
+    def __init__(self, parent, style=0):
         super().__init__(style=style)
 
         self.configMenuOptions = []
+        self.parentFrame = parent
 
         self.isCheckingForUpdates = False
         self.WINDOWS = False
@@ -124,6 +129,39 @@ class ToolMenuBar(wx.MenuBar):
         self.Append(runMenu, "&Run")
         self.Append(helpMenu, "&Help")
 
+        self.__set_properties()
+
+    def __set_properties(self):
+        self.run.Enable(False)
+        self.clone.Enable(False)
+        self.command.Enable(False)
+        self.clearConsole.Enable(False)
+        self.collection.Enable(False)
+        self.eqlQuery.Enable(False)
+
+        self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
+        self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
+
+        self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
+        self.Bind(wx.EVT_MENU, self.parentFrame.updateGrids, self.refreshGrids)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
+        self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
+        self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onUploadCSV, self.fileOpenConfig)
+        self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
+
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.gridPanel.onDeviceColumn, self.deviceColumns
+        )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
+        )
+
     @api_tool_decorator
     def onAbout(self, event):
         """ About Dialog """
@@ -209,3 +247,44 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator
     def enableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, True)
+
+    def onEqlQuery(self, event):
+        self.setGaugeValue(0)
+        self.onClearGrids(None)
+        with LargeTextEntryDialog(self, "Enter EQL Query:", "EQL Query") as textDialog:
+            if textDialog.ShowModal() == wx.ID_OK:
+                eql = textDialog.GetValue()
+                if eql:
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.gauge.Pulse()
+                    wxThread.doAPICallInThread(
+                        self,
+                        processCollectionDevices,
+                        args=(deviceListResp),
+                        eventType=None,
+                        waitForJoin=False,
+                        name="eqlIterateThroughDeviceList",
+                    )
+
+    def onCollection(self, event):
+        self.setGaugeValue(0)
+        self.onClearGrids(None)
+        with CollectionsDialog(self) as dlg:
+            if dlg.ShowModal() == wx.ID_EXECUTE:
+                eql = dlg.getSelectionEql()
+                if eql:
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.gauge.Pulse()
+                    wxThread.doAPICallInThread(
+                        self,
+                        processCollectionDevices,
+                        args=(deviceListResp),
+                        eventType=None,
+                        waitForJoin=False,
+                        name="collectionIterateThroughDeviceList",
+                    )
+
+    def checkCollectionEnabled(self):
+        if not checkCollectionIsEnabled():
+            self.collection.Hide()
+            self.eqlQuery.Hide()

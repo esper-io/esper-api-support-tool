@@ -30,7 +30,15 @@ def preformEqlSearch(query, who, returnJson=False):
         return resp
 
 
-def fetchCollectionList():
+def checkCollectionIsEnabled():
+    enabled = False
+    resp = fetchCollectionList(returnResp=True)
+    if resp.status_code < 300:
+        enabled = True
+    return enabled
+
+
+def fetchCollectionList(returnResp=False):
     # GET /api/v0/enterprise/{enterprise_id}/collection/
     headers = getHeader()
 
@@ -42,6 +50,9 @@ def fetchCollectionList():
     resp = requests.get(url, headers=headers)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
+
+    if returnResp:
+        return resp
 
     res = []
     [res.append(x["name"]) for x in jsonResp["results"] if x["name"] not in res]

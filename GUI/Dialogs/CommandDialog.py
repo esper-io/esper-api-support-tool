@@ -397,6 +397,7 @@ class CommandDialog(wx.Dialog):
         state = event.String
         if state.lower() == "locked":
             self.text_ctrl_4.Enable(True)
+            self.text_ctrl_4.SetFocus()
         else:
             self.text_ctrl_4.Enable(False)
             self.text_ctrl_4.SetValue("")

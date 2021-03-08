@@ -426,16 +426,15 @@ class GridPanel(wx.Panel):
     def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
         """ Add device info to Device Grid """
         Globals.grid1_lock.acquire()
+        self.grid_1.Enable(False)
         num = 0
         device = {}
         if isUpdate:
             deviceName = device_info[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-            found = False
             for rowNum in range(self.grid_1.GetNumberRows()):
                 if rowNum < self.grid_1.GetNumberRows():
                     esperName = self.grid_1.GetCellValue(rowNum, 0)
                     if deviceName == esperName:
-                        found = True
                         deviceListing = list(
                             filter(
                                 lambda x: (
@@ -496,11 +495,6 @@ class GridPanel(wx.Panel):
                                 )
                         break
             # Don't add if not found as potential Endpoint swap could have occurred
-            # if not found:
-            #     if hasattr(threading.current_thread(), "isStopped"):
-            #         if threading.current_thread().isStopped():
-            #             return
-            #     self.addDeviceToDeviceGrid(device_info, isUpdate=False)
         else:
             self.grid_1.AppendRows(1)
             esperName = ""
@@ -543,7 +537,7 @@ class GridPanel(wx.Panel):
             )
             if device not in self.grid_1_contents and not deviceListing:
                 self.grid_1_contents.append(device)
-        # self.grid_1.AutoSizeColumns()
+        self.grid_1.Enable(True)
         Globals.grid1_lock.release()
 
     def setStatusCellColor(self, value, rowNum, colNum):

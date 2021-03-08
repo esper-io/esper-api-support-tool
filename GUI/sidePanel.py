@@ -155,9 +155,12 @@ class SidePanel(wx.Panel):
         self.actionChoice = wx.ComboBox(
             self.panel_10,
             wx.ID_ANY,
-            choices=Globals.GENERAL_ACTIONS,
+            choices=[],
             style=wx.CB_DROPDOWN | wx.CB_READONLY,
         )
+        actions = {**Globals.GENERAL_ACTIONS, **Globals.GRID_ACTIONS}
+        for key, val in actions.items():
+            self.actionChoice.Append(key, val)
         sizer_5.Add(self.actionChoice, 0, wx.EXPAND, 0)
 
         label_4 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Application:")
@@ -172,22 +175,6 @@ class SidePanel(wx.Panel):
             self.panel_10, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
         sizer_5.Add(self.appChoice, 0, wx.EXPAND, 0)
-
-        label_6 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Grid Action:")
-        label_6.SetFont(
-            wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
-            )
-        )
-        sizer_5.Add(label_6, 0, wx.EXPAND, 0)
-
-        self.gridActions = wx.ComboBox(
-            self.panel_10,
-            wx.ID_ANY,
-            choices=Globals.GRID_ACTIONS,
-            style=wx.CB_DROPDOWN | wx.CB_READONLY,
-        )
-        sizer_5.Add(self.gridActions, 0, wx.EXPAND, 0)
 
         self.panel_11 = wx.Panel(parent, wx.ID_ANY)
         sizer_1.Add(self.panel_11, 1, wx.EXPAND, 0)
@@ -225,7 +212,6 @@ class SidePanel(wx.Panel):
 
     def __set_properties(self):
         self.actionChoice.SetSelection(1)
-        self.gridActions.SetSelection(0)
 
         self.actionChoice.Enable(False)
         self.deviceChoice.Enable(False)
@@ -237,40 +223,9 @@ class SidePanel(wx.Panel):
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
 
-        self.actionChoice.Bind(
-            wx.EVT_COMBOBOX, self.onActionSelection, self.actionChoice
-        )
-        self.gridActions.Bind(
-            wx.EVT_COMBOBOX, self.onGridActionSelection, self.gridActions
-        )
         self.deviceChoice.Bind(
             wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
         )
-        # self.Bind(wx.EVT_BUTTON, self.onRun, self.runBtn)
-
-    def onGridActionSelection(self, event):
-        """ When a Grid Action is selected deselect regular Action """
-        if event and event.String:
-            self.actionChoice.SetSelection(0)
-            self.appChoice.Enable(False)
-            self.appChoice.SetSelection(-1)
-        self.parentFrame.SetFocus()
-
-    def onActionSelection(self, event):
-        """ Depending on Action enable or disable Choice """
-        if event and event.String:
-            self.gridActions.SetSelection(0)
-
-            if (
-                event
-                and event.String == Globals.GENERAL_ACTIONS[Globals.SET_KIOSK]
-                or event.String == Globals.GENERAL_ACTIONS[Globals.CLEAR_APP_DATA]
-            ):
-                self.appChoice.Enable(True)
-            else:
-                self.appChoice.SetSelection(-1)
-                self.appChoice.Enable(False)
-        self.parentFrame.SetFocus()
 
     def RemoveEndpoint(self, event):
         value = None
