@@ -33,6 +33,7 @@ from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
@@ -1207,15 +1208,17 @@ class NewFrameLayout(wx.Frame):
         self.menubar.enableConfigMenu()
         self.setGaugeValue(100)
         if cmdResult:
-            dlg = wx.RichMessageDialog(
-                self, "Command has been fired. Check the Esper Console for details."
-            )
             result = ""
             for res in cmdResult:
                 result += json.dumps(str(res), indent=2)
                 result += "\n\n"
-            dlg.ShowDetailedText(str(cmdResult).replace("[", "").replace("]", ""))
-            dlg.ShowModal()
+            with ConfirmTextDialog(
+                "Command has been fired.",
+                "Check the Esper Console for details. Last command status listed below.",
+                "Command has been fired.",
+                result,
+            ) as dialog:
+                res = dialog.ShowModal()
         wx.CallLater(3000, self.setGaugeValue, 0)
 
     def confirmCommand(self, cmd, commandType, schedule, schType):
