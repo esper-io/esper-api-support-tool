@@ -647,37 +647,6 @@ def waitForCommandToFinish(
         return response.results
 
 
-def createCommand(frame, command_args, commandType, schedule, schType):
-    """ Attempt to apply a Command given user specifications """
-    result, isGroup = frame.confirmCommand(command_args, commandType, schedule, schType)
-
-    if schType.lower() == "immediate":
-        schType = esperclient.V0CommandScheduleEnum.IMMEDIATE
-    elif schType.lower() == "window":
-        schType = esperclient.V0CommandScheduleEnum.WINDOW
-    elif schType.lower() == "recurring":
-        schType = esperclient.V0CommandScheduleEnum.RECURRING
-    t = None
-    if result and isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnGroup,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=wxThread.myEVT_COMMAND,
-        )
-    elif result and not isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnDevice,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=wxThread.myEVT_COMMAND,
-        )
-    if t:
-        frame.menubar.disableConfigMenu()
-        frame.gauge.Pulse()
-        t.start()
-
-
 @api_tool_decorator
 def validateConfiguration(host, entId, key, prefix="Bearer"):
     configuration = esperclient.Configuration()

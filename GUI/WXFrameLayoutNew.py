@@ -43,7 +43,6 @@ from pathlib import Path
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
-    createCommand,
     setKiosk,
     setMulti,
     getdeviceapps,
@@ -56,6 +55,7 @@ from Utility.EsperAPICalls import (
 )
 from Utility.EastUtility import (
     TakeAction,
+    createCommand,
     iterateThroughGridRows,
 )
 from Utility.Resource import (
@@ -1220,47 +1220,6 @@ class NewFrameLayout(wx.Frame):
             ) as dialog:
                 res = dialog.ShowModal()
         wx.CallLater(3000, self.setGaugeValue, 0)
-
-    def confirmCommand(self, cmd, commandType, schedule, schType):
-        """ Ask user to confirm the command they want to run """
-        modal = None
-        isGroup = False
-        cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
-        sch_dict = ast.literal_eval(str(schedule).replace("\n", ""))
-        cmdFormatted = json.dumps(cmd_dict, indent=2)
-        schFormatted = json.dumps(sch_dict, indent=2)
-        label = ""
-        applyTo = ""
-        commaSeperated = ", "
-        if len(self.sidePanel.selectedDevicesList) > 0:
-            selections = self.sidePanel.deviceMultiDialog.GetSelections()
-            label = ""
-            for device in selections:
-                label += device + commaSeperated
-            if label.endswith(", "):
-                label = label[0 : len(label) - len(commaSeperated)]
-            applyTo = "device"
-        elif len(self.sidePanel.selectedGroupsList) >= 0:
-            selections = self.sidePanel.groupMultiDialog.GetSelections()
-            label = ""
-            for group in selections:
-                label += group + commaSeperated
-            if label.endswith(", "):
-                label = label[0 : len(label) - len(commaSeperated)]
-            applyTo = "group"
-            isGroup = True
-        modal = wx.NO
-        with CmdConfirmDialog(
-            commandType, cmdFormatted, schType, schFormatted, applyTo, label
-        ) as dialog:
-            res = dialog.ShowModal()
-            if res == wx.ID_OK:
-                modal = wx.YES
-
-        if modal == wx.YES:
-            return True, isGroup
-        else:
-            return False, isGroup
 
     def setStatus(self, status, orgingalMsg, isError=False):
         """ Set status bar text """

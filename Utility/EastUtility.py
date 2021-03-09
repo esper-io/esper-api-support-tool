@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import ast
+import json
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Common.enum import GeneralActions
 import esperclient
 import Common.Globals as Globals
@@ -605,3 +608,76 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
     return changeSucceeded
+
+
+def createCommand(frame, command_args, commandType, schedule, schType):
+    """ Attempt to apply a Command given user specifications """
+    result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
+
+    if schType.lower() == "immediate":
+        schType = esperclient.V0CommandScheduleEnum.IMMEDIATE
+    elif schType.lower() == "window":
+        schType = esperclient.V0CommandScheduleEnum.WINDOW
+    elif schType.lower() == "recurring":
+        schType = esperclient.V0CommandScheduleEnum.RECURRING
+    t = None
+    if result and isGroup:
+        t = wxThread.GUIThread(
+            frame,
+            apiCalls.executeCommandOnGroup,
+            args=(frame, command_args, schedule, schType, commandType),
+            eventType=wxThread.myEVT_COMMAND,
+        )
+    elif result and not isGroup:
+        t = wxThread.GUIThread(
+            frame,
+            apiCalls.executeCommandOnDevice,
+            args=(frame, command_args, schedule, schType, commandType),
+            eventType=wxThread.myEVT_COMMAND,
+        )
+    if t:
+        frame.menubar.disableConfigMenu()
+        frame.gauge.Pulse()
+        t.start()
+
+
+def confirmCommand(cmd, commandType, schedule, schType):
+    """ Ask user to confirm the command they want to run """
+    modal = None
+    isGroup = False
+    cmd_dict = ast.literal_eval(str(cmd).replace("\n", ""))
+    sch_dict = ast.literal_eval(str(schedule).replace("\n", ""))
+    cmdFormatted = json.dumps(cmd_dict, indent=2)
+    schFormatted = json.dumps(sch_dict, indent=2)
+    label = ""
+    applyTo = ""
+    commaSeperated = ", "
+    if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
+        selections = Globals.frame.sidePanel.deviceMultiDialog.GetSelections()
+        label = ""
+        for device in selections:
+            label += device + commaSeperated
+        if label.endswith(", "):
+            label = label[0 : len(label) - len(commaSeperated)]
+        applyTo = "device"
+    elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
+        selections = Globals.frame.sidePanel.groupMultiDialog.GetSelections()
+        label = ""
+        for group in selections:
+            label += group + commaSeperated
+        if label.endswith(", "):
+            label = label[0 : len(label) - len(commaSeperated)]
+        applyTo = "group"
+        isGroup = True
+    modal = wx.NO
+    with CmdConfirmDialog(
+        commandType, cmdFormatted, schType, schFormatted, applyTo, label
+    ) as dialog:
+        res = dialog.ShowModal()
+        if res == wx.ID_OK:
+            modal = wx.YES
+
+    if modal == wx.YES:
+        return True, isGroup
+    else:
+        return False, isGroup
