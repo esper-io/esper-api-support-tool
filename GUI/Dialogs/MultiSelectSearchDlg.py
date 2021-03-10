@@ -100,7 +100,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
+        if hasattr(self.Parent, "WINDOWS") and self.Parent.WINDOWS:
             self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
