@@ -1675,7 +1675,8 @@ class NewFrameLayout(wx.Frame):
                 if hasattr(threading.current_thread(), "isStopped"):
                     if threading.current_thread().isStopped():
                         break
-                self.fetchUpdateData()
+                if self.IsActive() and not self.IsIconized():
+                    self.fetchUpdateData()
             self.refresh = None
 
     @api_tool_decorator
@@ -1688,6 +1689,7 @@ class NewFrameLayout(wx.Frame):
         if (
             not self.isRunning
             and not self.isRunningUpdate
+            and self.IsActive()
             and (
                 (
                     self.gridPanel.grid_1_contents
