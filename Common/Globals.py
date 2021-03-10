@@ -20,7 +20,9 @@ lock = threading.Lock()
 deviceInfo_lock = threading.Lock()
 gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
+grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
+grid_color_lock = threading.Lock()
 
 MAX_THREAD_COUNT = 24
 MAX_RETRY = 5

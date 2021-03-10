@@ -151,6 +151,8 @@ class GridPanel(wx.Panel):
         Globals.grid2_lock.acquire()
         self.grid_1.AutoSizeColumns()
         self.grid_2.AutoSizeColumns()
+        self.grid_1.ForceRefresh()
+        self.grid_2.ForceRefresh()
         Globals.grid1_lock.release()
         Globals.grid2_lock.release()
 
@@ -551,6 +553,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator
     def setStatusCellColor(self, value, rowNum, colNum):
+        Globals.grid1_status_lock.acquire()
         if value == "Offline":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.red.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
@@ -569,15 +572,16 @@ class GridPanel(wx.Panel):
         elif value == "Unkown":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
+        Globals.grid1_status_lock.release()
 
     @api_tool_decorator
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
+        Globals.grid_color_lock.acquire()
         if attribute == "Alias" and "OriginalAlias" in device_info:
             grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
-            pass
         if attribute == "Tags" and "OriginalTags" in device_info:
             grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
-            pass
+        Globals.grid_color_lock.release()
 
     @api_tool_decorator
     def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
@@ -806,6 +810,8 @@ class GridPanel(wx.Panel):
     def disableGridProperties(
         self, disableGrid=True, disableColSize=True, disableColMove=True
     ):
+        Globals.grid1_lock.acquire()
+        Globals.grid2_lock.acquire()
         if disableGrid:
             self.grid_1.Enable(False)
             self.grid_2.Enable(False)
@@ -816,11 +822,15 @@ class GridPanel(wx.Panel):
             self.grid_1.DisableDragColMove()
             self.grid_2.DisableDragColMove()
         self.disableProperties = True
+        Globals.grid1_lock.release()
+        Globals.grid2_lock.release()
 
     @api_tool_decorator
     def enableGridProperties(
         self, enableGrid=True, enableColSize=True, enableColMove=True
     ):
+        Globals.grid1_lock.acquire()
+        Globals.grid2_lock.acquire()
         if enableGrid:
             self.grid_1.Enable(True)
             self.grid_2.Enable(True)
@@ -831,3 +841,5 @@ class GridPanel(wx.Panel):
             self.grid_1.EnableDragColMove()
             self.grid_2.EnableDragColMove()
         self.disableProperties = False
+        Globals.grid1_lock.release()
+        Globals.grid2_lock.release()
