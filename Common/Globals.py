@@ -9,7 +9,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.176"
+VERSION = "v0.178"
 TITLE = "Esper API Support Tool"
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
