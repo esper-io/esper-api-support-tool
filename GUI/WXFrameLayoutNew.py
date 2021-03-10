@@ -87,7 +87,7 @@ class NewFrameLayout(wx.Frame):
         self.isForceUpdate = False
         self.kill = False
         self.CSVUploaded = False
-        self.defaultDir = ""
+        self.defaultDir = os.getcwd()
 
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
@@ -336,10 +336,9 @@ class NewFrameLayout(wx.Frame):
         if self.gridPanel.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
-                "Save Device and Network Info CSV as...",
-                os.getcwd(),
-                "",
-                "*.csv",
+                message="Save Device and Network Info CSV as...",
+                defaultFile="",
+                wildcard="*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -348,7 +347,7 @@ class NewFrameLayout(wx.Frame):
             dlg.Destroy()
 
             if result == wx.ID_OK:  # Save button was pressed
-                self.defaultDir = Path(dlg.GetPath()).parent
+                self.defaultDir = Path(inFile).parent
                 gridDeviceData = []
                 for device in self.gridPanel.grid_1_contents:
                     tempDict = {}

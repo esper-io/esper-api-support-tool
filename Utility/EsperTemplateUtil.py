@@ -445,6 +445,8 @@ class EsperTemplateUtil:
                 for data in dicton[key]:
                     if type(data) is dict:
                         newList.append(self.processDictKeyNames(data))
+                    else:
+                        newList.append(data)
                 newDict[newKey] = newList
             else:
                 newDict[newKey] = dicton[key]
