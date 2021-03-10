@@ -17,6 +17,7 @@ from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
 
 ####Esper API Requests####
+@api_tool_decorator
 def logBadResponse(url, resp, json_resp):
     if Globals.PRINT_RESPONSES or resp.status_code > 300:
         print(url)
@@ -27,6 +28,7 @@ def logBadResponse(url, resp, json_resp):
         ApiToolLog().LogResponse(prettyReponse)
 
 
+@api_tool_decorator
 def getHeader():
     return {
         "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
@@ -34,6 +36,7 @@ def getHeader():
     }
 
 
+@api_tool_decorator
 def getInfo(request_extension, deviceid):
     """Sends Request For Device Info JSON"""
     headers = getHeader()
@@ -52,10 +55,12 @@ def getInfo(request_extension, deviceid):
     return json_resp
 
 
+@api_tool_decorator
 def getDeviceDetail(deviceId):
     return getInfo("/?format=json&show_policy=true", deviceId)
 
 
+@api_tool_decorator
 def fetchGroupName(groupURL):
     headers = getHeader()
     resp = requests.get(groupURL, headers=headers)
@@ -67,6 +72,7 @@ def fetchGroupName(groupURL):
     return None
 
 
+@api_tool_decorator
 def patchInfo(request_extension, deviceid, tags):
     """Pushes Data To Device Info JSON"""
     headers = getHeader()
@@ -84,6 +90,7 @@ def patchInfo(request_extension, deviceid, tags):
     return json_resp
 
 
+@api_tool_decorator
 def iskioskmode(deviceid):
     """Checks If Device Is In Kiosk Mode"""
     kioskmode = False
@@ -93,6 +100,7 @@ def iskioskmode(deviceid):
     return kioskmode
 
 
+@api_tool_decorator
 def toggleKioskMode(
     frame, deviceid, appToUse, isKiosk, timeout=Globals.COMMAND_TIMEOUT
 ):
@@ -121,6 +129,7 @@ def toggleKioskMode(
     return status
 
 
+@api_tool_decorator
 def getdevicetags(deviceid):
     """Retrieves Device Tags"""
     tags = ""
@@ -130,6 +139,7 @@ def getdevicetags(deviceid):
     return tags
 
 
+@api_tool_decorator
 def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
     applist = []
@@ -198,6 +208,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     return applist, json_resp
 
 
+@api_tool_decorator
 def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -210,6 +221,7 @@ def getkioskmodeapp(deviceid):
     return appName
 
 
+@api_tool_decorator
 def getNetworkInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -222,6 +234,7 @@ def getNetworkInfo(deviceid):
     return network_event
 
 
+@api_tool_decorator
 def getLocationInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -234,6 +247,7 @@ def getLocationInfo(deviceid):
     return location_event, respData
 
 
+@api_tool_decorator
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""
     json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags)
@@ -242,6 +256,7 @@ def setdevicetags(deviceid, tags):
     return tags
 
 
+@api_tool_decorator
 def setdevicename(
     frame, deviceid, devicename, ignoreQueue, timeout=Globals.COMMAND_TIMEOUT
 ):
@@ -264,6 +279,7 @@ def setdevicename(
     return status
 
 
+@api_tool_decorator
 def getAllGroups():
     """ Make a API call to get all Groups belonging to the Enterprise """
     try:
@@ -281,6 +297,7 @@ def getAllGroups():
         )
 
 
+@api_tool_decorator
 def uploadApplicationForHost(config, enterprise_id, file):
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
@@ -290,6 +307,7 @@ def uploadApplicationForHost(config, enterprise_id, file):
         raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
 
 
+@api_tool_decorator
 def getDeviceGroupsForHost(config, enterprise_id):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
@@ -301,6 +319,7 @@ def getDeviceGroupsForHost(config, enterprise_id):
         raise e
 
 
+@api_tool_decorator
 def createDeviceGroupForHost(config, enterprise_id, group):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
@@ -310,6 +329,7 @@ def createDeviceGroupForHost(config, enterprise_id, group):
         raise e
 
 
+@api_tool_decorator
 def getDeviceGroupForHost(config, enterprise_id, group_id):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
@@ -321,6 +341,7 @@ def getDeviceGroupForHost(config, enterprise_id, group_id):
         raise e
 
 
+@api_tool_decorator
 def getAllDevices(groupToUse):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not groupToUse:
@@ -355,6 +376,7 @@ def getAllDevices(groupToUse):
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
 
+@api_tool_decorator
 def getAllApplications():
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
@@ -375,6 +397,7 @@ def getAllApplications():
         )
 
 
+@api_tool_decorator
 def getAllApplicationsForHost(config, enterprise_id):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
@@ -392,6 +415,7 @@ def getAllApplicationsForHost(config, enterprise_id):
         )
 
 
+@api_tool_decorator
 def getDeviceById(deviceToUse):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
@@ -421,6 +445,7 @@ def getDeviceById(deviceToUse):
         ApiToolLog().LogError(e)
 
 
+@api_tool_decorator
 def getTokenInfo():
     api_instance = esperclient.TokenApi(esperclient.ApiClient(Globals.configuration))
     try:
@@ -431,6 +456,7 @@ def getTokenInfo():
         ApiToolLog().LogError(e)
 
 
+@api_tool_decorator
 def iterateThroughAllGroups(frame, action, api_instance, group=None):
     groupToUse = None
     if group:
@@ -453,6 +479,7 @@ def iterateThroughAllGroups(frame, action, api_instance, group=None):
         ApiToolLog().LogError(e)
 
 
+@api_tool_decorator
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
@@ -488,6 +515,7 @@ def setKiosk(frame, device, deviceInfo):
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
 
 
+@api_tool_decorator
 def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
     logString = (
@@ -520,6 +548,7 @@ def setMulti(frame, device, deviceInfo):
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
 
 
+@api_tool_decorator
 def getCommandsApiInstance():
     """ Returns an instace of the Commands API """
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
@@ -667,6 +696,7 @@ def validateConfiguration(host, entId, key, prefix="Bearer"):
     return False
 
 
+@api_tool_decorator
 def postEsperCommand(command_data, useV0=True):
     json_resp = None
     resp = None
@@ -691,6 +721,7 @@ def postEsperCommand(command_data, useV0=True):
     return resp, json_resp
 
 
+@api_tool_decorator
 def clearAppData(frame, device):
     json_resp = None
     try:
@@ -743,6 +774,7 @@ def clearAppData(frame, device):
     return json_resp
 
 
+@api_tool_decorator
 def getDeviceApplicationById(device_id, application_id):
     try:
         headers = getHeader()
@@ -760,6 +792,7 @@ def getDeviceApplicationById(device_id, application_id):
     return resp, json_resp
 
 
+@api_tool_decorator
 def setAppState(device_id, pkg_name, state="HIDE"):
     pkgName = pkg_name
     appVer = None

@@ -18,7 +18,11 @@ def api_tool_decorator(func):
         excpt = None
         try:
             if Globals.RECORD_PLACE:
-                place = str(func.__name__ + "\t:\t" + func.__doc__)
+                place = ""
+                if func.__name__ and func.__doc__:
+                    place = str(func.__name__ + "\t:\t" + func.__doc__)
+                elif func.__name__:
+                    place = str(func.__name__)
                 ApiToolLog().LogPlace(place)
         except Exception as e:
             ApiToolLog().LogError(e)

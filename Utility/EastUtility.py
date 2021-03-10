@@ -19,6 +19,7 @@ from esperclient.rest import ApiException
 
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
+@api_tool_decorator
 def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     """Calls API To Perform Action And Logs Result To UI"""
     if not Globals.enterprise_id:
@@ -439,6 +440,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     return deviceInfo
 
 
+@api_tool_decorator
 def logActionExecution(frame, action, selection=None):
     actionName = ""
     if (
@@ -452,6 +454,7 @@ def logActionExecution(frame, action, selection=None):
         frame.Logging("---> Starting Execution " + actionName)
 
 
+@api_tool_decorator
 def modifyDevice(frame):
     """ Start a thread that will attempt to modify device data """
     t = wxThread.GUIThread(
