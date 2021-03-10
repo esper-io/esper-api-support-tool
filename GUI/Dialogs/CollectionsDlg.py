@@ -188,7 +188,7 @@ class CollectionsDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()
 
     @api_tool_decorator
     def onInput(self, event):

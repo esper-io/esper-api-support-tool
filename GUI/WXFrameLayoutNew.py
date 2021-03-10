@@ -325,16 +325,16 @@ class NewFrameLayout(wx.Frame):
         self.kill = True
         if self.consoleWin:
             self.consoleWin.Close()
-            self.consoleWin.Destroy()
+            self.consoleWin.DestroyLater()
             self.consoleWin = None
         if self.prefDialog:
             self.prefDialog.Close()
-            self.prefDialog.Destroy()
+            self.prefDialog.DestroyLater()
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
         self.savePrefs(self.prefDialog)
-        self.Destroy()
+        self.DestroyLater()
 
     @api_tool_decorator
     def onSaveBoth(self, event):
@@ -349,7 +349,7 @@ class NewFrameLayout(wx.Frame):
             )
             result = dlg.ShowModal()
             inFile = dlg.GetPath()
-            dlg.Destroy()
+            dlg.DestroyLater()
 
             if result == wx.ID_OK:  # Save button was pressed
                 self.defaultDir = Path(inFile).parent
@@ -1167,7 +1167,7 @@ class NewFrameLayout(wx.Frame):
             self.menubar.clearConsole.Enable(True)
             self.Bind(wx.EVT_MENU, self.onClear, self.menubar.clearConsole)
         else:
-            self.consoleWin.Destroy()
+            self.consoleWin.DestroyLater()
             self.menubar.clearConsole.Enable(False)
 
     @api_tool_decorator

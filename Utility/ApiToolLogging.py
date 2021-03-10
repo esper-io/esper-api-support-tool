@@ -13,13 +13,21 @@ import traceback
 class ApiToolLog:
     def __init__(self):
         self.logPath = ""
+        self.placePath = ""
         if platform.system() == "Windows":
             self.logPath = (
                 "%s\\EsperApiTool\\ApiTool.log"
                 % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
             )
+            self.placePath = (
+                "%s\\EsperApiTool\\ApiToolPlace.log"
+                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+            )
         else:
             self.logPath = "%s/EsperApiTool/ApiTool.log" % os.path.expanduser(
+                "~/Desktop/"
+            )
+            self.placePath = "%s/EsperApiTool/ApiToolPlace.log" % os.path.expanduser(
                 "~/Desktop/"
             )
         if not os.path.exists(self.logPath):
@@ -28,6 +36,13 @@ class ApiToolLog:
                 if not os.path.exists(parentPath):
                     os.makedirs(parentPath)
                 with open(self.logPath, "w"):
+                    pass
+        if not os.path.exists(self.placePath):
+            if not os.path.exists(self.placePath):
+                parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
+                if not os.path.exists(parentPath):
+                    os.makedirs(parentPath)
+                with open(self.placePath, "w"):
                     pass
 
     def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
@@ -41,6 +56,10 @@ class ApiToolLog:
             myfile.write(str(exc_value))
             for line in exc_traceback:
                 myfile.write(str(line))
+
+    def LogPlace(self, str):
+        with open(self.logPath, "a") as myfile:
+            myfile.write("\n%s\t: %s\n" % (datetime.now(), str))
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:

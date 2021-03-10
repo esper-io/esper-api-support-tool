@@ -85,7 +85,7 @@ class Console(wx.Frame):
             wx.PostEvent(Globals.frame, evt)
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()
 
     @api_tool_decorator
     def onClear(self, event=None):

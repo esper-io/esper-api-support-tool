@@ -272,11 +272,11 @@ class SidePanel(wx.Panel):
     def destroyMultiChoiceDialogs(self):
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
-            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog.DestroyLater()
             self.groupMultiDialog = None
         if self.deviceMultiDialog:
             self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog.DestroyLater()
             self.deviceMultiDialog = None
 
     @api_tool_decorator
@@ -284,7 +284,7 @@ class SidePanel(wx.Panel):
         choices = list(self.groups.keys())
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
-            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog.DestroyLater()
             self.groupMultiDialog = None
         if not self.groupMultiDialog:
             self.groupMultiDialog = MultiSelectSearchDlg(
@@ -322,7 +322,7 @@ class SidePanel(wx.Panel):
         choices = list(self.devices.keys())
         if self.deviceMultiDialog:
             self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog.DestroyLater()
             self.deviceMultiDialog = None
         if not self.deviceMultiDialog:
             self.deviceMultiDialog = MultiSelectSearchDlg(

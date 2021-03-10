@@ -11,6 +11,7 @@ enterprise_id = ""
 """ Constants """
 VERSION = "v0.178"
 TITLE = "Esper API Support Tool"
+RECORD_PLACE = True
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500

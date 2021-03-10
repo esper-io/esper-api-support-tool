@@ -79,4 +79,4 @@ class CheckboxMessageBox(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()

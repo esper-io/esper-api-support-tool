@@ -7,6 +7,8 @@ import Common.Globals as Globals
 import sys
 import wx
 
+from Common.decorator import api_tool_decorator
+
 
 class MyApp(wx.App):
     def OnInit(self):
@@ -16,7 +18,8 @@ class MyApp(wx.App):
         return True
 
 
-if __name__ == "__main__":
+@api_tool_decorator
+def main():
     """Launches Main App"""
     sys.excepthook = ApiToolLog().excepthook
     try:
@@ -24,3 +27,7 @@ if __name__ == "__main__":
         Globals.app.MainLoop()
     except Exception as e:
         ApiToolLog().LogError(e)
+
+
+if __name__ == "__main__":
+    main()

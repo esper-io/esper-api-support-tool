@@ -60,7 +60,7 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()
 
     @api_tool_decorator
     def OnClose(self, event):
@@ -68,7 +68,7 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()
 
     @api_tool_decorator
     def isChecked(self, item):
