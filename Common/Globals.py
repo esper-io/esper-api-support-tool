@@ -16,11 +16,12 @@ MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
+deviceInfo_lock = threading.Lock()
 gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
 grid2_lock = threading.Lock()
 
-MAX_THREAD_COUNT = 8
+MAX_THREAD_COUNT = 24
 MAX_RETRY = 5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
@@ -45,6 +46,7 @@ GRID_ACTIONS = {
 }
 
 LOGLIST = []
+MAX_LOG_LIST_SIZE = 75
 
 COMMAND_ARGS = [
     "app_state",

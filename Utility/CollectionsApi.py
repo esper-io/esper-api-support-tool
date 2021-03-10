@@ -1,9 +1,11 @@
+from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import requests
 
 from Utility.EsperAPICalls import getHeader, logBadResponse
 
 
+@api_tool_decorator
 def preformEqlSearch(query, who, returnJson=False):
     # api/v0/enterprise/{ent-id}/collection/search/?q={eql_query}
     headers = getHeader()
@@ -30,6 +32,7 @@ def preformEqlSearch(query, who, returnJson=False):
         return resp
 
 
+@api_tool_decorator
 def checkCollectionIsEnabled():
     enabled = False
     resp = fetchCollectionList(returnResp=True)
@@ -38,6 +41,7 @@ def checkCollectionIsEnabled():
     return enabled
 
 
+@api_tool_decorator
 def fetchCollectionList(returnResp=False):
     # GET /api/v0/enterprise/{enterprise_id}/collection/
     headers = getHeader()
@@ -59,6 +63,7 @@ def fetchCollectionList(returnResp=False):
     return jsonResp, res
 
 
+@api_tool_decorator
 def createCollection(jsonData, returnJson=False):
     # POST /api/v0/enterprise/{enterprise_id}/collection/
     headers = getHeader()
@@ -78,6 +83,7 @@ def createCollection(jsonData, returnJson=False):
         return resp
 
 
+@api_tool_decorator
 def retrieveCollection(collectionId, returnJson=False):
     # GET /api/v0/enterprise/{enterprise_id}/collection/<id>
     headers = getHeader()
@@ -98,6 +104,7 @@ def retrieveCollection(collectionId, returnJson=False):
         return resp
 
 
+@api_tool_decorator
 def updateCollection(collectionId, jsonData, returnJson=False):
     # PUT /api/v0/enterprise/{enterprise_id}/collection/<id>
     headers = getHeader()
@@ -118,6 +125,7 @@ def updateCollection(collectionId, jsonData, returnJson=False):
         return resp
 
 
+@api_tool_decorator
 def deleteCollection(collectionId, returnJson=False):
     # DELETE /api/v0/enterprise/{enterprise_id}/collection/<id>
     headers = getHeader()

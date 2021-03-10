@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import wx
 import Common.Globals as Globals
 import platform
@@ -52,6 +53,9 @@ class Console(wx.Frame):
         grid_sizer_2.Add(self.loggingList, 0, wx.EXPAND, 1)
         panel.SetSizer(grid_sizer_2)
 
+        while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
+            Globals.LOGLIST.pop(0)
+
         for entry in Globals.LOGLIST:
             self.loggingList.AppendText(entry)
             self.loggingList.AppendText("\n")
@@ -66,6 +70,7 @@ class Console(wx.Frame):
         self.Centre()
         self.Show()
 
+    @api_tool_decorator
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
         if (
@@ -73,6 +78,7 @@ class Console(wx.Frame):
         ) and keycode == wx.WXK_ESCAPE:
             self.onClose(event)
 
+    @api_tool_decorator
     def onClose(self, event):
         evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
         if Globals.frame:
@@ -81,10 +87,12 @@ class Console(wx.Frame):
             self.Close()
         self.Destroy()
 
+    @api_tool_decorator
     def onClear(self, event=None):
         self.loggingList.Clear()
         Globals.LOGLIST.clear()
 
+    @api_tool_decorator
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
         self.loggingList.AppendText(entry)
@@ -92,5 +100,7 @@ class Console(wx.Frame):
         if self.WINDOWS:
             self.loggingList.EnsureVisible(self.loggingList.GetCount() - 1)
         if entry:
+            while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
+                Globals.LOGLIST.pop(0)
             Globals.LOGLIST.append(entry.strip())
         return

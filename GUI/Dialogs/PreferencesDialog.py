@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import wx
 
@@ -637,6 +638,7 @@ class PreferencesDialog(wx.Dialog):
                 if self.parent:
                     self.parent.gridPanel.disableGridProperties(False, False, True)
 
+    @api_tool_decorator
     def showMatchingPanel(self, event):
         event.Skip()
         if event.GetString() == "Grid":
@@ -672,6 +674,7 @@ class PreferencesDialog(wx.Dialog):
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
 
+    @api_tool_decorator
     def OnApply(self, event):
         self.prefs = {
             "enableDevice": self.checkbox_1.IsChecked(),
@@ -731,6 +734,7 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.Close()
 
+    @api_tool_decorator
     def SetPrefs(self, prefs):
         self.prefs = prefs
         if not self.prefs:
@@ -817,6 +821,7 @@ class PreferencesDialog(wx.Dialog):
                 Globals.SHOW_PKG_NAME = True
                 self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
 
+    @api_tool_decorator
     def GetPrefs(self):
         if not self.prefs:
             self.prefs = {}
@@ -840,6 +845,7 @@ class PreferencesDialog(wx.Dialog):
 
         return self.prefs
 
+    @api_tool_decorator
     def getDefaultKeyValue(self, key):
         if key == "enableDevice":
             return True

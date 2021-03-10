@@ -1,3 +1,4 @@
+from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
 import wx
 
@@ -49,6 +50,7 @@ class ToolsToolBar(wx.ToolBar):
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         size = self.search.GetSize()
         size.SetWidth(size.GetWidth() * 2)
@@ -71,6 +73,7 @@ class ToolsToolBar(wx.ToolBar):
         self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
+    @api_tool_decorator
     def onSearchChar(self, event):
         event.Skip()
         wx.CallAfter(self.Parent.onSearch, wx.EVT_CHAR.typeId)

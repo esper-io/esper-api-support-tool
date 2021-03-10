@@ -2,6 +2,8 @@
 
 import wx
 
+from Common.decorator import api_tool_decorator
+
 
 class NewEndpointDialog(wx.Dialog):
     def __init__(self, errorMsg=None, name=None, host=None, entId=None, key=None):
@@ -101,12 +103,14 @@ class NewEndpointDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+    @api_tool_decorator
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
 
+    @api_tool_decorator
     def getInputValues(self):
         name = str(self.text_ctrl_1.GetValue().strip())
         host = "https://%s-api.esper.cloud/api" % str(
@@ -117,6 +121,7 @@ class NewEndpointDialog(wx.Dialog):
         prefix = "Bearer"
         return name, host, entId, key, prefix
 
+    @api_tool_decorator
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
         host = "https://%s-api.esper.cloud/api" % str(
@@ -127,6 +132,7 @@ class NewEndpointDialog(wx.Dialog):
         prefix = "Bearer"
         return [name, host, entId, key, prefix]
 
+    @api_tool_decorator
     def checkInputs(self, event):
         if (
             self.text_ctrl_4.GetValue()

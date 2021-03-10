@@ -199,7 +199,7 @@ def joinThreadList(threads):
                 thread.join()
 
 
-def limitActiveThreads(threads, max_alive=25, sleep=1):
+def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
     Globals.lock.acquire()
     numAlive = 0
     for thread in threads:

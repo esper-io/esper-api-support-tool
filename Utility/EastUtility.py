@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import ast
 import json
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
@@ -94,12 +95,14 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             postEventToFrame(wxThread.myEVT_COMPLETE, None)
 
 
+@api_tool_decorator
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
     if action == Globals.MODIFY_ALIAS_AND_TAGS:
         modifyDevice(frame)
 
 
+@api_tool_decorator
 def iterateThroughDeviceList(
     frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
@@ -147,6 +150,7 @@ def iterateThroughDeviceList(
         wx.MessageBox("No devices found for group.", style=wx.ICON_INFORMATION)
 
 
+@api_tool_decorator
 def waitTillThreadsFinish(threads, action, entId, source, event=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
@@ -189,6 +193,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
         )
 
 
+@api_tool_decorator
 def processCollectionDevices(collectionList):
     n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
     if n == 0:
@@ -231,6 +236,7 @@ def processCollectionDevices(collectionList):
         )
 
 
+@api_tool_decorator
 def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     deviceList = {}
     for device in chunk:
@@ -240,16 +246,17 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 
             deviceList[number_of_devices] = [device, deviceInfo]
             number_of_devices += 1
-            Globals.gauge_lock.acquire()
+            Globals.deviceInfo_lock.acquire()
             value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
             Globals.frame.setGaugeValue(value)
-            Globals.gauge_lock.release()
+            Globals.deviceInfo_lock.release()
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
     return deviceList
 
 
+@api_tool_decorator
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
     """ Try to obtain more device info for a given device """
     deviceList = {}
@@ -269,6 +276,7 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
     return (action, deviceList)
 
 
+@api_tool_decorator
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     if not deviceDict:
@@ -284,6 +292,7 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
+@api_tool_decorator
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
     deviceId = None
@@ -455,6 +464,7 @@ def modifyDevice(frame):
     return t
 
 
+@api_tool_decorator
 def executeDeviceModification(frame):
     """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
@@ -509,6 +519,7 @@ def executeDeviceModification(frame):
         t.start()
 
 
+@api_tool_decorator
 def processDeviceModificationForList(
     frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction
 ):
@@ -538,6 +549,7 @@ def processDeviceModificationForList(
     return (changeSucceeded, succeeded, numNewName, tagsFromGrid)
 
 
+@api_tool_decorator
 def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     numNewName = 0
     succeeded = 0
@@ -584,6 +596,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     return (numNewName, succeeded)
 
 
+@api_tool_decorator
 def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
@@ -610,6 +623,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     return changeSucceeded
 
 
+@api_tool_decorator
 def createCommand(frame, command_args, commandType, schedule, schType):
     """ Attempt to apply a Command given user specifications """
     result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
@@ -641,6 +655,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         t.start()
 
 
+@api_tool_decorator
 def confirmCommand(cmd, commandType, schedule, schType):
     """ Ask user to confirm the command they want to run """
     modal = None

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
 from Common.enum import Color
 import wx
@@ -181,6 +182,7 @@ class CollectionsDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onExecute)
         self.bitmap_button_1.Bind(wx.EVT_BUTTON, self.updateCollectionList)
 
+    @api_tool_decorator
     def onExecute(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -188,10 +190,12 @@ class CollectionsDialog(wx.Dialog):
             self.Close()
         self.Destroy()
 
+    @api_tool_decorator
     def onInput(self, event):
         event.Skip()
         wx.CallAfter(self.checkInputs)
 
+    @api_tool_decorator
     def checkInputs(self):
         matchNames = list(
             filter(
@@ -217,6 +221,7 @@ class CollectionsDialog(wx.Dialog):
         else:
             self.button_3.Enable(False)
 
+    @api_tool_decorator
     def onSelection(self, event):
         currentSelection = self.list_box_1.GetSelection()
         if currentSelection == self.prevSelection:
@@ -245,6 +250,7 @@ class CollectionsDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
+    @api_tool_decorator
     def createCollection(self, event):
         error = False
         if not self.text_ctrl_3.GetValue():
@@ -291,6 +297,7 @@ class CollectionsDialog(wx.Dialog):
         self.text_ctrl_2.SetValue(""),
         self.updateCollectionList()
 
+    @api_tool_decorator
     def deleteCollection(self, event):
         id = None
         selectionStr = self.list_box_1.GetString(self.list_box_1.GetSelection())
@@ -308,6 +315,7 @@ class CollectionsDialog(wx.Dialog):
             self.parentFrame.Logging("Failed to find matching collection", isError=True)
         self.updateCollectionList()
 
+    @api_tool_decorator
     def updateCollectionList(self, event=None):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -322,6 +330,7 @@ class CollectionsDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
+    @api_tool_decorator
     def getSelectionEql(self):
         if self.selectedCollection and "eql" in self.selectedCollection:
             return self.selectedCollection["eql"]

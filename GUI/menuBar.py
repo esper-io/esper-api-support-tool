@@ -133,6 +133,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         self.run.Enable(False)
         self.clone.Enable(False)
@@ -191,6 +192,7 @@ class ToolMenuBar(wx.MenuBar):
             update.start()
             self.isCheckingForUpdates = True
 
+    @api_tool_decorator
     def updateCheck(self):
         icon = wx.ICON_INFORMATION
         msg = ""
@@ -252,6 +254,7 @@ class ToolMenuBar(wx.MenuBar):
     def enableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, True)
 
+    @api_tool_decorator
     def onEqlQuery(self, event):
         self.parentFrame.setGaugeValue(0)
         self.parentFrame.onClearGrids(None)
@@ -272,6 +275,7 @@ class ToolMenuBar(wx.MenuBar):
                         name="eqlIterateThroughDeviceList",
                     )
 
+    @api_tool_decorator
     def onCollection(self, event):
         self.parentFrame.setGaugeValue(0)
         self.parentFrame.onClearGrids(None)
@@ -290,6 +294,7 @@ class ToolMenuBar(wx.MenuBar):
                         name="collectionIterateThroughDeviceList",
                     )
 
+    @api_tool_decorator
     def checkCollectionEnabled(self):
         if not checkCollectionIsEnabled():
             self.collection.Hide()

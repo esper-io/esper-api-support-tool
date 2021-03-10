@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import wx
 
@@ -23,12 +24,14 @@ class ProgressCheckDialog(wx.Dialog):
         self.__do_layout()
         # end wxGlade
 
+    @api_tool_decorator
     def __set_properties(self):
         # begin wxGlade: MyDialog.__set_properties
         self.SetTitle("Progress Check")
         self.SetSize((375, 250))
         # end wxGlade
 
+    @api_tool_decorator
     def __do_layout(self):
         # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -65,6 +68,7 @@ class ProgressCheckDialog(wx.Dialog):
         self.Layout()
         # end wxGlade
 
+    @api_tool_decorator
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)

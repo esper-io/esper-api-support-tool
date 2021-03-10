@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import wx
 import wx.adv
@@ -375,6 +376,7 @@ class CommandDialog(wx.Dialog):
         self.winStartTime = None
         self.winEndTime = None
 
+    @api_tool_decorator
     def onCommandType(self, event):
         type = event.String
         self.choice_2.Enable(False)
@@ -393,6 +395,7 @@ class CommandDialog(wx.Dialog):
             self.text_ctrl_3.Enable(True)
         self.button_OK.Enable(True)
 
+    @api_tool_decorator
     def onDeviceState(self, event):
         state = event.String
         if state.lower() == "locked":
@@ -402,6 +405,7 @@ class CommandDialog(wx.Dialog):
             self.text_ctrl_4.Enable(False)
             self.text_ctrl_4.SetValue("")
 
+    @api_tool_decorator
     def onScheduleType(self, event):
         type = event.String
         self.datepicker_ctrl_1.Enable(False)
@@ -421,6 +425,7 @@ class CommandDialog(wx.Dialog):
         elif type.lower() == "immediate":
             pass
 
+    @api_tool_decorator
     def getStartDateTime(self):
         fullDateTime = datetime(
             self.datepicker_ctrl_1.GetValue().GetYear(),
@@ -438,6 +443,7 @@ class CommandDialog(wx.Dialog):
         date = date + "T" + time + "Z"
         return date, time
 
+    @api_tool_decorator
     def getEndDateTime(self):
         fullDateTime = datetime(
             self.datepicker_ctrl_3.GetValue().GetYear(),
@@ -455,6 +461,7 @@ class CommandDialog(wx.Dialog):
         date = date + "T" + time + "Z"
         return date, time
 
+    @api_tool_decorator
     def GetValue(self):
         command_args = V0CommandArgs(
             app_state=self.choice_2.GetStringSelection(),
@@ -493,6 +500,7 @@ class CommandDialog(wx.Dialog):
             self.choice_4.GetStringSelection(),
         )
 
+    @api_tool_decorator
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)

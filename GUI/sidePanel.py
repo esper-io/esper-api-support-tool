@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import csv
 import wx
 import Common.Globals as Globals
@@ -210,6 +211,7 @@ class SidePanel(wx.Panel):
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         self.actionChoice.SetSelection(1)
 
@@ -222,11 +224,13 @@ class SidePanel(wx.Panel):
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
+        # self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
         self.deviceChoice.Bind(
             wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
         )
 
+    @api_tool_decorator
     def RemoveEndpoint(self, event):
         value = None
         if (
@@ -257,12 +261,14 @@ class SidePanel(wx.Panel):
                         style=wx.OK | wx.ICON_INFORMATION,
                     )
 
+    @api_tool_decorator
     def clearGroupAndDeviceSelections(self):
         self.selectedGroups.Clear()
         self.selectedDevices.Clear()
         self.selectedGroupsList = []
         self.selectedDevicesList = []
 
+    @api_tool_decorator
     def destroyMultiChoiceDialogs(self):
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
@@ -273,6 +279,7 @@ class SidePanel(wx.Panel):
             self.deviceMultiDialog.Destroy()
             self.deviceMultiDialog = None
 
+    @api_tool_decorator
     def onGroupSelection(self, event):
         choices = list(self.groups.keys())
         if self.groupMultiDialog:
@@ -310,6 +317,7 @@ class SidePanel(wx.Panel):
             self.devices = {}
             self.parentFrame.PopulateDevices(None)
 
+    @api_tool_decorator
     def onDeviceSelection(self, event):
         choices = list(self.devices.keys())
         if self.deviceMultiDialog:
@@ -337,6 +345,7 @@ class SidePanel(wx.Panel):
                     self.selectedDevicesList.append(deviceId)
         self.parentFrame.onDeviceSelections(None)
 
+    @api_tool_decorator
     def sortAndPopulateAppChoice(self):
         if not self.selectedDevicesList:
             self.apps = self.enterpriseApps
@@ -365,3 +374,12 @@ class SidePanel(wx.Panel):
             num += 1
             val = percent + int(float(num / len(self.apps) / 2) * 100)
             self.parentFrame.setGaugeValue(val)
+
+    # @api_tool_decorator
+    # def onActionSelection(self, event):
+    #     item = self.actionChoice.GetValue()
+    #     if item == "Action -> Clear App Data" or item == "Action -> Set Kiosk Mode":
+    #         self.parentFrame.PopulateApps()
+    #         self.appChoice.Enable(True)
+    #     else:
+    #         self.appChoice.Enable(False)

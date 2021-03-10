@@ -7,6 +7,7 @@ import os
 
 from datetime import datetime
 from traceback import print_exc, extract_tb, format_list
+import traceback
 
 
 class ApiToolLog:
@@ -44,3 +45,9 @@ class ApiToolLog:
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:
             myfile.write(response)
+
+    def excepthook(self, type, value, tb):
+        message = "Uncaught exception:\n"
+        message += "".join(traceback.format_exception(type, value, tb))
+        with open(self.logPath, "a") as myfile:
+            myfile.write(message)
