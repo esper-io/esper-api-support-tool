@@ -830,7 +830,7 @@ class PreferencesDialog(wx.Dialog):
                 self.prefs[key] = self.getDefaultKeyValue(key)
 
         self.prefs["reachQueueStateOnly"] = Globals.REACH_QUEUED_ONLY
-        # self.prefs["getAppsForEachDevice"] = self.checkbox_5.IsChecked()
+        self.prefs["getAppsForEachDevice"] = Globals.GET_APP_EACH_DEVICE
         self.prefs["getAllApps"] = Globals.USE_ENTERPRISE_APP
         self.prefs["showPkg"] = Globals.SHOW_PKG_NAME
         self.prefs[

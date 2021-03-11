@@ -563,9 +563,6 @@ def executeCommandOnGroup(
     command_type="UPDATE_DEVICE_CONFIG",
 ):
     """ Execute a Command on a Group of Devices """
-    # groupToUse = frame.groupChoice.GetClientData(
-    #     frame.groupChoice.GetSelection()
-    # )  # Get Device Group ID
     statusList = []
     for groupToUse in frame.sidePanel.selectedGroupsList:
         request = esperclient.V0CommandRequest(

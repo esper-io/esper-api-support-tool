@@ -133,7 +133,7 @@ class NewFrameLayout(wx.Frame):
         # Menu Bar end
 
         # Tool Bar
-        self.frame_toolbar = ToolsToolBar(self, -1)  # wx.ToolBar(self, -1)
+        self.frame_toolbar = ToolsToolBar(self, -1)
         self.SetToolBar(self.frame_toolbar)
         # Tool Bar end
 
@@ -173,7 +173,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
         self.Bind(wxThread.EVT_UPDATE_DONE, self.onUpdateComplete)
         self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
-        # self.Bind(wxThread.EVT_DEVICE, self.addDevicesToDeviceChoice)
         self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
         self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
         self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
@@ -1020,12 +1019,6 @@ class NewFrameLayout(wx.Frame):
             and self.sidePanel.appChoice.Items[appSelection]
             else ""
         )
-        # gridLabel = (
-        #     self.sidePanel.gridActions.Items[gridSelection]
-        #     if len(self.sidePanel.gridActions.Items) > 0
-        #     and self.sidePanel.gridActions.Items[gridSelection]
-        #     else ""
-        # )
         actionLabel = (
             self.sidePanel.actionChoice.Items[actionSelection]
             if len(self.sidePanel.actionChoice.Items) > 0
@@ -1036,7 +1029,6 @@ class NewFrameLayout(wx.Frame):
         if (
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
-            # and gridSelection <= 0
             and actionSelection > 0
         ):
             # run action on group
@@ -1077,17 +1069,7 @@ class NewFrameLayout(wx.Frame):
                     groupLabel,
                 ),
             ).start()
-            # TakeAction(
-            #     self,
-            #     self.sidePanel.selectedGroupsList,
-            #     actionClientData,
-            #     groupLabel,
-            # )
-        elif (
-            self.sidePanel.selectedDevicesList
-            # and gridSelection <= 0
-            and actionSelection > 0
-        ):
+        elif self.sidePanel.selectedDevicesList and actionSelection > 0:
             # run action on device
             if (
                 actionClientData == GeneralActions.SET_KIOSK
@@ -1125,13 +1107,6 @@ class NewFrameLayout(wx.Frame):
                     True,
                 ),
             ).start()
-            # TakeAction(
-            #     self,
-            #     self.sidePanel.selectedDevicesList,
-            #     actionClientData,
-            #     None,
-            #     isDevice=True,
-            # )
         elif actionClientData > GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
@@ -1165,7 +1140,6 @@ class NewFrameLayout(wx.Frame):
                         iterateThroughGridRows,
                         (self, actionClientData),
                     ).start()
-                    # iterateThroughGridRows(self, actionClientData)
             else:
                 displayMessageBox(
                     (
@@ -1275,24 +1249,25 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onFetch(self, event):
         self.gauge.Pulse()
+        evtValue = event.GetValue()
+        action = evtValue[0]
+        entId = evtValue[1]
+        deviceList = evtValue[2]
+        updateGauge = False
+        maxGauge = None
+
+        if len(evtValue) == 5:
+            updateGauge = evtValue[3]
+            maxGauge = evtValue[4]
         wxThread.GUIThread(
-            self, self.processFetch, event.GetValue()
+            self,
+            self.processFetch,
+            (action, entId, deviceList, True, len(deviceList) * 2),
         ).start()
 
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
-        # if type(evtValue) == tuple and len(evtValue) >= 3:
         threads = []
-        # action = evtValue[0]
-        # entId = evtValue[1]
-        # deviceList = evtValue[2]
-        # updateGauge = False
-        # maxGauge = None
-
-        # if len(evtValue) == 5:
-        #     updateGauge = evtValue[3]
-        #     maxGauge = evtValue[4]
-
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
 
@@ -1459,29 +1434,23 @@ class NewFrameLayout(wx.Frame):
                     wxThread.GUIThread(
                         self, callback, (*cbArgs, response, *optCbArgs)
                     ).start()
-                    # callback(*(*cbArgs, response, *optCbArgs))
                 elif type(cbArgs) == tuple and type(optCbArgs) != tuple:
                     wxThread.GUIThread(
                         self, callback, (*cbArgs, response, optCbArgs)
                     ).start()
-                    # callback(*(*cbArgs, response, optCbArgs))
                 elif type(cbArgs) != tuple and type(optCbArgs) == tuple:
                     wxThread.GUIThread(
                         self, callback, (cbArgs, response, *optCbArgs)
                     ).start()
-                    # callback(*(cbArgs, response, *optCbArgs))
                 elif type(cbArgs) != tuple and type(optCbArgs) != tuple:
                     wxThread.GUIThread(
                         self, callback, (cbArgs, response, optCbArgs)
                     ).start()
-                    # callback(*(cbArgs, response, optCbArgs))
             else:
                 if type(cbArgs) == tuple:
                     wxThread.GUIThread(self, callback, (*cbArgs, response)).start()
-                    # callback(*(*cbArgs, response))
                 else:
                     wxThread.GUIThread(self, callback, (cbArgs, response)).start()
-                    # callback(cbArgs, response)
 
     @api_tool_decorator
     def onComplete(self, event):
@@ -1754,7 +1723,6 @@ class NewFrameLayout(wx.Frame):
             if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
                 self.isRunningUpdate = True
                 for groupId in Globals.LAST_GROUP_ID:
-                    # TakeAction(self, groupId, 1, None, isUpdate=True)
                     thread = wxThread.GUIThread(
                         self,
                         TakeAction,

@@ -657,7 +657,6 @@ class GridPanel(wx.Panel):
                 num += 1
             if networkInfo not in self.grid_2_contents:
                 self.grid_2_contents.append(networkInfo)
-        # self.grid_2.AutoSizeColumns()
 
     @api_tool_decorator
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):

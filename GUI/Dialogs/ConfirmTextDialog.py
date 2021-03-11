@@ -78,7 +78,6 @@ class ConfirmTextDialog(wx.Dialog):
         sizer_7.AddGrowableRow(1)
         sizer_7.AddGrowableCol(0)
         self.SetSizer(sizer_7)
-        # sizer_7.SetSizeHints(self)
 
         self.SetAffirmativeId(self.button_2.GetId())
         self.SetEscapeId(self.button_1.GetId())

@@ -112,55 +112,6 @@ def iterateThroughGridRows(frame, action):
 
 
 @api_tool_decorator
-def iterateThroughDeviceListV2(
-    action, api_response, entId, isDevice=False, isUpdate=False
-):
-    if len(api_response.results):
-        number_of_devices = 0
-        if not isDevice and not isUpdate:
-            # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-            # if n == 0:
-            #     n = len(api_response.results)
-            # splitResults = [
-            #     api_response.results[i * n : (i + 1) * n]
-            #     for i in range((len(api_response.results) + n - 1) // n)
-            # ]
-            splitResults = splitListIntoChunks(api_response.results)
-
-            threads = []
-            for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    Globals.frame,
-                    processDevices,
-                    args=(chunk, number_of_devices, action),
-                    # eventType=wxThread.myEVT_FETCH,
-                )
-                threads.append(t)
-                t.start()
-                number_of_devices += len(chunk)
-
-            t = wxThread.GUIThread(
-                Globals.frame,
-                waitTillThreadsFinish,
-                args=(tuple(threads), action, entId, 1),
-                eventType=wxThread.myEVT_FETCH,
-            )
-            t.start()
-        else:
-            deviceList = processDevices(
-                api_response.results, number_of_devices, action, isUpdate=isUpdate
-            )[1]
-            return deviceList
-    else:
-        if hasattr(threading.current_thread(), "isStopped"):
-            if threading.current_thread().isStopped():
-                return
-        if Globals.frame:
-            Globals.frame.Logging("---> No devices found for group")
-            displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
-
-
-@api_tool_decorator
 def iterateThroughDeviceList(
     frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
@@ -168,13 +119,6 @@ def iterateThroughDeviceList(
     if len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-            # if n == 0:
-            #     n = len(api_response.results)
-            # splitResults = [
-            #     api_response.results[i * n : (i + 1) * n]
-            #     for i in range((len(api_response.results) + n - 1) // n)
-            # ]
             splitResults = splitListIntoChunks(api_response.results)
 
             threads = []
@@ -182,8 +126,11 @@ def iterateThroughDeviceList(
                 t = wxThread.GUIThread(
                     frame,
                     processDevices,
-                    args=(chunk, number_of_devices, action),
-                    # eventType=wxThread.myEVT_FETCH,
+                    args=(
+                        chunk,
+                        number_of_devices,
+                        action,
+                    ),
                 )
                 threads.append(t)
                 t.start()
@@ -192,7 +139,14 @@ def iterateThroughDeviceList(
             t = wxThread.GUIThread(
                 frame,
                 waitTillThreadsFinish,
-                args=(tuple(threads), action, entId, 1),
+                args=(
+                    tuple(threads),
+                    action,
+                    entId,
+                    1,
+                    None,
+                    len(api_response.results) * 2,
+                ),
                 eventType=wxThread.myEVT_FETCH,
             )
             t.start()
@@ -206,11 +160,11 @@ def iterateThroughDeviceList(
             if threading.current_thread().isStopped():
                 return
         frame.Logging("---> No devices found for group")
-        wx.MessageBox("No devices found for group.", style=wx.ICON_INFORMATION)
+        displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
 
 
 @api_tool_decorator
-def waitTillThreadsFinish(threads, action, entId, source, event=None):
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
     if source == 1:
@@ -218,8 +172,13 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
         for thread in threads:
             if type(thread.result) == tuple:
                 deviceList = {**deviceList, **thread.result[1]}
+                if maxGauge:
+                    postEventToFrame(
+                        wxThread.myEVT_UPDATE_GAUGE,
+                        int(len(deviceList) / maxGauge * 100),
+                    )
         postEventToFrame(event, action)
-        return (action, entId, deviceList)
+        return (action, entId, deviceList, True, len(deviceList) * 2)
     if source == 2:
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
         changeSucceeded = succeeded = numNewName = 0
@@ -254,13 +213,6 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
 
 @api_tool_decorator
 def processCollectionDevices(collectionList):
-    # n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
-    # if n == 0:
-    #     n = len(collectionList["results"])
-    # splitResults = [
-    #     collectionList["results"][i * n : (i + 1) * n]
-    #     for i in range((len(collectionList["results"]) + n - 1) // n)
-    # ]
     splitResults = splitListIntoChunks(collectionList["results"])
     if splitResults:
         threads = []
@@ -555,13 +507,6 @@ def executeDeviceModification(frame):
         api_response.results = list(
             filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
         )
-        # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-        # if n == 0:
-        #     n = len(api_response.results)
-        # splitResults = [
-        #     api_response.results[i * n : (i + 1) * n]
-        #     for i in range((len(api_response.results) + n - 1) // n)
-        # ]
         splitResults = splitListIntoChunks(api_response.results)
 
         threads = []

@@ -241,7 +241,6 @@ class CollectionsDialog(wx.Dialog):
             self.button_2.Enable(False)
             myCursor = wx.Cursor(wx.CURSOR_WAIT)
             self.SetCursor(myCursor)
-            # self.selectedCollection = retrieveCollection(id, returnJson=True)
             self.text_ctrl_1.SetValue(self.selectedCollection["eql"])
             self.text_ctrl_3.SetValue(self.selectedCollection["name"])
             self.button_2.Enable(True)
