@@ -5,6 +5,7 @@ import json
 import sys
 import time
 import wx
+import threading
 
 from esperclient.rest import ApiException
 from Utility.ApiToolLogging import ApiToolLog
@@ -19,15 +20,39 @@ def api_tool_decorator(func):
         try:
             if Globals.RECORD_PLACE:
                 place = ""
+                currThread = threading.current_thread()
                 if func.__name__ and func.__doc__:
-                    place = str(func.__name__ + "\t:\t" + func.__doc__)
+                    place = str(
+                        func.__name__
+                        + "\t:\t"
+                        + func.__doc__
+                        + "\t:\t"
+                        + currThread.name
+                    )
                 elif func.__name__:
-                    place = str(func.__name__)
+                    place = str(func.__name__ + "\t:\t" + currThread.name)
                 ApiToolLog().LogPlace(place)
         except Exception as e:
             ApiToolLog().LogError(e)
         try:
             result = func(*args, **kwargs)
+            try:
+                if Globals.RECORD_PLACE:
+                    place = "Finshed "
+                    currThread = threading.current_thread()
+                    if func.__name__ and func.__doc__:
+                        place += str(
+                            func.__name__
+                            + "\t:\t"
+                            + func.__doc__
+                            + "\t:\t"
+                            + currThread.name
+                        )
+                    elif func.__name__:
+                        place += str(func.__name__ + "\t:\t" + currThread.name)
+                    ApiToolLog().LogPlace(place)
+            except Exception as e:
+                ApiToolLog().LogError(e)
         except ApiException as e:
             excpt = e
             bodyMsg = json.loads(e.body)["message"]

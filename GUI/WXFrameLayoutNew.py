@@ -1067,12 +1067,22 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on group, %s.'
                     % (actionLabel, groupLabel)
                 )
-            TakeAction(
+            wxThread.GUIThread(
                 self,
-                self.sidePanel.selectedGroupsList,
-                actionClientData,
-                groupLabel,
-            )
+                TakeAction,
+                (
+                    self,
+                    self.sidePanel.selectedGroupsList,
+                    actionClientData,
+                    groupLabel,
+                ),
+            ).start()
+            # TakeAction(
+            #     self,
+            #     self.sidePanel.selectedGroupsList,
+            #     actionClientData,
+            #     groupLabel,
+            # )
         elif (
             self.sidePanel.selectedDevicesList
             # and gridSelection <= 0
@@ -1104,13 +1114,24 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on device, %s.'
                     % (actionLabel, deviceLabel)
                 )
-            TakeAction(
+            wxThread.GUIThread(
                 self,
-                self.sidePanel.selectedDevicesList,
-                actionClientData,
-                None,
-                isDevice=True,
-            )
+                TakeAction,
+                (
+                    self,
+                    self.sidePanel.selectedDevicesList,
+                    actionClientData,
+                    None,
+                    True,
+                ),
+            ).start()
+            # TakeAction(
+            #     self,
+            #     self.sidePanel.selectedDevicesList,
+            #     actionClientData,
+            #     None,
+            #     isDevice=True,
+            # )
         elif actionClientData > GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
@@ -1139,7 +1160,12 @@ class NewFrameLayout(wx.Frame):
                         applyAll=True,
                     )
                     self.frame_toolbar.search.SetValue("")
-                    iterateThroughGridRows(self, actionClientData)
+                    wxThread.GUIThread(
+                        self,
+                        iterateThroughGridRows,
+                        (self, actionClientData),
+                    ).start()
+                    # iterateThroughGridRows(self, actionClientData)
             else:
                 displayMessageBox(
                     (
@@ -1248,64 +1274,68 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFetch(self, event):
-        """ Given device data perform the specified action """
         self.gauge.Pulse()
-        evtValue = event.GetValue()
-        if type(evtValue) == tuple and len(evtValue) >= 3:
-            threads = []
-            action = evtValue[0]
-            entId = evtValue[1]
-            deviceList = evtValue[2]
-            updateGauge = False
-            maxGauge = None
+        wxThread.GUIThread(
+            self, self.processFetch, event.GetValue()
+        ).start()
 
-            if len(evtValue) == 5:
-                updateGauge = evtValue[3]
-                maxGauge = evtValue[4]
+    def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
+        """ Given device data perform the specified action """
+        # if type(evtValue) == tuple and len(evtValue) >= 3:
+        threads = []
+        # action = evtValue[0]
+        # entId = evtValue[1]
+        # deviceList = evtValue[2]
+        # updateGauge = False
+        # maxGauge = None
 
-            if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                self.gridPanel.disableGridProperties()
+        # if len(evtValue) == 5:
+        #     updateGauge = evtValue[3]
+        #     maxGauge = evtValue[4]
 
-            for entry in deviceList.values():
-                if entId != Globals.enterprise_id:
+        if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+            self.gridPanel.disableGridProperties()
+
+        for entry in deviceList.values():
+            if entId != Globals.enterprise_id:
+                self.onClearGrids(None)
+                break
+            if hasattr(threading.current_thread(), "isStopped"):
+                if threading.current_thread().isStopped():
                     self.onClearGrids(None)
                     break
-                if hasattr(threading.current_thread(), "isStopped"):
-                    if threading.current_thread().isStopped():
-                        self.onClearGrids(None)
-                        break
-                device = entry[0]
-                deviceInfo = entry[1]
-                if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                elif action == GeneralActions.SET_KIOSK.value:
-                    thread = wxThread.GUIThread(
-                        self,
-                        self.gridPanel.addDeviceToDeviceGrid,
-                        (deviceInfo),
-                    )
-                    thread.start()
-                    threads.append(thread)
-                elif action == GeneralActions.SET_MULTI.value:
-                    thread = wxThread.GUIThread(
-                        self,
-                        setMulti,
-                        (self, device, deviceInfo),
-                    )
-                    thread.start()
-                    threads.append(thread)
-                elif action == GeneralActions.CLEAR_APP_DATA.value:
-                    clearAppData(self, device)
-                limitActiveThreads(threads)
+            device = entry[0]
+            deviceInfo = entry[1]
+            if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+                self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+            elif action == GeneralActions.SET_KIOSK.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    self.gridPanel.addDeviceToDeviceGrid,
+                    (deviceInfo),
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.SET_MULTI.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    setMulti,
+                    (self, device, deviceInfo),
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.CLEAR_APP_DATA.value:
+                clearAppData(self, device)
+            limitActiveThreads(threads)
 
-                if updateGauge:
-                    self.setGaugeValue(int(self.gauge.GetValue() + 1 / maxGauge * 100))
-            wxThread.GUIThread(
-                self,
-                self.waitForThreadsThenSetCursorDefault,
-                (threads, 3, action),
-            ).start()
+            if updateGauge:
+                self.setGaugeValue(int(self.gauge.GetValue() + 1 / maxGauge * 100))
+        wxThread.GUIThread(
+            self,
+            self.waitForThreadsThenSetCursorDefault,
+            (threads, 3, action),
+        ).start()
 
     @api_tool_decorator
     def onUpdateComplete(self, event):
@@ -1426,15 +1456,32 @@ class NewFrameLayout(wx.Frame):
             self.Logging("---> Attempting to Process API Response")
             if optCbArgs:
                 if type(cbArgs) == tuple and type(optCbArgs) == tuple:
-                    callback(*(*cbArgs, response, *optCbArgs))
+                    wxThread.GUIThread(
+                        self, callback, (*cbArgs, response, *optCbArgs)
+                    ).start()
+                    # callback(*(*cbArgs, response, *optCbArgs))
                 elif type(cbArgs) == tuple and type(optCbArgs) != tuple:
-                    callback(*(*cbArgs, response, optCbArgs))
+                    wxThread.GUIThread(
+                        self, callback, (*cbArgs, response, optCbArgs)
+                    ).start()
+                    # callback(*(*cbArgs, response, optCbArgs))
                 elif type(cbArgs) != tuple and type(optCbArgs) == tuple:
-                    callback(*(cbArgs, response, *optCbArgs))
+                    wxThread.GUIThread(
+                        self, callback, (cbArgs, response, *optCbArgs)
+                    ).start()
+                    # callback(*(cbArgs, response, *optCbArgs))
                 elif type(cbArgs) != tuple and type(optCbArgs) != tuple:
-                    callback(*(cbArgs, response, optCbArgs))
+                    wxThread.GUIThread(
+                        self, callback, (cbArgs, response, optCbArgs)
+                    ).start()
+                    # callback(*(cbArgs, response, optCbArgs))
             else:
-                callback(*(*cbArgs, response))
+                if type(cbArgs) == tuple:
+                    wxThread.GUIThread(self, callback, (*cbArgs, response)).start()
+                    # callback(*(*cbArgs, response))
+                else:
+                    wxThread.GUIThread(self, callback, (cbArgs, response)).start()
+                    # callback(cbArgs, response)
 
     @api_tool_decorator
     def onComplete(self, event):
@@ -1444,6 +1491,12 @@ class NewFrameLayout(wx.Frame):
             enable = event.GetValue()
         self.setCursorDefault()
         self.setGaugeValue(100)
+        if self.IsFrozen():
+            self.Thaw()
+        if self.gridPanel.grid_1.IsFrozen():
+            self.gridPanel.grid_1.Thaw()
+        if self.gridPanel.grid_2.IsFrozen():
+            self.gridPanel.grid_2.Thaw()
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False

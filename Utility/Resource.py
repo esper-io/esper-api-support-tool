@@ -80,7 +80,11 @@ def checkEsperInternetConnection():
 
 def checkForInternetAccess(frame):
     while not frame.kill:
-        if not checkEsperInternetConnection() and frame.IsShownOnScreen():
+        if (
+            not checkEsperInternetConnection()
+            and frame.IsShownOnScreen()
+            and frame.IsActive()
+        ):
             displayMessageBox(
                 (
                     "ERROR: An internet connection is required when using the tool!",
@@ -251,3 +255,13 @@ def displayMessageBox(event):
 
     if msg:
         wx.MessageBox(msg, style=sty)
+
+
+def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
+    n = int(len(mainList) / maxThread)
+    if n == 0:
+        n = len(mainList)
+    splitResults = [
+        mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)
+    ]
+    return splitResults

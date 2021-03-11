@@ -59,7 +59,7 @@ class ApiToolLog:
 
     def LogPlace(self, str):
         with open(self.placePath, "a") as myfile:
-            myfile.write("\n%s\t: %s\n" % (datetime.now(), str))
+            myfile.write("%s\t: %s\n" % (datetime.now(), str))
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:

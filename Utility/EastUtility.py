@@ -13,7 +13,13 @@ import wx
 import Utility.EsperAPICalls as apiCalls
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import joinThreadList, postEventToFrame, ipv6Tomac
+from Utility.Resource import (
+    displayMessageBox,
+    joinThreadList,
+    postEventToFrame,
+    ipv6Tomac,
+    splitListIntoChunks,
+)
 
 from esperclient.rest import ApiException
 
@@ -32,6 +38,8 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value) and not isUpdate:
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
+        frame.gridPanel.grid_1.Freeze()
+        frame.gridPanel.grid_2.Freeze()
         frame.CSVUploaded = False
 
     deviceList = None
@@ -104,6 +112,55 @@ def iterateThroughGridRows(frame, action):
 
 
 @api_tool_decorator
+def iterateThroughDeviceListV2(
+    action, api_response, entId, isDevice=False, isUpdate=False
+):
+    if len(api_response.results):
+        number_of_devices = 0
+        if not isDevice and not isUpdate:
+            # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+            # if n == 0:
+            #     n = len(api_response.results)
+            # splitResults = [
+            #     api_response.results[i * n : (i + 1) * n]
+            #     for i in range((len(api_response.results) + n - 1) // n)
+            # ]
+            splitResults = splitListIntoChunks(api_response.results)
+
+            threads = []
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    Globals.frame,
+                    processDevices,
+                    args=(chunk, number_of_devices, action),
+                    # eventType=wxThread.myEVT_FETCH,
+                )
+                threads.append(t)
+                t.start()
+                number_of_devices += len(chunk)
+
+            t = wxThread.GUIThread(
+                Globals.frame,
+                waitTillThreadsFinish,
+                args=(tuple(threads), action, entId, 1),
+                eventType=wxThread.myEVT_FETCH,
+            )
+            t.start()
+        else:
+            deviceList = processDevices(
+                api_response.results, number_of_devices, action, isUpdate=isUpdate
+            )[1]
+            return deviceList
+    else:
+        if hasattr(threading.current_thread(), "isStopped"):
+            if threading.current_thread().isStopped():
+                return
+        if Globals.frame:
+            Globals.frame.Logging("---> No devices found for group")
+            displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
+
+
+@api_tool_decorator
 def iterateThroughDeviceList(
     frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
@@ -111,13 +168,14 @@ def iterateThroughDeviceList(
     if len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-            if n == 0:
-                n = len(api_response.results)
-            splitResults = [
-                api_response.results[i * n : (i + 1) * n]
-                for i in range((len(api_response.results) + n - 1) // n)
-            ]
+            # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+            # if n == 0:
+            #     n = len(api_response.results)
+            # splitResults = [
+            #     api_response.results[i * n : (i + 1) * n]
+            #     for i in range((len(api_response.results) + n - 1) // n)
+            # ]
+            splitResults = splitListIntoChunks(api_response.results)
 
             threads = []
             for chunk in splitResults:
@@ -196,13 +254,14 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
 
 @api_tool_decorator
 def processCollectionDevices(collectionList):
-    n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
-    if n == 0:
-        n = len(collectionList["results"])
-    splitResults = [
-        collectionList["results"][i * n : (i + 1) * n]
-        for i in range((len(collectionList["results"]) + n - 1) // n)
-    ]
+    # n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
+    # if n == 0:
+    #     n = len(collectionList["results"])
+    # splitResults = [
+    #     collectionList["results"][i * n : (i + 1) * n]
+    #     for i in range((len(collectionList["results"]) + n - 1) // n)
+    # ]
+    splitResults = splitListIntoChunks(collectionList["results"])
     if splitResults:
         threads = []
         number_of_devices = 0
@@ -496,13 +555,14 @@ def executeDeviceModification(frame):
         api_response.results = list(
             filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
         )
-        n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-        if n == 0:
-            n = len(api_response.results)
-        splitResults = [
-            api_response.results[i * n : (i + 1) * n]
-            for i in range((len(api_response.results) + n - 1) // n)
-        ]
+        # n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
+        # if n == 0:
+        #     n = len(api_response.results)
+        # splitResults = [
+        #     api_response.results[i * n : (i + 1) * n]
+        #     for i in range((len(api_response.results) + n - 1) // n)
+        # ]
+        splitResults = splitListIntoChunks(api_response.results)
 
         threads = []
         for chunk in splitResults:
