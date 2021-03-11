@@ -158,6 +158,8 @@ class EsperTemplateUtil:
                     if newBg:
                         newBg["enterprise"] = self.toEntId
                         newBg["wallpaper"] = newBg["id"]
+                        newBg["orientations"] = bg["orientations"]
+                        newBg["screen_types"] = bg["screen_types"]
                         bgList.append(newBg)
                 templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
@@ -373,6 +375,8 @@ class EsperTemplateUtil:
                                 "is_g_play": False,
                                 "id": toApp.id,
                                 "app_version": versionId,
+                                "appVersionId": versionId,
+                                "installationRule": app["installationRule"],
                             }
                         )
                         postEventToFrame(
