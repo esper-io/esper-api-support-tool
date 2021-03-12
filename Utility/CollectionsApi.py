@@ -1,3 +1,9 @@
+from Utility.Resource import (
+    performDeleteRequestWithRetry,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+    performPostRequestWithRetry,
+)
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import requests
@@ -22,7 +28,7 @@ def preformEqlSearch(query, who, returnJson=False):
         query=query,
     )
 
-    resp = requests.get(url, headers=headers)
+    resp = performGetRequestWithRetry(url, headers=headers)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
@@ -51,7 +57,7 @@ def fetchCollectionList(returnResp=False):
         enterprise_id=Globals.enterprise_id,
     )
 
-    resp = requests.get(url, headers=headers)
+    resp = performGetRequestWithRetry(url, headers=headers)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
@@ -73,7 +79,7 @@ def createCollection(jsonData, returnJson=False):
         enterprise_id=Globals.enterprise_id,
     )
 
-    resp = requests.post(url, headers=headers, json=jsonData)
+    resp = performPostRequestWithRetry(url, headers=headers, json=jsonData)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
@@ -94,7 +100,7 @@ def retrieveCollection(collectionId, returnJson=False):
         id=collectionId,
     )
 
-    resp = requests.get(url, headers=headers)
+    resp = performGetRequestWithRetry(url, headers=headers)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
@@ -115,7 +121,7 @@ def updateCollection(collectionId, jsonData, returnJson=False):
         id=collectionId,
     )
 
-    resp = requests.patch(url, headers=headers, json=jsonData)
+    resp = performPatchRequestWithRetry(url, headers=headers, json=jsonData)
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp)
 
@@ -136,7 +142,7 @@ def deleteCollection(collectionId, returnJson=False):
         id=collectionId,
     )
 
-    resp = requests.delete(url, headers=headers)
+    resp = performDeleteRequestWithRetry(url, headers=headers)
     jsonResp = None
     try:
         jsonResp = resp.json()

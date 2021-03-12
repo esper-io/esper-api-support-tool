@@ -1270,7 +1270,7 @@ class NewFrameLayout(wx.Frame):
         threads = []
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
-
+        num = len(deviceList)
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -1305,7 +1305,8 @@ class NewFrameLayout(wx.Frame):
             limitActiveThreads(threads)
 
             if updateGauge:
-                self.setGaugeValue(int(self.gauge.GetValue() + 1 / maxGauge * 100))
+                num += 1
+                self.setGaugeValue(int(num / maxGauge * 100))
         wxThread.GUIThread(
             self,
             self.waitForThreadsThenSetCursorDefault,

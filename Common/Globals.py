@@ -18,7 +18,6 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
 deviceInfo_lock = threading.Lock()
-# gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
@@ -26,6 +25,7 @@ grid_color_lock = threading.Lock()
 
 MAX_THREAD_COUNT = 24
 MAX_RETRY = 5
+RETRY_SLEEP = 1
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False

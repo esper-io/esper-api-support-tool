@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 from Common.decorator import api_tool_decorator
 import ast
 import json
@@ -479,24 +480,28 @@ def modifyDevice(frame):
 
 
 @api_tool_decorator
-def executeDeviceModification(frame):
+def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     api_response = None
-    try:
-        api_response = api_instance.get_all_devices(
-            Globals.enterprise_id,
-            limit=Globals.limit,
-            offset=Globals.offset,
-        )
-    except Exception as e:
-        postEventToFrame(
-            wxThread.myEVT_LOG,
-            "---> ERROR: Failed to get devices ids to modify tags and aliases",
-        )
-        print(e)
-        ApiToolLog().LogError(e)
-        return
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
 
     tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
     aliasDic = frame.gridPanel.getDeviceAliasFromList()

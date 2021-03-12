@@ -265,3 +265,65 @@ def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
         mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)
     ]
     return splitResults
+
+
+def performGetRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.get(url, headers=headers, json=json, data=data)
+            break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPatchRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.patch(url, headers=headers, data=data, json=json)
+            break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performDeleteRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.delete(url, headers=headers, data=data, json=json)
+            break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPostRequestWithRetry(
+    url, headers=None, json=None, data=None, files=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.post(
+                url, headers=headers, data=data, json=json, files=files
+            )
+            break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
