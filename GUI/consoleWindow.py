@@ -98,7 +98,7 @@ class Console(wx.Frame):
         self.loggingList.AppendText(entry)
         self.loggingList.AppendText("\n")
         if self.WINDOWS:
-            self.loggingList.ShowPosition(self.loggingList.GetCount() - 1)
+            self.loggingList.ShowPosition(self.loggingList.GetNumberOfLines() - 1)
         if entry:
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)
