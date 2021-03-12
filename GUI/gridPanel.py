@@ -233,7 +233,7 @@ class GridPanel(wx.Panel):
                 and self.parentFrame.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
-            or self.disableGridProperties
+            or self.disableProperties
         ):
             return
         if hasattr(event, "Col"):
@@ -294,7 +294,7 @@ class GridPanel(wx.Panel):
                 and self.parentFrame.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
-            or self.disableGridProperties
+            or self.disableProperties
         ):
             return
         if hasattr(event, "Col"):
