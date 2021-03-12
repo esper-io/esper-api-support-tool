@@ -1287,7 +1287,7 @@ class NewFrameLayout(wx.Frame):
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self,
-                    self.gridPanel.addDeviceToDeviceGrid,
+                    self.gridPanel.setKiosk,
                     (deviceInfo),
                 )
                 thread.start()
@@ -1583,29 +1583,30 @@ class NewFrameLayout(wx.Frame):
     def onFail(self, event):
         """ Try to showcase rows in the grid on which an action failed on """
         failed = event.GetValue()
-        if type(failed) == list:
-            for device in failed:
-                if "Queued" in device:
+        if self.gridPanel.grid_1_contents and self.gridPanel.grid_2_contents:
+            if type(failed) == list:
+                for device in failed:
+                    if "Queued" in device:
+                        self.gridPanel.applyTextColorToDevice(
+                            device[0], Color.orange.value, bgColor=Color.warnBg.value
+                        )
+                    else:
+                        self.gridPanel.applyTextColorToDevice(
+                            device, Color.red.value, bgColor=Color.errorBg.value
+                        )
+            elif type(failed) == tuple:
+                if "Queued" in failed:
                     self.gridPanel.applyTextColorToDevice(
-                        device[0], Color.orange.value, bgColor=Color.warnBg.value
+                        failed[0], Color.orange.value, bgColor=Color.warnBg.value
                     )
                 else:
                     self.gridPanel.applyTextColorToDevice(
-                        device, Color.red.value, bgColor=Color.errorBg.value
+                        failed, Color.red.value, bgColor=Color.errorBg.value
                     )
-        elif type(failed) == tuple:
-            if "Queued" in failed:
-                self.gridPanel.applyTextColorToDevice(
-                    failed[0], Color.orange.value, bgColor=Color.warnBg.value
-                )
-            else:
+            elif failed:
                 self.gridPanel.applyTextColorToDevice(
                     failed, Color.red.value, bgColor=Color.errorBg.value
                 )
-        elif failed:
-            self.gridPanel.applyTextColorToDevice(
-                failed, Color.red.value, bgColor=Color.errorBg.value
-            )
 
     @api_tool_decorator
     def onFileDrop(self, event):

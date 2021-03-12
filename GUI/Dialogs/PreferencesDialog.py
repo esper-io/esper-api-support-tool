@@ -11,11 +11,11 @@ class PreferencesDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(500, 400),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,  # | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.SetSize((500, 400))
-        self.SetMinSize((500, 400))
+        self.SetSize((500, 450))
+        self.SetMinSize((500, 450))
 
         self.parent = parent
         self.prefs = prefDict
@@ -38,6 +38,7 @@ class PreferencesDialog(wx.Dialog):
             "templateUpdate",
             "colMove",
             "colSize",
+            "setStateShow",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -81,7 +82,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Enable Device Selection")
+        label_1 = wx.StaticText(
+            self.panel_3,
+            wx.ID_ANY,
+            "Enable Device Selection",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_1.SetToolTip(
             "Allow user to specify actions on a selections of devices within a group."
         )
@@ -100,7 +106,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_2 = wx.StaticText(self.panel_5, wx.ID_ANY, "API Request Limit")
+        label_2 = wx.StaticText(
+            self.panel_5,
+            wx.ID_ANY,
+            "API Request Limit",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_2.SetToolTip("Maximum amount of results that the API will return.")
         sizer_8.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -125,7 +136,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_4 = wx.StaticText(self.panel_9, wx.ID_ANY, "API Request Offset")
+        label_4 = wx.StaticText(
+            self.panel_9,
+            wx.ID_ANY,
+            "API Request Offset",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_4.SetToolTip("Page of results the API sends back (starts at 0)")
         sizer_10.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -152,7 +168,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_21 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_12 = wx.StaticText(self.panel_25, wx.ID_ANY, "Command Timeout (seconds)")
+        label_12 = wx.StaticText(
+            self.panel_25,
+            wx.ID_ANY,
+            "Command Timeout (seconds)",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_12.SetToolTip(
             "How long a command should wait on the status check before skipping."
         )
@@ -176,7 +197,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_22 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_13 = wx.StaticText(
-            self.panel_27, wx.ID_ANY, "Reach Queued Command State Only"
+            self.panel_27,
+            wx.ID_ANY,
+            "Reach Queued Command State Only",
+            style=wx.ST_ELLIPSIZE_END,
         )
         label_13.SetToolTip(
             "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes."
@@ -204,7 +228,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_17 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_9 = wx.StaticText(self.panel_19, wx.ID_ANY, "Enable Grid Refresh")
+        label_9 = wx.StaticText(
+            self.panel_19,
+            wx.ID_ANY,
+            "Enable Grid Refresh",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_9.SetToolTip(
             "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
             % Globals.MAX_UPDATE_COUNT
@@ -225,7 +254,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_18 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_10 = wx.StaticText(
-            self.panel_21, wx.ID_ANY, "Grid Refresh Rate (seconds)"
+            self.panel_21,
+            wx.ID_ANY,
+            "Grid Refresh Rate (seconds)",
+            style=wx.ST_ELLIPSIZE_END,
         )
         label_10.SetToolTip("How often the Grid should update its cell data.")
         sizer_18.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -246,14 +278,18 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
-        # ****
         self.panel_33 = wx.Panel(self.grid, wx.ID_ANY)
         sizer_16.Add(self.panel_33, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_25 = wx.BoxSizer(wx.HORIZONTAL)
         self.panel_33.SetSizer(sizer_25)
 
-        label_10 = wx.StaticText(self.panel_33, wx.ID_ANY, "Allow Column Draging")
+        label_10 = wx.StaticText(
+            self.panel_33,
+            wx.ID_ANY,
+            "Allow Column Draging",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_10.SetToolTip("Allow user to reoder grid columns by dragging them.")
         sizer_25.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -272,7 +308,12 @@ class PreferencesDialog(wx.Dialog):
         sizer_26 = wx.BoxSizer(wx.HORIZONTAL)
         self.panel_35.SetSizer(sizer_26)
 
-        label_10 = wx.StaticText(self.panel_35, wx.ID_ANY, "Allow Column Resizing")
+        label_10 = wx.StaticText(
+            self.panel_35,
+            wx.ID_ANY,
+            "Allow Column Resizing",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_10.SetToolTip("Allow user to resize grid columns")
         sizer_26.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -284,13 +325,12 @@ class PreferencesDialog(wx.Dialog):
 
         self.checkbox_10 = wx.CheckBox(self.panel_36, wx.ID_ANY, "")
         grid_sizer_17.Add(self.checkbox_10, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-        # ****
 
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)
+        sizer_9 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_7 = wx.Panel(self.app, wx.ID_ANY)
         sizer_9.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
@@ -298,7 +338,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_12 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_3 = wx.StaticText(
-            self.panel_7, wx.ID_ANY, "Fetch All Installed Applications"
+            self.panel_7,
+            wx.ID_ANY,
+            "Fetch All Installed Applications",
+            style=wx.ST_ELLIPSIZE_END,
         )
         label_3.SetToolTip(
             "Fetches all installed applications, including those that are hidden."
@@ -319,7 +362,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_6 = wx.StaticText(
-            self.panel_13, wx.ID_ANY, "Show Application's Package Name"
+            self.panel_13,
+            wx.ID_ANY,
+            "Show Application's Package Name",
+            style=wx.ST_ELLIPSIZE_END,
         )
         label_6.SetToolTip(
             "Displays an Application's Package Name (e.g., In Tags or the Application input)"
@@ -340,7 +386,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_15 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_7 = wx.StaticText(
-            self.panel_15, wx.ID_ANY, "Get Applications for Each Device"
+            self.panel_15,
+            wx.ID_ANY,
+            "Get Applications for Each Device",
+            style=wx.ST_ELLIPSIZE_END,
         )
         label_7.SetToolTip(
             "Fetch all applications for every device within a group.\nPerformance may be slower."
@@ -355,6 +404,30 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_6 = wx.CheckBox(self.panel_16, wx.ID_ANY, "")
         grid_sizer_7.Add(self.checkbox_6, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        self.panel_38 = wx.Panel(self.app, wx.ID_ANY)
+        sizer_9.Add(self.panel_38, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_27 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_16 = wx.StaticText(
+            self.panel_38,
+            wx.ID_ANY,
+            "Set App State To SHOW before Set Kiosk",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_16.SetToolTip(
+            "Set App State of Application To SHOW before Setting to as Kiosk app."
+        )
+        sizer_27.Add(label_16, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_37 = wx.Panel(self.panel_38, wx.ID_ANY)
+        sizer_27.Add(self.panel_37, 1, wx.EXPAND, 0)
+
+        grid_sizer_18 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_11 = wx.CheckBox(self.panel_37, wx.ID_ANY, "")
+        grid_sizer_18.Add(self.checkbox_11, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.prompts.Hide()
         sizer_5.Add(self.prompts, 1, wx.EXPAND, 0)
@@ -366,7 +439,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_23 = wx.BoxSizer(wx.HORIZONTAL)
 
-        label_14 = wx.StaticText(self.panel_29, wx.ID_ANY, "Grid Confirmation Prompt")
+        label_14 = wx.StaticText(
+            self.panel_29,
+            wx.ID_ANY,
+            "Grid Confirmation Prompt",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         sizer_23.Add(label_14, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_30 = wx.Panel(self.panel_29, wx.ID_ANY)
@@ -383,7 +461,10 @@ class PreferencesDialog(wx.Dialog):
         sizer_24 = wx.BoxSizer(wx.HORIZONTAL)
 
         label_15 = wx.StaticText(
-            self.panel_31, wx.ID_ANY, "Template Confirmation Prompt"
+            self.panel_31,
+            wx.ID_ANY,
+            "Template Confirmation Prompt",
+            style=wx.ST_ELLIPSIZE_END,
         )
         sizer_24.Add(label_15, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -420,6 +501,10 @@ class PreferencesDialog(wx.Dialog):
         self.panel_16.SetSizer(grid_sizer_7)
 
         self.panel_15.SetSizer(sizer_15)
+
+        self.panel_38.SetSizer(sizer_27)
+
+        self.panel_37.SetSizer(grid_sizer_18)
 
         self.panel_14.SetSizer(grid_sizer_6)
 
@@ -638,6 +723,20 @@ class PreferencesDialog(wx.Dialog):
                 if self.parent:
                     self.parent.gridPanel.disableGridProperties(False, False, True)
 
+        if not prefDict or (prefDict and not prefDict["setStateShow"]):
+            self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SET_APP_STATE_AS_SHOW = False
+        elif prefDict and prefDict["setStateShow"]:
+            if (
+                isinstance(self.prefs["setStateShow"], str)
+                and prefDict["setStateShow"].lower() == "true"
+            ) or prefDict["setStateShow"] == True:
+                self.checkbox_11.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SET_APP_STATE_AS_SHOW = True
+            else:
+                self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SET_APP_STATE_AS_SHOW = False
+
     @api_tool_decorator
     def showMatchingPanel(self, event):
         event.Skip()
@@ -697,8 +796,10 @@ class PreferencesDialog(wx.Dialog):
             "getAppsForEachDevice": self.checkbox_6.IsChecked(),
             "colMove": self.checkbox_9.IsChecked(),
             "colSize": self.checkbox_10.IsChecked(),
+            "setStateShow": self.checkbox_11.IsChecked(),
         }
 
+        Globals.SET_APP_STATE_AS_SHOW = False
         Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
@@ -883,5 +984,7 @@ class PreferencesDialog(wx.Dialog):
             return True
         elif key == "colSize":
             return True
+        elif key == "setStateShow":
+            return Globals.SET_APP_STATE_AS_SHOW
         else:
             return None

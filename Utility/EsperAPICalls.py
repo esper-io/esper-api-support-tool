@@ -664,8 +664,12 @@ def setKiosk(frame, device, deviceInfo):
         + " -> Kiosk ->"
         + str(appToUse)
     )
-    stateStatus = setAppState(device.id, appToUse, "SHOW")
-    timeout = Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
+    timeout = Globals.COMMAND_TIMEOUT
+    if Globals.SET_APP_STATE_AS_SHOW:
+        stateStatus = setAppState(device.id, appToUse, "SHOW")
+        timeout = (
+            Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
+        )
     status = toggleKioskMode(frame, device.id, appToUse, True, timeout)
     if "Success" in str(status):
         logString = logString + " <success>"
