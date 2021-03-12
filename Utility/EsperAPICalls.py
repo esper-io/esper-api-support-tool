@@ -32,7 +32,7 @@ def logBadResponse(url, resp, json_resp):
                 result=json.dumps(json_resp, indent=4, sort_keys=True)
             )
         else:
-            prettyReponse = url + "\nBody:\n" + resp.body
+            prettyReponse = str(resp)
         print(prettyReponse)
         ApiToolLog().LogResponse(prettyReponse)
 

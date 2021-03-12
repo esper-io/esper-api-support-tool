@@ -224,7 +224,7 @@ class SidePanel(wx.Panel):
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
-        # self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
+        self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
         self.deviceChoice.Bind(
             wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
@@ -375,11 +375,11 @@ class SidePanel(wx.Panel):
             val = percent + int(float(num / len(self.apps) / 2) * 100)
             self.parentFrame.setGaugeValue(val)
 
-    # @api_tool_decorator
-    # def onActionSelection(self, event):
-    #     item = self.actionChoice.GetValue()
-    #     if item == "Action -> Clear App Data" or item == "Action -> Set Kiosk Mode":
-    #         self.parentFrame.PopulateApps()
-    #         self.appChoice.Enable(True)
-    #     else:
-    #         self.appChoice.Enable(False)
+    @api_tool_decorator
+    def onActionSelection(self, event):
+        item = self.actionChoice.GetValue()
+        if item == "Action -> Clear App Data" or item == "Action -> Set Kiosk Mode":
+            # self.parentFrame.PopulateApps()
+            self.appChoice.Enable(True)
+        else:
+            self.appChoice.Enable(False)
