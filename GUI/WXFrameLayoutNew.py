@@ -1287,8 +1287,8 @@ class NewFrameLayout(wx.Frame):
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self,
-                    self.gridPanel.setKiosk,
-                    (deviceInfo),
+                    setKiosk,
+                    (self, device, deviceInfo),
                 )
                 thread.start()
                 threads.append(thread)
