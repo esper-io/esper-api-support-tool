@@ -1018,7 +1018,6 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
 
-        # gridSelection = self.sidePanel.gridActions.GetSelection()
         appSelection = self.sidePanel.appChoice.GetSelection()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
