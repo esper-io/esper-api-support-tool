@@ -816,6 +816,16 @@ class NewFrameLayout(wx.Frame):
         if source == 3:
             self.gridPanel.enableGridProperties()
             self.gridPanel.autoSizeGridsColumns()
+            if (
+                action == GeneralActions.SET_KIOSK.value
+                or action == GeneralActions.SET_MULTI.value
+            ):
+                cmdResults = []
+                for t in threads:
+                    if t.result:
+                        cmdResults.append(t.result)
+                if cmdResults:
+                    postEventToFrame(wxThread.myEVT_COMMAND, cmdResults)
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
             postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
         self.toggleEnabledState(True)
@@ -1033,8 +1043,8 @@ class NewFrameLayout(wx.Frame):
         ):
             # run action on group
             if (
-                actionClientData == GeneralActions.SET_KIOSK
-                or actionClientData == GeneralActions.CLEAR_APP_DATA
+                actionClientData == GeneralActions.SET_KIOSK.value
+                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
@@ -1072,8 +1082,8 @@ class NewFrameLayout(wx.Frame):
         elif self.sidePanel.selectedDevicesList and actionSelection > 0:
             # run action on device
             if (
-                actionClientData == GeneralActions.SET_KIOSK
-                or actionClientData == GeneralActions.CLEAR_APP_DATA
+                actionClientData == GeneralActions.SET_KIOSK.value
+                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
@@ -1227,9 +1237,9 @@ class NewFrameLayout(wx.Frame):
                 result += json.dumps(str(res), indent=2)
                 result += "\n\n"
             with ConfirmTextDialog(
-                "Command has been fired.",
+                "Command(s) has been fired.",
                 "Check the Esper Console for details. Last command status listed below.",
-                "Command has been fired.",
+                "Command(s) has been fired.",
                 result,
             ) as dialog:
                 res = dialog.ShowModal()
@@ -1317,19 +1327,19 @@ class NewFrameLayout(wx.Frame):
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
         action = event.GetValue()
-        if (
-            action == GeneralActions.SET_KIOSK.value
-            or action == GeneralActions.SET_MULTI.value
-        ):
-            self.Logging("---> Please refer to the Esper Console for detailed results.")
-            if not self.checkConsole:
-                try:
-                    self.checkConsole = ProgressCheckDialog()
-                    self.checkConsole.ShowModal()
-                    self.checkConsole = None
-                except Exception as e:
-                    print(e)
-                    ApiToolLog().LogError(e)
+        # if (
+        #     action == GeneralActions.SET_KIOSK.value
+        #     or action == GeneralActions.SET_MULTI.value
+        # ):
+        #     self.Logging("---> Please refer to the Esper Console for detailed results.")
+        #     if not self.checkConsole:
+        #         try:
+        #             self.checkConsole = ProgressCheckDialog()
+        #             self.checkConsole.ShowModal()
+        #             self.checkConsole = None
+        #         except Exception as e:
+        #             print(e)
+        #             ApiToolLog().LogError(e)
         if action == GeneralActions.CLEAR_APP_DATA.value:
             displayMessageBox(
                 (

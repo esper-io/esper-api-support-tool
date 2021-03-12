@@ -162,7 +162,9 @@ def toggleKioskMode(
             time.sleep(Globals.RETRY_SLEEP)
     status = response.results[0].state
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-    status = waitForCommandToFinish(frame, api_response.id, ignoreQueue=ignoreQueued)
+    status = waitForCommandToFinish(
+        frame, api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
+    )
     return status
 
 
@@ -688,6 +690,18 @@ def setKiosk(frame, device, deviceInfo):
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
     if warning:
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+    if hasattr(status, "state"):
+        return {
+            "Esper Name": device.device_name,
+            "Device Id": device.id,
+            "Status": status.state,
+        }
+    else:
+        return {
+            "Esper Name": device.device_name,
+            "Device Id": device.id,
+            "Status": status,
+        }
 
 
 @api_tool_decorator
@@ -721,6 +735,18 @@ def setMulti(frame, device, deviceInfo):
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
     if warning:
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+    if hasattr(status, "state"):
+        return {
+            "Esper Name": device.device_name,
+            "Device Id": device.id,
+            "Status": status.state,
+        }
+    else:
+        return {
+            "Esper Name": device.device_name,
+            "Device Id": device.id,
+            "Status": status,
+        }
 
 
 @api_tool_decorator

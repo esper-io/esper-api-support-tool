@@ -630,7 +630,7 @@ class PreferencesDialog(wx.Dialog):
 
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SHOW_PKG_NAME = False
+            Globals.REACH_QUEUED_ONLY = False
         elif prefDict and prefDict["reachQueueStateOnly"]:
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
