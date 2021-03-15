@@ -5,6 +5,7 @@ import re
 import threading
 import wx
 import wx.grid as gridlib
+import Utility.wxThread as wxThread
 
 
 from Common.decorator import api_tool_decorator
@@ -782,6 +783,14 @@ class GridPanel(wx.Panel):
     @api_tool_decorator
     def updateTagCell(self, name, tags=None):
         """ Update the Tag Column in the Device Grid """
+        wxThread.GUIThread(
+            self.parentFrame,
+            self.processUpdateTagCell,
+            (name, tags),
+            name="UpdateTagCell",
+        )
+
+    def processUpdateTagCell(self, name, tags=None):
         Globals.grid1_lock.acquire()
         self.disableGridProperties()
         name = tags = None

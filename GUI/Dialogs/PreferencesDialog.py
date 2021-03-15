@@ -778,10 +778,6 @@ class PreferencesDialog(wx.Dialog):
             self.parent.startUpdateThread()
 
         if self.parent:
-            if self.checkbox_9.IsChecked():
-                self.parent.gridPanel.enableGridProperties(True, False, True)
-            else:
-                self.parent.gridPanel.disableGridProperties(False, True, False)
             if self.checkbox_10.IsChecked():
                 self.parent.gridPanel.enableGridProperties(True, True, False)
             else:
