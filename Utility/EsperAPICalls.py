@@ -144,6 +144,8 @@ def toggleKioskMode(
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             break
         except Exception as e:
+            if hasattr(e, "body") and "invalid device id" in e.body:
+                return None
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
@@ -677,38 +679,40 @@ def setKiosk(frame, device, deviceInfo):
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
     status = toggleKioskMode(frame, device.id, appToUse, True, timeout)
-    if "Success" in str(status):
-        logString = logString + " <success>"
-    elif "Queued" in str(status):
-        logString = (
-            logString + " <warning, check back on the device (%s)>" % device.device_name
-        )
-        warning = True
-    else:
-        logString = logString + " <failed>"
-        failed = True
-    if deviceInfo["Status"] != "Online":
-        logString = logString + " (Device offline)"
-    postEventToFrame(wxThread.myEVT_LOG, logString)
-    if failed:
-        postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
-    if warning:
-        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
-    if hasattr(status, "state"):
-        entry = {
-            "Esper Name": device.device_name,
-            "Device Id": device.id,
-            "Status": status.state,
-        }
-        if hasattr(status, "reason"):
-            entry["Reason"] = status.reason
-        return entry
-    else:
-        return {
-            "Esper Name": device.device_name,
-            "Device Id": device.id,
-            "Status": status,
-        }
+    if status:
+        if "Success" in str(status):
+            logString = logString + " <success>"
+        elif "Queued" in str(status):
+            logString = (
+                logString
+                + " <warning, check back on the device (%s)>" % device.device_name
+            )
+            warning = True
+        else:
+            logString = logString + " <failed>"
+            failed = True
+        if deviceInfo["Status"] != "Online":
+            logString = logString + " (Device offline)"
+        postEventToFrame(wxThread.myEVT_LOG, logString)
+        if failed:
+            postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
+        if warning:
+            postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+        if hasattr(status, "state"):
+            entry = {
+                "Esper Name": device.device_name,
+                "Device Id": device.id,
+                "Status": status.state,
+            }
+            if hasattr(status, "reason"):
+                entry["Reason"] = status.reason
+            return entry
+        else:
+            return {
+                "Esper Name": device.device_name,
+                "Device Id": device.id,
+                "Status": status,
+            }
 
 
 @api_tool_decorator
@@ -722,17 +726,18 @@ def setMulti(frame, device, deviceInfo):
     warning = False
     if deviceInfo["Mode"] == "Kiosk":
         status = toggleKioskMode(frame, device.id, {}, False)
-        if "Success" in str(status):
-            logString = logString + " <success>"
-        elif "Queued" in str(status):
-            logString = (
-                logString
-                + " <warning, check back on the device (%s)>" % device.device_name
-            )
-            warning = True
-        else:
-            logString = logString + " <failed>"
-            failed = True
+        if status:
+            if "Success" in str(status):
+                logString = logString + " <success>"
+            elif "Queued" in str(status):
+                logString = (
+                    logString
+                    + " <warning, check back on the device (%s)>" % device.device_name
+                )
+                warning = True
+            else:
+                logString = logString + " <failed>"
+                failed = True
     else:
         logString = logString + " (Already Multi mode, skipping)"
     if deviceInfo["Status"] != "Online":
@@ -742,7 +747,7 @@ def setMulti(frame, device, deviceInfo):
         postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
     if warning:
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
-    if hasattr(status, "state"):
+    if status and hasattr(status, "state"):
         entry = {
             "Esper Name": device.device_name,
             "Device Id": device.id,
