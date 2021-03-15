@@ -197,10 +197,14 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                 succeeded += thread.result[1]
                 numNewName += thread.result[2]
                 tagsFromGrid = thread.result[3]
-        postEventToFrame(
-            wxThread.myEVT_LOG,
+        msg = (
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
+            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName)
+        )
+        postEventToFrame(wxThread.myEVT_LOG, msg)
+        postEventToFrame(
+            wxThread.myEVT_MESSAGE_BOX,
+            (msg, wx.ICON_INFORMATION),
         )
     if source == 3:
         deviceList = {}
