@@ -185,6 +185,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(wxThread.EVT_MESSAGE_BOX, displayMessageBox)
+        self.Bind(wxThread.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
@@ -759,6 +760,13 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None):
+        if hasattr(threads, "GetValue"):
+            evtVal = threads.GetValue()
+            threads = evtVal[0]
+            if len(evtVal) > 1:
+                source = evtVal[1]
+            if len(evtVal) > 2:
+                action = evtVal[2]
         joinThreadList(threads)
         if source == 0:
             self.sidePanel.groupChoice.Enable(True)
@@ -819,11 +827,17 @@ class NewFrameLayout(wx.Frame):
             if (
                 action == GeneralActions.SET_KIOSK.value
                 or action == GeneralActions.SET_MULTI.value
+                or action == GridActions.SET_APP_STATE_DISABLE.value
+                or action == GridActions.SET_APP_STATE_HIDE.value
+                or action == GridActions.SET_APP_STATE_SHOW.value
             ):
                 cmdResults = []
                 for t in threads:
                     if t.result:
-                        cmdResults.append(t.result)
+                        if type(t.result) == list:
+                            cmdResults = cmdResults + t.result
+                        else:
+                            cmdResults.append(t.result)
                 if cmdResults:
                     postEventToFrame(wxThread.myEVT_COMMAND, cmdResults)
             postEventToFrame(wxThread.myEVT_COMPLETE, True)
@@ -1039,6 +1053,8 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
             and actionSelection > 0
+            and actionClientData > 0
+            and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on group
             if (
@@ -1077,8 +1093,14 @@ class NewFrameLayout(wx.Frame):
                     actionClientData,
                     groupLabel,
                 ),
+                name="TakeActionOnGroups",
             ).start()
-        elif self.sidePanel.selectedDevicesList and actionSelection > 0:
+        elif (
+            self.sidePanel.selectedDevicesList
+            and actionSelection > 0
+            and actionClientData > 0
+            and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
+        ):
             # run action on device
             if (
                 actionClientData == GeneralActions.SET_KIOSK.value
@@ -1115,8 +1137,9 @@ class NewFrameLayout(wx.Frame):
                     None,
                     True,
                 ),
+                name="TakeActionOnDevices",
             ).start()
-        elif actionClientData > GridActions.MODIFY_ALIAS_AND_TAGS.value:
+        elif actionClientData >= GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
                 runAction = True
@@ -1148,11 +1171,12 @@ class NewFrameLayout(wx.Frame):
                         self,
                         iterateThroughGridRows,
                         (self, actionClientData),
+                        name="iterateThroughGridRows",
                     ).start()
             else:
                 displayMessageBox(
                     (
-                        "Make sure the grid has data to perform an action on",
+                        "Make sure the grid has data to perform the action on",
                         wx.OK | wx.ICON_ERROR,
                     )
                 )
@@ -1161,7 +1185,7 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(
                 (
-                    "Please select an action to perform on a group or device!",
+                    "Please select an valid action to perform on the selected group(s) or device(s)!",
                     wx.OK | wx.ICON_ERROR,
                 )
             )

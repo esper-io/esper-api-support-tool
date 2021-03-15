@@ -27,6 +27,9 @@ class GridPanel(wx.Panel):
         self.parentFrame = parentFrame
         self.disableProperties = False
 
+        self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
+
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
         label_7 = wx.StaticText(self, wx.ID_ANY, "Network Info:")
@@ -89,11 +92,10 @@ class GridPanel(wx.Panel):
     def fillDeviceGridHeaders(self):
         """ Populate Device Grid Headers """
         num = 0
-        headerLabels = Globals.CSV_TAG_ATTR_NAME.keys()
         try:
-            for head in headerLabels:
+            for head in self.grid1HeaderLabels:
                 if head:
-                    if self.grid_1.GetNumberCols() < len(headerLabels):
+                    if self.grid_1.GetNumberCols() < len(self.grid1HeaderLabels):
                         self.grid_1.AppendCols(1)
                     self.grid_1.SetColLabelValue(num, head)
                     num += 1
@@ -105,11 +107,10 @@ class GridPanel(wx.Panel):
     def fillNetworkGridHeaders(self):
         """ Populate Network Grid Headers """
         num = 0
-        headerLabels = Globals.CSV_NETWORK_ATTR_NAME.keys()
         try:
-            for head in headerLabels:
+            for head in self.grid2HeaderLabels:
                 if head:
-                    if self.grid_2.GetNumberCols() < len(headerLabels):
+                    if self.grid_2.GetNumberCols() < len(self.grid2HeaderLabels):
                         self.grid_2.AppendCols(1)
                     self.grid_2.SetColLabelValue(num, head)
                     num += 1
@@ -169,8 +170,8 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator
     def onCellEdit(self, event):
-        indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
-        indx2 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
+        indx1 = self.grid1HeaderLabels.index("Tags")
+        indx2 = self.grid1HeaderLabels.index("Alias")
         x, y = self.grid_1.GetGridCursorCoords()
         esperName = self.grid_1.GetCellValue(x, 0)
         deviceListing = list(
@@ -349,8 +350,8 @@ class GridPanel(wx.Panel):
         if self.disableProperties:
             event.Skip()
             return
-        indx1 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
-        indx2 = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
+        indx1 = self.grid1HeaderLabels.index("Tags")
+        indx2 = self.grid1HeaderLabels.index("Alias")
         grid_win = self.grid_1.GetTargetWindow()
         grid_win2 = self.grid_2.GetTargetWindow()
 
@@ -371,7 +372,7 @@ class GridPanel(wx.Panel):
     @api_tool_decorator
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
-        statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
+        statusIndex = self.grid1HeaderLabels.index("Status")
         if grid != self.grid_1:
             statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
@@ -468,9 +469,7 @@ class GridPanel(wx.Panel):
                             break
                         deviceListing.update(device)
                         for attribute in Globals.CSV_TAG_ATTR_NAME:
-                            indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(
-                                attribute
-                            )
+                            indx = self.grid1HeaderLabels.index(attribute)
                             cellValue = self.grid_1.GetCellValue(rowNum, indx)
                             fecthValue = (
                                 device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
@@ -617,9 +616,7 @@ class GridPanel(wx.Panel):
                             )
                             break
                         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(
-                                attribute
-                            )
+                            indx = self.grid2HeaderLabels.index(attribute)
                             cellValue = self.grid_2.GetCellValue(rowNum, indx)
                             fecthValue = (
                                 networkInfo[attribute]
@@ -662,7 +659,7 @@ class GridPanel(wx.Panel):
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
         Globals.grid1_lock.acquire()
-        statusIndex = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Status")
+        statusIndex = self.grid1HeaderLabels.index("Status")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
@@ -685,13 +682,13 @@ class GridPanel(wx.Panel):
         """ Return the tags from Grid """
         Globals.grid1_lock.acquire()
         tagList = {}
-        en_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Esper Name")
-        sn_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Serial Number")
+        en_indx = self.grid1HeaderLabels.index("Esper Name")
+        sn_indx = self.grid1HeaderLabels.index("Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
+                indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
                 for r in re.findall(r"\".+?\"|[\w\d '-+\\/^%$#!@$%^&]+", tags):
@@ -714,9 +711,9 @@ class GridPanel(wx.Panel):
         """ Return a list of Aliases from the Grid """
         Globals.grid1_lock.acquire()
         aliasList = {}
-        indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Alias")
-        en_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Esper Name")
-        sn_indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Serial Number")
+        indx = self.grid1HeaderLabels.index("Alias")
+        en_indx = self.grid1HeaderLabels.index("Esper Name")
+        sn_indx = self.grid1HeaderLabels.index("Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
@@ -797,7 +794,7 @@ class GridPanel(wx.Panel):
                 if rowNum < self.grid_1.GetNumberRows():
                     esperName = self.grid_1.GetCellValue(rowNum, 0)
                     if name == esperName:
-                        indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index("Tags")
+                        indx = self.grid1HeaderLabels.index("Tags")
                         if not all("" == s or s.isspace() for s in tags):
                             self.grid_1.SetCellValue(rowNum, indx, str(tags))
                         else:
@@ -842,3 +839,17 @@ class GridPanel(wx.Panel):
         self.disableProperties = False
         Globals.grid1_lock.release()
         Globals.grid2_lock.release()
+
+    def getDeviceIdentifersFromGrid(self):
+        Globals.grid1_lock.acquire()
+        identifers = []
+        en_indx = self.grid1HeaderLabels.index("Esper Name")
+        sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        for rowNum in range(self.grid_1.GetNumberRows()):
+            if rowNum < self.grid_1.GetNumberRows():
+                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                if esperName or serialNum:
+                    identifers.append((esperName, serialNum))
+        Globals.grid1_lock.release()
+        return identifers

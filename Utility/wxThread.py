@@ -52,6 +52,9 @@ EVT_CONFIRM_CLONE_UPDATE = wx.PyEventBinder(myEVT_CONFIRM_CLONE_UPDATE, 1)
 myEVT_MESSAGE_BOX = wx.NewEventType()
 EVT_MESSAGE_BOX = wx.PyEventBinder(myEVT_MESSAGE_BOX, 1)
 
+myEVT_THREAD_WAIT = wx.NewEventType()
+EVT_THREAD_WAIT = wx.PyEventBinder(myEVT_THREAD_WAIT, 1)
+
 
 def doAPICallInThread(
     frame,

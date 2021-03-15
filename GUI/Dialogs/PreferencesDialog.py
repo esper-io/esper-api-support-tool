@@ -36,7 +36,6 @@ class PreferencesDialog(wx.Dialog):
             "gridDialog",
             "templateDialog",
             "templateUpdate",
-            "colMove",
             "colSize",
             "setStateShow",
         ]
@@ -277,30 +276,6 @@ class PreferencesDialog(wx.Dialog):
         grid_sizer_10.Add(
             self.spin_ctrl_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
-
-        self.panel_33 = wx.Panel(self.grid, wx.ID_ANY)
-        sizer_16.Add(self.panel_33, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_25 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_33.SetSizer(sizer_25)
-
-        label_10 = wx.StaticText(
-            self.panel_33,
-            wx.ID_ANY,
-            "Allow Column Draging",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_10.SetToolTip("Allow user to reoder grid columns by dragging them.")
-        sizer_25.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_34 = wx.Panel(self.panel_33, wx.ID_ANY)
-        sizer_25.Add(self.panel_34, 1, wx.EXPAND, 0)
-
-        grid_sizer_16 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_34.SetSizer(grid_sizer_16)
-
-        self.checkbox_9 = wx.CheckBox(self.panel_34, wx.ID_ANY, "")
-        grid_sizer_16.Add(self.checkbox_9, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         self.panel_35 = wx.Panel(self.grid, wx.ID_ANY)
         sizer_16.Add(self.panel_35, 1, wx.ALL | wx.EXPAND, 5)
@@ -689,23 +664,6 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_GRID_DIALOG = False
 
-        if not prefDict or (prefDict and not prefDict["colMove"]):
-            self.checkbox_9.Set3StateValue(wx.CHK_CHECKED)
-            if self.parent:
-                self.parent.gridPanel.enableGridProperties(True, False, True)
-        elif prefDict and prefDict["colMove"]:
-            if (
-                isinstance(self.prefs["colMove"], str)
-                and prefDict["colMove"].lower() == "true"
-            ) or prefDict["colMove"] == True:
-                self.checkbox_9.Set3StateValue(wx.CHK_CHECKED)
-                if self.parent:
-                    self.parent.gridPanel.enableGridProperties(True, False, True)
-            else:
-                self.checkbox_9.Set3StateValue(wx.CHK_UNCHECKED)
-                if self.parent:
-                    self.parent.gridPanel.disableGridProperties(False, True, False)
-
         if not prefDict or (prefDict and not prefDict["colSize"]):
             self.checkbox_10.Set3StateValue(wx.CHK_CHECKED)
             if self.parent:
@@ -794,7 +752,6 @@ class PreferencesDialog(wx.Dialog):
             "showPkg": self.checkbox_4.IsChecked(),
             "reachQueueStateOnly": self.checkbox_5.IsChecked(),
             "getAppsForEachDevice": self.checkbox_6.IsChecked(),
-            "colMove": self.checkbox_9.IsChecked(),
             "colSize": self.checkbox_10.IsChecked(),
             "setStateShow": self.checkbox_11.IsChecked(),
         }
@@ -980,8 +937,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.GET_APP_EACH_DEVICE
         elif key == "reachQueueStateOnly":
             return Globals.REACH_QUEUED_ONLY
-        elif key == "colMove":
-            return True
         elif key == "colSize":
             return True
         elif key == "setStateShow":

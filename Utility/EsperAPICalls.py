@@ -192,6 +192,8 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         for app in json_resp["results"]:
             entry = None
             if "application" in app:
+                if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
                 appName = app["application"]["application_name"]
                 appPkgName = appName + (" (%s)" % app["application"]["package_name"])
                 entry = {
@@ -220,6 +222,8 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     + version
                 )
             else:
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
                 appName = app["app_name"]
                 appPkgName = appName + (" (%s)" % app["package_name"])
                 entry = {
@@ -668,7 +672,7 @@ def setKiosk(frame, device, deviceInfo):
     )
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
-        stateStatus = setAppState(device.id, appToUse, "SHOW")
+        stateStatus = setAppState(device.id, appToUse, state="SHOW")
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
@@ -691,11 +695,14 @@ def setKiosk(frame, device, deviceInfo):
     if warning:
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
     if hasattr(status, "state"):
-        return {
+        entry = {
             "Esper Name": device.device_name,
             "Device Id": device.id,
             "Status": status.state,
         }
+        if hasattr(status, "reason"):
+            entry["Reason"] = status.reason
+        return entry
     else:
         return {
             "Esper Name": device.device_name,
@@ -736,11 +743,14 @@ def setMulti(frame, device, deviceInfo):
     if warning:
         postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
     if hasattr(status, "state"):
-        return {
+        entry = {
             "Esper Name": device.device_name,
             "Device Id": device.id,
             "Status": status.state,
         }
+        if hasattr(status, "reason"):
+            entry["Reason"] = status.reason
+        return entry
     else:
         return {
             "Esper Name": device.device_name,
@@ -795,9 +805,12 @@ def executeCommandOnGroup(
             frame, api_response.id, ignoreQueue=ignoreQueued
         )
         if hasattr(last_status, "state"):
-            statusList.append({"group": groupToUse, "status": last_status.state})
+            entry = {"Group": groupToUse, "Status": last_status.state}
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
         else:
-            statusList.append({"group": groupToUse, "status": last_status})
+            statusList.append({"Group": groupToUse, "Status": last_status})
     return statusList
 
 
@@ -841,9 +854,12 @@ def executeCommandOnDevice(
             frame, api_response.id, ignoreQueue=ignoreQueued
         )
         if hasattr(last_status, "state"):
-            statusList.append({"group": deviceToUse, "status": last_status.state})
+            entry = {"Device": deviceToUse, "status": last_status.state}
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
         else:
-            statusList.append({"group": deviceToUse, "status": last_status})
+            statusList.append({"Device": deviceToUse, "Status": last_status})
     return statusList
 
 
@@ -982,7 +998,9 @@ def clearAppData(frame, device):
         appToUse = frame.sidePanel.appChoice.GetClientData(
             frame.sidePanel.appChoice.GetSelection()
         )
-        _, apps = getdeviceapps(device.id, createAppList=False, useEnterprise=True)
+        _, apps = getdeviceapps(
+            device.id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
+        )
         cmdArgs = {}
         for app in apps["results"]:
             if app["package_name"] == appToUse:
@@ -1047,22 +1065,27 @@ def getDeviceApplicationById(device_id, application_id):
 
 
 @api_tool_decorator
-def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY):
+def setAppState(
+    device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
+):
     pkgName = pkg_name
-    appVer = None
-    _, app = getdeviceapps(device_id, createAppList=False, useEnterprise=True)
-    app = list(
-        filter(
-            lambda x: x["package_name"] == pkg_name,
-            app["results"],
+    # appVer = None
+    if not appVer:
+        _, app = getdeviceapps(
+            device_id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
         )
-    )
-    if app:
-        app = app[0]
-    if "application" in app:
-        appVer = app["application"]["version"]["version_code"]
-    else:
-        appVer = app["version_code"]
+        app = list(
+            filter(
+                lambda x: x["package_name"] == pkg_name,
+                app["results"],
+            )
+        )
+        if app:
+            app = app[0]
+        if "application" in app:
+            appVer = app["application"]["version"]["version_code"]
+        else:
+            appVer = app["version_code"]
     if pkgName and appVer:
         args = V0CommandArgs(
             app_state=state,

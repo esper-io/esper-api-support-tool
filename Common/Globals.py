@@ -36,7 +36,7 @@ available on the Esper Console Dashboard."""
 
 """ Actions """
 GENERAL_ACTIONS = {
-    "": -1,
+    "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
     "Show - Device Info & Network And Secruity Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
@@ -44,8 +44,11 @@ GENERAL_ACTIONS = {
 }
 
 GRID_ACTIONS = {
-    "": "-1",
+    "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
+    # "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
+    # "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
+    # "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
 }
 
 LOGLIST = []
@@ -127,6 +130,7 @@ CSV_NETWORK_ATTR_NAME = {
     "Wifi Mac Id": "wifiMacAddress",
     "IPv6 Mac Address(es)": "macAddress",
 }
+BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
 
 """ WxPython Frame """
 frame = None

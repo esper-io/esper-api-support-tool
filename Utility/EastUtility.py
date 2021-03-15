@@ -5,7 +5,7 @@ from Common.decorator import api_tool_decorator
 import ast
 import json
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
-from Common.enum import GeneralActions
+from Common.enum import GeneralActions, GridActions
 import esperclient
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
@@ -17,6 +17,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
+    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -108,8 +109,14 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
 @api_tool_decorator
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
-    if action == Globals.MODIFY_ALIAS_AND_TAGS:
+    if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
         modifyDevice(frame)
+    if (
+        action == GridActions.SET_APP_STATE_DISABLE.value
+        or action == GridActions.SET_APP_STATE_HIDE.value
+        or action == GridActions.SET_APP_STATE_SHOW.value
+    ):
+        setAppStateForAllAppsListed(action)
 
 
 @api_tool_decorator
@@ -210,6 +217,8 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                 len(deviceList) * 2,
             ),
         )
+    if source == 4:
+        postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))
 
 
 @api_tool_decorator
@@ -509,9 +518,21 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
 
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
     if api_response:
-        api_response.results = list(
+        tempRes = list(
             filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
         )
+        if not tempRes:
+            if "serialNumber" in api_response.results[0].hardware_info:
+                tempRes = list(
+                    filter(
+                        lambda x: x.hardware_info["serialNumber"]
+                        in tagsFromGrid.keys(),
+                        api_response.results,
+                    )
+                )
+        if tempRes:
+            api_response.results = tempRes
+
         splitResults = splitListIntoChunks(api_response.results)
 
         threads = []
@@ -634,6 +655,113 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
     return changeSucceeded
+
+
+@api_tool_decorator
+def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
+
+    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+    if api_response:
+        tempRes = []
+        for device in api_response.results:
+            for deviceIds in deviceIdentifers:
+                if (
+                    device.device_name in deviceIds
+                    or device.hardware_info["serialNumber"] in deviceIds
+                ):
+                    tempRes.append(device)
+        if tempRes:
+            api_response.results = tempRes
+        threads = []
+        for device in api_response.results:
+            if (
+                device.device_name in deviceIds
+                or device.hardware_info["serialNumber"] in deviceIdentifers
+            ):
+                t = wxThread.GUIThread(
+                    Globals.frame,
+                    setAllAppsState,
+                    args=(Globals.frame, device, state),
+                )
+                threads.append(t)
+                t.start()
+                limitActiveThreads(threads)
+        t = wxThread.GUIThread(
+            Globals.frame,
+            waitTillThreadsFinish,
+            args=(tuple(threads), state, -1, 4),
+        )
+        t.start()
+
+
+@api_tool_decorator
+def setAllAppsState(frame, device, state):
+    stateStatuses = []
+    # for device in chunk:
+    _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
+    for app in resp["results"]:
+        stateStatus = None
+        if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+            continue
+        if state == GridActions.SET_APP_STATE_DISABLE.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                app["application"]["package_name"],
+                appVer=app["application"]["version"]["version_code"],
+                state="DISABLE",
+            )
+        if state == GridActions.SET_APP_STATE_HIDE.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                app["application"]["package_name"],
+                appVer=app["application"]["version"]["version_code"],
+                state="HIDE",
+            )
+        if state == GridActions.SET_APP_STATE_SHOW.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                app["application"]["package_name"],
+                appVer=app["application"]["version"]["version_code"],
+                state="SHOW",
+            )
+        if stateStatus and hasattr(stateStatus, "state"):
+            entry = {
+                "Device Name": device.device_name,
+                "Device id": device.id,
+                "State Status": stateStatus.state,
+            }
+            if hasattr(stateStatus, "reason"):
+                entry["Reason"] = stateStatus.reason
+            stateStatuses.append(entry)
+        else:
+            stateStatuses.append(
+                {
+                    "Device Name": device.device_name,
+                    "Device id": device.id,
+                    "State Status": stateStatus,
+                }
+            )
+    return stateStatuses
 
 
 @api_tool_decorator

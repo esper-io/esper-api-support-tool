@@ -159,7 +159,10 @@ class SidePanel(wx.Panel):
             choices=[],
             style=wx.CB_DROPDOWN | wx.CB_READONLY,
         )
-        actions = {**Globals.GENERAL_ACTIONS, **Globals.GRID_ACTIONS}
+        actions = {
+            **Globals.GENERAL_ACTIONS,
+            **Globals.GRID_ACTIONS,
+        }
         for key, val in actions.items():
             self.actionChoice.Append(key, val)
         sizer_5.Add(self.actionChoice, 0, wx.EXPAND, 0)

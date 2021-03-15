@@ -14,6 +14,9 @@ class GeneralActions(Enum):
 
 class GridActions(Enum):
     MODIFY_ALIAS_AND_TAGS = 30
+    SET_APP_STATE_SHOW = 31
+    SET_APP_STATE_HIDE = 32
+    SET_APP_STATE_DISABLE = 33
 
 
 class whom(Enum):
