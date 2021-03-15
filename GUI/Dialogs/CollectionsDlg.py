@@ -203,14 +203,20 @@ class CollectionsDialog(wx.Dialog):
                 self.collResp["results"],
             )
         )
+        if not self.text_ctrl_3.GetValue():
+            self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
+        else:
+            self.text_ctrl_3.SetBackgroundColour(Color.white.value)
+
         if matchNames and not self.checkbox_1.IsChecked():
             self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
         elif not matchNames or self.checkbox_1.IsChecked():
             self.text_ctrl_3.SetBackgroundColour(Color.white.value)
-        if not self.text_ctrl_3.GetValue():
-            self.text_ctrl_3.SetBackgroundColour(Color.lightRed.value)
+
         if not self.text_ctrl_2.GetValue():
             self.text_ctrl_2.SetBackgroundColour(Color.lightRed.value)
+        else:
+            self.text_ctrl_2.SetBackgroundColour(Color.white.value)
         if (
             self.text_ctrl_3.GetValue()
             and self.text_ctrl_2.GetValue()
