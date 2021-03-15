@@ -724,6 +724,7 @@ def setMulti(frame, device, deviceInfo):
     )
     failed = False
     warning = False
+    status = None
     if deviceInfo["Mode"] == "Kiosk":
         status = toggleKioskMode(frame, device.id, {}, False)
         if status:

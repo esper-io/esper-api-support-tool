@@ -1026,7 +1026,7 @@ class NewFrameLayout(wx.Frame):
             return
         self.setCursorBusy()
         self.isRunning = True
-        self.gauge.Pulse()
+        self.setGaugeValue(0)
         self.toggleEnabledState(False)
 
         self.gridPanel.grid_1.UnsetSortingColumn()
@@ -1048,7 +1048,6 @@ class NewFrameLayout(wx.Frame):
             and self.sidePanel.actionChoice.Items[actionSelection]
             else ""
         )
-        self.setGaugeValue(0)
         if (
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
@@ -1084,6 +1083,7 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on group, %s.'
                     % (actionLabel, groupLabel)
                 )
+            self.gauge.Pulse()
             wxThread.GUIThread(
                 self,
                 TakeAction,
@@ -1127,6 +1127,7 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on device, %s.'
                     % (actionLabel, deviceLabel)
                 )
+            self.gauge.Pulse()
             wxThread.GUIThread(
                 self,
                 TakeAction,
@@ -1167,6 +1168,7 @@ class NewFrameLayout(wx.Frame):
                         applyAll=True,
                     )
                     self.frame_toolbar.search.SetValue("")
+                    self.gauge.Pulse()
                     wxThread.GUIThread(
                         self,
                         iterateThroughGridRows,
