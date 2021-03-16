@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import wx
+import wx.html as wxHtml
 
 from Common.decorator import api_tool_decorator
+from Utility.Resource import openWebLinkInBrowser
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -77,6 +79,7 @@ class NewEndpointDialog(wx.Dialog):
             "",
             style=wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY,
         )
+        self.text_ctrl_5.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.text_ctrl_5.SetForegroundColour(wx.Colour(255, 0, 0))
         if errorMsg:
             self.text_ctrl_5.SetValue(str(errorMsg))

@@ -4,13 +4,12 @@ from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from Utility.EastUtility import processCollectionDevices
 from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import resourcePath
+from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
 import Utility.wxThread as wxThread
 import wx
 import wx.adv as adv
 import Common.Globals as Globals
-import webbrowser
 import platform
 
 
@@ -183,7 +182,7 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator
     def onHelp(self, event):
-        webbrowser.open(Globals.HELP_LINK)
+        openWebLinkInBrowser(Globals.HELP_LINK)
 
     @api_tool_decorator
     def onUpdateCheck(self, event):

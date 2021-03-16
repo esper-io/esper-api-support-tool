@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+from Utility.Resource import openWebLinkInBrowser
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import wx
+import wx.html as wxHtml
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -54,7 +56,8 @@ class ConfirmTextDialog(wx.Dialog):
             | wx.TE_LEFT
             | wx.TE_MULTILINE
             | wx.TE_READONLY
-            | wx.TE_WORDWRAP,
+            | wx.TE_WORDWRAP
+            | wx.TE_AUTO_URL,
         )
         sizer_7.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -85,6 +88,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
         # end wxGlade

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.enum import GeneralActions, GridActions
 from Common.decorator import api_tool_decorator
 import csv
 import wx
@@ -380,8 +381,15 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator
     def onActionSelection(self, event):
-        item = self.actionChoice.GetValue()
-        if item == "Action -> Clear App Data" or item == "Action -> Set Kiosk Mode":
+        # item = self.actionChoice.GetValue()
+        clientData = event.ClientData
+        if (
+            clientData == GeneralActions.SET_KIOSK.value
+            or clientData == GeneralActions.CLEAR_APP_DATA.value
+            or clientData == GeneralActions.SET_APP_STATE_DISABLE.value
+            or clientData == GeneralActions.SET_APP_STATE_HIDE.value
+            or clientData == GeneralActions.SET_APP_STATE_SHOW.value
+        ) and clientData < GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # self.parentFrame.PopulateApps()
             self.appChoice.Enable(True)
         else:

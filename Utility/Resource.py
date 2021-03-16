@@ -8,6 +8,7 @@ import sys
 import time
 import subprocess
 import wx
+import webbrowser
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
@@ -327,3 +328,9 @@ def performPostRequestWithRetry(
                 ApiToolLog().LogError(e)
             time.sleep(Globals.RETRY_SLEEP)
     return resp
+
+
+def openWebLinkInBrowser(link):
+    if hasattr(link, "GetLinkInfo"):
+        link = link.GetLinkInfo().GetHref()
+    webbrowser.open(link)

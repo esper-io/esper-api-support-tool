@@ -41,14 +41,17 @@ GENERAL_ACTIONS = {
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
+    "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
+    "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
+    "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
 }
 
 GRID_ACTIONS = {
     "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
-    # "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
-    # "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
-    # "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
+    "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
+    "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
+    "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
 }
 
 LOGLIST = []

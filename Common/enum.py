@@ -10,6 +10,9 @@ class GeneralActions(Enum):
     SET_KIOSK = 2
     SET_MULTI = 3
     CLEAR_APP_DATA = 4
+    SET_APP_STATE_SHOW = 5
+    SET_APP_STATE_HIDE = 6
+    SET_APP_STATE_DISABLE = 7
 
 
 class GridActions(Enum):

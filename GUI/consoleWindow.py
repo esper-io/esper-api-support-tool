@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from Utility.Resource import openWebLinkInBrowser
 from Common.decorator import api_tool_decorator
 import wx
+import wx.html as wxHtml
 import Common.Globals as Globals
 import platform
 import Utility.wxThread as wxThread
@@ -64,6 +66,8 @@ class Console(wx.Frame):
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+
+        self.loggingList.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.SetBackgroundColour(Color.darkGrey.value)

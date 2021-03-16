@@ -1075,17 +1075,24 @@ def setAppState(
     device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
 ):
     pkgName = pkg_name
-    # appVer = None
     if not appVer:
         _, app = getdeviceapps(
             device_id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
         )
-        app = list(
-            filter(
-                lambda x: x["package_name"] == pkg_name,
-                app["results"],
+        if app["results"] and "application" in app["results"][0]:
+            app = list(
+                filter(
+                    lambda x: x["application"]["package_name"] == pkg_name,
+                    app["results"],
+                )
             )
-        )
+        else:
+            app = list(
+                filter(
+                    lambda x: x["package_name"] == pkg_name,
+                    app["results"],
+                )
+            )
         if app:
             app = app[0]
         if "application" in app:

@@ -43,6 +43,7 @@ from pathlib import Path
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import (
+    setAppState,
     setKiosk,
     setMulti,
     getdeviceapps,
@@ -827,6 +828,9 @@ class NewFrameLayout(wx.Frame):
             if (
                 action == GeneralActions.SET_KIOSK.value
                 or action == GeneralActions.SET_MULTI.value
+                or action == GeneralActions.SET_APP_STATE_DISABLE.value
+                or action == GeneralActions.SET_APP_STATE_HIDE.value
+                or action == GeneralActions.SET_APP_STATE_SHOW.value
                 or action == GridActions.SET_APP_STATE_DISABLE.value
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
@@ -1259,12 +1263,13 @@ class NewFrameLayout(wx.Frame):
         if cmdResult:
             result = ""
             for res in cmdResult:
-                result += json.dumps(str(res), indent=2)
+                formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
+                result += formattedRes
                 result += "\n\n"
             with ConfirmTextDialog(
-                "Command(s) has been fired.",
+                "Command(s) have been fired.",
                 "Check the Esper Console for details. Last command status listed below.",
-                "Command(s) has been fired.",
+                "Command(s) have been fired.",
                 result,
             ) as dialog:
                 res = dialog.ShowModal()
@@ -1303,6 +1308,9 @@ class NewFrameLayout(wx.Frame):
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
+        appToUse = self.sidePanel.appChoice.GetClientData(
+            self.sidePanel.appChoice.GetSelection()
+        )
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
@@ -1337,11 +1345,36 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
             elif action == GeneralActions.CLEAR_APP_DATA.value:
                 clearAppData(self, device)
+            elif action == GeneralActions.SET_APP_STATE_DISABLE.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    setAppState,
+                    (device.id, appToUse, None, "DISABLE"),
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.SET_APP_STATE_HIDE.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    setAppState,
+                    (device.id, appToUse, None, "HIDE"),
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.SET_APP_STATE_SHOW.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    setAppState,
+                    (device.id, appToUse, None, "SHOW"),
+                )
+                thread.start()
+                threads.append(thread)
             limitActiveThreads(threads)
 
-            if updateGauge:
+            value = int(num / maxGauge * 100)
+            if updateGauge and value <= 50:
                 num += 1
-                self.setGaugeValue(int(num / maxGauge * 100))
+                self.setGaugeValue(value)
         wxThread.GUIThread(
             self,
             self.waitForThreadsThenSetCursorDefault,
@@ -1352,19 +1385,6 @@ class NewFrameLayout(wx.Frame):
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
         action = event.GetValue()
-        # if (
-        #     action == GeneralActions.SET_KIOSK.value
-        #     or action == GeneralActions.SET_MULTI.value
-        # ):
-        #     self.Logging("---> Please refer to the Esper Console for detailed results.")
-        #     if not self.checkConsole:
-        #         try:
-        #             self.checkConsole = ProgressCheckDialog()
-        #             self.checkConsole.ShowModal()
-        #             self.checkConsole = None
-        #         except Exception as e:
-        #             print(e)
-        #             ApiToolLog().LogError(e)
         if action == GeneralActions.CLEAR_APP_DATA.value:
             displayMessageBox(
                 (

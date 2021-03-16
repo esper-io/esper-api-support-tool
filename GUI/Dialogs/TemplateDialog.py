@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from Utility.Resource import openWebLinkInBrowser
 from Common.decorator import api_tool_decorator
 import Utility.EsperTemplateUtil as templateUtil
 import Utility.wxThread as wxThread
 import wx
+import wx.html as wxHtml
 import json
 
 
@@ -54,6 +56,7 @@ class TemplateDialog(wx.Dialog):
             | wx.TE_WORDWRAP
             | wx.TE_AUTO_URL,
         )
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
         self.button_1 = wx.Button(self.panel_4, wx.ID_OK, "Clone")
         self.button_2 = wx.Button(self.panel_4, wx.ID_CANCEL, "Cancel")
