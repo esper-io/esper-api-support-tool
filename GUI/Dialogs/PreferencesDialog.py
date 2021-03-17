@@ -367,7 +367,7 @@ class PreferencesDialog(wx.Dialog):
             style=wx.ST_ELLIPSIZE_END,
         )
         label_7.SetToolTip(
-            "Fetch all applications for every device within a group.\nPerformance may be slower."
+            "Fetch all applications for every device within a group.\nDefault is Enterprise apps only.\nPerformance may be slower if enabled."
         )
         sizer_15.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
