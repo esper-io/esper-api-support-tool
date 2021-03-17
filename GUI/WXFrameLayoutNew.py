@@ -1874,7 +1874,7 @@ class NewFrameLayout(wx.Frame):
                 self.createClone,
                 (util, templateFound, toApi, toKey, toEntId, False),
                 eventType=None,
-                name="createTemplateClone"
+                name="createTemplateClone",
             )
             clone.start()
         else:
@@ -1904,7 +1904,7 @@ class NewFrameLayout(wx.Frame):
                 self.createClone,
                 (util, templateFound, toApi, toKey, toEntId, True),
                 eventType=None,
-                name="updateTemplate"
+                name="updateTemplate",
             )
             clone.start()
         else:
@@ -1981,6 +1981,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def toggleEnabledState(self, state):
         self.sidePanel.runBtn.Enable(state)
+        self.sidePanel.actionChoice.Enable(state)
+        self.sidePanel.removeEndpointBtn.Enable(state)
+
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)

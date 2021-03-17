@@ -664,9 +664,10 @@ def setKiosk(frame, device, deviceInfo):
     logString = ""
     failed = False
     warning = False
-    appToUse = frame.sidePanel.appChoice.GetClientData(
-        frame.sidePanel.appChoice.GetSelection()
-    )
+    appSelection = frame.sidePanel.appChoice.GetSelection()
+    if appSelection < 0:
+        return {}
+    appToUse = frame.sidePanel.appChoice.GetClientData(appSelection)
     logString = (
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
         + " -> Kiosk ->"
