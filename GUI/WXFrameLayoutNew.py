@@ -1263,9 +1263,14 @@ class NewFrameLayout(wx.Frame):
         if cmdResult:
             result = ""
             for res in cmdResult:
-                formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
-                result += formattedRes
-                result += "\n\n"
+                formattedRes = ""
+                try:
+                    formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
+                except:
+                    formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
+                if formattedRes:
+                    result += formattedRes
+                    result += "\n\n"
             with ConfirmTextDialog(
                 "Command(s) have been fired.",
                 "Check the Esper Console for details. Last command status listed below.",
@@ -1308,9 +1313,10 @@ class NewFrameLayout(wx.Frame):
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
-        appToUse = self.sidePanel.appChoice.GetClientData(
-            self.sidePanel.appChoice.GetSelection()
-        )
+        appToUse = None
+        appSelection = self.sidePanel.appChoice.GetSelection()
+        if appSelection > 0:
+            appToUse = self.sidePanel.appChoice.GetClientData(appSelection)
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
         num = len(deviceList)

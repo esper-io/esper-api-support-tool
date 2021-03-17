@@ -57,6 +57,7 @@ class ConfirmTextDialog(wx.Dialog):
             | wx.TE_MULTILINE
             | wx.TE_READONLY
             | wx.TE_WORDWRAP
+            | wx.TE_BESTWRAP
             | wx.TE_AUTO_URL,
         )
         sizer_7.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)

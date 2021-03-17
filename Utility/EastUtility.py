@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
 import time
-from Common.decorator import api_tool_decorator
 import ast
 import json
-from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
-from Common.enum import GeneralActions, GridActions
 import esperclient
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
 import threading
 import wx
 import Utility.EsperAPICalls as apiCalls
+
+from Common.decorator import api_tool_decorator
+from Common.enum import GeneralActions, GridActions
+
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
@@ -725,27 +727,37 @@ def setAllAppsState(frame, device, state):
     _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
     for app in resp["results"]:
         stateStatus = None
-        if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
-            continue
+        package_name = None
+        app_version = None
+        if "application" in app:
+            package_name = app["application"]["package_name"]
+            app_version = app["application"]["version"]["version_code"]
+            if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                continue
+        else:
+            package_name = app["package_name"]
+            app_version = app["version_code"]
+            if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                continue
         if state == GridActions.SET_APP_STATE_DISABLE.value:
             stateStatus = apiCalls.setAppState(
                 device.id,
-                app["application"]["package_name"],
-                appVer=app["application"]["version"]["version_code"],
+                package_name,
+                appVer=app_version,
                 state="DISABLE",
             )
         if state == GridActions.SET_APP_STATE_HIDE.value:
             stateStatus = apiCalls.setAppState(
                 device.id,
-                app["application"]["package_name"],
-                appVer=app["application"]["version"]["version_code"],
+                package_name,
+                appVer=app_version,
                 state="HIDE",
             )
         if state == GridActions.SET_APP_STATE_SHOW.value:
             stateStatus = apiCalls.setAppState(
                 device.id,
-                app["application"]["package_name"],
-                appVer=app["application"]["version"]["version_code"],
+                package_name,
+                appVer=app_version,
                 state="SHOW",
             )
         if stateStatus and hasattr(stateStatus, "state"):
