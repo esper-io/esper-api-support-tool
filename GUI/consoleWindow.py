@@ -32,7 +32,8 @@ class Console(wx.Frame):
         wx.Frame.__init__(
             self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
         )
-        panel = wx.Panel(self, -1)
+        panel = wx.Panel(self, wx.ID_ANY)
+        panel.SetBackgroundColour(Color.grey.value)
 
         self.loggingList = wx.TextCtrl(
             panel,
@@ -52,17 +53,21 @@ class Console(wx.Frame):
         )
 
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
-        grid_sizer_2.Add(self.loggingList, 0, wx.EXPAND, 1)
+        grid_sizer_2.Add(self.loggingList, 0, wx.ALL | wx.EXPAND, 5)
         panel.SetSizer(grid_sizer_2)
 
         while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
             Globals.LOGLIST.pop(0)
 
+        self.totalPosition = 0
         for entry in Globals.LOGLIST:
             self.loggingList.AppendText(entry)
             self.loggingList.AppendText("\n")
-            if self.WINDOWS:
-                self.loggingList.ShowPosition(self.loggingList.GetNumberOfLines() - 1)
+            self.totalPosition = len(entry + "\n")
+        if self.WINDOWS:
+            position = int((self.totalPosition) * 0.75)
+            position = 0 if position < 0 else position
+            self.loggingList.ShowPosition(position)
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
@@ -101,8 +106,11 @@ class Console(wx.Frame):
         """Logs Infromation To Frame UI"""
         self.loggingList.AppendText(entry)
         self.loggingList.AppendText("\n")
+        self.totalPosition = len(entry + "\n")
         if self.WINDOWS:
-            self.loggingList.ShowPosition(self.loggingList.GetNumberOfLines() - 1)
+            position = int((self.totalPosition) * 0.75)
+            position = 0 if position < 0 else position
+            self.loggingList.ShowPosition(position)
         if entry:
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)

@@ -1098,7 +1098,7 @@ def setAppState(
             app = app[0]
         if "application" in app:
             appVer = app["application"]["version"]["version_code"]
-        else:
+        elif "version_code" in app:
             appVer = app["version_code"]
     if pkgName and appVer:
         args = V0CommandArgs(
