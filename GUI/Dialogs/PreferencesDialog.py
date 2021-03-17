@@ -319,7 +319,7 @@ class PreferencesDialog(wx.Dialog):
             style=wx.ST_ELLIPSIZE_END,
         )
         label_3.SetToolTip(
-            "Fetches all installed applications, including those that are hidden."
+            "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only."
         )
         sizer_12.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
@@ -363,11 +363,11 @@ class PreferencesDialog(wx.Dialog):
         label_7 = wx.StaticText(
             self.panel_15,
             wx.ID_ANY,
-            "Get Applications for Each Device",
+            "Get Applications For Each Device",
             style=wx.ST_ELLIPSIZE_END,
         )
         label_7.SetToolTip(
-            "Fetch all applications for every device within a group.\nDefault is Enterprise apps only.\nPerformance may be slower if enabled."
+            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled."
         )
         sizer_15.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
