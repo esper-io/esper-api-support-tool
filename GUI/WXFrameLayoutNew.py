@@ -473,12 +473,14 @@ class NewFrameLayout(wx.Frame):
             self.processCsvDataByGrid,
             args=(self.gridPanel.grid_1, data, Globals.CSV_TAG_ATTR_NAME),
             eventType=None,
+            name="csvUploadDeviceInfo",
         )
         netThread = wxThread.GUIThread(
             self,
             self.processCsvDataByGrid,
             args=(self.gridPanel.grid_2, data, Globals.CSV_NETWORK_ATTR_NAME),
             eventType=None,
+            name="csvUploadNetworkInfo",
         )
         deviceThread.start()
         netThread.start()
@@ -486,6 +488,7 @@ class NewFrameLayout(wx.Frame):
             self,
             self.waitForThreadsThenSetCursorDefault,
             ([deviceThread, netThread], 2),
+            name="waitForThreadsThenSetCursorDefault_2",
         ).start()
 
     @api_tool_decorator
@@ -753,6 +756,7 @@ class NewFrameLayout(wx.Frame):
                     self,
                     self.waitForThreadsThenSetCursorDefault,
                     (threads, 0),
+                    name="waitForThreadsThenSetCursorDefault_0",
                 ).start()
                 return True
         else:
@@ -917,6 +921,7 @@ class NewFrameLayout(wx.Frame):
             self,
             self.waitForThreadsThenSetCursorDefault,
             (threads, 1),
+            name="waitForThreadsThenSetCursorDefault_1",
         ).start()
 
     @api_tool_decorator
@@ -944,7 +949,11 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
-            self, getAllApplications, eventType=wxThread.myEVT_APPS, waitForJoin=False
+            self,
+            getAllApplications,
+            eventType=wxThread.myEVT_APPS,
+            waitForJoin=False,
+            name="PopulateApps",
         )
         return thread
 
@@ -1308,6 +1317,7 @@ class NewFrameLayout(wx.Frame):
             self,
             self.processFetch,
             (action, entId, deviceList, True, len(deviceList) * 2),
+            name="ProcessFetch",
         ).start()
 
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
@@ -1335,17 +1345,13 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
-                    self,
-                    setKiosk,
-                    (self, device, deviceInfo),
+                    self, setKiosk, (self, device, deviceInfo), name="SetKiosk"
                 )
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.SET_MULTI.value:
                 thread = wxThread.GUIThread(
-                    self,
-                    setMulti,
-                    (self, device, deviceInfo),
+                    self, setMulti, (self, device, deviceInfo), name="SetMulti"
                 )
                 thread.start()
                 threads.append(thread)
@@ -1356,6 +1362,7 @@ class NewFrameLayout(wx.Frame):
                     self,
                     setAppState,
                     (device.id, appToUse, None, "DISABLE"),
+                    name="SetAppDisable",
                 )
                 thread.start()
                 threads.append(thread)
@@ -1364,6 +1371,7 @@ class NewFrameLayout(wx.Frame):
                     self,
                     setAppState,
                     (device.id, appToUse, None, "HIDE"),
+                    name="SetAppHide",
                 )
                 thread.start()
                 threads.append(thread)
@@ -1372,6 +1380,7 @@ class NewFrameLayout(wx.Frame):
                     self,
                     setAppState,
                     (device.id, appToUse, None, "SHOW"),
+                    name="SetAppShow",
                 )
                 thread.start()
                 threads.append(thread)
@@ -1385,6 +1394,7 @@ class NewFrameLayout(wx.Frame):
             self,
             self.waitForThreadsThenSetCursorDefault,
             (threads, 3, action),
+            name="waitForThreadsThenSetCursorDefault_3",
         ).start()
 
     @api_tool_decorator
@@ -1414,6 +1424,7 @@ class NewFrameLayout(wx.Frame):
                 eventType=wxThread.myEVT_COMPLETE,
                 eventArg=True,
                 sendEventArgInsteadOfResult=True,
+                name="addDeviceApps",
             ).start()
         else:
             evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
@@ -1548,11 +1559,19 @@ class NewFrameLayout(wx.Frame):
     def onClearGrids(self, event):
         """ Empty Grids """
         thread = wxThread.GUIThread(
-            self, self.gridPanel.emptyDeviceGrid, None, eventType=None
+            self,
+            self.gridPanel.emptyDeviceGrid,
+            None,
+            eventType=None,
+            name="emptyDeviceGrid",
         )
         thread.start()
         netThread = wxThread.GUIThread(
-            self, self.gridPanel.emptyNetworkGrid, None, eventType=None
+            self,
+            self.gridPanel.emptyNetworkGrid,
+            None,
+            eventType=None,
+            name="emptyNetworkGrid",
         )
         netThread.start()
 
@@ -1627,6 +1646,7 @@ class NewFrameLayout(wx.Frame):
                 self.savePrefs,
                 (self.prefDialog),
                 eventType=None,
+                name="SavePrefs",
             )
             save.start()
             if self.sidePanel.selectedGroupsList:
@@ -1830,6 +1850,7 @@ class NewFrameLayout(wx.Frame):
             util.prepareTemplate,
             (tmpDialog.destTemplate, tmpDialog.chosenTemplate),
             eventType=None,
+            name="PrepTemplate",
         )
         clone.start()
 
@@ -1853,6 +1874,7 @@ class NewFrameLayout(wx.Frame):
                 self.createClone,
                 (util, templateFound, toApi, toKey, toEntId, False),
                 eventType=None,
+                name="createTemplateClone"
             )
             clone.start()
         else:
@@ -1882,6 +1904,7 @@ class NewFrameLayout(wx.Frame):
                 self.createClone,
                 (util, templateFound, toApi, toKey, toEntId, True),
                 eventType=None,
+                name="updateTemplate"
             )
             clone.start()
         else:

@@ -141,6 +141,7 @@ def iterateThroughDeviceList(
                         number_of_devices,
                         action,
                     ),
+                    name="processDevices",
                 )
                 threads.append(t)
                 t.start()
@@ -157,6 +158,7 @@ def iterateThroughDeviceList(
                     None,
                     len(api_response.results) * 2,
                 ),
+                name="waitTillThreadsFinish_1",
                 eventType=wxThread.myEVT_FETCH,
             )
             t.start()
@@ -238,6 +240,7 @@ def processCollectionDevices(collectionList):
                 Globals.frame,
                 fillInDeviceInfoDict,
                 args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
+                name="fillInDeviceInfoDict",
             )
             threads.append(t)
             t.start()
@@ -253,6 +256,7 @@ def processCollectionDevices(collectionList):
                 3,
             ),
             eventType=wxThread.myEVT_FETCH,
+            name="waitTillThreadsFinish3",
         )
         t.start()
     else:
@@ -489,6 +493,7 @@ def modifyDevice(frame):
         executeDeviceModification,
         args=(frame),
         eventType=None,
+        name="executeDeviceModification",
     )
     t.start()
     return t
@@ -547,6 +552,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                 frame,
                 processDeviceModificationForList,
                 args=(frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction),
+                name="processDeviceModificationForList",
             )
             threads.append(t)
             t.start()
@@ -555,6 +561,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
             frame,
             waitTillThreadsFinish,
             args=(tuple(threads), -1, -1, 2),
+            name="waitTillThreadsFinish",
         )
         t.start()
 
@@ -571,12 +578,14 @@ def processDeviceModificationForList(
             frame,
             changeTagsForDevice,
             args=(device, tagsFromGrid, frame, maxGaugeAction),
+            name="changeTagsForDevice",
         )
         t.start()
         t2 = wxThread.GUIThread(
             frame,
             changeAliasForDevice,
             args=(device, aliasDic, frame, maxGaugeAction),
+            name="changeAliasForDevice",
         )
         t2.start()
         joinThreadList([t, t2])
@@ -708,6 +717,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
                     Globals.frame,
                     setAllAppsState,
                     args=(Globals.frame, device, state),
+                    name="setAllAppsState",
                 )
                 threads.append(t)
                 t.start()
@@ -716,6 +726,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
             Globals.frame,
             waitTillThreadsFinish,
             args=(tuple(threads), state, -1, 4),
+            name="waitTillThreadsFinish%s" % state,
         )
         t.start()
 
@@ -798,6 +809,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
             apiCalls.executeCommandOnGroup,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
+            name="executeCommandOnGroup",
         )
     elif result and not isGroup:
         t = wxThread.GUIThread(
@@ -805,6 +817,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
             apiCalls.executeCommandOnDevice,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
+            name="executeCommandOnDevice",
         )
     if t:
         frame.menubar.disableConfigMenu()
