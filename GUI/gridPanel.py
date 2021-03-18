@@ -267,7 +267,7 @@ class GridPanel(wx.Panel):
             else:
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
-                    key=lambda i: i[keyName],
+                    key=lambda i: i[keyName].lower(),
                     reverse=self.deviceDescending,
                 )
         self.parentFrame.Logging(
@@ -320,7 +320,7 @@ class GridPanel(wx.Panel):
         else:
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
-                key=lambda i: i[keyName],
+                key=lambda i: i[keyName].lower(),
                 reverse=self.networkDescending,
             )
         self.parentFrame.Logging(
