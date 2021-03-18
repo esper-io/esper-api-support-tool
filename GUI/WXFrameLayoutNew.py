@@ -468,6 +468,8 @@ class NewFrameLayout(wx.Frame):
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
+        self.gridPanel.grid_1.Freeze()
+        self.gridPanel.grid_2.Freeze()
         deviceThread = wxThread.GUIThread(
             self,
             self.processCsvDataByGrid,
@@ -826,6 +828,10 @@ class NewFrameLayout(wx.Frame):
                 list(Globals.GRID_ACTIONS.keys())[1]
             )
             self.sidePanel.actionChoice.SetSelection(indx)
+            if self.gridPanel.grid_1.IsFrozen():
+                self.gridPanel.grid_1.Thaw()
+            if self.gridPanel.grid_2.IsFrozen():
+                self.gridPanel.grid_2.Thaw()
         if source == 3:
             self.gridPanel.enableGridProperties()
             self.gridPanel.autoSizeGridsColumns()
