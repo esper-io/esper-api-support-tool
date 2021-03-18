@@ -18,11 +18,15 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 lock = threading.Lock()
 deviceInfo_lock = threading.Lock()
+error_lock = threading.Lock()
+msg_lock = threading.Lock()
 grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
+error_tracker = {}
 
+MAX_ERROR_TIME_DIFF = 2
 MAX_THREAD_COUNT = 24
 MAX_RETRY = 5
 RETRY_SLEEP = 1

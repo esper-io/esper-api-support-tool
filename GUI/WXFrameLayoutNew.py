@@ -1307,12 +1307,12 @@ class NewFrameLayout(wx.Frame):
         action = evtValue[0]
         entId = evtValue[1]
         deviceList = evtValue[2]
-        updateGauge = False
-        maxGauge = None
+        # updateGauge = False
+        # maxGauge = None
 
-        if len(evtValue) == 5:
-            updateGauge = evtValue[3]
-            maxGauge = evtValue[4]
+        # if len(evtValue) == 5:
+        #     updateGauge = evtValue[3]
+        #     maxGauge = evtValue[4]
         wxThread.GUIThread(
             self,
             self.processFetch,
@@ -1320,6 +1320,7 @@ class NewFrameLayout(wx.Frame):
             name="ProcessFetch",
         ).start()
 
+    @api_tool_decorator
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
