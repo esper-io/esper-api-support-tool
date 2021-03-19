@@ -479,31 +479,35 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.disableGridProperties()
         self.gridPanel.grid_1.Freeze()
         self.gridPanel.grid_2.Freeze()
-        deviceThread = wxThread.GUIThread(
-            self,
-            self.processCsvDataByGrid,
-            args=(self.gridPanel.grid_1, data, Globals.CSV_TAG_ATTR_NAME),
-            eventType=None,
-            name="csvUploadDeviceInfo",
+        self.processCsvDataByGrid(
+            self.gridPanel.grid_1,
+            data,
+            Globals.CSV_TAG_ATTR_NAME,
+            Globals.grid1_lock,
         )
-        netThread = wxThread.GUIThread(
-            self,
-            self.processCsvDataByGrid,
-            args=(self.gridPanel.grid_2, data, Globals.CSV_NETWORK_ATTR_NAME),
-            eventType=None,
-            name="csvUploadNetworkInfo",
+        self.processCsvDataByGrid(
+            self.gridPanel.grid_2,
+            data,
+            Globals.CSV_NETWORK_ATTR_NAME,
+            Globals.grid2_lock,
         )
-        deviceThread.start()
-        netThread.start()
-        wxThread.GUIThread(
-            self,
-            self.waitForThreadsThenSetCursorDefault,
-            ([deviceThread, netThread], 2),
-            name="waitForThreadsThenSetCursorDefault_2",
-        ).start()
+        indx = self.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GRID_ACTIONS.keys())[1]
+        )
+        self.sidePanel.actionChoice.SetSelection(indx)
+        if self.gridPanel.grid_1.IsFrozen():
+            self.gridPanel.grid_1.Thaw()
+        if self.gridPanel.grid_2.IsFrozen():
+            self.gridPanel.grid_2.Thaw()
+        self.gridPanel.enableGridProperties()
+        self.gridPanel.autoSizeGridsColumns()
+        self.sidePanel.groupChoice.Enable(True)
+        self.sidePanel.deviceChoice.Enable(True)
 
     @api_tool_decorator
-    def processCsvDataByGrid(self, grid, data, headers):
+    def processCsvDataByGrid(self, grid, data, headers, lock=None):
+        if lock:
+            lock.acquire()
         grid_headers = list(headers.keys())
         len_reader = len(data)
         rowCount = 1
@@ -584,6 +588,8 @@ class NewFrameLayout(wx.Frame):
                             )
                         fileCol += 1
                     toolCol += 1
+        if lock:
+            lock.release()
 
     @api_tool_decorator
     def PopulateConfig(self, auth=None, event=None):
@@ -1102,6 +1108,7 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.userEdited = []
+            self.gridPanel.disableGridProperties()
             Globals.LAST_DEVICE_ID = None
             Globals.LAST_GROUP_ID = self.sidePanel.selectedGroupsList
 
@@ -1558,6 +1565,8 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_1.Thaw()
         if self.gridPanel.grid_2.IsFrozen():
             self.gridPanel.grid_2.Thaw()
+        if self.gridPanel.disableProperties:
+            self.gridPanel.enableGridProperties()
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
