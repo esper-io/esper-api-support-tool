@@ -217,15 +217,12 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         for thread in threads:
             if type(thread.result) == dict:
                 deviceList = {**deviceList, **thread.result}
-        postEventToFrame(
-            wxThread.myEVT_FETCH,
-            (
-                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                Globals.enterprise_id,
-                deviceList,
-                True,
-                len(deviceList) * 2,
-            ),
+        return (
+            GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+            Globals.enterprise_id,
+            deviceList,
+            True,
+            len(deviceList) * 2,
         )
     if source == 4:
         postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))

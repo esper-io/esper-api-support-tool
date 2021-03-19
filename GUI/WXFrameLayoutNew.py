@@ -1331,21 +1331,17 @@ class NewFrameLayout(wx.Frame):
     def onFetch(self, event):
         self.gauge.Pulse()
         evtValue = event.GetValue()
-        action = evtValue[0]
-        entId = evtValue[1]
-        deviceList = evtValue[2]
-        # updateGauge = False
-        # maxGauge = None
+        if evtValue:
+            action = evtValue[0]
+            entId = evtValue[1]
+            deviceList = evtValue[2]
 
-        # if len(evtValue) == 5:
-        #     updateGauge = evtValue[3]
-        #     maxGauge = evtValue[4]
-        wxThread.GUIThread(
-            self,
-            self.processFetch,
-            (action, entId, deviceList, True, len(deviceList) * 2),
-            name="ProcessFetch",
-        ).start()
+            wxThread.GUIThread(
+                self,
+                self.processFetch,
+                (action, entId, deviceList, True, len(deviceList) * 2),
+                name="ProcessFetch",
+            ).start()
 
     @api_tool_decorator
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
