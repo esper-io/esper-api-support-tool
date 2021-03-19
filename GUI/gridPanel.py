@@ -871,6 +871,24 @@ class GridPanel(wx.Panel):
         Globals.grid1_lock.release()
         return identifers
 
+    def getDeviceAppFromGrid(self):
+        Globals.grid1_lock.acquire()
+        appList = {}
+        indx = self.grid1HeaderLabels.index("Applications")
+        en_indx = self.grid1HeaderLabels.index("Esper Name")
+        sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        for rowNum in range(self.grid_1.GetNumberRows()):
+            if rowNum < self.grid_1.GetNumberRows():
+                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                apps = self.grid_1.GetCellValue(rowNum, indx)
+                if esperName and esperName not in appList.keys():
+                    appList[esperName] = apps
+                elif serialNum and serialNum not in appList.keys():
+                    appList[serialNum] = apps
+        Globals.grid1_lock.release()
+        return appList
+
     def updateGridContent(self, event):
         evtVal = event.GetValue()
         if self.grid_1_contents:

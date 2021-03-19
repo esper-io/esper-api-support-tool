@@ -119,6 +119,8 @@ def iterateThroughGridRows(frame, action):
         or action == GridActions.SET_APP_STATE_SHOW.value
     ):
         setAppStateForAllAppsListed(action)
+    if action == 50:
+        setAppStateForSpecificAppListed(action)
 
 
 @api_tool_decorator
@@ -713,7 +715,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
         threads = []
         for device in api_response.results:
             if (
-                device.device_name in deviceIds
+                device.device_name in deviceIdentifers
                 or device.hardware_info["serialNumber"] in deviceIdentifers
             ):
                 t = wxThread.GUIThread(
@@ -869,3 +871,75 @@ def confirmCommand(cmd, commandType, schedule, schType):
         return True, isGroup
     else:
         return False, isGroup
+
+
+def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
+    state = None
+    if action == 50:
+        state == 32
+
+    # deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+    appList = Globals.frame.gridPanel.getDeviceAppFromGrid()
+    if api_response:
+        tempRes = []
+        for device in api_response.results:
+            for deviceIds in appList.keys():
+                if (
+                    device.device_name in deviceIds
+                    or device.hardware_info["serialNumber"] in deviceIds
+                ):
+                    tempRes.append(device)
+        if tempRes:
+            api_response.results = tempRes
+        threads = []
+        for device in api_response.results:
+            if (
+                device.device_name in appList.keys()
+                or device.hardware_info["serialNumber"] in appList.keys()
+            ):
+                package_name = None
+                if device.device_name in appList.keys():
+                    package_name = appList[device.device_name]
+                elif device.hardware_info["serialNumber"] in appList.keys():
+                    package_name = appList[device.hardware_info["serialNumber"]]
+                if package_name:
+                    t = wxThread.GUIThread(
+                        Globals.frame,
+                        apiCalls.setAppState,
+                        args=(
+                            device.id,
+                            package_name,
+                            "DISABLE",
+                        ),
+                        name="setAllAppsState",
+                    )
+                    threads.append(t)
+                    t.start()
+                limitActiveThreads(threads)
+        t = wxThread.GUIThread(
+            Globals.frame,
+            waitTillThreadsFinish,
+            args=(tuple(threads), state, -1, 4),
+            name="waitTillThreadsFinish%s" % state,
+        )
+        t.start()

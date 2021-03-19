@@ -1155,6 +1155,7 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.userEdited = []
+            self.gridPanel.disableGridProperties()
             Globals.LAST_DEVICE_ID = self.sidePanel.selectedDevicesList
             Globals.LAST_GROUP_ID = None
             for deviceId in self.sidePanel.selectedDevicesList:
@@ -1205,6 +1206,7 @@ class NewFrameLayout(wx.Frame):
                         bgColor=Color.white.value,
                         applyAll=True,
                     )
+                    self.gridPanel.disableGridProperties()
                     self.frame_toolbar.search.SetValue("")
                     self.gauge.Pulse()
                     wxThread.GUIThread(

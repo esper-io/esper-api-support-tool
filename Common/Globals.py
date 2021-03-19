@@ -58,6 +58,7 @@ GRID_ACTIONS = {
     "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
     "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
     "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
+    # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
 LOGLIST = []
