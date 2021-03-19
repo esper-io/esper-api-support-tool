@@ -577,9 +577,17 @@ class GridPanel(wx.Panel):
     @api_tool_decorator
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
         Globals.grid_color_lock.acquire()
-        if attribute == "Alias" and "OriginalAlias" in device_info:
+        if (
+            attribute == "Alias"
+            and "OriginalAlias" in device_info
+            and device_info["Alias"] != device_info["OriginalAlias"]
+        ):
             grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
-        if attribute == "Tags" and "OriginalTags" in device_info:
+        if (
+            attribute == "Tags"
+            and "OriginalTags" in device_info
+            and device_info["Tags"] != device_info["OriginalTags"]
+        ):
             grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
         Globals.grid_color_lock.release()
 
@@ -862,3 +870,24 @@ class GridPanel(wx.Panel):
                     identifers.append((esperName, serialNum))
         Globals.grid1_lock.release()
         return identifers
+
+    def updateGridContent(self, event):
+        evtVal = event.GetValue()
+        if self.grid_1_contents:
+            device = evtVal[0]
+            modified = evtVal[1]
+            deviceListing = list(
+                filter(
+                    lambda x: (
+                        x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
+                    ),
+                    self.grid_1_contents,
+                )
+            )
+            for listing in deviceListing:
+                indx = self.grid_1_contents.index(listing)
+                if modified == "alias":
+                    listing["OriginalAlias"] = listing["Alias"]
+                elif modified == "tags":
+                    listing["OriginalTags"] = listing["Tags"]
+                self.grid_1_contents[indx] = listing

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
+import json
 import wx
 import wx.adv
 
-from datetime import datetime, timezone
+from datetime import datetime
 from dateutil import tz
+from Common.decorator import api_tool_decorator
 
 from esperclient.models.v0_command_args import V0CommandArgs
 from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
@@ -24,6 +25,151 @@ class CommandDialog(wx.Dialog):
             | wx.CANCEL
             | wx.RESIZE_BORDER,
         )
+        self.isJsonInput = Globals.COMMAND_JSON_INPUT
+        if self.isJsonInput:
+            self.createJsonWindowView(title, value)
+        else:
+            self.createSplitWindowView(title, value)
+
+    def createJsonWindowView(self, title, value):
+        self.SetSize((500, 400))
+        self.SetTitle(title)
+        emptyJson = "{\n\n}"
+
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
+
+        sizer_2 = wx.BoxSizer(wx.VERTICAL)
+
+        grid_sizer_1 = wx.GridSizer(2, 1, 0, 0)
+        sizer_2.Add(grid_sizer_1, 1, wx.EXPAND, 0)
+
+        self.window_1 = wx.SplitterWindow(self.panel_1, wx.ID_ANY)
+        self.window_1.SetMinimumPaneSize(20)
+        grid_sizer_1.Add(self.window_1, 1, wx.ALL | wx.EXPAND, 5)
+
+        self.window_1_pane_1 = wx.Panel(self.window_1, wx.ID_ANY)
+
+        sizer_7 = wx.BoxSizer(wx.VERTICAL)
+
+        label_1 = wx.StaticText(self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:")
+        label_1.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_LIGHT,
+                0,
+                "",
+            )
+        )
+        sizer_7.Add(label_1, 0, wx.ALL, 5)
+
+        self.panel_2 = wx.Panel(self.window_1_pane_1, wx.ID_ANY)
+        sizer_7.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_3 = wx.GridSizer(1, 1, 0, 0)
+
+        self.text_ctrl_1 = wx.TextCtrl(
+            self.panel_2, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
+        )
+        self.text_ctrl_1.SetFocus()
+        sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
+
+        self.window_1_pane_2 = wx.Panel(self.window_1, wx.ID_ANY)
+
+        sizer_8 = wx.BoxSizer(wx.VERTICAL)
+
+        label_3 = wx.StaticText(
+            self.window_1_pane_2, wx.ID_ANY, "Enter Schedule Args JSON:"
+        )
+        label_3.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_LIGHT,
+                0,
+                "",
+            )
+        )
+        sizer_8.Add(label_3, 0, wx.ALL, 5)
+
+        self.panel_4 = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        sizer_8.Add(self.panel_4, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_9 = wx.GridSizer(1, 1, 0, 0)
+
+        self.text_ctrl_2 = wx.TextCtrl(
+            self.panel_4, wx.ID_ANY, emptyJson, style=wx.TE_MULTILINE
+        )
+        sizer_9.Add(self.text_ctrl_2, 0, wx.EXPAND, 0)
+
+        self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
+        grid_sizer_1.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_5 = wx.BoxSizer(wx.VERTICAL)
+
+        label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Command Type")
+        label_2.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_LIGHT,
+                0,
+                "",
+            )
+        )
+        sizer_5.Add(label_2, 0, wx.ALL, 5)
+
+        self.cmdTypeBox = wx.ComboBox(
+            self.panel_3,
+            wx.ID_ANY,
+            choices=Globals.JSON_COMMAND_TYPES,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SIMPLE | wx.CB_SORT,
+        )
+        sizer_5.Add(self.cmdTypeBox, 0, wx.ALL | wx.SHAPED, 5)
+
+        static_line_1 = wx.StaticLine(self.panel_1, wx.ID_ANY)
+        sizer_2.Add(static_line_1, 0, wx.EXPAND, 0)
+
+        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_2.Add(sizer_4, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
+
+        self.okBtn = wx.Button(self.panel_1, wx.ID_OK, "OK")
+        sizer_4.Add(self.okBtn, 0, wx.ALL, 5)
+
+        sizer_4.Add((20, 20), 0, wx.ALL, 5)
+
+        self.cancelBtn = wx.Button(self.panel_1, wx.ID_CANCEL, "Cancel")
+        sizer_4.Add(self.cancelBtn, 0, wx.ALL, 5)
+
+        self.panel_3.SetSizer(sizer_5)
+
+        self.panel_4.SetSizer(sizer_9)
+
+        self.window_1_pane_2.SetSizer(sizer_8)
+
+        self.panel_2.SetSizer(sizer_3)
+
+        self.window_1_pane_1.SetSizer(sizer_7)
+
+        self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
+
+        self.panel_1.SetSizer(sizer_2)
+
+        self.okBtn.Bind(wx.EVT_BUTTON, self.OnClose)
+        self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnClose)
+
+        self.SetSizer(sizer_1)
+
+        self.Layout()
+        self.Centre()
+
+    def createSplitWindowView(self, title, value):
         self.SetTitle("Create Command")
 
         sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
@@ -461,44 +607,112 @@ class CommandDialog(wx.Dialog):
         date = date + "T" + time + "Z"
         return date, time
 
-    @api_tool_decorator
+    # @api_tool_decorator
     def GetValue(self):
-        command_args = V0CommandArgs(
-            app_state=self.choice_2.GetStringSelection(),
-            app_version=self.text_ctrl_3.GetValue(),
-            device_alias_name=None,
-            custom_settings_config=self.text_ctrl_1.GetValue(),
-            package_name=self.text_ctrl_2.GetValue(),
-            policy_url=None,
-            state=self.choice_3.GetStringSelection().upper(),
-            message=self.text_ctrl_4.GetValue(),
-            wifi_access_points=None,
-        )
-        dayList = (
-            list(self.check_list_box_1.GetCheckedStrings())
-            if self.check_list_box_1.IsEnabled()
-            else None
-        )
+        if not self.isJsonInput:
+            command_args = V0CommandArgs(
+                app_state=self.choice_2.GetStringSelection(),
+                app_version=self.text_ctrl_3.GetValue(),
+                device_alias_name=None,
+                custom_settings_config=self.text_ctrl_1.GetValue(),
+                package_name=self.text_ctrl_2.GetValue(),
+                policy_url=None,
+                state=self.choice_3.GetStringSelection().upper(),
+                message=self.text_ctrl_4.GetValue(),
+                wifi_access_points=None,
+            )
+            dayList = (
+                list(self.check_list_box_1.GetCheckedStrings())
+                if self.check_list_box_1.IsEnabled()
+                else None
+            )
 
-        if self.choice_4.GetStringSelection().lower() != "immediate":
-            self.startDate, self.winStartTime = self.getStartDateTime()
-            self.endDate, self.winEndTime = self.getEndDateTime()
+            if self.choice_4.GetStringSelection().lower() != "immediate":
+                self.startDate, self.winStartTime = self.getStartDateTime()
+                self.endDate, self.winEndTime = self.getEndDateTime()
 
-        schedule_args = V0CommandScheduleArgs(
-            name=self.choice_1.GetStringSelection(),
-            start_datetime=self.startDate,
-            end_datetime=self.endDate,
-            time_type=self.choice_5.GetStringSelection(),
-            window_start_time=self.winStartTime,
-            window_end_time=self.winEndTime,
-            days=dayList,
-        )
-        return (
-            command_args,
-            self.choice_1.GetStringSelection(),
-            schedule_args,
-            self.choice_4.GetStringSelection(),
-        )
+            schedule_args = V0CommandScheduleArgs(
+                name=self.choice_1.GetStringSelection(),
+                start_datetime=self.startDate,
+                end_datetime=self.endDate,
+                time_type=self.choice_5.GetStringSelection(),
+                window_start_time=self.winStartTime,
+                window_end_time=self.winEndTime,
+                days=dayList,
+            )
+            return (
+                command_args,
+                self.choice_1.GetStringSelection(),
+                schedule_args,
+                self.choice_4.GetStringSelection(),
+            )
+        else:
+            cmdConfig = json.loads(self.text_ctrl_1.GetValue())
+            scheduleConfig = json.loads(self.text_ctrl_2.GetValue())
+            otherConfig = {}
+            for key in cmdConfig.keys():
+                if key not in Globals.COMMAND_ARGS:
+                    otherConfig[key] = cmdConfig[key]
+
+            command_args = V0CommandArgs(
+                app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,
+                app_version=cmdConfig["app_version"]
+                if "app_version" in cmdConfig
+                else None,
+                device_alias_name=cmdConfig["device_alias_name"]
+                if "device_alias_name" in cmdConfig
+                else None,
+                custom_settings_config=otherConfig,
+                package_name=cmdConfig["package_name"]
+                if "package_name" in cmdConfig
+                else None,
+                policy_url=cmdConfig["policy_url"]
+                if "policy_url" in cmdConfig
+                else None,
+                state=cmdConfig["state"] if "state" in cmdConfig else None,
+                message=cmdConfig["message"] if "message" in cmdConfig else None,
+                wifi_access_points=cmdConfig["wifi_access_points"]
+                if "wifi_access_points" in cmdConfig
+                else None,
+            )
+            schedule_args = V0CommandScheduleArgs(
+                name=scheduleConfig["name"] if "name" in scheduleConfig else None,
+                start_datetime=scheduleConfig["start_datetime"]
+                if "start_datetime" in scheduleConfig
+                else None,
+                end_datetime=scheduleConfig["end_datetime"]
+                if "end_datetime" in scheduleConfig
+                else None,
+                time_type=scheduleConfig["time_type"]
+                if "time_type" in scheduleConfig
+                else None,
+                window_start_time=scheduleConfig["window_start_time"]
+                if "window_start_time" in scheduleConfig
+                else None,
+                window_end_time=scheduleConfig["window_end_time"]
+                if "window_end_time" in scheduleConfig
+                else None,
+                days=scheduleConfig["days"] if "days" in scheduleConfig else None,
+            )
+            schType = ""
+            if (
+                "days" in scheduleConfig
+                and "window_end_time" in scheduleConfig
+                and "window_start_time" in scheduleConfig
+            ):
+                schType = "WINDOW"
+            elif (
+                "start_datetime" in scheduleConfig and "end_datetime" in scheduleConfig
+            ):
+                schType = "REOCURRING"
+            else:
+                schType = "IMMEDIATE"
+            return (
+                command_args,
+                self.cmdTypeBox.GetValue(),
+                schedule_args,
+                schType,
+            )
 
     @api_tool_decorator
     def OnClose(self, event):

@@ -38,6 +38,7 @@ class PreferencesDialog(wx.Dialog):
             "templateUpdate",
             "colSize",
             "setStateShow",
+            "useJsonForCmd",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -70,6 +71,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
+        # General Preferences
         self.general = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
@@ -156,11 +158,12 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
+        # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.command.Hide()
         sizer_5.Add(self.command, 1, wx.EXPAND, 0)
 
-        sizer_14 = wx.FlexGridSizer(2, 1, 0, 0)
+        sizer_14 = wx.FlexGridSizer(3, 1, 0, 0)
 
         self.panel_25 = wx.Panel(self.command, wx.ID_ANY)
         sizer_14.Add(self.panel_25, 1, wx.ALL | wx.EXPAND, 5)
@@ -216,6 +219,32 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
+        self.panel_39 = wx.Panel(self.command, wx.ID_ANY)
+        sizer_14.Add(self.panel_39, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_28 = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_39.SetSizer(sizer_28)
+
+        label_17 = wx.StaticText(
+            self.panel_39,
+            wx.ID_ANY,
+            "Use Json Input for Commands",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        sizer_28.Add(label_17, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_40 = wx.Panel(self.panel_39, wx.ID_ANY)
+        sizer_28.Add(self.panel_40, 1, wx.EXPAND, 0)
+
+        grid_sizer_19 = wx.GridSizer(1, 1, 0, 0)
+        self.panel_40.SetSizer(grid_sizer_19)
+
+        self.checkbox_12 = wx.CheckBox(self.panel_40, wx.ID_ANY, "")
+        grid_sizer_19.Add(
+            self.checkbox_12, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+
+        # Grid Preferences
         self.grid = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
@@ -301,6 +330,7 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_10 = wx.CheckBox(self.panel_36, wx.ID_ANY, "")
         grid_sizer_17.Add(self.checkbox_10, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
@@ -403,6 +433,7 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_11 = wx.CheckBox(self.panel_37, wx.ID_ANY, "")
         grid_sizer_18.Add(self.checkbox_11, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.prompts.Hide()
         sizer_5.Add(self.prompts, 1, wx.EXPAND, 0)
@@ -695,6 +726,20 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SET_APP_STATE_AS_SHOW = False
 
+        if not prefDict or (prefDict and not prefDict["useJsonForCmd"]):
+            self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
+            Globals.COMMAND_JSON_INPUT = True
+        elif prefDict and prefDict["useJsonForCmd"]:
+            if (
+                isinstance(self.prefs["useJsonForCmd"], str)
+                and prefDict["useJsonForCmd"].lower() == "true"
+            ) or prefDict["useJsonForCmd"] == True:
+                self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
+                Globals.COMMAND_JSON_INPUT = True
+            else:
+                self.checkbox_12.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.COMMAND_JSON_INPUT = False
+
     @api_tool_decorator
     def showMatchingPanel(self, event):
         event.Skip()
@@ -754,6 +799,7 @@ class PreferencesDialog(wx.Dialog):
             "getAppsForEachDevice": self.checkbox_6.IsChecked(),
             "colSize": self.checkbox_10.IsChecked(),
             "setStateShow": self.checkbox_11.IsChecked(),
+            "useJsonForCmd": self.checkbox_12.IsChecked(),
         }
 
         Globals.SET_APP_STATE_AS_SHOW = False
@@ -768,6 +814,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
         Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
+        Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -860,13 +907,13 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
         if "showPkg" in self.prefs and self.prefs["showPkg"]:
             if (
-                isinstance(self.prefs["getAllApps"], str)
+                isinstance(self.prefs["showPkg"], str)
                 and self.prefs["showPkg"].lower() == "false"
             ) or not self.prefs["showPkg"]:
                 Globals.SHOW_PKG_NAME = False
                 self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
             elif (
-                isinstance(self.prefs["getAllApps"], str)
+                isinstance(self.prefs["showPkg"], str)
                 and self.prefs["showPkg"].lower() == "true"
             ) or self.prefs["showPkg"]:
                 Globals.SHOW_PKG_NAME = True
@@ -874,6 +921,22 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.SHOW_PKG_NAME = True
                 self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
+        if "useJsonForCmd" in self.prefs and self.prefs["useJsonForCmd"]:
+            if (
+                isinstance(self.prefs["useJsonForCmd"], str)
+                and self.prefs["useJsonForCmd"].lower() == "false"
+            ) or not self.prefs["useJsonForCmd"]:
+                Globals.COMMAND_JSON_INPUT = False
+                self.checkbox_12.Set3StateValue(wx.CHK_UNCHECKED)
+            elif (
+                isinstance(self.prefs["useJsonForCmd"], str)
+                and self.prefs["useJsonForCmd"].lower() == "true"
+            ) or self.prefs["useJsonForCmd"]:
+                Globals.COMMAND_JSON_INPUT = True
+                self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
+            else:
+                Globals.COMMAND_JSON_INPUT = True
+                self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -887,6 +950,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["getAppsForEachDevice"] = Globals.GET_APP_EACH_DEVICE
         self.prefs["getAllApps"] = Globals.USE_ENTERPRISE_APP
         self.prefs["showPkg"] = Globals.SHOW_PKG_NAME
+        self.prefs["useJsonForCmd"] = Globals.COMMAND_JSON_INPUT
         self.prefs[
             "gridDialog"
         ] = Globals.SHOW_GRID_DIALOG  # update pref value to match global value
@@ -937,5 +1001,7 @@ class PreferencesDialog(wx.Dialog):
             return True
         elif key == "setStateShow":
             return Globals.SET_APP_STATE_AS_SHOW
+        elif key == "useJsonForCmd":
+            return Globals.COMMAND_JSON_INPUT
         else:
             return None

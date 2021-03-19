@@ -637,6 +637,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
                 postEventToFrame(wxThread.myEVT_ON_FAILED, device)
         else:
             logString = logString + " (Alias Name already set)"
+        if "Success" in logString or "Queued" in logString:
+            postEventToFrame(wxThread.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
             wxThread.myEVT_UPDATE_GAUGE,
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
@@ -664,6 +666,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         tags = apiCalls.setdevicetags(device.id, tagsFromCell)
         if tags == tagsFromGrid[key]:
             changeSucceeded += 1
+        postEventToFrame(wxThread.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
         postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
         postEventToFrame(
             wxThread.myEVT_UPDATE_GAUGE,

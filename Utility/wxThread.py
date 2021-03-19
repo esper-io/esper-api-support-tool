@@ -55,6 +55,9 @@ EVT_MESSAGE_BOX = wx.PyEventBinder(myEVT_MESSAGE_BOX, 1)
 myEVT_THREAD_WAIT = wx.NewEventType()
 EVT_THREAD_WAIT = wx.PyEventBinder(myEVT_THREAD_WAIT, 1)
 
+myEVT_UPDATE_GRID_CONTENT = wx.NewEventType()
+EVT_UPDATE_GRID_CONTENT = wx.PyEventBinder(myEVT_UPDATE_GRID_CONTENT, 1)
+
 
 def doAPICallInThread(
     frame,

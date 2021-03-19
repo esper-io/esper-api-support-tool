@@ -182,6 +182,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_COMMAND, self.onCommandDone)
         self.Bind(wxThread.EVT_UPDATE_GAUGE, self.setGaugeValue)
         self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
+        self.Bind(wxThread.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
         self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
         self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
         self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
