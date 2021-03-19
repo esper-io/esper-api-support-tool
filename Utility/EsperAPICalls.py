@@ -74,11 +74,12 @@ def fetchGroupName(groupURL):
     headers = getHeader()
     resp = performGetRequestWithRetry(groupURL, headers=headers)
     try:
-        json_resp = resp.json()
-        logBadResponse(groupURL, resp, json_resp)
+        if resp.status_code < 300:
+            json_resp = resp.json()
+            logBadResponse(groupURL, resp, json_resp)
 
-        if "name" in json_resp:
-            return json_resp["name"]
+            if "name" in json_resp:
+                return json_resp["name"]
     except Exception as e:
         ApiToolLog().LogError(e)
         logBadResponse(groupURL, resp, None)
