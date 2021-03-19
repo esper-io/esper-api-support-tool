@@ -67,6 +67,7 @@ from Utility.Resource import (
     createNewFile,
     joinThreadList,
     displayMessageBox,
+    updateErrorTracker,
 )
 
 
@@ -203,6 +204,10 @@ class NewFrameLayout(wx.Frame):
             self, checkForInternetAccess, (self), name="InternetCheck"
         )
         internetCheck.start()
+        errorTracker = wxThread.GUIThread(
+            self, updateErrorTracker, None, name="updateErrorTracker"
+        )
+        errorTracker.start()
 
     @api_tool_decorator
     def __set_properties(self):
@@ -468,6 +473,9 @@ class NewFrameLayout(wx.Frame):
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
+        self.sidePanel.groupChoice.Enable(False)
+        self.sidePanel.deviceChoice.Enable(False)
+        self.gridPanel.disableGridProperties()
         self.gridPanel.grid_1.Freeze()
         self.gridPanel.grid_2.Freeze()
         deviceThread = wxThread.GUIThread(
@@ -823,7 +831,6 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.sidePanel.deviceChoice.Enable(False)
         if source == 2:
-            self.gridPanel.autoSizeGridsColumns()
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[1]
             )
@@ -832,6 +839,10 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.grid_1.Thaw()
             if self.gridPanel.grid_2.IsFrozen():
                 self.gridPanel.grid_2.Thaw()
+            self.gridPanel.enableGridProperties()
+            self.gridPanel.autoSizeGridsColumns()
+            self.sidePanel.groupChoice.Enable(True)
+            self.sidePanel.deviceChoice.Enable(True)
         if source == 3:
             self.gridPanel.enableGridProperties()
             self.gridPanel.autoSizeGridsColumns()

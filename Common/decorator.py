@@ -15,7 +15,6 @@ from traceback import print_exc, extract_tb, format_list
 
 def api_tool_decorator(func):
     def inner(*args, **kwargs):
-        updateErrorTracker()
         start = time.perf_counter()
         result = None
         excpt = None
@@ -25,17 +24,18 @@ def api_tool_decorator(func):
             logPlaceDone(func)
         except ApiException as e:
             excpt = determineErrorDisplay(e)
-            logError()
+            logError(e)
         except Exception as e:
             excpt = determineErrorDisplay(e)
-            logError()
+            logError(e)
         finally:
             if Globals.frame and excpt:
                 Globals.frame.Logging(str(excpt), isError=True)
                 Globals.frame.onComplete(None)
                 Globals.frame.setCursorDefault()
                 Globals.frame.setGaugeValue(100)
-                Globals.msg_lock.release()
+                if Globals.msg_lock.locked():
+                    Globals.msg_lock.release()
         end = time.perf_counter()
         duration = end - start
         if Globals.PRINT_FUNC_DURATION:
@@ -46,6 +46,7 @@ def api_tool_decorator(func):
 
 
 def determineErrorDisplay(e):
+    Globals.error_lock.acquire()
     if str(e) in Globals.error_tracker:
         occurred = Globals.error_tracker[str(e)]
         timeDiff = datetime.now() - occurred
@@ -64,20 +65,8 @@ def determineErrorDisplay(e):
             displayApiExcpetionMsg(e)
         else:
             displayGenericErrorMsg(e)
-    return e
-
-
-def updateErrorTracker():
-    Globals.error_lock.acquire()
-    if Globals.error_tracker:
-        new_tracker = {}
-        for key, value in Globals.error_tracker.items():
-            timeDiff = datetime.now() - value
-            minutes = timeDiff.total_seconds() / 60
-            if minutes <= Globals.MAX_ERROR_TIME_DIFF:
-                new_tracker[key] = value
-        Globals.error_tracker = new_tracker
     Globals.error_lock.release()
+    return e
 
 
 def displayApiExcpetionMsg(e):

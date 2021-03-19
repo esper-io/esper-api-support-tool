@@ -16,14 +16,6 @@ MIN_LIMIT = 1000
 MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
-lock = threading.Lock()
-deviceInfo_lock = threading.Lock()
-error_lock = threading.Lock()
-msg_lock = threading.Lock()
-grid1_lock = threading.Lock()
-grid1_status_lock = threading.Lock()
-grid2_lock = threading.Lock()
-grid_color_lock = threading.Lock()
 error_tracker = {}
 
 MAX_ERROR_TIME_DIFF = 2
@@ -37,6 +29,16 @@ PRINT_FUNC_DURATION = False
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
+
+""" Locks """
+lock = threading.Lock()
+deviceInfo_lock = threading.Lock()
+error_lock = threading.Lock()
+msg_lock = threading.Lock()
+grid1_lock = threading.Lock()
+grid1_status_lock = threading.Lock()
+grid2_lock = threading.Lock()
+grid_color_lock = threading.Lock()
 
 """ Actions """
 GENERAL_ACTIONS = {

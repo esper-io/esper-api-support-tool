@@ -12,6 +12,7 @@ import webbrowser
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
+from datetime import datetime
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
@@ -336,3 +337,24 @@ def openWebLinkInBrowser(link):
     if hasattr(link, "GetLinkInfo"):
         link = link.GetLinkInfo().GetHref()
     webbrowser.open(link)
+
+
+def updateErrorTracker():
+    while Globals.frame and not Globals.frame.kill:
+        try:
+            Globals.error_lock.acquire()
+            if Globals.error_tracker:
+                new_tracker = {}
+                for key, value in Globals.error_tracker.items():
+                    timeDiff = datetime.now() - value
+                    minutes = timeDiff.total_seconds() / 60
+                    if minutes <= Globals.MAX_ERROR_TIME_DIFF:
+                        new_tracker[key] = value
+                Globals.error_tracker = new_tracker
+            time.sleep(60)
+            Globals.error_lock.release()
+        except Exception as e:
+            ApiToolLog().LogError(e)
+        finally:
+            if Globals.error_lock.locked():
+                Globals.error_lock.release()
