@@ -896,7 +896,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
             time.sleep(Globals.RETRY_SLEEP)
     state = None
     if action == 50:
-        state == 32
+        state == "HIDE"
 
     # deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     appList = Globals.frame.gridPanel.getDeviceAppFromGrid()
@@ -917,25 +917,28 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
                 device.device_name in appList.keys()
                 or device.hardware_info["serialNumber"] in appList.keys()
             ):
-                package_name = None
+                package_names = None
                 if device.device_name in appList.keys():
-                    package_name = appList[device.device_name]
+                    package_names = appList[device.device_name]
                 elif device.hardware_info["serialNumber"] in appList.keys():
-                    package_name = appList[device.hardware_info["serialNumber"]]
-                if package_name:
-                    t = wxThread.GUIThread(
-                        Globals.frame,
-                        apiCalls.setAppState,
-                        args=(
-                            device.id,
-                            package_name,
-                            "DISABLE",
-                        ),
-                        name="setAllAppsState",
-                    )
-                    threads.append(t)
-                    t.start()
-                limitActiveThreads(threads)
+                    package_names = appList[device.hardware_info["serialNumber"]]
+                package_names = package_names.split(",")
+                if package_names:
+                    for package_name in package_names:
+                        if package_name.trim():
+                            t = wxThread.GUIThread(
+                                Globals.frame,
+                                apiCalls.setAppState,
+                                args=(
+                                    device.id,
+                                    package_name.trim(),
+                                    state,
+                                ),
+                                name="setAllAppsState",
+                            )
+                            threads.append(t)
+                            t.start()
+                        limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
             waitTillThreadsFinish,
