@@ -55,8 +55,8 @@ class crypto:
             # decrypt data
             f.decrypt(encrypted_data)
             return False
-        except Exception as e:
-            ApiToolLog().LogError(e)
+        except:
+            pass
         return True
 
     def isFileEncrypt(self, filename, key):
@@ -69,8 +69,8 @@ class crypto:
             # decrypt data
             f.decrypt(encrypted_data)
             return True
-        except Exception as e:
-            ApiToolLog().LogError(e)
+        except:
+            pass
         return False
 
     def decrypt(self, filename, key, writeDecrypt=False):
