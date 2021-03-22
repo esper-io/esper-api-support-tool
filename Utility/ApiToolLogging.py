@@ -4,10 +4,11 @@ import tempfile
 import platform
 import sys
 import os
+import traceback
+import Common.Globals as Globals
 
 from datetime import datetime
 from traceback import print_exc, extract_tb, format_list
-import traceback
 
 
 class ApiToolLog:
@@ -31,19 +32,17 @@ class ApiToolLog:
                 "~/Desktop/"
             )
         if not os.path.exists(self.logPath):
-            if not os.path.exists(self.logPath):
-                parentPath = os.path.abspath(os.path.join(self.logPath, os.pardir))
-                if not os.path.exists(parentPath):
-                    os.makedirs(parentPath)
-                with open(self.logPath, "w"):
-                    pass
-        if not os.path.exists(self.placePath):
-            if not os.path.exists(self.placePath):
-                parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
-                if not os.path.exists(parentPath):
-                    os.makedirs(parentPath)
-                with open(self.placePath, "w"):
-                    pass
+            parentPath = os.path.abspath(os.path.join(self.logPath, os.pardir))
+            if not os.path.exists(parentPath):
+                os.makedirs(parentPath)
+            with open(self.logPath, "w"):
+                pass
+        if not os.path.exists(self.placePath) and Globals.RECORD_PLACE:
+            parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
+            if not os.path.exists(parentPath):
+                os.makedirs(parentPath)
+            with open(self.placePath, "w"):
+                pass
 
     def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
         if exc_type == None or exc_value == None or exc_traceback == None:

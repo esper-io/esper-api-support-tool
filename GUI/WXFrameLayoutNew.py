@@ -42,6 +42,7 @@ from Common.decorator import api_tool_decorator
 from pathlib import Path
 
 from Utility.ApiToolLogging import ApiToolLog
+from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
     setAppState,
     setKiosk,
@@ -103,6 +104,9 @@ class NewFrameLayout(wx.Frame):
                 "%s\\EsperApiTool\\auth.csv"
                 % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
             )
+            self.keyPath = "%s\\EsperApiTool\\east.key" % tempfile.gettempdir().replace(
+                "Local", "Roaming"
+            ).replace("Temp", "")
         else:
             self.WINDOWS = False
             self.prefPath = "%s/EsperApiTool/prefs.json" % os.path.expanduser(
@@ -111,6 +115,7 @@ class NewFrameLayout(wx.Frame):
             self.authPath = "%s/EsperApiTool/auth.csv" % os.path.expanduser(
                 "~/Desktop/"
             )
+            self.keyPath = "%s/EsperApiTool/east.key" % os.path.expanduser("~/Desktop/")
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize(Globals.MIN_SIZE)
@@ -127,6 +132,9 @@ class NewFrameLayout(wx.Frame):
         self.panel_1.SetSizer(sizer_4)
 
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQuit)
+        self.Bind(wx.EVT_END_SESSION, self.OnQuit)
+        self.Bind(wx.EVT_END_PROCESS, self.OnQuit)
         self.Bind(wx.EVT_BUTTON, self.onRun, self.sidePanel.runBtn)
 
         # Menu Bar
@@ -192,6 +200,9 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
 
+        if self.kill:
+            return
+
         self.loadPref()
         self.__set_properties()
         self.Layout()
@@ -199,6 +210,9 @@ class NewFrameLayout(wx.Frame):
         self.Raise()
         self.Iconize(False)
         self.SetFocus()
+
+        if self.kill:
+            return
 
         self.menubar.checkCollectionEnabled()
         internetCheck = wxThread.GUIThread(
@@ -330,6 +344,8 @@ class NewFrameLayout(wx.Frame):
     def OnQuit(self, e):
         """ Actions to take when frame is closed """
         self.kill = True
+        if self.key and crypto().isFileDecrypt(Globals.csv_auth_path, self.key):
+            crypto().encryptFile(Globals.csv_auth_path, self.key)
         if self.consoleWin:
             self.consoleWin.Close()
             self.consoleWin.DestroyLater()
@@ -1603,6 +1619,8 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def readAuthCSV(self):
+        if self.key:
+            crypto().decrypt(Globals.csv_auth_path, self.key, True)
         if os.path.exists(Globals.csv_auth_path):
             with open(Globals.csv_auth_path, "r") as csvFile:
                 reader = csv.reader(
@@ -1613,6 +1631,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def loadPref(self):
         """ Attempt to load preferences from file system """
+        if not os.path.exists(self.keyPath):
+            self.key = crypto().create_key(self.keyPath)
+        else:
+            self.key = crypto().load_key(self.keyPath)
         if os.path.exists(self.authPath):
             Globals.csv_auth_path = self.authPath
             self.readAuthCSV()
@@ -1637,6 +1659,7 @@ class NewFrameLayout(wx.Frame):
             and os.access(self.prefPath, os.R_OK)
         ):
             if os.path.getsize(self.prefPath) > 2:
+                crypto().decrypt(self.prefPath, self.key, True)
                 with open(self.prefPath) as jsonFile:
                     if jsonFile:
                         try:
@@ -1660,6 +1683,8 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
+        if self.key and crypto().isFileDecrypt(self.prefPath, self.key):
+            crypto().encryptFile(self.prefPath, self.key)
         evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Preferences' Saved")
         wx.PostEvent(self, evt)
 
