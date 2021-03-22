@@ -72,10 +72,10 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = runMenu.Append(cloneItem)
         runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Perform Collection Action\tCtrl+Shift+F"
+            runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
         )
         self.collection = runMenu.Append(collectionItem)
-        eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search\tCtrl+F")
+        eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F")
         self.eqlQuery = runMenu.Append(eqlQueryItem)
 
         viewMenu = wx.Menu()
