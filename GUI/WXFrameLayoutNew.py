@@ -446,6 +446,9 @@ class NewFrameLayout(wx.Frame):
             )
             return
 
+        if self.isRunning:
+            return
+
         self.setCursorBusy()
         self.gridPanel.emptyDeviceGrid()
         self.gridPanel.emptyNetworkGrid()
@@ -490,6 +493,7 @@ class NewFrameLayout(wx.Frame):
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
+        self.toggleEnabledState(False)
         self.sidePanel.groupChoice.Enable(False)
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
@@ -519,6 +523,7 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.autoSizeGridsColumns()
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.deviceChoice.Enable(True)
+        self.toggleEnabledState(True)
 
     @api_tool_decorator
     def processCsvDataByGrid(self, grid, data, headers, lock=None):
@@ -1739,6 +1744,9 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFileDrop(self, event):
+        if self.isRunning:
+            return
+
         for file in event.Files:
             if file.endswith(".csv"):
                 with open(file, "r") as csvFile:
@@ -2036,6 +2044,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
 
+        self.menubar.fileOpenConfig.Enable(state)
         self.menubar.collection.Enable(state)
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
