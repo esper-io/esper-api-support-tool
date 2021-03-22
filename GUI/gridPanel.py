@@ -148,7 +148,7 @@ class GridPanel(wx.Panel):
         Globals.grid2_lock.release()
 
     @api_tool_decorator
-    def autoSizeGridsColumns(self):
+    def autoSizeGridsColumns(self, event=None):
         Globals.grid1_lock.acquire()
         Globals.grid2_lock.acquire()
         self.grid_1.AutoSizeColumns()
