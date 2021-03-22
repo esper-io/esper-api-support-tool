@@ -153,6 +153,8 @@ CSV_NETWORK_ATTR_NAME = {
 }
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
 
+CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
+
 """ WxPython Frame """
 frame = None
 app = None
@@ -178,6 +180,7 @@ GET_APP_EACH_DEVICE = False
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
+CMD_DEVICE_TYPE = "all"
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

@@ -39,7 +39,11 @@ def logBadResponse(url, resp, json_resp):
 
 @api_tool_decorator
 def getHeader():
-    if Globals.configuration and Globals.configuration.api_key and "Authorization" in Globals.configuration.api_key:
+    if (
+        Globals.configuration
+        and Globals.configuration.api_key
+        and "Authorization" in Globals.configuration.api_key
+    ):
         return {
             "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
             "Content-Type": "application/json",
@@ -137,7 +141,7 @@ def toggleKioskMode(
     command = esperclient.V0CommandRequest(
         enterprise=Globals.enterprise_id,
         command_type="DEVICE",
-        device_type="all",
+        device_type=Globals.CMD_DEVICE_TYPE,
         devices=[deviceid],
         command="SET_KIOSK_APP",
         command_args=command_args,
@@ -323,7 +327,7 @@ def setdevicename(
         devices=[deviceid],
         command="UPDATE_DEVICE_CONFIG",
         command_args=args,
-        device_type="all",
+        device_type=Globals.CMD_DEVICE_TYPE,
     )
     api_response = None
     for attempt in range(maxAttempt):
@@ -792,7 +796,7 @@ def executeCommandOnGroup(
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="GROUP",
-            device_type="all",
+            device_type=Globals.CMD_DEVICE_TYPE,
             groups=[groupToUse],
             command=command_type,
             command_args=command_args,
@@ -841,7 +845,7 @@ def executeCommandOnDevice(
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="DEVICE",
-            device_type="all",
+            device_type=Globals.CMD_DEVICE_TYPE,
             devices=[deviceToUse],
             command=command_type,
             command_args=command_args,
@@ -1032,7 +1036,7 @@ def clearAppData(frame, device):
                 "command_args": cmdArgs,
                 "devices": [device.id],
                 "groups": [],
-                "device_type": "all",
+                "device_type": Globals.CMD_DEVICE_TYPE,
                 "command": "CLEAR_APP_DATA",
             }
             resp, json_resp = postEsperCommand(reqData)
@@ -1115,7 +1119,7 @@ def setAppState(
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="DEVICE",
-            device_type="all",
+            device_type=Globals.CMD_DEVICE_TYPE,
             devices=[device_id],
             command="SET_APP_STATE",
             command_args=args,

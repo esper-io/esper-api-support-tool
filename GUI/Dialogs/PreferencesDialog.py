@@ -39,6 +39,7 @@ class PreferencesDialog(wx.Dialog):
             "colSize",
             "setStateShow",
             "useJsonForCmd",
+            "runCommandOn",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -163,7 +164,7 @@ class PreferencesDialog(wx.Dialog):
         self.command.Hide()
         sizer_5.Add(self.command, 1, wx.EXPAND, 0)
 
-        sizer_14 = wx.FlexGridSizer(3, 1, 0, 0)
+        sizer_14 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_25 = wx.Panel(self.command, wx.ID_ANY)
         sizer_14.Add(self.panel_25, 1, wx.ALL | wx.EXPAND, 5)
@@ -242,6 +243,38 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_12 = wx.CheckBox(self.panel_40, wx.ID_ANY, "")
         grid_sizer_19.Add(
             self.checkbox_12, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+
+        self.panel_41 = wx.Panel(self.command, wx.ID_ANY)
+        sizer_14.Add(self.panel_41, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_29 = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_41.SetSizer(sizer_29)
+
+        label_18 = wx.StaticText(
+            self.panel_41,
+            wx.ID_ANY,
+            "Device Type",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_18.SetToolTip("Types of devices that a command should be run on.")
+        sizer_29.Add(label_18, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_42 = wx.Panel(self.panel_41, wx.ID_ANY)
+        sizer_29.Add(self.panel_42, 1, wx.EXPAND, 0)
+
+        grid_sizer_20 = wx.GridSizer(1, 1, 0, 0)
+        self.panel_42.SetSizer(grid_sizer_20)
+
+        self.combobox_1 = wx.ComboBox(
+            self.panel_42,
+            wx.ID_ANY,
+            choices=Globals.CMD_DEVICE_TYPES,
+            style=wx.CB_DROPDOWN | wx.CB_READONLY,
+        )
+        self.combobox_1.SetSelection(0)
+        grid_sizer_20.Add(
+            self.combobox_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
         # Grid Preferences
@@ -740,6 +773,16 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_12.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.COMMAND_JSON_INPUT = False
 
+        if not prefDict or (prefDict and not prefDict["runCommandOn"]):
+            self.combobox_1.SetSelection(0)
+        elif prefDict and prefDict["runCommandOn"]:
+            if isinstance(self.prefs["runCommandOn"], str):
+                indx = self.combobox_1.GetItems().index(self.prefs["runCommandOn"])
+                self.combobox_1.SetSelection(indx)
+            else:
+                self.combobox_1.SetSelection(self.prefs["runCommandOn"])
+        Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
+
     @api_tool_decorator
     def showMatchingPanel(self, event):
         event.Skip()
@@ -800,6 +843,7 @@ class PreferencesDialog(wx.Dialog):
             "colSize": self.checkbox_10.IsChecked(),
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
+            "runCommandOn": self.combobox_1.GetValue(),
         }
 
         Globals.SET_APP_STATE_AS_SHOW = False
@@ -815,6 +859,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
         Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
+        Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -937,6 +982,15 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.COMMAND_JSON_INPUT = True
                 self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
+        if "runCommandOn" in self.prefs and self.prefs["runCommandOn"]:
+            if isinstance(self.prefs["runCommandOn"], str):
+                indx = self.combobox_1.GetItems().index(
+                    self.prefs["runCommandOn"].capitalize()
+                )
+                self.combobox_1.SetSelection(indx)
+            else:
+                self.combobox_1.SetSelection(self.prefs["runCommandOn"])
+            Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -960,6 +1014,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["isMaximized"] = self.parent.IsMaximized() if self.parent else False
         self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
+        self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
 
         return self.prefs
 
@@ -1003,5 +1058,7 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SET_APP_STATE_AS_SHOW
         elif key == "useJsonForCmd":
             return Globals.COMMAND_JSON_INPUT
+        elif key == "runCommandOn":
+            return Globals.CMD_DEVICE_TYPE
         else:
             return None

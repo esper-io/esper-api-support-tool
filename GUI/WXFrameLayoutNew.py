@@ -30,9 +30,7 @@ from GUI.consoleWindow import Console
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.TemplateDialog import TemplateDialog
 from GUI.Dialogs.CommandDialog import CommandDialog
-from GUI.Dialogs.ProgressCheckDialog import ProgressCheckDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
-from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
