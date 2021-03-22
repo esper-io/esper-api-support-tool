@@ -454,7 +454,7 @@ class PreferencesDialog(wx.Dialog):
             style=wx.ST_ELLIPSIZE_END,
         )
         label_16.SetToolTip(
-            "Set App State of Application To SHOW before Setting to as Kiosk app."
+            "Set App State to SHOW before setting the application as a Kiosk app on device."
         )
         sizer_27.Add(label_16, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
