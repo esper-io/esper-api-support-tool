@@ -38,11 +38,10 @@ def preformEqlSearch(query, who, returnJson=False):
         return resp
 
 
-@api_tool_decorator
 def checkCollectionIsEnabled():
     enabled = False
     resp = fetchCollectionList(returnResp=True)
-    if resp.status_code < 300:
+    if hasattr(resp, "status_code") and resp.status_code < 300:
         enabled = True
     return enabled
 
@@ -51,6 +50,8 @@ def checkCollectionIsEnabled():
 def fetchCollectionList(returnResp=False):
     # GET /api/v0/enterprise/{enterprise_id}/collection/
     headers = getHeader()
+    if not headers:
+        return None
 
     url = "https://{host}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/collection/".format(
         host=Globals.configuration.host.split("-api")[0].replace("https://", ""),

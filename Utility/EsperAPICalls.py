@@ -39,10 +39,13 @@ def logBadResponse(url, resp, json_resp):
 
 @api_tool_decorator
 def getHeader():
-    return {
-        "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
-        "Content-Type": "application/json",
-    }
+    if Globals.configuration and Globals.configuration.api_key and "Authorization" in Globals.configuration.api_key:
+        return {
+            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
+            "Content-Type": "application/json",
+        }
+    else:
+        return {}
 
 
 @api_tool_decorator
