@@ -2040,6 +2040,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.actionChoice.Enable(state)
         self.sidePanel.removeEndpointBtn.Enable(state)
 
+        self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
