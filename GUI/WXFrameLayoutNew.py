@@ -1659,7 +1659,6 @@ class NewFrameLayout(wx.Frame):
             and os.access(self.prefPath, os.R_OK)
         ):
             if os.path.getsize(self.prefPath) > 2:
-                crypto().decrypt(self.prefPath, self.key, True)
                 with open(self.prefPath) as jsonFile:
                     if jsonFile:
                         try:
@@ -1683,8 +1682,6 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
-        if self.key and crypto().isFileDecrypt(self.prefPath, self.key):
-            crypto().encryptFile(self.prefPath, self.key)
         evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Preferences' Saved")
         wx.PostEvent(self, evt)
 
