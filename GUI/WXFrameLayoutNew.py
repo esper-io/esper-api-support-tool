@@ -810,6 +810,7 @@ class NewFrameLayout(wx.Frame):
                 action = evtVal[2]
         joinThreadList(threads)
         if source == 0:
+            self.sidePanel.sortAndPopulateAppChoice()
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.actionChoice.Enable(True)
             self.sidePanel.removeEndpointBtn.Enable(True)
