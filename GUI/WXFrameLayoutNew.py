@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import threading
 import wx
 import time
@@ -230,6 +231,15 @@ class NewFrameLayout(wx.Frame):
 
         if self.kill:
             return
+
+        maxInt = sys.maxsize
+
+        while True:
+            try:
+                csv.field_size_limit(maxInt)
+                break
+            except OverflowError:
+                maxInt = int(maxInt / 10)
 
         self.frame_toolbar.Realize()
 
