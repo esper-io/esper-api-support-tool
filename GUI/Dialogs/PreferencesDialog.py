@@ -10,12 +10,12 @@ class PreferencesDialog(wx.Dialog):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
-            size=(500, 400),
+            size=(525, 400),
             style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.SetSize((500, 450))
-        self.SetMinSize((500, 450))
+        self.SetSize((525, 400))
+        self.SetMinSize((525, 400))
 
         self.parent = parent
         self.prefs = prefDict
@@ -456,7 +456,7 @@ class PreferencesDialog(wx.Dialog):
         label_16.SetToolTip(
             "Set App State to SHOW before setting the application as a Kiosk app on device."
         )
-        sizer_27.Add(label_16, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_27.Add(label_16, 0, wx.ALIGN_CENTER_VERTICAL, 2)
 
         self.panel_37 = wx.Panel(self.panel_38, wx.ID_ANY)
         sizer_27.Add(self.panel_37, 1, wx.EXPAND, 0)
