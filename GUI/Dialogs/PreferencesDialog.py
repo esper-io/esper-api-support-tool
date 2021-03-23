@@ -40,6 +40,7 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow",
             "useJsonForCmd",
             "runCommandOn",
+            "maxThread",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -77,7 +78,7 @@ class PreferencesDialog(wx.Dialog):
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_3 = wx.Panel(self.general, wx.ID_ANY)
         sizer_6.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 5)
@@ -158,6 +159,34 @@ class PreferencesDialog(wx.Dialog):
         grid_sizer_4.Add(
             self.spin_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
+
+        self.panel_43 = wx.Panel(self.general, wx.ID_ANY)
+        sizer_6.Add(self.panel_43, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_30 = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_43.SetSizer(sizer_30)
+
+        label_1 = wx.StaticText(
+            self.panel_43,
+            wx.ID_ANY,
+            "Max Threads",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_1.SetToolTip(
+            "Maximum number of threads that will be created to perform an action."
+        )
+        sizer_30.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.panel_44 = wx.Panel(self.panel_43, wx.ID_ANY)
+        sizer_30.Add(self.panel_44, 1, wx.EXPAND, 0)
+
+        grid_sizer_21 = wx.GridSizer(1, 1, 0, 0)
+        self.panel_44.SetSizer(grid_sizer_21)
+
+        self.spin_ctrl_8 = wx.SpinCtrl(
+            self.panel_44, wx.ID_ANY, min=10, max=100, initial=Globals.MAX_THREAD_COUNT
+        )
+        grid_sizer_21.Add(self.spin_ctrl_8, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -844,6 +873,7 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
+            "maxThread": self.spin_ctrl_8.GetValue(),
         }
 
         Globals.SET_APP_STATE_AS_SHOW = False
@@ -860,6 +890,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
+        Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -991,6 +1022,15 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.combobox_1.SetSelection(self.prefs["runCommandOn"])
             Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
+        if "maxThread" in self.prefs and self.prefs["maxThread"]:
+            maxThread = Globals.MAX_THREAD_COUNT
+            maxThread = int(self.prefs["maxThread"])
+            if maxThread < 10:
+                self.spin_ctrl_8.SetValue(10)
+            elif maxThread > 100:
+                self.spin_ctrl_8.SetValue(100)
+            else:
+                self.spin_ctrl_8.SetValue(maxThread)
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -1015,6 +1055,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
         self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
+        self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
 
         return self.prefs
 
@@ -1060,5 +1101,7 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMMAND_JSON_INPUT
         elif key == "runCommandOn":
             return Globals.CMD_DEVICE_TYPE
+        elif key == "maxThread":
+            return Globals.MAX_THREAD_COUNT
         else:
             return None
