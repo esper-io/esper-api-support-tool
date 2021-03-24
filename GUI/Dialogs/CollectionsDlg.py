@@ -158,7 +158,7 @@ class CollectionsDialog(wx.Dialog):
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT, 0)
 
-        self.button_2 = wx.Button(self, wx.ID_ANY, "Execute EQL")
+        self.button_2 = wx.Button(self, wx.ID_EXECUTE, "Execute EQL")
         self.button_2.Enable(False)
         sizer_2.Add(self.button_2, 0, wx.ALL, 5)
 
