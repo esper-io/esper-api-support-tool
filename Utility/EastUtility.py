@@ -42,6 +42,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value) and not isUpdate:
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
+        frame.gridPanel.disableGridProperties()
         frame.gridPanel.grid_1.Freeze()
         frame.gridPanel.grid_2.Freeze()
         frame.CSVUploaded = False
