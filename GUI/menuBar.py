@@ -265,7 +265,6 @@ class ToolMenuBar(wx.MenuBar):
         ) as textDialog:
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
-                self.parentFrame.setCursorDefault()
                 if eql:
                     self.parentFrame.toggleEnabledState(False)
                     self.parentFrame.gauge.Pulse()
@@ -292,7 +291,6 @@ class ToolMenuBar(wx.MenuBar):
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
-                self.parentFrame.setCursorDefault()
                 eql = dlg.getSelectionEql()
                 if eql:
                     self.parentFrame.gauge.Pulse()
