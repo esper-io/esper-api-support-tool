@@ -45,6 +45,8 @@ class ToolsToolBar(wx.ToolBar):
         cmd_icon = scale_bitmap(resourcePath("Images/command.png"), 16, 16)
         self.cmdtool = self.AddTool(wx.ID_ANY, "Run Command", cmd_icon, "Run Command")
 
+        self.AddSeparator()
+
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
         self.AddControl(self.search)
