@@ -267,8 +267,13 @@ class ToolMenuBar(wx.MenuBar):
                 eql = textDialog.GetValue()
                 self.parentFrame.setCursorDefault()
                 if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.toggleEnabledState(False)
                     self.parentFrame.gauge.Pulse()
+                    self.parentFrame.Logging("---> Performing EQL Query")
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.Logging(
+                        "---> Finsihed Performing EQL Query, processing results..."
+                    )
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,
@@ -290,8 +295,13 @@ class ToolMenuBar(wx.MenuBar):
                 self.parentFrame.setCursorDefault()
                 eql = dlg.getSelectionEql()
                 if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.gauge.Pulse()
+                    self.parentFrame.toggleEnabledState(False)
+                    self.parentFrame.Logging("---> Performing EQL Query")
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.Logging(
+                        "---> Finsihed Performing EQL Query, processing results..."
+                    )
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,
