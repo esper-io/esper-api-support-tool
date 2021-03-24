@@ -6,6 +6,7 @@ import wx
 class ToolsToolBar(wx.ToolBar):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
+        self.AddSeparator()
         close_icon = scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.AddSeparator()
