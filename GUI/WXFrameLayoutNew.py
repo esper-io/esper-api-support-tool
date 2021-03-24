@@ -471,15 +471,13 @@ class NewFrameLayout(wx.Frame):
             result = fileDialog.ShowModal()
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
-                Globals.csv_auth_path = fileDialog.GetPath()
+                csv_auth_path = fileDialog.GetPath()
                 self.defaultDir = Path(fileDialog.GetPath()).parent
                 self.Logging(
-                    "--->Attempting to load device data from %s" % Globals.csv_auth_path
+                    "--->Attempting to load device data from %s" % csv_auth_path
                 )
                 try:
-                    with open(
-                        Globals.csv_auth_path, "r", encoding="utf-8-sig"
-                    ) as csvFile:
+                    with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
                         reader = csv.reader(
                             csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                         )
@@ -487,7 +485,7 @@ class NewFrameLayout(wx.Frame):
                         self.processDeviceCSVUpload(data)
                         self.gridPanel.grid_1.AutoSizeColumns()
                 except UnicodeDecodeError as e:
-                    with open(Globals.csv_auth_path, "r") as csvFile:
+                    with open(csv_auth_path, "r") as csvFile:
                         reader = csv.reader(
                             csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                         )
@@ -1769,7 +1767,6 @@ class NewFrameLayout(wx.Frame):
                         and "apiPrefix" in data[0]
                         and "enterprise" in data[0]
                     ):
-                        Globals.csv_auth_path = file
                         self.PopulateConfig(auth=file)
                     else:
                         if not Globals.enterprise_id:
