@@ -1630,7 +1630,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def readAuthCSV(self):
-        if self.key:
+        if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
             crypto().decrypt(Globals.csv_auth_path, self.key, True)
         if os.path.exists(Globals.csv_auth_path):
             with open(Globals.csv_auth_path, "r") as csvFile:
