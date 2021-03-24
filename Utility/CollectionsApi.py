@@ -1,14 +1,16 @@
 from Utility.Resource import (
+    logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
+    # performPutRequestWithRetry,
 )
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import requests
 
-from Utility.EsperAPICalls import getHeader, logBadResponse
+from Utility.EsperAPICalls import getHeader
 
 
 @api_tool_decorator
@@ -30,7 +32,7 @@ def preformEqlSearch(query, who, returnJson=False):
 
     resp = performGetRequestWithRetry(url, headers=headers)
     jsonResp = resp.json()
-    logBadResponse(url, resp, jsonResp)
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnJson:
         return jsonResp
@@ -60,7 +62,7 @@ def fetchCollectionList(returnResp=False):
 
     resp = performGetRequestWithRetry(url, headers=headers)
     jsonResp = resp.json()
-    logBadResponse(url, resp, jsonResp)
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnResp:
         return resp
@@ -81,8 +83,12 @@ def createCollection(jsonData, returnJson=False):
     )
 
     resp = performPostRequestWithRetry(url, headers=headers, json=jsonData)
-    jsonResp = resp.json()
-    logBadResponse(url, resp, jsonResp)
+    jsonResp = None
+    try:
+        jsonResp = resp.json()
+    except:
+        pass
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnJson:
         return jsonResp
@@ -102,8 +108,12 @@ def retrieveCollection(collectionId, returnJson=False):
     )
 
     resp = performGetRequestWithRetry(url, headers=headers)
-    jsonResp = resp.json()
-    logBadResponse(url, resp, jsonResp)
+    jsonResp = None
+    try:
+        jsonResp = resp.json()
+    except:
+        pass
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnJson:
         return jsonResp
@@ -113,7 +123,7 @@ def retrieveCollection(collectionId, returnJson=False):
 
 @api_tool_decorator
 def updateCollection(collectionId, jsonData, returnJson=False):
-    # PUT /api/v0/enterprise/{enterprise_id}/collection/<id>
+    # PATCH  /api/v0/enterprise/{enterprise_id}/collection/<id>
     headers = getHeader()
 
     url = "https://{host}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/collection/{id}".format(
@@ -123,8 +133,12 @@ def updateCollection(collectionId, jsonData, returnJson=False):
     )
 
     resp = performPatchRequestWithRetry(url, headers=headers, json=jsonData)
-    jsonResp = resp.json()
-    logBadResponse(url, resp, jsonResp)
+    jsonResp = None
+    try:
+        jsonResp = resp.json()
+    except:
+        pass
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnJson:
         return jsonResp
@@ -149,7 +163,7 @@ def deleteCollection(collectionId, returnJson=False):
         jsonResp = resp.json()
     except:
         pass
-    logBadResponse(url, resp, jsonResp)
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnJson:
         return jsonResp

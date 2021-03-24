@@ -12,6 +12,7 @@ from Common.decorator import api_tool_decorator
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EastUtility import iterateThroughDeviceList
 from Utility.Resource import (
+    logBadResponse,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
@@ -22,21 +23,6 @@ from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
 
 ####Esper API Requests####
-@api_tool_decorator
-def logBadResponse(url, resp, json_resp):
-    if Globals.PRINT_RESPONSES or resp.status_code > 300:
-        print(url)
-        prettyReponse = ""
-        if json_resp:
-            prettyReponse = url + "\nResponse {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
-        else:
-            prettyReponse = str(resp)
-        print(prettyReponse)
-        ApiToolLog().LogResponse(prettyReponse)
-
-
 @api_tool_decorator
 def getHeader():
     if (

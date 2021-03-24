@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import os
 import platform
 import requests
@@ -271,6 +272,27 @@ def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
     return splitResults
 
 
+def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
+    if Globals.PRINT_RESPONSES or resp.status_code >= 300:
+        print(url)
+        prettyReponse = ""
+        if not json_resp:
+            try:
+                json_resp = resp.json()
+            except:
+                pass
+        if json_resp:
+            prettyReponse = url + "\nResponse {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
+        else:
+            prettyReponse = str(resp)
+        print(prettyReponse)
+        ApiToolLog().LogResponse(prettyReponse)
+        if displayMsgBox:
+            displayMessageBox((prettyReponse, wx.ICON_ERROR))
+
+
 def performGetRequestWithRetry(
     url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
 ):
@@ -294,6 +316,22 @@ def performPatchRequestWithRetry(
     for attempt in range(maxRetry):
         try:
             resp = requests.patch(url, headers=headers, data=data, json=json)
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPutRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.put(url, headers=headers, data=data, json=json)
             if resp.status_code < 300:
                 break
         except Exception as e:
