@@ -720,6 +720,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
         self.sidePanel.appChoice.Clear()
+        self.toggleEnabledState(False)
         self.setCursorBusy()
 
         for thread in threading.enumerate():
