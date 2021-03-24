@@ -47,30 +47,34 @@ class crypto:
 
     def isFileDecrypt(self, filename, key):
         f = Fernet(key)
+        encrypted_data = None
         with open(filename, "rb") as file:
             # read the encrypted data
             encrypted_data = file.read()
 
-        try:
-            # decrypt data
-            f.decrypt(encrypted_data)
-            return False
-        except:
-            pass
+        if encrypted_data:
+            try:
+                # decrypt data
+                f.decrypt(encrypted_data)
+                return False
+            except:
+                pass
         return True
 
     def isFileEncrypt(self, filename, key):
         f = Fernet(key)
+        encrypted_data = None
         with open(filename, "rb") as file:
             # read the encrypted data
             encrypted_data = file.read()
 
-        try:
-            # decrypt data
-            f.decrypt(encrypted_data)
-            return True
-        except:
-            pass
+        if encrypted_data:
+            try:
+                # decrypt data
+                f.decrypt(encrypted_data)
+                return True
+            except:
+                pass
         return False
 
     def decrypt(self, filename, key, writeDecrypt=False):
