@@ -150,7 +150,7 @@ class CollectionsDialog(wx.Dialog):
         self.text_ctrl_4 = wx.TextCtrl(self.panel_5, wx.ID_ANY, "")
         grid_sizer_6.Add(self.text_ctrl_4, 0, wx.EXPAND, 0)
 
-        self.button_3 = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Create")
+        self.button_3 = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Create/Modify")
         self.button_3.SetToolTip("Create Collection")
         self.button_3.Enable(False)
         grid_sizer_2.Add(self.button_3, 0, wx.TOP, 2)
