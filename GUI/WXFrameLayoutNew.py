@@ -644,9 +644,7 @@ class NewFrameLayout(wx.Frame):
 
                 # Handle empty File
                 if maxRow == 0:
-                    self.Logging(
-                        "--->ERROR: Empty Auth File, please select a proper Auth CSV file!"
-                    )
+                    self.Logging("--->ERROR: Empty Auth File, please add an Endpoint!")
                     self.AddEndpoint(None)
                     return
 
