@@ -352,8 +352,8 @@ class NewFrameLayout(wx.Frame):
     def OnQuit(self, e):
         """ Actions to take when frame is closed """
         self.kill = True
-        if self.key and crypto().isFileDecrypt(Globals.csv_auth_path, self.key):
-            crypto().encryptFile(Globals.csv_auth_path, self.key)
+        if self.key and crypto().isFileDecrypt(self.authPath, self.key):
+            crypto().encryptFile(self.authPath, self.key)
         if self.consoleWin:
             self.consoleWin.Close()
             self.consoleWin.DestroyLater()
