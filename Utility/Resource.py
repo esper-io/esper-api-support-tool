@@ -288,7 +288,7 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
         else:
             prettyReponse = str(resp)
         print(prettyReponse)
-        ApiToolLog().LogResponse("\n" + prettyReponse + "\n")
+        ApiToolLog().LogResponse("\n%s\t" % datetime.now() + prettyReponse + "\n")
         if displayMsgBox:
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
