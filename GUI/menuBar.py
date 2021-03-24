@@ -258,12 +258,14 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator
     def onEqlQuery(self, event):
         self.parentFrame.setGaugeValue(0)
+        self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
         ) as textDialog:
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
+                self.parentFrame.setCursorDefault()
                 if eql:
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.gauge.Pulse()
@@ -275,13 +277,17 @@ class ToolMenuBar(wx.MenuBar):
                         waitForJoin=False,
                         name="eqlIterateThroughDeviceList",
                     )
+            else:
+                self.parentFrame.setCursorDefault()
 
     @api_tool_decorator
     def onCollection(self, event):
         self.parentFrame.setGaugeValue(0)
+        self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
+                self.parentFrame.setCursorDefault()
                 eql = dlg.getSelectionEql()
                 if eql:
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
@@ -294,6 +300,8 @@ class ToolMenuBar(wx.MenuBar):
                         waitForJoin=False,
                         name="collectionIterateThroughDeviceList",
                     )
+            else:
+                self.parentFrame.setCursorDefault()
 
     @api_tool_decorator
     def checkCollectionEnabled(self):
