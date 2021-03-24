@@ -131,7 +131,12 @@ class CollectionsDialog(wx.Dialog):
         )
         grid_sizer_5.Add(label_3, 0, 0, 0)
 
-        self.text_ctrl_3 = wx.TextCtrl(self.panel_4, wx.ID_ANY, "")
+        self.text_ctrl_3 = wx.TextCtrl(
+            self.panel_4,
+            wx.ID_ANY,
+            "",
+            style=wx.TE_MULTILINE | wx.TE_WORDWRAP,
+        )
         grid_sizer_5.Add(self.text_ctrl_3, 0, wx.EXPAND, 0)
 
         self.panel_5 = wx.Panel(self.panel_6, wx.ID_ANY)
@@ -147,7 +152,12 @@ class CollectionsDialog(wx.Dialog):
         )
         grid_sizer_6.Add(label_4, 0, 0, 0)
 
-        self.text_ctrl_4 = wx.TextCtrl(self.panel_5, wx.ID_ANY, "")
+        self.text_ctrl_4 = wx.TextCtrl(
+            self.panel_5,
+            wx.ID_ANY,
+            "",
+            style=wx.TE_MULTILINE | wx.TE_WORDWRAP,
+        )
         grid_sizer_6.Add(self.text_ctrl_4, 0, wx.EXPAND, 0)
 
         self.button_3 = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Create/Modify")
