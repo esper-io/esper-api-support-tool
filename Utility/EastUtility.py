@@ -230,34 +230,35 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
 
 @api_tool_decorator
 def processCollectionDevices(collectionList):
-    splitResults = splitListIntoChunks(collectionList["results"])
-    if splitResults:
-        threads = []
-        number_of_devices = 0
-        for chunk in splitResults:
+    if collectionList["results"]:
+        splitResults = splitListIntoChunks(collectionList["results"])
+        if splitResults:
+            threads = []
+            number_of_devices = 0
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    Globals.frame,
+                    fillInDeviceInfoDict,
+                    args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
+                    name="fillInDeviceInfoDict",
+                )
+                threads.append(t)
+                t.start()
+                number_of_devices += len(chunk)
+
             t = wxThread.GUIThread(
                 Globals.frame,
-                fillInDeviceInfoDict,
-                args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
-                name="fillInDeviceInfoDict",
+                waitTillThreadsFinish,
+                args=(
+                    tuple(threads),
+                    GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+                    Globals.enterprise_id,
+                    3,
+                ),
+                eventType=wxThread.myEVT_FETCH,
+                name="waitTillThreadsFinish3",
             )
-            threads.append(t)
             t.start()
-            number_of_devices += len(chunk)
-
-        t = wxThread.GUIThread(
-            Globals.frame,
-            waitTillThreadsFinish,
-            args=(
-                tuple(threads),
-                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                Globals.enterprise_id,
-                3,
-            ),
-            eventType=wxThread.myEVT_FETCH,
-            name="waitTillThreadsFinish3",
-        )
-        t.start()
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
