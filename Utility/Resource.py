@@ -72,19 +72,24 @@ def download(url, file_name, overwrite=True):
         file.write(response.content)
 
 
-def checkEsperInternetConnection():
+def checkInternetConnection(url):
     try:
-        requests.get(Globals.ESPER_LINK)
+        requests.get(url)
         return True
     except Exception as e:
         print(e)
     return False
 
 
+def checkEsperInternetConnection():
+    return checkInternetConnection(Globals.ESPER_LINK)
+
+
 def checkForInternetAccess(frame):
     while not frame.kill:
         if (
             not checkEsperInternetConnection()
+            and not checkInternetConnection(Globals.UPDATE_LINK)
             and frame.IsShownOnScreen()
             and frame.IsActive()
         ):
