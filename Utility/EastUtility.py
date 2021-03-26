@@ -94,19 +94,9 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         if isUpdate:
             postEventToFrame(wxThread.myEVT_UPDATE, deviceList)
         else:
-            for entry in deviceList.values():
-                device = entry[0]
-                deviceInfo = entry[1]
-                if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                    frame.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    frame.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                elif action == GeneralActions.SET_KIOSK.value:
-                    apiCalls.setKiosk(frame, device, deviceInfo)
-                elif action == GeneralActions.SET_MULTI.value:
-                    apiCalls.setMulti(frame, device, deviceInfo)
-                elif action == GeneralActions.CLEAR_APP_DATA.value:
-                    apiCalls.clearAppData(frame, device)
-            postEventToFrame(wxThread.myEVT_COMPLETE, None)
+            postEventToFrame(
+                wxThread.myEVT_FETCH, (action, Globals.enterprise_id, deviceList)
+            )
 
 
 @api_tool_decorator
