@@ -931,9 +931,15 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_1.SetValue(self.prefs["enableDevice"])
         if "limit" in self.prefs and self.prefs["limit"]:
             Globals.limit = self.prefs["limit"]
+            if Globals.limit > Globals.MAX_LIMIT:
+                Globals.limit = Globals.MAX_LIMIT
+            elif Globals.limit < Globals.MIN_LIMIT:
+                Globals.limit = Globals.MIN_LIMIT
             self.spin_ctrl_1.SetValue(Globals.limit)
         if "offset" in self.prefs and self.prefs["offset"]:
             Globals.offset = self.prefs["offset"]
+            if Globals.offset < 0:
+                Globals.offset = 0
             self.spin_ctrl_2.SetValue(Globals.offset)
         if "gridDialog" in self.prefs and type(self.prefs["gridDialog"]) == bool:
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
