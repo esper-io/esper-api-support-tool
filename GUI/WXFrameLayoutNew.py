@@ -1220,6 +1220,7 @@ class NewFrameLayout(wx.Frame):
                         runAction = False
                 if result and result.getCheckBoxValue():
                     Globals.SHOW_GRID_DIALOG = False
+                    self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
                 if runAction:
                     self.Logging(
                         '---> Attempting to run grid action, "%s".'
@@ -1722,6 +1723,7 @@ class NewFrameLayout(wx.Frame):
         """ Update Preferences when they are changed """
         if self.isRunning:
             return
+        self.prefDialog.SetPrefs(self.preferences)
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.isSavingPrefs = True
             save = wxThread.GUIThread(
@@ -1969,6 +1971,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
+            self.preferences["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
 
     @api_tool_decorator
     def confirmCloneUpdate(self, event):
@@ -1999,6 +2002,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_UPDATE = False
+            self.preferences["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
 
     @api_tool_decorator
     def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False):
