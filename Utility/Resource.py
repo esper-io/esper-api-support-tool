@@ -401,8 +401,8 @@ def updateErrorTracker():
                     if minutes <= Globals.MAX_ERROR_TIME_DIFF:
                         new_tracker[key] = value
                 Globals.error_tracker = new_tracker
-            time.sleep(60)
             Globals.error_lock.release()
+            time.sleep(60)
         except Exception as e:
             ApiToolLog().LogError(e)
         finally:
