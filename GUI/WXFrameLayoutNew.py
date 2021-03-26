@@ -85,6 +85,7 @@ class NewFrameLayout(wx.Frame):
         self.WINDOWS = True
         self.isBusy = False
         self.isRunning = False
+        self.isSavingPrefs = False
         self.isRunningUpdate = False
         self.isForceUpdate = False
         self.kill = False
@@ -859,7 +860,8 @@ class NewFrameLayout(wx.Frame):
                             )
                 self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
-                self.menubar.enableConfigMenu()
+                if not self.isRunning and not self.isBusy:
+                    self.menubar.enableConfigMenu()
             if not self.preferences or self.preferences["enableDevice"] == True:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
@@ -878,8 +880,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.deviceChoice.Enable(True)
         if source == 3:
-            self.gridPanel.enableGridProperties()
-            self.gridPanel.autoSizeGridsColumns()
+            cmdResults = []
             if (
                 action == GeneralActions.SET_KIOSK.value
                 or action == GeneralActions.SET_MULTI.value
@@ -890,18 +891,14 @@ class NewFrameLayout(wx.Frame):
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
             ):
-                cmdResults = []
                 for t in threads:
                     if t.result:
                         if type(t.result) == list:
                             cmdResults = cmdResults + t.result
                         else:
                             cmdResults.append(t.result)
-                if cmdResults:
-                    postEventToFrame(wxThread.myEVT_COMMAND, cmdResults)
-            postEventToFrame(wxThread.myEVT_COMPLETE, True)
-            postEventToFrame(wxThread.myEVT_UPDATE_DONE, action)
-        self.toggleEnabledState(True)
+            postEventToFrame(wxThread.myEVT_COMPLETE, (True, action, cmdResults))
+        self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         self.setGaugeValue(100)
 
@@ -953,9 +950,10 @@ class NewFrameLayout(wx.Frame):
             self.setGaugeValue(0)
             self.gauge.Pulse()
         else:
-            self.sidePanel.runBtn.Enable(True)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
+            if not self.isRunning or not self.isBusy:
+                self.sidePanel.runBtn.Enable(True)
+                self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
+                self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
         threads = []
         for clientData in self.sidePanel.selectedGroupsList:
@@ -1320,7 +1318,11 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onCommandDone(self, event):
         """ Tell user to check the Esper Console for detailed results """
-        cmdResult = event.GetValue()
+        cmdResult = None
+        if hasattr(event, "GetValue"):
+            cmdResult = event.GetValue()
+        else:
+            cmdResult = event
         self.menubar.enableConfigMenu()
         self.setGaugeValue(100)
         if cmdResult:
@@ -1451,8 +1453,12 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onUpdateComplete(self, event):
         """ Alert user to chcek the Esper Console for detailed results for some actions """
-        action = event.GetValue()
-        if action == GeneralActions.CLEAR_APP_DATA.value:
+        action = None
+        if hasattr(event, "GetValue"):
+            action = event.GetValue()
+        else:
+            action = event
+        if action and action == GeneralActions.CLEAR_APP_DATA.value:
             displayMessageBox(
                 (
                     "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
@@ -1473,7 +1479,7 @@ class NewFrameLayout(wx.Frame):
                 self.addDevicesApps,
                 args=None,
                 eventType=wxThread.myEVT_COMPLETE,
-                eventArg=True,
+                eventArg=(not self.isRunning and not self.isSavingPrefs),
                 sendEventArgInsteadOfResult=True,
                 name="addDeviceApps",
             ).start()
@@ -1580,8 +1586,18 @@ class NewFrameLayout(wx.Frame):
     def onComplete(self, event):
         """ Things that should be done once an Action is completed """
         enable = False
+        action = None
+        cmdResults = None
         if event:
-            enable = event.GetValue()
+            eventVal = event.GetValue()
+            if type(eventVal) == tuple:
+                enable = eventVal[0]
+                if len(eventVal) > 1:
+                    action = eventVal[1]
+                if len(eventVal) > 2:
+                    cmdResults = eventVal[2]
+            else:
+                enable = eventVal
         self.setCursorDefault()
         self.setGaugeValue(100)
         if self.IsFrozen():
@@ -1592,12 +1608,17 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_2.Thaw()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
+        self.gridPanel.autoSizeGridsColumns()
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
+        if action:
+            self.onUpdateComplete(action)
+        if cmdResults:
+            self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
 
@@ -1699,7 +1720,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def onPref(self, event):
         """ Update Preferences when they are changed """
+        if self.isRunning:
+            return
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
+            self.isSavingPrefs = True
             save = wxThread.GUIThread(
                 self,
                 self.savePrefs,
@@ -1718,6 +1742,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.deviceChoice.Enable(True)
         else:
             self.sidePanel.deviceChoice.Enable(False)
+        self.isSavingPrefs = False
 
     @api_tool_decorator
     def onFail(self, event):
@@ -2051,6 +2076,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
 
         self.menubar.fileOpenConfig.Enable(state)
+        self.menubar.pref.Enable(state)
         self.menubar.collection.Enable(state)
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
