@@ -742,6 +742,11 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_TEMPLATE_DIALOG = False
                 Globals.SHOW_TEMPLATE_UPDATE = False
+        else:
+            if Globals.SHOW_TEMPLATE_DIALOG and Globals.SHOW_TEMPLATE_UPDATE:
+                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
+            else:
+                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
 
         if not prefDict or (prefDict and not prefDict["gridDialog"]):
             self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
@@ -756,6 +761,11 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_GRID_DIALOG = False
+        else:
+            if Globals.SHOW_GRID_DIALOG:
+                self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
+            else:
+                self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
 
         if not prefDict or (prefDict and not prefDict["colSize"]):
             self.checkbox_10.Set3StateValue(wx.CHK_CHECKED)
@@ -921,10 +931,16 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_1.SetValue(self.prefs["enableDevice"])
         if "limit" in self.prefs and self.prefs["limit"]:
             Globals.limit = self.prefs["limit"]
+            self.spin_ctrl_1.SetValue(Globals.limit)
         if "offset" in self.prefs and self.prefs["offset"]:
             Globals.offset = self.prefs["offset"]
+            self.spin_ctrl_2.SetValue(Globals.offset)
         if "gridDialog" in self.prefs and type(self.prefs["gridDialog"]) == bool:
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
+            if Globals.SHOW_GRID_DIALOG:
+                self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
+            else:
+                self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
         if (
             "templateDialog" in self.prefs
             and type(self.prefs["templateDialog"]) == bool
@@ -935,10 +951,16 @@ class PreferencesDialog(wx.Dialog):
             and type(self.prefs["templateUpdate"]) == bool
         ):
             Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateUpdate"]
+        if Globals.SHOW_TEMPLATE_UPDATE and Globals.SHOW_TEMPLATE_DIALOG:
+            self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
+        else:
+            self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
         if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
+            self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
         if "updateRate" in self.prefs and self.prefs["updateRate"]:
             Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
+            self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
         if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
             self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
             Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
