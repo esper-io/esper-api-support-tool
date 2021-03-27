@@ -860,7 +860,7 @@ class NewFrameLayout(wx.Frame):
                             )
                 self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
-                if not self.isRunning and not self.isBusy:
+                if not self.isRunning:
                     self.menubar.enableConfigMenu()
             if not self.preferences or self.preferences["enableDevice"] == True:
                 self.sidePanel.deviceChoice.Enable(True)
