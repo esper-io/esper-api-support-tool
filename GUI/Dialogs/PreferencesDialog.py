@@ -993,22 +993,38 @@ class PreferencesDialog(wx.Dialog):
                 else:
                     pos = tuple(self.prefs["windowPosition"])
                     self.parent.SetPosition(wx.Point(pos[0], pos[1]))
+        if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
+            if (
+                isinstance(self.prefs["getAppsForEachDevice"], str)
+                and self.prefs["getAppsForEachDevice"].lower() == "false"
+            ) or not self.prefs["getAppsForEachDevice"]:
+                Globals.SHOW_PKG_NAME = False
+                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+            elif (
+                isinstance(self.prefs["getAppsForEachDevice"], str)
+                and self.prefs["getAppsForEachDevice"].lower()
+            ) == "true" or self.prefs["getAppsForEachDevice"]:
+                Globals.SHOW_PKG_NAME = True
+                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+            else:
+                Globals.SHOW_PKG_NAME = True
+                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
         if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
             if (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower() == "false"
             ) or not self.prefs["getAllApps"]:
                 Globals.USE_ENTERPRISE_APP = False
-                self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
+                self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
             elif (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower()
             ) == "true" or self.prefs["getAllApps"]:
                 Globals.USE_ENTERPRISE_APP = True
-                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+                self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
             else:
                 Globals.USE_ENTERPRISE_APP = True
-                self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+                self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
         if "showPkg" in self.prefs and self.prefs["showPkg"]:
             if (
                 isinstance(self.prefs["showPkg"], str)
