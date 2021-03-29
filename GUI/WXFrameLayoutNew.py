@@ -1552,6 +1552,8 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def setGaugeValue(self, value):
         """ Attempt to set Gauge to the specififed value """
+        if Globals.gauge_lock.locked():
+            return
         Globals.gauge_lock.acquire()
         if hasattr(value, "GetValue"):
             value = value.GetValue()

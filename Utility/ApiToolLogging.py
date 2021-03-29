@@ -66,7 +66,15 @@ class ApiToolLog:
 
     def excepthook(self, type, value, tb):
         message = "\n%s\tUncaught exception:\n" % datetime.now()
+        print_exc()
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        exc_traceback = format_list(extract_tb(exc_traceback))
         message += "".join(traceback.format_exception(type, value, tb))
+        message += str(exc_type)
+        message += str(exc_value)
+        message += str(exc_type)
+        for line in exc_traceback:
+            message += str(line)
         message += "\n"
         print(message)
         with open(self.logPath, "a") as myfile:
