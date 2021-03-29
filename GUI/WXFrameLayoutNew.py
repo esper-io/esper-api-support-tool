@@ -2117,11 +2117,19 @@ class NewFrameLayout(wx.Frame):
                     for r in resp.results:
                         if r:
                             res.append(r.to_dict())
-                    wxThread.doAPICallInThread(
-                        self,
-                        processInstallDevices,
-                        args=(res),
-                        eventType=None,
-                        waitForJoin=False,
-                        name="iterateThroughDeviceList",
-                    )
+                    if res:
+                        wxThread.doAPICallInThread(
+                            self,
+                            processInstallDevices,
+                            args=(res),
+                            eventType=None,
+                            waitForJoin=False,
+                            name="iterateThroughDeviceList",
+                        )
+                    else:
+                        displayMessageBox(
+                            (
+                                "No device with that app version found",
+                                wx.ICON_INFORMATION,
+                            )
+                        )
