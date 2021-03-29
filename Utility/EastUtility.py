@@ -8,6 +8,7 @@ import Common.Globals as Globals
 import Utility.wxThread as wxThread
 import threading
 import wx
+import platform
 import Utility.EsperAPICalls as apiCalls
 
 from Common.decorator import api_tool_decorator
@@ -43,8 +44,9 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
         frame.gridPanel.disableGridProperties()
-        frame.gridPanel.grid_1.Freeze()
-        frame.gridPanel.grid_2.Freeze()
+        if platform.system() == "Windows":
+            frame.gridPanel.grid_1.Freeze()
+            frame.gridPanel.grid_2.Freeze()
         frame.CSVUploaded = False
 
     deviceList = None
