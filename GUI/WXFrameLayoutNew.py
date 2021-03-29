@@ -33,6 +33,7 @@ from GUI.Dialogs.TemplateDialog import TemplateDialog
 from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.PreferencesDialog import PreferencesDialog
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 
 from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
 
@@ -43,6 +44,7 @@ from pathlib import Path
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
+    getInstallDevices,
     setAppState,
     setKiosk,
     setMulti,
@@ -58,6 +60,7 @@ from Utility.EastUtility import (
     TakeAction,
     createCommand,
     iterateThroughGridRows,
+    processInstallDevices,
 )
 from Utility.Resource import (
     checkForInternetAccess,
@@ -1047,6 +1050,7 @@ class NewFrameLayout(wx.Frame):
                 "app_name": app["application"]["application_name"],
                 appName: app["application"]["package_name"],
                 appPkgName: app["application"]["package_name"],
+                "id": app["id"],
                 "app_state": None,
             }
         elif hasattr(app, "application_name"):
@@ -1056,6 +1060,8 @@ class NewFrameLayout(wx.Frame):
                 "app_name": app.application_name,
                 appName: app.package_name,
                 appPkgName: app.package_name,
+                "versions": app.versions,
+                "id": app.id,
             }
         else:
             appName = app["app_name"]
@@ -1065,6 +1071,7 @@ class NewFrameLayout(wx.Frame):
                 appName: app["package_name"],
                 appPkgName: app["package_name"],
                 "app_state": app["state"],
+                "id": app["id"],
             }
         if entry and entry not in self.sidePanel.enterpriseApps:
             self.sidePanel.enterpriseApps.append(entry)
@@ -2086,3 +2093,23 @@ class NewFrameLayout(wx.Frame):
         self.menubar.run.Enable(state)
         self.menubar.clone.Enable(state)
         self.menubar.command.Enable(state)
+
+    def onInstalledDevices(self, event):
+        with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
+            res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                app, version = dlg.getAppValues()
+                if app and version:
+                    resp = getInstallDevices(version, app)
+                    res = []
+                    for r in resp.results:
+                        if r:
+                            res.append(r.to_dict())
+                    wxThread.doAPICallInThread(
+                        self,
+                        processInstallDevices,
+                        args=(res),
+                        eventType=None,
+                        waitForJoin=False,
+                        name="iterateThroughDeviceList",
+                    )

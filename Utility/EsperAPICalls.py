@@ -1126,3 +1126,93 @@ def setAppState(
         return waitForCommandToFinish(
             Globals.frame, api_response.id, ignoreQueue=ignoreQueued
         )
+
+
+def getApplication(application_id):
+    api_instance = esperclient.ApplicationApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    enterprise_id = Globals.enterprise_id
+    try:
+        # Get application information
+        api_response = api_instance.get_application(application_id, enterprise_id)
+        return api_response
+    except ApiException as e:
+        print("Exception when calling ApplicationApi->get_application: %s\n" % e)
+
+
+def getAppVersions(
+    application_id, version_code="", build_number="", maxAttempt=Globals.MAX_RETRY
+):
+    api_instance = esperclient.ApplicationApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    enterprise_id = Globals.enterprise_id
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_app_versions(
+                application_id,
+                enterprise_id,
+                version_code=version_code,
+                build_number=build_number,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            return api_response
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                print(
+                    "Exception when calling ApplicationApi->get_app_versions: %s\n" % e
+                )
+                raise e
+            time.sleep(1)
+
+
+def getAppVersion(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.ApplicationApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    enterprise_id = Globals.enterprise_id
+    for attempt in range(maxAttempt):
+        try:
+            # Get app version information
+            api_response = api_instance.get_app_version(
+                version_id, application_id, enterprise_id
+            )
+            return api_response
+        except ApiException as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                print(
+                    "Exception when calling ApplicationApi->get_app_version: %s\n" % e
+                )
+                raise e
+            time.sleep(1)
+
+
+def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.ApplicationApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    enterprise_id = Globals.enterprise_id
+    for attempt in range(maxAttempt):
+        try:
+            # List install devices
+            api_response = api_instance.get_install_devices(
+                version_id,
+                application_id,
+                enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            return api_response
+        except ApiException as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                print(
+                    "Exception when calling ApplicationApi->get_install_devices: %s\n"
+                    % e
+                )
+                raise e
+            time.sleep(1)

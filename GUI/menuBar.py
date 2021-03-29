@@ -71,6 +71,9 @@ class ToolMenuBar(wx.MenuBar):
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
         runMenu.Append(wx.ID_SEPARATOR)
+        # installedDevices = wx.MenuItem(runMenu, wx.ID_ANY, "&Get Installed Devices")
+        # self.installedDevices = runMenu.Append(installedDevices)
+        # runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
             runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
         )
@@ -156,6 +159,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
+        # self.Bind(
+        #     wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
+        # )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )

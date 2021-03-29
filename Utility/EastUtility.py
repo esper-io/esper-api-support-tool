@@ -219,6 +219,15 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))
 
 
+def processInstallDevices(deviceList):
+    newDeviceList = []
+    for device in deviceList:
+        id = device["id"]
+        deviceListing = apiCalls.getDeviceById(id)
+        newDeviceList.append(deviceListing)
+    processCollectionDevices({"results": newDeviceList})
+
+
 @api_tool_decorator
 def processCollectionDevices(collectionList):
     if collectionList["results"]:
