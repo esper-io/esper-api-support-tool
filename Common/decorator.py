@@ -15,7 +15,11 @@ from traceback import print_exc, extract_tb, format_list
 
 def api_tool_decorator(func):
     def inner(*args, **kwargs):
-        start = time.perf_counter()
+        start = None
+        try:
+            start = time.perf_counter()
+        except:
+            pass
         result = None
         excpt = None
         logPlace(func)
@@ -37,9 +41,10 @@ def api_tool_decorator(func):
                 if Globals.msg_lock.locked():
                     Globals.msg_lock.release()
         end = time.perf_counter()
-        duration = end - start
-        if Globals.PRINT_FUNC_DURATION:
-            print("%s executed in %s seconds." % (func.__name__, duration))
+        if start and end:
+            duration = end - start
+            if Globals.PRINT_FUNC_DURATION:
+                print("%s executed in %s seconds." % (func.__name__, duration))
         return result
 
     return inner
