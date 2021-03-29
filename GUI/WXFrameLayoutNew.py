@@ -1002,17 +1002,25 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self,
-            getAllApplications,
-            eventType=wxThread.myEVT_APPS,
+            self.fetchAllApps,
+            eventType=None,
             waitForJoin=False,
             name="PopulateApps",
         )
         return thread
 
+    def fetchAllApps(self):
+        resp = getAllApplications()
+        self.addAppsToAppChoice(resp)
+
     @api_tool_decorator
     def addAppsToAppChoice(self, event):
         """ Populate App Choice """
-        api_response = event.GetValue()
+        api_response = None
+        if hasattr(event, "GetValue"):
+            api_response = event.GetValue()
+        else:
+            api_response = event
         results = None
 
         if hasattr(api_response, "results"):
