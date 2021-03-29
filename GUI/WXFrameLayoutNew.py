@@ -1544,6 +1544,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def setGaugeValue(self, value):
         """ Attempt to set Gauge to the specififed value """
+        Globals.gauge_lock.acquire()
         if hasattr(value, "GetValue"):
             value = value.GetValue()
         maxValue = self.gauge.GetRange()
@@ -1553,6 +1554,7 @@ class NewFrameLayout(wx.Frame):
             value = 0
         if value >= 0 and value <= maxValue:
             self.gauge.SetValue(value)
+        Globals.gauge_lock.release()
 
     @api_tool_decorator
     def performAPIResponse(self, event):
