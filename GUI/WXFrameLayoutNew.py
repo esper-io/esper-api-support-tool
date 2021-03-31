@@ -356,8 +356,9 @@ class NewFrameLayout(wx.Frame):
     def OnQuit(self, e):
         """ Actions to take when frame is closed """
         self.kill = True
-        if self.key and crypto().isFileDecrypt(self.authPath, self.key):
-            crypto().encryptFile(self.authPath, self.key)
+        if os.path.exists(self.authPath):
+            if self.key and crypto().isFileDecrypt(self.authPath, self.key):
+                crypto().encryptFile(self.authPath, self.key)
         if self.consoleWin:
             self.consoleWin.Close()
             self.consoleWin.DestroyLater()
@@ -1671,9 +1672,9 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def readAuthCSV(self):
-        if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
-            crypto().decrypt(Globals.csv_auth_path, self.key, True)
         if os.path.exists(Globals.csv_auth_path):
+            if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
+                crypto().decrypt(Globals.csv_auth_path, self.key, True)
             with open(Globals.csv_auth_path, "r") as csvFile:
                 reader = csv.reader(
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
