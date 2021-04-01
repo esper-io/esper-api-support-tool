@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import wx
 import wx.html as wxHtml
 
@@ -116,9 +117,17 @@ class NewEndpointDialog(wx.Dialog):
     @api_tool_decorator
     def getInputValues(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-        host = "https://%s-api.esper.cloud/api" % str(
-            self.text_ctrl_2.GetValue().strip()
-        )
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
@@ -127,9 +136,17 @@ class NewEndpointDialog(wx.Dialog):
     @api_tool_decorator
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-        host = "https://%s-api.esper.cloud/api" % str(
-            self.text_ctrl_2.GetValue().strip()
-        )
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
@@ -137,6 +154,16 @@ class NewEndpointDialog(wx.Dialog):
 
     @api_tool_decorator
     def checkInputs(self, event):
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+                self.text_ctrl_2.SetValue(hostname)
         if (
             self.text_ctrl_4.GetValue()
             and self.text_ctrl_3.GetValue()

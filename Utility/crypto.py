@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cryptography.fernet import Fernet
 from Utility.ApiToolLogging import ApiToolLog
 
