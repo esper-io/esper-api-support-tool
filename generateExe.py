@@ -57,7 +57,7 @@ if __name__ == "__main__":
             "--ascii",
             "--clean",
             "--name",
-            app_name,
+            app_name.replace(".app", ""),
             "--osx-bundle-identifier",
             "com.esper.esperapisupporttool",
             "--distpath",
