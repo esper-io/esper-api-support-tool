@@ -2104,6 +2104,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.collection.Enable(state)
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
+        # self.menubar.installedDevices.Enable(state)
         self.menubar.clone.Enable(state)
         self.menubar.command.Enable(state)
 
@@ -2113,6 +2114,8 @@ class NewFrameLayout(wx.Frame):
             if res == wx.ID_OK:
                 app, version = dlg.getAppValues()
                 if app and version:
+                    self.onClearGrids(None)
+                    self.gauge.Pulse()
                     resp = getInstallDevices(version, app)
                     res = []
                     for r in resp.results:

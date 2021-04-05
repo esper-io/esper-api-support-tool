@@ -71,7 +71,9 @@ class ToolMenuBar(wx.MenuBar):
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
         runMenu.Append(wx.ID_SEPARATOR)
-        # installedDevices = wx.MenuItem(runMenu, wx.ID_ANY, "&Get Installed Devices")
+        # installedDevices = wx.MenuItem(
+        #     runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        # )
         # self.installedDevices = runMenu.Append(installedDevices)
         # runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
