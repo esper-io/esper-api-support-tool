@@ -1075,6 +1075,16 @@ class PreferencesDialog(wx.Dialog):
                 self.spin_ctrl_8.SetValue(100)
             else:
                 self.spin_ctrl_8.SetValue(maxThread)
+        if "reachQueueStateOnly" in self.prefs and self.prefs["reachQueueStateOnly"]:
+            if (
+                    isinstance(self.prefs["reachQueueStateOnly"], str)
+                    and self.prefs["reachQueueStateOnly"].lower() == "true"
+                ) or self.prefs["reachQueueStateOnly"] == True:
+                    self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
+                    Globals.REACH_QUEUED_ONLY = True
+            else:
+                self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REACH_QUEUED_ONLY = False
 
     @api_tool_decorator
     def GetPrefs(self):
