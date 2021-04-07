@@ -792,10 +792,15 @@ class NewFrameLayout(wx.Frame):
                 Globals.enterprise_id = entId.strip()
 
                 res = getTokenInfo()
-                if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
-                    raise Exception(
-                        "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
-                    )
+                if res and hasattr(res, "expires_on"):
+                    if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+                        raise Exception(
+                            "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
+                        )
+                # else:
+                #     raise Exception(
+                #         "Failed to fetch API Token Info! Please replace Configuration entry by adding endpoint with a new API Key."
+                #     )
 
                 groupThread = self.PopulateGroups()
                 appThread = self.PopulateApps()
