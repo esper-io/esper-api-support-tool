@@ -268,6 +268,7 @@ def processCollectionDevices(collectionList):
             wxThread.myEVT_MESSAGE_BOX,
             ("No devices found for EQL query.", wx.ICON_INFORMATION),
         )
+        postEventToFrame(wxThread.myEVT_COMPLETE, (True))
 
 
 @api_tool_decorator
