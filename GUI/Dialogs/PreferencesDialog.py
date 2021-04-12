@@ -991,8 +991,9 @@ class PreferencesDialog(wx.Dialog):
                 if self.prefs["windowPosition"] == "1":
                     self.parent.Centre()
                 else:
-                    pos = tuple(self.prefs["windowPosition"])
-                    self.parent.SetPosition(wx.Point(pos[0], pos[1]))
+                    if not self.parent.IsMaximized():
+                        pos = tuple(self.prefs["windowPosition"])
+                        self.parent.SetPosition(wx.Point(pos[0], pos[1]))
         if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
@@ -1077,11 +1078,11 @@ class PreferencesDialog(wx.Dialog):
                 self.spin_ctrl_8.SetValue(maxThread)
         if "reachQueueStateOnly" in self.prefs and self.prefs["reachQueueStateOnly"]:
             if (
-                    isinstance(self.prefs["reachQueueStateOnly"], str)
-                    and self.prefs["reachQueueStateOnly"].lower() == "true"
-                ) or self.prefs["reachQueueStateOnly"] == True:
-                    self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
-                    Globals.REACH_QUEUED_ONLY = True
+                isinstance(self.prefs["reachQueueStateOnly"], str)
+                and self.prefs["reachQueueStateOnly"].lower() == "true"
+            ) or self.prefs["reachQueueStateOnly"] == True:
+                self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REACH_QUEUED_ONLY = True
             else:
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
