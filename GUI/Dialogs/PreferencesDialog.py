@@ -697,8 +697,8 @@ class PreferencesDialog(wx.Dialog):
                 Globals.GET_APP_EACH_DEVICE = False
 
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
-            self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.REACH_QUEUED_ONLY = False
+            self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
+            Globals.REACH_QUEUED_ONLY = True
         elif prefDict and prefDict["reachQueueStateOnly"]:
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
