@@ -1000,13 +1000,13 @@ class PreferencesDialog(wx.Dialog):
                 and self.prefs["getAppsForEachDevice"].lower() == "false"
             ) or not self.prefs["getAppsForEachDevice"]:
                 Globals.SHOW_PKG_NAME = False
-                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
             elif (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
                 and self.prefs["getAppsForEachDevice"].lower()
             ) == "true" or self.prefs["getAppsForEachDevice"]:
                 Globals.SHOW_PKG_NAME = True
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
             else:
                 Globals.SHOW_PKG_NAME = True
                 self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
