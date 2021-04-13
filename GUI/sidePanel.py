@@ -383,6 +383,8 @@ class SidePanel(wx.Panel):
     def onActionSelection(self, event):
         # item = self.actionChoice.GetValue()
         clientData = event.ClientData
+        if not clientData:
+            clientData = Globals.GENERAL_ACTIONS[self.actionChoice.GetValue()]
         if (
             clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value
