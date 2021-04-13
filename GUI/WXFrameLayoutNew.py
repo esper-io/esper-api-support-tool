@@ -1752,7 +1752,7 @@ class NewFrameLayout(wx.Frame):
         """ Update Preferences when they are changed """
         if self.isRunning:
             return
-        self.prefDialog.SetPrefs(self.preferences)
+        self.prefDialog.SetPrefs(self.preferences, onBoot=False)
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.isSavingPrefs = True
             save = wxThread.GUIThread(

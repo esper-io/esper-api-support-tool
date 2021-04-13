@@ -922,7 +922,7 @@ class PreferencesDialog(wx.Dialog):
             self.Close()
 
     @api_tool_decorator
-    def SetPrefs(self, prefs):
+    def SetPrefs(self, prefs, onBoot=True):
         self.prefs = prefs
         if not self.prefs:
             return
@@ -972,7 +972,7 @@ class PreferencesDialog(wx.Dialog):
             Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
             if Globals.ENABLE_GRID_UPDATE and self.parent != None:
                 self.parent.startUpdateThread()
-        if "windowSize" in self.prefs and self.prefs["windowSize"]:
+        if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
                 size = tuple(
                     int(num)
@@ -983,10 +983,10 @@ class PreferencesDialog(wx.Dialog):
                     .split(", ")
                 )
                 self.parent.SetSize(size)
-        if "isMaximized" in self.prefs and self.prefs["isMaximized"]:
+        if "isMaximized" in self.prefs and self.prefs["isMaximized"] and onBoot:
             if self.parent:
                 self.parent.Maximize(self.prefs["isMaximized"])
-        if "windowPosition" in self.prefs and self.prefs["windowPosition"]:
+        if "windowPosition" in self.prefs and self.prefs["windowPosition"] and onBoot:
             if self.parent:
                 if self.prefs["windowPosition"] == "1":
                     self.parent.Centre()
@@ -1010,7 +1010,7 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.SHOW_PKG_NAME = True
                 self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-        if "getAllApps" in self.prefs and self.prefs["getAllApps"]:
+        if "getAllApps" in self.prefs:
             if (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower() == "false"
@@ -1026,7 +1026,7 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.USE_ENTERPRISE_APP = True
                 self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
-        if "showPkg" in self.prefs and self.prefs["showPkg"]:
+        if "showPkg" in self.prefs:
             if (
                 isinstance(self.prefs["showPkg"], str)
                 and self.prefs["showPkg"].lower() == "false"
@@ -1042,6 +1042,22 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.SHOW_PKG_NAME = True
                 self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
+        if "setStateShow" in self.prefs:
+            if (
+                isinstance(self.prefs["setStateShow"], str)
+                and self.prefs["setStateShow"].lower() == "false"
+            ) or not self.prefs["setStateShow"]:
+                Globals.SET_APP_STATE_AS_SHOW = False
+                self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
+            elif (
+                isinstance(self.prefs["setStateShow"], str)
+                and self.prefs["setStateShow"].lower() == "true"
+            ) or self.prefs["setStateShow"]:
+                Globals.SET_APP_STATE_AS_SHOW = True
+                self.checkbox_11.Set3StateValue(wx.CHK_CHECKED)
+            else:
+                Globals.SET_APP_STATE_AS_SHOW = False
+                self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
         if "useJsonForCmd" in self.prefs and self.prefs["useJsonForCmd"]:
             if (
                 isinstance(self.prefs["useJsonForCmd"], str)
