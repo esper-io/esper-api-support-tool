@@ -384,7 +384,11 @@ class SidePanel(wx.Panel):
         # item = self.actionChoice.GetValue()
         clientData = event.ClientData
         if not clientData:
-            clientData = Globals.GENERAL_ACTIONS[self.actionChoice.GetValue()]
+            action = self.actionChoice.GetValue()
+            if action in Globals.GENERAL_ACTIONS:
+                clientData = Globals.GENERAL_ACTIONS[action]
+            elif action in Globals.GRID_ACTIONS:
+                clientData = Globals.GRID_ACTIONS[action]
         if (
             clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value
