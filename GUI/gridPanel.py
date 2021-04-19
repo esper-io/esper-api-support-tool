@@ -31,41 +31,62 @@ class GridPanel(wx.Panel):
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
 
-        sizer_6 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
 
-        label_7 = wx.StaticText(self, wx.ID_ANY, "Network Info:")
-        label_7.SetFont(
-            wx.Font(
-                10,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
-        sizer_6.Add(label_7, 0, wx.EXPAND, 0)
+        self.panel_4 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_4, 1, wx.EXPAND, 0)
 
-        self.grid_2 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        sizer_6.Add(self.grid_2, 1, wx.EXPAND, 0)
+        grid_sizer_4 = wx.BoxSizer(wx.VERTICAL)
 
-        label_8 = wx.StaticText(self, wx.ID_ANY, "Device Info:")
-        label_8.SetFont(
-            wx.Font(
-                10,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
-        sizer_6.Add(label_8, 0, wx.EXPAND, 0)
+        network_grid = wx.StaticText(self.panel_4, wx.ID_ANY, "Network Information:")
+        network_grid.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        grid_sizer_4.Add(network_grid, 0, wx.LEFT, 5)
 
-        self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
+        self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
+        grid_sizer_4.Add(self.grid_2, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.SetSizer(sizer_6)
+        self.panel_9 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_9, 1, wx.EXPAND, 0)
+
+        grid_sizer_8 = wx.BoxSizer(wx.VERTICAL)
+
+        label_8 = wx.StaticText(self.panel_9, wx.ID_ANY, "Device Information:")
+        label_8.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        grid_sizer_8.Add(label_8, 0, wx.LEFT, 5)
+
+        self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
+        grid_sizer_8.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 5)
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_1, 1, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 3)
+
+        grid_sizer_1 = wx.FlexGridSizer(1, 3, 0, 0)
+
+        self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "<")
+        grid_sizer_1.Add(self.button_1, 0, 0, 0)
+
+        grid_sizer_1.Add((20, 20), 0, 0, 0)
+
+        self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, ">")
+        grid_sizer_1.Add(self.button_2, 0, 0, 0)
+
+        self.panel_1.SetSizer(grid_sizer_1)
+
+        self.panel_9.SetSizer(grid_sizer_8)
+
+        self.panel_4.SetSizer(grid_sizer_4)
+
+        grid_sizer_2.AddGrowableRow(0)
+        grid_sizer_2.AddGrowableRow(1)
+        grid_sizer_2.AddGrowableCol(0)
+        self.SetSizer(grid_sizer_2)
+
+        self.button_1.Bind(wx.EVT_BUTTON, self.decrementOffset)
+        self.button_2.Bind(wx.EVT_BUTTON, self.incrementOffset)
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+
+        self.Layout()
 
         self.__set_properties()
 
@@ -909,3 +930,13 @@ class GridPanel(wx.Panel):
                 elif modified == "tags":
                     listing["OriginalTags"] = listing["Tags"]
                 self.grid_1_contents[indx] = listing
+
+    def decrementOffset(self, event):
+        Globals.offset = Globals.offset - Globals.limit
+        self.parentFrame.fetchData(False)
+        event.Skip()
+
+    def incrementOffset(self, event):
+        Globals.offset = Globals.offset + Globals.limit
+        self.parentFrame.fetchData(False)
+        event.Skip()
