@@ -130,7 +130,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel = SidePanel(self, self.panel_1, sizer_4)
 
         self.gridPanel = GridPanel(self, self.panel_1, wx.ID_ANY)
-        sizer_4.Add(self.gridPanel, 1, wx.EXPAND, 0)
+        sizer_4.Add(self.gridPanel, 1, wx.ALL | wx.EXPAND, 4)
 
         self.panel_1.SetSizer(sizer_4)
 
@@ -1920,34 +1920,39 @@ class NewFrameLayout(wx.Frame):
                 or forceUpdate
             )
         ):
-            if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
-                self.isRunningUpdate = True
-                for groupId in Globals.LAST_GROUP_ID:
-                    thread = wxThread.GUIThread(
-                        self,
-                        TakeAction,
-                        (self, groupId, 1, None, False, True),
-                        eventType=None,
-                        name="fetchUpdateDataActionThread",
-                    )
-                    thread.start()
-                    threads.append(thread)
-            elif Globals.LAST_DEVICE_ID:
-                self.isRunningUpdate = True
-                for deviceId in Globals.LAST_DEVICE_ID:
-                    thread = wxThread.GUIThread(
-                        self,
-                        TakeAction,
-                        (self, deviceId, 1, None, True, True),
-                        eventType=None,
-                        name="fetchUpdateDataActionThread",
-                    )
-                    thread.start()
-                    threads.append(thread)
+            threads = self.fetchData(True)
             self.isRunningUpdate = False
         joinThreadList(threads)
         evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
         wx.PostEvent(self, evt)
+
+    def fetchData(self, isUpdate=False):
+        threads = []
+        if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
+            self.isRunningUpdate = True
+            for groupId in Globals.LAST_GROUP_ID:
+                thread = wxThread.GUIThread(
+                    self,
+                    TakeAction,
+                    (self, groupId, 1, None, False, isUpdate),
+                    eventType=None,
+                    name="fetchUpdateDataActionThread",
+                )
+                thread.start()
+                threads.append(thread)
+        elif Globals.LAST_DEVICE_ID:
+            self.isRunningUpdate = True
+            for deviceId in Globals.LAST_DEVICE_ID:
+                thread = wxThread.GUIThread(
+                    self,
+                    TakeAction,
+                    (self, deviceId, 1, None, True, isUpdate),
+                    eventType=None,
+                    name="fetchUpdateDataActionThread",
+                )
+                thread.start()
+                threads.append(thread)
+        return threads
 
     @api_tool_decorator
     def onClone(self, event):
