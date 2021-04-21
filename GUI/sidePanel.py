@@ -381,7 +381,6 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator
     def onActionSelection(self, event):
-        # item = self.actionChoice.GetValue()
         clientData = event.ClientData
         if not clientData:
             action = self.actionChoice.GetValue()
@@ -389,6 +388,10 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GENERAL_ACTIONS[action]
             elif action in Globals.GRID_ACTIONS:
                 clientData = Globals.GRID_ACTIONS[action]
+        self.setAppChoiceState(clientData)
+
+    @api_tool_decorator
+    def setAppChoiceState(self, clientData):
         if (
             clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value

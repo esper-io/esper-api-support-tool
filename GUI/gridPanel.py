@@ -39,7 +39,16 @@ class GridPanel(wx.Panel):
         grid_sizer_4 = wx.BoxSizer(wx.VERTICAL)
 
         network_grid = wx.StaticText(self.panel_4, wx.ID_ANY, "Network Information:")
-        network_grid.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        network_grid.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_4.Add(network_grid, 0, wx.LEFT, 5)
 
         self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
@@ -51,7 +60,16 @@ class GridPanel(wx.Panel):
         grid_sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
         label_8 = wx.StaticText(self.panel_9, wx.ID_ANY, "Device Information:")
-        label_8.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_8.SetFont(
+            wx.Font(
+                10,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_8.Add(label_8, 0, wx.LEFT, 5)
 
         self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
@@ -63,11 +81,13 @@ class GridPanel(wx.Panel):
         grid_sizer_1 = wx.FlexGridSizer(1, 3, 0, 0)
 
         self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "<")
+        self.button_1.SetToolTip("Load previous page of devices.")
         grid_sizer_1.Add(self.button_1, 0, 0, 0)
 
         grid_sizer_1.Add((20, 20), 0, 0, 0)
 
         self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, ">")
+        self.button_1.SetToolTip("Load next page of devices.")
         grid_sizer_1.Add(self.button_2, 0, 0, 0)
 
         self.panel_1.SetSizer(grid_sizer_1)

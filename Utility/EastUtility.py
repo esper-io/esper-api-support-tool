@@ -132,6 +132,8 @@ def iterateThroughDeviceList(
         else:
             frame.gridPanel.button_1.Enable(False)
 
+    postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 33)
+
     if len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
@@ -196,7 +198,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                         int(len(deviceList) / maxGauge * 100),
                     )
         postEventToFrame(event, action)
-        return (action, entId, deviceList, True, len(deviceList) * 2)
+        return (action, entId, deviceList, True, len(deviceList) * 3)
     if source == 2:
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
         changeSucceeded = succeeded = numNewName = 0
@@ -289,7 +291,9 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     for device in chunk:
         try:
             deviceInfo = {}
-            thread = wxThread.GUIThread(Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo))
+            thread = wxThread.GUIThread(
+                Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
+            )
             limitActiveThreads(threads)
             thread.start()
             threads.append(thread)
@@ -321,7 +325,9 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
             deviceInfo = {}
             deviceInfo.update({"num": number_of_devices})
             # deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-            thread = wxThread.GUIThread(Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo))
+            thread = wxThread.GUIThread(
+                Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
+            )
             limitActiveThreads(threads)
             thread.start()
             threads.append(thread)
@@ -338,6 +344,11 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
         thread.join()
         number_of_devices = number_of_devices + 1
         deviceList[number_of_devices] = [thread._args[0], thread.result]
+        Globals.deviceInfo_lock.acquire()
+        value = int(Globals.frame.gauge.GetValue() + 1)
+        if value <= 66:
+            Globals.frame.setGaugeValue(value)
+        Globals.deviceInfo_lock.release()
     return (action, deviceList)
 
 
