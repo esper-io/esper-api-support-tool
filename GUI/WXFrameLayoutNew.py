@@ -1384,7 +1384,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFetch(self, event):
-        self.gauge.Pulse()
+        # self.gauge.Pulse()
         evtValue = event.GetValue()
         if evtValue:
             action = evtValue[0]
@@ -1466,7 +1466,7 @@ class NewFrameLayout(wx.Frame):
             limitActiveThreads(threads)
 
             value = int(num / maxGauge * 100)
-            if updateGauge and value <= 50:
+            if updateGauge and value <= 90:
                 num += 1
                 self.setGaugeValue(value)
         wxThread.GUIThread(
@@ -2106,6 +2106,7 @@ class NewFrameLayout(wx.Frame):
     def toggleEnabledState(self, state):
         self.sidePanel.runBtn.Enable(state)
         self.sidePanel.actionChoice.Enable(state)
+        self.sidePanel.appChoice.Enable(state)
         self.sidePanel.removeEndpointBtn.Enable(state)
 
         self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
