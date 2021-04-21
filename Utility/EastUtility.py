@@ -3,6 +3,7 @@
 import time
 import ast
 import json
+import math
 import esperclient
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
@@ -164,7 +165,7 @@ def iterateThroughDeviceList(
                     entId,
                     1,
                     None,
-                    len(api_response.results) * 2,
+                    len(api_response.results) * 3,
                 ),
                 name="waitTillThreadsFinish_1",
                 eventType=wxThread.myEVT_FETCH,
@@ -189,13 +190,18 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
     joinThreadList(threads)
     if source == 1:
         deviceList = {}
+        initPercent = Globals.frame.gauge.GetValue()
+        initVal = 0
+        if maxGauge:
+            initVal = math.ceil((initPercent / 100) * maxGauge)
         for thread in threads:
             if type(thread.result) == tuple:
                 deviceList = {**deviceList, **thread.result[1]}
                 if maxGauge:
+                    val = int((initVal + len(deviceList)) / maxGauge * 100)
                     postEventToFrame(
                         wxThread.myEVT_UPDATE_GAUGE,
-                        int(len(deviceList) / maxGauge * 100),
+                        val,
                     )
         postEventToFrame(event, action)
         return (action, entId, deviceList, True, len(deviceList) * 3)
@@ -228,7 +234,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
             Globals.enterprise_id,
             deviceList,
             True,
-            len(deviceList) * 2,
+            len(deviceList) * 3,
         )
     if source == 4:
         postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))
@@ -344,11 +350,6 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
         thread.join()
         number_of_devices = number_of_devices + 1
         deviceList[number_of_devices] = [thread._args[0], thread.result]
-        Globals.deviceInfo_lock.acquire()
-        value = int(Globals.frame.gauge.GetValue() + 1)
-        if value <= 66:
-            Globals.frame.setGaugeValue(value)
-        Globals.deviceInfo_lock.release()
     return (action, deviceList)
 
 
