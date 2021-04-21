@@ -2,6 +2,8 @@
 
 import wx
 
+from Common.decorator import api_tool_decorator
+
 
 class MultiSelectSearchDlg(wx.Dialog):
     def __init__(self, parent, choices, label="", title=""):
@@ -98,20 +100,25 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
+        if hasattr(self.Parent, "WINDOWS") and self.Parent.WINDOWS:
+            self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Layout()
 
+    @api_tool_decorator
     def onClose(self, event):
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
-        self.Destroy()
+        self.DestroyLater()
 
+    @api_tool_decorator
     def onChar(self, event):
         event.Skip()
         wx.CallAfter(self.onSearch, event)
 
+    @api_tool_decorator
     def onSearch(self, event=None):
         if event:
             event.Skip()
@@ -136,6 +143,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
 
+    @api_tool_decorator
     def OnListSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
@@ -159,6 +167,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
+    @api_tool_decorator
     def OnBoxSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
@@ -175,13 +184,16 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
+    @api_tool_decorator
     def GetSelections(self):
         return self.selected
 
+    @api_tool_decorator
     def onSelectAll(self, event):
         event.Skip()
         wx.CallAfter(self.onSelectEvent)
 
+    @api_tool_decorator
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
             if "All devices" in self.originalChoices:
@@ -191,3 +203,11 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.selected = []
         self.check_list_box_1.SetCheckedStrings(self.selected)
+
+    @api_tool_decorator
+    def onEscapePressed(self, event):
+        keycode = event.GetKeyCode()
+        if (
+            self.HasFocus() or self.loggingList.HasFocus()
+        ) and keycode == wx.WXK_ESCAPE:
+            self.onClose(event)

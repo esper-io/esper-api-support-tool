@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from Common.enum import GeneralActions, GridActions
+from Common.decorator import api_tool_decorator
 import csv
 import wx
 import Common.Globals as Globals
@@ -158,7 +160,10 @@ class SidePanel(wx.Panel):
             choices=[],
             style=wx.CB_DROPDOWN | wx.CB_READONLY,
         )
-        actions = {**Globals.GENERAL_ACTIONS, **Globals.GRID_ACTIONS}
+        actions = {
+            **Globals.GENERAL_ACTIONS,
+            **Globals.GRID_ACTIONS,
+        }
         for key, val in actions.items():
             self.actionChoice.Append(key, val)
         sizer_5.Add(self.actionChoice, 0, wx.EXPAND, 0)
@@ -210,6 +215,7 @@ class SidePanel(wx.Panel):
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         self.actionChoice.SetSelection(1)
 
@@ -222,11 +228,13 @@ class SidePanel(wx.Panel):
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
+        self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
         self.deviceChoice.Bind(
             wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
         )
 
+    @api_tool_decorator
     def RemoveEndpoint(self, event):
         value = None
         if (
@@ -257,27 +265,30 @@ class SidePanel(wx.Panel):
                         style=wx.OK | wx.ICON_INFORMATION,
                     )
 
+    @api_tool_decorator
     def clearGroupAndDeviceSelections(self):
         self.selectedGroups.Clear()
         self.selectedDevices.Clear()
         self.selectedGroupsList = []
         self.selectedDevicesList = []
 
+    @api_tool_decorator
     def destroyMultiChoiceDialogs(self):
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
-            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog.DestroyLater()
             self.groupMultiDialog = None
         if self.deviceMultiDialog:
             self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog.DestroyLater()
             self.deviceMultiDialog = None
 
+    @api_tool_decorator
     def onGroupSelection(self, event):
         choices = list(self.groups.keys())
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
-            self.groupMultiDialog.Destroy()
+            self.groupMultiDialog.DestroyLater()
             self.groupMultiDialog = None
         if not self.groupMultiDialog:
             self.groupMultiDialog = MultiSelectSearchDlg(
@@ -310,11 +321,12 @@ class SidePanel(wx.Panel):
             self.devices = {}
             self.parentFrame.PopulateDevices(None)
 
+    @api_tool_decorator
     def onDeviceSelection(self, event):
         choices = list(self.devices.keys())
         if self.deviceMultiDialog:
             self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.Destroy()
+            self.deviceMultiDialog.DestroyLater()
             self.deviceMultiDialog = None
         if not self.deviceMultiDialog:
             self.deviceMultiDialog = MultiSelectSearchDlg(
@@ -337,6 +349,7 @@ class SidePanel(wx.Panel):
                     self.selectedDevicesList.append(deviceId)
         self.parentFrame.onDeviceSelections(None)
 
+    @api_tool_decorator
     def sortAndPopulateAppChoice(self):
         if not self.selectedDevicesList:
             self.apps = self.enterpriseApps
@@ -365,3 +378,25 @@ class SidePanel(wx.Panel):
             num += 1
             val = percent + int(float(num / len(self.apps) / 2) * 100)
             self.parentFrame.setGaugeValue(val)
+
+    @api_tool_decorator
+    def onActionSelection(self, event):
+        # item = self.actionChoice.GetValue()
+        clientData = event.ClientData
+        if not clientData:
+            action = self.actionChoice.GetValue()
+            if action in Globals.GENERAL_ACTIONS:
+                clientData = Globals.GENERAL_ACTIONS[action]
+            elif action in Globals.GRID_ACTIONS:
+                clientData = Globals.GRID_ACTIONS[action]
+        if (
+            clientData == GeneralActions.SET_KIOSK.value
+            or clientData == GeneralActions.CLEAR_APP_DATA.value
+            or clientData == GeneralActions.SET_APP_STATE_DISABLE.value
+            or clientData == GeneralActions.SET_APP_STATE_HIDE.value
+            or clientData == GeneralActions.SET_APP_STATE_SHOW.value
+        ) and clientData < GridActions.MODIFY_ALIAS_AND_TAGS.value:
+            # self.parentFrame.PopulateApps()
+            self.appChoice.Enable(True)
+        else:
+            self.appChoice.Enable(False)

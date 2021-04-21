@@ -13,6 +13,13 @@ from Utility.Resource import isModuleInstalled, installRequiredModules
 if __name__ == "__main__":
     curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
+    app_name = "%s_EsperApiSupportTool.%s" % (
+        Globals.VERSION.replace(".", "-"),
+        "exe" if platform.system() == "Windows" else "app",
+    )
+    old_app_name = "EsperApiSupportTool.%s" % (
+        "exe" if platform.system() == "Windows" else "app",
+    )
 
     if not isModuleInstalled("pyinstaller"):
         installRequiredModules()
@@ -28,7 +35,10 @@ if __name__ == "__main__":
             "--noconfirm",
             "--onefile",
             "--windowed",
+            "--ascii",
             "--clean",
+            "--name",
+            app_name,
             "--distpath",
             dispath,
             "--add-data",
@@ -44,7 +54,12 @@ if __name__ == "__main__":
             "--windowed",
             "--icon",
             curDirPath + "/Images/icon.png",
+            "--ascii",
             "--clean",
+            "--name",
+            app_name.replace(".app", ""),
+            "--osx-bundle-identifier",
+            "com.esper.esperapisupporttool",
             "--distpath",
             dispath,
             "--add-data",
@@ -57,46 +72,33 @@ if __name__ == "__main__":
 
     try:
         if os.path.exists(dispath + "/Main.exe"):
-            if os.path.exists(dispath + "/EsperApiSupportTool.exe"):
-                os.remove(dispath + "/EsperApiSupportTool.exe")
-            if os.path.exists(
-                dispath
-                + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-")
-            ):
-                os.remove(
-                    dispath
-                    + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-")
-                )
+            if os.path.exists(dispath + "/" + old_app_name):
+                os.remove(dispath + "/" + old_app_name)
+            if os.path.exists(dispath + "/" + app_name):
+                os.remove(dispath + "/" + app_name)
             os.rename(
                 dispath + "/Main.exe",
-                dispath
-                + "/%s_EsperApiSupportTool.exe" % Globals.VERSION.replace(".", "-"),
+                dispath + "/" + app_name,
             )
         elif os.path.exists(dispath + "/Main.app"):
-            if os.path.exists(dispath + "/EsperApiSupportTool.app"):
-                if os.path.isfile(dispath + "/EsperApiSupportTool.app"):
-                    os.remove(dispath + "/EsperApiSupportTool.app")
+            if os.path.exists(dispath + "/" + old_app_name):
+                if os.path.isfile(dispath + "/" + old_app_name):
+                    os.remove(dispath + "/" + old_app_name)
                 else:
-                    shutil.rmtree(dispath + "/EsperApiSupportTool.app")
+                    shutil.rmtree(dispath + "/" + old_app_name)
                 if os.path.isfile(
-                    dispath
-                    + "/%s_EsperApiSupportTool.app" % Globals.VERSION.replace(".", "-")
+                    dispath + "/" + app_name,
                 ):
                     os.remove(
-                        dispath
-                        + "/%s_EsperApiSupportTool.app"
-                        % Globals.VERSION.replace(".", "-")
+                        dispath + "/" + app_name,
                     )
                 else:
                     shutil.rmtree(
-                        dispath
-                        + "/%s_EsperApiSupportTool.app"
-                        % Globals.VERSION.replace(".", "-")
+                        dispath + "/" + app_name,
                     )
             os.rename(
                 dispath + "/Main.app",
-                dispath
-                + "/%s_EsperApiSupportTool.app" % Globals.VERSION.replace(".", "-"),
+                dispath + "/" + app_name,
             )
     except Exception as e:
         print(

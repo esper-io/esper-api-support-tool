@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
+import re
 import wx
+import wx.html as wxHtml
+
+from Common.decorator import api_tool_decorator
+from Utility.Resource import openWebLinkInBrowser
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -75,6 +80,7 @@ class NewEndpointDialog(wx.Dialog):
             "",
             style=wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY,
         )
+        self.text_ctrl_5.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.text_ctrl_5.SetForegroundColour(wx.Colour(255, 0, 0))
         if errorMsg:
             self.text_ctrl_5.SetValue(str(errorMsg))
@@ -101,33 +107,63 @@ class NewEndpointDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+    @api_tool_decorator
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
 
+    @api_tool_decorator
     def getInputValues(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-        host = "https://%s-api.esper.cloud/api" % str(
-            self.text_ctrl_2.GetValue().strip()
-        )
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
         return name, host, entId, key, prefix
 
+    @api_tool_decorator
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-        host = "https://%s-api.esper.cloud/api" % str(
-            self.text_ctrl_2.GetValue().strip()
-        )
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
         return [name, host, entId, key, prefix]
 
+    @api_tool_decorator
     def checkInputs(self, event):
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            match = re.search(
+                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+            )
+            if match:
+                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = hostname.replace("https://", "")
+                hostname = hostname.replace("http://", "")
+                self.text_ctrl_2.SetValue(hostname)
         if (
             self.text_ctrl_4.GetValue()
             and self.text_ctrl_3.GetValue()

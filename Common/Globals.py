@@ -9,19 +9,19 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.176"
+VERSION = "v0.18"
 TITLE = "Esper API Support Tool"
+RECORD_PLACE = False
 MIN_LIMIT = 1000
 MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
-lock = threading.Lock()
-gauge_lock = threading.Lock()
-grid1_lock = threading.Lock()
-grid2_lock = threading.Lock()
+error_tracker = {}
 
-MAX_THREAD_COUNT = 8
+MAX_ERROR_TIME_DIFF = 2
+MAX_THREAD_COUNT = 20
 MAX_RETRY = 5
+RETRY_SLEEP = 1.5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
@@ -30,21 +30,40 @@ DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmati
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
 
+""" Locks """
+lock = threading.Lock()
+deviceInfo_lock = threading.Lock()
+error_lock = threading.Lock()
+msg_lock = threading.Lock()
+gauge_lock = threading.Lock()
+grid1_lock = threading.Lock()
+grid1_status_lock = threading.Lock()
+grid2_lock = threading.Lock()
+grid_color_lock = threading.Lock()
+
 """ Actions """
 GENERAL_ACTIONS = {
-    "": -1,
+    "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
     "Show - Device Info & Network And Secruity Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
+    "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
+    "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
+    "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
 }
 
 GRID_ACTIONS = {
-    "": "-1",
+    "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
+    "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
+    "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
+    "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
+    # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
 LOGLIST = []
+MAX_LOG_LIST_SIZE = 75
 
 COMMAND_ARGS = [
     "app_state",
@@ -61,11 +80,22 @@ COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
+    "SET_KIOSK_APP",
+    "SET_DEVICE_LOCKDOWN_STATE",
+    "SET_APP_STATE",
+    "WIPE",
+    "UPDATE_LATEST_DPC",
+]
+
+JSON_COMMAND_TYPES = [
+    "REBOOT",
+    "UPDATE_HEARTBEAT",
+    "UPDATE_DEVICE_CONFIG",
     # "INSTALL",
     # "UNINSTALL",
-    # "SET_NEW_POLICY",
-    # "ADD_WIFI_AP",
-    # "REMOVE_WIFI_AP",
+    "SET_NEW_POLICY",
+    "ADD_WIFI_AP",
+    "REMOVE_WIFI_AP",
     "SET_KIOSK_APP",
     "SET_DEVICE_LOCKDOWN_STATE",
     "SET_APP_STATE",
@@ -122,6 +152,9 @@ CSV_NETWORK_ATTR_NAME = {
     "Wifi Mac Id": "wifiMacAddress",
     "IPv6 Mac Address(es)": "macAddress",
 }
+BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+
+CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
 """ WxPython Frame """
 frame = None
@@ -135,7 +168,9 @@ LAST_DEVICE_ID = None
 LAST_GROUP_ID = None
 
 """ Preferences """
+SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
+COMMAND_JSON_INPUT = True
 GRID_UPDATE_RATE = 60
 MAX_GRID_UPDATE_RATE = 3600
 ENABLE_GRID_UPDATE = False
@@ -146,6 +181,7 @@ GET_APP_EACH_DEVICE = False
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
+CMD_DEVICE_TYPE = "all"
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

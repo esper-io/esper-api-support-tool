@@ -1,23 +1,36 @@
 #!/usr/bin/env python
 
+import time
 import ast
 import json
-from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
-from Common.enum import GeneralActions
 import esperclient
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
 import threading
 import wx
+import platform
 import Utility.EsperAPICalls as apiCalls
 
+from Common.decorator import api_tool_decorator
+from Common.enum import GeneralActions, GridActions
+
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
+
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import joinThreadList, postEventToFrame, ipv6Tomac
+from Utility.Resource import (
+    displayMessageBox,
+    joinThreadList,
+    limitActiveThreads,
+    postEventToFrame,
+    ipv6Tomac,
+    splitListIntoChunks,
+)
 
 from esperclient.rest import ApiException
 
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
+@api_tool_decorator
 def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     """Calls API To Perform Action And Logs Result To UI"""
     if not Globals.enterprise_id:
@@ -30,6 +43,10 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value) and not isUpdate:
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
+        frame.gridPanel.disableGridProperties()
+        if platform.system() == "Windows":
+            frame.gridPanel.grid_1.Freeze()
+            frame.gridPanel.grid_2.Freeze()
         frame.CSVUploaded = False
 
     deviceList = None
@@ -79,27 +96,27 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         if isUpdate:
             postEventToFrame(wxThread.myEVT_UPDATE, deviceList)
         else:
-            for entry in deviceList.values():
-                device = entry[0]
-                deviceInfo = entry[1]
-                if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                    frame.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    frame.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                elif action == GeneralActions.SET_KIOSK.value:
-                    apiCalls.setKiosk(frame, device, deviceInfo)
-                elif action == GeneralActions.SET_MULTI.value:
-                    apiCalls.setMulti(frame, device, deviceInfo)
-                elif action == GeneralActions.CLEAR_APP_DATA.value:
-                    apiCalls.clearAppData(frame, device)
-            postEventToFrame(wxThread.myEVT_COMPLETE, None)
+            postEventToFrame(
+                wxThread.myEVT_FETCH, (action, Globals.enterprise_id, deviceList)
+            )
 
 
+@api_tool_decorator
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
-    if action == Globals.MODIFY_ALIAS_AND_TAGS:
+    if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
         modifyDevice(frame)
+    if (
+        action == GridActions.SET_APP_STATE_DISABLE.value
+        or action == GridActions.SET_APP_STATE_HIDE.value
+        or action == GridActions.SET_APP_STATE_SHOW.value
+    ):
+        setAppStateForAllAppsListed(action)
+    if action == 50:
+        setAppStateForSpecificAppListed(action)
 
 
+@api_tool_decorator
 def iterateThroughDeviceList(
     frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
@@ -107,21 +124,19 @@ def iterateThroughDeviceList(
     if len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-            if n == 0:
-                n = len(api_response.results)
-            splitResults = [
-                api_response.results[i * n : (i + 1) * n]
-                for i in range((len(api_response.results) + n - 1) // n)
-            ]
+            splitResults = splitListIntoChunks(api_response.results)
 
             threads = []
             for chunk in splitResults:
                 t = wxThread.GUIThread(
                     frame,
                     processDevices,
-                    args=(chunk, number_of_devices, action),
-                    # eventType=wxThread.myEVT_FETCH,
+                    args=(
+                        chunk,
+                        number_of_devices,
+                        action,
+                    ),
+                    name="processDevices",
                 )
                 threads.append(t)
                 t.start()
@@ -130,7 +145,15 @@ def iterateThroughDeviceList(
             t = wxThread.GUIThread(
                 frame,
                 waitTillThreadsFinish,
-                args=(tuple(threads), action, entId, 1),
+                args=(
+                    tuple(threads),
+                    action,
+                    entId,
+                    1,
+                    None,
+                    len(api_response.results) * 2,
+                ),
+                name="waitTillThreadsFinish_1",
                 eventType=wxThread.myEVT_FETCH,
             )
             t.start()
@@ -144,10 +167,11 @@ def iterateThroughDeviceList(
             if threading.current_thread().isStopped():
                 return
         frame.Logging("---> No devices found for group")
-        wx.MessageBox("No devices found for group.", style=wx.ICON_INFORMATION)
+        displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
 
 
-def waitTillThreadsFinish(threads, action, entId, source, event=None):
+@api_tool_decorator
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
     if source == 1:
@@ -155,8 +179,13 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
         for thread in threads:
             if type(thread.result) == tuple:
                 deviceList = {**deviceList, **thread.result[1]}
+                if maxGauge:
+                    postEventToFrame(
+                        wxThread.myEVT_UPDATE_GAUGE,
+                        int(len(deviceList) / maxGauge * 100),
+                    )
         postEventToFrame(event, action)
-        return (action, entId, deviceList)
+        return (action, entId, deviceList, True, len(deviceList) * 2)
     if source == 2:
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
         changeSucceeded = succeeded = numNewName = 0
@@ -167,61 +196,71 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None):
                 succeeded += thread.result[1]
                 numNewName += thread.result[2]
                 tagsFromGrid = thread.result[3]
-        postEventToFrame(
-            wxThread.myEVT_LOG,
+        msg = (
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName),
+            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName)
+        )
+        postEventToFrame(wxThread.myEVT_LOG, msg)
+        postEventToFrame(
+            wxThread.myEVT_MESSAGE_BOX,
+            (msg, wx.ICON_INFORMATION),
         )
     if source == 3:
         deviceList = {}
         for thread in threads:
             if type(thread.result) == dict:
                 deviceList = {**deviceList, **thread.result}
-        postEventToFrame(
-            wxThread.myEVT_FETCH,
-            (
-                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                Globals.enterprise_id,
-                deviceList,
-                True,
-                len(deviceList) * 2,
-            ),
+        return (
+            GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+            Globals.enterprise_id,
+            deviceList,
+            True,
+            len(deviceList) * 2,
         )
+    if source == 4:
+        postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))
 
 
+def processInstallDevices(deviceList):
+    newDeviceList = []
+    for device in deviceList:
+        id = device["id"]
+        deviceListing = apiCalls.getDeviceById(id)
+        newDeviceList.append(deviceListing)
+    processCollectionDevices({"results": newDeviceList})
+
+
+@api_tool_decorator
 def processCollectionDevices(collectionList):
-    n = int(len(collectionList["results"]) / Globals.MAX_THREAD_COUNT)
-    if n == 0:
-        n = len(collectionList["results"])
-    splitResults = [
-        collectionList["results"][i * n : (i + 1) * n]
-        for i in range((len(collectionList["results"]) + n - 1) // n)
-    ]
-    if splitResults:
-        threads = []
-        number_of_devices = 0
-        for chunk in splitResults:
+    if collectionList["results"]:
+        splitResults = splitListIntoChunks(collectionList["results"])
+        if splitResults:
+            threads = []
+            number_of_devices = 0
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    Globals.frame,
+                    fillInDeviceInfoDict,
+                    args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
+                    name="fillInDeviceInfoDict",
+                )
+                threads.append(t)
+                t.start()
+                number_of_devices += len(chunk)
+
             t = wxThread.GUIThread(
                 Globals.frame,
-                fillInDeviceInfoDict,
-                args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
+                waitTillThreadsFinish,
+                args=(
+                    tuple(threads),
+                    GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+                    Globals.enterprise_id,
+                    3,
+                ),
+                eventType=wxThread.myEVT_FETCH,
+                name="waitTillThreadsFinish3",
             )
-            threads.append(t)
             t.start()
-            number_of_devices += len(chunk)
-
-        t = wxThread.GUIThread(
-            Globals.frame,
-            waitTillThreadsFinish,
-            args=(
-                tuple(threads),
-                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                Globals.enterprise_id,
-                3,
-            ),
-            eventType=wxThread.myEVT_FETCH,
-        )
-        t.start()
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
@@ -229,8 +268,10 @@ def processCollectionDevices(collectionList):
             wxThread.myEVT_MESSAGE_BOX,
             ("No devices found for EQL query.", wx.ICON_INFORMATION),
         )
+        postEventToFrame(wxThread.myEVT_COMPLETE, (True))
 
 
+@api_tool_decorator
 def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     deviceList = {}
     for device in chunk:
@@ -240,16 +281,17 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 
             deviceList[number_of_devices] = [device, deviceInfo]
             number_of_devices += 1
-            Globals.gauge_lock.acquire()
+            Globals.deviceInfo_lock.acquire()
             value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
             Globals.frame.setGaugeValue(value)
-            Globals.gauge_lock.release()
+            Globals.deviceInfo_lock.release()
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
     return deviceList
 
 
+@api_tool_decorator
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
     """ Try to obtain more device info for a given device """
     deviceList = {}
@@ -269,6 +311,7 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
     return (action, deviceList)
 
 
+@api_tool_decorator
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     if not deviceDict:
@@ -284,6 +327,7 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
+@api_tool_decorator
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
     deviceId = None
@@ -430,6 +474,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     return deviceInfo
 
 
+@api_tool_decorator
 def logActionExecution(frame, action, selection=None):
     actionName = ""
     if (
@@ -443,6 +488,7 @@ def logActionExecution(frame, action, selection=None):
         frame.Logging("---> Starting Execution " + actionName)
 
 
+@api_tool_decorator
 def modifyDevice(frame):
     """ Start a thread that will attempt to modify device data """
     t = wxThread.GUIThread(
@@ -450,29 +496,35 @@ def modifyDevice(frame):
         executeDeviceModification,
         args=(frame),
         eventType=None,
+        name="executeDeviceModification",
     )
     t.start()
     return t
 
 
-def executeDeviceModification(frame):
+@api_tool_decorator
+def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     api_response = None
-    try:
-        api_response = api_instance.get_all_devices(
-            Globals.enterprise_id,
-            limit=Globals.limit,
-            offset=Globals.offset,
-        )
-    except Exception as e:
-        postEventToFrame(
-            wxThread.myEVT_LOG,
-            "---> ERROR: Failed to get devices ids to modify tags and aliases",
-        )
-        print(e)
-        ApiToolLog().LogError(e)
-        return
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
 
     tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
     aliasDic = frame.gridPanel.getDeviceAliasFromList()
@@ -480,16 +532,22 @@ def executeDeviceModification(frame):
 
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
     if api_response:
-        api_response.results = list(
+        tempRes = list(
             filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
         )
-        n = int(len(api_response.results) / Globals.MAX_THREAD_COUNT)
-        if n == 0:
-            n = len(api_response.results)
-        splitResults = [
-            api_response.results[i * n : (i + 1) * n]
-            for i in range((len(api_response.results) + n - 1) // n)
-        ]
+        if not tempRes:
+            if "serialNumber" in api_response.results[0].hardware_info:
+                tempRes = list(
+                    filter(
+                        lambda x: x.hardware_info["serialNumber"]
+                        in tagsFromGrid.keys(),
+                        api_response.results,
+                    )
+                )
+        if tempRes:
+            api_response.results = tempRes
+
+        splitResults = splitListIntoChunks(api_response.results)
 
         threads = []
         for chunk in splitResults:
@@ -497,6 +555,7 @@ def executeDeviceModification(frame):
                 frame,
                 processDeviceModificationForList,
                 args=(frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction),
+                name="processDeviceModificationForList",
             )
             threads.append(t)
             t.start()
@@ -505,10 +564,12 @@ def executeDeviceModification(frame):
             frame,
             waitTillThreadsFinish,
             args=(tuple(threads), -1, -1, 2),
+            name="waitTillThreadsFinish",
         )
         t.start()
 
 
+@api_tool_decorator
 def processDeviceModificationForList(
     frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction
 ):
@@ -520,12 +581,14 @@ def processDeviceModificationForList(
             frame,
             changeTagsForDevice,
             args=(device, tagsFromGrid, frame, maxGaugeAction),
+            name="changeTagsForDevice",
         )
         t.start()
         t2 = wxThread.GUIThread(
             frame,
             changeAliasForDevice,
             args=(device, aliasDic, frame, maxGaugeAction),
+            name="changeAliasForDevice",
         )
         t2.start()
         joinThreadList([t, t2])
@@ -538,6 +601,7 @@ def processDeviceModificationForList(
     return (changeSucceeded, succeeded, numNewName, tagsFromGrid)
 
 
+@api_tool_decorator
 def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     numNewName = 0
     succeeded = 0
@@ -576,6 +640,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
                 postEventToFrame(wxThread.myEVT_ON_FAILED, device)
         else:
             logString = logString + " (Alias Name already set)"
+        if "Success" in logString or "Queued" in logString:
+            postEventToFrame(wxThread.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
             wxThread.myEVT_UPDATE_GAUGE,
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
@@ -584,6 +650,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     return (numNewName, succeeded)
 
 
+@api_tool_decorator
 def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
@@ -602,6 +669,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         tags = apiCalls.setdevicetags(device.id, tagsFromCell)
         if tags == tagsFromGrid[key]:
             changeSucceeded += 1
+        postEventToFrame(wxThread.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
         postEventToFrame(wxThread.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
         postEventToFrame(
             wxThread.myEVT_UPDATE_GAUGE,
@@ -610,6 +678,126 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     return changeSucceeded
 
 
+@api_tool_decorator
+def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
+
+    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+    if api_response:
+        tempRes = []
+        for device in api_response.results:
+            for deviceIds in deviceIdentifers:
+                if (
+                    device.device_name in deviceIds
+                    or device.hardware_info["serialNumber"] in deviceIds
+                ):
+                    tempRes.append(device)
+        if tempRes:
+            api_response.results = tempRes
+        threads = []
+        for device in api_response.results:
+            if (
+                device.device_name in deviceIdentifers
+                or device.hardware_info["serialNumber"] in deviceIdentifers
+            ):
+                t = wxThread.GUIThread(
+                    Globals.frame,
+                    setAllAppsState,
+                    args=(Globals.frame, device, state),
+                    name="setAllAppsState",
+                )
+                threads.append(t)
+                t.start()
+                limitActiveThreads(threads)
+        t = wxThread.GUIThread(
+            Globals.frame,
+            waitTillThreadsFinish,
+            args=(tuple(threads), state, -1, 4),
+            name="waitTillThreadsFinish%s" % state,
+        )
+        t.start()
+
+
+@api_tool_decorator
+def setAllAppsState(frame, device, state):
+    stateStatuses = []
+    # for device in chunk:
+    _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
+    for app in resp["results"]:
+        stateStatus = None
+        package_name = None
+        app_version = None
+        if "application" in app:
+            package_name = app["application"]["package_name"]
+            app_version = app["application"]["version"]["version_code"]
+            if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                continue
+        else:
+            package_name = app["package_name"]
+            app_version = app["version_code"]
+            if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                continue
+        if state == GridActions.SET_APP_STATE_DISABLE.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                package_name,
+                appVer=app_version,
+                state="DISABLE",
+            )
+        if state == GridActions.SET_APP_STATE_HIDE.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                package_name,
+                appVer=app_version,
+                state="HIDE",
+            )
+        if state == GridActions.SET_APP_STATE_SHOW.value:
+            stateStatus = apiCalls.setAppState(
+                device.id,
+                package_name,
+                appVer=app_version,
+                state="SHOW",
+            )
+        if stateStatus and hasattr(stateStatus, "state"):
+            entry = {
+                "Device Name": device.device_name,
+                "Device id": device.id,
+                "State Status": stateStatus.state,
+            }
+            if hasattr(stateStatus, "reason"):
+                entry["Reason"] = stateStatus.reason
+            stateStatuses.append(entry)
+        else:
+            stateStatuses.append(
+                {
+                    "Device Name": device.device_name,
+                    "Device id": device.id,
+                    "State Status": stateStatus,
+                }
+            )
+    return stateStatuses
+
+
+@api_tool_decorator
 def createCommand(frame, command_args, commandType, schedule, schType):
     """ Attempt to apply a Command given user specifications """
     result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
@@ -627,6 +815,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
             apiCalls.executeCommandOnGroup,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
+            name="executeCommandOnGroup",
         )
     elif result and not isGroup:
         t = wxThread.GUIThread(
@@ -634,6 +823,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
             apiCalls.executeCommandOnDevice,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
+            name="executeCommandOnDevice",
         )
     if t:
         frame.menubar.disableConfigMenu()
@@ -641,6 +831,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         t.start()
 
 
+@api_tool_decorator
 def confirmCommand(cmd, commandType, schedule, schType):
     """ Ask user to confirm the command they want to run """
     modal = None
@@ -681,3 +872,78 @@ def confirmCommand(cmd, commandType, schedule, schType):
         return True, isGroup
     else:
         return False, isGroup
+
+
+def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                postEventToFrame(
+                    wxThread.myEVT_LOG,
+                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                )
+                print(e)
+                ApiToolLog().LogError(e)
+                return
+            time.sleep(Globals.RETRY_SLEEP)
+    state = None
+    if action == 50:
+        state == "HIDE"
+
+    # deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+    appList = Globals.frame.gridPanel.getDeviceAppFromGrid()
+    if api_response:
+        tempRes = []
+        for device in api_response.results:
+            for deviceIds in appList.keys():
+                if (
+                    device.device_name in deviceIds
+                    or device.hardware_info["serialNumber"] in deviceIds
+                ):
+                    tempRes.append(device)
+        if tempRes:
+            api_response.results = tempRes
+        threads = []
+        for device in api_response.results:
+            if (
+                device.device_name in appList.keys()
+                or device.hardware_info["serialNumber"] in appList.keys()
+            ):
+                package_names = None
+                if device.device_name in appList.keys():
+                    package_names = appList[device.device_name]
+                elif device.hardware_info["serialNumber"] in appList.keys():
+                    package_names = appList[device.hardware_info["serialNumber"]]
+                package_names = package_names.split(",")
+                if package_names:
+                    for package_name in package_names:
+                        if package_name.trim():
+                            t = wxThread.GUIThread(
+                                Globals.frame,
+                                apiCalls.setAppState,
+                                args=(
+                                    device.id,
+                                    package_name.trim(),
+                                    state,
+                                ),
+                                name="setAllAppsState",
+                            )
+                            threads.append(t)
+                            t.start()
+                        limitActiveThreads(threads)
+        t = wxThread.GUIThread(
+            Globals.frame,
+            waitTillThreadsFinish,
+            args=(tuple(threads), state, -1, 4),
+            name="waitTillThreadsFinish%s" % state,
+        )
+        t.start()

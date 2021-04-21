@@ -1,3 +1,4 @@
+from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
 import wx
 
@@ -5,6 +6,7 @@ import wx
 class ToolsToolBar(wx.ToolBar):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
+        self.AddSeparator()
         close_icon = scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.AddSeparator()
@@ -43,12 +45,15 @@ class ToolsToolBar(wx.ToolBar):
         cmd_icon = scale_bitmap(resourcePath("Images/command.png"), 16, 16)
         self.cmdtool = self.AddTool(wx.ID_ANY, "Run Command", cmd_icon, "Run Command")
 
+        self.AddSeparator()
+
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
         self.AddControl(self.search)
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         size = self.search.GetSize()
         size.SetWidth(size.GetWidth() * 2)
@@ -71,6 +76,7 @@ class ToolsToolBar(wx.ToolBar):
         self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
+    @api_tool_decorator
     def onSearchChar(self, event):
         event.Skip()
         wx.CallAfter(self.Parent.onSearch, wx.EVT_CHAR.typeId)

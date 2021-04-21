@@ -260,7 +260,8 @@ class EnhancedStatusBar(wx.StatusBar):
 
         try:
             self.RemoveChild(self._items[pos].widget)
-            self._items[pos].widget.Destroy()
+            # self._items[pos].widget.Destroy()
+            self._items[pos].widget.DestroyLater()
         except KeyError:
             pass
 

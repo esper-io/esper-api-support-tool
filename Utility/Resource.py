@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import os
 import platform
 import requests
@@ -8,9 +9,11 @@ import sys
 import time
 import subprocess
 import wx
+import webbrowser
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
+from datetime import datetime
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
@@ -69,18 +72,27 @@ def download(url, file_name, overwrite=True):
         file.write(response.content)
 
 
-def checkEsperInternetConnection():
+def checkInternetConnection(url):
     try:
-        requests.get(Globals.ESPER_LINK)
+        requests.get(url)
         return True
     except Exception as e:
         print(e)
     return False
 
 
+def checkEsperInternetConnection():
+    return checkInternetConnection(Globals.ESPER_LINK)
+
+
 def checkForInternetAccess(frame):
     while not frame.kill:
-        if not checkEsperInternetConnection() and frame.IsShownOnScreen():
+        if (
+            not checkEsperInternetConnection()
+            and not checkInternetConnection(Globals.UPDATE_LINK)
+            and frame.IsShownOnScreen()
+            and frame.IsActive()
+        ):
             displayMessageBox(
                 (
                     "ERROR: An internet connection is required when using the tool!",
@@ -199,7 +211,7 @@ def joinThreadList(threads):
                 thread.join()
 
 
-def limitActiveThreads(threads, max_alive=25, sleep=1):
+def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
     Globals.lock.acquire()
     numAlive = 0
     for thread in threads:
@@ -249,5 +261,150 @@ def displayMessageBox(event):
     elif isinstance(value, str):
         msg = value
 
+    Globals.msg_lock.acquire()
     if msg:
         wx.MessageBox(msg, style=sty)
+    Globals.msg_lock.release()
+
+
+def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
+    n = int(len(mainList) / maxThread)
+    if n == 0:
+        n = len(mainList)
+    if n > 0:
+        splitResults = [
+            mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)
+        ]
+    else:
+        splitResults = mainList
+    return splitResults
+
+
+def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
+    if Globals.PRINT_RESPONSES or (resp and  hasattr(resp, "status_code") and resp.status_code >= 300):
+        print(url)
+        prettyReponse = ""
+        if not json_resp:
+            try:
+                json_resp = resp.json()
+            except:
+                pass
+        if json_resp:
+            prettyReponse = url + "\nResponse {result}".format(
+                result=json.dumps(json_resp, indent=4, sort_keys=True)
+            )
+        else:
+            prettyReponse = str(resp)
+        print(prettyReponse)
+        ApiToolLog().LogResponse("\n%s\t" % datetime.now() + prettyReponse + "\n")
+        if displayMsgBox:
+            displayMessageBox((prettyReponse, wx.ICON_ERROR))
+
+
+def performGetRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.get(url, headers=headers, json=json, data=data)
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPatchRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.patch(url, headers=headers, data=data, json=json)
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPutRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.put(url, headers=headers, data=data, json=json)
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performDeleteRequestWithRetry(
+    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.delete(url, headers=headers, data=data, json=json)
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def performPostRequestWithRetry(
+    url, headers=None, json=None, data=None, files=None, maxRetry=Globals.MAX_RETRY
+):
+    resp = None
+    for attempt in range(maxRetry):
+        try:
+            resp = requests.post(
+                url, headers=headers, data=data, json=json, files=files
+            )
+            if resp.status_code < 300:
+                break
+        except Exception as e:
+            if attempt == maxRetry - 1:
+                ApiToolLog().LogError(e)
+            time.sleep(Globals.RETRY_SLEEP)
+    return resp
+
+
+def openWebLinkInBrowser(link):
+    if hasattr(link, "GetLinkInfo"):
+        link = link.GetLinkInfo().GetHref()
+    webbrowser.open(link)
+
+
+def updateErrorTracker():
+    while Globals.frame and not Globals.frame.kill:
+        try:
+            Globals.error_lock.acquire()
+            if Globals.error_tracker:
+                new_tracker = {}
+                for key, value in Globals.error_tracker.items():
+                    timeDiff = datetime.now() - value
+                    minutes = timeDiff.total_seconds() / 60
+                    if minutes <= Globals.MAX_ERROR_TIME_DIFF:
+                        new_tracker[key] = value
+                Globals.error_tracker = new_tracker
+            Globals.error_lock.release()
+            time.sleep(60)
+        except Exception as e:
+            ApiToolLog().LogError(e)
+        finally:
+            if Globals.error_lock.locked():
+                Globals.error_lock.release()

@@ -4,13 +4,12 @@ from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from Utility.EastUtility import processCollectionDevices
 from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import resourcePath
+from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
 import Utility.wxThread as wxThread
 import wx
 import wx.adv as adv
 import Common.Globals as Globals
-import webbrowser
 import platform
 
 
@@ -72,11 +71,16 @@ class ToolMenuBar(wx.MenuBar):
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
         runMenu.Append(wx.ID_SEPARATOR)
+        # installedDevices = wx.MenuItem(
+        #     runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        # )
+        # self.installedDevices = runMenu.Append(installedDevices)
+        # runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Perform Collection Action\tCtrl+Shift+F"
+            runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
         )
         self.collection = runMenu.Append(collectionItem)
-        eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search\tCtrl+F")
+        eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F")
         self.eqlQuery = runMenu.Append(eqlQueryItem)
 
         viewMenu = wx.Menu()
@@ -133,6 +137,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.__set_properties()
 
+    @api_tool_decorator
     def __set_properties(self):
         self.run.Enable(False)
         self.clone.Enable(False)
@@ -156,6 +161,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
+        # self.Bind(
+        #     wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
+        # )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
@@ -175,22 +183,25 @@ class ToolMenuBar(wx.MenuBar):
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
-        info.SetCopyright("(C) 2020 Esper - All Rights Reserved")
+        info.SetCopyright("(C) 2021 Esper - All Rights Reserved")
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
 
     @api_tool_decorator
     def onHelp(self, event):
-        webbrowser.open(Globals.HELP_LINK)
+        openWebLinkInBrowser(Globals.HELP_LINK)
 
     @api_tool_decorator
     def onUpdateCheck(self, event):
         if not self.isCheckingForUpdates:
-            update = wxThread.GUIThread(self, self.updateCheck, None)
+            update = wxThread.GUIThread(
+                self, self.updateCheck, None, name="UpdateCheck"
+            )
             update.start()
             self.isCheckingForUpdates = True
 
+    @api_tool_decorator
     def updateCheck(self):
         icon = wx.ICON_INFORMATION
         msg = ""
@@ -252,8 +263,10 @@ class ToolMenuBar(wx.MenuBar):
     def enableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, True)
 
+    @api_tool_decorator
     def onEqlQuery(self, event):
         self.parentFrame.setGaugeValue(0)
+        self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
@@ -261,8 +274,13 @@ class ToolMenuBar(wx.MenuBar):
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
                 if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.toggleEnabledState(False)
                     self.parentFrame.gauge.Pulse()
+                    self.parentFrame.Logging("---> Performing EQL Query")
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.Logging(
+                        "---> Finsihed Performing EQL Query, processing results..."
+                    )
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,
@@ -271,16 +289,25 @@ class ToolMenuBar(wx.MenuBar):
                         waitForJoin=False,
                         name="eqlIterateThroughDeviceList",
                     )
+            else:
+                self.parentFrame.setCursorDefault()
 
+    @api_tool_decorator
     def onCollection(self, event):
         self.parentFrame.setGaugeValue(0)
+        self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.gauge.Pulse()
+                    self.parentFrame.toggleEnabledState(False)
+                    self.parentFrame.Logging("---> Performing EQL Query")
+                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
+                    self.parentFrame.Logging(
+                        "---> Finsihed Performing EQL Query, processing results..."
+                    )
                     wxThread.doAPICallInThread(
                         self,
                         processCollectionDevices,
@@ -289,7 +316,10 @@ class ToolMenuBar(wx.MenuBar):
                         waitForJoin=False,
                         name="collectionIterateThroughDeviceList",
                     )
+            else:
+                self.parentFrame.setCursorDefault()
 
+    @api_tool_decorator
     def checkCollectionEnabled(self):
         if not checkCollectionIsEnabled():
             self.collection.Hide()

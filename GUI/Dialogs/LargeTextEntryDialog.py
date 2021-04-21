@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from Common.decorator import api_tool_decorator
 import wx
 
 
@@ -65,5 +66,6 @@ class LargeTextEntryDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+    @api_tool_decorator
     def GetValue(self):
         return self.text_ctrl_1.GetValue()

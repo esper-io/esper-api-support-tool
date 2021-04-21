@@ -10,7 +10,14 @@ import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import download, deleteFile, joinThreadList
+from Utility.Resource import (
+    download,
+    deleteFile,
+    joinThreadList,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+    performPostRequestWithRetry,
+)
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
@@ -158,6 +165,8 @@ class EsperTemplateUtil:
                     if newBg:
                         newBg["enterprise"] = self.toEntId
                         newBg["wallpaper"] = newBg["id"]
+                        newBg["orientations"] = bg["orientations"]
+                        newBg["screen_types"] = bg["screen_types"]
                         bgList.append(newBg)
                 templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
@@ -193,7 +202,9 @@ class EsperTemplateUtil:
                 postEventToFrame(
                     wxThread.myEVT_LOG, "Attempting to upload wallpaper..."
                 )
-                resp = requests.post(url, headers=headers, data=payload, files=files)
+                resp = performPostRequestWithRetry(
+                    url, headers=headers, data=payload, files=files
+                )
                 if resp.ok:
                     postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Succeeded!")
                     json_resp = resp.json()
@@ -373,6 +384,8 @@ class EsperTemplateUtil:
                                 "is_g_play": False,
                                 "id": toApp.id,
                                 "app_version": versionId,
+                                "appVersionId": versionId,
+                                "installationRule": app["installationRule"],
                             }
                         )
                         postEventToFrame(
@@ -445,6 +458,8 @@ class EsperTemplateUtil:
                 for data in dicton[key]:
                     if type(data) is dict:
                         newList.append(self.processDictKeyNames(data))
+                    else:
+                        newList.append(data)
                 newDict[newKey] = newList
             else:
                 newDict[newKey] = dicton[key]
@@ -471,7 +486,7 @@ class EsperTemplateUtil:
                 + self.template_extension
                 + self.limit_extension.format(num=Globals.limit)
             )
-            resp = requests.get(url, headers=headers)
+            resp = performGetRequestWithRetry(url, headers=headers)
             json_resp = resp.json()
             return json_resp
         except Exception as e:
@@ -491,7 +506,7 @@ class EsperTemplateUtil:
                     link = link + "/"
                 link = link + "v0/enterprise/"
             url = link + enterprise_id + self.template_extension + str(template_id)
-            resp = requests.get(url, headers=headers)
+            resp = performGetRequestWithRetry(url, headers=headers)
             json_resp = resp.json()
             return json_resp
         except Exception as e:
@@ -505,7 +520,7 @@ class EsperTemplateUtil:
                 "Content-Type": "application/json",
             }
             url = link + enterprise_id + self.template_extension
-            resp = requests.post(url, headers=headers, json=template)
+            resp = performPostRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
             return json_resp
         except Exception as e:
@@ -519,7 +534,7 @@ class EsperTemplateUtil:
                 "Content-Type": "application/json",
             }
             url = link + enterprise_id + self.template_extension + str(template["id"])
-            resp = requests.patch(url, headers=headers, json=template)
+            resp = performPatchRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
             return json_resp
         except Exception as e:
