@@ -1394,7 +1394,7 @@ class NewFrameLayout(wx.Frame):
             wxThread.GUIThread(
                 self,
                 self.processFetch,
-                (action, entId, deviceList, True, len(deviceList) * 2),
+                (action, entId, deviceList, True, len(deviceList) * 3),
                 name="ProcessFetch",
             ).start()
 
@@ -1466,7 +1466,7 @@ class NewFrameLayout(wx.Frame):
             limitActiveThreads(threads)
 
             value = int(num / maxGauge * 100)
-            if updateGauge and value <= 90:
+            if updateGauge and value <= 99:
                 num += 1
                 self.setGaugeValue(value)
         wxThread.GUIThread(
@@ -2106,8 +2106,18 @@ class NewFrameLayout(wx.Frame):
     def toggleEnabledState(self, state):
         self.sidePanel.runBtn.Enable(state)
         self.sidePanel.actionChoice.Enable(state)
-        self.sidePanel.appChoice.Enable(state)
         self.sidePanel.removeEndpointBtn.Enable(state)
+
+        if not self.sidePanel.appChoice.IsEnabled() and state:
+            action = self.sidePanel.actionChoice.GetValue()
+            clientData = None
+            if action in Globals.GENERAL_ACTIONS:
+                clientData = Globals.GENERAL_ACTIONS[action]
+            elif action in Globals.GRID_ACTIONS:
+                clientData = Globals.GRID_ACTIONS[action]
+            self.sidePanel.setAppChoiceState(clientData)
+        else:
+            self.sidePanel.appChoice.Enable(state)
 
         self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
