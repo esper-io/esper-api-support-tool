@@ -181,6 +181,7 @@ def iterateThroughDeviceList(
             if threading.current_thread().isStopped():
                 return
         frame.Logging("---> No devices found for group")
+        frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
 
 
@@ -283,6 +284,7 @@ def processCollectionDevices(collectionList):
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
+            Globals.frame.isRunning = False
         postEventToFrame(
             wxThread.myEVT_MESSAGE_BOX,
             ("No devices found for EQL query.", wx.ICON_INFORMATION),
