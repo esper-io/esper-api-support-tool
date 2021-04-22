@@ -249,6 +249,15 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
 
 
 @api_tool_decorator
+def getLatestEvent(deviceId):
+    json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
+    respData = None
+    if json_resp["results"]:
+        respData = json_resp["results"][0]["data"]
+    return respData
+
+
+@api_tool_decorator
 def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
