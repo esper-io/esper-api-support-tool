@@ -297,25 +297,26 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     for device in chunk:
         try:
             deviceInfo = {}
-            thread = wxThread.GUIThread(
-                Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
-            )
-            limitActiveThreads(threads)
-            thread.start()
-            threads.append(thread)
-            # deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+            # thread = wxThread.GUIThread(
+            #     Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
+            # )
+            # limitActiveThreads(threads, max_alive=5)
+            # thread.start()
+            # threads.append(thread)
+            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+            deviceList[number_of_devices] = [device, deviceInfo]
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
 
-    for thread in threads:
-        thread.join()
-        deviceList[number_of_devices] = [thread._args[0], thread.result]
-        number_of_devices += 1
-        Globals.deviceInfo_lock.acquire()
-        value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
-        Globals.frame.setGaugeValue(value)
-        Globals.deviceInfo_lock.release()
+    # for thread in threads:
+    #     thread.join()
+    #     deviceList[number_of_devices] = [thread._args[0], thread.result]
+    #     number_of_devices += 1
+    #     Globals.deviceInfo_lock.acquire()
+    #     value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
+    #     Globals.frame.setGaugeValue(value)
+    #     Globals.deviceInfo_lock.release()
     return deviceList
 
 
@@ -330,26 +331,26 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
             number_of_devices = number_of_devices + 1
             deviceInfo = {}
             deviceInfo.update({"num": number_of_devices})
-            # deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-            thread = wxThread.GUIThread(
-                Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
-            )
-            limitActiveThreads(threads)
-            thread.start()
-            threads.append(thread)
+            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+            # thread = wxThread.GUIThread(
+            #     Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
+            # )
+            # limitActiveThreads(threads, max_alive=5)
+            # thread.start()
+            # threads.append(thread)
 
-            # deviceList[number_of_devices] = [device, deviceInfo]
+            deviceList[number_of_devices] = [device, deviceInfo]
             # if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
             #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
 
-    number_of_devices = orgNum
-    for thread in threads:
-        thread.join()
-        number_of_devices = number_of_devices + 1
-        deviceList[number_of_devices] = [thread._args[0], thread.result]
+    # number_of_devices = orgNum
+    # for thread in threads:
+    #     thread.join()
+    #     number_of_devices = number_of_devices + 1
+    #     deviceList[number_of_devices] = [thread._args[0], thread.result]
     return (action, deviceList)
 
 
@@ -398,7 +399,33 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceTags = device.tags
         deviceDict = device.__dict__
         unpackageDict(deviceInfo, deviceDict)
-    kioskMode = apiCalls.iskioskmode(deviceId)
+    appThread = wxThread.GUIThread(
+        Globals.frame,
+        apiCalls.getdeviceapps,
+        (deviceId, True, Globals.USE_ENTERPRISE_APP),
+    )
+    appThread.start()
+    # netThread = wxThread.GUIThread(
+    #     Globals.frame,
+    #     apiCalls.getNetworkInfo,
+    #     (deviceId),
+    # )
+    # netThread.start()
+    # locThread = wxThread.GUIThread(
+    #     Globals.frame,
+    #     apiCalls.getLocationInfo,
+    #     (deviceId),
+    # )
+    # locThread.start()
+    eventThread = wxThread.GUIThread(
+        Globals.frame,
+        apiCalls.getLatestEvent,
+        (deviceId),
+    )
+    eventThread.start()
+    # kioskMode = apiCalls.iskioskmode(deviceId)
+    # kioskModeApp = apiCalls.getkioskmodeapp(deviceId)
+    latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
     detailInfo = apiCalls.getDeviceDetail(deviceId)
@@ -452,6 +479,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         else:
             deviceInfo.update({"Status": "Unknown"})
 
+    kioskMode = deviceInfo["current_app_mode"]
     if kioskMode == 1:
         deviceInfo.update({"Mode": "Kiosk"})
     else:
@@ -477,17 +505,27 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
 
-    apps, _ = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+    # apps, _ = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+    appThread.join()
+    apps, _ = appThread.result
     deviceInfo.update({"Apps": str(apps)})
 
-    if kioskMode == 1 and deviceStatus == 1:
-        deviceInfo.update({"KioskApp": str(apiCalls.getkioskmodeapp(deviceId))})
+    if kioskMode == 1:
+        eventThread.join()
+        latestEvent = eventThread.result
+        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
+        deviceInfo.update({"KioskApp": str(kioskModeApp)})
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    location_info, resp_json = apiCalls.getLocationInfo(deviceId)
-    network_info = apiCalls.getNetworkInfo(deviceId)
-    unpackageDict(deviceInfo, resp_json)
+    # location_info, resp_json = apiCalls.getLocationInfo(deviceId)
+    if eventThread.isAlive():
+        eventThread.join()
+        latestEvent = eventThread.result
+    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
+    # network_info = apiCalls.getNetworkInfo(deviceId)
+    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
+    unpackageDict(deviceInfo, latestEvent)
 
     deviceInfo["macAddress"] = []
     ipKey = None
@@ -514,6 +552,14 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
 
     return deviceInfo
+
+
+@api_tool_decorator
+def getValueFromLatestEvent(respData, eventName):
+    event = ""
+    if respData and eventName in respData:
+        event = respData[eventName]
+    return event
 
 
 @api_tool_decorator

@@ -1384,7 +1384,6 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def onFetch(self, event):
-        # self.gauge.Pulse()
         evtValue = event.GetValue()
         if evtValue:
             action = evtValue[0]

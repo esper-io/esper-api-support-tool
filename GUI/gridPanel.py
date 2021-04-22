@@ -33,6 +33,21 @@ class GridPanel(wx.Panel):
 
         grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
 
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_1, 1, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 3)
+
+        grid_sizer_1 = wx.FlexGridSizer(1, 3, 0, 0)
+
+        self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "<")
+        self.button_1.SetToolTip("Load previous page of devices.")
+        grid_sizer_1.Add(self.button_1, 0, 0, 0)
+
+        grid_sizer_1.Add((20, 20), 0, 0, 0)
+
+        self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, ">")
+        self.button_1.SetToolTip("Load next page of devices.")
+        grid_sizer_1.Add(self.button_2, 0, 0, 0)
+
         self.panel_4 = wx.Panel(self, wx.ID_ANY)
         grid_sizer_2.Add(self.panel_4, 1, wx.EXPAND, 0)
 
@@ -75,29 +90,14 @@ class GridPanel(wx.Panel):
         self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
         grid_sizer_8.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        grid_sizer_2.Add(self.panel_1, 1, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 3)
-
-        grid_sizer_1 = wx.FlexGridSizer(1, 3, 0, 0)
-
-        self.button_1 = wx.Button(self.panel_1, wx.ID_ANY, "<")
-        self.button_1.SetToolTip("Load previous page of devices.")
-        grid_sizer_1.Add(self.button_1, 0, 0, 0)
-
-        grid_sizer_1.Add((20, 20), 0, 0, 0)
-
-        self.button_2 = wx.Button(self.panel_1, wx.ID_ANY, ">")
-        self.button_1.SetToolTip("Load next page of devices.")
-        grid_sizer_1.Add(self.button_2, 0, 0, 0)
-
         self.panel_1.SetSizer(grid_sizer_1)
 
         self.panel_9.SetSizer(grid_sizer_8)
 
         self.panel_4.SetSizer(grid_sizer_4)
 
-        grid_sizer_2.AddGrowableRow(0)
         grid_sizer_2.AddGrowableRow(1)
+        grid_sizer_2.AddGrowableRow(2)
         grid_sizer_2.AddGrowableCol(0)
         self.SetSizer(grid_sizer_2)
 
