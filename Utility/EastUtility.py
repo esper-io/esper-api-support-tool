@@ -407,26 +407,12 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
     appThread.start()
-    # netThread = wxThread.GUIThread(
-    #     Globals.frame,
-    #     apiCalls.getNetworkInfo,
-    #     (deviceId),
-    # )
-    # netThread.start()
-    # locThread = wxThread.GUIThread(
-    #     Globals.frame,
-    #     apiCalls.getLocationInfo,
-    #     (deviceId),
-    # )
-    # locThread.start()
     eventThread = wxThread.GUIThread(
         Globals.frame,
         apiCalls.getLatestEvent,
         (deviceId),
     )
     eventThread.start()
-    # kioskMode = apiCalls.iskioskmode(deviceId)
-    # kioskModeApp = apiCalls.getkioskmodeapp(deviceId)
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
@@ -482,7 +468,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
             deviceInfo.update({"Status": "Unknown"})
 
     kioskMode = deviceInfo["current_app_mode"]
-    if kioskMode == 1:
+    if kioskMode == 0:
         deviceInfo.update({"Mode": "Kiosk"})
     else:
         deviceInfo.update({"Mode": "Multi"})
@@ -512,7 +498,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     apps, _ = appThread.result
     deviceInfo.update({"Apps": str(apps)})
 
-    if kioskMode == 1:
+    if kioskMode == 0:
         eventThread.join()
         latestEvent = eventThread.result
         kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
