@@ -36,7 +36,7 @@ class SidePanel(wx.Panel):
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
 
         self.panel_3 = wx.Panel(self.panel_2, wx.ID_ANY)
-        sizer_2.Add(self.panel_3, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.panel_3, 0, wx.EXPAND | wx.BOTTOM, 5)
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
