@@ -29,14 +29,15 @@ def resourcePath(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def createNewFile(filePath):
+def createNewFile(filePath, fileData=None):
     """ Create a new File to write in """
     if not os.path.exists(filePath):
         parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
         if not os.path.exists(parentPath):
             os.makedirs(parentPath)
-        with open(filePath, "w"):
-            pass
+        with open(filePath, "w") as outfile:
+            if fileData:
+                outfile.write(fileData)
 
 
 def scale_bitmap(bitmap, width, height):
