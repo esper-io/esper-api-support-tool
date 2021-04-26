@@ -123,15 +123,20 @@ def iterateThroughDeviceList(
 ):
     """Iterates Through Each Device And Performs A Specified Action"""
     if api_response:
-        if api_response.next:
-            frame.gridPanel.button_2.Enable(True)
+        if hasattr(api_response, "next"):
+            if api_response.next:
+                frame.gridPanel.button_2.Enable(True)
+            else:
+                frame.gridPanel.button_2.Enable(False)
         else:
             frame.gridPanel.button_2.Enable(False)
-
-        if api_response.previous:
-            frame.gridPanel.button_1.Enable(True)
+        if hasattr(api_response, "previous"):
+            if api_response.previous:
+                frame.gridPanel.button_1.Enable(True)
+            else:
+                frame.gridPanel.button_1.Enable(False)
         else:
-            frame.gridPanel.button_1.Enable(False)
+            frame.gridPanel.button_2.Enable(False)
 
     postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 33)
 
@@ -479,10 +484,21 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     elif "serialNumber" in deviceHardware:
         hdwareKey = "serialNumber"
 
+    custHdwareKey = None
+    if "custom_serial_number" in deviceHardware:
+        custHdwareKey = "custom_serial_number"
+    elif "customSerialNumber" in deviceHardware:
+        custHdwareKey = "customSerialNumber"
+
     if hdwareKey and bool(deviceHardware[hdwareKey]):
         deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
     else:
         deviceInfo.update({"Serial": ""})
+
+    if custHdwareKey and bool(deviceHardware[custHdwareKey]):
+        deviceInfo.update({"Custom Serial": str(deviceHardware[custHdwareKey])})
+    else:
+        deviceInfo.update({"Custom Serial": ""})
 
     if bool(deviceTags):
         # Add Functionality For Modifying Multiple Tags
@@ -605,18 +621,11 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
 
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
     if api_response:
-        tempRes = list(
-            filter(lambda x: x.device_name in tagsFromGrid.keys(), api_response.results)
-        )
-        if not tempRes:
-            if "serialNumber" in api_response.results[0].hardware_info:
-                tempRes = list(
-                    filter(
-                        lambda x: x.hardware_info["serialNumber"]
-                        in tagsFromGrid.keys(),
-                        api_response.results,
-                    )
-                )
+        tempRes = []
+        for device in api_response.results:
+            if (device.device_name in tagsFromGrid.keys() or device.hardware_info["serialNumber"] in tagsFromGrid.keys() or
+                ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in tagsFromGrid.keys())):
+                tempRes.append(device)
         if tempRes:
             api_response.results = tempRes
 
@@ -683,12 +692,15 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     if (
         device.device_name in aliasDic.keys()
         or device.hardware_info["serialNumber"] in aliasDic.keys()
+        or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in aliasDic.keys())
     ):
         newName = None
         if device.device_name in aliasDic:
             newName = aliasDic[device.device_name]
-        else:
+        elif device.hardware_info["serialNumber"] in aliasDic:
             newName = aliasDic[device.hardware_info["serialNumber"]]
+        elif "customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in aliasDic:
+            newName = aliasDic[device.hardware_info["customSerialNumber"]]
         logString = str(
             "--->" + str(device.device_name) + " : " + str(newName) + "--->"
         )
@@ -730,15 +742,17 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     if (
         device.device_name in tagsFromGrid.keys()
         or device.hardware_info["serialNumber"] in tagsFromGrid.keys()
+        or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in tagsFromGrid.keys())
     ):
         tagsFromCell = None
         key = None
         if device.device_name in tagsFromGrid:
             key = device.device_name
-            tagsFromCell = tagsFromGrid[key]
-        else:
+        elif device.hardware_info["serialNumber"] in tagsFromGrid:
             key = device.hardware_info["serialNumber"]
-            tagsFromCell = tagsFromGrid[key]
+        elif "customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in tagsFromGrid:
+            key = device.hardware_info["customSerialNumber"]
+        tagsFromCell = tagsFromGrid[key]
         tags = apiCalls.setdevicetags(device.id, tagsFromCell)
         if tags == tagsFromGrid[key]:
             changeSucceeded += 1
@@ -782,6 +796,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
                 if (
                     device.device_name in deviceIds
                     or device.hardware_info["serialNumber"] in deviceIds
+                    or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in deviceIds)
                 ):
                     tempRes.append(device)
         if tempRes:
@@ -791,6 +806,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
             if (
                 device.device_name in deviceIdentifers
                 or device.hardware_info["serialNumber"] in deviceIdentifers
+                or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in deviceIdentifers)
             ):
                 t = wxThread.GUIThread(
                     Globals.frame,
@@ -981,6 +997,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
                 if (
                     device.device_name in deviceIds
                     or device.hardware_info["serialNumber"] in deviceIds
+                    or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in deviceIds)
                 ):
                     tempRes.append(device)
         if tempRes:
@@ -990,12 +1007,15 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
             if (
                 device.device_name in appList.keys()
                 or device.hardware_info["serialNumber"] in appList.keys()
+                or ("customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in appList.keys())
             ):
                 package_names = None
                 if device.device_name in appList.keys():
                     package_names = appList[device.device_name]
                 elif device.hardware_info["serialNumber"] in appList.keys():
                     package_names = appList[device.hardware_info["serialNumber"]]
+                elif "customSerialNumber" in device.hardware_info and device.hardware_info["customSerialNumber"] in appList.keys():
+                    package_names = appList[device.hardware_info["customSerialNumber"]]
                 package_names = package_names.split(",")
                 if package_names:
                     for package_name in package_names:
