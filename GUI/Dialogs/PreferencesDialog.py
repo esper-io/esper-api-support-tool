@@ -1059,7 +1059,7 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.SET_APP_STATE_AS_SHOW = False
                 self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
-        if "useJsonForCmd" in self.prefs and self.prefs["useJsonForCmd"]:
+        if "useJsonForCmd" in self.prefs:
             if (
                 isinstance(self.prefs["useJsonForCmd"], str)
                 and self.prefs["useJsonForCmd"].lower() == "false"
