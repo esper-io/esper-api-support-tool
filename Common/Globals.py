@@ -130,6 +130,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Version": "esper_client",
     "Mode": "Mode",
     "Serial Number": "Serial",
+    "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",

@@ -758,10 +758,12 @@ class GridPanel(wx.Panel):
         tagList = {}
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
@@ -775,8 +777,10 @@ class GridPanel(wx.Panel):
                         properTagList.append(processedTag.strip())
                 if esperName:
                     tagList[esperName] = properTagList
-                elif serialNum:
+                if serialNum:
                     tagList[serialNum] = properTagList
+                if cusSerialNum:
+                    tagList[cusSerialNum] = properTagList
         Globals.grid1_lock.release()
         return tagList
 
@@ -788,15 +792,19 @@ class GridPanel(wx.Panel):
         indx = self.grid1HeaderLabels.index("Alias")
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 alias = self.grid_1.GetCellValue(rowNum, indx)
                 if esperName and esperName not in aliasList.keys():
                     aliasList[esperName] = alias
-                elif serialNum and serialNum not in aliasList.keys():
+                if serialNum and serialNum not in aliasList.keys():
                     aliasList[serialNum] = alias
+                if cusSerialNum and cusSerialNum not in aliasList.keys():
+                    aliasList[cusSerialNum] = alias
         Globals.grid1_lock.release()
         return aliasList
 
