@@ -2,6 +2,7 @@
 
 import Common.Globals as Globals
 import json
+import random
 import wx
 import wx.adv
 
@@ -655,7 +656,7 @@ class CommandDialog(wx.Dialog):
                     otherConfig[key] = cmdConfig[key]
 
             command_args = V0CommandArgs(
-                app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,
+                app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else "Task_%s" % random.randint(0, Globals.MAX_LIMIT),
                 app_version=cmdConfig["app_version"]
                 if "app_version" in cmdConfig
                 else None,
