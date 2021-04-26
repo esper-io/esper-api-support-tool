@@ -493,7 +493,6 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
 
-    # apps, _ = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     appThread.join()
     apps, _ = appThread.result
     deviceInfo.update({"Apps": str(apps)})
@@ -506,12 +505,10 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    # location_info, resp_json = apiCalls.getLocationInfo(deviceId)
     if eventThread.isAlive():
         eventThread.join()
         latestEvent = eventThread.result
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
-    # network_info = apiCalls.getNetworkInfo(deviceId)
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
 
