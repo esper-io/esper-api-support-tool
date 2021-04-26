@@ -70,6 +70,7 @@ from Utility.Resource import (
     createNewFile,
     joinThreadList,
     displayMessageBox,
+    splitListIntoChunks,
     updateErrorTracker,
 )
 
@@ -991,14 +992,29 @@ class NewFrameLayout(wx.Frame):
                 api_response.results,
                 key=lambda i: i.device_name.lower(),
             )
-            for device in api_response.results:
-                name = "%s %s %s" % (
-                    device.hardware_info["manufacturer"],
-                    device.hardware_info["model"],
-                    device.device_name,
+            splitResults = splitListIntoChunks(api_response.results)
+            threads = []
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    self,
+                    self.processAddDeviceToChoice,
+                    args=(
+                        chunk
+                    ),
+                    name="addDeviceToDeviceChoice",
                 )
-                if name and not name in self.sidePanel.devices:
-                    self.sidePanel.devices[name] = device.id
+                threads.append(t)
+                t.start()
+
+    def processAddDeviceToChoice(self, chunk):
+        for device in chunk:
+            name = "%s %s %s" % (
+                device.hardware_info["manufacturer"],
+                device.hardware_info["model"],
+                device.device_name,
+            )
+            if name and not name in self.sidePanel.devices:
+                self.sidePanel.devices[name] = device.id
 
     @api_tool_decorator
     def PopulateApps(self):
