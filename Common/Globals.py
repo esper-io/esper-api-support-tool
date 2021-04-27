@@ -32,7 +32,6 @@ available on the Esper Console Dashboard."""
 
 """ Locks """
 lock = threading.Lock()
-deviceInfo_lock = threading.Lock()
 error_lock = threading.Lock()
 msg_lock = threading.Lock()
 gauge_lock = threading.Lock()

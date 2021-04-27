@@ -795,7 +795,7 @@ def executeCommandOnGroup(
             groups=[groupToUse],
             command=command_type,
             command_args=command_args,
-            schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+            schedule=schedule_type,
             schedule_args=schedule,
         )
         api_instance = getCommandsApiInstance()
@@ -844,7 +844,7 @@ def executeCommandOnDevice(
             devices=[deviceToUse],
             command=command_type,
             command_args=command_args,
-            schedule="IMMEDIATE" if command_type != "UPDATE_LATEST_DPC" else "WINDOW",
+            schedule=schedule_type,
             schedule_args=schedule,
         )
         api_instance = getCommandsApiInstance()

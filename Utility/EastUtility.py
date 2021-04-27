@@ -300,30 +300,14 @@ def processCollectionDevices(collectionList):
 @api_tool_decorator
 def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     deviceList = {}
-    threads = []
     for device in chunk:
         try:
             deviceInfo = {}
-            # thread = wxThread.GUIThread(
-            #     Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
-            # )
-            # limitActiveThreads(threads, max_alive=5)
-            # thread.start()
-            # threads.append(thread)
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
             deviceList[number_of_devices] = [device, deviceInfo]
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
-
-    # for thread in threads:
-    #     thread.join()
-    #     deviceList[number_of_devices] = [thread._args[0], thread.result]
-    #     number_of_devices += 1
-    #     Globals.deviceInfo_lock.acquire()
-    #     value = int(Globals.frame.gauge.GetValue() + 1 / maxGauge * 100)
-    #     Globals.frame.setGaugeValue(value)
-    #     Globals.deviceInfo_lock.release()
     return deviceList
 
 
@@ -331,20 +315,12 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
     """ Try to obtain more device info for a given device """
     deviceList = {}
-    threads = []
-    orgNum = number_of_devices
     for device in chunk:
         try:
             number_of_devices = number_of_devices + 1
             deviceInfo = {}
             deviceInfo.update({"num": number_of_devices})
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-            # thread = wxThread.GUIThread(
-            #     Globals.frame, populateDeviceInfoDictionary, (device, deviceInfo)
-            # )
-            # limitActiveThreads(threads, max_alive=5)
-            # thread.start()
-            # threads.append(thread)
 
             deviceList[number_of_devices] = [device, deviceInfo]
             # if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
@@ -353,11 +329,6 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
             print(e)
             ApiToolLog().LogError(e)
 
-    # number_of_devices = orgNum
-    # for thread in threads:
-    #     thread.join()
-    #     number_of_devices = number_of_devices + 1
-    #     deviceList[number_of_devices] = [thread._args[0], thread.result]
     return (action, deviceList)
 
 

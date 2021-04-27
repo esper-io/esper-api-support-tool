@@ -41,8 +41,6 @@ class ToolMenuBar(wx.MenuBar):
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         self.fileOpenConfig = fileMenu.Append(foc)
 
-        self.recent = wx.Menu()
-
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
         self.fileSave = fileMenu.Append(fs)
