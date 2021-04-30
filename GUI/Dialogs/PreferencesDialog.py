@@ -41,6 +41,7 @@ class PreferencesDialog(wx.Dialog):
             "useJsonForCmd",
             "runCommandOn",
             "maxThread",
+            "syncGridScroll",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -312,7 +313,7 @@ class PreferencesDialog(wx.Dialog):
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(5, 1, 0, 0)
 
         self.panel_19 = wx.Panel(self.grid, wx.ID_ANY)
         sizer_16.Add(self.panel_19, 1, wx.ALL | wx.EXPAND, 5)
@@ -393,12 +394,34 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_10 = wx.CheckBox(self.panel_36, wx.ID_ANY, "")
         grid_sizer_17.Add(self.checkbox_10, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        self.panel_45 = wx.Panel(self.grid, wx.ID_ANY)
+        sizer_16.Add(self.panel_45, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_31 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_19 = wx.StaticText(
+            self.panel_45,
+            wx.ID_ANY,
+            "Sync Grids Vertical Scroll Position",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_19.SetToolTip("Sync Grids Vertical Scroll Position.")
+        sizer_31.Add(label_19, 0, wx.ALIGN_CENTER_VERTICAL, 2)
+
+        self.panel_46 = wx.Panel(self.panel_45, wx.ID_ANY)
+        sizer_31.Add(self.panel_46, 1, wx.EXPAND, 0)
+
+        grid_sizer_22 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_13 = wx.CheckBox(self.panel_46, wx.ID_ANY, "")
+        grid_sizer_22.Add(self.checkbox_13, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
 
         self.panel_7 = wx.Panel(self.app, wx.ID_ANY)
         sizer_9.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
@@ -575,6 +598,10 @@ class PreferencesDialog(wx.Dialog):
 
         self.panel_37.SetSizer(grid_sizer_18)
 
+        self.panel_45.SetSizer(sizer_31)
+
+        self.panel_46.SetSizer(grid_sizer_22)
+
         self.panel_14.SetSizer(grid_sizer_6)
 
         self.panel_13.SetSizer(sizer_13)
@@ -700,7 +727,7 @@ class PreferencesDialog(wx.Dialog):
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
             Globals.REACH_QUEUED_ONLY = True
-        elif prefDict and prefDict["reachQueueStateOnly"]:
+        elif prefDict and "reachQueueStateOnly" in prefDict:
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
                 and prefDict["reachQueueStateOnly"].lower() == "true"
@@ -710,6 +737,20 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
+
+        if not prefDict or (prefDict and not prefDict["syncGridScroll"]):
+            self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+            Globals.MATCH_SCROLL_POS = True
+        elif prefDict and "syncGridScroll" in prefDict:
+            if (
+                isinstance(self.prefs["syncGridScroll"], str)
+                and prefDict["syncGridScroll"].lower() == "true"
+            ) or prefDict["syncGridScroll"] == True:
+                self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+                Globals.MATCH_SCROLL_POS = True
+            else:
+                self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.MATCH_SCROLL_POS = False
 
         if not prefDict or (
             prefDict
@@ -885,6 +926,7 @@ class PreferencesDialog(wx.Dialog):
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
             "maxThread": self.spin_ctrl_8.GetValue(),
+            "syncGridScroll": self.checkbox_13.IsChecked(),
         }
 
         Globals.SET_APP_STATE_AS_SHOW = False
@@ -902,6 +944,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
+        Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -1103,6 +1146,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
+        if "syncGridScroll" in self.prefs:
+            if (
+                isinstance(self.prefs["syncGridScroll"], str)
+                and self.prefs["syncGridScroll"].lower() == "true"
+            ) or self.prefs["syncGridScroll"] == True:
+                self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+                Globals.MATCH_SCROLL_POS = True
+            else:
+                self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.MATCH_SCROLL_POS = False
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -1128,6 +1181,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
         self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
+        self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
 
         return self.prefs
 
@@ -1175,5 +1229,7 @@ class PreferencesDialog(wx.Dialog):
             return Globals.CMD_DEVICE_TYPE
         elif key == "maxThread":
             return Globals.MAX_THREAD_COUNT
+        elif key == "syncGridScroll":
+            return Globals.MATCH_SCROLL_POS
         else:
             return None
