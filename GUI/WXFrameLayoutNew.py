@@ -998,9 +998,7 @@ class NewFrameLayout(wx.Frame):
                 t = wxThread.GUIThread(
                     self,
                     self.processAddDeviceToChoice,
-                    args=(
-                        chunk
-                    ),
+                    args=(chunk),
                     name="addDeviceToDeviceChoice",
                 )
                 threads.append(t)
@@ -1797,7 +1795,7 @@ class NewFrameLayout(wx.Frame):
         if self.gridPanel.grid_1_contents and self.gridPanel.grid_2_contents:
             if type(failed) == list:
                 for device in failed:
-                    if "Queued" in device:
+                    if "Queued" in device or "Scheduled" in device:
                         self.gridPanel.applyTextColorToDevice(
                             device[0], Color.orange.value, bgColor=Color.warnBg.value
                         )
@@ -1806,7 +1804,7 @@ class NewFrameLayout(wx.Frame):
                             device, Color.red.value, bgColor=Color.errorBg.value
                         )
             elif type(failed) == tuple:
-                if "Queued" in failed:
+                if "Queued" in failed or "Scheduled" in failed:
                     self.gridPanel.applyTextColorToDevice(
                         failed[0], Color.orange.value, bgColor=Color.warnBg.value
                     )
