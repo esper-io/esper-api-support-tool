@@ -494,7 +494,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
     if eventThread.is_alive():
         eventThread.join()
-        latestEvent = eventThread.result
+    latestEvent = eventThread.result
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
