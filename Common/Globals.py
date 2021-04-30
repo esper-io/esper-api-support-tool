@@ -145,7 +145,8 @@ CSV_NETWORK_ATTR_NAME = {
     "[Current WIFI Connection]": "",
     "[Cellular Access Point]": "",
     "Active Connection": "",
-    "IP Address": "ipAddress",
+    "IPv4 Address": "ipv4Address",
+    "IPv6 Address": "ipv6Address",
     "Bluetooth State": "bluetoothState",
     "Paired Devices": "pairedDevices",
     "Connected Devices": "connectedDevices",
@@ -183,6 +184,7 @@ SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
 MATCH_SCROLL_POS = True
+ALIAS_DAY_DELTA = 14
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

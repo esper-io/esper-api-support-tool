@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import requests
+from datetime import datetime, timedelta
 import esperclient
 import time
 import json
@@ -317,12 +317,37 @@ def setdevicename(
     """Pushes New Name To Name"""
     api_instance = getCommandsApiInstance()
     args = esperclient.V0CommandArgs(device_alias_name=devicename)
+    now = datetime.now()
+    start = now + timedelta(minutes=1)
+    end = now + timedelta(days=14, minutes=1)
+    startDate = start.strftime("%Y-%m-%dT%H:%M:%SZ")
+    endDate = end.strftime("%Y-%m-%dT%H:%M:%SZ")
+    startTime = end.strftime("%H:%M:%S")
+    endTime = end.strftime("%H:%M:%S")
     command = esperclient.V0CommandRequest(
         command_type="DEVICE",
         devices=[deviceid],
         command="UPDATE_DEVICE_CONFIG",
         command_args=args,
         device_type=Globals.CMD_DEVICE_TYPE,
+        schedule=esperclient.V0CommandScheduleEnum.WINDOW,
+        schedule_args=esperclient.V0CommandScheduleArgs(
+            days=[
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ],
+            name="%s_%s_%s" % (deviceid, devicename, datetime.now()),
+            time_type="device",
+            start_datetime=startDate,
+            end_datetime=endDate,
+            window_end_time=startTime,
+            window_start_time=endTime,
+        ),
     )
     api_response = None
     for attempt in range(maxAttempt):
