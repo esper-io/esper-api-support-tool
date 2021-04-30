@@ -143,6 +143,8 @@ class GridPanel(wx.Panel):
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
+        self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
+        self.grid_2.Bind(wx.EVT_SCROLLWIN, self.onGrid2Scroll)
 
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
@@ -992,3 +994,17 @@ class GridPanel(wx.Panel):
         Globals.offset = Globals.offset + Globals.limit
         self.parentFrame.fetchData(False)
         event.Skip()
+
+    def onGrid1Scroll(self, event):
+        event.Skip()
+        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_1, self.grid_2)
+
+    def onGrid2Scroll(self, event):
+        event.Skip()
+        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_2, self.grid_1)
+
+    def setBothGridVSCrollPositions(self, gridOne, gridTwo):
+        if Globals.MATCH_SCROLL_POS:
+            gridTwo.Scroll(
+                gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
+            )

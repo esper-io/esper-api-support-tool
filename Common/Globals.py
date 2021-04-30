@@ -182,6 +182,7 @@ SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
+MATCH_SCROLL_POS = True
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )
