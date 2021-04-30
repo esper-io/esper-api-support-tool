@@ -492,7 +492,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    if eventThread.isAlive():
+    if eventThread.is_alive():
         eventThread.join()
         latestEvent = eventThread.result
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
