@@ -185,6 +185,7 @@ SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
+ALIAS_MAX_DAY_DELTA = 56
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )
