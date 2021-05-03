@@ -1359,10 +1359,14 @@ class NewFrameLayout(wx.Frame):
     def onCommandDone(self, event):
         """ Tell user to check the Esper Console for detailed results """
         cmdResult = None
+        msg = ""
         if hasattr(event, "GetValue"):
             cmdResult = event.GetValue()
         else:
             cmdResult = event
+        if type(cmdResult) == tuple:
+            msg = cmdResult[0]
+            cmdResult = cmdResult[1]
         self.menubar.enableConfigMenu()
         self.setGaugeValue(100)
         if cmdResult:
@@ -1378,7 +1382,11 @@ class NewFrameLayout(wx.Frame):
                     result += "\n\n"
             with ConfirmTextDialog(
                 "Command(s) have been fired.",
-                "Check the Esper Console for details. Last command status listed below.",
+                "%s Check the Esper Console for details. Last command status listed below."
+                % msg
+                + "\n"
+                if msg
+                else "",
                 "Command(s) have been fired.",
                 result,
             ) as dialog:

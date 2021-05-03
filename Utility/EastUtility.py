@@ -214,6 +214,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
     if source == 2:
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
         changeSucceeded = succeeded = numNewName = 0
+        statuses = []
         tagsFromGrid = None
         for thread in threads:
             if type(thread.result) == tuple:
@@ -221,15 +222,17 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                 succeeded += thread.result[1]
                 numNewName += thread.result[2]
                 tagsFromGrid = thread.result[3]
+                statuses += thread.result[4]
         msg = (
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
             % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName)
         )
         postEventToFrame(wxThread.myEVT_LOG, msg)
-        postEventToFrame(
-            wxThread.myEVT_MESSAGE_BOX,
-            (msg, wx.ICON_INFORMATION),
-        )
+        postEventToFrame(wxThread.myEVT_COMMAND, (msg, statuses))
+        # postEventToFrame(
+        #     wxThread.myEVT_MESSAGE_BOX,
+        #     (msg, wx.ICON_INFORMATION),
+        # )
     if source == 3:
         deviceList = {}
         for thread in threads:
@@ -640,6 +643,7 @@ def processDeviceModificationForList(
     changeSucceeded = 0
     succeeded = 0
     numNewName = 0
+    status = []
     for device in chunk:
         t = wxThread.GUIThread(
             frame,
@@ -661,8 +665,10 @@ def processDeviceModificationForList(
         if t2.result:
             numNewName += t2.result[0]
             succeeded += t2.result[1]
+            if len(t2.result) > 2 and t2.result[2]:
+                status.append(t2.result[2])
 
-    return (changeSucceeded, succeeded, numNewName, tagsFromGrid)
+    return (changeSucceeded, succeeded, numNewName, tagsFromGrid, status)
 
 
 @api_tool_decorator
@@ -670,6 +676,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     numNewName = 0
     succeeded = 0
     logString = ""
+    status = None
     # Alias modification
     if (
         device.device_name in aliasDic.keys()
@@ -723,7 +730,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(wxThread.myEVT_LOG, logString)
-    return (numNewName, succeeded)
+    return (numNewName, succeeded, status)
 
 
 @api_tool_decorator
