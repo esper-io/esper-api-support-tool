@@ -229,10 +229,6 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         )
         postEventToFrame(wxThread.myEVT_LOG, msg)
         postEventToFrame(wxThread.myEVT_COMMAND, (msg, statuses))
-        # postEventToFrame(
-        #     wxThread.myEVT_MESSAGE_BOX,
-        #     (msg, wx.ICON_INFORMATION),
-        # )
     if source == 3:
         deviceList = {}
         for thread in threads:
