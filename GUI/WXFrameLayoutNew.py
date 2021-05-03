@@ -227,6 +227,7 @@ class NewFrameLayout(wx.Frame):
             self, updateErrorTracker, None, name="updateErrorTracker"
         )
         errorTracker.start()
+        self.menubar.onUpdateCheck(showDlg=False)
 
     @api_tool_decorator
     def __set_properties(self):
