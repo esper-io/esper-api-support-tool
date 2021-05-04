@@ -5,6 +5,7 @@ import ast
 import json
 import math
 import esperclient
+from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
 import threading
@@ -1034,13 +1035,13 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
                 package_names = package_names.split(",")
                 if package_names:
                     for package_name in package_names:
-                        if package_name.trim():
+                        if package_name.strip():
                             t = wxThread.GUIThread(
                                 Globals.frame,
                                 apiCalls.setAppState,
                                 args=(
                                     device.id,
-                                    package_name.trim(),
+                                    package_name.strip(),
                                     state,
                                 ),
                                 name="setAllAppsState",
@@ -1055,3 +1056,19 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
             name="waitTillThreadsFinish%s" % state,
         )
         t.start()
+
+
+def removeNonWhitelisted(deviceId):
+    detailInfo = apiCalls.getDeviceDetail(deviceId)
+    wifiAP = detailInfo["wifi_access_points"]
+    removeList = []
+    for ap in wifiAP:
+        ssid = ap["wifi_ssid"]
+        if ssid not in Globals.WHITELIST_AP:
+            removeList.append(ssid)
+    command_args = V0CommandArgs(
+        wifi_access_points=removeList,
+    )
+    return apiCalls.executeCommandOnDevice(
+        Globals.frame, command_args, command_type="REMOVE_WIFI_AP"
+    )

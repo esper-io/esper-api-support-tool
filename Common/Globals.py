@@ -43,13 +43,14 @@ grid_color_lock = threading.Lock()
 """ Actions """
 GENERAL_ACTIONS = {
     "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
-    "Show - Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Show Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
     "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
+    "Action - > Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
 }
 
 GRID_ACTIONS = {
@@ -154,6 +155,7 @@ CSV_NETWORK_ATTR_NAME = {
     "IPv6 Mac Address(es)": "macAddress",
 }
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+WHITELIST_AP = ["serviceswifi"]
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 

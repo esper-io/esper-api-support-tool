@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 import sys
 import threading
 import wx
@@ -10,6 +11,7 @@ import platform
 import json
 import tempfile
 import ast
+import wx.adv as wxadv
 
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
@@ -61,6 +63,7 @@ from Utility.EastUtility import (
     createCommand,
     iterateThroughGridRows,
     processInstallDevices,
+    removeNonWhitelisted,
 )
 from Utility.Resource import (
     checkForInternetAccess,
@@ -180,6 +183,8 @@ class NewFrameLayout(wx.Frame):
         )
         self.SetIcon(icon)
 
+        self.notification = None
+
         # Bound Events
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
@@ -211,9 +216,7 @@ class NewFrameLayout(wx.Frame):
         self.__set_properties()
         self.Layout()
         self.Centre()
-        self.Raise()
-        self.Iconize(False)
-        self.SetFocus()
+        self.tryToMakeActive()
 
         if self.kill:
             return
@@ -228,6 +231,15 @@ class NewFrameLayout(wx.Frame):
         )
         errorTracker.start()
         self.menubar.onUpdateCheck(showDlg=False)
+
+    @api_tool_decorator
+    def tryToMakeActive(self):
+        self.Raise()
+        self.Iconize(False)
+        self.SetFocus()
+        style = self.GetWindowStyle()
+        self.SetWindowStyle(style | wx.STAY_ON_TOP)
+        self.SetWindowStyle(style)
 
     @api_tool_decorator
     def __set_properties(self):
@@ -368,6 +380,8 @@ class NewFrameLayout(wx.Frame):
         if self.prefDialog:
             self.prefDialog.Close()
             self.prefDialog.DestroyLater()
+        if self.notification:
+            self.notification.Close()
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
@@ -898,6 +912,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SET_APP_STATE_DISABLE.value
                 or action == GeneralActions.SET_APP_STATE_HIDE.value
                 or action == GeneralActions.SET_APP_STATE_SHOW.value
+                or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GridActions.SET_APP_STATE_DISABLE.value
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
@@ -1007,10 +1022,11 @@ class NewFrameLayout(wx.Frame):
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
-            name = "%s %s %s" % (
+            name = "%s %s %s %s" % (
                 device.hardware_info["manufacturer"],
                 device.hardware_info["model"],
                 device.device_name,
+                device.alias_name if device.alias_name else "",
             )
             if name and not name in self.sidePanel.devices:
                 self.sidePanel.devices[name] = device.id
@@ -1146,6 +1162,24 @@ class NewFrameLayout(wx.Frame):
             and self.sidePanel.actionChoice.Items[actionSelection]
             else ""
         )
+        if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
+            with LargeTextEntryDialog(
+                self,
+                "Enter Wifi Access Point Whitelist as comma seperated list",
+                "Wifi Access Point Whitelist",
+            ) as textDialog:
+                if textDialog.ShowModal() == wx.ID_OK:
+                    apList = textDialog.GetValue()
+                    whitelist = []
+                    parts = apList.split(",")
+                    for part in parts:
+                        whitelist.append(part.strip())
+                    Globals.WHITELIST_AP = whitelist
+                else:
+                    self.isRunning = False
+                    self.setCursorDefault()
+                    self.toggleEnabledState(True)
+                    return
         if (
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
@@ -1485,6 +1519,15 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
+            elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    removeNonWhitelisted,
+                    (device.id),
+                    name="removeNonWhitelisted",
+                )
+                thread.start()
+                threads.append(thread)
             limitActiveThreads(threads)
 
             value = int(num / maxGauge * 100)
@@ -1570,7 +1613,7 @@ class NewFrameLayout(wx.Frame):
             try:
                 self.GetTopWindow().Raise()
             except:
-                pass
+                self.tryToMakeActive()
         event.Skip()
 
     @api_tool_decorator
@@ -1652,6 +1695,26 @@ class NewFrameLayout(wx.Frame):
                 enable = eventVal
         self.setCursorDefault()
         self.setGaugeValue(100)
+        if not self.IsActive():
+            if (
+                self.sidePanel.actionChoice.GetClientData(
+                    self.sidePanel.actionChoice.GetSelection()
+                )
+                == action
+            ):
+                actionName = self.sidePanel.actionChoice.GetValue().replace(
+                    "Action -> ", ""
+                )
+                self.notification = wxadv.NotificationMessage(
+                    "Action Completed", "%s has completed." % actionName, self
+                )
+            else:
+                self.notification = wxadv.NotificationMessage(
+                    "Action Completed", "Action has completed.", self
+                )
+            if self.notification:
+                self.notification.MSWUseToasts()
+                self.notification.Show()
         if self.IsFrozen():
             self.Thaw()
         if self.gridPanel.grid_1.IsFrozen():
@@ -1678,6 +1741,8 @@ class NewFrameLayout(wx.Frame):
     def onActivate(self, event, skip=True):
         if not self.isRunning:
             wx.CallLater(3000, self.setGaugeValue, 0)
+            if self.notification:
+                self.notification.Close()
         if skip:
             event.Skip()
 
