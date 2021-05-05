@@ -1070,5 +1070,5 @@ def removeNonWhitelisted(deviceId):
         wifi_access_points=removeList,
     )
     return apiCalls.executeCommandOnDevice(
-        Globals.frame, command_args, command_type="REMOVE_WIFI_AP"
+        Globals.frame, command_args, command_type="REMOVE_WIFI_AP", deviceIds=[deviceId]
     )
