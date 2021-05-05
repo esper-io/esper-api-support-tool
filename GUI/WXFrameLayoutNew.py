@@ -1756,6 +1756,7 @@ class NewFrameLayout(wx.Frame):
             wx.CallLater(3000, self.setGaugeValue, 0)
         if self.notification:
             self.notification.Close()
+        self.Refresh()
         if skip:
             event.Skip()
 
