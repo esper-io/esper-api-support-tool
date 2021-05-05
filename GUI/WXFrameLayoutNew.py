@@ -1691,7 +1691,7 @@ class NewFrameLayout(wx.Frame):
                     wxThread.GUIThread(self, callback, (cbArgs, response)).start()
 
     @api_tool_decorator
-    def onComplete(self, event):
+    def onComplete(self, event, isError=False):
         """ Things that should be done once an Action is completed """
         enable = False
         action = None
@@ -1708,7 +1708,7 @@ class NewFrameLayout(wx.Frame):
                 enable = eventVal
         self.setCursorDefault()
         self.setGaugeValue(100)
-        if not self.IsActive():
+        if not self.IsActive() and not isError:
             if (
                 self.sidePanel.actionChoice.GetClientData(
                     self.sidePanel.actionChoice.GetSelection()

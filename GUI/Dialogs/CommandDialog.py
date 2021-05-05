@@ -733,3 +733,4 @@ class CommandDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         else:
             self.Close()
+        self.DestroyLater()

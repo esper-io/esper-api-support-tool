@@ -103,13 +103,15 @@ class MultiSelectSearchDlg(wx.Dialog):
         if hasattr(self.Parent, "WINDOWS") and self.Parent.WINDOWS:
             self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
-        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
 
         self.Layout()
 
     @api_tool_decorator
     def onClose(self, event):
-        if event.EventType != wx.EVT_CLOSE.typeId:
+        if self.IsModal():
+            self.EndModal(event.EventObject.Id)
+        else:
             self.Close()
         self.DestroyLater()
 
@@ -207,7 +209,5 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
-        if (
-            self.HasFocus() or self.loggingList.HasFocus()
-        ) and keycode == wx.WXK_ESCAPE:
+        if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
