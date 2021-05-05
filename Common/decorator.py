@@ -35,7 +35,7 @@ def api_tool_decorator(func):
         finally:
             if Globals.frame and excpt:
                 Globals.frame.Logging(str(excpt), isError=True)
-                Globals.frame.onComplete(None)
+                Globals.frame.onComplete(None, True)
                 Globals.frame.setCursorDefault()
                 Globals.frame.setGaugeValue(100)
                 if Globals.msg_lock.locked():
