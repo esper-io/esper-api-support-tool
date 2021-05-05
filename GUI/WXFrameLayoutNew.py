@@ -404,67 +404,66 @@ class NewFrameLayout(wx.Frame):
             dlg.DestroyLater()
 
             if result == wx.ID_OK:  # Save button was pressed
-                self.defaultDir = Path(inFile).parent
-                gridDeviceData = []
-                for device in self.gridPanel.grid_1_contents:
-                    tempDict = {}
-                    tempDict.update(device)
-                    deviceListing = list(
-                        filter(
-                            lambda x: (
-                                x["Device Name"]
-                                == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-                            ),
-                            self.gridPanel.grid_2_contents,
-                        )
-                    )
-                    if deviceListing:
-                        tempDict.update(deviceListing[0])
-                    gridDeviceData.append(tempDict)
-                headers = []
-                headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
-                headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
-                headers.remove("Device Name")
-                headersNoDup = []
-                [headersNoDup.append(x) for x in headers if x not in headersNoDup]
-                headers = headersNoDup
-
-                gridData = []
-                gridData.append(headers)
-
-                createNewFile(inFile)
-
-                for deviceData in gridDeviceData:
-                    rowValues = []
-                    for header in headers:
-                        value = ""
-                        if header in deviceData:
-                            value = deviceData[header]
-                        else:
-                            if header in Globals.CSV_TAG_ATTR_NAME.keys():
-                                if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
-                                    value = deviceData[
-                                        Globals.CSV_TAG_ATTR_NAME[header]
-                                    ]
-                            if header in Globals.CSV_NETWORK_ATTR_NAME.keys():
-                                if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
-                                    value = deviceData[
-                                        Globals.CSV_NETWORK_ATTR_NAME[header]
-                                    ]
-                        rowValues.append(value)
-                    gridData.append(rowValues)
-
-                with open(inFile, "w", newline="") as csvfile:
-                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerows(gridData)
-
-                self.Logging("---> Info saved to csv file - " + inFile)
-
+                thread = wxThread.GUIThread(self, self.saveFile, (inFile))
+                thread.start()
                 return True
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
                 return False
+
+    def saveFile(self, inFile):
+        self.defaultDir = Path(inFile).parent
+        gridDeviceData = []
+        for device in self.gridPanel.grid_1_contents:
+            tempDict = {}
+            tempDict.update(device)
+            deviceListing = list(
+                filter(
+                    lambda x: (
+                        x["Device Name"]
+                        == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
+                    ),
+                    self.gridPanel.grid_2_contents,
+                )
+            )
+            if deviceListing:
+                tempDict.update(deviceListing[0])
+            gridDeviceData.append(tempDict)
+        headers = []
+        headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
+        headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
+        headers.remove("Device Name")
+        headersNoDup = []
+        [headersNoDup.append(x) for x in headers if x not in headersNoDup]
+        headers = headersNoDup
+
+        gridData = []
+        gridData.append(headers)
+
+        createNewFile(inFile)
+
+        for deviceData in gridDeviceData:
+            rowValues = []
+            for header in headers:
+                value = ""
+                if header in deviceData:
+                    value = deviceData[header]
+                else:
+                    if header in Globals.CSV_TAG_ATTR_NAME.keys():
+                        if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
+                            value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
+                    if header in Globals.CSV_NETWORK_ATTR_NAME.keys():
+                        if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
+                            value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
+                rowValues.append(value)
+            gridData.append(rowValues)
+
+        with open(inFile, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerows(gridData)
+
+        self.Logging("---> Info saved to csv file - " + inFile)
 
     @api_tool_decorator
     def onUploadCSV(self, event):
