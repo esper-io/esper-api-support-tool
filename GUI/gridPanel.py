@@ -478,7 +478,9 @@ class GridPanel(wx.Panel):
         if "Device Name" in headerLabels:
             headerLabels.remove("Device Name")
 
-        with ColumnVisibilityDialog(self.grid_1, choiceData=headerLabels) as dialog:
+        with ColumnVisibilityDialog(
+            self, self.grid_1, choiceData=headerLabels
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
                 for _ in headerLabels:
@@ -495,7 +497,9 @@ class GridPanel(wx.Panel):
         if "Device Name" in headerLabels:
             headerLabels.remove("Device Name")
 
-        with ColumnVisibilityDialog(self.grid_2, choiceData=headerLabels) as dialog:
+        with ColumnVisibilityDialog(
+            self, self.grid_2, choiceData=headerLabels
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
                 for _ in headerLabels:

@@ -72,7 +72,9 @@ class ToolsToolBar(wx.ToolBar):
         self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.Parent.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
+
         self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
+        self.search.Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
@@ -80,3 +82,37 @@ class ToolsToolBar(wx.ToolBar):
     def onSearchChar(self, event):
         event.Skip()
         wx.CallAfter(self.Parent.onSearch, wx.EVT_CHAR.typeId)
+
+    @api_tool_decorator
+    def onKey(self, event):
+        keycode = event.GetKeyCode()
+        # CTRL + C or CTRL + Insert
+        if event.ControlDown() and keycode in [67, 322]:
+            self.on_copy(event)
+        # CTRL + V
+        elif event.ControlDown() and keycode == 86:
+            self.on_paste(event)
+        else:
+            event.Skip()
+
+    @api_tool_decorator
+    def on_copy(self, event):
+        widget = self.FindFocus()
+        data = wx.TextDataObject()
+        data.SetText(widget.GetStringSelection())
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(data)
+            wx.TheClipboard.Close()
+        widget.SetFocus()
+
+    @api_tool_decorator
+    def on_paste(self, event):
+        widget = self.FindFocus()
+        success = False
+        data = wx.TextDataObject()
+        if wx.TheClipboard.Open():
+            success = wx.TheClipboard.GetData(data)
+            wx.TheClipboard.Close()
+        if success:
+            widget.WriteText(data.GetText())
+        widget.SetFocus()

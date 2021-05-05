@@ -1010,7 +1010,7 @@ class PreferencesDialog(wx.Dialog):
 
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
 
     @api_tool_decorator

@@ -731,6 +731,6 @@ class CommandDialog(wx.Dialog):
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
         self.DestroyLater()

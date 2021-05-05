@@ -6,10 +6,10 @@ import wx
 
 
 class ColumnVisibilityDialog(wx.Dialog):
-    def __init__(self, grid, choiceData=[]):
+    def __init__(self, parent, grid, choiceData=[]):
         # begin wxGlade: MyDialog.__init__
         super(ColumnVisibilityDialog, self).__init__(
-            None,
+            parent,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
         )
@@ -30,7 +30,11 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnApply)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
 
-        self.Bind(wx.EVT_LISTBOX, self.OnSelection)
+        if (
+            hasattr(self.Parent.parentFrame, "WINDOWS")
+            and self.Parent.parentFrame.WINDOWS
+        ):
+            self.Bind(wx.EVT_LISTBOX, self.OnSelection)
         # self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         colNum = 0
@@ -58,7 +62,7 @@ class ColumnVisibilityDialog(wx.Dialog):
     def OnApply(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
         self.DestroyLater()
 
@@ -66,7 +70,7 @@ class ColumnVisibilityDialog(wx.Dialog):
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
         self.DestroyLater()
 
