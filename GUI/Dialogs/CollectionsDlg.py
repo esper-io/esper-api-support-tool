@@ -233,7 +233,7 @@ class CollectionsDialog(wx.Dialog):
     def onExecute(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
         self.DestroyLater()
 
