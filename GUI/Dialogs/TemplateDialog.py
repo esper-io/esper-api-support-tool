@@ -65,8 +65,9 @@ class TemplateDialog(wx.Dialog):
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
         self.choice_2.Bind(wx.EVT_CHOICE, self.onChoice2Select)
-        self.check_list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
-        self.check_list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+        if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
+            self.check_list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
+            self.check_list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         self.__set_properties()
         self.__do_layout()
