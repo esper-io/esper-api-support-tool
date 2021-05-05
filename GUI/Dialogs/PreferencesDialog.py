@@ -137,6 +137,7 @@ class PreferencesDialog(wx.Dialog):
         )
 
         self.panel_9 = wx.Panel(self.general, wx.ID_ANY)
+        self.panel_9.Hide()
         sizer_6.Add(self.panel_9, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
