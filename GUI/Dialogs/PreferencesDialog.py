@@ -698,7 +698,8 @@ class PreferencesDialog(wx.Dialog):
 
         self.Layout()
 
-        self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
+        if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
+            self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
         if prefDict and not prefDict["enableDevice"]:
