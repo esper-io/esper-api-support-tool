@@ -1019,6 +1019,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 threads.append(t)
                 t.start()
+            joinThreadList(threads)
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
@@ -1175,6 +1176,18 @@ class NewFrameLayout(wx.Frame):
                     for part in parts:
                         whitelist.append(part.strip())
                     Globals.WHITELIST_AP = whitelist
+                    with LargeTextEntryDialog(
+                        self,
+                        "Do you wish to proceed with this Wifi Access Point Whitelist?",
+                        "Wifi Access Point Whitelist",
+                        Globals.WHITELIST_AP,
+                        False,
+                    ) as textDialog2:
+                        if textDialog2.ShowModal() != wx.ID_OK:
+                            self.isRunning = False
+                            self.setCursorDefault()
+                            self.toggleEnabledState(True)
+                            return
                 else:
                     self.isRunning = False
                     self.setCursorDefault()
