@@ -288,7 +288,6 @@ class SidePanel(wx.Panel):
         if not self.parentFrame.isRunning:
             choices = list(self.groups.keys())
             if self.groupMultiDialog:
-                self.groupMultiDialog.EndModal(wx.ID_EXIT)
                 self.groupMultiDialog = None
             if not self.groupMultiDialog:
                 self.groupMultiDialog = MultiSelectSearchDlg(
@@ -326,7 +325,6 @@ class SidePanel(wx.Panel):
         if not self.parentFrame.isRunning:
             choices = list(self.devices.keys())
             if self.deviceMultiDialog:
-                self.deviceMultiDialog.EndModal(wx.ID_EXIT)
                 self.deviceMultiDialog = None
             if not self.deviceMultiDialog:
                 self.deviceMultiDialog = MultiSelectSearchDlg(
