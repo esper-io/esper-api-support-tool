@@ -1536,7 +1536,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     removeNonWhitelisted,
-                    (device.id),
+                    (device.id, deviceInfo),
                     name="removeNonWhitelisted",
                 )
                 thread.start()
@@ -1754,8 +1754,8 @@ class NewFrameLayout(wx.Frame):
     def onActivate(self, event, skip=True):
         if not self.isRunning:
             wx.CallLater(3000, self.setGaugeValue, 0)
-            if self.notification:
-                self.notification.Close()
+        if self.notification:
+            self.notification.Close()
         if skip:
             event.Skip()
 

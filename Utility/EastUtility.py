@@ -1058,8 +1058,12 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
         t.start()
 
 
-def removeNonWhitelisted(deviceId):
-    detailInfo = apiCalls.getDeviceDetail(deviceId)
+def removeNonWhitelisted(deviceId, deviceInfo=None):
+    detailInfo = None
+    if not deviceInfo:
+        detailInfo = apiCalls.getDeviceDetail(deviceId)
+    else:
+        detailInfo = deviceInfo
     wifiAP = detailInfo["wifi_access_points"]
     removeList = []
     for ap in wifiAP:
