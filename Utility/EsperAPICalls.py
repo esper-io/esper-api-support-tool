@@ -739,11 +739,17 @@ def setKiosk(frame, device, deviceInfo):
             if hasattr(status, "reason"):
                 entry["Reason"] = status.reason
             return entry
-        else:
+        elif status:
             return {
                 "Esper Name": device.device_name,
                 "Device Id": device.id,
                 "Status": status,
+            }
+        else:
+            return {
+                "Esper Name": device.device_name,
+                "Device Id": device.id,
+                "Status": "Already Kiosk mode",
             }
 
 
@@ -791,11 +797,17 @@ def setMulti(frame, device, deviceInfo):
         if hasattr(status, "reason"):
             entry["Reason"] = status.reason
         return entry
-    else:
+    elif status:
         return {
             "Esper Name": device.device_name,
             "Device Id": device.id,
             "Status": status,
+        }
+    else:
+        return {
+            "Esper Name": device.device_name,
+            "Device Id": device.id,
+            "Status": "Already Multi mode",
         }
 
 
