@@ -18,6 +18,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.originalChoices = choices
         self.selected = []
+        self.isFiltered = False
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -141,10 +142,12 @@ class MultiSelectSearchDlg(wx.Dialog):
             )
             for item in sortedList:
                 self.check_list_box_1.Append(item)
+            self.isFiltered = True
         else:
             for item in self.originalChoices:
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
+            self.isFiltered = False
 
     @api_tool_decorator
     def OnListSelection(self, event):
@@ -205,7 +208,10 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.selected = self.originalChoices
         else:
             self.selected = []
-        self.check_list_box_1.SetCheckedStrings(self.selected)
+        if not self.isFiltered:
+            self.check_list_box_1.SetCheckedStrings(self.selected)
+        if self.selected != self.originalChoices and self.isFiltered:
+            self.check_list_box_1.SetCheckedStrings([])
 
     @api_tool_decorator
     def onEscapePressed(self, event):

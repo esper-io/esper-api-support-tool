@@ -1179,7 +1179,7 @@ class NewFrameLayout(wx.Frame):
                         self,
                         "Do you wish to proceed with this Wifi Access Point Whitelist?",
                         "Wifi Access Point Whitelist",
-                        Globals.WHITELIST_AP,
+                        "\n".join(Globals.WHITELIST_AP),
                         False,
                     ) as textDialog2:
                         if textDialog2.ShowModal() != wx.ID_OK:
