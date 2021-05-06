@@ -33,7 +33,9 @@ class LargeTextEntryDialog(wx.Dialog):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
         label_1 = wx.StaticText(
-            self.panel_1, wx.ID_ANY, label, style=wx.ST_ELLIPSIZE_END
+            self.panel_1,
+            wx.ID_ANY,
+            label,
         )
         label_1.Wrap(300)
         label_1.SetToolTip(label)
