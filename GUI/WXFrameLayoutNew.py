@@ -1165,7 +1165,7 @@ class NewFrameLayout(wx.Frame):
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
                 self,
-                "Enter Wifi Access Point Whitelist as comma seperated list",
+                "Enter Wifi SSIDs you want whitelisted, as a comma seperated list:",
                 "Wifi Access Point Whitelist",
             ) as textDialog:
                 if textDialog.ShowModal() == wx.ID_OK:
@@ -1177,7 +1177,7 @@ class NewFrameLayout(wx.Frame):
                     Globals.WHITELIST_AP = whitelist
                     with LargeTextEntryDialog(
                         self,
-                        "Do you wish to proceed with this Wifi Access Point Whitelist?",
+                        "Do you wish to proceed with this Wifi SSID Whitelist?",
                         "Wifi Access Point Whitelist",
                         "\n".join(Globals.WHITELIST_AP),
                         False,
