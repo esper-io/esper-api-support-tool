@@ -23,11 +23,6 @@ class GridActions(Enum):
     SET_APP_STATE_DISABLE = 33
 
 
-class whom(Enum):
-    device = 0
-    collection = 1
-
-
 class Color(Enum):
     white = wx.Colour(255, 255, 255)
     black = wx.Colour(0, 0, 0)
