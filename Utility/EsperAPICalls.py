@@ -861,43 +861,39 @@ def executeCommandOnGroup(
                     ApiToolLog().LogError(e)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
-        if "invalid group id" not in str(api_response).lower():
-            ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-            last_status = waitForCommandToFinish(
-                frame, api_response.id, ignoreQueue=ignoreQueued
-            )
-            if "invalid group id" not in str(api_response).lower():
-                entryName = list(
-                    filter(
-                        lambda x: groupToUse == x[1], frame.sidePanel.devices.items()
-                    )
-                )
-                if entryName:
-                    entryName = entryName[0]
-                if last_status and hasattr(last_status, "state"):
-                    entry = {}
-                    if entryName and len(entryName) > 1:
-                        entry["Group Name"] = entryName[0]
-                        entry["Group Id"] = entryName[1]
-                    else:
-                        entry["Group Id"] = groupToUse
-                    if hasattr(last_status, "id"):
-                        entry["Command Id"] = last_status.id
-                    entry["Status State"] = last_status.state
-                    if hasattr(last_status, "reason"):
-                        entry["Reason"] = last_status.reason
-                    statusList.append(entry)
-                else:
-                    entry = {}
-                    if entryName and len(entryName) > 1:
-                        entry["Group Name"] = entryName[0]
-                        entry["Group Id"] = entryName[1]
-                    else:
-                        entry["Group Id"] = groupToUse
-                    if hasattr(last_status, "state"):
-                        entry["Command Id"] = last_status.id
-                    entry["Status"] = last_status
-                    statusList.append(entry)
+        ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+        last_status = waitForCommandToFinish(
+            frame, api_response.id, ignoreQueue=ignoreQueued
+        )
+        entryName = list(
+            filter(lambda x: groupToUse == x[1], frame.sidePanel.devices.items())
+        )
+        if entryName:
+            entryName = entryName[0]
+        if last_status and hasattr(last_status, "state"):
+            entry = {}
+            if entryName and len(entryName) > 1:
+                entry["Group Name"] = entryName[0]
+                entry["Group Id"] = entryName[1]
+            else:
+                entry["Group Id"] = groupToUse
+            if hasattr(last_status, "id"):
+                entry["Command Id"] = last_status.id
+            entry["Status State"] = last_status.state
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
+        else:
+            entry = {}
+            if entryName and len(entryName) > 1:
+                entry["Group Name"] = entryName[0]
+                entry["Group Id"] = entryName[1]
+            else:
+                entry["Group Id"] = groupToUse
+            if hasattr(last_status, "state"):
+                entry["Command Id"] = last_status.id
+            entry["Status"] = last_status
+            statusList.append(entry)
     return statusList
 
 
@@ -945,51 +941,47 @@ def executeCommandOnDevice(
                     ApiToolLog().LogError(e)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
-        if "invalid device id" not in str(api_response).lower():
-            ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-            last_status = waitForCommandToFinish(
-                frame, api_response.id, ignoreQueue=ignoreQueued
-            )
-            if "invalid device id" not in str(last_status).lower():
-                deviceEntryName = list(
-                    filter(
-                        lambda x: deviceToUse == x[1], frame.sidePanel.devices.items()
-                    )
-                )
-                if deviceEntryName:
-                    deviceEntryName = deviceEntryName[0]
-                if last_status and hasattr(last_status, "state"):
-                    entry = {}
-                    if deviceEntryName and len(deviceEntryName) > 1:
-                        parts = deviceEntryName[0].split(" ")
-                        if len(parts) > 3:
-                            entry["Esper Name"] = parts[2]
-                            entry["Alias"] = parts[3]
-                        elif len(parts) > 2:
-                            entry["Esper Name"] = parts[2]
-                        entry["Device Id"] = deviceEntryName[1]
-                    else:
-                        entry["Device Id"] = deviceToUse
-                    if hasattr(last_status, "id"):
-                        entry["Command Id"] = last_status.id
-                    entry["status"] = last_status.state
-                    if hasattr(last_status, "reason"):
-                        entry["Reason"] = last_status.reason
-                    statusList.append(entry)
-                else:
-                    entry = {}
-                    if deviceEntryName and len(deviceEntryName) > 1:
-                        parts = deviceEntryName[0].split(" ")
-                        if len(parts) > 3:
-                            entry["Esper Name"] = parts[2]
-                            entry["Alias"] = parts[3]
-                        elif len(parts) > 2:
-                            entry["Esper Name"] = parts[2]
-                        entry["Device Id"] = deviceEntryName[1]
-                    else:
-                        entry["Device Id"] = deviceToUse
-                    entry["Status"] = last_status
-                    statusList.append(entry)
+        ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+        last_status = waitForCommandToFinish(
+            frame, api_response.id, ignoreQueue=ignoreQueued
+        )
+        deviceEntryName = list(
+            filter(lambda x: deviceToUse == x[1], frame.sidePanel.devices.items())
+        )
+        if deviceEntryName:
+            deviceEntryName = deviceEntryName[0]
+        if last_status and hasattr(last_status, "state"):
+            entry = {}
+            if deviceEntryName and len(deviceEntryName) > 1:
+                parts = deviceEntryName[0].split(" ")
+                if len(parts) > 3:
+                    entry["Esper Name"] = parts[2]
+                    entry["Alias"] = parts[3]
+                elif len(parts) > 2:
+                    entry["Esper Name"] = parts[2]
+                entry["Device Id"] = deviceEntryName[1]
+            else:
+                entry["Device Id"] = deviceToUse
+            if hasattr(last_status, "id"):
+                entry["Command Id"] = last_status.id
+            entry["status"] = last_status.state
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
+        else:
+            entry = {}
+            if deviceEntryName and len(deviceEntryName) > 1:
+                parts = deviceEntryName[0].split(" ")
+                if len(parts) > 3:
+                    entry["Esper Name"] = parts[2]
+                    entry["Alias"] = parts[3]
+                elif len(parts) > 2:
+                    entry["Esper Name"] = parts[2]
+                entry["Device Id"] = deviceEntryName[1]
+            else:
+                entry["Device Id"] = deviceToUse
+            entry["Status"] = last_status
+            statusList.append(entry)
     return statusList
 
 
