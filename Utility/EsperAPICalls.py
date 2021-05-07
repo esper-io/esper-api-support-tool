@@ -854,6 +854,9 @@ def executeCommandOnGroup(
                 )
                 break
             except Exception as e:
+                if hasattr(e, "body") and "invalid group id" in e.body:
+                    logBadResponse("create command api", api_response, None)
+                    return None
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
@@ -935,6 +938,9 @@ def executeCommandOnDevice(
                 )
                 break
             except Exception as e:
+                if hasattr(e, "body") and "invalid device id" in e.body:
+                    logBadResponse("create command api", api_response, None)
+                    return None
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
