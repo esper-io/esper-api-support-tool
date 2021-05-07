@@ -13,6 +13,7 @@ class GeneralActions(Enum):
     SET_APP_STATE_SHOW = 5
     SET_APP_STATE_HIDE = 6
     SET_APP_STATE_DISABLE = 7
+    REMOVE_NON_WHITELIST_AP = 8
 
 
 class GridActions(Enum):
@@ -20,11 +21,6 @@ class GridActions(Enum):
     SET_APP_STATE_SHOW = 31
     SET_APP_STATE_HIDE = 32
     SET_APP_STATE_DISABLE = 33
-
-
-class whom(Enum):
-    device = 0
-    collection = 1
 
 
 class Color(Enum):

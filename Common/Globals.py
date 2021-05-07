@@ -9,10 +9,10 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.18"
+VERSION = "v0.183"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
-MIN_LIMIT = 1000
+MIN_LIMIT = 50
 MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
@@ -32,7 +32,6 @@ available on the Esper Console Dashboard."""
 
 """ Locks """
 lock = threading.Lock()
-deviceInfo_lock = threading.Lock()
 error_lock = threading.Lock()
 msg_lock = threading.Lock()
 gauge_lock = threading.Lock()
@@ -44,13 +43,14 @@ grid_color_lock = threading.Lock()
 """ Actions """
 GENERAL_ACTIONS = {
     "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
-    "Show - Device Info & Network And Secruity Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Show Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
     "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
+    "Action - > Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
 }
 
 GRID_ACTIONS = {
@@ -130,6 +130,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Version": "esper_client",
     "Mode": "Mode",
     "Serial Number": "Serial",
+    "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
@@ -145,7 +146,8 @@ CSV_NETWORK_ATTR_NAME = {
     "[Current WIFI Connection]": "",
     "[Cellular Access Point]": "",
     "Active Connection": "",
-    "IP Address": "ipAddress",
+    "IPv4 Address(es)": "ipv4Address",
+    "IPv6 Address(es)": "ipv6Address",
     "Bluetooth State": "bluetoothState",
     "Paired Devices": "pairedDevices",
     "Connected Devices": "connectedDevices",
@@ -153,6 +155,7 @@ CSV_NETWORK_ATTR_NAME = {
     "IPv6 Mac Address(es)": "macAddress",
 }
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
@@ -182,6 +185,9 @@ SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
+MATCH_SCROLL_POS = True
+ALIAS_DAY_DELTA = 14
+ALIAS_MAX_DAY_DELTA = 56
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

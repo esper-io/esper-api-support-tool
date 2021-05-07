@@ -8,7 +8,6 @@ from Utility.Resource import (
 )
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
-import requests
 
 from Utility.EsperAPICalls import getHeader
 

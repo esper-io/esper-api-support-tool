@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.Resource import resourcePath, scale_bitmap
 import Common.Globals as Globals
 import re
 import threading
@@ -31,10 +32,20 @@ class GridPanel(wx.Panel):
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
 
-        sizer_6 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        label_7 = wx.StaticText(self, wx.ID_ANY, "Network Info:")
-        label_7.SetFont(
+        self.panel_4 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_4, 1, wx.EXPAND | wx.TOP, 5)
+
+        grid_sizer_4 = wx.FlexGridSizer(2, 1, 0, 0)
+
+        self.panel_1 = wx.Panel(self.panel_4, wx.ID_ANY)
+        grid_sizer_4.Add(self.panel_1, 1, wx.EXPAND, 0)
+
+        grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
+
+        network_grid = wx.StaticText(self.panel_1, wx.ID_ANY, "Network Information:")
+        network_grid.SetFont(
             wx.Font(
                 10,
                 wx.FONTFAMILY_DEFAULT,
@@ -44,12 +55,44 @@ class GridPanel(wx.Panel):
                 "",
             )
         )
-        sizer_6.Add(label_7, 0, wx.EXPAND, 0)
+        grid_sizer_1.Add(network_grid, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
 
-        self.grid_2 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        sizer_6.Add(self.grid_2, 1, wx.EXPAND, 0)
+        self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
+        grid_sizer_1.Add(
+            self.panel_3, 1, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        )
 
-        label_8 = wx.StaticText(self, wx.ID_ANY, "Device Info:")
+        grid_sizer_3 = wx.GridSizer(1, 3, 0, 0)
+
+        prev_icon = scale_bitmap(resourcePath("Images/prev.png"), 18, 18)
+        self.button_1 = wx.BitmapButton(
+            self.panel_3,
+            wx.ID_BACKWARD,
+            prev_icon,
+        )
+        self.button_1.SetToolTip("Load previous page of devices.")
+        grid_sizer_3.Add(self.button_1, 0, 0, 0)
+
+        grid_sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
+
+        next_icon = scale_bitmap(resourcePath("Images/next.png"), 18, 18)
+        self.button_2 = wx.BitmapButton(
+            self.panel_3,
+            wx.ID_FORWARD,
+            next_icon,
+        )
+        self.button_2.SetToolTip("Load next page of devices.")
+        grid_sizer_3.Add(self.button_2, 0, 0, 0)
+
+        self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
+        grid_sizer_4.Add(self.grid_2, 1, wx.ALL | wx.EXPAND, 5)
+
+        self.panel_9 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_2.Add(self.panel_9, 1, wx.EXPAND, 0)
+
+        grid_sizer_8 = wx.BoxSizer(wx.VERTICAL)
+
+        label_8 = wx.StaticText(self.panel_9, wx.ID_ANY, "Device Information:")
         label_8.SetFont(
             wx.Font(
                 10,
@@ -60,12 +103,34 @@ class GridPanel(wx.Panel):
                 "",
             )
         )
-        sizer_6.Add(label_8, 0, wx.EXPAND, 0)
+        grid_sizer_8.Add(label_8, 0, wx.LEFT, 5)
 
-        self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
+        self.grid_1 = wx.grid.Grid(self.panel_9, wx.ID_ANY, size=(1, 1))
+        grid_sizer_8.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.SetSizer(sizer_6)
+        self.panel_9.SetSizer(grid_sizer_8)
+
+        self.panel_3.SetSizer(grid_sizer_3)
+
+        self.panel_1.SetSizer(grid_sizer_1)
+
+        grid_sizer_4.AddGrowableRow(1)
+        grid_sizer_4.AddGrowableCol(0)
+        self.panel_4.SetSizer(grid_sizer_4)
+
+        grid_sizer_2.AddGrowableRow(0)
+        grid_sizer_2.AddGrowableRow(1)
+        grid_sizer_2.AddGrowableCol(0)
+        self.SetSizer(grid_sizer_2)
+
+        self.Layout()
+
+        self.button_1.Bind(wx.EVT_BUTTON, self.decrementOffset)
+        self.button_2.Bind(wx.EVT_BUTTON, self.incrementOffset)
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+
+        self.Layout()
 
         self.__set_properties()
 
@@ -78,6 +143,8 @@ class GridPanel(wx.Panel):
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
+        self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
+        self.grid_2.Bind(wx.EVT_SCROLLWIN, self.onGrid2Scroll)
 
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
@@ -411,7 +478,9 @@ class GridPanel(wx.Panel):
         if "Device Name" in headerLabels:
             headerLabels.remove("Device Name")
 
-        with ColumnVisibilityDialog(self.grid_1, choiceData=headerLabels) as dialog:
+        with ColumnVisibilityDialog(
+            self, self.grid_1, choiceData=headerLabels
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
                 for _ in headerLabels:
@@ -428,7 +497,9 @@ class GridPanel(wx.Panel):
         if "Device Name" in headerLabels:
             headerLabels.remove("Device Name")
 
-        with ColumnVisibilityDialog(self.grid_2, choiceData=headerLabels) as dialog:
+        with ColumnVisibilityDialog(
+            self, self.grid_2, choiceData=headerLabels
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
                 for _ in headerLabels:
@@ -693,10 +764,12 @@ class GridPanel(wx.Panel):
         tagList = {}
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
@@ -710,8 +783,10 @@ class GridPanel(wx.Panel):
                         properTagList.append(processedTag.strip())
                 if esperName:
                     tagList[esperName] = properTagList
-                elif serialNum:
+                if serialNum:
                     tagList[serialNum] = properTagList
+                if cusSerialNum:
+                    tagList[cusSerialNum] = properTagList
         Globals.grid1_lock.release()
         return tagList
 
@@ -723,15 +798,19 @@ class GridPanel(wx.Panel):
         indx = self.grid1HeaderLabels.index("Alias")
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
+        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 alias = self.grid_1.GetCellValue(rowNum, indx)
                 if esperName and esperName not in aliasList.keys():
                     aliasList[esperName] = alias
-                elif serialNum and serialNum not in aliasList.keys():
+                if serialNum and serialNum not in aliasList.keys():
                     aliasList[serialNum] = alias
+                if cusSerialNum and cusSerialNum not in aliasList.keys():
+                    aliasList[cusSerialNum] = alias
         Globals.grid1_lock.release()
         return aliasList
 
@@ -909,3 +988,27 @@ class GridPanel(wx.Panel):
                 elif modified == "tags":
                     listing["OriginalTags"] = listing["Tags"]
                 self.grid_1_contents[indx] = listing
+
+    def decrementOffset(self, event):
+        Globals.offset = Globals.offset - Globals.limit
+        self.parentFrame.fetchData(False)
+        event.Skip()
+
+    def incrementOffset(self, event):
+        Globals.offset = Globals.offset + Globals.limit
+        self.parentFrame.fetchData(False)
+        event.Skip()
+
+    def onGrid1Scroll(self, event):
+        event.Skip()
+        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_1, self.grid_2)
+
+    def onGrid2Scroll(self, event):
+        event.Skip()
+        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_2, self.grid_1)
+
+    def setBothGridVSCrollPositions(self, gridOne, gridTwo):
+        if Globals.MATCH_SCROLL_POS:
+            gridTwo.Scroll(
+                gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
+            )

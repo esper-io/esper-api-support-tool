@@ -82,9 +82,7 @@ class Console(wx.Frame):
     @api_tool_decorator
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
-        if (
-            self.HasFocus() or self.loggingList.HasFocus()
-        ) and keycode == wx.WXK_ESCAPE:
+        if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
 
     @api_tool_decorator
