@@ -194,7 +194,6 @@ class GridPanel(wx.Panel):
             self.grid_1_contents = []
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-        # self.grid_1.ClearGrid()
         self.grid_1.SetScrollLineX(15)
         self.grid_1.SetScrollLineY(15)
         self.fillDeviceGridHeaders()
@@ -208,7 +207,6 @@ class GridPanel(wx.Panel):
             self.grid_2_contents = []
         if self.grid_2.GetNumberRows() > 0:
             self.grid_2.DeleteRows(0, self.grid_2.GetNumberRows())
-        # self.grid_2.ClearGrid()
         self.grid_2.SetScrollLineX(15)
         self.grid_2.SetScrollLineY(15)
         self.fillNetworkGridHeaders()

@@ -323,8 +323,6 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
 
             deviceList[number_of_devices] = [device, deviceInfo]
-            # if deviceInfo not in Globals.GRID_DEVICE_INFO_LIST:
-            #    Globals.GRID_DEVICE_INFO_LIST.append(deviceInfo)
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)

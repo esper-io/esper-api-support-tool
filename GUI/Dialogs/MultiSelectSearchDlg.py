@@ -96,7 +96,6 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetEscapeId(wx.ID_CANCEL)
 
         self.search.Bind(wx.EVT_SEARCH, self.onSearch)
-        # self.search.Bind(wx.EVT_CHAR, self.onChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         self.search.Bind(wx.EVT_CHAR, self.onKey)
 
