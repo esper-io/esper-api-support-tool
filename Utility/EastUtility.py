@@ -906,7 +906,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
     if result and isGroup:
         t = wxThread.GUIThread(
             frame,
-            apiCalls.executeCommandOnGroup,
+            executeCommandOnGroup,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
             name="executeCommandOnGroup",
@@ -914,7 +914,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
     elif result and not isGroup:
         t = wxThread.GUIThread(
             frame,
-            apiCalls.executeCommandOnDevice,
+            executeCommandOnDevice,
             args=(frame, command_args, schedule, schType, commandType),
             eventType=wxThread.myEVT_COMMAND,
             name="executeCommandOnDevice",
@@ -1071,6 +1071,136 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
     command_args = V0CommandArgs(
         wifi_access_points=removeList,
     )
-    return apiCalls.executeCommandOnDevice(
+    return executeCommandOnDevice(
         Globals.frame, command_args, command_type="REMOVE_WIFI_AP", deviceIds=[deviceId]
     )
+
+
+@api_tool_decorator
+def executeCommandOnGroup(
+    frame,
+    command_args,
+    schedule=None,
+    schedule_type="IMMEDIATE",
+    command_type="UPDATE_DEVICE_CONFIG",
+    groupIds=None,
+    maxAttempt=Globals.MAX_RETRY,
+):
+    """ Execute a Command on a Group of Devices """
+    statusList = []
+    groupList = frame.sidePanel.selectedGroupsList
+    if groupIds and isinstance(groupIds, str):
+        groupList = [groupIds]
+    elif groupIds and hasattr(groupIds, "__iter__"):
+        groupList = groupIds
+    for groupToUse in groupList:
+        request = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="GROUP",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            groups=[groupToUse],
+            command=command_type,
+            command_args=command_args,
+            schedule=schedule_type,
+            schedule_args=schedule,
+        )
+        last_status = apiCalls.executeCommandAndWait(request, maxAttempt=maxAttempt)
+        entryName = list(
+            filter(lambda x: groupToUse == x[1], frame.sidePanel.devices.items())
+        )
+        if entryName:
+            entryName = entryName[0]
+        if last_status and hasattr(last_status, "state"):
+            entry = {}
+            if entryName and len(entryName) > 1:
+                entry["Group Name"] = entryName[0]
+                entry["Group Id"] = entryName[1]
+            else:
+                entry["Group Id"] = groupToUse
+            if hasattr(last_status, "id"):
+                entry["Command Id"] = last_status.id
+            entry["Status State"] = last_status.state
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
+        else:
+            entry = {}
+            if entryName and len(entryName) > 1:
+                entry["Group Name"] = entryName[0]
+                entry["Group Id"] = entryName[1]
+            else:
+                entry["Group Id"] = groupToUse
+            if hasattr(last_status, "state"):
+                entry["Command Id"] = last_status.id
+            entry["Status"] = last_status
+            statusList.append(entry)
+    return statusList
+
+
+@api_tool_decorator
+def executeCommandOnDevice(
+    frame,
+    command_args,
+    schedule=None,
+    schedule_type="IMMEDIATE",
+    command_type="UPDATE_DEVICE_CONFIG",
+    deviceIds=None,
+    maxAttempt=Globals.MAX_RETRY,
+):
+    """ Execute a Command on a Device """
+    statusList = []
+    devicelist = frame.sidePanel.selectedDevicesList
+    if deviceIds and isinstance(deviceIds, str):
+        devicelist = [deviceIds]
+    elif deviceIds and hasattr(deviceIds, "__iter__"):
+        devicelist = deviceIds
+    for deviceToUse in devicelist:
+        request = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="DEVICE",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            devices=[deviceToUse],
+            command=command_type,
+            command_args=command_args,
+            schedule=schedule_type,
+            schedule_args=schedule,
+        )
+        last_status = apiCalls.executeCommandAndWait(request, maxAttempt=maxAttempt)
+        deviceEntryName = list(
+            filter(lambda x: deviceToUse == x[1], frame.sidePanel.devices.items())
+        )
+        if deviceEntryName:
+            deviceEntryName = deviceEntryName[0]
+        if last_status and hasattr(last_status, "state"):
+            entry = {}
+            if deviceEntryName and len(deviceEntryName) > 1:
+                parts = deviceEntryName[0].split(" ")
+                if len(parts) > 3:
+                    entry["Esper Name"] = parts[2]
+                    entry["Alias"] = parts[3]
+                elif len(parts) > 2:
+                    entry["Esper Name"] = parts[2]
+                entry["Device Id"] = deviceEntryName[1]
+            else:
+                entry["Device Id"] = deviceToUse
+            if hasattr(last_status, "id"):
+                entry["Command Id"] = last_status.id
+            entry["status"] = last_status.state
+            if hasattr(last_status, "reason"):
+                entry["Reason"] = last_status.reason
+            statusList.append(entry)
+        else:
+            entry = {}
+            if deviceEntryName and len(deviceEntryName) > 1:
+                parts = deviceEntryName[0].split(" ")
+                if len(parts) > 3:
+                    entry["Esper Name"] = parts[2]
+                    entry["Alias"] = parts[3]
+                elif len(parts) > 2:
+                    entry["Esper Name"] = parts[2]
+                entry["Device Id"] = deviceEntryName[1]
+            else:
+                entry["Device Id"] = deviceToUse
+            entry["Status"] = last_status
+            statusList.append(entry)
+    return statusList
