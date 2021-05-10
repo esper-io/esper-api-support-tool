@@ -198,6 +198,6 @@ def constructNetworkInfo(device, deviceInfo):
             if value in deviceInfo:
                 networkInfo[key] = str(deviceInfo[value])
             else:
-                networkInfo[key] = str([])
+                networkInfo[key] = ""
 
     return networkInfo
