@@ -513,6 +513,15 @@ def populateDeviceInfoDictionary(device, deviceInfo):
                 deviceInfo["ipv6Address"].append(ip)
                 deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
+    if location_info:
+        location_info = "%s, %s, %s" % (
+            location_info["locationAlts"],
+            location_info["locationLats"],
+            location_info["locationLongs"],
+        )
+    else:
+        location_info = "Unknown"
+
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})
 

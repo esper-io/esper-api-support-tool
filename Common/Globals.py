@@ -137,6 +137,12 @@ CSV_TAG_ATTR_NAME = {
     "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
+    "Device Type": "device_type",
+    "Total RAM": "totalRam",
+    "Total Internal Storage": "totalInternalStorage",
+    "Audio Contraints": "audio_constraints",
+    "Timezone": "timezone_string",
+    "Location": "location_info",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
