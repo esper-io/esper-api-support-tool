@@ -514,11 +514,18 @@ def populateDeviceInfoDictionary(device, deviceInfo):
                 deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
     if location_info:
-        location_info = "%s, %s, %s" % (
-            location_info["locationAlts"],
-            location_info["locationLats"],
-            location_info["locationLongs"],
-        )
+        if (
+            "n/a" not in location_info["locationAlts"].lower()
+            and "n/a" not in location_info["locationLats"].lower()
+            and "n/a" not in location_info["locationLongs"].lower()
+        ):
+            location_info = "%s, %s, %s" % (
+                location_info["locationAlts"],
+                location_info["locationLats"],
+                location_info["locationLongs"],
+            )
+        else:
+            location_info = "Unknown"
     else:
         location_info = "Unknown"
 
@@ -533,6 +540,21 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
     if "mac_address" in deviceInfo:
         deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "lockdown_state" in deviceInfo:
+        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+            elif "ringerMode" in audio:
+                if audio["ringerMode"] == 0:
+                    deviceInfo["ringerMode"] = "Silent"
+                elif audio["ringerMode"] == 1:
+                    deviceInfo["ringerMode"] = "Vibrate"
+                elif audio["ringerMode"] == 2:
+                    deviceInfo["ringerMode"] = "Normal"
 
     return deviceInfo
 
