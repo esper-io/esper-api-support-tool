@@ -165,7 +165,6 @@ app = None
 
 """ CSV Save File """
 csv_auth_path = ""
-# GRID_DEVICE_INFO_LIST = []
 
 LAST_DEVICE_ID = None
 LAST_GROUP_ID = None

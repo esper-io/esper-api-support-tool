@@ -618,7 +618,7 @@ class CommandDialog(wx.Dialog):
         date = date + "T" + time + "Z"
         return date, time
 
-    # @api_tool_decorator
+    @api_tool_decorator
     def GetValue(self):
         if not self.isJsonInput:
             command_args = V0CommandArgs(

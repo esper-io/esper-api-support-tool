@@ -9,7 +9,6 @@ import Common.Globals as Globals
 from Utility.CollectionsApi import (
     fetchCollectionList,
     createCollection,
-    # retrieveCollection,
     updateCollection,
     deleteCollection,
 )
