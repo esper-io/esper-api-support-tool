@@ -171,7 +171,7 @@ CSV_NETWORK_ATTR_NAME = {
     "Connected Devices": "connectedDevices",
     "Wifi Mac Id": "wifiMacAddress",
     "IPv6 Mac Address(es)": "macAddress",
-    "Signal Strength": "signalStrength",
+    # "Signal Strength": "signalStrength",
     "Frequency": "frequency",
     "linkSpeed": "linkSpeed",
     "Data Speed Down": "dataSpeedDown",
