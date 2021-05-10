@@ -251,7 +251,6 @@ class NewFrameLayout(wx.Frame):
             return
 
         maxInt = sys.maxsize
-
         while True:
             try:
                 csv.field_size_limit(maxInt)
@@ -2225,7 +2224,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.collection.Enable(state)
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
-        # self.menubar.installedDevices.Enable(state)
+        self.menubar.installedDevices.Enable(state)
         self.menubar.clone.Enable(state)
         self.menubar.command.Enable(state)
 

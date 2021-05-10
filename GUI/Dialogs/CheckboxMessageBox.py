@@ -60,6 +60,7 @@ class CheckboxMessageBox(wx.Dialog):
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
+        self.Centre()
 
     @api_tool_decorator
     def toggleCheckbox(self, event):
