@@ -126,6 +126,7 @@ CSV_TAG_ATTR_NAME = {
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
+    "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
     "Template": "template_name",
