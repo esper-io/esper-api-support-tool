@@ -236,9 +236,9 @@ class NewFrameLayout(wx.Frame):
     def tryToMakeActive(self):
         self.Raise()
         self.Iconize(False)
-        self.SetFocus()
         style = self.GetWindowStyle()
         self.SetWindowStyle(style | wx.STAY_ON_TOP)
+        self.SetFocus()
         self.SetWindowStyle(style)
 
     @api_tool_decorator
