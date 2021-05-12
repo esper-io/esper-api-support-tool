@@ -1720,7 +1720,8 @@ class NewFrameLayout(wx.Frame):
                     "Action Completed", "Action has completed.", self
                 )
             if self.notification:
-                self.notification.MSWUseToasts()
+                if hasattr(self.notification, "MSWUseToasts"):
+                    self.notification.MSWUseToasts()
                 self.notification.Show()
         if self.IsFrozen():
             self.Thaw()
