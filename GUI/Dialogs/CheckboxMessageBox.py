@@ -11,7 +11,7 @@ class CheckboxMessageBox(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.OK | wx.CANCEL,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL,
         )
         self.SetSize((400, 200))
         self.panel_1 = wx.Panel(self, wx.ID_ANY)

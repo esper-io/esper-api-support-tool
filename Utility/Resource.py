@@ -97,7 +97,7 @@ def checkForInternetAccess(frame):
             displayMessageBox(
                 (
                     "ERROR: An internet connection is required when using the tool!",
-                    wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
                 )
             )
         time.sleep(15)
@@ -282,7 +282,9 @@ def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
 
 
 def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
-    if Globals.PRINT_RESPONSES or (resp and  hasattr(resp, "status_code") and resp.status_code >= 300):
+    if Globals.PRINT_RESPONSES or (
+        resp and hasattr(resp, "status_code") and resp.status_code >= 300
+    ):
         print(url)
         prettyReponse = ""
         if not json_resp:

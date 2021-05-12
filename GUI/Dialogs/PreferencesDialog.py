@@ -11,7 +11,7 @@ class PreferencesDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(525, 400),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
         self.SetSize((525, 400))

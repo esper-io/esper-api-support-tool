@@ -997,7 +997,7 @@ class NewFrameLayout(wx.Frame):
     def addDevicesToDeviceChoice(self, groupId):
         """ Populate Device Choice """
         api_response = getAllDevices(groupId)
-        if len(api_response.results):
+        if hasattr(api_response, "results") and len(api_response.results):
             api_response.results = sorted(
                 api_response.results,
                 key=lambda i: i.device_name.lower(),

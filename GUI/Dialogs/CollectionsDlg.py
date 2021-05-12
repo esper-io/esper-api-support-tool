@@ -20,7 +20,7 @@ class CollectionsDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(583, 407),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetSize((583, 407))
         self.SetMinSize((583, 407))
