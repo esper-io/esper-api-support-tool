@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from Utility.Resource import resourcePath, scale_bitmap
+import time
+from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 import Common.Globals as Globals
 import re
 import threading
@@ -152,6 +153,8 @@ class GridPanel(wx.Panel):
         self.grid_2.UseNativeColHeader()
         self.grid_1.DisableDragRowSize()
         self.grid_2.DisableDragRowSize()
+        self.grid_1.EnableDragColMove(True)
+        self.grid_2.EnableDragColMove(True)
         self.enableGridProperties()
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
@@ -341,15 +344,11 @@ class GridPanel(wx.Panel):
         )
         self.parentFrame.setGaugeValue(0)
         self.emptyDeviceGrid(emptyContents=False)
-        num = 1
-        for device in self.grid_1_contents:
-            self.addDeviceToDeviceGrid(device)
-            self.parentFrame.setGaugeValue(int(num / len(self.grid_1_contents) * 100))
-            num += 1
-        self.grid_1.AutoSizeColumns()
-        self.grid_1.MakeCellVisible(0, col)
-        self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
-        wx.CallLater(3000, self.parentFrame.setGaugeValue, 0)
+        self.grid_1.Freeze()
+        thread = wxThread.GUIThread(
+            self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
+        )
+        thread.start()
 
     @api_tool_decorator
     def onNetworkGridSort(self, event):
@@ -394,15 +393,40 @@ class GridPanel(wx.Panel):
         )
         self.parentFrame.setGaugeValue(0)
         self.emptyNetworkGrid(emptyContents=False)
+        self.grid_2.Freeze()
+        thread = wxThread.GUIThread(
+            self.parentFrame,
+            self.repopulateGrid,
+            (self.grid_2_contents, col, "Network"),
+        )
+        thread.start()
+
+    def repopulateGrid(self, content, col, action="Device"):
         num = 1
-        for info in self.grid_2_contents:
-            self.addToNetworkGrid(info)
-            self.parentFrame.setGaugeValue(int(num / len(self.grid_2_contents) * 100))
-            num += 1
-        self.grid_2.AutoSizeColumns()
-        self.grid_2.MakeCellVisible(0, col)
+        for info in content:
+            if action == "Device":
+                self.addDeviceToDeviceGrid(info)
+                self.parentFrame.setGaugeValue(
+                    int(num / len(self.grid_1_contents) * 100)
+                )
+                num += 1
+            elif action == "Network":
+                self.addToNetworkGrid(info)
+                self.parentFrame.setGaugeValue(
+                    int(num / len(self.grid_2_contents) * 100)
+                )
+                num += 1
+        if action == "Device":
+            self.grid_1.AutoSizeColumns()
+            self.grid_1.MakeCellVisible(0, col)
+            self.grid_1.Thaw()
+        elif action == "Network":
+            self.grid_2.AutoSizeColumns()
+            self.grid_2.MakeCellVisible(0, col)
+            self.grid_2.Thaw()
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
-        wx.CallLater(3000, self.parentFrame.setGaugeValue, 0)
+        time.sleep(3)
+        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, (0))
 
     @api_tool_decorator
     def toogleViewMenuItem(self, event):
