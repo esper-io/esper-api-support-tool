@@ -662,6 +662,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
         ApiToolLog().LogError(e)
+        return e
 
 
 @api_tool_decorator

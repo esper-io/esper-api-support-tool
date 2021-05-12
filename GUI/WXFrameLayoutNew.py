@@ -811,6 +811,14 @@ class NewFrameLayout(wx.Frame):
                         raise Exception(
                             "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
                         )
+                elif (
+                    res
+                    and hasattr(res, "body")
+                    and "Authentication credentials were not provided" in res.body
+                ):
+                    raise Exception(
+                        "API Token has expired! Please replace Configuration entry by adding endpoint with a new API Key."
+                    )
 
                 groupThread = self.PopulateGroups()
                 appThread = self.PopulateApps()
