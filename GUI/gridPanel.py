@@ -1012,13 +1012,15 @@ class GridPanel(wx.Panel):
                 self.grid_1_contents[indx] = listing
 
     def decrementOffset(self, event):
-        Globals.offset = Globals.offset - Globals.limit
-        self.parentFrame.fetchData(False)
+        if not self.parentFrame.isRunning:
+            Globals.offset = Globals.offset - Globals.limit
+            self.parentFrame.fetchData(False)
         event.Skip()
 
     def incrementOffset(self, event):
-        Globals.offset = Globals.offset + Globals.limit
-        self.parentFrame.fetchData(False)
+        if not self.parentFrame.isRunning:
+            Globals.offset = Globals.offset + Globals.limit
+            self.parentFrame.fetchData(False)
         event.Skip()
 
     def onGrid1Scroll(self, event):
