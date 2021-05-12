@@ -16,10 +16,7 @@ class LargeTextEntryDialog(wx.Dialog):
         **kwds
     ):
         kwds["style"] = (
-            kwds.get("style", 0)
-            | wx.DEFAULT_DIALOG_STYLE
-            | wx.RESIZE_BORDER
-            | wx.STAY_ON_TOP
+            kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         )
         wx.Dialog.__init__(self, parent, *args, **kwds)
         self.SetSize((400, 300))

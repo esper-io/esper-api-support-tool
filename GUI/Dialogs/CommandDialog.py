@@ -20,11 +20,7 @@ class CommandDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.STAY_ON_TOP
-            | wx.OK
-            | wx.CANCEL
-            | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL | wx.RESIZE_BORDER,
         )
         self.isJsonInput = Globals.COMMAND_JSON_INPUT
         if self.isJsonInput:

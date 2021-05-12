@@ -141,7 +141,7 @@ def iterateThroughDeviceList(
 
     postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 33)
 
-    if len(api_response.results):
+    if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
             splitResults = splitListIntoChunks(api_response.results)

@@ -11,7 +11,7 @@ class ColumnVisibilityDialog(wx.Dialog):
         super(ColumnVisibilityDialog, self).__init__(
             parent,
             wx.ID_ANY,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE,
         )
         self.grid = grid
 

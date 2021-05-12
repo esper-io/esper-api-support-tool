@@ -15,7 +15,7 @@ class TemplateDialog(wx.Dialog):
         super(TemplateDialog, self).__init__(
             None,
             wx.ID_ANY,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.parent = parent
         self.sourceTemplate = []

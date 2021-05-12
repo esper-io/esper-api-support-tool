@@ -9,7 +9,7 @@ class InstalledDevicesDlg(wx.Dialog):
         super(InstalledDevicesDlg, self).__init__(
             None,
             wx.ID_ANY,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE,
         )
         self.SetTitle("Get Installed Devices")
 
