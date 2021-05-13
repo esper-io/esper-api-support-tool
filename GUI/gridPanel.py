@@ -29,6 +29,7 @@ class GridPanel(wx.Panel):
 
         self.parentFrame = parentFrame
         self.disableProperties = False
+        self.currentlySelectedCell = (-1, -1)
 
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
@@ -146,6 +147,10 @@ class GridPanel(wx.Panel):
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
         self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
         self.grid_2.Bind(wx.EVT_SCROLLWIN, self.onGrid2Scroll)
+        self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
+        self.grid_2.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
+        self.grid_1.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
+        self.grid_2.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
 
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
@@ -1036,3 +1041,58 @@ class GridPanel(wx.Panel):
             gridTwo.Scroll(
                 gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
             )
+
+    @api_tool_decorator
+    def onKey(self, event):
+        keycode = event.GetKeyCode()
+        # CTRL + C or CTRL + Insert
+        if event.ControlDown() and keycode in [67, 322]:
+            self.on_copy(event)
+        # CTRL + V
+        elif event.ControlDown() and keycode == 86:
+            self.on_paste(event)
+        else:
+            event.Skip()
+
+    @api_tool_decorator
+    def on_copy(self, event):
+        widget = self.FindFocus()
+        if self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
+            data = wx.TextDataObject()
+            data.SetText(
+                widget.GetCellValue(
+                    self.currentlySelectedCell[0], self.currentlySelectedCell[1]
+                )
+            )
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(data)
+                wx.TheClipboard.Close()
+            widget.SetFocus()
+
+    @api_tool_decorator
+    def on_paste(self, event):
+        widget = self.FindFocus()
+        success = False
+        data = wx.TextDataObject()
+        if wx.TheClipboard.Open():
+            success = wx.TheClipboard.GetData(data)
+            wx.TheClipboard.Close()
+        if (
+            success
+            and self.currentlySelectedCell[0] >= 0
+            and self.currentlySelectedCell[1] >= 0
+        ):
+            widget.SetCellValue(
+                self.currentlySelectedCell[0],
+                self.currentlySelectedCell[1],
+                data.GetText(),
+            )
+        widget.SetFocus()
+
+    def onSingleSelect(self, event):
+        """
+        Get the selection of a single cell by clicking or
+        moving the selection with the arrow keys
+        """
+        self.currentlySelectedCell = (event.GetRow(), event.GetCol())
+        event.Skip()
