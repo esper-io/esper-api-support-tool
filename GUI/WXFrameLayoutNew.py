@@ -85,7 +85,6 @@ class NewFrameLayout(wx.Frame):
 
         self.consoleWin = None
         self.refresh = None
-        self.checkConsole = None
         self.preferences = None
         self.auth_data = None
 
@@ -1597,7 +1596,7 @@ class NewFrameLayout(wx.Frame):
     def addDevicesApps(self):
         num = 1
         appAdded = False
-        self.sidePanel.deviceApps = []
+        self.sidePanel.selectedDeviceApps = []
         self.sidePanel.apps = self.sidePanel.knownApps + self.sidePanel.enterpriseApps
         for deviceId in self.sidePanel.selectedDevicesList:
             appList, _ = getdeviceapps(
