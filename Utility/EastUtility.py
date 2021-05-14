@@ -507,7 +507,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         deviceInfo["ipv4Address"] = []
         deviceInfo["ipv6Address"] = []
         for ip in deviceInfo[ipKey]:
-            if ip.endswith("/24"):
+            if ":" not in ip:
                 deviceInfo["ipv4Address"].append(ip)
             elif ip.endswith("/64"):
                 deviceInfo["ipv6Address"].append(ip)
