@@ -12,10 +12,22 @@ from Common.decorator import api_tool_decorator
 
 class MyApp(wx.App):
     def OnInit(self):
+        self.name = "EAST-%s" % wx.GetUserId()
+        self.instance = wx.SingleInstanceChecker(self.name)
+
+        if self.instance.IsAnotherRunning():
+            return False
+
         Globals.frame = FrameLayout()
         self.SetTopWindow(Globals.frame)
         Globals.frame.Show()
         return True
+
+    def MacPrintFile(self, file_path):
+        Globals.frame.MacPrintFile(file_path)
+
+    def MacNewFile(self):
+        Globals.frame.MacNewFile()
 
 
 @api_tool_decorator
