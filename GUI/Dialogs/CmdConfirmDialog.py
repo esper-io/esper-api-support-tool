@@ -11,9 +11,12 @@ class CmdConfirmDialog(ConfirmTextDialog):
     ):
         label = ""
         if schType.startswith("i"):
-            label = (
-                "About to try applying an %s %s command on the %s, %s.\nCommand will be applied to %s devices.\nContinue?"
-                % (schType.lower(), commandType, applyToType, applyTo, Globals.CMD_DEVICE_TYPE.capitalize())
+            label = "About to try applying an %s %s command on the %s, %s.\nCommand will be applied to %s devices.\nContinue?" % (
+                schType.lower(),
+                commandType,
+                applyToType,
+                applyTo,
+                Globals.CMD_DEVICE_TYPE.capitalize(),
             )
         else:
             label = "About to try applying a %s %s command on the %s, %s.\nCommand will be applied to %s devices.\nContinue?" % (
