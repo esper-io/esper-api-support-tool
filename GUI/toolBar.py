@@ -1,3 +1,4 @@
+import platform
 from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
 import wx
@@ -7,7 +8,12 @@ class ToolsToolBar(wx.ToolBar):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.AddSeparator()
-        close_icon = scale_bitmap(resourcePath("Images/exit.png"), 16, 16)
+
+        size = (16, 16)
+        if platform.system() != "Windows":
+            size = (8, 8)
+
+        close_icon = scale_bitmap(resourcePath("Images/exit.png"), *size)
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.AddSeparator()
 
