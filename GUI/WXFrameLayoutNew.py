@@ -689,14 +689,14 @@ class NewFrameLayout(wx.Frame):
                         self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
                         return
             self.Logging(
-                "--->**** Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
+                "---> Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
             )
             defaultConfigItem = self.menubar.configMenuOptions[0]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
         else:
             self.Logging(
-                "--->****"
+                "---> "
                 + configfile
                 + " not found - PLEASE Quit and create configuration file"
             )
@@ -770,7 +770,7 @@ class NewFrameLayout(wx.Frame):
                 raise Exception("Failed to load configuration")
         except Exception as e:
             self.Logging(
-                "--->****An Error has occured while loading the configuration, please try again."
+                "---> An Error has occured while loading the configuration, please try again."
             )
             print(e)
             ApiToolLog().LogError(e)
