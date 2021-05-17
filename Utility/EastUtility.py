@@ -128,23 +128,17 @@ def iterateThroughDeviceList(
     if api_response:
         if hasattr(api_response, "next"):
             if api_response.next:
-                # frame.gridPanel.button_2.Enable(True)
                 frame.gridArrowState["next"] = True
             else:
-                # frame.gridPanel.button_2.Enable(False)
                 frame.gridArrowState["next"] = False
         else:
-            # frame.gridPanel.button_2.Enable(False)
             frame.gridArrowState["next"] = False
         if hasattr(api_response, "previous"):
             if api_response.previous:
-                # frame.gridPanel.button_1.Enable(True)
                 frame.gridArrowState["prev"] = True
             else:
-                # frame.gridPanel.button_1.Enable(False)
                 frame.gridArrowState["prev"] = False
         else:
-            # frame.gridPanel.button_2.Enable(False)
             frame.gridArrowState["prev"] = False
 
     postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 33)
