@@ -60,10 +60,6 @@ class ToolsToolBar(wx.ToolBar):
 
     @api_tool_decorator
     def __set_properties(self):
-        if platform.system() != "Windows":
-            sz = self.GetSize()
-            self.SetSize(sz[0], int(sz[1] / 2))
-
         size = self.search.GetSize()
         size.SetWidth(size.GetWidth() * 2)
         self.search.SetSize(size)
