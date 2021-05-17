@@ -1081,6 +1081,9 @@ class GridPanel(wx.Panel):
             success
             and self.currentlySelectedCell[0] >= 0
             and self.currentlySelectedCell[1] >= 0
+            and not widget.IsReadOnly(
+                self.currentlySelectedCell[0], self.currentlySelectedCell[1]
+            )
         ):
             widget.SetCellValue(
                 self.currentlySelectedCell[0],
