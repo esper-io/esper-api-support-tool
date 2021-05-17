@@ -518,7 +518,8 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                             Globals.limit = int(Globals.limit / 4)
                             postEventToFrame(
                                 wxThread.myEVT_LOG,
-                                "---> Encountered a 504 error, retrying with lower limit",
+                                "---> Encountered a 504 error, retrying with lower limit: %s"
+                                % Globals.limit,
                             )
                         time.sleep(Globals.RETRY_SLEEP)
                 if not api_response:
@@ -543,7 +544,8 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                         Globals.limit = int(Globals.limit / 4)
                         postEventToFrame(
                             wxThread.myEVT_LOG,
-                            "---> Encountered a 504 error, retrying with lower limit",
+                            "---> Encountered a 504 error, retrying with lower limit: %s"
+                            % Globals.limit,
                         )
                     time.sleep(Globals.RETRY_SLEEP)
         postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
