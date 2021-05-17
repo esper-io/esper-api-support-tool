@@ -17,19 +17,19 @@ class ToolsToolBar(wx.ToolBar):
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.AddSeparator()
 
-        add_icon = scale_bitmap(resourcePath("Images/add.png"), 16, 16)
+        add_icon = scale_bitmap(resourcePath("Images/add.png"), *size)
         self.atool = self.AddTool(
             wx.ID_ANY, "Add New Endpoint", add_icon, "Add New Endpoint"
         )
         self.AddSeparator()
 
-        open_icon = scale_bitmap(resourcePath("Images/open.png"), 16, 16)
+        open_icon = scale_bitmap(resourcePath("Images/open.png"), *size)
         self.otool = self.AddTool(
             wx.ID_ANY, "Open Device CSV", open_icon, "Open Device CSV"
         )
         self.AddSeparator()
 
-        save_icon = scale_bitmap(resourcePath("Images/save.png"), 16, 16)
+        save_icon = scale_bitmap(resourcePath("Images/save.png"), *size)
         self.stool = self.AddTool(
             wx.ID_ANY,
             "Save Device and Network Info in Grids",
@@ -38,17 +38,17 @@ class ToolsToolBar(wx.ToolBar):
         )
         self.AddSeparator()
 
-        exe_icon = scale_bitmap(resourcePath("Images/run.png"), 16, 16)
+        exe_icon = scale_bitmap(resourcePath("Images/run.png"), *size)
         self.rtool = self.AddTool(wx.ID_ANY, "Run Action", exe_icon, "Run Action")
         self.AddSeparator()
 
-        ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), 16, 16)
+        ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), *size)
         self.rftool = self.AddTool(
             wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
         )
         self.AddSeparator()
 
-        cmd_icon = scale_bitmap(resourcePath("Images/command.png"), 16, 16)
+        cmd_icon = scale_bitmap(resourcePath("Images/command.png"), *size)
         self.cmdtool = self.AddTool(wx.ID_ANY, "Run Command", cmd_icon, "Run Command")
 
         self.AddSeparator()
