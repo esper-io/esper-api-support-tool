@@ -97,6 +97,7 @@ class NewFrameLayout(wx.Frame):
         self.kill = False
         self.CSVUploaded = False
         self.defaultDir = os.getcwd()
+        self.gridArrowState = {"next": False, "prev": False}
 
         self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
@@ -1732,6 +1733,8 @@ class NewFrameLayout(wx.Frame):
                 self.notification.Show()
         if self.IsFrozen():
             self.Thaw()
+        self.gridPanel.button_2.Enable(self.gridArrowState["next"])
+        self.gridPanel.button_1.Enable(self.gridArrowState["prev"])
         if self.gridPanel.grid_1.IsFrozen():
             self.gridPanel.grid_1.Thaw()
         if self.gridPanel.grid_2.IsFrozen():
