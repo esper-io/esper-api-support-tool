@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser
+from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
 import wx
 import wx.html as wxHtml
@@ -32,6 +32,12 @@ class Console(wx.Frame):
         wx.Frame.__init__(
             self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
         )
+        icon = wx.Icon()
+        icon.CopyFromBitmap(
+            wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG)
+        )
+        self.SetIcon(icon)
+
         panel = wx.Panel(self, wx.ID_ANY)
         panel.SetBackgroundColour(Color.grey.value)
 
