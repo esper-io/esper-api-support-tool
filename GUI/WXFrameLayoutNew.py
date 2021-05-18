@@ -1374,13 +1374,14 @@ class NewFrameLayout(wx.Frame):
             self.setGaugeValue(0)
 
             if self.sidePanel.selectedGroupsList:
+                result = None
+                cmdArgs = None
+                commandType = None
+                schArgs = None
+                schType = None
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
                     result = cmdDialog.ShowModal()
                     if result == wx.ID_OK:
-                        cmdArgs = None
-                        commandType = None
-                        schArgs = None
-                        schType = None
                         try:
                             (
                                 cmdArgs,
@@ -1396,8 +1397,8 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             ApiToolLog().LogError(e)
-                        if cmdArgs != None:
-                            createCommand(self, cmdArgs, commandType, schArgs, schType)
+                if cmdArgs != None:
+                    createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
                 displayMessageBox(
                     ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
