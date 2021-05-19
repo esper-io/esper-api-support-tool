@@ -515,7 +515,7 @@ class GridPanel(wx.Panel):
                         colNum + 1, showState=dialog.isChecked(colNum)
                     )
                     colNum += 1
-            dialog.DestoryLater()
+            dialog.DestroyLater()
 
     @api_tool_decorator
     def onNetworkColumn(self, event):
@@ -535,7 +535,7 @@ class GridPanel(wx.Panel):
                         colNum + 1, showState=dialog.isChecked(colNum)
                     )
                     colNum += 1
-            dialog.DestoryLater()
+            dialog.DestroyLater()
 
     @api_tool_decorator
     def addDeviceToDeviceGrid(self, device_info, isUpdate=False):

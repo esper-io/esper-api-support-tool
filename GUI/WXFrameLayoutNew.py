@@ -364,7 +364,7 @@ class NewFrameLayout(wx.Frame):
                     if not self.IsShown():
                         isValid = True
                         self.OnQuit(None)
-                dialog.DestoryLater()
+                dialog.DestroyLater()
 
     @api_tool_decorator
     def OnQuit(self, e):
