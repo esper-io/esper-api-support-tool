@@ -977,7 +977,7 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
         }
 
-        Globals.SET_APP_STATE_AS_SHOW = False
+        Globals.SET_APP_STATE_AS_SHOW = self.prefs["setStateShow"]
         Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
