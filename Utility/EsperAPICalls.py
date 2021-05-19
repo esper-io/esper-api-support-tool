@@ -355,6 +355,9 @@ def setdevicename(
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             break
         except Exception as e:
+            if hasattr(e, "body") and "invalid device id" in e.body:
+                logBadResponse("create command api", api_response, None)
+                return None
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e

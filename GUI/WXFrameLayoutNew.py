@@ -364,6 +364,7 @@ class NewFrameLayout(wx.Frame):
                     if not self.IsShown():
                         isValid = True
                         self.OnQuit(None)
+                dialog.DestoryLater()
 
     @api_tool_decorator
     def OnQuit(self, e):
@@ -1397,6 +1398,7 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             ApiToolLog().LogError(e)
+                    cmdDialog.DestroyLater()
                 if cmdArgs != None:
                     createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
@@ -2067,6 +2069,7 @@ class NewFrameLayout(wx.Frame):
             result = self.tmpDialog.ShowModal()
             if result == wx.ID_OK:
                 self.prepareClone(self.tmpDialog)
+            self.tmpDialog.DestroyLater()
 
     @api_tool_decorator
     def prepareClone(self, tmpDialog):
@@ -2269,3 +2272,4 @@ class NewFrameLayout(wx.Frame):
                                 wx.ICON_INFORMATION,
                             )
                         )
+            dlg.DestroyLater()

@@ -329,6 +329,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            dlg.DestoryLater()
 
     @api_tool_decorator
     def checkCollectionEnabled(self):

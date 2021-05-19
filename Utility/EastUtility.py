@@ -654,6 +654,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
             )
             threads.append(t)
             t.start()
+            limitActiveThreads(threads)
 
         t = wxThread.GUIThread(
             frame,
@@ -785,7 +786,10 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         ):
             key = device.hardware_info["customSerialNumber"]
         tagsFromCell = tagsFromGrid[key]
-        tags = apiCalls.setdevicetags(device.id, tagsFromCell)
+        try:
+            tags = apiCalls.setdevicetags(device.id, tagsFromCell)
+        except Exception as e:
+            ApiToolLog().LogError(e)
         if tags == tagsFromGrid[key]:
             changeSucceeded += 1
         postEventToFrame(wxThread.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
@@ -1016,7 +1020,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
             if attempt == maxAttempt - 1:
                 postEventToFrame(
                     wxThread.myEVT_LOG,
-                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
+                    "---> ERROR: Failed to get devices in order to set app state",
                 )
                 print(e)
                 ApiToolLog().LogError(e)
