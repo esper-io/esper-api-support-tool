@@ -1732,7 +1732,10 @@ class NewFrameLayout(wx.Frame):
                 )
             if self.notification:
                 if hasattr(self.notification, "MSWUseToasts"):
-                    self.notification.MSWUseToasts()
+                    try:
+                        self.notification.MSWUseToasts()
+                    except:
+                        pass
                 self.notification.Show()
         if self.IsFrozen():
             self.Thaw()
