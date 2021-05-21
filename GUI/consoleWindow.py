@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser
+from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
 import wx
 import wx.html as wxHtml
@@ -32,6 +32,12 @@ class Console(wx.Frame):
         wx.Frame.__init__(
             self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
         )
+        icon = wx.Icon()
+        icon.CopyFromBitmap(
+            wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG)
+        )
+        self.SetIcon(icon)
+
         panel = wx.Panel(self, wx.ID_ANY)
         panel.SetBackgroundColour(Color.grey.value)
 
@@ -62,8 +68,8 @@ class Console(wx.Frame):
         self.totalPosition = 0
         for entry in Globals.LOGLIST:
             self.loggingList.AppendText(entry)
-            self.loggingList.AppendText("\n")
-            self.totalPosition = len(entry + "\n")
+            self.loggingList.AppendText("\n\n")
+            self.totalPosition = len(entry + "\n\n")
         if self.WINDOWS:
             position = int((self.totalPosition) * 0.75)
             position = 0 if position < 0 else position
@@ -82,9 +88,7 @@ class Console(wx.Frame):
     @api_tool_decorator
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
-        if (
-            self.HasFocus() or self.loggingList.HasFocus()
-        ) and keycode == wx.WXK_ESCAPE:
+        if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
 
     @api_tool_decorator

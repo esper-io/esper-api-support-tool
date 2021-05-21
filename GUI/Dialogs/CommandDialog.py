@@ -2,6 +2,7 @@
 
 import Common.Globals as Globals
 import json
+import random
 import wx
 import wx.adv
 
@@ -19,11 +20,7 @@ class CommandDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.STAY_ON_TOP
-            | wx.OK
-            | wx.CANCEL
-            | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL | wx.RESIZE_BORDER,
         )
         self.isJsonInput = Globals.COMMAND_JSON_INPUT
         if self.isJsonInput:
@@ -172,15 +169,17 @@ class CommandDialog(wx.Dialog):
     def createSplitWindowView(self, title, value):
         self.SetTitle("Create Command")
 
-        sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
+        grid_sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
+        self.panel_2 = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+        self.panel_2.SetMinSize((600, 375))
+        self.panel_2.SetScrollRate(10, 10)
+        grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_1 = wx.FlexGridSizer(1, 3, 0, 0)
+        grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
 
-        self.command = wx.Panel(self.panel_1, wx.ID_ANY)
-        grid_sizer_1.Add(self.command, 1, wx.ALL | wx.EXPAND, 3)
+        self.command = wx.Panel(self.panel_2, wx.ID_ANY)
+        grid_sizer_2.Add(self.command, 1, wx.ALL | wx.EXPAND, 3)
 
         sizer_12 = wx.StaticBoxSizer(
             wx.StaticBox(self.command, wx.ID_ANY, "Command Arguements"), wx.VERTICAL
@@ -189,10 +188,10 @@ class CommandDialog(wx.Dialog):
         self.panel_18 = wx.Panel(self.command, wx.ID_ANY)
         sizer_12.Add(self.panel_18, 1, wx.EXPAND, 0)
 
-        grid_sizer_2 = wx.FlexGridSizer(4, 1, 0, 0)
+        grid_sizer_3 = wx.FlexGridSizer(4, 1, 0, 0)
 
         self.panel_5 = wx.Panel(self.panel_18, wx.ID_ANY)
-        grid_sizer_2.Add(self.panel_5, 1, wx.ALL | wx.EXPAND, 2)
+        grid_sizer_3.Add(self.panel_5, 1, wx.ALL | wx.EXPAND, 2)
 
         grid_sizer_5 = wx.GridSizer(1, 2, 0, 0)
 
@@ -223,7 +222,7 @@ class CommandDialog(wx.Dialog):
         sizer_7.Add(self.text_ctrl_2, 0, wx.EXPAND, 0)
 
         self.panel_4 = wx.Panel(self.panel_18, wx.ID_ANY)
-        grid_sizer_2.Add(self.panel_4, 1, wx.ALL | wx.EXPAND, 2)
+        grid_sizer_3.Add(self.panel_4, 1, wx.ALL | wx.EXPAND, 2)
 
         grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
 
@@ -255,12 +254,12 @@ class CommandDialog(wx.Dialog):
         sizer_8.Add(self.choice_2, 0, wx.EXPAND, 0)
 
         self.panel_3 = wx.Panel(self.panel_18, wx.ID_ANY)
-        grid_sizer_2.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 2)
+        grid_sizer_3.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 2)
 
-        grid_sizer_3 = wx.GridSizer(1, 2, 0, 0)
+        grid_sizer_6 = wx.GridSizer(1, 2, 0, 0)
 
         self.panel_10 = wx.Panel(self.panel_3, wx.ID_ANY)
-        grid_sizer_3.Add(self.panel_10, 1, wx.EXPAND, 0)
+        grid_sizer_6.Add(self.panel_10, 1, wx.EXPAND, 0)
 
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
 
@@ -275,7 +274,7 @@ class CommandDialog(wx.Dialog):
         sizer_4.Add(self.choice_3, 0, wx.EXPAND, 0)
 
         self.panel_11 = wx.Panel(self.panel_3, wx.ID_ANY)
-        grid_sizer_3.Add(self.panel_11, 1, wx.EXPAND | wx.LEFT, 2)
+        grid_sizer_6.Add(self.panel_11, 1, wx.EXPAND | wx.LEFT, 2)
 
         sizer_9 = wx.BoxSizer(wx.VERTICAL)
 
@@ -286,24 +285,25 @@ class CommandDialog(wx.Dialog):
         self.text_ctrl_4.Enable(False)
         sizer_9.Add(self.text_ctrl_4, 0, wx.EXPAND, 0)
 
-        self.panel_2 = wx.Panel(self.panel_18, wx.ID_ANY)
-        grid_sizer_2.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 2)
+        self.panel_12 = wx.Panel(self.panel_18, wx.ID_ANY)
+        grid_sizer_3.Add(self.panel_12, 1, wx.ALL | wx.EXPAND, 2)
 
         sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "Custom Config:")
+        label_1 = wx.StaticText(self.panel_12, wx.ID_ANY, "Custom Config:")
         sizer_3.Add(label_1, 0, 0, 0)
 
         self.text_ctrl_1 = wx.TextCtrl(
-            self.panel_2, wx.ID_ANY, "", style=wx.TE_BESTWRAP | wx.TE_MULTILINE
+            self.panel_12, wx.ID_ANY, "", style=wx.TE_BESTWRAP | wx.TE_MULTILINE
         )
+        self.text_ctrl_1.SetMinSize((522, 100))
         sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
-        static_line_2 = wx.StaticLine(self.panel_1, wx.ID_ANY, style=wx.LI_VERTICAL)
-        grid_sizer_1.Add(static_line_2, 0, wx.ALL | wx.EXPAND, 2)
+        static_line_2 = wx.StaticLine(self.panel_2, wx.ID_ANY, style=wx.LI_VERTICAL)
+        grid_sizer_2.Add(static_line_2, 0, wx.ALL | wx.EXPAND, 2)
 
-        self.schedule = wx.Panel(self.panel_1, wx.ID_ANY)
-        grid_sizer_1.Add(self.schedule, 1, wx.ALL | wx.EXPAND, 3)
+        self.schedule = wx.Panel(self.panel_2, wx.ID_ANY)
+        grid_sizer_2.Add(self.schedule, 1, wx.ALL | wx.EXPAND, 3)
 
         sizer_10 = wx.StaticBoxSizer(
             wx.StaticBox(self.schedule, wx.ID_ANY, "Schedule Arguements"), wx.VERTICAL
@@ -312,18 +312,37 @@ class CommandDialog(wx.Dialog):
         self.panel_13 = wx.Panel(self.schedule, wx.ID_ANY)
         sizer_10.Add(self.panel_13, 1, wx.EXPAND, 0)
 
-        grid_sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
+        grid_sizer_7 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        self.panel_14 = wx.Panel(self.panel_13, wx.ID_ANY)
-        grid_sizer_6.Add(self.panel_14, 1, wx.EXPAND, 0)
+        self.panel_28 = wx.Panel(self.panel_13, wx.ID_ANY)
+        grid_sizer_7.Add(self.panel_28, 1, wx.EXPAND | wx.TOP, 5)
 
-        sizer_11 = wx.BoxSizer(wx.VERTICAL)
+        sizer_18 = wx.BoxSizer(wx.VERTICAL)
 
-        label_9 = wx.StaticText(self.panel_14, wx.ID_ANY, "Type")
-        sizer_11.Add(label_9, 0, 0, 0)
+        label_15 = wx.StaticText(
+            self.panel_28, wx.ID_ANY, "Name (Schedule Name must be unique)"
+        )
+        sizer_18.Add(label_15, 0, 0, 0)
 
-        self.choice_4 = wx.Choice(
-            self.panel_14,
+        grid_sizer_15 = wx.GridSizer(1, 1, 0, 0)
+        sizer_18.Add(grid_sizer_15, 1, wx.EXPAND, 0)
+
+        self.text_ctrl_5 = wx.TextCtrl(self.panel_28, wx.ID_ANY, "")
+        grid_sizer_15.Add(self.text_ctrl_5, 0, wx.EXPAND, 0)
+
+        self.panel_17 = wx.Panel(self.panel_13, wx.ID_ANY)
+        grid_sizer_7.Add(self.panel_17, 1, wx.EXPAND | wx.TOP, 5)
+
+        grid_sizer_9 = wx.FlexGridSizer(1, 2, 0, 0)
+
+        grid_sizer_24 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_9.Add(grid_sizer_24, 1, wx.EXPAND | wx.RIGHT, 2)
+
+        label_13 = wx.StaticText(self.panel_17, wx.ID_ANY, "Type")
+        grid_sizer_24.Add(label_13, 0, 0, 0)
+
+        self.choice_6 = wx.Choice(
+            self.panel_17,
             wx.ID_ANY,
             choices=[
                 "Immediate",
@@ -331,80 +350,70 @@ class CommandDialog(wx.Dialog):
                 "Reocurring",
             ],
         )
-        self.choice_4.SetSelection(0)
-        sizer_11.Add(self.choice_4, 0, wx.EXPAND, 0)
+        self.choice_6.SetSelection(0)
+        grid_sizer_24.Add(self.choice_6, 0, wx.EXPAND, 0)
 
-        self.panel_15 = wx.Panel(self.panel_13, wx.ID_ANY)
-        grid_sizer_6.Add(self.panel_15, 1, wx.EXPAND, 0)
+        grid_sizer_26 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_9.Add(grid_sizer_26, 1, wx.EXPAND | wx.LEFT, 2)
 
-        sizer_13 = wx.BoxSizer(wx.VERTICAL)
+        label_14 = wx.StaticText(self.panel_17, wx.ID_ANY, "Time Type")
+        grid_sizer_26.Add(label_14, 0, 0, 0)
 
-        label_10 = wx.StaticText(self.panel_15, wx.ID_ANY, "Time Type")
-        sizer_13.Add(label_10, 0, 0, 0)
-
-        self.choice_5 = wx.Choice(
-            self.panel_15, wx.ID_ANY, choices=["Device", "Console"]
+        self.choice_7 = wx.Choice(
+            self.panel_17, wx.ID_ANY, choices=["Device", "Console"]
         )
-        self.choice_5.SetSelection(0)
-        sizer_13.Add(self.choice_5, 0, wx.EXPAND, 0)
+        self.choice_7.SetSelection(0)
+        grid_sizer_26.Add(self.choice_7, 0, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.panel_13, wx.ID_ANY)
-        grid_sizer_6.Add(self.panel_16, 1, wx.EXPAND, 0)
+        grid_sizer_7.Add(self.panel_16, 1, wx.EXPAND | wx.TOP, 5)
 
-        grid_sizer_8 = wx.GridSizer(2, 1, 0, 0)
+        grid_sizer_8 = wx.FlexGridSizer(1, 2, 0, 0)
 
-        self.panel_19 = wx.Panel(self.panel_16, wx.ID_ANY)
-        grid_sizer_8.Add(self.panel_19, 1, wx.EXPAND, 0)
+        grid_sizer_20 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_8.Add(grid_sizer_20, 1, wx.EXPAND | wx.RIGHT, 2)
 
-        grid_sizer_9 = wx.GridSizer(2, 1, 0, 0)
+        label_11 = wx.StaticText(self.panel_16, wx.ID_ANY, "Start Date and Time")
+        grid_sizer_20.Add(label_11, 0, 0, 0)
 
-        label_11 = wx.StaticText(self.panel_19, wx.ID_ANY, "Start Datetime")
-        grid_sizer_9.Add(label_11, 0, 0, 0)
+        grid_sizer_21 = wx.GridSizer(1, 3, 0, 0)
+        grid_sizer_20.Add(grid_sizer_21, 1, wx.EXPAND, 0)
 
-        self.panel_20 = wx.Panel(self.panel_19, wx.ID_ANY)
-        grid_sizer_9.Add(self.panel_20, 1, wx.EXPAND, 0)
+        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(self.panel_16, wx.ID_ANY)
+        grid_sizer_21.Add(self.datepicker_ctrl_1, 0, 0, 0)
 
-        sizer_14 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_21.Add((20, 20), 0, 0, 0)
 
-        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(self.panel_20, wx.ID_ANY)
-        sizer_14.Add(self.datepicker_ctrl_1, 0, 0, 0)
+        self.timepicker_ctrl_2 = wx.adv.TimePickerCtrl(self.panel_16, wx.ID_ANY)
+        grid_sizer_21.Add(self.timepicker_ctrl_2, 0, 0, 0)
 
-        sizer_14.Add((20, 20), 0, wx.EXPAND, 0)
+        grid_sizer_22 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_8.Add(grid_sizer_22, 1, wx.EXPAND | wx.LEFT, 2)
 
-        self.timepicker_ctrl_2 = wx.adv.TimePickerCtrl(self.panel_20, wx.ID_ANY)
-        sizer_14.Add(self.timepicker_ctrl_2, 0, 0, 0)
+        label_12 = wx.StaticText(self.panel_16, wx.ID_ANY, "End Date and Time")
+        grid_sizer_22.Add(label_12, 0, 0, 0)
 
-        self.panel_21 = wx.Panel(self.panel_16, wx.ID_ANY)
-        grid_sizer_8.Add(self.panel_21, 1, wx.EXPAND, 0)
+        grid_sizer_23 = wx.GridSizer(1, 3, 0, 0)
+        grid_sizer_22.Add(grid_sizer_23, 1, wx.EXPAND, 0)
 
-        grid_sizer_10 = wx.GridSizer(2, 1, 0, 0)
+        self.datepicker_ctrl_3 = wx.adv.DatePickerCtrl(self.panel_16, wx.ID_ANY)
+        grid_sizer_23.Add(self.datepicker_ctrl_3, 0, 0, 0)
 
-        label_12 = wx.StaticText(self.panel_21, wx.ID_ANY, "End Datetime")
-        grid_sizer_10.Add(label_12, 0, 0, 0)
+        grid_sizer_23.Add((20, 20), 0, 0, 0)
 
-        self.panel_22 = wx.Panel(self.panel_21, wx.ID_ANY)
-        grid_sizer_10.Add(self.panel_22, 1, wx.EXPAND, 0)
+        self.timepicker_ctrl_4 = wx.adv.TimePickerCtrl(self.panel_16, wx.ID_ANY)
+        grid_sizer_23.Add(self.timepicker_ctrl_4, 0, 0, 0)
 
-        sizer_15 = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_27 = wx.Panel(self.panel_13, wx.ID_ANY)
+        grid_sizer_7.Add(self.panel_27, 1, wx.EXPAND | wx.TOP, 5)
 
-        self.datepicker_ctrl_3 = wx.adv.DatePickerCtrl(self.panel_22, wx.ID_ANY)
-        sizer_15.Add(self.datepicker_ctrl_3, 0, 0, 0)
+        grid_sizer_14 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        sizer_15.Add((20, 20), 0, wx.EXPAND, 0)
-
-        self.timepicker_ctrl_4 = wx.adv.TimePickerCtrl(self.panel_22, wx.ID_ANY)
-        sizer_15.Add(self.timepicker_ctrl_4, 0, 0, 0)
-
-        self.panel_12 = wx.Panel(self.panel_13, wx.ID_ANY)
-        grid_sizer_6.Add(self.panel_12, 1, wx.EXPAND, 0)
-
-        grid_sizer_7 = wx.FlexGridSizer(2, 1, 0, 0)
-
-        label_8 = wx.StaticText(self.panel_12, wx.ID_ANY, "Days")
-        grid_sizer_7.Add(label_8, 0, 0, 0)
+        label_8 = wx.StaticText(self.panel_27, wx.ID_ANY, "Days")
+        grid_sizer_14.Add(label_8, 0, 0, 0)
 
         self.check_list_box_1 = wx.CheckListBox(
-            self.panel_12,
+            self.panel_27,
             wx.ID_ANY,
             choices=[
                 "Monday",
@@ -417,13 +426,15 @@ class CommandDialog(wx.Dialog):
             ],
             style=wx.LB_MULTIPLE | wx.LB_NEEDED_SB,
         )
-        grid_sizer_7.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
+        grid_sizer_14.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
 
         static_line_1 = wx.StaticLine(self, wx.ID_ANY)
-        sizer_1.Add(static_line_1, 0, wx.ALL | wx.EXPAND, 2)
+        grid_sizer_1.Add(static_line_1, 0, wx.ALL | wx.EXPAND, 2)
 
         sizer_2 = wx.StdDialogButtonSizer()
-        sizer_1.Add(sizer_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5)
+        grid_sizer_1.Add(
+            sizer_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5
+        )
 
         self.button_OK = wx.Button(self, wx.ID_OK, "")
         self.button_OK.SetDefault()
@@ -434,39 +445,37 @@ class CommandDialog(wx.Dialog):
 
         sizer_2.Realize()
 
-        grid_sizer_7.AddGrowableRow(1)
-        grid_sizer_7.AddGrowableCol(0)
-        self.panel_12.SetSizer(grid_sizer_7)
+        grid_sizer_14.AddGrowableRow(1)
+        grid_sizer_14.AddGrowableCol(0)
+        self.panel_27.SetSizer(grid_sizer_14)
 
-        self.panel_22.SetSizer(sizer_15)
-
-        self.panel_21.SetSizer(grid_sizer_10)
-
-        self.panel_20.SetSizer(sizer_14)
-
-        self.panel_19.SetSizer(grid_sizer_9)
-
+        grid_sizer_8.AddGrowableRow(0)
+        grid_sizer_8.AddGrowableCol(0)
+        grid_sizer_8.AddGrowableCol(1)
         self.panel_16.SetSizer(grid_sizer_8)
 
-        self.panel_15.SetSizer(sizer_13)
+        grid_sizer_9.AddGrowableRow(0)
+        grid_sizer_9.AddGrowableCol(0)
+        grid_sizer_9.AddGrowableCol(1)
+        self.panel_17.SetSizer(grid_sizer_9)
 
-        self.panel_14.SetSizer(sizer_11)
+        self.panel_28.SetSizer(sizer_18)
 
-        grid_sizer_6.AddGrowableRow(3)
-        grid_sizer_6.AddGrowableCol(0)
-        self.panel_13.SetSizer(grid_sizer_6)
+        grid_sizer_7.AddGrowableRow(3)
+        grid_sizer_7.AddGrowableCol(0)
+        self.panel_13.SetSizer(grid_sizer_7)
 
         self.schedule.SetSizer(sizer_10)
 
         sizer_3.AddGrowableRow(1)
         sizer_3.AddGrowableCol(0)
-        self.panel_2.SetSizer(sizer_3)
+        self.panel_12.SetSizer(sizer_3)
 
         self.panel_11.SetSizer(sizer_9)
 
         self.panel_10.SetSizer(sizer_4)
 
-        self.panel_3.SetSizer(grid_sizer_3)
+        self.panel_3.SetSizer(grid_sizer_6)
 
         self.panel_9.SetSizer(sizer_8)
 
@@ -480,22 +489,20 @@ class CommandDialog(wx.Dialog):
 
         self.panel_5.SetSizer(grid_sizer_5)
 
-        grid_sizer_2.AddGrowableRow(3)
-        grid_sizer_2.AddGrowableCol(0)
-        self.panel_18.SetSizer(grid_sizer_2)
+        grid_sizer_3.AddGrowableRow(3)
+        grid_sizer_3.AddGrowableCol(0)
+        self.panel_18.SetSizer(grid_sizer_3)
 
         self.command.SetSizer(sizer_12)
 
+        grid_sizer_2.AddGrowableRow(0)
+        grid_sizer_2.AddGrowableCol(0)
+        self.panel_2.SetSizer(grid_sizer_2)
+
         grid_sizer_1.AddGrowableRow(0)
         grid_sizer_1.AddGrowableCol(0)
-        grid_sizer_1.AddGrowableCol(2)
-        self.panel_1.SetSizer(grid_sizer_1)
-
-        sizer_1.AddGrowableRow(0)
-        sizer_1.AddGrowableCol(0)
-        self.SetSizer(sizer_1)
-        sizer_1.Fit(self)
-        sizer_1.SetSizeHints(self)
+        self.SetSizer(grid_sizer_1)
+        grid_sizer_1.SetSizeHints(self)
 
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
@@ -515,7 +522,7 @@ class CommandDialog(wx.Dialog):
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
 
-        self.choice_4.Bind(wx.EVT_CHOICE, self.onScheduleType)
+        self.choice_6.Bind(wx.EVT_CHOICE, self.onScheduleType)
 
         self.startDate = None
         self.endDate = None
@@ -607,7 +614,7 @@ class CommandDialog(wx.Dialog):
         date = date + "T" + time + "Z"
         return date, time
 
-    # @api_tool_decorator
+    @api_tool_decorator
     def GetValue(self):
         if not self.isJsonInput:
             command_args = V0CommandArgs(
@@ -627,15 +634,15 @@ class CommandDialog(wx.Dialog):
                 else None
             )
 
-            if self.choice_4.GetStringSelection().lower() != "immediate":
+            if self.choice_6.GetStringSelection().lower() != "immediate":
                 self.startDate, self.winStartTime = self.getStartDateTime()
                 self.endDate, self.winEndTime = self.getEndDateTime()
 
             schedule_args = V0CommandScheduleArgs(
-                name=self.choice_1.GetStringSelection(),
+                name=self.text_ctrl_5.GetStringSelection(),
                 start_datetime=self.startDate,
                 end_datetime=self.endDate,
-                time_type=self.choice_5.GetStringSelection(),
+                time_type=self.choice_7.GetStringSelection(),
                 window_start_time=self.winStartTime,
                 window_end_time=self.winEndTime,
                 days=dayList,
@@ -644,7 +651,7 @@ class CommandDialog(wx.Dialog):
                 command_args,
                 self.choice_1.GetStringSelection(),
                 schedule_args,
-                self.choice_4.GetStringSelection(),
+                self.choice_6.GetStringSelection(),
             )
         else:
             cmdConfig = json.loads(self.text_ctrl_1.GetValue())
@@ -676,7 +683,9 @@ class CommandDialog(wx.Dialog):
                 else None,
             )
             schedule_args = V0CommandScheduleArgs(
-                name=scheduleConfig["name"] if "name" in scheduleConfig else None,
+                name=scheduleConfig["name"]
+                if "name" in scheduleConfig
+                else "Task_%s" % random.randint(0, Globals.MAX_LIMIT),
                 start_datetime=scheduleConfig["start_datetime"]
                 if "start_datetime" in scheduleConfig
                 else None,
@@ -718,5 +727,6 @@ class CommandDialog(wx.Dialog):
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
+        # self.DestroyLater()

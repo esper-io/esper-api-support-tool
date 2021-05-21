@@ -14,7 +14,7 @@ class NewEndpointDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE,
         )
         self.SetSize((500, 400))
         self.SetTitle("Add New Endpoint")
@@ -111,7 +111,7 @@ class NewEndpointDialog(wx.Dialog):
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
 
     @api_tool_decorator

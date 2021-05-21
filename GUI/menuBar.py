@@ -41,8 +41,6 @@ class ToolMenuBar(wx.MenuBar):
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         self.fileOpenConfig = fileMenu.Append(foc)
 
-        self.recent = wx.Menu()
-
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
         self.fileSave = fileMenu.Append(fs)
@@ -71,11 +69,11 @@ class ToolMenuBar(wx.MenuBar):
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
         runMenu.Append(wx.ID_SEPARATOR)
-        # installedDevices = wx.MenuItem(
-        #     runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
-        # )
-        # self.installedDevices = runMenu.Append(installedDevices)
-        # runMenu.Append(wx.ID_SEPARATOR)
+        installedDevices = wx.MenuItem(
+            runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        )
+        self.installedDevices = runMenu.Append(installedDevices)
+        runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
             runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
         )
@@ -161,9 +159,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
-        # self.Bind(
-        #     wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
-        # )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
+        )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
@@ -193,16 +191,16 @@ class ToolMenuBar(wx.MenuBar):
         openWebLinkInBrowser(Globals.HELP_LINK)
 
     @api_tool_decorator
-    def onUpdateCheck(self, event):
+    def onUpdateCheck(self, event=None, showDlg=True):
         if not self.isCheckingForUpdates:
             update = wxThread.GUIThread(
-                self, self.updateCheck, None, name="UpdateCheck"
+                self, self.updateCheck, showDlg, name="UpdateCheck"
             )
             update.start()
             self.isCheckingForUpdates = True
 
     @api_tool_decorator
-    def updateCheck(self):
+    def updateCheck(self, showDlg=False):
         icon = wx.ICON_INFORMATION
         msg = ""
         json = None
@@ -226,20 +224,28 @@ class ToolMenuBar(wx.MenuBar):
                         downloadURL = asset["browser_download_url"]
                         break
                 if downloadURL:
-                    result = None
-                    try:
-                        result = downloadFileFromUrl(downloadURL, name)
-                    except Exception as e:
-                        print(e)
-                        ApiToolLog().LogError(e)
-                    if result:
-                        msg = (
-                            "Download Succeeded! File should be located at:\n\n%s\nPlease open the executable from the download!"
-                            % result
-                        )
-                    else:
-                        icon = wx.ICON_ERROR
-                        msg = "An error occured while downloading the update. Please try again later."
+                    dlg = wx.MessageDialog(
+                        None,
+                        "Update found! Do you want to update?",
+                        "Update",
+                        wx.YES_NO | wx.ICON_QUESTION,
+                    )
+                    if dlg.ShowModal() == wx.ID_YES:
+                        result = None
+                        try:
+                            result = downloadFileFromUrl(downloadURL, name)
+                        except Exception as e:
+                            print(e)
+                            ApiToolLog().LogError(e)
+                        if result:
+                            showDlg = True
+                            msg = (
+                                "Download Succeeded! File should be located at:\n\n%s\nPlease open the executable from the download!"
+                                % result
+                            )
+                        else:
+                            icon = wx.ICON_ERROR
+                            msg = "An error occured while downloading the update. Please try again later."
             else:
                 msg = "You are up-to-date!"
         else:
@@ -247,7 +253,12 @@ class ToolMenuBar(wx.MenuBar):
             msg = (
                 "An error occured while downloading the update. Please try again later."
             )
-        wx.MessageBox(msg, style=icon)
+        if msg and showDlg:
+            wx.MessageBox(msg, style=icon)
+        elif msg:
+            self.parentFrame.Logging(
+                msg, isError=True if "error" in msg.lower() else False
+            )
         self.isCheckingForUpdates = False
 
     @api_tool_decorator
@@ -318,6 +329,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            dlg.DestroyLater()
 
     @api_tool_decorator
     def checkCollectionEnabled(self):

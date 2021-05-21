@@ -35,9 +35,20 @@ def api_tool_decorator(func):
         finally:
             if Globals.frame and excpt:
                 Globals.frame.Logging(str(excpt), isError=True)
-                Globals.frame.onComplete(None)
-                Globals.frame.setCursorDefault()
-                Globals.frame.setGaugeValue(100)
+                otherThreadsRunning = False
+                for thread in threading.enumerate():
+                    if (
+                        thread.name != "InternetCheck"
+                        and thread.name != "updateErrorTracker"
+                        and "main" in thread.name.lower()
+                        and thread.name != "SavePrefs"
+                    ):
+                        otherThreadsRunning = True
+                        break
+                if not otherThreadsRunning:
+                    Globals.frame.onComplete(None, True)
+                    Globals.frame.setCursorDefault()
+                    Globals.frame.setGaugeValue(100)
                 if Globals.msg_lock.locked():
                     Globals.msg_lock.release()
         end = time.perf_counter()

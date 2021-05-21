@@ -29,14 +29,15 @@ def resourcePath(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def createNewFile(filePath):
+def createNewFile(filePath, fileData=None):
     """ Create a new File to write in """
     if not os.path.exists(filePath):
         parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
         if not os.path.exists(parentPath):
             os.makedirs(parentPath)
-        with open(filePath, "w"):
-            pass
+        with open(filePath, "w") as outfile:
+            if fileData:
+                outfile.write(fileData)
 
 
 def scale_bitmap(bitmap, width, height):
@@ -96,7 +97,7 @@ def checkForInternetAccess(frame):
             displayMessageBox(
                 (
                     "ERROR: An internet connection is required when using the tool!",
-                    wx.OK | wx.ICON_ERROR | wx.CENTRE | wx.STAY_ON_TOP,
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
                 )
             )
         time.sleep(15)
@@ -281,7 +282,9 @@ def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
 
 
 def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
-    if Globals.PRINT_RESPONSES or (resp and  hasattr(resp, "status_code") and resp.status_code >= 300):
+    if Globals.PRINT_RESPONSES or (
+        resp and hasattr(resp, "status_code") and resp.status_code >= 300
+    ):
         print(url)
         prettyReponse = ""
         if not json_resp:

@@ -36,7 +36,7 @@ class SidePanel(wx.Panel):
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
 
         self.panel_3 = wx.Panel(self.panel_2, wx.ID_ANY)
-        sizer_2.Add(self.panel_3, 0, wx.EXPAND, 0)
+        sizer_2.Add(self.panel_3, 0, wx.EXPAND | wx.BOTTOM, 5)
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
@@ -285,69 +285,67 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator
     def onGroupSelection(self, event):
-        choices = list(self.groups.keys())
-        if self.groupMultiDialog:
-            self.groupMultiDialog.Close()
-            self.groupMultiDialog.DestroyLater()
-            self.groupMultiDialog = None
-        if not self.groupMultiDialog:
-            self.groupMultiDialog = MultiSelectSearchDlg(
-                self.parentFrame,
-                choices,
-                label="Select Group(s)",
-                title="Select Group(s)",
-            )
+        if not self.parentFrame.isRunning:
+            choices = list(self.groups.keys())
+            if self.groupMultiDialog:
+                self.groupMultiDialog = None
+            if not self.groupMultiDialog:
+                self.groupMultiDialog = MultiSelectSearchDlg(
+                    self.parentFrame,
+                    choices,
+                    label="Select Group(s)",
+                    title="Select Group(s)",
+                )
 
-        if self.groupMultiDialog.ShowModal() == wx.ID_OK:
-            self.parentFrame.menubar.disableConfigMenu()
-            self.knownApps = []
-            self.clearGroupAndDeviceSelections()
-            selections = self.groupMultiDialog.GetSelections()
-            if selections:
-                for groupName in selections:
-                    groupId = self.groups[groupName]
-                    self.selectedGroups.Append(groupName)
-                    if groupName.lower() == "all devices":
-                        self.selectedGroups.Clear()
-                        self.selectedGroupsList = []
+            if self.groupMultiDialog.ShowModal() == wx.ID_OK:
+                self.parentFrame.menubar.disableConfigMenu()
+                self.knownApps = []
+                self.clearGroupAndDeviceSelections()
+                selections = self.groupMultiDialog.GetSelections()
+                if selections:
+                    for groupName in selections:
+                        groupId = self.groups[groupName]
                         self.selectedGroups.Append(groupName)
-                        self.selectedGroupsList.append(groupId)
-                        break
-                    if groupId not in self.selectedGroupsList:
-                        self.selectedGroupsList.append(groupId)
+                        if groupName.lower() == "all devices":
+                            self.selectedGroups.Clear()
+                            self.selectedGroupsList = []
+                            self.selectedGroups.Append(groupName)
+                            self.selectedGroupsList.append(groupId)
+                            break
+                        if groupId not in self.selectedGroupsList:
+                            self.selectedGroupsList.append(groupId)
 
-        if self.selectedGroupsList:
-            self.parentFrame.setCursorBusy()
-            self.devices = {}
-            self.parentFrame.PopulateDevices(None)
+            if self.selectedGroupsList:
+                self.parentFrame.setCursorBusy()
+                self.devices = {}
+                self.parentFrame.PopulateDevices(None)
 
     @api_tool_decorator
     def onDeviceSelection(self, event):
-        choices = list(self.devices.keys())
-        if self.deviceMultiDialog:
-            self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.DestroyLater()
-            self.deviceMultiDialog = None
-        if not self.deviceMultiDialog:
-            self.deviceMultiDialog = MultiSelectSearchDlg(
-                self.parentFrame,
-                choices,
-                label="Select Device(s)",
-                title="Select Device(s)",
-            )
-        if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
-            self.parentFrame.menubar.disableConfigMenu()
-            self.appChoice.Clear()
-            self.selectedDevices.Clear()
-            self.selectedDevicesList = []
-            self.selectedDeviceApps = []
-            selections = self.deviceMultiDialog.GetSelections()
-            for deviceName in selections:
-                deviceId = self.devices[deviceName]
-                self.selectedDevices.Append(deviceName)
-                if deviceId not in self.selectedDevicesList:
-                    self.selectedDevicesList.append(deviceId)
-        self.parentFrame.onDeviceSelections(None)
+        if not self.parentFrame.isRunning:
+            choices = list(self.devices.keys())
+            if self.deviceMultiDialog:
+                self.deviceMultiDialog = None
+            if not self.deviceMultiDialog:
+                self.deviceMultiDialog = MultiSelectSearchDlg(
+                    self.parentFrame,
+                    choices,
+                    label="Select Device(s)",
+                    title="Select Device(s)",
+                )
+            if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
+                self.parentFrame.menubar.disableConfigMenu()
+                self.appChoice.Clear()
+                self.selectedDevices.Clear()
+                self.selectedDevicesList = []
+                self.selectedDeviceApps = []
+                selections = self.deviceMultiDialog.GetSelections()
+                for deviceName in selections:
+                    deviceId = self.devices[deviceName]
+                    self.selectedDevices.Append(deviceName)
+                    if deviceId not in self.selectedDevicesList:
+                        self.selectedDevicesList.append(deviceId)
+            self.parentFrame.onDeviceSelections(None)
 
     @api_tool_decorator
     def sortAndPopulateAppChoice(self):
@@ -381,7 +379,6 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator
     def onActionSelection(self, event):
-        # item = self.actionChoice.GetValue()
         clientData = event.ClientData
         if not clientData:
             action = self.actionChoice.GetValue()
@@ -389,6 +386,10 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GENERAL_ACTIONS[action]
             elif action in Globals.GRID_ACTIONS:
                 clientData = Globals.GRID_ACTIONS[action]
+        self.setAppChoiceState(clientData)
+
+    @api_tool_decorator
+    def setAppChoiceState(self, clientData):
         if (
             clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value

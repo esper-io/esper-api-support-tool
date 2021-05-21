@@ -522,6 +522,12 @@ class EsperTemplateUtil:
             url = link + enterprise_id + self.template_extension
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
+            if hasattr(resp, "status_code"):
+                if resp.status_code > 299:
+                    postEventToFrame(
+                        wxThread.myEVT_MESSAGE_BOX,
+                        (str(json_resp), wx.ICON_ERROR),
+                    )
             return json_resp
         except Exception as e:
             raise e

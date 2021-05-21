@@ -11,7 +11,7 @@ class PreferencesDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(525, 400),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
         self.SetSize((525, 400))
@@ -41,6 +41,8 @@ class PreferencesDialog(wx.Dialog):
             "useJsonForCmd",
             "runCommandOn",
             "maxThread",
+            "syncGridScroll",
+            "aliasDayDelta",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -135,6 +137,7 @@ class PreferencesDialog(wx.Dialog):
         )
 
         self.panel_9 = wx.Panel(self.general, wx.ID_ANY)
+        self.panel_9.Hide()
         sizer_6.Add(self.panel_9, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
@@ -161,6 +164,7 @@ class PreferencesDialog(wx.Dialog):
         )
 
         self.panel_43 = wx.Panel(self.general, wx.ID_ANY)
+        self.panel_43.Hide()
         sizer_6.Add(self.panel_43, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_30 = wx.BoxSizer(wx.HORIZONTAL)
@@ -193,7 +197,7 @@ class PreferencesDialog(wx.Dialog):
         self.command.Hide()
         sizer_5.Add(self.command, 1, wx.EXPAND, 0)
 
-        sizer_14 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_14 = wx.FlexGridSizer(5, 1, 0, 0)
 
         self.panel_25 = wx.Panel(self.command, wx.ID_ANY)
         sizer_14.Add(self.panel_25, 1, wx.ALL | wx.EXPAND, 5)
@@ -306,12 +310,46 @@ class PreferencesDialog(wx.Dialog):
             self.combobox_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
         )
 
+        self.panel_47 = wx.Panel(self.command, wx.ID_ANY)
+        sizer_14.Add(self.panel_47, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_32 = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_47.SetSizer(sizer_32)
+
+        label_18 = wx.StaticText(
+            self.panel_47,
+            wx.ID_ANY,
+            "Date Delta for Alias Command",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_18.SetToolTip(
+            "Time difference for when the Alias command schedule should end."
+        )
+        sizer_32.Add(label_18, 0, wx.ALIGN_CENTER_VERTICAL | wx.TOP, 2)
+
+        self.panel_48 = wx.Panel(self.panel_47, wx.ID_ANY)
+        sizer_32.Add(self.panel_48, 1, wx.EXPAND, 0)
+
+        grid_sizer_23 = wx.GridSizer(1, 1, 0, 0)
+        self.panel_48.SetSizer(grid_sizer_23)
+
+        self.spin_ctrl_9 = wx.SpinCtrl(
+            self.panel_48,
+            wx.ID_ANY,
+            min=0,
+            max=Globals.ALIAS_MAX_DAY_DELTA,
+            initial=Globals.ALIAS_DAY_DELTA,
+        )
+        grid_sizer_23.Add(
+            self.spin_ctrl_9, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+        )
+
         # Grid Preferences
         self.grid = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(5, 1, 0, 0)
 
         self.panel_19 = wx.Panel(self.grid, wx.ID_ANY)
         sizer_16.Add(self.panel_19, 1, wx.ALL | wx.EXPAND, 5)
@@ -392,12 +430,34 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_10 = wx.CheckBox(self.panel_36, wx.ID_ANY, "")
         grid_sizer_17.Add(self.checkbox_10, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
+        self.panel_45 = wx.Panel(self.grid, wx.ID_ANY)
+        sizer_16.Add(self.panel_45, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer_31 = wx.BoxSizer(wx.HORIZONTAL)
+
+        label_19 = wx.StaticText(
+            self.panel_45,
+            wx.ID_ANY,
+            "Sync Grids Vertical Scroll Position",
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label_19.SetToolTip("Sync Grids Vertical Scroll Position.")
+        sizer_31.Add(label_19, 0, wx.ALIGN_CENTER_VERTICAL, 2)
+
+        self.panel_46 = wx.Panel(self.panel_45, wx.ID_ANY)
+        sizer_31.Add(self.panel_46, 1, wx.EXPAND, 0)
+
+        grid_sizer_22 = wx.GridSizer(1, 1, 0, 0)
+
+        self.checkbox_13 = wx.CheckBox(self.panel_46, wx.ID_ANY, "")
+        grid_sizer_22.Add(self.checkbox_13, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
 
         self.panel_7 = wx.Panel(self.app, wx.ID_ANY)
         sizer_9.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
@@ -574,6 +634,10 @@ class PreferencesDialog(wx.Dialog):
 
         self.panel_37.SetSizer(grid_sizer_18)
 
+        self.panel_45.SetSizer(sizer_31)
+
+        self.panel_46.SetSizer(grid_sizer_22)
+
         self.panel_14.SetSizer(grid_sizer_6)
 
         self.panel_13.SetSizer(sizer_13)
@@ -634,7 +698,9 @@ class PreferencesDialog(wx.Dialog):
 
         self.Layout()
 
-        self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
+        if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
+            self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
+        self.Bind(wx.EVT_SIZE, self.onResize, self)
 
         if prefDict and not prefDict["enableDevice"]:
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
@@ -699,7 +765,7 @@ class PreferencesDialog(wx.Dialog):
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
             Globals.REACH_QUEUED_ONLY = True
-        elif prefDict and prefDict["reachQueueStateOnly"]:
+        elif prefDict and "reachQueueStateOnly" in prefDict:
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
                 and prefDict["reachQueueStateOnly"].lower() == "true"
@@ -709,6 +775,28 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
+
+        if not prefDict or (prefDict and not prefDict["syncGridScroll"]):
+            self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+            Globals.MATCH_SCROLL_POS = True
+        elif prefDict and "syncGridScroll" in prefDict:
+            if (
+                isinstance(self.prefs["syncGridScroll"], str)
+                and prefDict["syncGridScroll"].lower() == "true"
+            ) or prefDict["syncGridScroll"] == True:
+                self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+                Globals.MATCH_SCROLL_POS = True
+            else:
+                self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.MATCH_SCROLL_POS = False
+
+        if prefDict and "aliasDayDelta" in prefDict:
+            Globals.ALIAS_DAY_DELTA = int(prefDict["aliasDayDelta"])
+            if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
+                Globals.ALIAS_DAY_DELTA = Globals.ALIAS_MAX_DAY_DELTA
+            if Globals.ALIAS_DAY_DELTA < 0:
+                Globals.ALIAS_DAY_DELTA = 0
+            self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
 
         if not prefDict or (
             prefDict
@@ -857,6 +945,7 @@ class PreferencesDialog(wx.Dialog):
             self.grid.Hide()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
+        self.Refresh()
 
     @api_tool_decorator
     def OnApply(self, event):
@@ -884,9 +973,11 @@ class PreferencesDialog(wx.Dialog):
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
             "maxThread": self.spin_ctrl_8.GetValue(),
+            "syncGridScroll": self.checkbox_13.IsChecked(),
+            "aliasDayDelta": self.spin_ctrl_9.GetValue(),
         }
 
-        Globals.SET_APP_STATE_AS_SHOW = False
+        Globals.SET_APP_STATE_AS_SHOW = self.prefs["setStateShow"]
         Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
@@ -901,6 +992,8 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
+        Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
+        Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -918,7 +1011,7 @@ class PreferencesDialog(wx.Dialog):
 
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
 
     @api_tool_decorator
@@ -1058,7 +1151,7 @@ class PreferencesDialog(wx.Dialog):
             else:
                 Globals.SET_APP_STATE_AS_SHOW = False
                 self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
-        if "useJsonForCmd" in self.prefs and self.prefs["useJsonForCmd"]:
+        if "useJsonForCmd" in self.prefs:
             if (
                 isinstance(self.prefs["useJsonForCmd"], str)
                 and self.prefs["useJsonForCmd"].lower() == "false"
@@ -1102,6 +1195,23 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REACH_QUEUED_ONLY = False
+        if "syncGridScroll" in self.prefs:
+            if (
+                isinstance(self.prefs["syncGridScroll"], str)
+                and self.prefs["syncGridScroll"].lower() == "true"
+            ) or self.prefs["syncGridScroll"] == True:
+                self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
+                Globals.MATCH_SCROLL_POS = True
+            else:
+                self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.MATCH_SCROLL_POS = False
+        if "aliasDayDelta" in self.prefs:
+            Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
+            if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
+                Globals.ALIAS_DAY_DELTA = Globals.ALIAS_MAX_DAY_DELTA
+            if Globals.ALIAS_DAY_DELTA < 0:
+                Globals.ALIAS_DAY_DELTA = 0
+            self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -1127,6 +1237,8 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
         self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
+        self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
+        self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
 
         return self.prefs
 
@@ -1174,5 +1286,13 @@ class PreferencesDialog(wx.Dialog):
             return Globals.CMD_DEVICE_TYPE
         elif key == "maxThread":
             return Globals.MAX_THREAD_COUNT
+        elif key == "syncGridScroll":
+            return Globals.MATCH_SCROLL_POS
+        elif key == "aliasDayDelta":
+            return Globals.ALIAS_DAY_DELTA
         else:
             return None
+
+    def onResize(self, event):
+        self.Refresh()
+        event.Skip()

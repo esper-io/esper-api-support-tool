@@ -11,7 +11,7 @@ class CheckboxMessageBox(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP | wx.OK | wx.CANCEL,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL,
         )
         self.SetSize((400, 200))
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
@@ -60,6 +60,7 @@ class CheckboxMessageBox(wx.Dialog):
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
+        self.Centre()
 
     @api_tool_decorator
     def toggleCheckbox(self, event):
@@ -77,6 +78,6 @@ class CheckboxMessageBox(wx.Dialog):
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
         self.DestroyLater()

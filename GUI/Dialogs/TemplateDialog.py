@@ -15,7 +15,7 @@ class TemplateDialog(wx.Dialog):
         super(TemplateDialog, self).__init__(
             None,
             wx.ID_ANY,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.parent = parent
         self.sourceTemplate = []
@@ -65,8 +65,9 @@ class TemplateDialog(wx.Dialog):
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
         self.choice_2.Bind(wx.EVT_CHOICE, self.onChoice2Select)
-        self.check_list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
-        self.check_list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+        if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
+            self.check_list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
+            self.check_list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         self.__set_properties()
         self.__do_layout()
@@ -134,9 +135,9 @@ class TemplateDialog(wx.Dialog):
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
-        self.DestroyLater()
+        # self.DestroyLater()
 
     @api_tool_decorator
     def populateTemplatePreview(self, template):

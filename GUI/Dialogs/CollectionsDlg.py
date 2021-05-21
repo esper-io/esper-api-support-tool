@@ -9,7 +9,6 @@ import Common.Globals as Globals
 from Utility.CollectionsApi import (
     fetchCollectionList,
     createCollection,
-    # retrieveCollection,
     updateCollection,
     deleteCollection,
 )
@@ -21,7 +20,7 @@ class CollectionsDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=(583, 407),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetSize((583, 407))
         self.SetMinSize((583, 407))
@@ -215,8 +214,9 @@ class CollectionsDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-        self.list_box_1.Bind(wx.EVT_LISTBOX, self.onSelection)
-        self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.onSelection)
+        if hasattr(self.parentFrame, "WINDOWS") and self.parentFrame.WINDOWS:
+            self.list_box_1.Bind(wx.EVT_LISTBOX, self.onSelection)
+            self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.onSelection)
         self.button_1.Bind(wx.EVT_BUTTON, self.deleteCollection)
         self.button_2.Bind(wx.EVT_BUTTON, self.onExecute)
         self.button_3.Bind(wx.EVT_BUTTON, self.createCollection)
@@ -233,9 +233,9 @@ class CollectionsDialog(wx.Dialog):
     def onExecute(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
-        else:
+        elif self.IsShown():
             self.Close()
-        self.DestroyLater()
+        # self.DestroyLater()
 
     @api_tool_decorator
     def onInput(self, event):

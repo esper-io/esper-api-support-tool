@@ -9,10 +9,10 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.18"
+VERSION = "v0.184"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
-MIN_LIMIT = 1000
+MIN_LIMIT = 50
 MAX_LIMIT = 500000
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
@@ -32,7 +32,6 @@ available on the Esper Console Dashboard."""
 
 """ Locks """
 lock = threading.Lock()
-deviceInfo_lock = threading.Lock()
 error_lock = threading.Lock()
 msg_lock = threading.Lock()
 gauge_lock = threading.Lock()
@@ -44,13 +43,14 @@ grid_color_lock = threading.Lock()
 """ Actions """
 GENERAL_ACTIONS = {
     "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
-    "Show - Device Info & Network And Secruity Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Show Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
     "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
+    "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
 }
 
 GRID_ACTIONS = {
@@ -120,22 +120,42 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags"]
 CSV_TAG_ATTR_NAME = {
+    # "Esper Id": "id",
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
+    "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
+    "Template": "template_name",
+    "Policy": "policy_name",
     "Mode": "Mode",
+    "Lockdown State": "lockdown_state",
     "Serial Number": "Serial",
+    "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
     "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
+    "Device Type": "device_type",
+    "Total RAM": "totalRam",
+    "Total Internal Storage": "totalInternalStorage",
+    # "Audio Contraints": "audio_constraints",
+    "Timezone": "timezone_string",
+    "Location": "location_info",
+    "Rotation": "rotationState",
+    "Brightness": "brightnessScale",
+    "Screen Timeout (ms)": "screenOffTimeout",
+    "Ringer Mode": "ringerMode",
+    "Music Volume": "STREAM_MUSIC",
+    "Ring Volume": "STREAM_RING",
+    "Alarm Volume": "STREAM_ALARM",
+    "Notification Volume": "STREAM_NOTIFICATION",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
@@ -143,16 +163,24 @@ CSV_NETWORK_ATTR_NAME = {
     "Security Patch": "securityPatchLevel",
     "[WIFI ACCESS POINTS]": "",
     "[Current WIFI Connection]": "",
+    "Ethernet Connection": "ethernetState",
     "[Cellular Access Point]": "",
     "Active Connection": "",
-    "IP Address": "ipAddress",
+    "IPv4 Address(es)": "ipv4Address",
+    "IPv6 Address(es)": "ipv6Address",
     "Bluetooth State": "bluetoothState",
     "Paired Devices": "pairedDevices",
     "Connected Devices": "connectedDevices",
     "Wifi Mac Id": "wifiMacAddress",
     "IPv6 Mac Address(es)": "macAddress",
+    # "Signal Strength": "signalStrength",
+    "Frequency": "frequency",
+    "linkSpeed": "linkSpeed",
+    "Data Speed Down": "dataSpeedDown",
+    "Data Speed Up": "dataSpeedUp",
 }
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
@@ -162,7 +190,6 @@ app = None
 
 """ CSV Save File """
 csv_auth_path = ""
-# GRID_DEVICE_INFO_LIST = []
 
 LAST_DEVICE_ID = None
 LAST_GROUP_ID = None
@@ -182,6 +209,9 @@ SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
+MATCH_SCROLL_POS = True
+ALIAS_DAY_DELTA = 14
+ALIAS_MAX_DAY_DELTA = 56
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )
