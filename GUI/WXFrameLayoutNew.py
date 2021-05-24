@@ -431,11 +431,29 @@ class NewFrameLayout(wx.Frame):
                 tempDict.update(deviceListing[0])
             gridDeviceData.append(tempDict)
         headers = []
-        headers.extend(Globals.CSV_TAG_ATTR_NAME.keys())
-        headers.extend(Globals.CSV_NETWORK_ATTR_NAME.keys())
+        deviceHeaders = Globals.CSV_TAG_ATTR_NAME.keys()
+        networkHeaders = Globals.CSV_NETWORK_ATTR_NAME.keys()
+        headers.extend(deviceHeaders)
+        headers.extend(networkHeaders)
         headers.remove("Device Name")
         headersNoDup = []
         [headersNoDup.append(x) for x in headers if x not in headersNoDup]
+        headers = headersNoDup
+
+        headersNoDup = []
+        for header in headers:
+            if (
+                header in deviceHeaders
+                and self.gridPanel.grid_1.GetColSize(list(deviceHeaders).index(header))
+                > 0
+            ):
+                headersNoDup.append(header)
+            if (
+                header in networkHeaders
+                and self.gridPanel.grid_2.GetColSize(list(networkHeaders).index(header))
+                > 0
+            ):
+                headersNoDup.append(header)
         headers = headersNoDup
 
         gridData = []
@@ -450,10 +468,10 @@ class NewFrameLayout(wx.Frame):
                 if header in deviceData:
                     value = deviceData[header]
                 else:
-                    if header in Globals.CSV_TAG_ATTR_NAME.keys():
+                    if header in deviceHeaders:
                         if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
                             value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
-                    if header in Globals.CSV_NETWORK_ATTR_NAME.keys():
+                    if header in networkHeaders:
                         if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
                             value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
                 rowValues.append(value)
