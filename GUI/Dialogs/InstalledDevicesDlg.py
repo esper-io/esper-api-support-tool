@@ -2,6 +2,7 @@
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
+import Common.Globals as Globals
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -14,7 +15,21 @@ class InstalledDevicesDlg(wx.Dialog):
 
         self.appNameList = []
         self.apps = apps
-        self.appNameList = [a_dict["app_name"] for a_dict in apps]
+        for app in self.apps:
+            if Globals.SHOW_PKG_NAME:
+                for key, value in app.items():
+                    if (
+                        key != "app_name"
+                        and key != "app_state"
+                        and (
+                            (Globals.SHOW_PKG_NAME and " (" in key)
+                            or (not Globals.SHOW_PKG_NAME and " (" not in key)
+                        )
+                    ):
+                        self.appNameList.append(key)
+                        break
+            else:
+                self.appNameList.append(app["app_name"])
         self.versions = []
 
         self.SetMinSize((400, 300))
@@ -72,6 +87,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.Layout()
+        self.Fit()
         self.Centre()
 
         self.list_box_1.Bind(wx.EVT_LISTBOX, self.onAppSelect)
@@ -100,12 +116,13 @@ class InstalledDevicesDlg(wx.Dialog):
         )
         self.list_box_2.Clear()
         for match in matches:
-            id = match["id"]
-            versions = getAppVersions(id)
-            self.versions = versions.results
-            for version in versions.results:
-                # self.list_box_2.Append(version.version_code, version.id)
-                self.list_box_2.Append(version.version_code)
+            if "id" in match:
+                id = match["id"]
+                versions = getAppVersions(id)
+                self.versions = versions.results
+                for version in versions.results:
+                    # self.list_box_2.Append(version.version_code, version.id)
+                    self.list_box_2.Append(version.version_code)
         if matches:
             self.list_box_2.Enable(True)
         else:

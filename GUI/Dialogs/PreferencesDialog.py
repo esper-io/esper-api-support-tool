@@ -14,8 +14,9 @@ class PreferencesDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.SetSize((525, 400))
-        self.SetMinSize((525, 400))
+        self.size = (525, 400)
+        self.SetSize(self.size)
+        self.SetMinSize(self.size)
 
         self.parent = parent
         self.prefs = prefDict
@@ -945,6 +946,8 @@ class PreferencesDialog(wx.Dialog):
             self.grid.Hide()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
+        if self.GetSize() == self.size:
+            self.Fit()
         self.Refresh()
 
     @api_tool_decorator
