@@ -191,6 +191,7 @@ def iterateThroughDeviceList(
         frame.Logging("---> No devices found for group")
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
+        postEventToFrame(wxThread.myEVT_COMPLETE, (True))
 
 
 @api_tool_decorator
