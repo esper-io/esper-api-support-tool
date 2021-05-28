@@ -114,8 +114,17 @@ class ApiToolLog:
                 if incremented:
                     break
             if not incremented:
-                Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
-                writeToFile = True
+                if (
+                    api_func
+                    and hasattr(api_func, "__name__")
+                    and api_func.__name__ in Globals.API_FUNCTIONS.keys()
+                ):
+                    Globals.API_REQUEST_TRACKER[
+                        Globals.API_FUNCTIONS[api_func.__name__]
+                    ] += 1
+                else:
+                    Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
+                    writeToFile = True
             strToWrite = "API Request orginated from %s, triggerring %s\n" % (
                 str(src),
                 str(api_func)
