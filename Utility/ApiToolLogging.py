@@ -6,6 +6,7 @@ import sys
 import os
 import traceback
 import Common.Globals as Globals
+import threading
 
 from datetime import datetime
 from traceback import print_exc, extract_tb, format_list
@@ -70,12 +71,59 @@ class ApiToolLog:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exc_traceback = format_list(extract_tb(exc_traceback))
         message += "".join(traceback.format_exception(type, value, tb))
-        message += str(exc_type) + "\n"
-        message += str(exc_value) + "\n"
-        message += str(exc_type) + "\n"
+        message += "Exc Type: %s\n" % str(exc_type)
+        message += "Exc Value: %s\n" % str(exc_value)
+        message += "Exc Traceback: %s\n" % str(exc_traceback)
         for line in exc_traceback:
             message += str(line)
         message += "\n"
         print(message)
         with open(self.logPath, "a") as myfile:
             myfile.write(message)
+
+    def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
+        thread = threading.Thread(
+            target=self.LogApiRequest, args=(src, api_func, writeToFile)
+        )
+        thread.start()
+        return thread
+
+    def LogApiRequest(self, src, api_func, writeToFile=False):
+        strToWrite = ""
+        if api_func and type(api_func) == dict:
+            strToWrite = "Session API Summary:\t%s\n\n" % str(api_func)
+        else:
+            Globals.API_REQUEST_SESSION_TRACKER += 1
+            incremented = False
+            for key in Globals.API_REQUEST_TRACKER.keys():
+                if (
+                    api_func
+                    and hasattr(api_func, "__name__")
+                    and key.replace("/", "") in api_func.__name__
+                ):
+                    Globals.API_REQUEST_TRACKER[key] += 1
+                    incremented = True
+                elif (
+                    api_func
+                    and type(api_func) == str
+                    and (key in api_func or api_func.endswith(key))
+                ):
+                    Globals.API_REQUEST_TRACKER[key] += 1
+                    incremented = True
+                if incremented:
+                    break
+            strToWrite = "API Request orginated from %s, triggerring %s\n" % (
+                str(src),
+                str(api_func)
+                if not hasattr(api_func, "__name__")
+                else api_func.__name__,
+            )
+        if strToWrite and writeToFile:
+            Globals.api_log_lock.acquire()
+            try:
+                with open(self.logPath, "a") as myfile:
+                    myfile.write(strToWrite)
+            except:
+                pass
+            finally:
+                Globals.api_log_lock.release()

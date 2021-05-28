@@ -187,6 +187,9 @@ class EsperTemplateUtil:
                 "Authorization": f"Bearer {key}",
             }
             download(bg["url"], "wallpaper.jpeg")
+            ApiToolLog().LogApiRequestOccurrence(
+                "download", bg["url"], Globals.PRINT_API_LOGS
+            )
             if os.path.exists("wallpaper.jpeg"):
                 payload = {
                     "orientation": bg["orientation"],
@@ -404,6 +407,9 @@ class EsperTemplateUtil:
             file = "%s.apk" % app["applicationName"]
             deleteFile(file)
             download(app["downloadUrl"], file)
+            ApiToolLog().LogApiRequestOccurrence(
+                "download", app["downloadUrl"], Globals.PRINT_API_LOGS
+            )
             res = uploadApplicationForHost(config, entId, file)
             if type(res) != InlineResponse201:
                 deleteFile(file)

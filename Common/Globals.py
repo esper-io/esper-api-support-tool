@@ -18,6 +18,8 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 error_tracker = {}
 
+API_REQUEST_SESSION_TRACKER = 0
+
 MAX_ERROR_TIME_DIFF = 2
 MAX_THREAD_COUNT = 20
 MAX_RETRY = 5
@@ -25,6 +27,7 @@ RETRY_SLEEP = 1.5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
+PRINT_API_LOGS = False
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
 your enterprise's Android-based Dedicated Devices providing features that are not currently
@@ -34,6 +37,7 @@ available on the Esper Console Dashboard."""
 lock = threading.Lock()
 error_lock = threading.Lock()
 msg_lock = threading.Lock()
+api_log_lock = threading.Lock()
 gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
@@ -102,6 +106,21 @@ JSON_COMMAND_TYPES = [
     "WIPE",
     "UPDATE_LATEST_DPC",
 ]
+
+API_REQUEST_TRACKER = {
+    "/application": 0,
+    "/collection": 0,
+    "/command": 0,
+    "/content": 0,
+    "/device/": 0,
+    "/devicegroup": 0,
+    "/v1/enterprise": 0,
+    "/policy": 0,
+    "/geofence": 0,
+    "/GroupCommandsApi": 0,
+    "/subscription": 0,
+    "/token": 0,
+}
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"

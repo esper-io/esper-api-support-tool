@@ -9,8 +9,17 @@
             "type": "python",
             "request": "launch",
             "program": "Main.py",
-            "console": "integratedTerminal"
-
+            "console": "integratedTerminal",
+            "args": [
+                "--record_place",
+                "false",
+                "--print_res",
+                "false",
+                "--print_duration",
+                "false",
+                "--log_api",
+                "false"
+            ]
         },
         {
             "name": "Create Executable",
@@ -18,7 +27,6 @@
             "request": "launch",
             "program": "generateExe.py",
             "console": "integratedTerminal"
-
         },
         {
             "name": "Python: Current File",
@@ -26,6 +34,6 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
-        }        
+        }
     ]
 }

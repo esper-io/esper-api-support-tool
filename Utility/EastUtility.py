@@ -610,6 +610,11 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                executeDeviceModification.__name__,
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
+            )
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
@@ -813,6 +818,11 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                setAppStateForAllAppsListed.__name__,
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
+            )
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
@@ -1015,6 +1025,11 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
                 Globals.enterprise_id,
                 limit=Globals.limit,
                 offset=Globals.offset,
+            )
+            ApiToolLog().LogApiRequestOccurrence(
+                setAppStateForSpecificAppListed.__name__,
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
             )
             break
         except Exception as e:

@@ -385,7 +385,9 @@ class NewFrameLayout(wx.Frame):
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
+        thread = ApiToolLog().LogApiRequestOccurrence(None, Globals.API_REQUEST_TRACKER, True)
         self.savePrefs(self.prefDialog)
+        thread.join()
         self.DestroyLater()
 
     @api_tool_decorator
@@ -1084,7 +1086,7 @@ class NewFrameLayout(wx.Frame):
 
         if hasattr(api_response, "results"):
             results = api_response.results
-        else:
+        elif api_response:
             results = api_response[1]["results"]
 
         if results and type(results[0]) == dict and "application" in results[0]:
