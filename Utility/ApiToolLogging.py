@@ -113,6 +113,9 @@ class ApiToolLog:
                     incremented = True
                 if incremented:
                     break
+            if not incremented:
+                Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
+                writeToFile = True
             strToWrite = "API Request orginated from %s, triggerring %s\n" % (
                 str(src),
                 str(api_func)
