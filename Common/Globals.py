@@ -120,6 +120,7 @@ API_REQUEST_TRACKER = {
     "/GroupCommandsApi": 0,
     "/subscription": 0,
     "/token": 0,
+    "/user": 0,
     "OtherAPI": 0,
 }
 

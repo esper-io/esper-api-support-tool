@@ -6,6 +6,7 @@ from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
+from GUI.UserCreation import UserCreation
 import Utility.wxThread as wxThread
 import wx
 import wx.adv as adv
@@ -30,6 +31,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.isCheckingForUpdates = False
         self.WINDOWS = False
+        self.uc = None
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -37,6 +39,9 @@ class ToolMenuBar(wx.MenuBar):
         fileMenu = wx.Menu()
         foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
         self.fileOpenAuth = fileMenu.Append(foa)
+
+        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Add Users")
+        self.fileAddUser = fileMenu.Append(fou)
 
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         self.fileOpenConfig = fileMenu.Append(foc)
@@ -152,6 +157,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
+        self.Bind(wx.EVT_MENU, self.AddUser, self.fileAddUser)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUploadCSV, self.fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
@@ -336,3 +342,7 @@ class ToolMenuBar(wx.MenuBar):
         if not checkCollectionIsEnabled():
             self.collection.Hide()
             self.eqlQuery.Hide()
+
+    def AddUser(self, event):
+        self.uc = UserCreation()
+        self.uc.Show()

@@ -382,6 +382,9 @@ class NewFrameLayout(wx.Frame):
             self.prefDialog.DestroyLater()
         if self.notification:
             self.notification.Close()
+        if self.menubar.uc:
+            self.menubar.uc.Close()
+            self.menubar.uc.DestroyLater()
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
