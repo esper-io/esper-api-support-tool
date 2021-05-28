@@ -92,7 +92,10 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "Session API Summary:\t%s\n\n" % str(api_func)
+            strToWrite = "Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+                str(api_func),
+                Globals.Globals.API_REQUEST_SESSION_TRACKER,
+            )
         else:
             Globals.API_REQUEST_SESSION_TRACKER += 1
             incremented = False
