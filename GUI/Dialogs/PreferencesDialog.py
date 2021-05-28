@@ -19,7 +19,7 @@ class PreferencesDialog(wx.Dialog):
         self.SetMinSize(self.size)
 
         self.parent = parent
-        self.prefs = prefDict
+        self.prefs = prefDict if prefDict else {}
         self.prefKeys = [
             "enableDevice",
             "limit",
@@ -911,6 +911,19 @@ class PreferencesDialog(wx.Dialog):
                 self.combobox_1.SetSelection(self.prefs["runCommandOn"])
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
 
+        if not prefDict or (prefDict and not prefDict["colVisibility"]):
+            self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
+        elif prefDict and prefDict["colVisibility"]:
+            if self.prefs["colVisibility"]:
+                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
+                    0
+                ]
+            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
+                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
+                    1
+                ]
+            self.parent.gridPanel.setColVisibility()
+
     @api_tool_decorator
     def showMatchingPanel(self, event):
         event.Skip()
@@ -978,6 +991,7 @@ class PreferencesDialog(wx.Dialog):
             "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
+            "colVisibility": self.parent.gridPanel.getColVisibility(),
         }
 
         Globals.SET_APP_STATE_AS_SHOW = self.prefs["setStateShow"]
@@ -1215,6 +1229,16 @@ class PreferencesDialog(wx.Dialog):
             if Globals.ALIAS_DAY_DELTA < 0:
                 Globals.ALIAS_DAY_DELTA = 0
             self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
+        if "colVisibility" in self.prefs:
+            self.colVisibilty = self.prefs["colVisibility"]
+            if self.prefs["colVisibility"]:
+                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
+                    0
+                ]
+            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
+                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
+                    1
+                ]
 
     @api_tool_decorator
     def GetPrefs(self):
@@ -1242,6 +1266,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
         self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
+        self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
 
         return self.prefs
 

@@ -99,8 +99,6 @@ class NewFrameLayout(wx.Frame):
         self.defaultDir = os.getcwd()
         self.gridArrowState = {"next": False, "prev": False}
 
-        self.prefDialog = PreferencesDialog(self.preferences, parent=self)
-
         if platform.system() == "Windows":
             self.WINDOWS = True
             self.prefPath = (
@@ -211,6 +209,8 @@ class NewFrameLayout(wx.Frame):
 
         if self.kill:
             return
+
+        self.prefDialog = PreferencesDialog(self.preferences, parent=self)
 
         self.loadPref()
         self.__set_properties()
@@ -385,7 +385,9 @@ class NewFrameLayout(wx.Frame):
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
-        thread = ApiToolLog().LogApiRequestOccurrence(None, Globals.API_REQUEST_TRACKER, True)
+        thread = ApiToolLog().LogApiRequestOccurrence(
+            None, Globals.API_REQUEST_TRACKER, True
+        )
         self.savePrefs(self.prefDialog)
         thread.join()
         self.DestroyLater()
@@ -866,6 +868,7 @@ class NewFrameLayout(wx.Frame):
                 action = evtVal[2]
         joinThreadList(threads)
         if source == 0:
+            self.gridPanel.setColVisibility()
             self.sidePanel.sortAndPopulateAppChoice()
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.actionChoice.Enable(True)

@@ -33,6 +33,8 @@ class GridPanel(wx.Panel):
 
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
+        self.grid1ColVisibility = {}
+        self.grid2ColVisibility = {}
 
         grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
@@ -528,12 +530,18 @@ class GridPanel(wx.Panel):
         ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
-                for _ in headerLabels:
+                for header in headerLabels:
                     self.toggleColVisibilityInGridOne(
                         colNum + 1, showState=dialog.isChecked(colNum)
                     )
+                    self.grid1ColVisibility[header] = dialog.isChecked(colNum)
                     colNum += 1
             dialog.DestroyLater()
+            self.parentFrame.savePrefs(self.parentFrame.prefDialog)
+        self.parentFrame.prefDialog.colVisibilty = (
+            self.grid1ColVisibility,
+            self.grid2ColVisibility,
+        )
 
     @api_tool_decorator
     def onNetworkColumn(self, event):
@@ -548,12 +556,34 @@ class GridPanel(wx.Panel):
         ) as dialog:
             if dialog.ShowModal() == wx.ID_APPLY:
                 colNum = 0
-                for _ in headerLabels:
+                for header in headerLabels:
                     self.toggleColVisibilityInGridTwo(
                         colNum + 1, showState=dialog.isChecked(colNum)
                     )
+                    self.grid2ColVisibility[header] = dialog.isChecked(colNum)
                     colNum += 1
             dialog.DestroyLater()
+            self.parentFrame.savePrefs(self.parentFrame.prefDialog)
+        self.parentFrame.prefDialog.colVisibilty = (
+            self.grid1ColVisibility,
+            self.grid2ColVisibility,
+        )
+
+    def setColVisibility(self):
+        grid1Cols = self.grid1ColVisibility.keys()
+        grid2Cols = self.grid2ColVisibility.keys()
+        for col in grid1Cols:
+            if col in self.grid1HeaderLabels:
+                indx = self.grid1HeaderLabels.index(col)
+                self.toggleColVisibilityInGridOne(
+                    indx, showState=self.grid1ColVisibility[col]
+                )
+        for col in grid2Cols:
+            if col in self.grid2HeaderLabels:
+                indx = self.grid2HeaderLabels.index(col)
+                self.toggleColVisibilityInGridTwo(
+                    indx, showState=self.grid2ColVisibility[col]
+                )
 
     @api_tool_decorator
     def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
@@ -879,7 +909,7 @@ class GridPanel(wx.Panel):
         index = None
         if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
             index = event
-        if index:
+        if index and index < self.grid_1.GetNumberCols():
             if type(showState) == bool:
                 if not showState:
                     self.grid_1.HideCol(index)
@@ -900,7 +930,7 @@ class GridPanel(wx.Panel):
         index = None
         if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
             index = event
-        if index:
+        if index and index < self.grid_2.GetNumberCols():
             if type(showState) == bool:
                 if not showState:
                     self.grid_2.HideCol(index)
@@ -1119,3 +1149,25 @@ class GridPanel(wx.Panel):
         """
         self.currentlySelectedCell = (event.GetRow(), event.GetCol())
         event.Skip()
+
+    def getColVisibility(self):
+        if not self.grid1ColVisibility and not self.grid2ColVisibility:
+            headerLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+            headerLabels2 = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
+            colNum = 0
+            grid1Sizes = self.grid_1.GetColSizes()
+            grid2Sizes = self.grid_2.GetColSizes()
+            for header in headerLabels2:
+                if grid2Sizes.GetSize(colNum) > 0:
+                    self.grid2ColVisibility[str(header)] = True
+                else:
+                    self.grid2ColVisibility[str(header)] = False
+                colNum += 1
+            colNum = 0
+            for header in headerLabels:
+                if grid1Sizes.GetSize(colNum) > 0:
+                    self.grid1ColVisibility[str(header)] = True
+                else:
+                    self.grid1ColVisibility[str(header)] = False
+                colNum += 1
+        return (self.grid1ColVisibility, self.grid2ColVisibility)

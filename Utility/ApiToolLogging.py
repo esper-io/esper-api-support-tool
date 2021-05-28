@@ -56,6 +56,7 @@ class ApiToolLog:
             myfile.write(str(exc_value))
             for line in exc_traceback:
                 myfile.write(str(line))
+            myfile.write("\n")
 
     def LogPlace(self, str):
         with open(self.placePath, "a") as myfile:
