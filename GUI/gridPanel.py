@@ -1087,7 +1087,11 @@ class GridPanel(wx.Panel):
         wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_2, self.grid_1)
 
     def setBothGridVSCrollPositions(self, gridOne, gridTwo):
-        if Globals.MATCH_SCROLL_POS:
+        if (
+            Globals.MATCH_SCROLL_POS
+            and gridOne.GetSortingColumn() < 0
+            and gridTwo.GetSortingColumn() < 0
+        ):
             gridTwo.Scroll(
                 gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
             )
