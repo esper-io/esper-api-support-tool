@@ -120,6 +120,7 @@ class UserCreation(wx.Frame):
             self.Close()
         self.DestroyLater()
 
+    @api_tool_decorator
     def upload(self, event):
         with wx.FileDialog(
             self,
@@ -132,11 +133,13 @@ class UserCreation(wx.Frame):
             if result == wx.ID_OK:
                 self.processUpload(fileDialog.GetPath())
 
+    @api_tool_decorator
     def onFileDrop(self, event):
         for file in event.Files:
             if file.endswith(".csv"):
                 self.processUpload(file)
 
+    @api_tool_decorator
     def processUpload(self, file):
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
@@ -164,6 +167,7 @@ class UserCreation(wx.Frame):
                     headers = entry
         self.grid_1.AutoSize()
 
+    @api_tool_decorator
     def onCreate(self, event):
         tenant = Globals.configuration.host.replace("https://", "").replace(
             "-api.esper.cloud/api", ""
@@ -171,16 +175,17 @@ class UserCreation(wx.Frame):
         url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
         for user in self.users:
             body = {}
-            body["first_name"] = user["first name"] if "first name" in user else ""
-            body["last_name"] = user["last name"] if "last name" in user else ""
+            userKeys = user.keys()
+            body["first_name"] = user["first name"] if "first name" in userKeys else ""
+            body["last_name"] = user["last name"] if "last name" in userKeys else ""
             body["username"] = (
                 user["username"]
-                if "username" in user
+                if "username" in userKeys
                 else (body["first_name"] + body["last_name"])
             )
             body["password"] = user["password"]
             body["profile"] = {}
-            if "role" in user.keys():
+            if "role" in userKeys:
                 body["profile"]["role"] = user["role"]
             else:
                 body["profile"]["role"] = "Group Viewer"
