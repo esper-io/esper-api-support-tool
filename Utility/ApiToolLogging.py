@@ -125,11 +125,15 @@ class ApiToolLog:
                 else:
                     Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
-            strToWrite = "API Request orginated from %s, triggerring %s\n" % (
-                str(src),
-                str(api_func)
-                if not hasattr(api_func, "__name__")
-                else api_func.__name__,
+            strToWrite = (
+                "API Request orginated from %s, triggerring %s. Total Requests: %s\n"
+                % (
+                    str(src),
+                    str(api_func)
+                    if not hasattr(api_func, "__name__")
+                    else api_func.__name__,
+                    Globals.API_REQUEST_SESSION_TRACKER,
+                )
             )
         if strToWrite and writeToFile:
             Globals.api_log_lock.acquire()
