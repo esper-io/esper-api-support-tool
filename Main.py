@@ -82,27 +82,41 @@ def parseArgs():
     )
     args = parser.parse_args()
     if hasattr(args, "record_place"):
-        if args.record_place.lower() == "false" or args.record_place.lower() == "f":
-            Globals.RECORD_PLACE = False
-        elif args.record_place.lower() == "true" or args.record_place.lower() == "t":
+        if (
+            args.record_place.lower() == "true"
+            or args.record_place.lower() == "t"
+            or args.record_place.lower() == "y"
+        ):
             Globals.RECORD_PLACE = True
+        else:
+            Globals.RECORD_PLACE = False
     if hasattr(args, "print_res"):
-        if args.print_res.lower() == "false" or args.print_res.lower() == "f":
-            Globals.PRINT_RESPONSES = False
-        elif args.print_res.lower() == "true" or args.print_res.lower() == "t":
+        if (
+            args.print_res.lower() == "true"
+            or args.print_res.lower() == "t"
+            or args.print_res.lower() == "y"
+        ):
             Globals.PRINT_RESPONSES = True
+        else:
+            Globals.PRINT_RESPONSES = False
     if hasattr(args, "print_duration"):
-        if args.print_duration.lower() == "false" or args.print_duration.lower() == "f":
-            Globals.PRINT_FUNC_DURATION = False
-        elif (
-            args.print_duration.lower() == "true" or args.print_duration.lower() == "t"
+        if (
+            args.print_duration.lower() == "true"
+            or args.print_duration.lower() == "t"
+            or args.print_duration.lower() == "y"
         ):
             Globals.PRINT_FUNC_DURATION = True
+        else:
+            Globals.PRINT_FUNC_DURATION = False
     if hasattr(args, "log_api"):
-        if args.log_api.lower() == "false" or args.log_api.lower() == "f":
-            Globals.PRINT_API_LOGS = False
-        elif args.log_api.lower() == "true" or args.log_api.lower() == "t":
+        if (
+            args.log_api.lower() == "true"
+            or args.log_api.lower() == "t"
+            or args.log_api.lower() == "y"
+        ):
             Globals.PRINT_API_LOGS = True
+        else:
+            Globals.PRINT_API_LOGS = False
 
 
 if __name__ == "__main__":
