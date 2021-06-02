@@ -754,7 +754,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
-        menuItem = self.menubar.configMenu.FindItemById(event.Id)
+        self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
         Globals.LAST_DEVICE_ID = []
         Globals.LAST_GROUP_ID = []
@@ -776,12 +776,14 @@ class NewFrameLayout(wx.Frame):
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."
-                % menuItem.GetItemLabelText()
+                % self.configMenuItem.GetItemLabelText()
             )
-            selectedConfig = self.sidePanel.configChoice[menuItem.GetItemLabelText()]
+            selectedConfig = self.sidePanel.configChoice[
+                self.configMenuItem.GetItemLabelText()
+            ]
 
-            for item in menuItem.Menu.MenuItems:
-                if item != menuItem:
+            for item in self.configMenuItem.Menu.MenuItems:
+                if item != self.configMenuItem:
                     item.Check(False)
                 else:
                     item.Check(True)
@@ -801,7 +803,7 @@ class NewFrameLayout(wx.Frame):
             )
             print(e)
             ApiToolLog().LogError(e)
-            menuItem.Check(False)
+            self.configMenuItem.Check(False)
 
     @api_tool_decorator
     def fillInConfigListing(self, config):

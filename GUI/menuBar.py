@@ -344,7 +344,7 @@ class ToolMenuBar(wx.MenuBar):
             self.eqlQuery.Hide()
 
     def AddUser(self, event):
-        self.uc = UserCreation()
+        self.uc = UserCreation(self)
         self.parentFrame.toggleEnabledState(False)
         self.parentFrame.isRunning = True
         self.uc.Show()

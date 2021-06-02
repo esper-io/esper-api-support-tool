@@ -262,10 +262,12 @@ def displayMessageBox(event):
     elif isinstance(value, str):
         msg = value
 
+    res = None
     Globals.msg_lock.acquire()
     if msg:
-        wx.MessageBox(msg, style=sty)
+        res = wx.MessageBox(msg, style=sty)
     Globals.msg_lock.release()
+    return res
 
 
 def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
