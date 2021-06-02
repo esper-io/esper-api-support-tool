@@ -40,7 +40,7 @@ class ToolMenuBar(wx.MenuBar):
         foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
         self.fileOpenAuth = fileMenu.Append(foa)
 
-        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Add Users")
+        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Add Users\tCtrl+U")
         self.fileAddUser = fileMenu.Append(fou)
 
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
