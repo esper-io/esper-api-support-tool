@@ -116,6 +116,10 @@ class UserCreation(wx.Frame):
         evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
         if Globals.frame:
             wx.PostEvent(Globals.frame, evt)
+            Globals.frame.isRunning = False
+            self.parentFrame.toggleEnabledState(
+                not self.isRunning and not self.isSavingPrefs
+            )
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
         self.DestroyLater()
@@ -173,6 +177,7 @@ class UserCreation(wx.Frame):
             "-api.esper.cloud/api", ""
         )
         url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+        num = 0
         for user in self.users:
             body = {}
             userKeys = user.keys()
@@ -195,7 +200,10 @@ class UserCreation(wx.Frame):
             body["profile"]["enterprise"] = Globals.enterprise_id
 
             resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
-
+            num += 1
+            postEventToFrame(
+                wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users * 100))
+            )
             logMsg = ""
             if resp.status_code > 299:
                 logMsg = "Successfully created user account: %s" % body["username"]

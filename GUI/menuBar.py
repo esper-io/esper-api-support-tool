@@ -345,4 +345,6 @@ class ToolMenuBar(wx.MenuBar):
 
     def AddUser(self, event):
         self.uc = UserCreation()
+        self.parentFrame.toggleEnabledState(False)
+        self.parentFrame.isRunning = True
         self.uc.Show()
