@@ -176,6 +176,7 @@ class UserCreation(wx.Frame):
         self.button_7.Bind(wx.EVT_BUTTON, self.onClose)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.DragAcceptFiles(True)
 
     @api_tool_decorator

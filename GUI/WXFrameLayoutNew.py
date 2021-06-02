@@ -2245,8 +2245,6 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator
     def toggleEnabledState(self, state):
-        if not self.isRunning and state:
-            self.isRunning = True
         self.sidePanel.runBtn.Enable(state)
         self.sidePanel.actionChoice.Enable(state)
         self.sidePanel.removeEndpointBtn.Enable(state)
