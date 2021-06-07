@@ -33,6 +33,7 @@ class UserCreation(wx.Frame):
             "Groups",
         ]
         self.parent = parent
+        self.lastFilePath = ""
 
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
 
@@ -226,10 +227,15 @@ class UserCreation(wx.Frame):
             "Open User CSV File",
             wildcard="CSV files (*.csv)|*.csv",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-            defaultDir=str(os.getcwd()),
+            defaultDir=str(self.lastFilePath),
         ) as fileDialog:
             result = fileDialog.ShowModal()
             if result == wx.ID_OK:
+                self.lastFilePath = fileDialog.GetPath()
+                if not os.path.isdir(self.lastFilePath):
+                    self.lastFilePath = os.path.abspath(
+                        os.path.join(self.lastFilePath, os.pardir)
+                    )
                 self.processUpload(fileDialog.GetPath())
 
     @api_tool_decorator()
