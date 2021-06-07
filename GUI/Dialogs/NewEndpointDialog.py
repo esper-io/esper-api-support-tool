@@ -120,10 +120,10 @@ class NewEndpointDialog(wx.Dialog):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
             match = re.search(
-                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
             )
             if match:
-                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
                 hostname = hostname.replace("https://", "")
                 hostname = hostname.replace("http://", "")
 
@@ -139,10 +139,10 @@ class NewEndpointDialog(wx.Dialog):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
             match = re.search(
-                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
             )
             if match:
-                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
                 hostname = hostname.replace("https://", "")
                 hostname = hostname.replace("http://", "")
 
@@ -157,10 +157,10 @@ class NewEndpointDialog(wx.Dialog):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
             match = re.search(
-                "[https://|http://]*[a-zA-Z]+[-api]*\.esper\.cloud[\S]*", hostname
+                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
             )
             if match:
-                hostname = re.sub("[-api]*\.esper\.cloud[\S]*", "", hostname)
+                hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
                 hostname = hostname.replace("https://", "")
                 hostname = hostname.replace("http://", "")
                 self.text_ctrl_2.SetValue(hostname)

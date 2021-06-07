@@ -58,15 +58,18 @@ def getWifiStatus(deviceInfo):
 
     if wifi_event:
         # Configured Networks
-        if "configuredWifiNetworks" in wifi_event:
+        if (
+            "configuredWifiNetworks" in wifi_event
+            and wifi_event["configuredWifiNetworks"]
+        ):
             for access_point in wifi_event["configuredWifiNetworks"]:
                 current_wifi_configurations += access_point + " "
-        if "wifi_access_points" in wifi_event:
+        if "wifi_access_points" in wifi_event and wifi_event["wifi_access_points"]:
             for access_point in wifi_event["wifi_access_points"]:
                 current_wifi_configurations += access_point + " "
 
         # Connected Network
-        if "wifiNetworkInfo" in wifi_event:
+        if "wifiNetworkInfo" in wifi_event and wifi_event["wifiNetworkInfo"]:
             if "<unknown ssid>" not in wifi_event["wifiNetworkInfo"]["wifiSSID"]:
                 ssid = wifi_event["wifiNetworkInfo"]["wifiSSID"] + ": Connected"
                 current_wifi_connection = ssid
@@ -100,11 +103,14 @@ def getCellularStatus(deviceInfo):
         current_active_connection = network_event["active_connection"]
 
     simoperator = ""
+    connection_status = ""
     if "cellularNetworkInfo" in network_event:
         cellularNetworkInfo = network_event["cellularNetworkInfo"]
-        connection_status = cellularNetworkInfo["mobileNetworkStatus"]
-        if len(cellularNetworkInfo["simOperator"]) > 0:
-            simoperator = cellularNetworkInfo["simOperator"][0] + ":"
+        if cellularNetworkInfo:
+            if "mobileNetworkStatus" in cellularNetworkInfo:
+                connection_status = cellularNetworkInfo["mobileNetworkStatus"]
+            if len(cellularNetworkInfo["simOperator"]) > 0:
+                simoperator = cellularNetworkInfo["simOperator"][0] + ":"
         cellular_connections = (
             "["
             + simoperator
