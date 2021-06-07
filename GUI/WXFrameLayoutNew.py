@@ -1696,7 +1696,7 @@ class NewFrameLayout(wx.Frame):
     def MacPrintFile(self, file_path):
         pass
 
-    @api_tool_decorator()
+    @api_tool_decorator(locks=[Globals.gauge_lock])
     def setGaugeValue(self, value):
         """ Attempt to set Gauge to the specififed value """
         if Globals.gauge_lock.locked():
