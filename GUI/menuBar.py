@@ -38,20 +38,26 @@ class ToolMenuBar(wx.MenuBar):
 
         fileMenu = wx.Menu()
         foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
+        addPng = wx.Bitmap(resourcePath("Images/Menu/add.png"))
+        foa.SetBitmap(addPng)
         self.fileOpenAuth = fileMenu.Append(foa)
 
         fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Add Users\tCtrl+U")
+        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = fileMenu.Append(fou)
 
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
+        foc.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/open.png")))
         self.fileOpenConfig = fileMenu.Append(foc)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
+        fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
+        fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
         self.fileItem = fileMenu.Append(fi)
 
         self.configMenu = wx.Menu()
@@ -62,37 +68,48 @@ class ToolMenuBar(wx.MenuBar):
 
         editMenu = wx.Menu()
         pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+Shift+P")
+        pref.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/prefs.png")))
         self.pref = editMenu.Append(pref)
 
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
+        runItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/run.png")))
         self.run = runMenu.Append(runItem)
         runMenu.Append(wx.ID_SEPARATOR)
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
+        commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
         runMenu.Append(wx.ID_SEPARATOR)
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
+        self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         runMenu.Append(wx.ID_SEPARATOR)
         installedDevices = wx.MenuItem(
             runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
         self.installedDevices = runMenu.Append(installedDevices)
+        self.installedDevices.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
         collectionItem = wx.MenuItem(
             runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
         )
         self.collection = runMenu.Append(collectionItem)
+        self.collection.SetBitmap(
+            wx.Bitmap(resourcePath("Images/Menu/collections.png"))
+        )
         eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F")
         self.eqlQuery = runMenu.Append(eqlQueryItem)
+        self.eqlQuery.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/search.png")))
 
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Device Columns")
         )
+        self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         self.networkColumns = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
         )
+        self.networkColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(
@@ -106,28 +123,34 @@ class ToolMenuBar(wx.MenuBar):
         self.refreshGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids' Data")
         )
+        self.refreshGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
         self.colSize = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
         )
+        self.colSize.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/resize.png")))
         self.clearGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
+        self.clearGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clear.png")))
 
         helpMenu = wx.Menu()
 
         helpItem = wx.MenuItem(helpMenu, wx.ID_ANY, "&Help\tF1")
+        helpItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/help.png")))
         helpMenu.Append(helpItem)
         self.Bind(wx.EVT_MENU, self.onHelp, helpItem)
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
         checkUpdate = wx.MenuItem(helpMenu, wx.ID_ANY, "&Check For Updates")
+        checkUpdate.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/update.png")))
         helpMenu.Append(checkUpdate)
         self.Bind(wx.EVT_MENU, self.onUpdateCheck, checkUpdate)
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
+        about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
         self.ConfigMenuPosition = 3

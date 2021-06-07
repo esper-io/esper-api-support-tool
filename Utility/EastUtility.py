@@ -147,7 +147,9 @@ def iterateThroughDeviceList(
     if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            splitResults = splitListIntoChunks(api_response.results)
+            splitResults = splitListIntoChunks(
+                api_response.results, maxThread=int(Globals.MAX_THREAD_COUNT * (2 / 3))
+            )
 
             threads = []
             for chunk in splitResults:
