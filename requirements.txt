@@ -2,3 +2,4 @@ wxPython
 requests
 esperclient
 pyinstaller
+fuzzywuzzy
