@@ -631,14 +631,14 @@ class NewFrameLayout(wx.Frame):
                             or (
                                 header[fileCol].strip() not in headers.keys()
                                 and colName != "devicename"
-                                and ratio < 80
+                                and ratio < 90
                             )
                         ):
                             fileCol += 1
                             continue
                         if (
                             colName == expectedCol.replace(" ", "").lower()
-                            or ratio >= 80
+                            or ratio >= 90
                         ):
                             if expectedCol == "Tags":
                                 try:
