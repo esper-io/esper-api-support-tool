@@ -924,7 +924,7 @@ class PreferencesDialog(wx.Dialog):
                 ]
             self.parent.gridPanel.setColVisibility()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
         if event.GetString() == "Grid":
@@ -963,7 +963,7 @@ class PreferencesDialog(wx.Dialog):
             self.Fit()
         self.Refresh()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnApply(self, event):
         self.prefs = {
             "enableDevice": self.checkbox_1.IsChecked(),
@@ -1031,7 +1031,7 @@ class PreferencesDialog(wx.Dialog):
         elif self.IsShown():
             self.Close()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
         self.prefs = prefs
         if not self.prefs:
@@ -1240,7 +1240,7 @@ class PreferencesDialog(wx.Dialog):
                     1
                 ]
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def GetPrefs(self):
         if not self.prefs:
             self.prefs = {}
@@ -1270,7 +1270,7 @@ class PreferencesDialog(wx.Dialog):
 
         return self.prefs
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getDefaultKeyValue(self, key):
         if key == "enableDevice":
             return True

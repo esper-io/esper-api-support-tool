@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import json
 import os
 import platform
@@ -212,6 +213,7 @@ def joinThreadList(threads):
                 thread.join()
 
 
+@api_tool_decorator(locks=[Globals.lock])
 def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
     Globals.lock.acquire()
     numAlive = 0
@@ -247,6 +249,7 @@ def ipv6Tomac(ipv6):
     return ":".join(macParts)
 
 
+@api_tool_decorator(locks=[Globals.msg_lock])
 def displayMessageBox(event):
     value = None
     if hasattr(event, "GetValue"):
@@ -409,6 +412,7 @@ def openWebLinkInBrowser(link):
     webbrowser.open(link)
 
 
+@api_tool_decorator(locks=[Globals.error_lock])
 def updateErrorTracker():
     while Globals.frame and not Globals.frame.kill:
         try:

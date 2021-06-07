@@ -73,7 +73,7 @@ class TemplateDialog(wx.Dialog):
         self.__do_layout()
         # end wxGlade
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self):
         # begin wxGlade: MyDialog.__set_properties
         self.SetTitle("Clone Template")
@@ -84,7 +84,7 @@ class TemplateDialog(wx.Dialog):
         self.button_2.SetFocus()
         # end wxGlade
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __do_layout(self):
         # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -124,14 +124,14 @@ class TemplateDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getInputSelections(self):
         return (
             self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
             self.check_list_box_1.GetString(self.check_list_box_1.GetSelection()),
         )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -139,7 +139,7 @@ class TemplateDialog(wx.Dialog):
             self.Close()
         # self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def populateTemplatePreview(self, template):
         if type(template) == list:
             template = template[0]
@@ -155,7 +155,7 @@ class TemplateDialog(wx.Dialog):
             self.text_ctrl_1.ShowPosition(0)
         self.checkInputValues()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnSelection(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -164,7 +164,7 @@ class TemplateDialog(wx.Dialog):
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         self.populateTemplatePreview(template)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
@@ -172,7 +172,7 @@ class TemplateDialog(wx.Dialog):
                 self.check_list_box_1.Append(template["name"])
         self.checkInputValues()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onChoice1Select(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -186,13 +186,13 @@ class TemplateDialog(wx.Dialog):
         )
         self.choice1thread.start()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
         if destName:
             self.destTemplate = self.getTemplates(self.configMenuOpt[destName])
         self.checkInputValues()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onChoice2Select(self, event):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -205,7 +205,7 @@ class TemplateDialog(wx.Dialog):
         )
         self.choice2thread.start()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getTemplates(self, dataSrc):
         util = templateUtil.EsperTemplateUtil(dataSrc, None)
         tempList = util.getTemplates(
@@ -213,7 +213,7 @@ class TemplateDialog(wx.Dialog):
         )
         return tempList["results"]
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getTemplate(self, template):
         util = templateUtil.EsperTemplateUtil()
         dataSrc = self.configMenuOpt[
@@ -223,7 +223,7 @@ class TemplateDialog(wx.Dialog):
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
         )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def checkInputValues(self):
         if (
             self.choice_1.GetString(self.choice_1.GetSelection())

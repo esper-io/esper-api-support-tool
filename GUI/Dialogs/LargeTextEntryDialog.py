@@ -81,11 +81,11 @@ class LargeTextEntryDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def GetValue(self):
         return self.text_ctrl_1.GetValue()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onKey(self, event):
         keycode = event.GetKeyCode()
         # CTRL + C or CTRL + Insert
@@ -97,7 +97,7 @@ class LargeTextEntryDialog(wx.Dialog):
         else:
             event.Skip()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
         data = wx.TextDataObject()
@@ -106,7 +106,7 @@ class LargeTextEntryDialog(wx.Dialog):
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_paste(self, event):
         widget = self.FindFocus()
         success = False

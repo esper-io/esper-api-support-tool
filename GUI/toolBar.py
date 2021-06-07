@@ -58,7 +58,7 @@ class ToolsToolBar(wx.ToolBar):
 
         self.__set_properties()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self):
         size = self.search.GetSize()
         size.SetWidth(size.GetWidth() * 2)
@@ -83,12 +83,12 @@ class ToolsToolBar(wx.ToolBar):
         self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onSearchChar(self, event):
         event.Skip()
         wx.CallAfter(self.Parent.onSearch, wx.EVT_CHAR.typeId)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onKey(self, event):
         keycode = event.GetKeyCode()
         # CTRL + C or CTRL + Insert
@@ -100,7 +100,7 @@ class ToolsToolBar(wx.ToolBar):
         else:
             event.Skip()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
         data = wx.TextDataObject()
@@ -110,7 +110,7 @@ class ToolsToolBar(wx.ToolBar):
             wx.TheClipboard.Close()
         widget.SetFocus()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_paste(self, event):
         widget = self.FindFocus()
         success = False

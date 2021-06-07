@@ -94,7 +94,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
         # end wxGlade
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)

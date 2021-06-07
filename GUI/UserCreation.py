@@ -179,13 +179,13 @@ class UserCreation(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.DragAcceptFiles(True)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClose(self, event):
         if Globals.frame:
             Globals.frame.isRunning = False
@@ -219,7 +219,7 @@ class UserCreation(wx.Frame):
             return True
         return False
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def upload(self, event):
         with wx.FileDialog(
             self,
@@ -232,13 +232,13 @@ class UserCreation(wx.Frame):
             if result == wx.ID_OK:
                 self.processUpload(fileDialog.GetPath())
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onFileDrop(self, event):
         for file in event.Files:
             if file.endswith(".csv"):
                 self.processUpload(file)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def processUpload(self, file):
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
@@ -302,7 +302,7 @@ class UserCreation(wx.Frame):
                 )
             )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onCreate(self, event):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)

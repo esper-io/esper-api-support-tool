@@ -27,13 +27,13 @@ class CheckboxMessageBox(wx.Dialog):
         self.__set_properties(title)
         self.__do_layout(caption)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self, title):
         self.SetTitle(title)
         self.SetSize((400, 200))
         self.cancelBtn.SetFocus()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __do_layout(self, caption):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -62,7 +62,7 @@ class CheckboxMessageBox(wx.Dialog):
         self.Layout()
         self.Centre()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def toggleCheckbox(self, event):
         if self.checkbox_1.IsChecked():
             self.checkbox_1.SetValue(False)
@@ -70,11 +70,11 @@ class CheckboxMessageBox(wx.Dialog):
             self.checkbox_1.SetValue(True)
         event.Skip()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getCheckBoxValue(self):
         return self.checkbox_1.GetValue()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)

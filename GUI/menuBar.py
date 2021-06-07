@@ -140,7 +140,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.__set_properties()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self):
         self.run.Enable(False)
         self.clone.Enable(False)
@@ -178,7 +178,7 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
         )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onAbout(self, event):
         """ About Dialog """
         info = adv.AboutDialogInfo()
@@ -192,11 +192,11 @@ class ToolMenuBar(wx.MenuBar):
 
         adv.AboutBox(info)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onHelp(self, event):
         openWebLinkInBrowser(Globals.HELP_LINK)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onUpdateCheck(self, event=None, showDlg=True):
         if not self.isCheckingForUpdates:
             update = wxThread.GUIThread(
@@ -205,7 +205,7 @@ class ToolMenuBar(wx.MenuBar):
             update.start()
             self.isCheckingForUpdates = True
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def updateCheck(self, showDlg=False):
         icon = wx.ICON_INFORMATION
         msg = ""
@@ -267,20 +267,20 @@ class ToolMenuBar(wx.MenuBar):
             )
         self.isCheckingForUpdates = False
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def uncheckConsole(self, event):
         """ Uncheck Console menu item """
         self.consoleView.Check(False)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def disableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, False)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def enableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, True)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onEqlQuery(self, event):
         self.parentFrame.setGaugeValue(0)
         self.parentFrame.setCursorBusy()
@@ -309,7 +309,7 @@ class ToolMenuBar(wx.MenuBar):
             else:
                 self.parentFrame.setCursorDefault()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onCollection(self, event):
         self.parentFrame.setGaugeValue(0)
         self.parentFrame.setCursorBusy()
@@ -337,7 +337,7 @@ class ToolMenuBar(wx.MenuBar):
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def checkCollectionEnabled(self):
         if not checkCollectionIsEnabled():
             self.collection.Hide()

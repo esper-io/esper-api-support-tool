@@ -31,7 +31,7 @@ class MyApp(wx.App):
         Globals.frame.MacNewFile()
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def main():
     """Launches Main App"""
     sys.excepthook = ApiToolLog().excepthook

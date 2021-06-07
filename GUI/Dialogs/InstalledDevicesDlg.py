@@ -93,7 +93,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.list_box_1.Bind(wx.EVT_LISTBOX, self.onAppSelect)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)

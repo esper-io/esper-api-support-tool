@@ -30,9 +30,10 @@ from Utility.Resource import (
 
 from esperclient.rest import ApiException
 
+knownGroups = {}
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
-@api_tool_decorator
+@api_tool_decorator()
 def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     """Calls API To Perform Action And Logs Result To UI"""
     if not Globals.enterprise_id:
@@ -105,7 +106,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             )
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
     if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
@@ -120,7 +121,7 @@ def iterateThroughGridRows(frame, action):
         setAppStateForSpecificAppListed(action)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def iterateThroughDeviceList(
     frame, action, api_response, entId, isDevice=False, isUpdate=False
 ):
@@ -194,7 +195,7 @@ def iterateThroughDeviceList(
         postEventToFrame(wxThread.myEVT_COMPLETE, (True))
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
@@ -258,7 +259,7 @@ def processInstallDevices(deviceList):
     processCollectionDevices({"results": newDeviceList})
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def processCollectionDevices(collectionList):
     if collectionList["results"]:
         splitResults = splitListIntoChunks(collectionList["results"])
@@ -300,7 +301,7 @@ def processCollectionDevices(collectionList):
         postEventToFrame(wxThread.myEVT_COMPLETE, (True))
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     deviceList = {}
     for device in chunk:
@@ -314,7 +315,7 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
     return deviceList
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def processDevices(chunk, number_of_devices, action, isUpdate=False):
     """ Try to obtain more device info for a given device """
     deviceList = {}
@@ -333,7 +334,7 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False):
     return (action, deviceList)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     if not deviceDict:
@@ -349,7 +350,7 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def populateDeviceInfoDictionary(device, deviceInfo):
     """Populates Device Info Dictionary"""
     deviceId = None
@@ -398,11 +399,17 @@ def populateDeviceInfoDictionary(device, deviceInfo):
 
     if deviceGroups:
         groupNames = []
+        global knownGroups
         if type(deviceGroups) == list:
             for groupURL in deviceGroups:
-                groupName = apiCalls.fetchGroupName(groupURL)
+                groupName = None
+                if groupURL in knownGroups:
+                    groupName = knownGroups[groupURL]
+                else:
+                    groupName = apiCalls.fetchGroupName(groupURL)
                 if groupName:
                     groupNames.append(groupName)
+                    knownGroups[groupURL] = groupNames
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
@@ -562,7 +569,7 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     return deviceInfo
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getValueFromLatestEvent(respData, eventName):
     event = ""
     if respData and eventName in respData:
@@ -570,7 +577,7 @@ def getValueFromLatestEvent(respData, eventName):
     return event
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def logActionExecution(frame, action, selection=None):
     actionName = ""
     if (
@@ -584,7 +591,7 @@ def logActionExecution(frame, action, selection=None):
         frame.Logging("---> Starting Execution " + actionName)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def modifyDevice(frame):
     """ Start a thread that will attempt to modify device data """
     t = wxThread.GUIThread(
@@ -598,7 +605,7 @@ def modifyDevice(frame):
     return t
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
@@ -671,7 +678,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
         t.start()
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def processDeviceModificationForList(
     frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction
 ):
@@ -706,7 +713,7 @@ def processDeviceModificationForList(
     return (changeSucceeded, succeeded, numNewName, tagsFromGrid, status)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     numNewName = 0
     succeeded = 0
@@ -768,7 +775,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     return (numNewName, succeeded, status)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
@@ -807,7 +814,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     return changeSucceeded
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     api_response = None
@@ -879,7 +886,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
         t.start()
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setAllAppsState(frame, device, state):
     stateStatuses = []
     # for device in chunk:
@@ -939,7 +946,7 @@ def setAllAppsState(frame, device, state):
     return stateStatuses
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def createCommand(frame, command_args, commandType, schedule, schType):
     """ Attempt to apply a Command given user specifications """
     result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
@@ -973,7 +980,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         t.start()
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def confirmCommand(cmd, commandType, schedule, schType):
     """ Ask user to confirm the command they want to run """
     modal = None
@@ -1129,7 +1136,7 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
     )
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def executeCommandOnGroup(
     frame,
     command_args,
@@ -1190,7 +1197,7 @@ def executeCommandOnGroup(
     return statusList
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def executeCommandOnDevice(
     frame,
     command_args,
@@ -1257,3 +1264,8 @@ def executeCommandOnDevice(
             entry["Status"] = last_status
             statusList.append(entry)
     return statusList
+
+
+def clearKnownGroups():
+    global knownGroups
+    knownGroups.clear()

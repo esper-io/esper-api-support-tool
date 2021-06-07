@@ -56,7 +56,7 @@ class EsperTemplateUtil:
 
         self.missingApps = ""
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def prepareTemplate(self, dest=None, chosenTemplate=None):
         if self.parent and self.parent.gauge:
             self.parent.gauge.Pulse()
@@ -117,7 +117,7 @@ class EsperTemplateUtil:
                 wxThread.myEVT_LOG, "Template was not found. Check arguements."
             )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
             self.getEsperConfig(self.toApi, self.toKey), self.toEntId
@@ -152,7 +152,7 @@ class EsperTemplateUtil:
                 )
         return templateFound
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def processWallpapers(self, templateFound):
         if self.toApi and self.toKey and self.toEntId:
             postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
@@ -178,7 +178,7 @@ class EsperTemplateUtil:
         configuration.api_key_prefix["Authorization"] = auth
         return configuration
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def uploadWallpaper(self, link, key, enterprise_id, bg):
         json_resp = None
         files = None
@@ -473,7 +473,7 @@ class EsperTemplateUtil:
                 del newDict[key]
         return newDict
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getTemplates(self, link, key, enterprise_id):
         try:
             headers = {
@@ -498,7 +498,7 @@ class EsperTemplateUtil:
         except Exception as e:
             raise e
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getTemplate(self, link, key, enterprise_id, template_id):
         try:
             headers = {
@@ -518,7 +518,7 @@ class EsperTemplateUtil:
         except Exception as e:
             raise e
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def createTemplate(self, link, key, enterprise_id, template):
         try:
             headers = {
@@ -538,7 +538,7 @@ class EsperTemplateUtil:
         except Exception as e:
             raise e
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def updateTemplate(self, link, key, enterprise_id, template):
         try:
             headers = {

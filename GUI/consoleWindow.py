@@ -85,13 +85,13 @@ class Console(wx.Frame):
         self.Centre()
         self.Show()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClose(self, event):
         evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
         if Globals.frame:
@@ -100,12 +100,12 @@ class Console(wx.Frame):
             self.Close()
         self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClear(self, event=None):
         self.loggingList.Clear()
         Globals.LOGLIST.clear()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
         self.loggingList.AppendText(entry)

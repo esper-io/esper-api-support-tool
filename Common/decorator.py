@@ -8,55 +8,64 @@ import wx
 import threading
 
 from datetime import datetime
+from functools import wraps
 from esperclient.rest import ApiException
 from Utility.ApiToolLogging import ApiToolLog
 from traceback import print_exc, extract_tb, format_list
 
 
-def api_tool_decorator(func):
-    def inner(*args, **kwargs):
-        start = None
-        try:
-            start = time.perf_counter()
-        except:
-            pass
-        result = None
-        excpt = None
-        logPlace(func)
-        try:
-            result = func(*args, **kwargs)
-            logPlaceDone(func)
-        except ApiException as e:
-            excpt = determineErrorDisplay(e)
-            logError(e)
-        except Exception as e:
-            excpt = determineErrorDisplay(e)
-            logError(e)
-        finally:
-            if Globals.frame and excpt:
-                Globals.frame.Logging(str(excpt), isError=True)
-                otherThreadsRunning = False
-                for thread in threading.enumerate():
-                    if (
-                        thread.name != "InternetCheck"
-                        and thread.name != "updateErrorTracker"
-                        and "main" in thread.name.lower()
-                        and thread.name != "SavePrefs"
-                    ):
-                        otherThreadsRunning = True
-                        break
-                if not otherThreadsRunning:
-                    Globals.frame.onComplete(None, True)
-                    Globals.frame.setCursorDefault()
-                    Globals.frame.setGaugeValue(100)
-                if Globals.msg_lock.locked():
-                    Globals.msg_lock.release()
-        end = time.perf_counter()
-        if start and end:
-            duration = end - start
-            if Globals.PRINT_FUNC_DURATION:
-                print("%s executed in %s seconds." % (func.__name__, duration))
-        return result
+def api_tool_decorator(locks=None):
+    def inner(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = None
+            try:
+                start = time.perf_counter()
+            except:
+                pass
+            result = None
+            excpt = None
+            logPlace(func)
+            try:
+                result = func(*args, **kwargs)
+                logPlaceDone(func)
+            except ApiException as e:
+                excpt = determineErrorDisplay(e)
+                logError(e)
+            except Exception as e:
+                excpt = determineErrorDisplay(e)
+                logError(e)
+            finally:
+                if Globals.frame and excpt:
+                    Globals.frame.Logging(str(excpt), isError=True)
+                    otherThreadsRunning = False
+                    for thread in threading.enumerate():
+                        if (
+                            thread.name != "InternetCheck"
+                            and thread.name != "updateErrorTracker"
+                            and "main" in thread.name.lower()
+                            and thread.name != "SavePrefs"
+                        ):
+                            otherThreadsRunning = True
+                            break
+                    if not otherThreadsRunning:
+                        Globals.frame.onComplete(None, True)
+                        Globals.frame.setCursorDefault()
+                        Globals.frame.setGaugeValue(100)
+                    if Globals.msg_lock.locked():
+                        Globals.msg_lock.release()
+                    if "locks" in kwargs:
+                        for lock in kwargs["locks"]:
+                            if lock.locked():
+                                lock.release()
+            end = time.perf_counter()
+            if start and end:
+                duration = end - start
+                if Globals.PRINT_FUNC_DURATION:
+                    print("%s executed in %s seconds." % (func.__name__, duration))
+            return result
+
+        return wrapper
 
     return inner
 

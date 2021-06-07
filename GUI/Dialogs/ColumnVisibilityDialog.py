@@ -47,7 +47,7 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.__do_layout()
         # end wxGlade
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnSelection(self, event):
         selection = event.GetSelection()
         self.check_list_box_1.Deselect(selection)
@@ -58,7 +58,7 @@ class ColumnVisibilityDialog(wx.Dialog):
             checked.append(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnApply(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -66,7 +66,7 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.Close()
         # self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -74,11 +74,11 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.Close()
         self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def isChecked(self, item):
         return self.check_list_box_1.IsChecked(item)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self):
         # begin wxGlade: MyDialog.__set_properties
         self.SetTitle("Column Visibility")
@@ -86,7 +86,7 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.panel_3.SetBackgroundColour(wx.Colour(255, 119, 255))
         # end wxGlade
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __do_layout(self):
         # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)

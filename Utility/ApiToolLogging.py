@@ -83,16 +83,20 @@ class ApiToolLog:
             myfile.write(message)
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
-        thread = threading.Thread(
-            target=self.LogApiRequest, args=(src, api_func, writeToFile)
-        )
-        thread.start()
-        return thread
+        if "main" in threading.current_thread().name.lower():
+            thread = threading.Thread(
+                target=self.LogApiRequest, args=(src, api_func, writeToFile)
+            )
+            thread.start()
+            return thread
+        else:
+            self.LogApiRequest(src, api_func, writeToFile)
 
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+                datetime.now(),
                 str(api_func),
                 Globals.API_REQUEST_SESSION_TRACKER,
             )
@@ -129,8 +133,9 @@ class ApiToolLog:
                     Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
             strToWrite = (
-                "API Request orginated from %s, triggerring %s. Total Requests: %s\n"
+                "%s API Request orginated from %s, triggerring %s. Total Requests: %s\n"
                 % (
+                    datetime.now(),
                     str(src),
                     str(api_func)
                     if not hasattr(api_func, "__name__")

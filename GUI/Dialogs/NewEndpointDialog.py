@@ -107,14 +107,14 @@ class NewEndpointDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getInputValues(self):
         name = str(self.text_ctrl_1.GetValue().strip())
         hostname = self.text_ctrl_2.GetValue().strip()
@@ -133,7 +133,7 @@ class NewEndpointDialog(wx.Dialog):
         prefix = "Bearer"
         return name, host, entId, key, prefix
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
         hostname = self.text_ctrl_2.GetValue().strip()
@@ -152,7 +152,7 @@ class NewEndpointDialog(wx.Dialog):
         prefix = "Bearer"
         return [name, host, entId, key, prefix]
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def checkInputs(self, event):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
