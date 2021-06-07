@@ -14,6 +14,7 @@ import webbrowser
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
+from fuzzywuzzy import fuzz
 from datetime import datetime
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
@@ -432,3 +433,9 @@ def updateErrorTracker():
         finally:
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
+
+
+def getStrRatioSimilarity(s, t, usePartial=False):
+    if usePartial:
+        return fuzz.partial_ratio(s.lower(), t.lower())
+    return fuzz.ratio(s.lower(), t.lower())

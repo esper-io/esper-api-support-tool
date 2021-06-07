@@ -68,6 +68,7 @@ from Utility.EastUtility import (
 )
 from Utility.Resource import (
     checkForInternetAccess,
+    getStrRatioSimilarity,
     limitActiveThreads,
     postEventToFrame,
     resourcePath,
@@ -577,7 +578,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceChoice.Enable(True)
         self.toggleEnabledState(True)
 
-    @api_tool_decorator()
+    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def processCsvDataByGrid(self, grid, data, headers, lock=None):
         if lock:
             lock.acquire()
@@ -603,6 +604,8 @@ class NewFrameLayout(wx.Frame):
                             if len(header) > fileCol
                             else ""
                         )
+                        if colValue == "--":
+                            colValue = ""
                         if colName == "storenumber":
                             colName = "Alias"
                             header[fileCol] = "Alias"
@@ -615,6 +618,12 @@ class NewFrameLayout(wx.Frame):
                             and grid == self.gridPanel.grid_2
                         ):
                             colName = "devicename"
+                        if expectedCol == "Esper Name" and colName == "devicename":
+                            colName = "devicename"
+                            expectedCol = "devicename"
+                        ratio = getStrRatioSimilarity(
+                            colName.lower(), expectedCol.replace(" ", "").lower(), True
+                        )
                         if (
                             fileCol > len(header)
                             or header[fileCol].strip()
@@ -622,11 +631,15 @@ class NewFrameLayout(wx.Frame):
                             or (
                                 header[fileCol].strip() not in headers.keys()
                                 and colName != "devicename"
+                                and ratio < 80
                             )
                         ):
                             fileCol += 1
                             continue
-                        if colName == expectedCol.replace(" ", "").lower():
+                        if (
+                            colName == expectedCol.replace(" ", "").lower()
+                            or ratio >= 80
+                        ):
                             if expectedCol == "Tags":
                                 try:
                                     ast.literal_eval(colValue)
@@ -926,8 +939,8 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(False)
             if not self.IsActive():
                 self.notification = wxadv.NotificationMessage(
-                        "Finished loading devices", "", self
-                    )
+                    "Finished loading devices", "", self
+                )
                 if self.notification:
                     if hasattr(self.notification, "MSWUseToasts"):
                         try:
