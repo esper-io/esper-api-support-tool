@@ -122,6 +122,7 @@ API_REQUEST_TRACKER = {
     "/token": 0,
     "/user": 0,
     "OtherAPI": 0,
+    "/devicetemplate": 0,
 }
 
 API_FUNCTIONS = {
