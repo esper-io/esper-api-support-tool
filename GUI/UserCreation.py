@@ -50,7 +50,7 @@ class UserCreation(wx.Frame):
         label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "User Creation")
         label_1.SetFont(
             wx.Font(
-                18,
+                Globals.HEADER_FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
@@ -71,7 +71,7 @@ class UserCreation(wx.Frame):
         )
         label_2.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -92,7 +92,7 @@ class UserCreation(wx.Frame):
         label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Upload CSV:")
         label_4.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -110,7 +110,7 @@ class UserCreation(wx.Frame):
         label_3 = wx.StaticText(self.panel_2, wx.ID_ANY, "Preview:")
         label_3.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,

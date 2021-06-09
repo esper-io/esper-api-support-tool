@@ -49,7 +49,7 @@ class Console(wx.Frame):
 
         self.loggingList.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,

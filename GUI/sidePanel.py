@@ -43,7 +43,7 @@ class SidePanel(wx.Panel):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Configuration:")
         label_1.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
@@ -78,7 +78,7 @@ class SidePanel(wx.Panel):
         )
         self.configList.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -89,7 +89,7 @@ class SidePanel(wx.Panel):
         grid_sizer_2.Add(self.configList, 0, wx.EXPAND, 0)
         self.configList.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -149,7 +149,12 @@ class SidePanel(wx.Panel):
         label_5 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Action:")
         label_5.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)
@@ -171,7 +176,12 @@ class SidePanel(wx.Panel):
         label_4 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Application:")
         label_4.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_5.Add(label_4, 0, wx.EXPAND, 0)

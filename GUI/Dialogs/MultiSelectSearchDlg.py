@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import wx
+import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 
@@ -35,7 +36,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, label)
         label_1.SetFont(
             wx.Font(
-                12,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,

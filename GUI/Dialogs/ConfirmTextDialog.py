@@ -31,7 +31,7 @@ class ConfirmTextDialog(wx.Dialog):
         label_2 = wx.StaticText(self.panel_8, wx.ID_ANY, caption)
         label_2.SetFont(
             wx.Font(
-                12,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,

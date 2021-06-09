@@ -51,7 +51,7 @@ class GridPanel(wx.Panel):
         network_grid = wx.StaticText(self.panel_1, wx.ID_ANY, "Network Information:")
         network_grid.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
@@ -99,7 +99,7 @@ class GridPanel(wx.Panel):
         label_8 = wx.StaticText(self.panel_9, wx.ID_ANY, "Device Information:")
         label_8.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,

@@ -54,7 +54,7 @@ class CommandDialog(wx.Dialog):
         label_1 = wx.StaticText(self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:")
         label_1.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,
@@ -84,7 +84,7 @@ class CommandDialog(wx.Dialog):
         )
         label_3.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,
@@ -112,7 +112,7 @@ class CommandDialog(wx.Dialog):
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Command Type")
         label_2.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,

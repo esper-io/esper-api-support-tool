@@ -38,7 +38,7 @@ class LargeTextEntryDialog(wx.Dialog):
         label_1.SetToolTip(label)
         label_1.SetFont(
             wx.Font(
-                12,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
