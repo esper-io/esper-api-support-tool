@@ -228,9 +228,9 @@ class PreferencesDialog(wx.Dialog):
         (self.panel_45, self.panel_46, self.checkbox_13,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
-            "Sync Grids Vertical Scroll Position",
+            "Sync Grid's Vertical Scroll Position",
             wx.CheckBox,
-            "Sync Grids Vertical Scroll Position.",
+            "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
         # App Preferences
