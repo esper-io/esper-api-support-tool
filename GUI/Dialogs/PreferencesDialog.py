@@ -167,6 +167,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Use Json Input for Commands",
             wx.CheckBox,
+            "Use Json Input for Commands",
         )
 
         (self.panel_41, self.panel_42, self.combobox_1,) = self.addPrefToPanel(
