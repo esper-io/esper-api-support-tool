@@ -505,8 +505,11 @@ class EsperTemplateUtil:
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
             }
-            if not link.endswith("/v0/enterprise/") or not link.endswith(
-                "v0/enterprise/"
+            if (
+                not link.endswith("/v0/enterprise/")
+                or not link.endswith("v0/enterprise/")
+                or not link.endswith("v0/enterprise")
+                or not link.endswith("/v0/enterprise")
             ):
                 if not link.endswith("/"):
                     link = link + "/"
