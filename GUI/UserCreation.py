@@ -337,13 +337,14 @@ class UserCreation(wx.Frame):
         self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(True)
-        displayMessageBox(
-            (
-                "Successfully added %s of %s users!\nPlease make sure all necessary fields are filled in for each User entry."
-                % (len(self.users), len(data) - 1),
-                wx.ICON_INFORMATION,
+        if invalidUsers:
+            displayMessageBox(
+                (
+                    "Successfully added %s of %s users!\nPlease make sure all necessary fields are filled in for each User entry."
+                    % (len(self.users), len(data) - 1),
+                    wx.ICON_INFORMATION,
+                )
             )
-        )
 
     @api_tool_decorator()
     def onCreate(self, event):
@@ -360,6 +361,12 @@ class UserCreation(wx.Frame):
         if res == wx.YES:
             num = 0
             numCreated = 0
+            self.dialog = wx.ProgressDialog(
+                "Creating Users",
+                "Time remaining",
+                100,
+                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+            )
             for user in self.users:
                 username = (
                     user["username"]
@@ -368,23 +375,22 @@ class UserCreation(wx.Frame):
                 )
                 resp = createNewUser(user)
                 num += 1
-                postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users * 100))
-                )
                 logMsg = ""
                 if resp.status_code > 299:
                     logMsg = "Successfully created user account: %s" % username
                     numCreated += 1
                 else:
                     logMsg = "ERROR: failed to create user account: %s" % username
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            displayMessageBox(
-                (
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                )
+                self.dialog.Update(
+                    int(num / len(self.users) * 100),
                     "Successfully created %s of %s users!"
                     % (numCreated, len(self.users)),
-                    wx.ICON_INFORMATION,
                 )
-            )
+                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+            self.dialog.Close()
 
     def tryToMakeActive(self):
         self.Raise()
