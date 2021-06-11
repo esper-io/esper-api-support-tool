@@ -120,7 +120,12 @@ class UserCreation(wx.Frame):
         )
         sizer_1.Add(label_3, 0, wx.TOP, 5)
 
-        self.grid_1 = wx.grid.Grid(self.panel_2, wx.ID_ANY, size=(1, 1))
+        self.panel_3 = wx.Panel(self.panel_2, wx.ID_ANY)
+        sizer_1.Add(self.panel_3, 1, wx.EXPAND, 0)
+
+        grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
+
+        self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
         self.grid_1.CreateGrid(0, 7)
         self.grid_1.EnableEditing(0)
         self.grid_1.EnableDragRowSize(0)
@@ -131,7 +136,7 @@ class UserCreation(wx.Frame):
         self.grid_1.SetColLabelValue(4, "Password")
         self.grid_1.SetColLabelValue(5, "Role")
         self.grid_1.SetColLabelValue(6, "Groups")
-        sizer_1.Add(self.grid_1, 1, wx.EXPAND | wx.TOP, 2)
+        grid_sizer_6.Add(self.grid_1, 1, wx.EXPAND | wx.TOP, 2)
 
         static_line_2 = wx.StaticLine(self.panel_2, wx.ID_ANY)
         sizer_1.Add(
@@ -150,11 +155,12 @@ class UserCreation(wx.Frame):
         grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Create")
-        self.button_6.Enable(False)
         sizer_3.Add(self.button_6, 0, wx.RIGHT, 5)
 
         self.button_7 = wx.Button(self.panel_2, wx.ID_ANY, "Cancel")
         sizer_3.Add(self.button_7, 0, wx.RIGHT, 5)
+
+        self.panel_3.SetSizer(grid_sizer_6)
 
         grid_sizer_5.AddGrowableCol(1)
 
@@ -171,7 +177,7 @@ class UserCreation(wx.Frame):
         self.Layout()
         self.Centre()
 
-        self.grid_1.AutoSize()
+        self.button_6.Enable(False)
 
         self.button_1.Bind(wx.EVT_BUTTON, self.downloadTemplate)
         self.button_2.Bind(wx.EVT_BUTTON, self.upload)
@@ -329,7 +335,7 @@ class UserCreation(wx.Frame):
                 else:
                     headers = entry
         self.grid_1.Thaw()
-        self.grid_1.AutoSize()
+        self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(True)
         if invalidUsers:
