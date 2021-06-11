@@ -1311,3 +1311,34 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
                 )
                 raise e
             time.sleep(1)
+
+
+def createNewUser(user):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+    body = {}
+    userKeys = user.keys()
+    body["first_name"] = (
+        user["first name"] if "first name" in userKeys else ""
+    )
+    body["last_name"] = user["last name"] if "last name" in userKeys else ""
+    body["username"] = (
+        user["username"]
+        if "username" in userKeys
+        else (body["first_name"] + body["last_name"])
+    )
+    body["password"] = user["password"]
+    body["profile"] = {}
+    if "role" in userKeys:
+        body["profile"]["role"] = user["role"]
+    else:
+        body["profile"]["role"] = "Group Viewer"
+    body["profile"]["groups"] = user["groups"]
+    if type(body["profile"]["groups"]) == str:
+        body["profile"]["groups"] = list(body["profile"]["groups"])
+    body["profile"]["enterprise"] = Globals.enterprise_id
+
+    resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
+    return resp

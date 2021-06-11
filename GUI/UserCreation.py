@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from requests.api import head
 from wx.core import YES
-from Utility.EsperAPICalls import getHeader
+from Utility.EsperAPICalls import createNewUser
 import os
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
@@ -171,6 +171,8 @@ class UserCreation(wx.Frame):
         self.Layout()
         self.Centre()
 
+        self.grid_1.AutoSize()
+
         self.button_1.Bind(wx.EVT_BUTTON, self.downloadTemplate)
         self.button_2.Bind(wx.EVT_BUTTON, self.upload)
         self.button_6.Bind(wx.EVT_BUTTON, self.onCreate)
@@ -261,23 +263,37 @@ class UserCreation(wx.Frame):
             for entry in data:
                 if "Username" not in entry:
                     if (
-                        "Username" not in headers
+                        (
+                            "Username" not in headers
+                            or (
+                                "First Name" not in headers
+                                and "Last Name" not in headers
+                            )
+                        )
                         and "Password" not in headers
                         and "Role" not in headers
+                        and "Email" not in headers
                     ):
                         displayMessageBox(
                             (
-                                "Failed to add Users. Please make sure that Username, Password, and Role columns exist and are filled out for each User.",
+                                "Failed to add Users. Please make sure that Username (or First and Last Name), Email, Password, and Role columns exist and are filled out for each User.",
                                 wx.ICON_ERROR,
                             )
                         )
                         break
                     if (
-                        not entry[headers.index("Username")]
+                        (
+                            not entry[headers.index("Username")]
+                            and not entry[headers.index("First Name")]
+                            and not entry[headers.index("Last Name")]
+                        )
                         or not entry[headers.index("Password")]
                         or not entry[headers.index("Role")]
                     ) or (
-                        entry[headers.index("Role")] != "Enterprise Admin"
+                        (
+                            entry[headers.index("Role")] != "Enterprise Admin"
+                            and entry[headers.index("Role")] != "Viewer"
+                        )
                         and not entry[headers.index("Groups")]
                     ):
                         invalidUsers.append(entry)
@@ -286,13 +302,29 @@ class UserCreation(wx.Frame):
                         col = 0
                         user = {}
                         for field in entry:
-                            if headers[col]:
-                                indx = self.headers.index(headers[col])
-                                self.grid_1.SetCellValue(
-                                    self.grid_1.GetNumberRows() - 1, indx, str(field)
-                                )
-                                user[headers[col].lower()] = str(field)
+                            if len(headers) > col:
+                                if headers[col]:
+                                    indx = self.headers.index(headers[col])
+                                    self.grid_1.SetCellValue(
+                                        self.grid_1.GetNumberRows() - 1,
+                                        indx,
+                                        str(field),
+                                    )
+                                    user[headers[col].lower().replace(" ", "_")] = str(
+                                        field
+                                    )
                             col += 1
+                        if "first_name" not in user:
+                            user["first_name"] = ""
+                        if "last_name" not in user:
+                            user["last_name"] = ""
+                        if "username" in user and not user["username"]:
+                            user["username"] = user["first_name"] + user["last_name"]
+                            self.grid_1.SetCellValue(
+                                self.grid_1.GetNumberRows() - 1,
+                                self.headers.index("Username"),
+                                str(user["username"]),
+                            )
                         self.users.append(user)
                 else:
                     headers = entry
@@ -303,7 +335,7 @@ class UserCreation(wx.Frame):
         if invalidUsers:
             displayMessageBox(
                 (
-                    "Failed to add some Users. Please make sure that Username, Password, Role, and Group Ids is filled out for each User, as neccessary.",
+                    "Failed to add some Users. Please make sure that Username (or First and Last Name), Password, Role, and Group Ids is filled out for each User, as neccessary.",
                     wx.ICON_ERROR,
                 )
             )
@@ -321,45 +353,30 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
-            tenant = Globals.configuration.host.replace("https://", "").replace(
-                "-api.esper.cloud/api", ""
-            )
-            url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
             num = 0
             for user in self.users:
-                body = {}
-                userKeys = user.keys()
-                body["first_name"] = (
-                    user["first name"] if "first name" in userKeys else ""
-                )
-                body["last_name"] = user["last name"] if "last name" in userKeys else ""
-                body["username"] = (
+                username = (
                     user["username"]
-                    if "username" in userKeys
-                    else (body["first_name"] + body["last_name"])
+                    if "username" in user.keys()
+                    else (user["first_name"] + user["last_name"])
                 )
-                body["password"] = user["password"]
-                body["profile"] = {}
-                if "role" in userKeys:
-                    body["profile"]["role"] = user["role"]
-                else:
-                    body["profile"]["role"] = "Group Viewer"
-                body["profile"]["groups"] = user["groups"]
-                if type(body["profile"]["groups"]) == str:
-                    body["profile"]["groups"] = list(body["profile"]["groups"])
-                body["profile"]["enterprise"] = Globals.enterprise_id
-
-                resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
+                resp = createNewUser(user)
                 num += 1
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users * 100))
                 )
                 logMsg = ""
                 if resp.status_code > 299:
-                    logMsg = "Successfully created user account: %s" % body["username"]
+                    logMsg = "Successfully created user account: %s" % username
                 else:
-                    logMsg = (
-                        "ERROR: failed to create user account: %s" % body["username"]
-                    )
+                    logMsg = "ERROR: failed to create user account: %s" % username
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
             self.onClose(event)
+
+    def tryToMakeActive(self):
+        self.Raise()
+        self.Iconize(False)
+        style = self.GetWindowStyle()
+        self.SetWindowStyle(style | wx.STAY_ON_TOP)
+        self.SetFocus()
+        self.SetWindowStyle(style)
