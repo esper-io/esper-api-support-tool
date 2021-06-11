@@ -391,6 +391,11 @@ class UserCreation(wx.Frame):
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
             self.dialog.Close()
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+            self.grid_1.SetScrollLineX(15)
+            self.grid_1.SetScrollLineY(15)
+            self.button_2.SetFocus()
 
     def tryToMakeActive(self):
         self.Raise()
