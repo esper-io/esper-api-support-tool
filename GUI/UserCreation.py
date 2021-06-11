@@ -9,7 +9,6 @@ import Utility.wxThread as wxThread
 from Utility.Resource import (
     createNewFile,
     displayMessageBox,
-    performPostRequestWithRetry,
     postEventToFrame,
 )
 import csv
@@ -338,13 +337,13 @@ class UserCreation(wx.Frame):
         self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(True)
-        if invalidUsers:
-            displayMessageBox(
-                (
-                    "Failed to add some Users. Please make sure that Username (or First and Last Name), Password, Role, and Group Ids is filled out for each User, as neccessary.",
-                    wx.ICON_ERROR,
-                )
+        displayMessageBox(
+            (
+                "Successfully added %s of %s users!\nPlease make sure all necessary fields are filled in for each User entry."
+                % (len(self.users), len(data) - 1),
+                wx.ICON_INFORMATION,
             )
+        )
 
     @api_tool_decorator()
     def onCreate(self, event):
@@ -360,6 +359,7 @@ class UserCreation(wx.Frame):
         )
         if res == wx.YES:
             num = 0
+            numCreated = 0
             for user in self.users:
                 username = (
                     user["username"]
@@ -374,10 +374,17 @@ class UserCreation(wx.Frame):
                 logMsg = ""
                 if resp.status_code > 299:
                     logMsg = "Successfully created user account: %s" % username
+                    numCreated += 1
                 else:
                     logMsg = "ERROR: failed to create user account: %s" % username
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            self.onClose(event)
+            displayMessageBox(
+                (
+                    "Successfully created %s of %s users!"
+                    % (numCreated, len(self.users)),
+                    wx.ICON_INFORMATION,
+                )
+            )
 
     def tryToMakeActive(self):
         self.Raise()
