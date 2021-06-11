@@ -120,5 +120,5 @@ def parseArgs():
 
 
 if __name__ == "__main__":
-    parseArgs()
+    # parseArgs()
     main()
