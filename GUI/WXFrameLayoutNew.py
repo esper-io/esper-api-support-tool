@@ -1704,13 +1704,14 @@ class NewFrameLayout(wx.Frame):
         Globals.gauge_lock.acquire()
         if hasattr(value, "GetValue"):
             value = value.GetValue()
-        maxValue = self.gauge.GetRange()
-        if value > maxValue:
-            value = maxValue
-        if value < 0:
-            value = 0
-        if value >= 0 and value <= maxValue:
-            self.gauge.SetValue(value)
+        if bool(self.gauge):
+            maxValue = self.gauge.GetRange()
+            if value > maxValue:
+                value = maxValue
+            if value < 0:
+                value = 0
+            if value >= 0 and value <= maxValue:
+                self.gauge.SetValue(value)
         Globals.gauge_lock.release()
 
     @api_tool_decorator()
