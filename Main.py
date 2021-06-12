@@ -6,6 +6,7 @@ from Utility.ApiToolLogging import ApiToolLog
 import Common.Globals as Globals
 import sys
 import wx
+import pyforms
 
 from Common.decorator import api_tool_decorator
 
