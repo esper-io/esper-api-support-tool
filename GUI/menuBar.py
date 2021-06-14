@@ -42,7 +42,7 @@ class ToolMenuBar(wx.MenuBar):
         foa.SetBitmap(addPng)
         self.fileOpenAuth = fileMenu.Append(foa)
 
-        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Add Users\tCtrl+U")
+        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = fileMenu.Append(fou)
 
