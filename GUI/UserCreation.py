@@ -438,10 +438,11 @@ class UserCreation(wx.Frame):
         elif self.choice_1.GetStringSelection() == "Modify":
             self.onModify()
         elif self.choice_1.GetStringSelection() == "Delete":
-            pass
+            self.onDelete()
+        event.Skip()
 
     @api_tool_decorator()
-    def onModify(self, event):
+    def onModify(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
             return
@@ -505,7 +506,7 @@ class UserCreation(wx.Frame):
             self.button_7.Enable(True)
 
     @api_tool_decorator()
-    def onCreate(self, event):
+    def onCreate(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
             return
