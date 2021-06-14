@@ -331,6 +331,12 @@ class UserCreation(wx.Frame):
                                 self.headers.index("Username"),
                                 str(user["username"]),
                             )
+                        if "groups" in user:
+                            groups = user["groups"].split(",")
+                            tmp = []
+                            for group in groups:
+                                tmp.append(group.strip())
+                            user["groups"] = tmp
                         self.users.append(user)
                 else:
                     headers = entry
