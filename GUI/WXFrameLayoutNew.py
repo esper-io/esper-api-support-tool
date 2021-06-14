@@ -853,7 +853,7 @@ class NewFrameLayout(wx.Frame):
                     self.promptForNewToken()
 
                 if res and hasattr(res, "scope"):
-                    if "write" in res.scope:
+                    if "write" not in res.scope:
                         self.menubar.fileAddUser.Enable(False)
 
                 groupThread = self.PopulateGroups()
