@@ -1371,11 +1371,13 @@ def modifyUser(user):
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
-    url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
-        tenant=tenant, id=userId
-    )
-    body = getUserBody(user)
-    resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+    resp = None
+    if userId:
+        url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
+            tenant=tenant, id=userId
+        )
+        body = getUserBody(user)
+        resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
     return resp
 
 
@@ -1390,8 +1392,10 @@ def deleteUser(user):
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
-    url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
-        tenant=tenant, id=userId
-    )
-    resp = performDeleteRequestWithRetry(url, headers=getHeader())
+    resp = None
+    if userId:
+        url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
+            tenant=tenant, id=userId
+        )
+        resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp

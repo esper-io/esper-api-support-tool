@@ -577,13 +577,13 @@ class UserCreation(wx.Frame):
                 resp = createNewUser(user)
                 num += 1
                 logMsg = ""
-                if resp.status_code < 299:
+                if resp and resp.status_code < 299:
                     logMsg = "Successfully created user account: %s" % username
                     numCreated += 1
                 else:
                     logMsg = "ERROR: failed to create user account: %s\nReason: %s" % (
                         username,
-                        resp.text,
+                        resp.text if resp else "User not found",
                     )
                 if logMsg:
                     logs.append(logMsg)
@@ -635,13 +635,13 @@ class UserCreation(wx.Frame):
                 resp = deleteUser(user)
                 num += 1
                 logMsg = ""
-                if resp.status_code < 299:
+                if resp and resp.status_code < 299:
                     logMsg = "Successfully deleted user account: %s" % username
                     numCreated += 1
                 else:
                     logMsg = "ERROR: failed to deleted user account: %s\nReason: %s" % (
                         username,
-                        resp.text,
+                        resp.text if resp else "User not found",
                     )
                 if logMsg:
                     logs.append(logMsg)
