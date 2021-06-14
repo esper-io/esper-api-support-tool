@@ -444,14 +444,13 @@ class UserCreation(wx.Frame):
 
     def onExecute(self, event):
         res = None
+        dlgMsg = ""
         if self.choice_1.GetStringSelection() == "Add":
-            res = self.onCreate()
+            res, dlgMsg = self.onCreate()
         elif self.choice_1.GetStringSelection() == "Modify":
-            res = self.onModify()
+            res, dlgMsg = self.onModify()
         elif self.choice_1.GetStringSelection() == "Delete":
-            res = self.onDelete()
-        self.dialog.Update(self.dialog.GetRange())
-        self.dialog.Destroy()
+            res, dlgMsg = self.onDelete()
         formattedRes = ""
         try:
             formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
@@ -461,12 +460,15 @@ class UserCreation(wx.Frame):
             formattedRes += "\n\n"
         with ConfirmTextDialog(
             "User Management Results",
+            dlgMsg,
             "User Management Results",
-            "",
             formattedRes,
             parent=self,
         ) as dialog:
             res = dialog.ShowModal()
+        if bool(self.dialog):
+            self.dialog.Update(self.dialog.GetRange())
+            self.dialog.Destroy()
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             self.users = []
@@ -504,6 +506,7 @@ class UserCreation(wx.Frame):
                 | wx.PD_ESTIMATED_TIME,
             )
             logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -511,6 +514,8 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = modifyUser(user)
                 num += 1
@@ -531,13 +536,16 @@ class UserCreation(wx.Frame):
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully modified %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully modified %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            return res
+            return res, dlgMsg
 
     @api_tool_decorator()
     def onCreate(self):
@@ -566,6 +574,7 @@ class UserCreation(wx.Frame):
                 | wx.PD_ESTIMATED_TIME,
             )
             logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -573,6 +582,8 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = createNewUser(user)
                 num += 1
@@ -590,13 +601,16 @@ class UserCreation(wx.Frame):
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully created %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully created %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            return logs
+            return logs, dlgMsg
 
     def onDelete(self):
         if not self.grid_1.GetNumberRows() > 0:
@@ -624,6 +638,7 @@ class UserCreation(wx.Frame):
                 | wx.PD_ESTIMATED_TIME,
             )
             logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -631,6 +646,8 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = deleteUser(user)
                 num += 1
@@ -648,13 +665,16 @@ class UserCreation(wx.Frame):
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully deleted %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully deleted %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            return logs
+            return logs, dlgMsg
 
     def tryToMakeActive(self):
         self.Raise()
