@@ -370,7 +370,7 @@ class UserCreation(wx.Frame):
                         )
                         or (
                             self.choice_1.GetStringSelection() != "Delete"
-                            or (
+                            and (
                                 len(entry) > headers.index("Role")
                                 and entry[headers.index("Role")] not in self.roles
                             )

@@ -1365,11 +1365,11 @@ def modifyUser(user):
         "-api.esper.cloud/api", ""
     )
     url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url)
+    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for user in users.results:
-        if user.username == user["username"]:
-            userId = user.id
+    for usr in users["results"]:
+        if usr["username"] == user["username"]:
+            userId = usr["id"]
             break
     url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
         tenant=tenant, id=userId
@@ -1384,11 +1384,11 @@ def deleteUser(user):
         "-api.esper.cloud/api", ""
     )
     url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url)
+    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for user in users.results:
-        if user.username == user["username"]:
-            userId = user.id
+    for usr in users["results"]:
+        if usr["username"] == user["username"]:
+            userId = usr["id"]
             break
     url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
         tenant=tenant, id=userId
