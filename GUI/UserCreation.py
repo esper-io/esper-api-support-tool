@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+import json
 from requests.api import head
 from wx.core import YES
 from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
@@ -22,15 +24,22 @@ class UserCreation(wx.Frame):
         self.SetSize((671, 560))
         self.SetTitle("User Management")
         self.users = []
-        self.headers = [
-            "First Name",
-            "Last Name",
-            "Email",
-            "Username",
-            "Password",
-            "Role",
-            "Groups",
-        ]
+        self.headers = {
+            "First Name": 0,
+            "firstname": 0,
+            "Last Name": 1,
+            "lastname": 1,
+            "Email": 2,
+            "email": 2,
+            "Username": 3,
+            "username": 3,
+            "Password": 4,
+            "password": 4,
+            "Role": 5,
+            "role": 5,
+            "Groups": 6,
+            "groups": 6,
+        }
         self.roles = ["Enterprise Admin", "Viewer", "Group Viewer", "Group Admin"]
         self.parent = parent
         self.lastFilePath = ""
@@ -303,24 +312,23 @@ class UserCreation(wx.Frame):
         invalidUsers = []
         if data:
             self.grid_1.Freeze()
-            headers = None
+            headers = []
             for entry in data:
-                if "Username" not in entry:
+                if "username" not in entry and "Username" not in entry:
                     if (
                         (
-                            "Username" not in headers
+                            "username" not in headers
                             or (
-                                "First Name" not in headers
-                                and "Last Name" not in headers
+                                "firstname" not in headers and "lastname" not in headers
                             )
                         )
-                        and "Password" not in headers
-                        and "Role" not in headers
-                        and "Email" not in headers
+                        and "password" not in headers
+                        and "role" not in headers
+                        and "email" not in headers
                         and self.choice_1.GetStringSelection() != "Delete"
                     ) or (
                         self.choice_1.GetStringSelection() == "Delete"
-                        and "Username" not in headers
+                        and "username" not in headers
                     ):
                         displayMessageBox(
                             (
@@ -334,45 +342,45 @@ class UserCreation(wx.Frame):
                     if (
                         (
                             (
-                                not entry[headers.index("Username")]
+                                not entry[headers.index("username")]
                                 and (
-                                    len(entry) > headers.index("First Name")
-                                    and not entry[headers.index("First Name")]
+                                    len(entry) > headers.index("firstname")
+                                    and not entry[headers.index("firstname")]
                                 )
                                 and (
-                                    len(entry) > headers.index("Last Name")
-                                    and not entry[headers.index("Last Name")]
+                                    len(entry) > headers.index("lastname")
+                                    and not entry[headers.index("lastname")]
                                 )
                             )
                             or (
                                 (
-                                    len(entry) > headers.index("Password")
-                                    and not entry[headers.index("Password")]
+                                    len(entry) > headers.index("password")
+                                    and not entry[headers.index("password")]
                                 )
                                 or (
-                                    len(entry) > headers.index("Role")
-                                    and not entry[headers.index("Role")]
+                                    len(entry) > headers.index("role")
+                                    and not entry[headers.index("role")]
                                 )
                             )
                             and self.choice_1.GetStringSelection() != "Delete"
                         )
                         or (
                             (
-                                len(entry) > headers.index("Role")
-                                and entry[headers.index("Role")] != "Enterprise Admin"
-                                and entry[headers.index("Role")] != "Viewer"
+                                len(entry) > headers.index("role")
+                                and entry[headers.index("role")] != "Enterprise Admin"
+                                and entry[headers.index("role")] != "Viewer"
                             )
                             and (
-                                len(entry) > headers.index("Groups")
-                                and not entry[headers.index("Groups")]
+                                len(entry) > headers.index("groups")
+                                and not entry[headers.index("groups")]
                             )
                             and self.choice_1.GetStringSelection() != "Delete"
                         )
                         or (
                             self.choice_1.GetStringSelection() != "Delete"
                             and (
-                                len(entry) > headers.index("Role")
-                                and entry[headers.index("Role")] not in self.roles
+                                len(entry) > headers.index("role")
+                                and entry[headers.index("role")] not in self.roles
                             )
                         )
                     ):
@@ -384,7 +392,7 @@ class UserCreation(wx.Frame):
                         for field in entry:
                             if len(headers) > col:
                                 if headers[col]:
-                                    indx = self.headers.index(headers[col])
+                                    indx = self.headers[headers[col]]
                                     self.grid_1.SetCellValue(
                                         self.grid_1.GetNumberRows() - 1,
                                         indx,
@@ -402,7 +410,7 @@ class UserCreation(wx.Frame):
                             user["username"] = user["first_name"] + user["last_name"]
                             self.grid_1.SetCellValue(
                                 self.grid_1.GetNumberRows() - 1,
-                                self.headers.index("Username"),
+                                self.headers["Username"],
                                 str(user["username"]),
                             )
                         if "role" in user and (
@@ -418,7 +426,9 @@ class UserCreation(wx.Frame):
                             user["groups"] = tmp
                         self.users.append(user)
                 else:
-                    headers = entry
+                    # headers = entry
+                    for header in entry:
+                        headers.append(header.lower().replace(" ", ""))
         self.grid_1.Thaw()
         self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
@@ -433,12 +443,40 @@ class UserCreation(wx.Frame):
             )
 
     def onExecute(self, event):
+        res = None
+        dlgMsg = ""
         if self.choice_1.GetStringSelection() == "Add":
-            self.onCreate()
+            res, dlgMsg = self.onCreate()
         elif self.choice_1.GetStringSelection() == "Modify":
-            self.onModify()
+            res, dlgMsg = self.onModify()
         elif self.choice_1.GetStringSelection() == "Delete":
-            self.onDelete()
+            res, dlgMsg = self.onDelete()
+        formattedRes = ""
+        try:
+            formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
+        except:
+            formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
+        if formattedRes:
+            formattedRes += "\n\n"
+        with ConfirmTextDialog(
+            "User Management Results",
+            dlgMsg,
+            "User Management Results",
+            formattedRes,
+            parent=self,
+        ) as dialog:
+            res = dialog.ShowModal()
+        if bool(self.dialog):
+            self.dialog.Update(self.dialog.GetRange())
+            self.dialog.Destroy()
+        if self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+            self.users = []
+        self.grid_1.SetScrollLineX(15)
+        self.grid_1.SetScrollLineY(15)
+        self.button_2.SetFocus()
+        self.button_6.Enable(False)
+        self.button_7.Enable(True)
         event.Skip()
 
     @api_tool_decorator()
@@ -462,8 +500,13 @@ class UserCreation(wx.Frame):
                 "Modifying Users",
                 "Time remaining",
                 100,
-                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+                style=wx.PD_CAN_ABORT
+                | wx.PD_ELAPSED_TIME
+                | wx.PD_AUTO_HIDE
+                | wx.PD_ESTIMATED_TIME,
             )
+            logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -471,6 +514,8 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = modifyUser(user)
                 num += 1
@@ -486,24 +531,21 @@ class UserCreation(wx.Frame):
                             resp.text,
                         )
                     )
+                if logMsg:
+                    logs.append(logMsg)
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully modified %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully modified %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            self.dialog.Close()
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-                self.users = []
-            self.grid_1.SetScrollLineX(15)
-            self.grid_1.SetScrollLineY(15)
-            self.button_2.SetFocus()
-            self.button_6.Enable(False)
-            self.button_7.Enable(True)
+            return res, dlgMsg
 
     @api_tool_decorator()
     def onCreate(self):
@@ -526,8 +568,13 @@ class UserCreation(wx.Frame):
                 "Creating Users",
                 "Time remaining",
                 100,
-                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+                style=wx.PD_CAN_ABORT
+                | wx.PD_ELAPSED_TIME
+                | wx.PD_AUTO_HIDE
+                | wx.PD_ESTIMATED_TIME,
             )
+            logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -535,36 +582,35 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = createNewUser(user)
                 num += 1
                 logMsg = ""
-                if resp.status_code < 299:
+                if resp and resp.status_code < 299:
                     logMsg = "Successfully created user account: %s" % username
                     numCreated += 1
                 else:
                     logMsg = "ERROR: failed to create user account: %s\nReason: %s" % (
                         username,
-                        resp.text,
+                        resp.text if resp else "User not found",
                     )
+                if logMsg:
+                    logs.append(logMsg)
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully created %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully created %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            self.dialog.Close()
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-                self.users = []
-            self.grid_1.SetScrollLineX(15)
-            self.grid_1.SetScrollLineY(15)
-            self.button_2.SetFocus()
-            self.button_6.Enable(False)
-            self.button_7.Enable(True)
+            return logs, dlgMsg
 
     def onDelete(self):
         if not self.grid_1.GetNumberRows() > 0:
@@ -586,8 +632,13 @@ class UserCreation(wx.Frame):
                 "Deleting Users",
                 "Time remaining",
                 100,
-                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+                style=wx.PD_CAN_ABORT
+                | wx.PD_ELAPSED_TIME
+                | wx.PD_AUTO_HIDE
+                | wx.PD_ESTIMATED_TIME,
             )
+            logs = []
+            dlgMsg = ""
             for user in self.users:
                 username = (
                     user["username"]
@@ -595,36 +646,35 @@ class UserCreation(wx.Frame):
                     else (user["first_name"] + user["last_name"])
                 )
                 if self.dialog.WasCancelled():
+                    self.dialog.Update(self.dialog.GetRange())
+                    self.dialog.Destroy()
                     break
                 resp = deleteUser(user)
                 num += 1
                 logMsg = ""
-                if resp.status_code < 299:
+                if resp and resp.status_code < 299:
                     logMsg = "Successfully deleted user account: %s" % username
                     numCreated += 1
                 else:
                     logMsg = "ERROR: failed to deleted user account: %s\nReason: %s" % (
                         username,
-                        resp.text,
+                        resp.text if resp else "User not found",
                     )
+                if logMsg:
+                    logs.append(logMsg)
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
+                dlgMsg = "Successfully deleted %s of %s users!" % (
+                    numCreated,
+                    len(self.users),
+                )
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
-                    "Successfully deleted %s of %s users!"
-                    % (numCreated, len(self.users)),
+                    dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            self.dialog.Close()
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-                self.users = []
-            self.grid_1.SetScrollLineX(15)
-            self.grid_1.SetScrollLineY(15)
-            self.button_2.SetFocus()
-            self.button_6.Enable(False)
-            self.button_7.Enable(True)
+            return logs, dlgMsg
 
     def tryToMakeActive(self):
         self.Raise()
