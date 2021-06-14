@@ -393,6 +393,7 @@ class UserCreation(wx.Frame):
             self.dialog.Close()
             if self.grid_1.GetNumberRows() > 0:
                 self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+                self.users = []
             self.grid_1.SetScrollLineX(15)
             self.grid_1.SetScrollLineY(15)
             self.button_2.SetFocus()
