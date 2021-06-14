@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from requests.api import head
 from wx.core import YES
-from Utility.EsperAPICalls import createNewUser
+from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
 import os
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
@@ -20,7 +20,7 @@ class UserCreation(wx.Frame):
     def __init__(self, parent, *args, **kwds):
         wx.Frame.__init__(self, None, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize((671, 560))
-        self.SetTitle("User Creation")
+        self.SetTitle("User Management")
         self.users = []
         self.headers = [
             "First Name",
@@ -45,9 +45,9 @@ class UserCreation(wx.Frame):
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
         grid_sizer_3.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_1 = wx.FlexGridSizer(8, 1, 0, 0)
+        sizer_1 = wx.FlexGridSizer(10, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "User Creation")
+        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "User Management")
         label_1.SetFont(
             wx.Font(
                 Globals.HEADER_FONT_SIZE,
@@ -61,7 +61,12 @@ class UserCreation(wx.Frame):
         sizer_1.Add(label_1, 0, 0, 0)
 
         static_line_1 = wx.StaticLine(self.panel_2, wx.ID_ANY)
-        sizer_1.Add(static_line_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
+        sizer_1.Add(
+            static_line_1,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
 
         grid_sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
         sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
@@ -107,6 +112,36 @@ class UserCreation(wx.Frame):
             self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
 
+        grid_sizer_7 = wx.FlexGridSizer(1, 2, 0, 0)
+        sizer_1.Add(grid_sizer_7, 1, wx.EXPAND | wx.TOP, 5)
+
+        label_5 = wx.StaticText(self.panel_2, wx.ID_ANY, "Select Action:")
+        label_5.SetFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "",
+            )
+        )
+        grid_sizer_7.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        self.choice_1 = wx.Choice(
+            self.panel_2, wx.ID_ANY, choices=["Add", "Modify", "Delete"]
+        )
+        self.choice_1.SetSelection(0)
+        grid_sizer_7.Add(self.choice_1, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+        static_line_3 = wx.StaticLine(self.panel_2, wx.ID_ANY)
+        sizer_1.Add(
+            static_line_3,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
         label_3 = wx.StaticText(self.panel_2, wx.ID_ANY, "Preview:")
         label_3.SetFont(
             wx.Font(
@@ -126,7 +161,7 @@ class UserCreation(wx.Frame):
         grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
 
         self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(0, 7)
+        self.grid_1.CreateGrid(41, 7)
         self.grid_1.EnableEditing(0)
         self.grid_1.EnableDragRowSize(0)
         self.grid_1.SetColLabelValue(0, "First Name")
@@ -154,7 +189,7 @@ class UserCreation(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
-        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Create")
+        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Exectute")
         sizer_3.Add(self.button_6, 0, wx.RIGHT, 5)
 
         self.button_7 = wx.Button(self.panel_2, wx.ID_ANY, "Cancel")
@@ -162,11 +197,13 @@ class UserCreation(wx.Frame):
 
         self.panel_3.SetSizer(grid_sizer_6)
 
+        grid_sizer_7.AddGrowableCol(1)
+
         grid_sizer_5.AddGrowableCol(1)
 
         grid_sizer_1.AddGrowableCol(1)
 
-        sizer_1.AddGrowableRow(5)
+        sizer_1.AddGrowableRow(7)
         sizer_1.AddGrowableCol(0)
         self.panel_2.SetSizer(sizer_1)
 
@@ -181,7 +218,7 @@ class UserCreation(wx.Frame):
 
         self.button_1.Bind(wx.EVT_BUTTON, self.downloadTemplate)
         self.button_2.Bind(wx.EVT_BUTTON, self.upload)
-        self.button_6.Bind(wx.EVT_BUTTON, self.onCreate)
+        self.button_6.Bind(wx.EVT_BUTTON, self.onExecute)
         self.button_7.Bind(wx.EVT_BUTTON, self.onClose)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
@@ -280,6 +317,10 @@ class UserCreation(wx.Frame):
                         and "Password" not in headers
                         and "Role" not in headers
                         and "Email" not in headers
+                        and self.choice_1.GetStringSelection() != "Delete"
+                    ) or (
+                        self.choice_1.GetStringSelection() == "Delete"
+                        and "Username" not in headers
                     ):
                         displayMessageBox(
                             (
@@ -292,19 +333,48 @@ class UserCreation(wx.Frame):
                         continue
                     if (
                         (
-                            not entry[headers.index("Username")]
-                            and not entry[headers.index("First Name")]
-                            and not entry[headers.index("Last Name")]
+                            (
+                                not entry[headers.index("Username")]
+                                and (
+                                    len(entry) > headers.index("First Name")
+                                    and not entry[headers.index("First Name")]
+                                )
+                                and (
+                                    len(entry) > headers.index("Last Name")
+                                    and not entry[headers.index("Last Name")]
+                                )
+                            )
+                            or (
+                                (
+                                    len(entry) > headers.index("Password")
+                                    and not entry[headers.index("Password")]
+                                )
+                                or (
+                                    len(entry) > headers.index("Role")
+                                    and not entry[headers.index("Role")]
+                                )
+                            )
+                            and self.choice_1.GetStringSelection() != "Delete"
                         )
-                        or not entry[headers.index("Password")]
-                        or not entry[headers.index("Role")]
-                    ) or (
-                        (
-                            entry[headers.index("Role")] != "Enterprise Admin"
-                            and entry[headers.index("Role")] != "Viewer"
+                        or (
+                            (
+                                len(entry) > headers.index("Role")
+                                and entry[headers.index("Role")] != "Enterprise Admin"
+                                and entry[headers.index("Role")] != "Viewer"
+                            )
+                            and (
+                                len(entry) > headers.index("Groups")
+                                and not entry[headers.index("Groups")]
+                            )
+                            and self.choice_1.GetStringSelection() != "Delete"
                         )
-                        and not entry[headers.index("Groups")]
-                        or entry[headers.index("Role")] not in self.roles
+                        or (
+                            self.choice_1.GetStringSelection() != "Delete"
+                            or (
+                                len(entry) > headers.index("Role")
+                                and entry[headers.index("Role")] not in self.roles
+                            )
+                        )
                     ):
                         invalidUsers.append(entry)
                     else:
@@ -362,6 +432,78 @@ class UserCreation(wx.Frame):
                 )
             )
 
+    def onExecute(self, event):
+        if self.choice_1.GetStringSelection() == "Add":
+            self.onCreate()
+        elif self.choice_1.GetStringSelection() == "Modify":
+            self.onModify()
+        elif self.choice_1.GetStringSelection() == "Delete":
+            pass
+
+    @api_tool_decorator()
+    def onModify(self, event):
+        if not self.grid_1.GetNumberRows() > 0:
+            self.button_6.Enable(False)
+            return
+        res = displayMessageBox(
+            (
+                'You are about to modify the previewed Users on "%s", are you sure?'
+                % Globals.frame.configMenuItem.GetItemLabelText(),
+                wx.ICON_INFORMATION | wx.YES_NO,
+            )
+        )
+        if res == wx.YES:
+            self.button_6.Enable(False)
+            self.button_7.Enable(False)
+            num = 0
+            numCreated = 0
+            self.dialog = wx.ProgressDialog(
+                "Modifying Users",
+                "Time remaining",
+                100,
+                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+            )
+            for user in self.users:
+                username = (
+                    user["username"]
+                    if "username" in user.keys()
+                    else (user["first_name"] + user["last_name"])
+                )
+                if self.dialog.WasCancelled():
+                    break
+                resp = modifyUser(user)
+                num += 1
+                logMsg = ""
+                if resp.status_code < 299:
+                    logMsg = "Successfully modified user account: %s" % username
+                    numCreated += 1
+                else:
+                    logMsg = (
+                        "ERROR: failed to modified user account: %s\nReason: %s"
+                        % (
+                            username,
+                            resp.text,
+                        )
+                    )
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                )
+                self.dialog.Update(
+                    int(num / len(self.users) * 100),
+                    "Successfully modified %s of %s users!"
+                    % (numCreated, len(self.users)),
+                )
+                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+            self.dialog.Close()
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+                self.users = []
+            self.grid_1.SetScrollLineX(15)
+            self.grid_1.SetScrollLineY(15)
+            self.button_2.SetFocus()
+            self.button_6.Enable(False)
+            self.button_7.Enable(True)
+
     @api_tool_decorator()
     def onCreate(self, event):
         if not self.grid_1.GetNumberRows() > 0:
@@ -391,6 +533,8 @@ class UserCreation(wx.Frame):
                     if "username" in user.keys()
                     else (user["first_name"] + user["last_name"])
                 )
+                if self.dialog.WasCancelled():
+                    break
                 resp = createNewUser(user)
                 num += 1
                 logMsg = ""
@@ -408,6 +552,66 @@ class UserCreation(wx.Frame):
                 self.dialog.Update(
                     int(num / len(self.users) * 100),
                     "Successfully created %s of %s users!"
+                    % (numCreated, len(self.users)),
+                )
+                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+            self.dialog.Close()
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+                self.users = []
+            self.grid_1.SetScrollLineX(15)
+            self.grid_1.SetScrollLineY(15)
+            self.button_2.SetFocus()
+            self.button_6.Enable(False)
+            self.button_7.Enable(True)
+
+    def onDelete(self):
+        if not self.grid_1.GetNumberRows() > 0:
+            self.button_6.Enable(False)
+            return
+        res = displayMessageBox(
+            (
+                'You are about to delete the previewed Users on "%s", are you sure?'
+                % Globals.frame.configMenuItem.GetItemLabelText(),
+                wx.ICON_INFORMATION | wx.YES_NO,
+            )
+        )
+        if res == wx.YES:
+            self.button_6.Enable(False)
+            self.button_7.Enable(False)
+            num = 0
+            numCreated = 0
+            self.dialog = wx.ProgressDialog(
+                "Deleting Users",
+                "Time remaining",
+                100,
+                style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME,
+            )
+            for user in self.users:
+                username = (
+                    user["username"]
+                    if "username" in user.keys()
+                    else (user["first_name"] + user["last_name"])
+                )
+                if self.dialog.WasCancelled():
+                    break
+                resp = deleteUser(user)
+                num += 1
+                logMsg = ""
+                if resp.status_code < 299:
+                    logMsg = "Successfully deleted user account: %s" % username
+                    numCreated += 1
+                else:
+                    logMsg = "ERROR: failed to deleted user account: %s\nReason: %s" % (
+                        username,
+                        resp.text,
+                    )
+                postEventToFrame(
+                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                )
+                self.dialog.Update(
+                    int(num / len(self.users) * 100),
+                    "Successfully deleted %s of %s users!"
                     % (numCreated, len(self.users)),
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)

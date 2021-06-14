@@ -13,6 +13,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.EastUtility import iterateThroughDeviceList
 from Utility.Resource import (
     logBadResponse,
+    performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
@@ -1316,11 +1317,7 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
             time.sleep(1)
 
 
-def createNewUser(user):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+def getUserBody(user):
     body = {}
     userKeys = user.keys()
     body["first_name"] = user["first name"] if "first name" in userKeys else ""
@@ -1350,6 +1347,51 @@ def createNewUser(user):
                     groups.append(gp.id)
     body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
+    return body
 
+
+def createNewUser(user):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+    body = getUserBody(user)
     resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
+    return resp
+
+
+def modifyUser(user):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+    users = performGetRequestWithRetry(url)
+    userId = ""
+    for user in users.results:
+        if user.username == user["username"]:
+            userId = user.id
+            break
+    url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
+        tenant=tenant, id=userId
+    )
+    body = getUserBody(user)
+    resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+    return resp
+
+
+def deleteUser(user):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+    users = performGetRequestWithRetry(url)
+    userId = ""
+    for user in users.results:
+        if user.username == user["username"]:
+            userId = user.id
+            break
+    url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
+        tenant=tenant, id=userId
+    )
+    resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
