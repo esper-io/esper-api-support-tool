@@ -31,6 +31,7 @@ class UserCreation(wx.Frame):
             "Role",
             "Groups",
         ]
+        self.roles = ["Enterprise Admin", "Viewer", "Group Viewer", "Group Admin"]
         self.parent = parent
         self.lastFilePath = ""
 
@@ -287,6 +288,8 @@ class UserCreation(wx.Frame):
                             )
                         )
                         break
+                    if not entry:
+                        continue
                     if (
                         (
                             not entry[headers.index("Username")]
@@ -301,6 +304,7 @@ class UserCreation(wx.Frame):
                             and entry[headers.index("Role")] != "Viewer"
                         )
                         and not entry[headers.index("Groups")]
+                        or entry[headers.index("Role")] not in self.roles
                     ):
                         invalidUsers.append(entry)
                     else:
@@ -331,7 +335,12 @@ class UserCreation(wx.Frame):
                                 self.headers.index("Username"),
                                 str(user["username"]),
                             )
-                        if "groups" in user:
+                        if "role" in user and (
+                            "Enterprise Admin" == user["role"]
+                            or "Viewer" == user["role"]
+                        ):
+                            user["groups"] = []
+                        if "groups" in user and type(user["groups"]) == str:
                             groups = user["groups"].split(",")
                             tmp = []
                             for group in groups:
@@ -366,6 +375,8 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
+            self.button_6.Enable(False)
+            self.button_7.Enable(False)
             num = 0
             numCreated = 0
             self.dialog = wx.ProgressDialog(
@@ -404,6 +415,8 @@ class UserCreation(wx.Frame):
             self.grid_1.SetScrollLineX(15)
             self.grid_1.SetScrollLineY(15)
             self.button_2.SetFocus()
+            self.button_6.Enable(False)
+            self.button_7.Enable(True)
 
     def tryToMakeActive(self):
         self.Raise()

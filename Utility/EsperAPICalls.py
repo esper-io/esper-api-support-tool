@@ -393,7 +393,7 @@ def setdevicename(
 
 
 @api_tool_decorator()
-def getAllGroups(maxAttempt=Globals.MAX_RETRY):
+def getAllGroups(name="", maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Groups belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceGroupApi(
@@ -403,7 +403,10 @@ def getAllGroups(maxAttempt=Globals.MAX_RETRY):
         for attempt in range(maxAttempt):
             try:
                 api_response = api_instance.get_all_groups(
-                    Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
+                    Globals.enterprise_id,
+                    name=name,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
                 )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
@@ -1320,9 +1323,7 @@ def createNewUser(user):
     url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
     body = {}
     userKeys = user.keys()
-    body["first_name"] = (
-        user["first name"] if "first name" in userKeys else ""
-    )
+    body["first_name"] = user["first name"] if "first name" in userKeys else ""
     body["last_name"] = user["last name"] if "last name" in userKeys else ""
     body["username"] = (
         user["username"]
@@ -1338,6 +1339,16 @@ def createNewUser(user):
     body["profile"]["groups"] = user["groups"]
     if type(body["profile"]["groups"]) == str:
         body["profile"]["groups"] = list(body["profile"]["groups"])
+    groups = []
+    for group in body["profile"]["groups"]:
+        if len(group) == 36 and "-" in group:
+            groups.append(group)
+        else:
+            resp = getAllGroups(name=group)
+            if resp.results:
+                for gp in resp.results:
+                    groups.append(gp.id)
+    body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
 
     resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
