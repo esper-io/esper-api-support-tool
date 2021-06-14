@@ -255,6 +255,7 @@ class UserCreation(wx.Frame):
     def processUpload(self, file):
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        self.users = []
         data = None
         with open(file, "r") as csvFile:
             reader = csv.reader(
