@@ -394,11 +394,14 @@ class UserCreation(wx.Frame):
                 resp = createNewUser(user)
                 num += 1
                 logMsg = ""
-                if resp.status_code > 299:
+                if resp.status_code < 299:
                     logMsg = "Successfully created user account: %s" % username
                     numCreated += 1
                 else:
-                    logMsg = "ERROR: failed to create user account: %s" % username
+                    logMsg = "ERROR: failed to create user account: %s\nReason: %s" % (
+                        username,
+                        resp.text,
+                    )
                 postEventToFrame(
                     wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
