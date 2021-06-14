@@ -8,11 +8,11 @@ import wx.html as wxHtml
 
 
 class ConfirmTextDialog(wx.Dialog):
-    def __init__(self, title, label, caption, detail):
+    def __init__(self, title, label, caption, detail, parent=None):
         # begin wxGlade: MyDialog.__init__
         minSize = (500, 400)
         super(ConfirmTextDialog, self).__init__(
-            None,
+            parent,
             wx.ID_ANY,
             size=minSize,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
