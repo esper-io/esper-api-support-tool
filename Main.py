@@ -3,7 +3,6 @@
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 from Utility.ApiToolLogging import ApiToolLog
 
-import argparse
 import Common.Globals as Globals
 import sys
 import wx
@@ -31,7 +30,7 @@ class MyApp(wx.App):
         Globals.frame.MacNewFile()
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def main():
     """Launches Main App"""
     sys.excepthook = ApiToolLog().excepthook
@@ -42,44 +41,45 @@ def main():
         ApiToolLog().LogError(e)
 
 
-def parseArgs():
-    parser = argparse.ArgumentParser(description=Globals.DESCRIPTION)
-    parser.add_argument(
-        "--print_responses",
-        dest="print_res",
-        action="store",
-        nargs="?",
-        default=False,
-        help="Print Responses",
-        required=False,
-    )
-    parser.add_argument(
-        "--print_duration",
-        dest="print_duration",
-        action="store",
-        nargs="?",
-        default=False,
-        help="Print Duration of Methods",
-        required=False,
-    )
-    parser.add_argument(
-        "--record_place",
-        dest="record_place",
-        action="store",
-        nargs="?",
-        default=False,
-        help="Record Execution Pathing",
-        required=False,
-    )
-    args = parser.parse_args()
-    if hasattr(args, "record_place"):
-        Globals.RECORD_PLACE = args.record_place
-    if hasattr(args, "print_res"):
-        Globals.PRINT_RESPONSES = args.print_res
-    if hasattr(args, "print_duration"):
-        Globals.PRINT_FUNC_DURATION = args.print_duration
-
-
 if __name__ == "__main__":
-    parseArgs()
+    command = " ".join(sys.argv)
+    cmdList = command.split("--")
+    for cmd in cmdList:
+        parts = cmd.split(" ")
+        if parts[0] == "record_place":
+            if (
+                parts[1].lower() == "true"
+                or parts[1].lower() == "t"
+                or parts[1].lower() == "y"
+            ):
+                Globals.RECORD_PLACE = True
+            else:
+                Globals.RECORD_PLACE = False
+        if parts[0] == "print_res":
+            if (
+                parts[1].lower() == "true"
+                or parts[1].lower() == "t"
+                or parts[1].lower() == "y"
+            ):
+                Globals.PRINT_RESPONSES = True
+            else:
+                Globals.PRINT_RESPONSES = False
+        if parts[0] == "print_duration":
+            if (
+                parts[1].lower() == "true"
+                or parts[1].lower() == "t"
+                or parts[1].lower() == "y"
+            ):
+                Globals.PRINT_FUNC_DURATION = True
+            else:
+                Globals.PRINT_FUNC_DURATION = False
+        if parts[0] == "log_api":
+            if (
+                parts[1].lower() == "true"
+                or parts[1].lower() == "t"
+                or parts[1].lower() == "y"
+            ):
+                Globals.PRINT_API_LOGS = True
+            else:
+                Globals.PRINT_API_LOGS = False
     main()

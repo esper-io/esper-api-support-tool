@@ -23,7 +23,7 @@ from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
 
 ####Esper API Requests####
-@api_tool_decorator
+@api_tool_decorator()
 def getHeader():
     if (
         Globals.configuration
@@ -38,7 +38,7 @@ def getHeader():
         return {}
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getInfo(request_extension, deviceid):
     """Sends Request For Device Info JSON"""
     headers = getHeader()
@@ -57,12 +57,12 @@ def getInfo(request_extension, deviceid):
     return json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getDeviceDetail(deviceId):
     return getInfo("/?format=json&show_policy=true", deviceId)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def fetchGroupName(groupURL):
     headers = getHeader()
     resp = performGetRequestWithRetry(groupURL, headers=headers)
@@ -79,7 +79,7 @@ def fetchGroupName(groupURL):
     return None
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def patchInfo(request_extension, deviceid, tags):
     """Pushes Data To Device Info JSON"""
     headers = getHeader()
@@ -99,7 +99,7 @@ def patchInfo(request_extension, deviceid, tags):
     return json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def iskioskmode(deviceid):
     """Checks If Device Is In Kiosk Mode"""
     kioskmode = False
@@ -109,7 +109,7 @@ def iskioskmode(deviceid):
     return kioskmode
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def toggleKioskMode(
     frame,
     deviceid,
@@ -136,6 +136,11 @@ def toggleKioskMode(
     for attempt in range(maxAttempt):
         try:
             api_response = api_instance.create_command(Globals.enterprise_id, command)
+            ApiToolLog.LogApiRequestOccurrence(
+                "toggleKioskMode",
+                api_instance.create_command.__name__,
+                Globals.PRINT_API_LOGS,
+            )
             break
         except Exception as e:
             if hasattr(e, "body") and "invalid device id" in e.body:
@@ -165,7 +170,7 @@ def toggleKioskMode(
     return status
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getdevicetags(deviceid):
     """Retrieves Device Tags"""
     tags = ""
@@ -175,7 +180,7 @@ def getdevicetags(deviceid):
     return tags
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
     applist = []
@@ -248,7 +253,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
     return applist, json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getLatestEvent(deviceId):
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
     respData = None
@@ -257,7 +262,7 @@ def getLatestEvent(deviceId):
     return respData
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -270,7 +275,7 @@ def getkioskmodeapp(deviceid):
     return appName
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getNetworkInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -283,7 +288,7 @@ def getNetworkInfo(deviceid):
     return network_event
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getLocationInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
@@ -296,7 +301,7 @@ def getLocationInfo(deviceid):
     return location_event, respData
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""
     json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags)
@@ -305,7 +310,7 @@ def setdevicetags(deviceid, tags):
     return tags
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setdevicename(
     frame,
     deviceid,
@@ -353,6 +358,9 @@ def setdevicename(
     for attempt in range(maxAttempt):
         try:
             api_response = api_instance.create_command(Globals.enterprise_id, command)
+            ApiToolLog().LogApiRequestOccurrence(
+                "setdevicename", api_instance.create_command, Globals.PRINT_API_LOGS
+            )
             break
         except Exception as e:
             if hasattr(e, "body") and "invalid device id" in e.body:
@@ -368,6 +376,11 @@ def setdevicename(
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                "setdevicename",
+                api_instance.get_command_request_status,
+                Globals.PRINT_API_LOGS,
+            )
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
@@ -379,7 +392,7 @@ def setdevicename(
     return status
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getAllGroups(maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Groups belonging to the Enterprise """
     try:
@@ -391,6 +404,9 @@ def getAllGroups(maxAttempt=Globals.MAX_RETRY):
             try:
                 api_response = api_instance.get_all_groups(
                     Globals.enterprise_id, limit=Globals.limit, offset=Globals.offset
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
                 )
                 break
             except Exception as e:
@@ -406,7 +422,7 @@ def getAllGroups(maxAttempt=Globals.MAX_RETRY):
         )
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX_RETRY):
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
@@ -414,6 +430,11 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
         for attempt in range(maxAttempt):
             try:
                 api_response = api_instance.upload(enterprise_id, file)
+                ApiToolLog().LogApiRequestOccurrence(
+                    "uploadApplicationForHost",
+                    api_instance.upload,
+                    Globals.PRINT_API_LOGS,
+                )
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -425,7 +446,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
         raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
@@ -434,6 +455,11 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
             try:
                 api_response = api_instance.get_all_groups(
                     enterprise_id, limit=Globals.limit, offset=Globals.offset
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getDeviceGroupsForHost",
+                    api_instance.get_all_groups,
+                    Globals.PRINT_API_LOGS,
                 )
                 break
             except Exception as e:
@@ -446,7 +472,7 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
         raise e
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def createDeviceGroupForHost(
     config, enterprise_id, group, maxAttempt=Globals.MAX_RETRY
 ):
@@ -458,28 +484,10 @@ def createDeviceGroupForHost(
                 api_response = api_instance.create_group(
                     enterprise_id, data={"name": group}
                 )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except Exception as e:
-        raise e
-
-
-@api_tool_decorator
-def getDeviceGroupForHost(
-    config, enterprise_id, group_id, maxAttempt=Globals.MAX_RETRY
-):
-    try:
-        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.get_group_by_id(
-                    group_id=group_id, enterprise_id=enterprise_id
+                ApiToolLog().LogApiRequestOccurrence(
+                    "createDeviceGroupForHost",
+                    api_instance.create_group,
+                    Globals.PRINT_API_LOGS,
                 )
                 break
             except Exception as e:
@@ -492,7 +500,35 @@ def getDeviceGroupForHost(
         raise e
 
 
-@api_tool_decorator
+@api_tool_decorator()
+def getDeviceGroupForHost(
+    config, enterprise_id, group_id, maxAttempt=Globals.MAX_RETRY
+):
+    try:
+        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
+        api_response = None
+        for attempt in range(maxAttempt):
+            try:
+                api_response = api_instance.get_group_by_id(
+                    group_id=group_id, enterprise_id=enterprise_id
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getDeviceGroupForHost",
+                    api_instance.get_group_by_id,
+                    Globals.PRINT_API_LOGS,
+                )
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        return api_response
+    except Exception as e:
+        raise e
+
+
+@api_tool_decorator()
 def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not groupToUse:
@@ -511,6 +547,11 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                             group=group,
                             limit=Globals.limit,
                             offset=Globals.offset,
+                        )
+                        ApiToolLog().LogApiRequestOccurrence(
+                            "getAllDevices",
+                            api_instance.get_all_devices,
+                            Globals.PRINT_API_LOGS,
                         )
                         break
                     except Exception as e:
@@ -538,6 +579,11 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
+                    ApiToolLog().LogApiRequestOccurrence(
+                        "getAllDevices",
+                        api_instance.get_all_devices,
+                        Globals.PRINT_API_LOGS,
+                    )
                     break
                 except Exception as e:
                     if attempt == maxAttempt - 1:
@@ -557,7 +603,7 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getAllApplications(maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
@@ -573,6 +619,11 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     offset=Globals.offset,
                     is_hidden=False,
                 )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllApplications",
+                    api_instance.get_all_applications,
+                    Globals.PRINT_API_LOGS,
+                )
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -587,7 +638,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
         )
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
@@ -600,6 +651,11 @@ def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETR
                     limit=Globals.limit,
                     offset=0,
                     is_hidden=False,
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllApplicationsForHost",
+                    api_instance.get_all_applications,
+                    Globals.PRINT_API_LOGS,
                 )
                 break
             except Exception as e:
@@ -614,7 +670,7 @@ def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETR
         )
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
@@ -630,6 +686,11 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
                         api_response = api_instance.get_device_by_id(
                             Globals.enterprise_id, device_id=device
                         )
+                        ApiToolLog().LogApiRequestOccurrence(
+                            "getDeviceById",
+                            api_instance.get_device_by_id,
+                            Globals.PRINT_API_LOGS,
+                        )
                         break
                     except Exception as e:
                         if attempt == maxAttempt - 1:
@@ -643,6 +704,11 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
                 try:
                     api_response = api_instance.get_device_by_id(
                         Globals.enterprise_id, device_id=deviceToUse
+                    )
+                    ApiToolLog().LogApiRequestOccurrence(
+                        "getDeviceById",
+                        api_instance.get_device_by_id,
+                        Globals.PRINT_API_LOGS,
                     )
                     break
                 except Exception as e:
@@ -661,7 +727,7 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
         ApiToolLog().LogError(e)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.TokenApi(esperclient.ApiClient(Globals.configuration))
     try:
@@ -669,6 +735,9 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         for attempt in range(maxAttempt):
             try:
                 api_response = api_instance.get_token_info()
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getTokenInfo", api_instance.get_token_info, Globals.PRINT_API_LOGS
+                )
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -682,7 +751,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         return e
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def iterateThroughAllGroups(frame, action, api_instance, group=None):
     groupToUse = None
     if group:
@@ -705,7 +774,7 @@ def iterateThroughAllGroups(frame, action, api_instance, group=None):
         ApiToolLog().LogError(e)
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
@@ -771,7 +840,7 @@ def setKiosk(frame, device, deviceInfo):
             }
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
     logString = (
@@ -829,7 +898,7 @@ def setMulti(frame, device, deviceInfo):
         }
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getCommandsApiInstance():
     """ Returns an instace of the Commands API """
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
@@ -841,6 +910,11 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             api_response = api_instance.create_command(Globals.enterprise_id, request)
+            ApiToolLog().LogApiRequestOccurrence(
+                "executeCommandAndWait",
+                api_instance.create_command,
+                Globals.PRINT_API_LOGS,
+            )
             break
         except Exception as e:
             if hasattr(e, "body") and (
@@ -857,7 +931,7 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
     return last_status
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def waitForCommandToFinish(
     request_id,
     ignoreQueue=False,
@@ -871,6 +945,11 @@ def waitForCommandToFinish(
         try:
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, request_id
+            )
+            ApiToolLog().LogApiRequestOccurrence(
+                "waitForCommandToFinish",
+                api_instance.get_command_request_status,
+                Globals.PRINT_API_LOGS,
             )
             break
         except Exception as e:
@@ -911,6 +990,11 @@ def waitForCommandToFinish(
                     response = api_instance.get_command_request_status(
                         Globals.enterprise_id, request_id
                     )
+                    ApiToolLog().LogApiRequestOccurrence(
+                        "waitForCommandToFinish",
+                        api_instance.get_command_request_status,
+                        Globals.PRINT_API_LOGS,
+                    )
                     break
                 except Exception as e:
                     if attempt == maxAttempt - 1:
@@ -928,7 +1012,7 @@ def waitForCommandToFinish(
         return response.results
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def validateConfiguration(
     host, entId, key, prefix="Bearer", maxAttempt=Globals.MAX_RETRY
 ):
@@ -945,6 +1029,11 @@ def validateConfiguration(
         for attempt in range(maxAttempt):
             try:
                 api_response = api_instance.get_enterprise(enterprise_id)
+                ApiToolLog().LogApiRequestOccurrence(
+                    "validateConfiguration",
+                    api_instance.get_enterprise,
+                    Globals.PRINT_API_LOGS,
+                )
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -959,7 +1048,7 @@ def validateConfiguration(
     return False
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def postEsperCommand(command_data, useV0=True):
     json_resp = None
     resp = None
@@ -984,7 +1073,7 @@ def postEsperCommand(command_data, useV0=True):
     return resp, json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def clearAppData(frame, device):
     json_resp = None
     try:
@@ -1039,7 +1128,7 @@ def clearAppData(frame, device):
     return json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def getDeviceApplicationById(device_id, application_id):
     try:
         headers = getHeader()
@@ -1057,7 +1146,7 @@ def getDeviceApplicationById(device_id, application_id):
     return resp, json_resp
 
 
-@api_tool_decorator
+@api_tool_decorator()
 def setAppState(
     device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
 ):
@@ -1107,6 +1196,9 @@ def setAppState(
                 api_response = api_instance.create_command(
                     Globals.enterprise_id, request
                 )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "setAppState", api_instance.create_command, Globals.PRINT_API_LOGS
+                )
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -1125,6 +1217,9 @@ def getApplication(application_id):
     try:
         # Get application information
         api_response = api_instance.get_application(application_id, enterprise_id)
+        ApiToolLog().LogApiRequestOccurrence(
+            "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
+        )
         return api_response
     except ApiException as e:
         print("Exception when calling ApplicationApi->get_application: %s\n" % e)
@@ -1147,6 +1242,9 @@ def getAppVersions(
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getAppVersions", api_instance.get_app_versions, Globals.PRINT_API_LOGS
+            )
             return api_response
         except Exception as e:
             if attempt == maxAttempt - 1:
@@ -1168,6 +1266,9 @@ def getAppVersion(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
             # Get app version information
             api_response = api_instance.get_app_version(
                 version_id, application_id, enterprise_id
+            )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getAppVersion", api_instance.get_app_version, Globals.PRINT_API_LOGS
             )
             return api_response
         except ApiException as e:
@@ -1195,6 +1296,11 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getInstallDevices",
+                api_instance.get_install_devices,
+                Globals.PRINT_API_LOGS,
+            )
             return api_response
         except ApiException as e:
             if attempt == maxAttempt - 1:
@@ -1205,3 +1311,34 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
                 )
                 raise e
             time.sleep(1)
+
+
+def createNewUser(user):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
+    body = {}
+    userKeys = user.keys()
+    body["first_name"] = (
+        user["first name"] if "first name" in userKeys else ""
+    )
+    body["last_name"] = user["last name"] if "last name" in userKeys else ""
+    body["username"] = (
+        user["username"]
+        if "username" in userKeys
+        else (body["first_name"] + body["last_name"])
+    )
+    body["password"] = user["password"]
+    body["profile"] = {}
+    if "role" in userKeys:
+        body["profile"]["role"] = user["role"]
+    else:
+        body["profile"]["role"] = "Group Viewer"
+    body["profile"]["groups"] = user["groups"]
+    if type(body["profile"]["groups"]) == str:
+        body["profile"]["groups"] = list(body["profile"]["groups"])
+    body["profile"]["enterprise"] = Globals.enterprise_id
+
+    resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
+    return resp

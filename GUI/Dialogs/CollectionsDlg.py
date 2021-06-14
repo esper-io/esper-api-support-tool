@@ -56,7 +56,12 @@ class CollectionsDialog(wx.Dialog):
         label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "Collection List:")
         label_1.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         grid_sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -88,7 +93,12 @@ class CollectionsDialog(wx.Dialog):
         )
         self.checkbox_1.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         grid_sizer_2.Add(
@@ -108,7 +118,7 @@ class CollectionsDialog(wx.Dialog):
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Name:")
         label_2.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
             )
         )
         grid_sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -125,7 +135,7 @@ class CollectionsDialog(wx.Dialog):
         label_3 = wx.StaticText(self.panel_4, wx.ID_ANY, "Description:")
         label_3.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
             )
         )
         grid_sizer_5.Add(label_3, 0, 0, 0)
@@ -146,7 +156,7 @@ class CollectionsDialog(wx.Dialog):
         label_4 = wx.StaticText(self.panel_5, wx.ID_ANY, "EQL:")
         label_4.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
             )
         )
         grid_sizer_6.Add(label_4, 0, 0, 0)
@@ -229,7 +239,7 @@ class CollectionsDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onExecute)
         self.bitmap_button_1.Bind(wx.EVT_BUTTON, self.updateCollectionList)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onExecute(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -237,12 +247,12 @@ class CollectionsDialog(wx.Dialog):
             self.Close()
         # self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onInput(self, event):
         event.Skip()
         wx.CallAfter(self.checkInputs)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def checkInputs(self):
         matchNames = list(
             filter(
@@ -274,7 +284,7 @@ class CollectionsDialog(wx.Dialog):
         else:
             self.button_3.Enable(False)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onSelection(self, event):
         currentSelection = self.list_box_1.GetSelection()
         if currentSelection == self.prevSelection:
@@ -305,7 +315,7 @@ class CollectionsDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def createCollection(self, event):
         error = False
         if not self.text_ctrl_3.GetValue():
@@ -355,7 +365,7 @@ class CollectionsDialog(wx.Dialog):
         self.button_3.Enable(False)
         self.updateCollectionList()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def deleteCollection(self, event):
         id = None
         selectionStr = self.list_box_1.GetString(self.list_box_1.GetSelection())
@@ -373,7 +383,7 @@ class CollectionsDialog(wx.Dialog):
             self.parentFrame.Logging("Failed to find matching collection", isError=True)
         self.updateCollectionList()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def updateCollectionList(self, event=None):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
@@ -391,7 +401,7 @@ class CollectionsDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getSelectionEql(self):
         if self.selectedCollection and "eql" in self.selectedCollection:
             return self.selectedCollection["eql"]

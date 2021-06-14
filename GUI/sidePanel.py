@@ -43,7 +43,7 @@ class SidePanel(wx.Panel):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Configuration:")
         label_1.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
@@ -78,7 +78,7 @@ class SidePanel(wx.Panel):
         )
         self.configList.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -89,7 +89,7 @@ class SidePanel(wx.Panel):
         grid_sizer_2.Add(self.configList, 0, wx.EXPAND, 0)
         self.configList.SetFont(
             wx.Font(
-                10,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
@@ -149,7 +149,12 @@ class SidePanel(wx.Panel):
         label_5 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Action:")
         label_5.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)
@@ -171,7 +176,12 @@ class SidePanel(wx.Panel):
         label_4 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Application:")
         label_4.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_5.Add(label_4, 0, wx.EXPAND, 0)
@@ -215,7 +225,7 @@ class SidePanel(wx.Panel):
 
         self.__set_properties()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def __set_properties(self):
         self.actionChoice.SetSelection(1)
 
@@ -234,7 +244,7 @@ class SidePanel(wx.Panel):
             wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
         )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def RemoveEndpoint(self, event):
         value = None
         if (
@@ -265,14 +275,14 @@ class SidePanel(wx.Panel):
                         style=wx.OK | wx.ICON_INFORMATION,
                     )
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def clearGroupAndDeviceSelections(self):
         self.selectedGroups.Clear()
         self.selectedDevices.Clear()
         self.selectedGroupsList = []
         self.selectedDevicesList = []
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def destroyMultiChoiceDialogs(self):
         if self.groupMultiDialog:
             self.groupMultiDialog.Close()
@@ -283,7 +293,7 @@ class SidePanel(wx.Panel):
             self.deviceMultiDialog.DestroyLater()
             self.deviceMultiDialog = None
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onGroupSelection(self, event):
         if not self.parentFrame.isRunning:
             choices = list(self.groups.keys())
@@ -320,7 +330,7 @@ class SidePanel(wx.Panel):
                 self.devices = {}
                 self.parentFrame.PopulateDevices(None)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onDeviceSelection(self, event):
         if not self.parentFrame.isRunning:
             choices = list(self.devices.keys())
@@ -347,7 +357,7 @@ class SidePanel(wx.Panel):
                         self.selectedDevicesList.append(deviceId)
             self.parentFrame.onDeviceSelections(None)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def sortAndPopulateAppChoice(self):
         if not self.selectedDevicesList:
             self.apps = self.enterpriseApps
@@ -377,7 +387,7 @@ class SidePanel(wx.Panel):
             val = percent + int(float(num / len(self.apps) / 2) * 100)
             self.parentFrame.setGaugeValue(val)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onActionSelection(self, event):
         clientData = event.ClientData
         if not clientData:
@@ -388,7 +398,7 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GRID_ACTIONS[action]
         self.setAppChoiceState(clientData)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def setAppChoiceState(self, clientData):
         if (
             clientData == GeneralActions.SET_KIOSK.value

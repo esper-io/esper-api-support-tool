@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import wx
+import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 
@@ -35,7 +36,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, label)
         label_1.SetFont(
             wx.Font(
-                12,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
@@ -108,7 +109,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.Layout()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
@@ -116,12 +117,12 @@ class MultiSelectSearchDlg(wx.Dialog):
             self.Close()
         self.DestroyLater()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onChar(self, event):
         event.Skip()
         wx.CallAfter(self.onSearch, event)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onSearch(self, event=None):
         if event:
             event.Skip()
@@ -148,7 +149,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             self.check_list_box_1.SetCheckedStrings(self.selected)
             self.isFiltered = False
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnListSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
@@ -172,7 +173,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnBoxSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
@@ -189,16 +190,16 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def GetSelections(self):
         return self.selected
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onSelectAll(self, event):
         event.Skip()
         wx.CallAfter(self.onSelectEvent)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
             if "All devices" in self.originalChoices:
@@ -212,14 +213,14 @@ class MultiSelectSearchDlg(wx.Dialog):
         if self.selected != self.originalChoices and self.isFiltered:
             self.check_list_box_1.SetCheckedStrings([])
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
         event.Skip()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def onKey(self, event):
         keycode = event.GetKeyCode()
         # CTRL + C or CTRL + Insert
@@ -233,7 +234,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.onChar(event)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
         data = wx.TextDataObject()
@@ -242,7 +243,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def on_paste(self, event):
         widget = self.FindFocus()
         success = False

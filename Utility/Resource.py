@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Common.decorator import api_tool_decorator
 import json
 import os
 import platform
@@ -13,6 +14,7 @@ import webbrowser
 import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
+from fuzzywuzzy import fuzz
 from datetime import datetime
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
@@ -212,6 +214,7 @@ def joinThreadList(threads):
                 thread.join()
 
 
+@api_tool_decorator(locks=[Globals.lock])
 def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
     Globals.lock.acquire()
     numAlive = 0
@@ -247,6 +250,7 @@ def ipv6Tomac(ipv6):
     return ":".join(macParts)
 
 
+@api_tool_decorator(locks=[Globals.msg_lock])
 def displayMessageBox(event):
     value = None
     if hasattr(event, "GetValue"):
@@ -262,10 +266,12 @@ def displayMessageBox(event):
     elif isinstance(value, str):
         msg = value
 
+    res = None
     Globals.msg_lock.acquire()
     if msg:
-        wx.MessageBox(msg, style=sty)
+        res = wx.MessageBox(msg, style=sty)
     Globals.msg_lock.release()
+    return res
 
 
 def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
@@ -311,6 +317,9 @@ def performGetRequestWithRetry(
     for attempt in range(maxRetry):
         try:
             resp = requests.get(url, headers=headers, json=json, data=data)
+            ApiToolLog().LogApiRequestOccurrence(
+                performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
+            )
             if resp.status_code < 300:
                 break
         except Exception as e:
@@ -327,6 +336,9 @@ def performPatchRequestWithRetry(
     for attempt in range(maxRetry):
         try:
             resp = requests.patch(url, headers=headers, data=data, json=json)
+            ApiToolLog().LogApiRequestOccurrence(
+                performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
+            )
             if resp.status_code < 300:
                 break
         except Exception as e:
@@ -343,6 +355,9 @@ def performPutRequestWithRetry(
     for attempt in range(maxRetry):
         try:
             resp = requests.put(url, headers=headers, data=data, json=json)
+            ApiToolLog().LogApiRequestOccurrence(
+                performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
+            )
             if resp.status_code < 300:
                 break
         except Exception as e:
@@ -359,6 +374,9 @@ def performDeleteRequestWithRetry(
     for attempt in range(maxRetry):
         try:
             resp = requests.delete(url, headers=headers, data=data, json=json)
+            ApiToolLog().LogApiRequestOccurrence(
+                performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
+            )
             if resp.status_code < 300:
                 break
         except Exception as e:
@@ -377,6 +395,9 @@ def performPostRequestWithRetry(
             resp = requests.post(
                 url, headers=headers, data=data, json=json, files=files
             )
+            ApiToolLog().LogApiRequestOccurrence(
+                performPostRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
+            )
             if resp.status_code < 300:
                 break
         except Exception as e:
@@ -392,6 +413,7 @@ def openWebLinkInBrowser(link):
     webbrowser.open(link)
 
 
+@api_tool_decorator(locks=[Globals.error_lock])
 def updateErrorTracker():
     while Globals.frame and not Globals.frame.kill:
         try:
@@ -411,3 +433,9 @@ def updateErrorTracker():
         finally:
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
+
+
+def getStrRatioSimilarity(s, t, usePartial=False):
+    if usePartial:
+        return fuzz.partial_ratio(s.lower(), t.lower())
+    return fuzz.ratio(s.lower(), t.lower())

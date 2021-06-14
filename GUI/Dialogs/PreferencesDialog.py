@@ -14,11 +14,12 @@ class PreferencesDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.SetSize((525, 400))
-        self.SetMinSize((525, 400))
+        self.size = (525, 400)
+        self.SetSize(self.size)
+        self.SetMinSize(self.size)
 
         self.parent = parent
-        self.prefs = prefDict
+        self.prefs = prefDict if prefDict else {}
         self.prefKeys = [
             "enableDevice",
             "limit",
@@ -43,6 +44,7 @@ class PreferencesDialog(wx.Dialog):
             "maxThread",
             "syncGridScroll",
             "aliasDayDelta",
+            "fontSize",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -82,115 +84,58 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        self.panel_3 = wx.Panel(self.general, wx.ID_ANY)
-        sizer_6.Add(self.panel_3, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_1 = wx.StaticText(
-            self.panel_3,
-            wx.ID_ANY,
+        (self.panel_3, self.panel_4, self.checkbox_1,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
             "Enable Device Selection",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Allow user to specify actions on a selections of devices within a group.",
         )
-        label_1.SetToolTip(
-            "Allow user to specify actions on a selections of devices within a group."
-        )
-        sizer_7.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_4 = wx.Panel(self.panel_3, wx.ID_ANY)
-        sizer_7.Add(self.panel_4, 1, wx.EXPAND, 0)
-
-        grid_sizer_1 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_1 = wx.CheckBox(self.panel_4, wx.ID_ANY, "")
-        grid_sizer_1.Add(self.checkbox_1, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_5 = wx.Panel(self.general, wx.ID_ANY)
-        sizer_6.Add(self.panel_5, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_2 = wx.StaticText(
-            self.panel_5,
-            wx.ID_ANY,
+        (self.panel_5, self.panel_6, self.spin_ctrl_1,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
             "API Request Limit",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "Maximum amount of results that the API will return.",
         )
-        label_2.SetToolTip("Maximum amount of results that the API will return.")
-        sizer_8.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
+        self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_1.SetValue(Globals.limit)
 
-        self.panel_6 = wx.Panel(self.panel_5, wx.ID_ANY)
-        sizer_8.Add(self.panel_6, 1, wx.EXPAND, 0)
-
-        grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
-
-        self.spin_ctrl_1 = wx.SpinCtrl(
-            self.panel_6,
-            wx.ID_ANY,
-            min=Globals.MIN_LIMIT,
-            max=Globals.MAX_LIMIT,
-            initial=Globals.limit,
-        )
-        grid_sizer_2.Add(
-            self.spin_ctrl_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
-
-        self.panel_9 = wx.Panel(self.general, wx.ID_ANY)
-        self.panel_9.Hide()
-        sizer_6.Add(self.panel_9, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_4 = wx.StaticText(
-            self.panel_9,
-            wx.ID_ANY,
+        (self.panel_9, self.panel_10, self.spin_ctrl_2,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
             "API Request Offset",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "Page of results the API sends back (starts at 0)",
         )
-        label_4.SetToolTip("Page of results the API sends back (starts at 0)")
-        sizer_10.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        self.panel_9.Hide()
+        self.spin_ctrl_2.SetMin(0)
+        self.spin_ctrl_2.SetValue(Globals.offset)
 
-        self.panel_10 = wx.Panel(self.panel_9, wx.ID_ANY)
-        sizer_10.Add(self.panel_10, 1, wx.EXPAND, 0)
-
-        grid_sizer_4 = wx.GridSizer(1, 1, 0, 0)
-
-        self.spin_ctrl_2 = wx.SpinCtrl(
-            self.panel_10, wx.ID_ANY, min=0, initial=Globals.offset
-        )
-        grid_sizer_4.Add(
-            self.spin_ctrl_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
-
-        self.panel_43 = wx.Panel(self.general, wx.ID_ANY)
-        self.panel_43.Hide()
-        sizer_6.Add(self.panel_43, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_30 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_43.SetSizer(sizer_30)
-
-        label_1 = wx.StaticText(
-            self.panel_43,
-            wx.ID_ANY,
+        (self.panel_43, self.panel_44, self.spin_ctrl_8,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
             "Max Threads",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "Maximum number of threads that will be created to perform an action.",
         )
-        label_1.SetToolTip(
-            "Maximum number of threads that will be created to perform an action."
+        self.panel_43.Hide()
+        self.spin_ctrl_8.SetMin(10)
+        self.spin_ctrl_8.SetMax(100)
+        self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
+
+        (self.panel_47, self.panel_48, self.spin_ctrl_10,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Font Size",
+            wx.SpinCtrl,
+            "Font size.",
         )
-        sizer_30.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_44 = wx.Panel(self.panel_43, wx.ID_ANY)
-        sizer_30.Add(self.panel_44, 1, wx.EXPAND, 0)
-
-        grid_sizer_21 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_44.SetSizer(grid_sizer_21)
-
-        self.spin_ctrl_8 = wx.SpinCtrl(
-            self.panel_44, wx.ID_ANY, min=10, max=100, initial=Globals.MAX_THREAD_COUNT
-        )
-        grid_sizer_21.Add(self.spin_ctrl_8, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+        self.spin_ctrl_10.SetMin(10)
+        self.spin_ctrl_10.SetMax(72)
+        self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -199,150 +144,52 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_14 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        self.panel_25 = wx.Panel(self.command, wx.ID_ANY)
-        sizer_14.Add(self.panel_25, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_21 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_12 = wx.StaticText(
-            self.panel_25,
-            wx.ID_ANY,
+        (self.panel_25, self.panel_26, self.spin_ctrl_6,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
             "Command Timeout (seconds)",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "How long a command should wait on the status check before skipping.",
         )
-        label_12.SetToolTip(
-            "How long a command should wait on the status check before skipping."
-        )
-        sizer_21.Add(label_12, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        self.spin_ctrl_6.SetMin(0)
+        self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
 
-        self.panel_26 = wx.Panel(self.panel_25, wx.ID_ANY)
-        sizer_21.Add(self.panel_26, 1, wx.EXPAND, 0)
-
-        grid_sizer_12 = wx.GridSizer(1, 1, 0, 0)
-
-        self.spin_ctrl_6 = wx.SpinCtrl(
-            self.panel_26, wx.ID_ANY, min=0, initial=Globals.COMMAND_TIMEOUT
-        )
-        grid_sizer_12.Add(
-            self.spin_ctrl_6, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
-
-        self.panel_27 = wx.Panel(self.command, wx.ID_ANY)
-        sizer_14.Add(self.panel_27, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_22 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_13 = wx.StaticText(
-            self.panel_27,
-            wx.ID_ANY,
+        (self.panel_27, self.panel_28, self.checkbox_5,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
             "Reach Queued Command State Only",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_13.SetToolTip(
-            "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes."
-        )
-        sizer_22.Add(label_13, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_28 = wx.Panel(self.panel_27, wx.ID_ANY)
-        sizer_22.Add(self.panel_28, 1, wx.EXPAND, 0)
-
-        grid_sizer_13 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_5 = wx.CheckBox(self.panel_28, wx.ID_ANY, "")
-        grid_sizer_13.Add(
-            self.checkbox_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+            wx.CheckBox,
+            "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes.",
         )
 
-        self.panel_39 = wx.Panel(self.command, wx.ID_ANY)
-        sizer_14.Add(self.panel_39, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_28 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_39.SetSizer(sizer_28)
-
-        label_17 = wx.StaticText(
-            self.panel_39,
-            wx.ID_ANY,
+        (self.panel_39, self.panel_40, self.checkbox_12,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
             "Use Json Input for Commands",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        sizer_28.Add(label_17, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_40 = wx.Panel(self.panel_39, wx.ID_ANY)
-        sizer_28.Add(self.panel_40, 1, wx.EXPAND, 0)
-
-        grid_sizer_19 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_40.SetSizer(grid_sizer_19)
-
-        self.checkbox_12 = wx.CheckBox(self.panel_40, wx.ID_ANY, "")
-        grid_sizer_19.Add(
-            self.checkbox_12, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+            wx.CheckBox,
+            "Use Json Input for Commands",
         )
 
-        self.panel_41 = wx.Panel(self.command, wx.ID_ANY)
-        sizer_14.Add(self.panel_41, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_29 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_41.SetSizer(sizer_29)
-
-        label_18 = wx.StaticText(
-            self.panel_41,
-            wx.ID_ANY,
+        (self.panel_41, self.panel_42, self.combobox_1,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
             "Device Type",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_18.SetToolTip("Types of devices that a command should be run on.")
-        sizer_29.Add(label_18, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_42 = wx.Panel(self.panel_41, wx.ID_ANY)
-        sizer_29.Add(self.panel_42, 1, wx.EXPAND, 0)
-
-        grid_sizer_20 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_42.SetSizer(grid_sizer_20)
-
-        self.combobox_1 = wx.ComboBox(
-            self.panel_42,
-            wx.ID_ANY,
-            choices=Globals.CMD_DEVICE_TYPES,
-            style=wx.CB_DROPDOWN | wx.CB_READONLY,
+            wx.ComboBox,
+            "Types of devices that a command should be run on.",
+            choice=Globals.CMD_DEVICE_TYPES,
         )
         self.combobox_1.SetSelection(0)
-        grid_sizer_20.Add(
-            self.combobox_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
 
-        self.panel_47 = wx.Panel(self.command, wx.ID_ANY)
-        sizer_14.Add(self.panel_47, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_32 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_47.SetSizer(sizer_32)
-
-        label_18 = wx.StaticText(
-            self.panel_47,
-            wx.ID_ANY,
+        (self.panel_47, self.panel_48, self.spin_ctrl_9,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
             "Date Delta for Alias Command",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "Time difference for when the Alias command schedule should end.",
         )
-        label_18.SetToolTip(
-            "Time difference for when the Alias command schedule should end."
-        )
-        sizer_32.Add(label_18, 0, wx.ALIGN_CENTER_VERTICAL | wx.TOP, 2)
-
-        self.panel_48 = wx.Panel(self.panel_47, wx.ID_ANY)
-        sizer_32.Add(self.panel_48, 1, wx.EXPAND, 0)
-
-        grid_sizer_23 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_48.SetSizer(grid_sizer_23)
-
-        self.spin_ctrl_9 = wx.SpinCtrl(
-            self.panel_48,
-            wx.ID_ANY,
-            min=0,
-            max=Globals.ALIAS_MAX_DAY_DELTA,
-            initial=Globals.ALIAS_DAY_DELTA,
-        )
-        grid_sizer_23.Add(
-            self.spin_ctrl_9, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
+        self.spin_ctrl_9.SetMin(0)
+        self.spin_ctrl_9.SetMax(Globals.ALIAS_MAX_DAY_DELTA)
+        self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
 
         # Grid Preferences
         self.grid = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -351,106 +198,41 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        self.panel_19 = wx.Panel(self.grid, wx.ID_ANY)
-        sizer_16.Add(self.panel_19, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_17 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_9 = wx.StaticText(
-            self.panel_19,
-            wx.ID_ANY,
+        (self.panel_19, self.panel_20, self.checkbox_3,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
             "Enable Grid Refresh",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_9.SetToolTip(
+            wx.CheckBox,
             "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
-            % Globals.MAX_UPDATE_COUNT
+            % Globals.MAX_UPDATE_COUNT,
         )
-        sizer_17.Add(label_9, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_20 = wx.Panel(self.panel_19, wx.ID_ANY)
-        sizer_17.Add(self.panel_20, 1, wx.EXPAND, 0)
-
-        grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_3 = wx.CheckBox(self.panel_20, wx.ID_ANY, "")
-        grid_sizer_9.Add(self.checkbox_3, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_21 = wx.Panel(self.grid, wx.ID_ANY)
-        sizer_16.Add(self.panel_21, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_18 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_10 = wx.StaticText(
-            self.panel_21,
-            wx.ID_ANY,
+        (self.panel_21, self.panel_22, self.spin_ctrl_7,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
             "Grid Refresh Rate (seconds)",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.SpinCtrl,
+            "How often the Grid should update its cell data.",
         )
-        label_10.SetToolTip("How often the Grid should update its cell data.")
-        sizer_18.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
+        self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
+        self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
 
-        self.panel_22 = wx.Panel(self.panel_21, wx.ID_ANY)
-        sizer_18.Add(self.panel_22, 1, wx.EXPAND, 0)
-
-        grid_sizer_10 = wx.GridSizer(1, 1, 0, 0)
-
-        self.spin_ctrl_7 = wx.SpinCtrl(
-            self.panel_22,
-            wx.ID_ANY,
-            min=Globals.GRID_UPDATE_RATE,
-            max=Globals.MAX_GRID_UPDATE_RATE,
-            initial=Globals.GRID_UPDATE_RATE,
-        )
-        grid_sizer_10.Add(
-            self.spin_ctrl_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
-        )
-
-        self.panel_35 = wx.Panel(self.grid, wx.ID_ANY)
-        sizer_16.Add(self.panel_35, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_26 = wx.BoxSizer(wx.HORIZONTAL)
-        self.panel_35.SetSizer(sizer_26)
-
-        label_10 = wx.StaticText(
-            self.panel_35,
-            wx.ID_ANY,
+        (self.panel_35, self.panel_36, self.checkbox_10,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
             "Allow Column Resizing",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Allow user to resize grid columns",
         )
-        label_10.SetToolTip("Allow user to resize grid columns")
-        sizer_26.Add(label_10, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_36 = wx.Panel(self.panel_35, wx.ID_ANY)
-        sizer_26.Add(self.panel_36, 1, wx.EXPAND, 0)
-
-        grid_sizer_17 = wx.GridSizer(1, 1, 0, 0)
-        self.panel_36.SetSizer(grid_sizer_17)
-
-        self.checkbox_10 = wx.CheckBox(self.panel_36, wx.ID_ANY, "")
-        grid_sizer_17.Add(self.checkbox_10, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_45 = wx.Panel(self.grid, wx.ID_ANY)
-        sizer_16.Add(self.panel_45, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_31 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_19 = wx.StaticText(
-            self.panel_45,
-            wx.ID_ANY,
-            "Sync Grids Vertical Scroll Position",
-            style=wx.ST_ELLIPSIZE_END,
+        (self.panel_45, self.panel_46, self.checkbox_13,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Sync Grid's Vertical Scroll Position",
+            wx.CheckBox,
+            "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
-        label_19.SetToolTip("Sync Grids Vertical Scroll Position.")
-        sizer_31.Add(label_19, 0, wx.ALIGN_CENTER_VERTICAL, 2)
-
-        self.panel_46 = wx.Panel(self.panel_45, wx.ID_ANY)
-        sizer_31.Add(self.panel_46, 1, wx.EXPAND, 0)
-
-        grid_sizer_22 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_13 = wx.CheckBox(self.panel_46, wx.ID_ANY, "")
-        grid_sizer_22.Add(self.checkbox_13, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -459,101 +241,37 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        self.panel_7 = wx.Panel(self.app, wx.ID_ANY)
-        sizer_9.Add(self.panel_7, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_12 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_3 = wx.StaticText(
-            self.panel_7,
-            wx.ID_ANY,
+        (self.panel_7, self.panel_8, self.checkbox_2,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
             "Fetch All Installed Applications",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
-        label_3.SetToolTip(
-            "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only."
-        )
-        sizer_12.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_8 = wx.Panel(self.panel_7, wx.ID_ANY)
-        sizer_12.Add(self.panel_8, 1, wx.EXPAND, 0)
-
-        grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_2 = wx.CheckBox(self.panel_8, wx.ID_ANY, "")
-        grid_sizer_3.Add(self.checkbox_2, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_13 = wx.Panel(self.app, wx.ID_ANY)
-        sizer_9.Add(self.panel_13, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_6 = wx.StaticText(
-            self.panel_13,
-            wx.ID_ANY,
+        (self.panel_13, self.panel_14, self.checkbox_4,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
             "Show Application's Package Name",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
-        label_6.SetToolTip(
-            "Displays an Application's Package Name (e.g., In Tags or the Application input)"
-        )
-        sizer_13.Add(label_6, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_14 = wx.Panel(self.panel_13, wx.ID_ANY)
-        sizer_13.Add(self.panel_14, 1, wx.EXPAND, 0)
-
-        grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_4 = wx.CheckBox(self.panel_14, wx.ID_ANY, "")
-        grid_sizer_6.Add(self.checkbox_4, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_15 = wx.Panel(self.app, wx.ID_ANY)
-        sizer_9.Add(self.panel_15, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_15 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_7 = wx.StaticText(
-            self.panel_15,
-            wx.ID_ANY,
+        (self.panel_15, self.panel_16, self.checkbox_6,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
             "Get Applications For Each Device",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
         )
-        label_7.SetToolTip(
-            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled."
+
+        (self.panel_38, self.panel_37, self.checkbox_11,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Get Applications For Each Device",
+            wx.CheckBox,
+            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
         )
-        sizer_15.Add(label_7, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_16 = wx.Panel(self.panel_15, wx.ID_ANY)
-        sizer_15.Add(self.panel_16, 1, wx.EXPAND, 0)
-
-        grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_6 = wx.CheckBox(self.panel_16, wx.ID_ANY, "")
-        grid_sizer_7.Add(self.checkbox_6, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-
-        self.panel_38 = wx.Panel(self.app, wx.ID_ANY)
-        sizer_9.Add(self.panel_38, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_27 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_16 = wx.StaticText(
-            self.panel_38,
-            wx.ID_ANY,
-            "Set App State To SHOW before Set Kiosk",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_16.SetToolTip(
-            "Set App State to SHOW before setting the application as a Kiosk app on device."
-        )
-        sizer_27.Add(label_16, 0, wx.ALIGN_CENTER_VERTICAL, 2)
-
-        self.panel_37 = wx.Panel(self.panel_38, wx.ID_ANY)
-        sizer_27.Add(self.panel_37, 1, wx.EXPAND, 0)
-
-        grid_sizer_18 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_11 = wx.CheckBox(self.panel_37, wx.ID_ANY, "")
-        grid_sizer_18.Add(self.checkbox_11, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -562,48 +280,20 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_19 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        self.panel_29 = wx.Panel(self.prompts, wx.ID_ANY)
-        sizer_19.Add(self.panel_29, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_23 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_14 = wx.StaticText(
-            self.panel_29,
-            wx.ID_ANY,
+        (self.panel_29, self.panel_30, self.checkbox_8,) = self.addPrefToPanel(
+            self.prompts,
+            sizer_19,
             "Grid Confirmation Prompt",
-            style=wx.ST_ELLIPSIZE_END,
+            wx.CheckBox,
+            "Grid Confirmation Prompt",
         )
-        sizer_23.Add(label_14, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.panel_30 = wx.Panel(self.panel_29, wx.ID_ANY)
-        sizer_23.Add(self.panel_30, 1, wx.EXPAND, 0)
-
-        grid_sizer_14 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_8 = wx.CheckBox(self.panel_30, wx.ID_ANY, "")
-        grid_sizer_14.Add(self.checkbox_8, 0, wx.ALIGN_RIGHT, 0)
-
-        self.panel_31 = wx.Panel(self.prompts, wx.ID_ANY)
-        sizer_19.Add(self.panel_31, 1, wx.ALL | wx.EXPAND, 5)
-
-        sizer_24 = wx.BoxSizer(wx.HORIZONTAL)
-
-        label_15 = wx.StaticText(
-            self.panel_31,
-            wx.ID_ANY,
+        (self.panel_31, self.panel_32, self.checkbox_7,) = self.addPrefToPanel(
+            self.prompts,
+            sizer_19,
             "Template Confirmation Prompt",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        sizer_24.Add(label_15, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-
-        self.panel_32 = wx.Panel(self.panel_31, wx.ID_ANY)
-        sizer_24.Add(self.panel_32, 1, wx.EXPAND, 0)
-
-        grid_sizer_15 = wx.GridSizer(1, 1, 0, 0)
-
-        self.checkbox_7 = wx.CheckBox(self.panel_32, wx.ID_ANY, "")
-        grid_sizer_15.Add(
-            self.checkbox_7, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0
+            wx.CheckBox,
+            "Template Confirmation Prompt",
         )
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -615,73 +305,17 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_2.Realize()
 
-        self.panel_32.SetSizer(grid_sizer_15)
-
-        self.panel_31.SetSizer(sizer_24)
-
-        self.panel_30.SetSizer(grid_sizer_14)
-
-        self.panel_29.SetSizer(sizer_23)
-
         sizer_19.AddGrowableCol(0)
         self.prompts.SetSizer(sizer_19)
-
-        self.panel_16.SetSizer(grid_sizer_7)
-
-        self.panel_15.SetSizer(sizer_15)
-
-        self.panel_38.SetSizer(sizer_27)
-
-        self.panel_37.SetSizer(grid_sizer_18)
-
-        self.panel_45.SetSizer(sizer_31)
-
-        self.panel_46.SetSizer(grid_sizer_22)
-
-        self.panel_14.SetSizer(grid_sizer_6)
-
-        self.panel_13.SetSizer(sizer_13)
-
-        self.panel_8.SetSizer(grid_sizer_3)
-
-        self.panel_7.SetSizer(sizer_12)
 
         sizer_9.AddGrowableCol(0)
         self.app.SetSizer(sizer_9)
 
-        self.panel_22.SetSizer(grid_sizer_10)
-
-        self.panel_21.SetSizer(sizer_18)
-
-        self.panel_20.SetSizer(grid_sizer_9)
-
-        self.panel_19.SetSizer(sizer_17)
-
         sizer_16.AddGrowableCol(0)
         self.grid.SetSizer(sizer_16)
 
-        self.panel_28.SetSizer(grid_sizer_13)
-
-        self.panel_27.SetSizer(sizer_22)
-
-        self.panel_26.SetSizer(grid_sizer_12)
-
-        self.panel_25.SetSizer(sizer_21)
-
         sizer_14.AddGrowableCol(0)
         self.command.SetSizer(sizer_14)
-
-        self.panel_10.SetSizer(grid_sizer_4)
-
-        self.panel_9.SetSizer(sizer_10)
-
-        self.panel_6.SetSizer(grid_sizer_2)
-
-        self.panel_5.SetSizer(sizer_8)
-
-        self.panel_4.SetSizer(grid_sizer_1)
-
-        self.panel_3.SetSizer(sizer_7)
 
         sizer_6.AddGrowableCol(0)
         self.general.SetSizer(sizer_6)
@@ -798,6 +432,11 @@ class PreferencesDialog(wx.Dialog):
                 Globals.ALIAS_DAY_DELTA = 0
             self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
 
+        if prefDict and "fontSize" in prefDict:
+            Globals.FONT_SIZE = int(prefDict["fontSize"])
+            Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
+            self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
         if not prefDict or (
             prefDict
             and not prefDict["templateDialog"]
@@ -910,7 +549,20 @@ class PreferencesDialog(wx.Dialog):
                 self.combobox_1.SetSelection(self.prefs["runCommandOn"])
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
 
-    @api_tool_decorator
+        if not prefDict or (prefDict and not prefDict["colVisibility"]):
+            self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
+        elif prefDict and prefDict["colVisibility"]:
+            if self.prefs["colVisibility"]:
+                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
+                    0
+                ]
+            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
+                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
+                    1
+                ]
+            self.parent.gridPanel.setColVisibility()
+
+    @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
         if event.GetString() == "Grid":
@@ -945,9 +597,11 @@ class PreferencesDialog(wx.Dialog):
             self.grid.Hide()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
+        if self.GetSize() == self.size:
+            self.Fit()
         self.Refresh()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def OnApply(self, event):
         self.prefs = {
             "enableDevice": self.checkbox_1.IsChecked(),
@@ -975,8 +629,12 @@ class PreferencesDialog(wx.Dialog):
             "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
+            "colVisibility": self.parent.gridPanel.getColVisibility(),
+            "fontSize": self.spin_ctrl_10.GetValue(),
         }
 
+        Globals.FONT_SIZE = int(self.prefs["fontSize"])
+        Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
         Globals.SET_APP_STATE_AS_SHOW = self.prefs["setStateShow"]
         Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
@@ -1014,7 +672,7 @@ class PreferencesDialog(wx.Dialog):
         elif self.IsShown():
             self.Close()
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
         self.prefs = prefs
         if not self.prefs:
@@ -1212,8 +870,22 @@ class PreferencesDialog(wx.Dialog):
             if Globals.ALIAS_DAY_DELTA < 0:
                 Globals.ALIAS_DAY_DELTA = 0
             self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
+        if "fontSize" in self.prefs:
+            Globals.FONT_SIZE = int(self.prefs["fontSize"])
+            Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
+            self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+        if "colVisibility" in self.prefs:
+            self.colVisibilty = self.prefs["colVisibility"]
+            if self.prefs["colVisibility"]:
+                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
+                    0
+                ]
+            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
+                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
+                    1
+                ]
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def GetPrefs(self):
         if not self.prefs:
             self.prefs = {}
@@ -1239,10 +911,12 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
         self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
+        self.prefs["fontSize"] = Globals.FONT_SIZE
+        self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
 
         return self.prefs
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def getDefaultKeyValue(self, key):
         if key == "enableDevice":
             return True
@@ -1290,9 +964,55 @@ class PreferencesDialog(wx.Dialog):
             return Globals.MATCH_SCROLL_POS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
+        elif key == "fontSize":
+            return Globals.FONT_SIZE
         else:
             return None
 
     def onResize(self, event):
         self.Refresh()
         event.Skip()
+
+    def addPrefToPanel(
+        self, sourcePanel, sourceSizer, label, inputObjType, toolTip="", choice=[]
+    ):
+        panel = wx.Panel(sourcePanel, wx.ID_ANY)
+        if sourceSizer.GetEffectiveRowsCount() >= sourceSizer.GetRows():
+            sourceSizer.SetRows(sourceSizer.GetRows() + 1)
+        sourceSizer.Add(panel, 1, wx.ALL | wx.EXPAND, 5)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        label = wx.StaticText(
+            panel,
+            wx.ID_ANY,
+            label,
+            style=wx.ST_ELLIPSIZE_END,
+        )
+        label.SetToolTip(toolTip)
+        sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+
+        panel_2 = wx.Panel(panel, wx.ID_ANY)
+        sizer.Add(panel_2, 1, wx.EXPAND, 0)
+
+        grid_sizer = wx.GridSizer(1, 1, 0, 0)
+
+        inputObj = None
+        if inputObjType == wx.CheckBox:
+            inputObj = wx.CheckBox(panel_2, wx.ID_ANY, "")
+        elif inputObjType == wx.SpinCtrl:
+            inputObj = wx.SpinCtrl(panel_2, wx.ID_ANY)
+        elif inputObjType == wx.ComboBox:
+            inputObj = wx.ComboBox(
+                panel_2,
+                wx.ID_ANY,
+                choices=choice,
+                style=wx.CB_DROPDOWN | wx.CB_READONLY,
+            )
+        if inputObj:
+            grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+        panel.SetSizer(sizer)
+        panel_2.SetSizer(grid_sizer)
+
+        return panel, panel_2, inputObj

@@ -9,7 +9,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.184"
+VERSION = "v0.186"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -18,13 +18,16 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 error_tracker = {}
 
+API_REQUEST_SESSION_TRACKER = 0
+
 MAX_ERROR_TIME_DIFF = 2
-MAX_THREAD_COUNT = 20
+MAX_THREAD_COUNT = 16
 MAX_RETRY = 5
 RETRY_SLEEP = 1.5
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
+PRINT_API_LOGS = False
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
 your enterprise's Android-based Dedicated Devices providing features that are not currently
@@ -34,6 +37,7 @@ available on the Esper Console Dashboard."""
 lock = threading.Lock()
 error_lock = threading.Lock()
 msg_lock = threading.Lock()
+api_log_lock = threading.Lock()
 gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
@@ -102,6 +106,80 @@ JSON_COMMAND_TYPES = [
     "WIPE",
     "UPDATE_LATEST_DPC",
 ]
+
+API_REQUEST_TRACKER = {
+    "/application": 0,
+    "/collection": 0,
+    "/command": 0,
+    "/content": 0,
+    "/device/": 0,
+    "/devicegroup": 0,
+    "/v1/enterprise": 0,
+    "/policy": 0,
+    "/geofence": 0,
+    "/GroupCommandsApi": 0,
+    "/subscription": 0,
+    "/token": 0,
+    "/user": 0,
+    "OtherAPI": 0,
+    "/devicetemplate": 0,
+}
+
+API_FUNCTIONS = {
+    "delete_app_version": "/application",
+    "delete_application": "/application",
+    "get_all_applications": "/application",
+    "get_app_version": "/application",
+    "get_app_versions": "/application",
+    "get_application": "/application",
+    "get_install_devices": "/application",
+    "upload": "/application",
+    "get_command": "/command",
+    "run_command": "/command",
+    "create_command": "/command",
+    "get_command_request_status": "/command",
+    "get_device_command_history": "/command",
+    "list_command_request": "/command",
+    "delete_content": "/content",
+    "get_all_content": "/content",
+    "get_content": "/content",
+    "patch_content": "/content",
+    "post_content": "/content",
+    "get_all_devices": "/device/",
+    "get_app_installs": "/device/",
+    "get_device_app_by_id": "/device/",
+    "get_device_apps": "/device/",
+    "get_device_by_id": "/device/",
+    "get_device_event": "/device/",
+    "create_group": "/devicegroup",
+    "delete_group": "/devicegroup",
+    "get_all_groups": "/devicegroup",
+    "get_group_by_id": "/devicegroup",
+    "partial_update_group": "/devicegroup",
+    "update_group": "/devicegroup",
+    "get_enterprise": "/v1/enterprise",
+    "partial_update_enterprise": "/v1/enterprise",
+    "create_policy": "/policy",
+    "delete_enterprise_policy": "/policy",
+    "get_policy_by_id": "/policy",
+    "list_policies": "/policy",
+    "partialupdate_policy": "/policy",
+    "update_policy": "/policy",
+    "create_geofence": "/geofence",
+    "delete_geofence": "/geofence",
+    "get_all_geofences": "/geofence",
+    "get_geofence": "/geofence",
+    "partial_update_geofence": "/geofence",
+    "update_geofence": "/geofence",
+    "get_group_command": "/GroupCommandsApi",
+    "run_group_command": "/GroupCommandsApi",
+    "create_subscription": "/subscription",
+    "delete_subscription": "/subscription",
+    "get_all_subscriptions": "/subscription",
+    "get_subscription": "/subscription",
+    "get_token_info": "/token",
+    "renew_token": "/token",
+}
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
@@ -212,6 +290,8 @@ CMD_DEVICE_TYPE = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 56
+FONT_SIZE = 11
+HEADER_FONT_SIZE = FONT_SIZE + 7
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )
