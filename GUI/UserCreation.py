@@ -528,7 +528,7 @@ class UserCreation(wx.Frame):
                         "ERROR: failed to modified user account: %s\nReason: %s"
                         % (
                             username,
-                            resp.text,
+                            resp.text if hasattr(resp, "text") else "User not found",
                         )
                     )
                 if logMsg:
@@ -594,7 +594,7 @@ class UserCreation(wx.Frame):
                 else:
                     logMsg = "ERROR: failed to create user account: %s\nReason: %s" % (
                         username,
-                        resp.text if resp else "User not found",
+                        resp.text if hasattr(resp, "text") else "User not found",
                     )
                 if logMsg:
                     logs.append(logMsg)
@@ -658,7 +658,7 @@ class UserCreation(wx.Frame):
                 else:
                     logMsg = "ERROR: failed to deleted user account: %s\nReason: %s" % (
                         username,
-                        resp.text if resp else "User not found",
+                        resp.text if hasattr(resp, "text") else "User not found",
                     )
                 if logMsg:
                     logs.append(logMsg)
