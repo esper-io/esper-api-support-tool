@@ -1329,6 +1329,7 @@ def getUserBody(user):
     )
     body["password"] = user["password"]
     body["profile"] = {}
+    body["email"] = user["email"]
     if "role" in userKeys:
         body["profile"]["role"] = user["role"]
     else:
