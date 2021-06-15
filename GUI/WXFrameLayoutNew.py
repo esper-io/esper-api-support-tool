@@ -341,6 +341,9 @@ class NewFrameLayout(wx.Frame):
                 with open(self.authPath, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                     writer.writerow(csvRow)
+                self.readAuthCSV()
+                self.PopulateConfig(auth=self.authPath)
+                displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
                 self.auth_data = [
                     csvRow if x == matchingConfig[0] else x for x in self.auth_data
