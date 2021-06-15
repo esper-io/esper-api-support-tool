@@ -545,7 +545,7 @@ class UserCreation(wx.Frame):
                     dlgMsg,
                 )
                 postEventToFrame(wxThread.myEVT_LOG, logMsg)
-            return res, dlgMsg
+            return logs, dlgMsg
 
     @api_tool_decorator()
     def onCreate(self):

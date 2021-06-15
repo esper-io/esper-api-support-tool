@@ -1320,8 +1320,8 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
 def getUserBody(user):
     body = {}
     userKeys = user.keys()
-    body["first_name"] = user["first name"] if "first name" in userKeys else ""
-    body["last_name"] = user["last name"] if "last name" in userKeys else ""
+    body["first_name"] = user["firstname"] if "firstname" in userKeys else ""
+    body["last_name"] = user["lastname"] if "lastname" in userKeys else ""
     body["username"] = (
         user["username"]
         if "username" in userKeys
