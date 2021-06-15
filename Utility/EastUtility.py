@@ -407,15 +407,21 @@ def populateDeviceInfoDictionary(device, deviceInfo):
                 groupName = None
                 if groupURL in knownGroups:
                     groupName = knownGroups[groupURL]
+                    if type(groupName) == list and len(groupName) == 1:
+                        groupName = groupName[0]
                 else:
                     groupName = apiCalls.fetchGroupName(groupURL)
                 if groupName:
                     groupNames.append(groupName)
-                    knownGroups[groupURL] = groupNames
+                if groupURL not in knownGroups:
+                    knownGroups[groupURL] = groupName
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
-            deviceInfo["groups"] = groupNames[0]
+            if type(groupNames[0]) == list:
+                deviceInfo["groups"] = groupNames[0][0]
+            else:
+                deviceInfo["groups"] = groupNames[0]
         elif len(groupNames) == 0:
             deviceInfo["groups"] = ""
         else:
