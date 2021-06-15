@@ -40,6 +40,15 @@ class UserCreation(wx.Frame):
             "Groups": 6,
             "groups": 6,
         }
+        self.fileHeaders = [
+            "First Name",
+            "Last Name",
+            "Email",
+            "Username",
+            "Password",
+            "Role",
+            "Groups",
+        ]
         self.roles = ["Enterprise Admin", "Viewer", "Group Viewer", "Group Admin"]
         self.parent = parent
         self.lastFilePath = ""
@@ -267,7 +276,7 @@ class UserCreation(wx.Frame):
             createNewFile(inFile)
 
             gridData = []
-            gridData.append(self.headers)
+            gridData.append(self.fileHeaders)
             with open(inFile, "w", newline="") as csvfile:
                 writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                 writer.writerows(gridData)
