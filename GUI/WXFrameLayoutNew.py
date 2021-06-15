@@ -875,8 +875,8 @@ class NewFrameLayout(wx.Frame):
         while not newToken:
             with TextEntryDialog(
                 self,
-                "Please replace Configuration entry by adding endpoint with a new API Key.",
-                "API Token has expired!",
+                "Please enter a new API Token for %s" % Globals.configuration.host,
+                "%s - API Token has expired!" % self.configMenuItem.GetItemLabelText(),
             ) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
                     newToken = dlg.GetValue()
