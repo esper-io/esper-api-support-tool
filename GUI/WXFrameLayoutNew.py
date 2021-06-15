@@ -305,7 +305,9 @@ class NewFrameLayout(wx.Frame):
                     try:
                         name, host, entId, key, prefix = dialog.getInputValues()
                         csvRow = dialog.getCSVRowEntry()
-                        self.addEndpointEntry(name, host, entId, key, prefix, csvRow)
+                        isValid = self.addEndpointEntry(
+                            name, host, entId, key, prefix, csvRow
+                        )
                     except:
                         displayMessageBox(
                             (
