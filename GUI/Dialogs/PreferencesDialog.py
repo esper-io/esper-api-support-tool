@@ -131,7 +131,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Font Size",
             wx.SpinCtrl,
-            "Font size.",
+            "Font size, applies on next session.",
         )
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
