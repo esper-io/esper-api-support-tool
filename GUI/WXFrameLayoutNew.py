@@ -778,6 +778,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
         self.sidePanel.appChoice.Clear()
+        self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
         self.setCursorBusy()
 
