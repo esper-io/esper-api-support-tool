@@ -131,7 +131,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Font Size",
             wx.SpinCtrl,
-            "Font size.",
+            "Font size, applies on next session.",
         )
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
@@ -268,9 +268,9 @@ class PreferencesDialog(wx.Dialog):
         (self.panel_38, self.panel_37, self.checkbox_11,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Get Applications For Each Device",
+            "Set App State To SHOW before Set Kiosk",
             wx.CheckBox,
-            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
+            "Set App State to SHOW before setting the application as a Kiosk app on device.",
         )
 
         # Prompts Preferences

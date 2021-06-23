@@ -296,6 +296,7 @@ class CommandDialog(wx.Dialog):
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_12, wx.ID_ANY, "", style=wx.TE_BESTWRAP | wx.TE_MULTILINE
         )
+        self.text_ctrl_1.Enable(False)
         self.text_ctrl_1.SetMinSize((522, 100))
         sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
@@ -534,6 +535,7 @@ class CommandDialog(wx.Dialog):
         type = event.String
         self.choice_2.Enable(False)
         self.choice_3.Enable(False)
+        self.text_ctrl_1.Enable(False)
         self.text_ctrl_2.Enable(False)
         self.text_ctrl_3.Enable(False)
         self.text_ctrl_4.Enable(False)
@@ -546,6 +548,9 @@ class CommandDialog(wx.Dialog):
         elif type.lower() == "set_kiosk_app":
             self.text_ctrl_2.Enable(True)
             self.text_ctrl_3.Enable(True)
+        elif type.lower() == "update_device_config":
+            self.text_ctrl_1.Enable(True)
+
         self.button_OK.Enable(True)
 
     @api_tool_decorator()

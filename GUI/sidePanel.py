@@ -357,6 +357,11 @@ class SidePanel(wx.Panel):
                         self.selectedDevicesList.append(deviceId)
             self.parentFrame.onDeviceSelections(None)
 
+    def clearStoredApps(self):
+        self.apps = []
+        self.selectedDeviceApps = []
+        self.enterpriseApps = []
+
     @api_tool_decorator()
     def sortAndPopulateAppChoice(self):
         if not self.selectedDevicesList:
@@ -384,7 +389,7 @@ class SidePanel(wx.Panel):
                     self.appChoice.Append(key, value)
                     break
             num += 1
-            val = percent + int(float(num / len(self.apps) / 2) * 100)
+            val = percent + int(float(num / len(self.apps) / 2) * 25)
             self.parentFrame.setGaugeValue(val)
 
     @api_tool_decorator()
