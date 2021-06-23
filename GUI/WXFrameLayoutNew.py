@@ -706,7 +706,7 @@ class NewFrameLayout(wx.Frame):
                     return
 
                 for row in auth_csv_reader:
-                    self.setGaugeValue(int(float(num / maxRow) * 100))
+                    self.setGaugeValue(int(float(num / maxRow) * 25))
                     num += 1
                     if "name" in row:
                         self.sidePanel.configChoice[row["name"]] = row
@@ -861,6 +861,7 @@ class NewFrameLayout(wx.Frame):
                     if "write" not in res.scope:
                         self.menubar.fileAddUser.Enable(False)
 
+                self.setGaugeValue(50)
                 groupThread = self.PopulateGroups()
                 appThread = self.PopulateApps()
                 threads = [groupThread, appThread]
@@ -1018,8 +1019,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
-        self.setGaugeValue(0)
-        self.gauge.Pulse()
+        # self.gauge.Pulse()
         thread = wxThread.doAPICallInThread(
             self,
             getAllGroups,
@@ -1041,7 +1041,7 @@ class NewFrameLayout(wx.Frame):
         if len(results):
             for group in results:
                 self.sidePanel.groups[group.name] = group.id
-                self.setGaugeValue(int(float(num / len(results)) * 100))
+                self.setGaugeValue(50 + int(float(num / len(results)) * 25))
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
