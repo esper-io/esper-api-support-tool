@@ -623,14 +623,14 @@ class NewFrameLayout(wx.Frame):
                             colName.lower(), expectedCol.replace(" ", "").lower(), True
                         )
                         if (
-                            fileCol > len(header)
-                            or header[fileCol].strip()
+                            fileCol < len(header)
+                            and header[fileCol].strip()
                             in Globals.CSV_DEPRECATED_HEADER_LABEL
-                            or (
-                                header[fileCol].strip() not in headers.keys()
-                                and colName != "devicename"
-                                and ratio < 90
-                            )
+                        ) or (
+                            fileCol < len(header)
+                            and header[fileCol].strip() not in headers.keys()
+                            and colName != "devicename"
+                            and ratio < 90
                         ):
                             fileCol += 1
                             continue
