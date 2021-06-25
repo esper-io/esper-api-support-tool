@@ -75,7 +75,7 @@ class GridPanel(wx.Panel):
             prev_icon,
         )
         self.button_1.SetToolTip("Load previous page of devices.")
-        grid_sizer_3.Add(self.button_1, 0, 0, 0)
+        grid_sizer_3.Add(self.button_1, 0, wx.BOTTOM, 5)
 
         grid_sizer_3.Add((20, 20), 0, wx.EXPAND, 0)
 
@@ -86,7 +86,7 @@ class GridPanel(wx.Panel):
             next_icon,
         )
         self.button_2.SetToolTip("Load next page of devices.")
-        grid_sizer_3.Add(self.button_2, 0, 0, 0)
+        grid_sizer_3.Add(self.button_2, 0, wx.BOTTOM, 5)
 
         self.grid_2 = wx.grid.Grid(self.panel_4, wx.ID_ANY, size=(1, 1))
         grid_sizer_4.Add(self.grid_2, 1, wx.LEFT | wx.EXPAND | wx.RIGHT, 5)
