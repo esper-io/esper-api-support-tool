@@ -184,7 +184,7 @@ class SidePanel(wx.Panel):
                 "",
             )
         )
-        sizer_5.Add(label_4, 0, wx.EXPAND, 0)
+        sizer_5.Add(label_4, 0, wx.EXPAND | wx.TOP, 5)
 
         self.appChoice = wx.ComboBox(
             self.panel_10, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
