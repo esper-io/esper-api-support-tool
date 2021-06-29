@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from Common.decorator import api_tool_decorator
+import Common.Globals as Globals
 import wx
 
 

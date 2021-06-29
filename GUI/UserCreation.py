@@ -353,21 +353,25 @@ class UserCreation(wx.Frame):
                             (
                                 not entry[headers.index("username")]
                                 and (
-                                    len(entry) > headers.index("firstname")
+                                    "firstname" in headers
+                                    and len(entry) > headers.index("firstname")
                                     and not entry[headers.index("firstname")]
                                 )
                                 and (
-                                    len(entry) > headers.index("lastname")
+                                    "lastname" in headers
+                                    and len(entry) > headers.index("lastname")
                                     and not entry[headers.index("lastname")]
                                 )
                             )
                             or (
                                 (
-                                    len(entry) > headers.index("password")
+                                    "password" in headers
+                                    and len(entry) > headers.index("password")
                                     and not entry[headers.index("password")]
                                 )
                                 or (
-                                    len(entry) > headers.index("role")
+                                    "role" in headers
+                                    and len(entry) > headers.index("role")
                                     and not entry[headers.index("role")]
                                 )
                             )
@@ -382,12 +386,14 @@ class UserCreation(wx.Frame):
                         )
                         or (
                             (
-                                len(entry) > headers.index("role")
+                                "role" in headers
+                                and len(entry) > headers.index("role")
                                 and entry[headers.index("role")] != "Enterprise Admin"
                                 and entry[headers.index("role")] != "Viewer"
                             )
                             and (
-                                len(entry) > headers.index("groups")
+                                "groups" in headers
+                                and len(entry) > headers.index("groups")
                                 and not entry[headers.index("groups")]
                             )
                             and self.choice_1.GetStringSelection() != "Delete"
@@ -395,9 +401,26 @@ class UserCreation(wx.Frame):
                         or (
                             self.choice_1.GetStringSelection() != "Delete"
                             and (
-                                len(entry) > headers.index("role")
+                                "role" in headers
+                                and len(entry) > headers.index("role")
                                 and entry[headers.index("role")] not in self.roles
                             )
+                        )
+                        or (
+                            self.choice_1.GetStringSelection() != "Delete"
+                            and (
+                                "email" not in headers
+                                or (
+                                    len(entry) > headers.index("email")
+                                    and not entry[headers.index("email")]
+                                )
+                            )
+                        )
+                        or (
+                            self.choice_1.GetStringSelection() == "Delete"
+                            and "username" in headers
+                            and len(entry) > headers.index("username")
+                            and not entry[headers.index("username")]
                         )
                     ):
                         invalidUsers.append(entry)
@@ -414,15 +437,20 @@ class UserCreation(wx.Frame):
                                         indx,
                                         str(field),
                                     )
-                                    user[headers[col].lower().replace(" ", "_")] = str(
+                                    user[headers[col].lower().replace(" ", "")] = str(
                                         field
                                     )
                             col += 1
-                        if "first_name" not in user:
-                            user["first_name"] = ""
-                        if "last_name" not in user:
-                            user["last_name"] = ""
-                        if "username" in user and not user["username"]:
+                        if "firstname" not in user:
+                            user["firstname"] = ""
+                        if "lastname" not in user:
+                            user["lastname"] = ""
+                        if (
+                            "username" in user
+                            and not user["username"]
+                            and ("firstname" in user and user["firstname"])
+                            and ("lastname" in user and user["lastname"])
+                        ):
                             user["username"] = user["firstname"] + user["lastname"]
                             self.grid_1.SetCellValue(
                                 self.grid_1.GetNumberRows() - 1,
@@ -434,6 +462,11 @@ class UserCreation(wx.Frame):
                             or "Viewer" == user["role"]
                         ):
                             user["groups"] = []
+                            self.grid_1.SetCellValue(
+                                self.grid_1.GetNumberRows() - 1,
+                                self.headers["Groups"],
+                                "",
+                            )
                         if "groups" in user and type(user["groups"]) == str:
                             groups = user["groups"].split(",")
                             tmp = []
