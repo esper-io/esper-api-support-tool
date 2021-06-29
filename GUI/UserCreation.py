@@ -371,6 +371,13 @@ class UserCreation(wx.Frame):
                                     and not entry[headers.index("role")]
                                 )
                             )
+                            or (
+                                "email" not in headers
+                                or (
+                                    len(entry) > headers.index("email")
+                                    and not entry[headers.index("email")]
+                                )
+                            )
                             and self.choice_1.GetStringSelection() != "Delete"
                         )
                         or (
@@ -416,7 +423,7 @@ class UserCreation(wx.Frame):
                         if "last_name" not in user:
                             user["last_name"] = ""
                         if "username" in user and not user["username"]:
-                            user["username"] = user["first_name"] + user["last_name"]
+                            user["username"] = user["firstname"] + user["lastname"]
                             self.grid_1.SetCellValue(
                                 self.grid_1.GetNumberRows() - 1,
                                 self.headers["Username"],
