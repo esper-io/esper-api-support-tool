@@ -234,6 +234,7 @@ CSV_TAG_ATTR_NAME = {
     "Ring Volume": "STREAM_RING",
     "Alarm Volume": "STREAM_ALARM",
     "Notification Volume": "STREAM_NOTIFICATION",
+    "Registered On": "provisioned_on",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",

@@ -453,12 +453,14 @@ class NewFrameLayout(wx.Frame):
                 header in deviceHeaders
                 and self.gridPanel.grid_1.GetColSize(list(deviceHeaders).index(header))
                 > 0
+                and header not in headersNoDup
             ):
                 headersNoDup.append(header)
             if (
                 header in networkHeaders
                 and self.gridPanel.grid_2.GetColSize(list(networkHeaders).index(header))
                 > 0
+                and header not in headersNoDup
             ):
                 headersNoDup.append(header)
         headers = headersNoDup
