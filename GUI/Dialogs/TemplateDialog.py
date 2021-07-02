@@ -24,6 +24,7 @@ class TemplateDialog(wx.Dialog):
         self.chosenTemplate = None
         self.choice1thread = None
         self.choice2thread = None
+        self.lastLine = 0
 
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
@@ -343,13 +344,12 @@ class TemplateDialog(wx.Dialog):
         else:
             queryString = self.previewSearch.GetValue()
         if queryString:
-            line = self.text_ctrl_1.XYToPosition(
-                self.text_ctrl_1.GetPosition().x, self.text_ctrl_1.GetPosition().y
-            )
-            if line == -1:
-                line = 0
-            for row in range(self.text_ctrl_1.GetNumberOfLines()):
+            line = 0
+            if self.lastLine != 0:
+                self.lastLine += 1
+            for row in range(self.lastLine, self.text_ctrl_1.GetNumberOfLines()):
                 if queryString.lower() in self.text_ctrl_1.GetLineText(row).lower():
                     line = row
+                    self.lastLine = line
                     break
             self.text_ctrl_1.ShowPosition(line)
