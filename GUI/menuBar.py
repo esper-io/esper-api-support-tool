@@ -46,6 +46,7 @@ class ToolMenuBar(wx.MenuBar):
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = fileMenu.Append(fou)
 
+        fileMenu.Append(wx.ID_SEPARATOR)
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         foc.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/open.png")))
         self.fileOpenConfig = fileMenu.Append(foc)
