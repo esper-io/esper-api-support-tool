@@ -66,7 +66,7 @@ class TemplateDialog(wx.Dialog):
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
+        grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
         grid_sizer_4.Add(grid_sizer_3, 1, wx.EXPAND, 0)
@@ -93,14 +93,12 @@ class TemplateDialog(wx.Dialog):
         grid_sizer_4.Add(grid_sizer_5, 1, wx.EXPAND, 0)
 
         sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
-        grid_sizer_5.Add(sizer_4, 1, wx.BOTTOM | wx.EXPAND, 5)
+        grid_sizer_5.Add(sizer_4, 1, wx.BOTTOM | wx.EXPAND, 12)
 
         label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Template Preview:")
         sizer_4.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.previewSearch = wx.SearchCtrl(self.panel_2, wx.ID_ANY, "")
-        self.previewSearch.ShowCancelButton(True)
-        sizer_4.Add(self.previewSearch, 0, wx.RIGHT, 5)
+        sizer_4.Add((0, 0), 0, 0, 0)
 
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_2,
@@ -141,9 +139,6 @@ class TemplateDialog(wx.Dialog):
         grid_sizer_3.AddGrowableRow(1)
         grid_sizer_3.AddGrowableCol(0)
 
-        grid_sizer_4.AddGrowableRow(0)
-        grid_sizer_4.AddGrowableCol(0)
-        grid_sizer_4.AddGrowableCol(1)
         self.panel_2.SetSizer(grid_sizer_4)
 
         self.panel_1.SetSizer(grid_sizer_2)
@@ -161,10 +156,6 @@ class TemplateDialog(wx.Dialog):
         self.templateSearch.Bind(wx.EVT_SEARCH, self.onSearchTemplate)
         self.templateSearch.Bind(wx.EVT_CHAR, self.onSearchTemplateChar)
         self.templateSearch.Bind(wx.EVT_SEARCH_CANCEL, self.onSearchTemplate)
-
-        self.previewSearch.Bind(wx.EVT_SEARCH, self.onSearchPreview)
-        self.previewSearch.Bind(wx.EVT_CHAR, self.onSearchPreviewChar)
-        self.previewSearch.Bind(wx.EVT_SEARCH_CANCEL, self.onSearchPreview)
 
         self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
@@ -307,11 +298,6 @@ class TemplateDialog(wx.Dialog):
         event.Skip()
         wx.CallAfter(self.onSearchTemplate, wx.EVT_CHAR.typeId)
 
-    @api_tool_decorator()
-    def onSearchPreviewChar(self, event):
-        event.Skip()
-        wx.CallAfter(self.onSearchPreview, wx.EVT_CHAR.typeId)
-
     def onSearchTemplate(self, event):
         queryString = ""
         if hasattr(event, "GetString"):
@@ -334,22 +320,3 @@ class TemplateDialog(wx.Dialog):
         else:
             for template in self.sourceTemplate:
                 self.list_box_1.Append(template["name"])
-
-    def onSearchPreview(self, event):
-        queryString = ""
-        if hasattr(event, "GetString"):
-            queryString = event.GetString()
-        elif isinstance(event, str):
-            queryString = event
-        else:
-            queryString = self.previewSearch.GetValue()
-        if queryString:
-            line = 0
-            if self.lastLine != 0:
-                self.lastLine += 1
-            for row in range(self.lastLine, self.text_ctrl_1.GetNumberOfLines()):
-                if queryString.lower() in self.text_ctrl_1.GetLineText(row).lower():
-                    line = row
-                    self.lastLine = line
-                    break
-            self.text_ctrl_1.ShowPosition(line)
