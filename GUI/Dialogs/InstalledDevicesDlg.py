@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
@@ -110,7 +111,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
         matches = list(
             filter(
-                lambda x: x["app_name"] == val,
+                lambda x: x["app_name"] == val or val in x.keys(),
                 self.apps,
             )
         )
