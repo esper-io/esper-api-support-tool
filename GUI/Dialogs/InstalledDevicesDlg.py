@@ -108,6 +108,7 @@ class InstalledDevicesDlg(wx.Dialog):
         wx.CallAfter(self.processAppSelect, val)
 
     def processAppSelect(self, val):
+        self.list_box_1.Enable(False)
         self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
         matches = list(
             filter(
@@ -129,6 +130,7 @@ class InstalledDevicesDlg(wx.Dialog):
         else:
             self.list_box_2.Enable(False)
         self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+        self.list_box_1.Enable(True)
 
     def getAppValues(self):
         app_id = None
