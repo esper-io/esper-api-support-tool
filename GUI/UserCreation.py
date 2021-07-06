@@ -65,11 +65,11 @@ class UserCreation(wx.Frame):
 
         sizer_1 = wx.FlexGridSizer(10, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "User Management")
+        label_1 = wx.StaticText(self.panel_2, wx.ID_BOLD, "User Management")
         label_1.SetFont(
             wx.Font(
                 Globals.HEADER_FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
+                wx.FONTFAMILY_SWISS,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,

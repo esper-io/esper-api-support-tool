@@ -264,6 +264,45 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.Realize()
 
     @api_tool_decorator()
+    def setFontSizeForLabels(self, parent=None):
+        children = None
+        if not parent:
+            children = self.GetChildren()
+        else:
+            children = parent.GetChildren()
+        for child in children:
+            if type(child) == wx.StaticText:
+                currentFont = child.GetFont()
+                if (
+                    currentFont.GetWeight() >= wx.FONTWEIGHT_BOLD
+                    and child.Id == wx.ID_BOLD
+                ):
+                    child.SetFont(
+                        wx.Font(
+                            Globals.HEADER_FONT_SIZE,
+                            wx.FONTFAMILY_SWISS,
+                            wx.FONTSTYLE_NORMAL,
+                            wx.FONTWEIGHT_BOLD,
+                            0,
+                            "",
+                        )
+                    )
+                else:
+                    child.SetFont(
+                        wx.Font(
+                            Globals.FONT_SIZE,
+                            currentFont.GetFamily(),
+                            currentFont.GetStyle(),
+                            currentFont.GetWeight(),
+                            0,
+                            "",
+                        )
+                    )
+            if child.GetChildren():
+                self.setFontSizeForLabels(parent=child)
+        self.Refresh()
+
+    @api_tool_decorator()
     def onLog(self, event):
         """ Event trying to log data """
         evtValue = event.GetValue()
@@ -1966,6 +2005,7 @@ class NewFrameLayout(wx.Frame):
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
                 self.onDeviceSelections(None)
+            self.setFontSizeForLabels()
         if self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
         else:
