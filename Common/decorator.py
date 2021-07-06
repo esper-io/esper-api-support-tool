@@ -58,6 +58,10 @@ def api_tool_decorator(locks=None):
                         for lock in kwargs["locks"]:
                             if lock.locked():
                                 lock.release()
+                    if locks:
+                        for lock in locks:
+                            if lock.locked():
+                                lock.release()
             end = time.perf_counter()
             if start and end:
                 duration = end - start

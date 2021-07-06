@@ -24,7 +24,6 @@ class TemplateDialog(wx.Dialog):
         self.chosenTemplate = None
         self.choice1thread = None
         self.choice2thread = None
-        self.lastLine = 0
 
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
