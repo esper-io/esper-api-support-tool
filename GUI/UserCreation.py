@@ -65,11 +65,11 @@ class UserCreation(wx.Frame):
 
         sizer_1 = wx.FlexGridSizer(10, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_2, wx.ID_ANY, "User Management")
+        label_1 = wx.StaticText(self.panel_2, wx.ID_BOLD, "User Management")
         label_1.SetFont(
             wx.Font(
                 Globals.HEADER_FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
+                wx.FONTFAMILY_SWISS,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
@@ -373,6 +373,13 @@ class UserCreation(wx.Frame):
                                     "role" in headers
                                     and len(entry) > headers.index("role")
                                     and not entry[headers.index("role")]
+                                )
+                            )
+                            or (
+                                "email" not in headers
+                                or (
+                                    len(entry) > headers.index("email")
+                                    and not entry[headers.index("email")]
                                 )
                             )
                             and self.choice_1.GetStringSelection() != "Delete"

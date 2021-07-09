@@ -118,7 +118,12 @@ class CollectionsDialog(wx.Dialog):
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Name:")
         label_2.SetFont(
             wx.Font(
-                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         grid_sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -135,7 +140,12 @@ class CollectionsDialog(wx.Dialog):
         label_3 = wx.StaticText(self.panel_4, wx.ID_ANY, "Description:")
         label_3.SetFont(
             wx.Font(
-                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         grid_sizer_5.Add(label_3, 0, 0, 0)
@@ -156,7 +166,12 @@ class CollectionsDialog(wx.Dialog):
         label_4 = wx.StaticText(self.panel_5, wx.ID_ANY, "EQL:")
         label_4.SetFont(
             wx.Font(
-                Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         grid_sizer_6.Add(label_4, 0, 0, 0)

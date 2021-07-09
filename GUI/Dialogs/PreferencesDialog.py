@@ -49,12 +49,12 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
+        panel_1 = wx.Panel(self, wx.ID_ANY)
+        sizer_1.Add(panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
-        self.window_1 = wx.SplitterWindow(self.panel_1, wx.ID_ANY)
+        self.window_1 = wx.SplitterWindow(panel_1, wx.ID_ANY)
         self.window_1.SetMinimumPaneSize(20)
         sizer_3.Add(self.window_1, 1, wx.EXPAND, 0)
 
@@ -84,7 +84,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        (self.panel_3, self.panel_4, self.checkbox_1,) = self.addPrefToPanel(
+        (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Enable Device Selection",
@@ -92,7 +92,7 @@ class PreferencesDialog(wx.Dialog):
             "Allow user to specify actions on a selections of devices within a group.",
         )
 
-        (self.panel_5, self.panel_6, self.spin_ctrl_1,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_1,) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "API Request Limit",
@@ -103,35 +103,35 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_1.SetValue(Globals.limit)
 
-        (self.panel_9, self.panel_10, self.spin_ctrl_2,) = self.addPrefToPanel(
+        (panel_9, _, self.spin_ctrl_2,) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "API Request Offset",
             wx.SpinCtrl,
             "Page of results the API sends back (starts at 0)",
         )
-        self.panel_9.Hide()
+        panel_9.Hide()
         self.spin_ctrl_2.SetMin(0)
         self.spin_ctrl_2.SetValue(Globals.offset)
 
-        (self.panel_43, self.panel_44, self.spin_ctrl_8,) = self.addPrefToPanel(
+        (panel_43, _, self.spin_ctrl_8,) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Max Threads",
             wx.SpinCtrl,
             "Maximum number of threads that will be created to perform an action.",
         )
-        self.panel_43.Hide()
+        panel_43.Hide()
         self.spin_ctrl_8.SetMin(10)
         self.spin_ctrl_8.SetMax(100)
         self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
 
-        (self.panel_47, self.panel_48, self.spin_ctrl_10,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_10,) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Font Size",
             wx.SpinCtrl,
-            "Font size, applies on next session.",
+            "Font size",
         )
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
@@ -144,7 +144,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_14 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        (self.panel_25, self.panel_26, self.spin_ctrl_6,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_6,) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Command Timeout (seconds)",
@@ -154,7 +154,7 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_6.SetMin(0)
         self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
 
-        (self.panel_27, self.panel_28, self.checkbox_5,) = self.addPrefToPanel(
+        (_, _, self.checkbox_5,) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Reach Queued Command State Only",
@@ -162,7 +162,7 @@ class PreferencesDialog(wx.Dialog):
             "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes.",
         )
 
-        (self.panel_39, self.panel_40, self.checkbox_12,) = self.addPrefToPanel(
+        (_, __file__, self.checkbox_12,) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Use Json Input for Commands",
@@ -170,7 +170,7 @@ class PreferencesDialog(wx.Dialog):
             "Use Json Input for Commands",
         )
 
-        (self.panel_41, self.panel_42, self.combobox_1,) = self.addPrefToPanel(
+        (_, _, self.combobox_1,) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Device Type",
@@ -180,7 +180,7 @@ class PreferencesDialog(wx.Dialog):
         )
         self.combobox_1.SetSelection(0)
 
-        (self.panel_47, self.panel_48, self.spin_ctrl_9,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_9,) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Date Delta for Alias Command",
@@ -198,7 +198,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        (self.panel_19, self.panel_20, self.checkbox_3,) = self.addPrefToPanel(
+        (_, _, self.checkbox_3,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
             "Enable Grid Refresh",
@@ -207,7 +207,7 @@ class PreferencesDialog(wx.Dialog):
             % Globals.MAX_UPDATE_COUNT,
         )
 
-        (self.panel_21, self.panel_22, self.spin_ctrl_7,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
             "Grid Refresh Rate (seconds)",
@@ -218,7 +218,7 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
         self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
 
-        (self.panel_35, self.panel_36, self.checkbox_10,) = self.addPrefToPanel(
+        (_, _, self.checkbox_10,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
             "Allow Column Resizing",
@@ -226,7 +226,7 @@ class PreferencesDialog(wx.Dialog):
             "Allow user to resize grid columns",
         )
 
-        (self.panel_45, self.panel_46, self.checkbox_13,) = self.addPrefToPanel(
+        (_, _, self.checkbox_13,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
             "Sync Grid's Vertical Scroll Position",
@@ -241,7 +241,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
 
-        (self.panel_7, self.panel_8, self.checkbox_2,) = self.addPrefToPanel(
+        (_, _, self.checkbox_2,) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Fetch All Installed Applications",
@@ -249,7 +249,7 @@ class PreferencesDialog(wx.Dialog):
             "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
 
-        (self.panel_13, self.panel_14, self.checkbox_4,) = self.addPrefToPanel(
+        (_, _, self.checkbox_4,) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Show Application's Package Name",
@@ -257,7 +257,7 @@ class PreferencesDialog(wx.Dialog):
             "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
 
-        (self.panel_15, self.panel_16, self.checkbox_6,) = self.addPrefToPanel(
+        (_, _, self.checkbox_6,) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Get Applications For Each Device",
@@ -265,7 +265,7 @@ class PreferencesDialog(wx.Dialog):
             "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
         )
 
-        (self.panel_38, self.panel_37, self.checkbox_11,) = self.addPrefToPanel(
+        (_, _, self.checkbox_11,) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Set App State To SHOW before Set Kiosk",
@@ -280,7 +280,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_19 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        (self.panel_29, self.panel_30, self.checkbox_8,) = self.addPrefToPanel(
+        (_, _, self.checkbox_8,) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Grid Confirmation Prompt",
@@ -288,7 +288,7 @@ class PreferencesDialog(wx.Dialog):
             "Grid Confirmation Prompt",
         )
 
-        (self.panel_31, self.panel_32, self.checkbox_7,) = self.addPrefToPanel(
+        (_, _, self.checkbox_7,) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Template Confirmation Prompt",
@@ -326,7 +326,7 @@ class PreferencesDialog(wx.Dialog):
 
         self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
 
-        self.panel_1.SetSizer(sizer_3)
+        panel_1.SetSizer(sizer_3)
 
         self.SetSizer(sizer_1)
 

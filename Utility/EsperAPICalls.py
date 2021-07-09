@@ -137,7 +137,7 @@ def toggleKioskMode(
     for attempt in range(maxAttempt):
         try:
             api_response = api_instance.create_command(Globals.enterprise_id, command)
-            ApiToolLog.LogApiRequestOccurrence(
+            ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
                 api_instance.create_command.__name__,
                 Globals.PRINT_API_LOGS,
@@ -191,7 +191,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
     json_resp = getInfo(extention, deviceid)
-    if len(json_resp["results"]) and createAppList:
+    if "results" in json_resp and len(json_resp["results"]) and createAppList:
         for app in json_resp["results"]:
             entry = None
             if "application" in app:
@@ -258,7 +258,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
 def getLatestEvent(deviceId):
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
     respData = None
-    if json_resp["results"]:
+    if "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     return respData
 
@@ -268,7 +268,7 @@ def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if json_resp["results"]:
+    if "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     appName = ""
     if respData and "kioskAppName" in respData:
@@ -281,7 +281,7 @@ def getNetworkInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if json_resp["results"]:
+    if "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     network_event = ""
     if respData and "networkEvent" in respData:
@@ -294,7 +294,7 @@ def getLocationInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if json_resp["results"]:
+    if "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     location_event = ""
     if respData and "locationEvent" in respData:

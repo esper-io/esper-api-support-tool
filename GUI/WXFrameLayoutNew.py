@@ -264,6 +264,45 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.Realize()
 
     @api_tool_decorator()
+    def setFontSizeForLabels(self, parent=None):
+        children = None
+        if not parent:
+            children = self.GetChildren()
+        else:
+            children = parent.GetChildren()
+        for child in children:
+            if type(child) == wx.StaticText:
+                currentFont = child.GetFont()
+                if (
+                    currentFont.GetWeight() >= wx.FONTWEIGHT_BOLD
+                    and child.Id == wx.ID_BOLD
+                ):
+                    child.SetFont(
+                        wx.Font(
+                            Globals.HEADER_FONT_SIZE,
+                            wx.FONTFAMILY_SWISS,
+                            wx.FONTSTYLE_NORMAL,
+                            wx.FONTWEIGHT_BOLD,
+                            0,
+                            "",
+                        )
+                    )
+                else:
+                    child.SetFont(
+                        wx.Font(
+                            Globals.FONT_SIZE,
+                            currentFont.GetFamily(),
+                            currentFont.GetStyle(),
+                            currentFont.GetWeight(),
+                            0,
+                            "",
+                        )
+                    )
+            if child.GetChildren():
+                self.setFontSizeForLabels(parent=child)
+        self.Refresh()
+
+    @api_tool_decorator()
     def onLog(self, event):
         """ Event trying to log data """
         evtValue = event.GetValue()
@@ -453,12 +492,14 @@ class NewFrameLayout(wx.Frame):
                 header in deviceHeaders
                 and self.gridPanel.grid_1.GetColSize(list(deviceHeaders).index(header))
                 > 0
+                and header not in headersNoDup
             ):
                 headersNoDup.append(header)
             if (
                 header in networkHeaders
                 and self.gridPanel.grid_2.GetColSize(list(networkHeaders).index(header))
                 > 0
+                and header not in headersNoDup
             ):
                 headersNoDup.append(header)
         headers = headersNoDup
@@ -623,14 +664,14 @@ class NewFrameLayout(wx.Frame):
                             colName.lower(), expectedCol.replace(" ", "").lower(), True
                         )
                         if (
-                            fileCol > len(header)
-                            or header[fileCol].strip()
+                            fileCol < len(header)
+                            and header[fileCol].strip()
                             in Globals.CSV_DEPRECATED_HEADER_LABEL
-                            or (
-                                header[fileCol].strip() not in headers.keys()
-                                and colName != "devicename"
-                                and ratio < 90
-                            )
+                        ) or (
+                            fileCol < len(header)
+                            and header[fileCol].strip() not in headers.keys()
+                            and colName != "devicename"
+                            and ratio < 90
                         ):
                             fileCol += 1
                             continue
@@ -1964,6 +2005,7 @@ class NewFrameLayout(wx.Frame):
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
                 self.onDeviceSelections(None)
+            self.setFontSizeForLabels()
         if self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
         else:

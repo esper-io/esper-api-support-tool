@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
@@ -107,10 +108,11 @@ class InstalledDevicesDlg(wx.Dialog):
         wx.CallAfter(self.processAppSelect, val)
 
     def processAppSelect(self, val):
+        self.list_box_1.Enable(False)
         self.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
         matches = list(
             filter(
-                lambda x: x["app_name"] == val,
+                lambda x: x["app_name"] == val or val in x.keys(),
                 self.apps,
             )
         )
@@ -128,6 +130,7 @@ class InstalledDevicesDlg(wx.Dialog):
         else:
             self.list_box_2.Enable(False)
         self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+        self.list_box_1.Enable(True)
 
     def getAppValues(self):
         app_id = None

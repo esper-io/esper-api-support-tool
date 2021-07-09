@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser
+from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
 from Common.decorator import api_tool_decorator
 import Utility.EsperTemplateUtil as templateUtil
 import Utility.wxThread as wxThread
@@ -31,21 +31,74 @@ class TemplateDialog(wx.Dialog):
         size = (600, 500)
         self.SetSize(size)
         self.SetMinSize(size)
+        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+
+        grid_sizer_1 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
+
+        self.panel_1 = wx.Panel(self, wx.ID_ANY)
+        grid_sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
+
+        grid_sizer_2 = wx.GridSizer(1, 2, 0, 0)
+
+        sizer_5 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
+
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Endpoint:")
+        sizer_5.Add(label_1, 0, 0, 0)
+
+        self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)
+        sizer_5.Add(self.choice_1, 0, wx.EXPAND | wx.RIGHT, 5)
+
+        sizer_6 = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer_2.Add(sizer_6, 1, wx.EXPAND | wx.LEFT, 5)
+
+        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Endpoint:")
+        sizer_6.Add(label_2, 0, 0, 0)
+
+        self.choice_2 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)
+        sizer_6.Add(self.choice_2, 0, wx.EXPAND | wx.RIGHT, 5)
+
+        static_line_1 = wx.StaticLine(self, wx.ID_ANY)
+        grid_sizer_1.Add(static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        self.panel_5 = wx.Panel(self.panel_2, wx.ID_ANY)
-        self.choice_1 = self.choice_1 = wx.Choice(
-            self.panel_5, wx.ID_ANY, choices=choices, style=wx.CB_SORT
-        )
-        self.panel_6 = wx.Panel(self.panel_2, wx.ID_ANY)
-        self.choice_2 = wx.Choice(
-            self.panel_6, wx.ID_ANY, choices=choices, style=wx.CB_SORT
-        )
-        self.check_list_box_1 = wx.ListBox(
+        grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
+
+        grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
+
+        grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
+        grid_sizer_4.Add(grid_sizer_3, 1, wx.EXPAND, 0)
+
+        sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
+        grid_sizer_3.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
+
+        label_3 = wx.StaticText(self.panel_2, wx.ID_ANY, "Source Template:")
+        sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.LEFT, 5)
+
+        self.templateSearch = wx.SearchCtrl(self.panel_2, wx.ID_ANY, "")
+        self.templateSearch.ShowCancelButton(True)
+        sizer_3.Add(self.templateSearch, 0, wx.RIGHT, 5)
+
+        self.list_box_1 = wx.ListBox(
             self.panel_2,
             wx.ID_ANY,
             choices=[],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE | wx.LB_SORT,
         )
+        grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
+
+        grid_sizer_5 = wx.FlexGridSizer(2, 1, 0, 0)
+        grid_sizer_4.Add(grid_sizer_5, 1, wx.EXPAND, 0)
+
+        sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
+        grid_sizer_5.Add(sizer_4, 1, wx.BOTTOM | wx.EXPAND, 12)
+
+        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Template Preview:")
+        sizer_4.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
+
+        sizer_4.Add((0, 0), 0, 0, 0)
+
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_2,
             wx.ID_ANY,
@@ -56,22 +109,63 @@ class TemplateDialog(wx.Dialog):
             | wx.TE_WORDWRAP
             | wx.TE_AUTO_URL,
         )
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
-        self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
-        self.button_1 = wx.Button(self.panel_4, wx.ID_OK, "Clone")
-        self.button_2 = wx.Button(self.panel_4, wx.ID_CANCEL, "Cancel")
+        grid_sizer_5.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
+        static_line_2 = wx.StaticLine(self, wx.ID_ANY)
+        grid_sizer_1.Add(static_line_2, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+
+        sizer_2 = wx.StdDialogButtonSizer()
+        sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
+
+        self.button_OK = wx.Button(self, wx.ID_OK, "")
+        self.button_OK.SetDefault()
+        sizer_2.AddButton(self.button_OK)
+
+        self.button_CANCEL = wx.Button(self, wx.ID_CANCEL, "")
+        sizer_2.AddButton(self.button_CANCEL)
+
+        sizer_2.Realize()
+
+        sizer_4.AddGrowableRow(0)
+        sizer_4.AddGrowableCol(0)
+
+        grid_sizer_5.AddGrowableRow(1)
+        grid_sizer_5.AddGrowableCol(0)
+
+        sizer_3.AddGrowableRow(0)
+        sizer_3.AddGrowableCol(0)
+
+        grid_sizer_3.AddGrowableRow(1)
+        grid_sizer_3.AddGrowableCol(0)
+
+        self.panel_2.SetSizer(grid_sizer_4)
+
+        self.panel_1.SetSizer(grid_sizer_2)
+
+        grid_sizer_1.AddGrowableRow(2)
+        grid_sizer_1.AddGrowableCol(0)
+
+        self.SetSizer(sizer_1)
+
+        self.SetAffirmativeId(self.button_OK.GetId())
+        self.SetEscapeId(self.button_CANCEL.GetId())
+
+        self.Layout()
+
+        self.templateSearch.Bind(wx.EVT_SEARCH, self.onSearchTemplate)
+        self.templateSearch.Bind(wx.EVT_CHAR, self.onSearchTemplateChar)
+        self.templateSearch.Bind(wx.EVT_SEARCH_CANCEL, self.onSearchTemplate)
+
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
+        self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
         self.choice_2.Bind(wx.EVT_CHOICE, self.onChoice2Select)
         if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
-            self.check_list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
-            self.check_list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+            self.list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
+            self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         self.__set_properties()
-        self.__do_layout()
-        # end wxGlade
 
     @api_tool_decorator()
     def __set_properties(self):
@@ -80,55 +174,15 @@ class TemplateDialog(wx.Dialog):
         self.SetSize((515, 315))
         self.choice_1.SetSelection(0)
         self.choice_2.SetSelection(0)
-        self.button_1.Enable(False)
-        self.button_2.SetFocus()
+        self.button_OK.Enable(False)
+        self.button_CANCEL.SetFocus()
         # end wxGlade
-
-    @api_tool_decorator()
-    def __do_layout(self):
-        # begin wxGlade: MyDialog.__do_layout
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        grid_sizer_3 = wx.GridSizer(1, 1, 0, 0)
-        sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_5 = wx.StaticBoxSizer(
-            wx.StaticBox(self.panel_2, wx.ID_ANY, "Source Template"), wx.VERTICAL
-        )
-        grid_sizer_4 = wx.GridSizer(1, 2, 0, 0)
-        grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
-        sizer_4 = wx.BoxSizer(wx.VERTICAL)
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        label_1 = wx.StaticText(self.panel_5, wx.ID_ANY, "Source Endpoint")
-        sizer_3.Add(label_1, 0, wx.ALL, 5)
-        sizer_3.Add(self.choice_1, 0, wx.ALL | wx.EXPAND, 5)
-        self.panel_5.SetSizer(sizer_3)
-        grid_sizer_1.Add(self.panel_5, 1, wx.EXPAND, 0)
-        label_2 = wx.StaticText(self.panel_6, wx.ID_ANY, "Destination Endpoint")
-        sizer_4.Add(label_2, 0, wx.ALL, 5)
-        sizer_4.Add(self.choice_2, 0, wx.ALL | wx.EXPAND, 5)
-        self.panel_6.SetSizer(sizer_4)
-        grid_sizer_1.Add(self.panel_6, 1, wx.EXPAND, 0)
-        grid_sizer_2.Add(grid_sizer_1, 0, wx.EXPAND, 0)
-        grid_sizer_4.Add(self.check_list_box_1, 0, wx.ALL | wx.EXPAND, 5)
-        grid_sizer_4.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
-        sizer_5.Add(grid_sizer_4, 1, wx.EXPAND, 0)
-        grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.button_1, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
-        sizer_2.Add(self.button_2, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
-        self.panel_4.SetSizer(sizer_2)
-        grid_sizer_3.Add(self.panel_4, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
-        grid_sizer_2.Add(grid_sizer_3, 0, wx.EXPAND, 0)
-        self.panel_2.SetSizer(grid_sizer_2)
-        sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
-        self.SetSizer(sizer_1)
-        self.Layout()
-        self.Centre()
 
     @api_tool_decorator()
     def getInputSelections(self):
         return (
             self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
-            self.check_list_box_1.GetString(self.check_list_box_1.GetSelection()),
+            self.list_box_1.GetString(self.list_box_1.GetSelection()),
         )
 
     @api_tool_decorator()
@@ -160,7 +214,7 @@ class TemplateDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         selection = event.GetSelection()
-        name = self.check_list_box_1.GetString(selection)
+        name = self.list_box_1.GetString(selection)
         template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         self.populateTemplatePreview(template)
 
@@ -169,7 +223,7 @@ class TemplateDialog(wx.Dialog):
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
             for template in self.sourceTemplate:
-                self.check_list_box_1.Append(template["name"])
+                self.list_box_1.Append(template["name"])
         self.checkInputValues()
 
     @api_tool_decorator()
@@ -177,7 +231,7 @@ class TemplateDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.sourceTemplate = []
-        self.check_list_box_1.Clear()
+        self.list_box_1.Clear()
         self.choice1thread = wxThread.GUIThread(
             self,
             self.populateSourceTempaltes,
@@ -230,10 +284,38 @@ class TemplateDialog(wx.Dialog):
             == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
-            or self.check_list_box_1.GetSelection() == wx.NOT_FOUND
+            or self.list_box_1.GetSelection() == wx.NOT_FOUND
         ):
-            self.button_1.Enable(False)
+            self.button_OK.Enable(False)
         else:
-            self.button_1.Enable(True)
+            self.button_OK.Enable(True)
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
+
+    @api_tool_decorator()
+    def onSearchTemplateChar(self, event):
+        event.Skip()
+        wx.CallAfter(self.onSearchTemplate, wx.EVT_CHAR.typeId)
+
+    def onSearchTemplate(self, event):
+        queryString = ""
+        if hasattr(event, "GetString"):
+            queryString = event.GetString()
+        elif isinstance(event, str):
+            queryString = event
+        else:
+            queryString = self.templateSearch.GetValue()
+        self.list_box_1.Clear()
+        if queryString:
+            filteredList = list(
+                filter(
+                    lambda x: queryString.lower() in x["name"].lower()
+                    or getStrRatioSimilarity(x["name"], queryString) > 90,
+                    self.sourceTemplate,
+                )
+            )
+            for template in filteredList:
+                self.list_box_1.Append(template["name"])
+        else:
+            for template in self.sourceTemplate:
+                self.list_box_1.Append(template["name"])
