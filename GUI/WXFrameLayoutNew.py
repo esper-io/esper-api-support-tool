@@ -1202,7 +1202,7 @@ class NewFrameLayout(wx.Frame):
                 results,
                 key=lambda i: i.application_name.lower(),
             )
-        else:
+        elif results:
             results = sorted(
                 results,
                 key=lambda i: i["app_name"].lower(),

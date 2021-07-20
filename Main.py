@@ -16,6 +16,7 @@ class MyApp(wx.App):
         self.instance = wx.SingleInstanceChecker(self.name)
 
         if self.instance.IsAnotherRunning():
+            print("Another instance is running")
             return False
 
         Globals.frame = FrameLayout()

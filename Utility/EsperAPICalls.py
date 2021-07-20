@@ -52,7 +52,10 @@ def getInfo(request_extension, deviceid):
         + request_extension
     )
     resp = performGetRequestWithRetry(url, headers=headers)
-    json_resp = resp.json()
+    try:
+        json_resp = resp.json()
+    except:
+        pass
     logBadResponse(url, resp, json_resp)
 
     return json_resp
@@ -191,7 +194,12 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
     json_resp = getInfo(extention, deviceid)
-    if "results" in json_resp and len(json_resp["results"]) and createAppList:
+    if (
+        json_resp
+        and "results" in json_resp
+        and len(json_resp["results"])
+        and createAppList
+    ):
         for app in json_resp["results"]:
             entry = None
             if "application" in app:
@@ -258,7 +266,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
 def getLatestEvent(deviceId):
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
     respData = None
-    if "results" in json_resp and json_resp["results"]:
+    if json_resp and "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     return respData
 
@@ -268,7 +276,7 @@ def getkioskmodeapp(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if "results" in json_resp and json_resp["results"]:
+    if json_resp and "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     appName = ""
     if respData and "kioskAppName" in respData:
@@ -281,7 +289,7 @@ def getNetworkInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if "results" in json_resp and json_resp["results"]:
+    if json_resp and "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     network_event = ""
     if respData and "networkEvent" in respData:
@@ -294,7 +302,7 @@ def getLocationInfo(deviceid):
     """Retrieves The Kiosk Mode Application ID"""
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
     respData = None
-    if "results" in json_resp and json_resp["results"]:
+    if json_resp and "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     location_event = ""
     if respData and "locationEvent" in respData:
@@ -388,7 +396,8 @@ def setdevicename(
                 ApiToolLog().LogError(e)
                 raise e
             time.sleep(Globals.RETRY_SLEEP)
-    status = response.results[0].state
+    if response.results:
+        status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
     return status
 
@@ -1343,7 +1352,7 @@ def getUserBody(user):
             groups.append(group)
         else:
             resp = getAllGroups(name=group)
-            if resp.results:
+            if resp and resp.results:
                 for gp in resp.results:
                     groups.append(gp.id)
     body["profile"]["groups"] = groups
