@@ -86,6 +86,9 @@ class GroupManagement(wx.Dialog):
 
         self.Layout()
 
+        self.button_2.Enable(False)
+        self.button_1.Enable(False)
+
         self.button_3.Bind(wx.EVT_BUTTON, self.refreshTree)
         self.button_2.Bind(wx.EVT_BUTTON, self.deleteGroup)
         self.button_1.Bind(wx.EVT_BUTTON, self.addSubGroup)
@@ -199,12 +202,17 @@ class GroupManagement(wx.Dialog):
         self.setCursorDefault()
 
     def checkActions(self, event):
-        hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
-        if (
-            hasChild
-            or self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
-            in self.groupTree.keys()
-        ):
-            self.button_2.Enable(False)
+        if self.tree_ctrl_1.GetSelection():
+            self.button_1.Enable(True)
+            hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
+            if (
+                hasChild
+                or self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
+                in self.groupTree.keys()
+            ):
+                self.button_2.Enable(False)
+            else:
+                self.button_2.Enable(True)
         else:
-            self.button_2.Enable(True)
+            self.button_1.Enable(False)
+            self.button_2.Enable(False)
