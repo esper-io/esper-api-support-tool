@@ -257,6 +257,9 @@ def displayMessageBox(event):
         value = event.GetValue()
     elif type(event) == tuple:
         value = event
+    elif type(event) == str:
+        value = event
+
     msg = ""
     sty = wx.ICON_INFORMATION
     if type(value) == tuple:

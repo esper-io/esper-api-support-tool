@@ -36,6 +36,7 @@ class ToolMenuBar(wx.MenuBar):
         if platform.system() == "Windows":
             self.WINDOWS = True
 
+        # File Menu
         fileMenu = wx.Menu()
         foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
         addPng = wx.Bitmap(resourcePath("Images/Menu/add.png"))
@@ -61,17 +62,20 @@ class ToolMenuBar(wx.MenuBar):
         fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
         self.fileItem = fileMenu.Append(fi)
 
+        # Endpoint Menu
         self.configMenu = wx.Menu()
         self.defaultConfigVal = self.configMenu.Append(
             wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
         )
         self.configMenuOptions.append(self.defaultConfigVal)
 
+        # Edit Menu
         editMenu = wx.Menu()
         pref = wx.MenuItem(editMenu, wx.ID_ANY, "&Preferences\tCtrl+Shift+P")
         pref.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/prefs.png")))
         self.pref = editMenu.Append(pref)
 
+        # Run Menu
         runMenu = wx.Menu()
         runItem = wx.MenuItem(runMenu, wx.ID_RETRY, "&Run\tCtrl+R")
         runItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/run.png")))
@@ -91,17 +95,31 @@ class ToolMenuBar(wx.MenuBar):
         self.installedDevices = runMenu.Append(installedDevices)
         self.installedDevices.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
+        self.groupSubMenu = wx.Menu()
+        self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "Move Device(s)")
+        self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "Manage Groups")
+        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Group", self.groupSubMenu)
+        runMenu.Append(wx.ID_SEPARATOR)
+        self.collectionSubMenu = wx.Menu()
         collectionItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Perform Collection Action (Preview)\tCtrl+Shift+F"
+            self.collectionSubMenu,
+            wx.ID_ANY,
+            "&Perform Collection Action (Preview)\tCtrl+Shift+F",
         )
-        self.collection = runMenu.Append(collectionItem)
+        self.collection = self.collectionSubMenu.Append(collectionItem)
         self.collection.SetBitmap(
             wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
-        eqlQueryItem = wx.MenuItem(runMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F")
-        self.eqlQuery = runMenu.Append(eqlQueryItem)
+        eqlQueryItem = wx.MenuItem(
+            self.collectionSubMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F"
+        )
+        self.eqlQuery = self.collectionSubMenu.Append(eqlQueryItem)
         self.eqlQuery.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/search.png")))
+        self.collectionSubMenu = runMenu.Append(
+            wx.ID_ANY, "&Collections", self.collectionSubMenu
+        )
 
+        # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Device Columns")
@@ -134,6 +152,7 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.clearGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clear.png")))
 
+        # Help Menu
         helpMenu = wx.Menu()
 
         helpItem = wx.MenuItem(helpMenu, wx.ID_ANY, "&Help\tF1")
@@ -172,6 +191,8 @@ class ToolMenuBar(wx.MenuBar):
         self.clearConsole.Enable(False)
         self.collection.Enable(False)
         self.eqlQuery.Enable(False)
+        self.collectionSubMenu.Enable(False)
+        self.groupSubMenu.Enable(False)
 
         self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
@@ -201,6 +222,8 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
         )
+        self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
+        self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
 
     @api_tool_decorator()
     def onAbout(self, event):
