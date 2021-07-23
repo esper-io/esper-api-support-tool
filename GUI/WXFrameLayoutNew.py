@@ -105,6 +105,7 @@ class NewFrameLayout(wx.Frame):
         self.defaultDir = os.getcwd()
         self.gridArrowState = {"next": False, "prev": False}
         self.groups = None
+        self.groupManage = None
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -431,6 +432,9 @@ class NewFrameLayout(wx.Frame):
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
+        if self.groupManage:
+            self.groupManage.Close()
+            self.groupManage.DestroyLater()
         thread = ApiToolLog().LogApiRequestOccurrence(
             None, Globals.API_REQUEST_TRACKER, True
         )
@@ -1082,6 +1086,7 @@ class NewFrameLayout(wx.Frame):
         results = event.GetValue().results
         num = 1
         self.groups = results
+        self.groupManage = GroupManagement(self.groups)
         results = sorted(
             results,
             key=lambda i: i.name.lower(),
@@ -2450,5 +2455,5 @@ class NewFrameLayout(wx.Frame):
             return
 
     def createGroup(self, event):
-        with GroupManagement(self.groups) as manage:
+        with self.groupManage as manage:
             manage.ShowModal()

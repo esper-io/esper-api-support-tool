@@ -427,6 +427,29 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         else:
             deviceInfo["groups"] = groupNames
 
+    if Globals.frame and deviceInfo["groups"]:
+        subgroupsIds = []
+        urlFormat = None
+        for group in deviceGroups:
+            groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
+            if not urlFormat:
+                urlFormat = deviceGroups[0].replace(groupId, "{id}")
+            subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
+        deviceInfo["subgroups"] = []
+        for id in subgroupsIds:
+            url = urlFormat.format(id=id)
+            groupName = None
+            if url in knownGroups:
+                groupName = knownGroups[url]
+                if type(groupName) == list and len(groupName) == 1:
+                    groupName = groupName[0]
+            else:
+                groupName = apiCalls.fetchGroupName(url)
+            if groupName:
+                deviceInfo["subgroups"].append(groupName)
+            if url not in knownGroups:
+                knownGroups[url] = groupName
+
     if bool(deviceAlias):
         deviceInfo.update({"Alias": deviceAlias})
     else:

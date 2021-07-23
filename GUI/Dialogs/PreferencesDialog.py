@@ -43,6 +43,7 @@ class PreferencesDialog(wx.Dialog):
             "runCommandOn",
             "maxThread",
             "syncGridScroll",
+            "immediateChild",
             "aliasDayDelta",
             "fontSize",
         ]
@@ -196,7 +197,7 @@ class PreferencesDialog(wx.Dialog):
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_3,) = self.addPrefToPanel(
             self.grid,
@@ -232,6 +233,14 @@ class PreferencesDialog(wx.Dialog):
             "Sync Grid's Vertical Scroll Position",
             wx.CheckBox,
             "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
+        )
+
+        (_, _, self.checkbox_14,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Only Show Immediate Subgroups",
+            wx.CheckBox,
+            "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
         )
 
         # App Preferences
@@ -423,6 +432,20 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
+
+        if not prefDict or (prefDict and not prefDict["immediateChild"]):
+            self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.GET_IMMEDIATE_SUBGROUPS = False
+        elif prefDict and "immediateChild" in prefDict:
+            if (
+                isinstance(self.prefs["immediateChild"], str)
+                and prefDict["immediateChild"].lower() == "true"
+            ) or prefDict["immediateChild"] == True:
+                self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GET_IMMEDIATE_SUBGROUPS = True
+            else:
+                self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GET_IMMEDIATE_SUBGROUPS = False
 
         if prefDict and "aliasDayDelta" in prefDict:
             Globals.ALIAS_DAY_DELTA = int(prefDict["aliasDayDelta"])
@@ -628,6 +651,7 @@ class PreferencesDialog(wx.Dialog):
             "runCommandOn": self.combobox_1.GetValue(),
             "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
+            "immediateChild": self.checkbox_14.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
@@ -651,6 +675,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
+        Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
 
         if self.prefs["getAllApps"]:
@@ -863,6 +888,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
+        if "immediateChild" in self.prefs:
+            if (
+                isinstance(self.prefs["immediateChild"], str)
+                and self.prefs["immediateChild"].lower() == "true"
+            ) or self.prefs["immediateChild"] == True:
+                self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GET_IMMEDIATE_SUBGROUPS = True
+            else:
+                self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GET_IMMEDIATE_SUBGROUPS = False
         if "aliasDayDelta" in self.prefs:
             Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
             if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
@@ -910,6 +945,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
         self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
+        self.prefs["immediateChild"] = Globals.GET_IMMEDIATE_SUBGROUPS
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
@@ -962,6 +998,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.MAX_THREAD_COUNT
         elif key == "syncGridScroll":
             return Globals.MATCH_SCROLL_POS
+        elif key == "immediateChild":
+            return Globals.GET_IMMEDIATE_SUBGROUPS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":

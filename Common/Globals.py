@@ -203,6 +203,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
+    "Subgroups": "subgroups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
@@ -294,6 +295,7 @@ ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
+GET_IMMEDIATE_SUBGROUPS = False
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

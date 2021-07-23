@@ -4,7 +4,9 @@ from wx.core import TextEntryDialog
 from Utility.Resource import displayMessageBox, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import createGroup, deleteGroup, getAllGroups
+
 import wx
+import Common.Globals as Globals
 
 
 class GroupManagement(wx.Dialog):
@@ -100,7 +102,7 @@ class GroupManagement(wx.Dialog):
     def createTreeLayout(self):
         unsorted = []
         for group in self.groups:
-            parentId = group.parent.split("/")[-2] if group.parent else None
+            parentId = self.getGroupIdFromURL(group.parent)
             if not group.parent:
                 self.groupTree[group.id] = []
                 self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
@@ -118,7 +120,7 @@ class GroupManagement(wx.Dialog):
         while len(unsorted) > 0:
             newUnsorted = []
             for group in unsorted:
-                parentId = group.parent.split("/")[-2] if group.parent else None
+                parentId = self.getGroupIdFromURL(group.parent)
                 success = self.addGroupAsChild(self.groupTree, parentId, group)
                 if not success:
                     newUnsorted.append(group)
@@ -216,3 +218,29 @@ class GroupManagement(wx.Dialog):
         else:
             self.button_1.Enable(False)
             self.button_2.Enable(False)
+
+    def getSubGroups(self, groupId):
+        return self.getSubGroupsHelper(self.groupTree, groupId)
+
+    def getSubGroupsHelper(self, src, groupId):
+        for id, children in src.items():
+            if id == groupId:
+                childIds = []
+                self.getChildIds(children, childIds)
+                return childIds
+            else:
+                for child in children:
+                    childrenList = self.getSubGroupsHelper(child, groupId)
+                    if childrenList:
+                        return childrenList
+        return []
+
+    def getChildIds(self, children, childIds):
+        for childDict in children:
+            childIds += list(childDict.keys())
+            if not Globals.GET_IMMEDIATE_SUBGROUPS:
+                for c in childDict.values():
+                    self.getChildIds(c, childIds)
+
+    def getGroupIdFromURL(self, url):
+        return url.split("/")[-2] if url else None
