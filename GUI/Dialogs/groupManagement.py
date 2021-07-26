@@ -17,12 +17,20 @@ import wx.grid as gridlib
 import Common.Globals as Globals
 
 
+class TabPanel(wx.Panel):
+    def __init__(self, parent, id, name):
+        """"""
+        super().__init__(parent=parent, id=id)
+        self.name = name
+
+
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):
         # begin wxGlade: MyDialog.__init__
         self.groups = groups
         self.groupTree = {}
         self.tree = {}
+        self.current_page = None
 
         super(GroupManagement, self).__init__(
             None,
@@ -35,15 +43,15 @@ class GroupManagement(wx.Dialog):
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
-        grid_sizer_3 = wx.GridSizer(1, 2, 0, 0)
-        sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
+        self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        grid_sizer_3.Add(self.panel_1, 0, wx.ALL | wx.EXPAND, 5)
+        self.notebook_1_pane_1 = TabPanel(self.notebook_1, wx.ID_ANY, "Single")
+        self.notebook_1.AddPage(self.notebook_1_pane_1, "Single")
 
         grid_sizer_1 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Groups:")
+        label_1 = wx.StaticText(self.notebook_1_pane_1, wx.ID_ANY, "Groups:")
         label_1.SetFont(
             wx.Font(
                 11,
@@ -57,7 +65,7 @@ class GroupManagement(wx.Dialog):
         grid_sizer_1.Add(label_1, 0, 0, 0)
 
         label_2 = wx.StaticText(
-            self.panel_1,
+            self.notebook_1_pane_1,
             wx.ID_ANY,
             "Select a group from the list below and then select one of the actions below",
             style=wx.ST_ELLIPSIZE_END,
@@ -68,23 +76,23 @@ class GroupManagement(wx.Dialog):
         label_2.Wrap(1)
         grid_sizer_1.Add(label_2, 0, wx.BOTTOM | wx.EXPAND, 5)
 
-        self.button_3 = wx.Button(self.panel_1, wx.ID_REFRESH, "")
+        self.button_3 = wx.Button(self.notebook_1_pane_1, wx.ID_REFRESH, "")
         self.button_3.SetToolTip("Rerfresh Group listing")
         grid_sizer_1.Add(self.button_3, 0, wx.ALIGN_RIGHT | wx.BOTTOM, 5)
 
         self.tree_ctrl_1 = wx.TreeCtrl(
-            self.panel_1,
+            self.notebook_1_pane_1,
             wx.ID_ANY,
             style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS,
         )
         grid_sizer_1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
 
-        self.panel_2 = wx.Panel(self, wx.ID_ANY)
-        grid_sizer_3.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
+        self.notebook_1_pane_2 = TabPanel(self.notebook_1, wx.ID_ANY, "Bulk")
+        self.notebook_1.AddPage(self.notebook_1_pane_2, "Bulk")
 
         grid_sizer_4 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "CSV Upload:")
+        label_4 = wx.StaticText(self.notebook_1_pane_2, wx.ID_ANY, "CSV Upload:")
         label_4.SetFont(
             wx.Font(
                 11,
@@ -98,7 +106,7 @@ class GroupManagement(wx.Dialog):
         grid_sizer_4.Add(label_4, 0, 0, 0)
 
         label_3 = wx.StaticText(
-            self.panel_2,
+            self.notebook_1_pane_2,
             wx.ID_ANY,
             "Upload a CSV to rename a bunch of groups: ",
             style=wx.ST_ELLIPSIZE_END,
@@ -109,14 +117,14 @@ class GroupManagement(wx.Dialog):
         label_3.Wrap(1)
         grid_sizer_4.Add(label_3, 0, wx.BOTTOM | wx.EXPAND, 5)
 
-        self.button_5 = wx.Button(self.panel_2, wx.ID_ANY, "Upload CSV")
-        self.button_5.SetToolTip("Upload CSV file")
-        grid_sizer_4.Add(self.button_5, 0, wx.ALIGN_RIGHT | wx.BOTTOM | wx.RIGHT, 5)
+        self.button_6 = wx.Button(self.notebook_1_pane_2, wx.ID_ANY, "Upload CSV")
+        self.button_6.SetToolTip("Upload CSV file")
+        grid_sizer_4.Add(self.button_6, 0, wx.ALIGN_RIGHT | wx.BOTTOM | wx.RIGHT, 5)
 
-        self.grid_1 = wx.grid.Grid(self.panel_2, wx.ID_ANY, size=(1, 1))
+        self.grid_1 = wx.grid.Grid(self.notebook_1_pane_2, wx.ID_ANY, size=(1, 1))
         self.grid_1.CreateGrid(0, 3)
         self.grid_1.EnableDragGridSize(0)
-        self.grid_1.SetColLabelValue(0, "Old Group Name")
+        self.grid_1.SetColLabelValue(0, "Group Name")
         self.grid_1.SetColLabelValue(1, "Parent Group")
         self.grid_1.SetColLabelValue(2, "New Group Name")
         grid_sizer_4.Add(self.grid_1, 1, wx.EXPAND, 0)
@@ -137,11 +145,11 @@ class GroupManagement(wx.Dialog):
 
         grid_sizer_4.AddGrowableRow(3)
         grid_sizer_4.AddGrowableCol(0)
-        self.panel_2.SetSizer(grid_sizer_4)
+        self.notebook_1_pane_2.SetSizer(grid_sizer_4)
 
         grid_sizer_1.AddGrowableRow(3)
         grid_sizer_1.AddGrowableCol(0)
-        self.panel_1.SetSizer(grid_sizer_1)
+        self.notebook_1_pane_1.SetSizer(grid_sizer_1)
 
         self.SetSizer(sizer_1)
 
@@ -157,8 +165,9 @@ class GroupManagement(wx.Dialog):
         self.button_3.Bind(wx.EVT_BUTTON, self.refreshTree)
         self.button_2.Bind(wx.EVT_BUTTON, self.deleteGroup)
         self.button_1.Bind(wx.EVT_BUTTON, self.addSubGroup)
-        self.button_5.Bind(wx.EVT_BUTTON, self.uploadCSV)
+        self.button_6.Bind(wx.EVT_BUTTON, self.uploadCSV)
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
+        self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
@@ -231,46 +240,91 @@ class GroupManagement(wx.Dialog):
         self.SetCursor(myCursor)
 
     def deleteGroup(self, event):
-        if self.tree_ctrl_1.GetSelection():
-            hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
-            if (
-                not hasChild
-                and self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
-                not in self.groupTree.keys()
-            ):
-                self.setCursorBusy()
-                deleteGroup(
-                    self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
+        if not self.current_page or self.current_page.name == "Single":
+            if self.tree_ctrl_1.GetSelection():
+                hasChild = self.tree_ctrl_1.ItemHasChildren(
+                    self.tree_ctrl_1.GetSelection()
                 )
-                self.refreshTree()
-                self.setCursorDefault()
+                if (
+                    not hasChild
+                    and self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
+                    not in self.groupTree.keys()
+                ):
+                    self.setCursorBusy()
+                    deleteGroup(
+                        self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
+                    )
+                    self.refreshTree()
+                    self.setCursorDefault()
+        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
+            numSuccess = 0
+            for row in range(self.grid_1.GetNumberRows()):
+                oldName = self.grid_1.GetCellValue(row, 0)
+                parent = self.grid_1.GetCellValue(row, 1)
+
+                if oldName and parent:
+                    matchingGroups = getAllGroups(name=oldName)
+                    for group in matchingGroups.results:
+                        parentName = fetchGroupName(group.parent)
+                        if parent == parentName:
+                            deleteGroup(group.id)
+                            numSuccess += 1
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+            displayMessageBox("%s Groups should be deleted" % (numSuccess))
 
     def addSubGroup(self, event):
-        if self.tree_ctrl_1.GetSelection():
-            groupName = None
-            with TextEntryDialog(
-                self,
-                "Please enter new Group Name:",
-            ) as dlg:
-                if dlg.ShowModal() == wx.ID_OK:
-                    groupName = dlg.GetValue()
-            if groupName:
-                self.setCursorBusy()
-                resp = createGroup(
-                    groupName,
-                    self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection()),
-                )
-                if type(resp) == dict and "errors" in resp:
-                    displayMessageBox(
-                        (
-                            "Error (%s): %s" % (resp["status"], resp["message"]),
-                            wx.ICON_ERROR,
-                        )
+        self.setCursorBusy()
+        if not self.current_page or self.current_page.name == "Single":
+            if self.tree_ctrl_1.GetSelection():
+                groupName = None
+                with TextEntryDialog(
+                    self,
+                    "Please enter new Group Name:",
+                ) as dlg:
+                    if dlg.ShowModal() == wx.ID_OK:
+                        groupName = dlg.GetValue()
+                if groupName:
+                    resp = createGroup(
+                        groupName,
+                        self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection()),
                     )
-                else:
-                    displayMessageBox("%s has been created" % groupName)
-                    self.refreshTree()
-            self.setCursorDefault()
+                    if type(resp) == dict and "errors" in resp:
+                        displayMessageBox(
+                            (
+                                "Error (%s): %s" % (resp["status"], resp["message"]),
+                                wx.ICON_ERROR,
+                            )
+                        )
+                    else:
+                        displayMessageBox("%s has been created" % groupName)
+                        self.refreshTree()
+        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
+            numSuccess = 0
+            for row in range(self.grid_1.GetNumberRows()):
+                oldName = self.grid_1.GetCellValue(row, 0)
+                parent = self.grid_1.GetCellValue(row, 1)
+
+                if oldName and parent:
+                    matchingGroups = getAllGroups(name=parent)
+                    for group in matchingGroups.results:
+                        parentName = fetchGroupName(group.parent)
+                        if parent == parentName:
+                            resp = createGroup(oldName, group.id)
+                            if (
+                                resp
+                                and resp.status_code <= 299
+                                and resp.status_code >= 200
+                            ):
+                                numSuccess += 1
+                            break
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+            displayMessageBox(
+                "%s out of %s Groups have been created"
+                % (numSuccess, self.grid_1.GetNumberRows())
+            )
+        self.setCursorDefault()
 
     def checkActions(self, event=None):
         if self.tree_ctrl_1.GetSelection():
@@ -289,9 +343,14 @@ class GroupManagement(wx.Dialog):
             self.button_1.Enable(False)
             self.button_2.Enable(False)
             self.button_4.Enable(False)
+
         if self.grid_1.GetNumberRows() > 0:
+            self.button_1.Enable(True)
+            self.button_2.Enable(True)
             self.button_4.Enable(True)
         else:
+            self.button_1.Enable(False)
+            self.button_2.Enable(False)
             self.button_4.Enable(False)
 
     def getSubGroups(self, groupId):
@@ -321,34 +380,34 @@ class GroupManagement(wx.Dialog):
         return url.split("/")[-2] if url else None
 
     def renameGroup(self, event):
-        if self.tree_ctrl_1.GetSelection():
-            groupName = None
-            with TextEntryDialog(
-                self,
-                "Please enter new Group Name for %s:"
-                % self.tree_ctrl_1.GetItemText(self.tree_ctrl_1.GetSelection()),
-            ) as dlg:
-                if dlg.ShowModal() == wx.ID_OK:
-                    groupName = dlg.GetValue()
-            if groupName:
-                self.setCursorBusy()
-                resp = renameGroup(
-                    self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection()),
-                    groupName,
-                )
-                if type(resp) == dict and "errors" in resp:
-                    displayMessageBox(
-                        (
-                            "Error (%s): %s" % (resp["status"], resp["message"]),
-                            wx.ICON_ERROR,
-                        )
+        if not self.current_page or self.current_page.name == "Single":
+            if self.tree_ctrl_1.GetSelection():
+                groupName = None
+                with TextEntryDialog(
+                    self,
+                    "Please enter new Group Name for %s:"
+                    % self.tree_ctrl_1.GetItemText(self.tree_ctrl_1.GetSelection()),
+                ) as dlg:
+                    if dlg.ShowModal() == wx.ID_OK:
+                        groupName = dlg.GetValue()
+                if groupName:
+                    self.setCursorBusy()
+                    resp = renameGroup(
+                        self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection()),
+                        groupName,
                     )
-                else:
-                    displayMessageBox("%s has been renamed" % groupName)
-                    self.refreshTree()
-            self.setCursorDefault()
-
-        if self.grid_1.GetNumberRows() > 0:
+                    if type(resp) == dict and "errors" in resp:
+                        displayMessageBox(
+                            (
+                                "Error (%s): %s" % (resp["status"], resp["message"]),
+                                wx.ICON_ERROR,
+                            )
+                        )
+                    else:
+                        displayMessageBox("%s has been renamed" % groupName)
+                        self.refreshTree()
+                self.setCursorDefault()
+        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
             numSuccess = 0
             for row in range(self.grid_1.GetNumberRows()):
                 oldName = self.grid_1.GetCellValue(row, 0)
@@ -374,7 +433,6 @@ class GroupManagement(wx.Dialog):
                 "%s out of %s Groups have been renamed"
                 % (numSuccess, self.grid_1.GetNumberRows())
             )
-            self.refreshTree()
 
     def uploadCSV(self, event):
         filePath = None
@@ -413,3 +471,9 @@ class GroupManagement(wx.Dialog):
                     colNum += 1
             self.grid_1.AutoSizeColumns()
             self.checkActions()
+
+    def on_tab_change(self, event):
+        self.current_page = self.notebook_1.GetPage(event.GetSelection())
+        if self.current_page.name == "Single":
+            self.refreshTree()
+        event.Skip()
