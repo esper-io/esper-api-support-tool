@@ -2420,39 +2420,47 @@ class NewFrameLayout(wx.Frame):
             dlg.DestroyLater()
 
     def moveGroup(self, event=None):
-        choices = list(self.sidePanel.groups.keys())
-        groupMultiDialog = MultiSelectSearchDlg(
-            self,
-            choices,
-            label="Select Group to move to",
-            title="Select Group to move to",
-            single=True,
-        )
+        if self.sidePanel.selectedDevicesList:
+            choices = list(self.sidePanel.groups.keys())
+            groupMultiDialog = MultiSelectSearchDlg(
+                self,
+                choices,
+                label="Select Group to move to",
+                title="Select Group to move to",
+                single=True,
+            )
 
-        if groupMultiDialog.ShowModal() == wx.ID_OK:
-            selections = groupMultiDialog.GetSelections()
-            if selections:
-                selction = selections[0]
-                groups = getAllGroups(name=selction)
-            if groups.results:
-                resp = moveGroup(
-                    groups.results[0].id, self.sidePanel.selectedDevicesList
-                )
-                if resp and resp.status_code == 200:
-                    displayMessageBox(
-                        "Selected device have been moved to the %s Group."
-                        % groups.results[0].name
+            if groupMultiDialog.ShowModal() == wx.ID_OK:
+                selections = groupMultiDialog.GetSelections()
+                if selections:
+                    selction = selections[0]
+                    groups = getAllGroups(name=selction)
+                if groups.results:
+                    resp = moveGroup(
+                        groups.results[0].id, self.sidePanel.selectedDevicesList
                     )
-                elif resp:
-                    displayMessageBox(str(resp))
+                    if resp and resp.status_code == 200:
+                        displayMessageBox(
+                            "Selected device have been moved to the %s Group."
+                            % groups.results[0].name
+                        )
+                    elif resp:
+                        displayMessageBox(str(resp))
+                else:
+                    displayMessageBox("No Group found with the name: %s" % selction)
+                return
             else:
-                displayMessageBox("No Group found with the name: %s" % selction)
-            return
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return
         else:
-            self.isRunning = False
-            self.setCursorDefault()
-            self.toggleEnabledState(True)
-            return
+            displayMessageBox(
+                (
+                    "Please select a Group and then the devices you wish to move!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )
 
     def createGroup(self, event):
         with self.groupManage as manage:

@@ -108,7 +108,7 @@ class GroupManagement(wx.Dialog):
         label_3 = wx.StaticText(
             self.notebook_1_pane_2,
             wx.ID_ANY,
-            "Upload a CSV to rename a bunch of groups: ",
+            "Upload a CSV bulk perform an Action (Adding Groups works best with unique Parent names): ",
             style=wx.ST_ELLIPSIZE_END,
         )
         label_3.SetToolTip(
@@ -269,8 +269,7 @@ class GroupManagement(wx.Dialog):
                         if parent == parentName:
                             deleteGroup(group.id)
                             numSuccess += 1
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+                            break
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
 
     def addSubGroup(self, event):
@@ -308,18 +307,11 @@ class GroupManagement(wx.Dialog):
                 if oldName and parent:
                     matchingGroups = getAllGroups(name=parent)
                     for group in matchingGroups.results:
-                        parentName = fetchGroupName(group.parent)
-                        if parent == parentName:
+                        if parent == group.name:
                             resp = createGroup(oldName, group.id)
-                            if (
-                                resp
-                                and resp.status_code <= 299
-                                and resp.status_code >= 200
-                            ):
+                            if resp:
                                 numSuccess += 1
                             break
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             displayMessageBox(
                 "%s out of %s Groups have been created"
                 % (numSuccess, self.grid_1.GetNumberRows())
@@ -427,8 +419,6 @@ class GroupManagement(wx.Dialog):
                             ):
                                 numSuccess += 1
                             break
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             displayMessageBox(
                 "%s out of %s Groups have been renamed"
                 % (numSuccess, self.grid_1.GetNumberRows())
@@ -476,4 +466,6 @@ class GroupManagement(wx.Dialog):
         self.current_page = self.notebook_1.GetPage(event.GetSelection())
         if self.current_page.name == "Single":
             self.refreshTree()
+        elif self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         event.Skip()
