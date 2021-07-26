@@ -62,7 +62,7 @@ class GroupManagement(wx.Dialog):
                 "",
             )
         )
-        grid_sizer_1.Add(label_1, 0, 0, 0)
+        grid_sizer_1.Add(label_1, 0, wx.TOP, 5)
 
         label_2 = wx.StaticText(
             self.notebook_1_pane_1,
@@ -103,7 +103,7 @@ class GroupManagement(wx.Dialog):
                 "",
             )
         )
-        grid_sizer_4.Add(label_4, 0, 0, 0)
+        grid_sizer_4.Add(label_4, 0, wx.TOP, 5)
 
         label_3 = wx.StaticText(
             self.notebook_1_pane_2,
