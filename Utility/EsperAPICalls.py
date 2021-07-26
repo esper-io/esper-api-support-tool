@@ -67,7 +67,7 @@ def getDeviceDetail(deviceId):
 
 
 @api_tool_decorator()
-def fetchGroupName(groupURL):
+def fetchGroupName(groupURL, returnJson=False):
     headers = getHeader()
     resp = performGetRequestWithRetry(groupURL, headers=headers)
     try:
@@ -76,7 +76,10 @@ def fetchGroupName(groupURL):
             logBadResponse(groupURL, resp, json_resp)
 
             if "name" in json_resp:
-                return json_resp["name"]
+                if returnJson:
+                    return json_resp
+                else:
+                    return json_resp["name"]
     except Exception as e:
         ApiToolLog().LogError(e)
         logBadResponse(groupURL, resp, None)

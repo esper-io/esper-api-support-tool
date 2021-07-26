@@ -125,7 +125,7 @@ class GroupManagement(wx.Dialog):
         self.grid_1.CreateGrid(0, 3)
         self.grid_1.EnableDragGridSize(0)
         self.grid_1.SetColLabelValue(0, "Group Name")
-        self.grid_1.SetColLabelValue(1, "Parent Group")
+        self.grid_1.SetColLabelValue(1, "Parent Group Identifier")
         self.grid_1.SetColLabelValue(2, "New Group Name")
         grid_sizer_4.Add(self.grid_1, 1, wx.EXPAND, 0)
 
@@ -265,8 +265,12 @@ class GroupManagement(wx.Dialog):
                 if oldName and parent:
                     matchingGroups = getAllGroups(name=oldName)
                     for group in matchingGroups.results:
-                        parentName = fetchGroupName(group.parent)
-                        if parent == parentName:
+                        parentGroup = fetchGroupName(group.parent, returnJson=True)
+                        if parent == parentGroup["name"] or (
+                            len(parent) == 36
+                            and "-" in parent
+                            and parentGroup["id"] == parent
+                        ):
                             deleteGroup(group.id)
                             numSuccess += 1
                             break
@@ -305,13 +309,18 @@ class GroupManagement(wx.Dialog):
                 parent = self.grid_1.GetCellValue(row, 1)
 
                 if oldName and parent:
-                    matchingGroups = getAllGroups(name=parent)
-                    for group in matchingGroups.results:
-                        if parent == group.name:
-                            resp = createGroup(oldName, group.id)
-                            if resp:
-                                numSuccess += 1
-                            break
+                    if len(parent) == 36 and "-" in parent:
+                        resp = createGroup(oldName, parent)
+                        if resp:
+                            numSuccess += 1
+                    else:
+                        matchingGroups = getAllGroups(name=parent)
+                        for group in matchingGroups.results:
+                            if parent == group.name:
+                                resp = createGroup(oldName, group.id)
+                                if resp:
+                                    numSuccess += 1
+                                break
             displayMessageBox(
                 "%s out of %s Groups have been created"
                 % (numSuccess, self.grid_1.GetNumberRows())
@@ -409,8 +418,12 @@ class GroupManagement(wx.Dialog):
                 if oldName and parent and newName:
                     matchingGroups = getAllGroups(name=oldName)
                     for group in matchingGroups.results:
-                        parentName = fetchGroupName(group.parent)
-                        if parent == parentName:
+                        parentGroup = fetchGroupName(group.parent, returnJson=True)
+                        if parent == parentGroup["name"] or (
+                            len(parent) == 36
+                            and "-" in parent
+                            and parentGroup["id"] == parent
+                        ):
                             resp = renameGroup(group.id, newName)
                             if (
                                 resp
@@ -425,6 +438,8 @@ class GroupManagement(wx.Dialog):
             )
 
     def uploadCSV(self, event):
+        if self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         filePath = None
         with wx.FileDialog(
             self,
