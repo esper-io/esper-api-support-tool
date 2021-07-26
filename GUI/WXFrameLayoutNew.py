@@ -533,7 +533,7 @@ class NewFrameLayout(wx.Frame):
                 rowValues.append(value)
             gridData.append(rowValues)
 
-        with open(inFile, "w", newline="") as csvfile:
+        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
 

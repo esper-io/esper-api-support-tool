@@ -1476,3 +1476,15 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
+
+
+def renameGroup(groupId, newName):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/enterprise/{enterprise}/devicegroup/{group}/".format(
+        tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
+    )
+    body = {"name": newName}
+    resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+    return resp
