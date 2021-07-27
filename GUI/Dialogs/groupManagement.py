@@ -328,24 +328,24 @@ class GroupManagement(wx.Dialog):
         self.setCursorDefault()
 
     def checkActions(self, event=None):
-        if self.tree_ctrl_1.GetSelection():
-            self.button_1.Enable(True)
-            self.button_4.Enable(True)
-            hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
-            if (
-                hasChild
-                or self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
-                in self.groupTree.keys()
-            ):
-                self.button_2.Enable(False)
+        if not self.current_page or self.current_page.name == "Single":
+            if self.tree_ctrl_1.GetSelection():
+                self.button_1.Enable(True)
+                self.button_4.Enable(True)
+                hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
+                if (
+                    hasChild
+                    or self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
+                    in self.groupTree.keys()
+                ):
+                    self.button_2.Enable(False)
+                else:
+                    self.button_2.Enable(True)
             else:
-                self.button_2.Enable(True)
-        else:
-            self.button_1.Enable(False)
-            self.button_2.Enable(False)
-            self.button_4.Enable(False)
-
-        if self.grid_1.GetNumberRows() > 0:
+                self.button_1.Enable(False)
+                self.button_2.Enable(False)
+                self.button_4.Enable(False)
+        elif self.grid_1.GetNumberRows() > 0:
             self.button_1.Enable(True)
             self.button_2.Enable(True)
             self.button_4.Enable(True)
