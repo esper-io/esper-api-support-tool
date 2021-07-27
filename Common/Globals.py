@@ -9,7 +9,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.186"
+VERSION = "v0.187"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -55,6 +55,7 @@ GENERAL_ACTIONS = {
     "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
     "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
+    "Action -> Move Device to new Group": GeneralActions.MOVE_GROUP.value,
 }
 
 GRID_ACTIONS = {
@@ -202,6 +203,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
+    "Subgroups": "subgroups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
@@ -293,6 +295,7 @@ ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
+GET_IMMEDIATE_SUBGROUPS = False
 limit = (
     MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
 )

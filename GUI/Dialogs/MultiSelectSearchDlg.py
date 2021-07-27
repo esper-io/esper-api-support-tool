@@ -7,7 +7,7 @@ from Common.decorator import api_tool_decorator
 
 
 class MultiSelectSearchDlg(wx.Dialog):
-    def __init__(self, parent, choices, label="", title=""):
+    def __init__(self, parent, choices, label="", title="", single=False):
         super(MultiSelectSearchDlg, self).__init__(
             parent,
             wx.ID_ANY,
@@ -64,11 +64,12 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         grid_sizer_1 = wx.GridSizer(1, 1, 0, 0)
 
+        listStyle = wx.LB_MULTIPLE | wx.LB_NEEDED_SB if not single else wx.LB_NEEDED_SB
         self.check_list_box_1 = wx.CheckListBox(
             self.panel_2,
             wx.ID_ANY,
             choices=choices,
-            style=wx.LB_MULTIPLE | wx.LB_NEEDED_SB,
+            style=listStyle,
         )
         grid_sizer_1.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
 

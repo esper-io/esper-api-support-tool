@@ -14,6 +14,7 @@ class GeneralActions(Enum):
     SET_APP_STATE_HIDE = 6
     SET_APP_STATE_DISABLE = 7
     REMOVE_NON_WHITELIST_AP = 8
+    MOVE_GROUP = 9
 
 
 class GridActions(Enum):

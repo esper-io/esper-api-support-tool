@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from GUI.Dialogs.groupManagement import GroupManagement
+from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 import sys
@@ -48,6 +50,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
     getInstallDevices,
+    moveGroup,
     setAppState,
     setKiosk,
     setMulti,
@@ -101,6 +104,8 @@ class NewFrameLayout(wx.Frame):
         self.CSVUploaded = False
         self.defaultDir = os.getcwd()
         self.gridArrowState = {"next": False, "prev": False}
+        self.groups = None
+        self.groupManage = None
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -427,6 +432,9 @@ class NewFrameLayout(wx.Frame):
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
+        if self.groupManage:
+            self.groupManage.Close()
+            self.groupManage.DestroyLater()
         thread = ApiToolLog().LogApiRequestOccurrence(
             None, Globals.API_REQUEST_TRACKER, True
         )
@@ -525,7 +533,7 @@ class NewFrameLayout(wx.Frame):
                 rowValues.append(value)
             gridData.append(rowValues)
 
-        with open(inFile, "w", newline="") as csvfile:
+        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
 
@@ -1040,6 +1048,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SET_APP_STATE_HIDE.value
                 or action == GeneralActions.SET_APP_STATE_SHOW.value
                 or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
+                or action == GeneralActions.MOVE_GROUP.value
                 or action == GridActions.SET_APP_STATE_DISABLE.value
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
@@ -1076,6 +1085,8 @@ class NewFrameLayout(wx.Frame):
         """ Populate Group Choice """
         results = event.GetValue().results
         num = 1
+        self.groups = results
+        self.groupManage = GroupManagement(self.groups)
         results = sorted(
             results,
             key=lambda i: i.name.lower(),
@@ -1319,6 +1330,10 @@ class NewFrameLayout(wx.Frame):
                     self.setCursorDefault()
                     self.toggleEnabledState(True)
                     return
+        if actionClientData == GeneralActions.MOVE_GROUP.value:
+            self.moveGroup()
+            return
+
         if (
             self.sidePanel.selectedGroupsList
             and not self.sidePanel.selectedDevicesList
@@ -2370,6 +2385,8 @@ class NewFrameLayout(wx.Frame):
         self.menubar.installedDevices.Enable(state)
         self.menubar.clone.Enable(state)
         self.menubar.command.Enable(state)
+        self.menubar.collectionSubMenu.Enable(state)
+        self.menubar.groupSubMenu.Enable(state)
 
     def onInstalledDevices(self, event):
         with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
@@ -2401,3 +2418,53 @@ class NewFrameLayout(wx.Frame):
                             )
                         )
             dlg.DestroyLater()
+
+    def moveGroup(self, event=None):
+        if self.sidePanel.selectedDevicesList:
+            choices = list(self.sidePanel.groups.keys())
+            groupMultiDialog = MultiSelectSearchDlg(
+                self,
+                choices,
+                label="Select Group to move to",
+                title="Select Group to move to",
+                single=True,
+            )
+
+            if groupMultiDialog.ShowModal() == wx.ID_OK:
+                selections = groupMultiDialog.GetSelections()
+                if selections:
+                    selction = selections[0]
+                    groups = getAllGroups(name=selction)
+                if groups.results:
+                    resp = moveGroup(
+                        groups.results[0].id, self.sidePanel.selectedDevicesList
+                    )
+                    if resp and resp.status_code == 200:
+                        displayMessageBox(
+                            "Selected device have been moved to the %s Group."
+                            % groups.results[0].name
+                        )
+                    elif resp:
+                        displayMessageBox(str(resp))
+                else:
+                    displayMessageBox("No Group found with the name: %s" % selction)
+                return
+            else:
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return
+        else:
+            displayMessageBox(
+                (
+                    "Please select a Group and then the devices you wish to move!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )
+
+    def createGroup(self, event):
+        if not self.groupManage:
+            self.groupManage = GroupManagement(self.groups)
+        with self.groupManage as manage:
+            manage.ShowModal()
+            self.groupManage = None
