@@ -2463,5 +2463,8 @@ class NewFrameLayout(wx.Frame):
             )
 
     def createGroup(self, event):
+        if not self.groupManage:
+            self.groupManage = GroupManagement(self.groups)
         with self.groupManage as manage:
             manage.ShowModal()
+            self.groupManage = None
