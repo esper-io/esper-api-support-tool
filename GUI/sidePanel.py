@@ -17,8 +17,11 @@ class SidePanel(wx.Panel):
         self.parentFrame = parentFrame
         self.configChoice = {}
         self.selectedDevicesList = []
+        self.deviceResp = None
         self.devices = {}
+        self.devicesExtended = {}
         self.selectedGroupsList = []
+        self.groupsResp = None
         self.groups = {}
         self.enterpriseApps = []
         self.selectedDeviceApps = []
@@ -305,6 +308,7 @@ class SidePanel(wx.Panel):
                     choices,
                     label="Select Group(s)",
                     title="Select Group(s)",
+                    resp=self.groupsResp,
                 )
 
             if self.groupMultiDialog.ShowModal() == wx.ID_OK:
@@ -342,6 +346,7 @@ class SidePanel(wx.Panel):
                     choices,
                     label="Select Device(s)",
                     title="Select Device(s)",
+                    resp=self.deviceResp,
                 )
             if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
@@ -351,10 +356,16 @@ class SidePanel(wx.Panel):
                 self.selectedDeviceApps = []
                 selections = self.deviceMultiDialog.GetSelections()
                 for deviceName in selections:
-                    deviceId = self.devices[deviceName]
-                    self.selectedDevices.Append(deviceName)
-                    if deviceId not in self.selectedDevicesList:
-                        self.selectedDevicesList.append(deviceId)
+                    deviceId = None
+                    if deviceName in self.devices.keys():
+                        deviceId = self.devices[deviceName]
+                    elif deviceName in self.devicesExtended.keys():
+                        deviceId = self.devicesExtended[deviceName]
+                        self.devices[deviceName] = deviceId
+                    if deviceId:
+                        self.selectedDevices.Append(deviceName)
+                        if deviceId not in self.selectedDevicesList:
+                            self.selectedDevicesList.append(deviceId)
             self.parentFrame.onDeviceSelections(None)
 
     def clearStoredApps(self):
