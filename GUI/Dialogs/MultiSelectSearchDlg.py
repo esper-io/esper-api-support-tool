@@ -1,32 +1,45 @@
 #!/usr/bin/env python3
 
+from Utility.EsperAPICalls import getAllDevices, getAllGroups
+from Utility.Resource import resourcePath, scale_bitmap
 import wx
+import math
 import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 
 
 class MultiSelectSearchDlg(wx.Dialog):
-    def __init__(self, parent, choices, label="", title="", single=False):
+    def __init__(self, parent, choices, label="", title="", single=False, resp=None):
+        size = (500, 400)
         super(MultiSelectSearchDlg, self).__init__(
             parent,
             wx.ID_ANY,
-            size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE,
+            size=size,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
-        self.SetSize((400, 300))
+        self.SetSize(size)
+        self.SetMinSize(size)
         self.SetTitle(title)
 
-        self.originalChoices = choices
+        self.originalChoices = [choices]
         self.selected = []
         self.isFiltered = False
+        self.label = label
+        self.page = 0
+        self.resp = resp
+        self.limit = math.floor(resp.count / len(resp.results))
+        self.group = None
+
+        if hasattr(parent, "sidePanel"):
+            self.group = parent.sidePanel.selectedGroupsList
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_3 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_3 = wx.FlexGridSizer(3, 1, 0, 0)
 
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)
         sizer_3.Add(self.panel_3, 1, wx.EXPAND, 0)
@@ -52,7 +65,6 @@ class MultiSelectSearchDlg(wx.Dialog):
         sizer_4 = wx.GridSizer(1, 2, 0, 0)
 
         self.checkbox_1 = wx.CheckBox(self.panel_4, wx.ID_ANY, "Select All")
-        self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onSelectAll)
         sizer_4.Add(self.checkbox_1, 0, wx.EXPAND, 5)
 
         self.search = wx.SearchCtrl(self.panel_4, wx.ID_ANY, "")
@@ -62,7 +74,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
         sizer_3.Add(self.panel_2, 1, wx.EXPAND | wx.TOP, 5)
 
-        grid_sizer_1 = wx.GridSizer(1, 1, 0, 0)
+        grid_sizer_1 = wx.FlexGridSizer(2, 1, 0, 0)
 
         listStyle = wx.LB_MULTIPLE | wx.LB_NEEDED_SB if not single else wx.LB_NEEDED_SB
         self.check_list_box_1 = wx.CheckListBox(
@@ -73,6 +85,25 @@ class MultiSelectSearchDlg(wx.Dialog):
         )
         grid_sizer_1.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
 
+        grid_sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_1.Add(grid_sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND | wx.TOP, 5)
+
+        prev_icon = scale_bitmap(resourcePath("Images/prev.png"), 18, 18)
+        self.button_1 = wx.BitmapButton(
+            self.panel_2,
+            wx.ID_BACKWARD,
+            prev_icon,
+        )
+        grid_sizer_3.Add(self.button_1, 0, wx.RIGHT, 5)
+
+        next_icon = scale_bitmap(resourcePath("Images/next.png"), 18, 18)
+        self.button_2 = wx.BitmapButton(
+            self.panel_2,
+            wx.ID_FORWARD,
+            next_icon,
+        )
+        grid_sizer_3.Add(self.button_2, 0, wx.LEFT, 5)
+
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
@@ -82,6 +113,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         sizer_2.Realize()
 
+        grid_sizer_1.AddGrowableRow(0)
+        grid_sizer_1.AddGrowableCol(0)
         self.panel_2.SetSizer(grid_sizer_1)
 
         self.panel_4.SetSizer(sizer_4)
@@ -95,7 +128,10 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetSizer(sizer_1)
 
         self.SetAffirmativeId(self.button_OK.GetId())
-        self.SetEscapeId(wx.ID_CANCEL)
+
+        self.Layout()
+
+        self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onSelectAll)
 
         self.search.Bind(wx.EVT_SEARCH, self.onSearch)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
@@ -108,7 +144,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
 
-        self.Layout()
+        self.button_2.Bind(wx.EVT_BUTTON, self.onNext)
+        self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
+        self.checkPageButton()
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -138,14 +176,18 @@ class MultiSelectSearchDlg(wx.Dialog):
             sortedList = list(
                 filter(
                     lambda i: queryString.lower() in i.lower(),
-                    self.originalChoices,
+                    self.originalChoices[self.page],
                 )
             )
+            match = []
             for item in sortedList:
                 self.check_list_box_1.Append(item)
+                if item in self.selected:
+                    match.append(item)
+            self.check_list_box_1.SetCheckedStrings(match)
             self.isFiltered = True
         else:
-            for item in self.originalChoices:
+            for item in self.originalChoices[self.page]:
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
             self.isFiltered = False
@@ -169,7 +211,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         if "All devices" in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
-        elif len(self.selected) != len(self.originalChoices):
+        elif len(self.selected) != len(self.originalChoices[self.page]):
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
@@ -186,7 +228,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         if "All devices" in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
-        elif len(self.selected) != len(self.originalChoices):
+        elif len(self.selected) != len(self.originalChoices[self.page]):
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
@@ -203,15 +245,15 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
-            if "All devices" in self.originalChoices:
+            if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             else:
-                self.selected = self.originalChoices
+                self.selected = self.originalChoices[self.page]
         else:
             self.selected = []
         if not self.isFiltered:
             self.check_list_box_1.SetCheckedStrings(self.selected)
-        if self.selected != self.originalChoices and self.isFiltered:
+        if self.selected != self.originalChoices[self.page] and self.isFiltered:
             self.check_list_box_1.SetCheckedStrings([])
 
     @api_tool_decorator()
@@ -254,3 +296,87 @@ class MultiSelectSearchDlg(wx.Dialog):
             wx.TheClipboard.Close()
         if success:
             widget.WriteText(data.GetText())
+
+    def onNext(self, event):
+        self.setCursorBusy()
+        self.checkbox_1.Enable(False)
+        if self.page < self.limit:
+            self.page += 1
+        self.updateChoices()
+        self.checkPageButton()
+        self.search.Clear()
+        self.checkbox_1.Enable(True)
+        self.setCursorDefault()
+
+    def onPrev(self, event):
+        self.setCursorBusy()
+        if self.page > 0:
+            self.page -= 1
+        self.checkbox_1.Enable(False)
+        self.updateChoices()
+        self.checkPageButton()
+        self.search.Clear()
+        self.checkbox_1.Enable(True)
+        self.setCursorDefault()
+
+    def checkPageButton(self):
+        if self.page == 0:
+            self.button_1.Enable(False)
+        else:
+            self.button_1.Enable(True)
+
+        if self.page == self.limit:
+            self.button_2.Enable(False)
+        else:
+            self.button_2.Enable(True)
+
+    def updateChoices(self):
+        resp = None
+        if len(self.originalChoices) > self.page:
+            resp = self.originalChoices[self.page]
+        else:
+            if "device" in self.label.lower():
+                resp = getAllDevices(
+                    self.group,
+                    limit=len(self.resp.results),
+                    offset=len(self.resp.results) * self.page,
+                )
+            elif "group" in self.label.lower():
+                resp = getAllGroups(offset=len(self.resp.results) * self.page)
+            if resp:
+                self.originalChoices.append(self.processDevices(resp.results))
+
+        if resp:
+            self.check_list_box_1.Clear()
+            choices = self.originalChoices[self.page]
+            for entry in self.selected:
+                if entry not in choices:
+                    choices.append(entry)
+            for item in choices:
+                self.check_list_box_1.Append(item)
+            self.check_list_box_1.SetCheckedStrings(self.selected)
+
+    def setCursorBusy(self):
+        """ Set cursor icon to busy state """
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
+
+    def setCursorDefault(self):
+        """ Set cursor icon to busy state """
+        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+        self.SetCursor(myCursor)
+
+    def processDevices(self, chunk):
+        nameList = []
+        for device in chunk:
+            name = "%s %s %s %s" % (
+                device.hardware_info["manufacturer"],
+                device.hardware_info["model"],
+                device.device_name,
+                device.alias_name if device.alias_name else "",
+            )
+            if name and not name in self.Parent.sidePanel.devicesExtended:
+                self.Parent.sidePanel.devicesExtended[name] = device.id
+            if name not in nameList:
+                nameList.append(name)
+        return nameList

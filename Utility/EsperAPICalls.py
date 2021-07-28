@@ -406,7 +406,9 @@ def setdevicename(
 
 
 @api_tool_decorator()
-def getAllGroups(name="", maxAttempt=Globals.MAX_RETRY):
+def getAllGroups(
+    name="", limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY
+):
     """ Make a API call to get all Groups belonging to the Enterprise """
     try:
         api_instance = esperclient.DeviceGroupApi(
@@ -418,8 +420,8 @@ def getAllGroups(name="", maxAttempt=Globals.MAX_RETRY):
                 api_response = api_instance.get_all_groups(
                     Globals.enterprise_id,
                     name=name,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
+                    limit=limit,
+                    offset=offset,
                 )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
@@ -545,7 +547,9 @@ def getDeviceGroupForHost(
 
 
 @api_tool_decorator()
-def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
+def getAllDevices(
+    groupToUse, limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY
+):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not groupToUse:
         return None
@@ -561,8 +565,8 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                         response = api_instance.get_all_devices(
                             Globals.enterprise_id,
                             group=group,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
+                            limit=limit,
+                            offset=offset,
                         )
                         ApiToolLog().LogApiRequestOccurrence(
                             "getAllDevices",
@@ -575,11 +579,11 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                             ApiToolLog().LogError(e)
                             raise e
                         if hasattr(e, "status") and e.status == 504:
-                            Globals.limit = int(Globals.limit / 4)
+                            limit = int(limit / 4)
                             postEventToFrame(
                                 wxThread.myEVT_LOG,
                                 "---> Encountered a 504 error, retrying with lower limit: %s"
-                                % Globals.limit,
+                                % limit,
                             )
                         time.sleep(Globals.RETRY_SLEEP)
                 if not api_response:
@@ -592,8 +596,8 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                     api_response = api_instance.get_all_devices(
                         Globals.enterprise_id,
                         group=groupToUse,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
+                        limit=limit,
+                        offset=offset,
                     )
                     ApiToolLog().LogApiRequestOccurrence(
                         "getAllDevices",
@@ -606,11 +610,11 @@ def getAllDevices(groupToUse, maxAttempt=Globals.MAX_RETRY):
                         ApiToolLog().LogError(e)
                         raise e
                     if hasattr(e, "status") and e.status == 504:
-                        Globals.limit = int(Globals.limit / 4)
+                        limit = int(limit / 4)
                         postEventToFrame(
                             wxThread.myEVT_LOG,
                             "---> Encountered a 504 error, retrying with lower limit: %s"
-                            % Globals.limit,
+                            % limit,
                         )
                     time.sleep(Globals.RETRY_SLEEP)
         postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")

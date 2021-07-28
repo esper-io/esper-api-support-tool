@@ -1086,6 +1086,7 @@ class NewFrameLayout(wx.Frame):
         results = event.GetValue().results
         num = 1
         self.groups = results
+        self.sidePanel.groupsResp = event.GetValue()
         self.groupManage = GroupManagement(self.groups)
         results = sorted(
             results,
@@ -1139,7 +1140,8 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, groupId):
         """ Populate Device Choice """
-        api_response = getAllDevices(groupId)
+        api_response = getAllDevices(groupId, limit=Globals.limit)
+        self.sidePanel.deviceResp = api_response
         if hasattr(api_response, "results") and len(api_response.results):
             api_response.results = sorted(
                 api_response.results,
@@ -1410,9 +1412,15 @@ class NewFrameLayout(wx.Frame):
             Globals.LAST_DEVICE_ID = self.sidePanel.selectedDevicesList
             Globals.LAST_GROUP_ID = None
             for deviceId in self.sidePanel.selectedDevicesList:
-                deviceLabel = list(self.sidePanel.devices.keys())[
-                    list(self.sidePanel.devices.values()).index(deviceId)
-                ]
+                deviceLabel = None
+                try:
+                    deviceLabel = list(self.sidePanel.devices.keys())[
+                        list(self.sidePanel.devices.values()).index(deviceId)
+                    ]
+                except:
+                    deviceLabel = list(self.sidePanel.devicesExtended.keys())[
+                        list(self.sidePanel.devicesExtended.values()).index(deviceId)
+                    ]
                 self.Logging(
                     '---> Attempting to run action, "%s", on device, %s.'
                     % (actionLabel, deviceLabel)
