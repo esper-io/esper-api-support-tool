@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from urllib3 import packages
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
@@ -7,7 +8,7 @@ import Common.Globals as Globals
 
 
 class InstalledDevicesDlg(wx.Dialog):
-    def __init__(self, apps):
+    def __init__(self, apps, hide_version=False, title="Get Installed Devices"):
         super(InstalledDevicesDlg, self).__init__(
             None,
             wx.ID_ANY,
@@ -34,7 +35,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.versions = []
 
         self.SetMinSize((400, 300))
-        self.SetTitle("Get Installed Devices")
+        self.SetTitle(title)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -52,14 +53,16 @@ class InstalledDevicesDlg(wx.Dialog):
         self.list_box_1 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=self.appNameList)
         grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
-        grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
+        self.list_box_2 = None
+        if not hide_version:
+            grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
+            grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
 
-        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Versions:")
-        grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
+            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Versions:")
+            grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
-        self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[])
-        grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
+            self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[])
+            grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -73,8 +76,9 @@ class InstalledDevicesDlg(wx.Dialog):
 
         sizer_2.Realize()
 
-        grid_sizer_2.AddGrowableRow(1)
-        grid_sizer_2.AddGrowableCol(0)
+        if not hide_version:
+            grid_sizer_2.AddGrowableRow(1)
+            grid_sizer_2.AddGrowableCol(0)
 
         grid_sizer_3.AddGrowableRow(1)
         grid_sizer_3.AddGrowableCol(0)
@@ -91,7 +95,8 @@ class InstalledDevicesDlg(wx.Dialog):
         self.Fit()
         self.Centre()
 
-        self.list_box_1.Bind(wx.EVT_LISTBOX, self.onAppSelect)
+        if not hide_version:
+            self.list_box_1.Bind(wx.EVT_LISTBOX, self.onAppSelect)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     @api_tool_decorator()
@@ -132,18 +137,12 @@ class InstalledDevicesDlg(wx.Dialog):
         self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
         self.list_box_1.Enable(True)
 
-    def getAppValues(self):
+    def getAppValues(self, returnPkgName=False):
         app_id = None
+        packageName = None
         version_id = None
-        selection = self.list_box_2.GetSelection()
-        if selection >= 0:
-            matches = list(
-                filter(
-                    lambda x: x["app_name"]
-                    == self.list_box_1.GetString(self.list_box_1.GetSelection()),
-                    self.apps,
-                )
-            )
+        selection = self.list_box_2.GetSelection() if self.list_box_2 else None
+        if selection and selection >= 0:
             verMatches = list(
                 filter(
                     lambda x: x.version_code
@@ -151,8 +150,22 @@ class InstalledDevicesDlg(wx.Dialog):
                     self.versions,
                 )
             )
-            if matches:
-                app_id = matches[0]["id"]
             if verMatches:
                 version_id = verMatches[0].id
-        return app_id, version_id
+        if self.list_box_1.GetSelection() >= 0:
+            matches = list(
+                filter(
+                    lambda x: x["app_name"]
+                    == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    or x["appPkgName"]
+                    == self.list_box_1.GetString(self.list_box_1.GetSelection()),
+                    self.apps,
+                )
+            )
+            if matches:
+                app_id = matches[0]["id"]
+                packageName = matches[0]["packageName"]
+        if returnPkgName:
+            return app_id, version_id, packageName
+        else:
+            return app_id, version_id

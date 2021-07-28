@@ -50,6 +50,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
     getInstallDevices,
+    installAppOnGroups,
     moveGroup,
     setAppState,
     setKiosk,
@@ -58,6 +59,9 @@ from Utility.EsperAPICalls import (
     getAllDevices,
     getAllGroups,
     getAllApplications,
+    installAppOnDevices,
+    uninstallAppOnDevice,
+    uninstallAppOnGroup,
     validateConfiguration,
     getTokenInfo,
     clearAppData,
@@ -1235,6 +1239,8 @@ class NewFrameLayout(wx.Frame):
                 "app_name": app["application"]["application_name"],
                 appName: app["application"]["package_name"],
                 appPkgName: app["application"]["package_name"],
+                "appPkgName": appPkgName,
+                "packageName": app["application"]["package_name"],
                 "id": app["id"],
                 "app_state": None,
             }
@@ -1245,6 +1251,8 @@ class NewFrameLayout(wx.Frame):
                 "app_name": app.application_name,
                 appName: app.package_name,
                 appPkgName: app.package_name,
+                "appPkgName": appPkgName,
+                "packageName": app.package_name,
                 "versions": app.versions,
                 "id": app.id,
             }
@@ -1255,6 +1263,8 @@ class NewFrameLayout(wx.Frame):
                 "app_name": app["app_name"],
                 appName: app["package_name"],
                 appPkgName: app["package_name"],
+                "appPkgName": appPkgName,
+                "packageName": app["package_name"],
                 "app_state": app["state"],
                 "id": app["id"],
             }
@@ -1347,6 +1357,8 @@ class NewFrameLayout(wx.Frame):
             if (
                 actionClientData == GeneralActions.SET_KIOSK.value
                 or actionClientData == GeneralActions.CLEAR_APP_DATA.value
+                or actionClientData == GeneralActions.INSTALL_APP.value
+                or actionClientData == GeneralActions.UNINSTALL_APP.value
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
@@ -1395,6 +1407,8 @@ class NewFrameLayout(wx.Frame):
             if (
                 actionClientData == GeneralActions.SET_KIOSK.value
                 or actionClientData == GeneralActions.CLEAR_APP_DATA.value
+                or actionClientData == GeneralActions.INSTALL_APP.value
+                or actionClientData == GeneralActions.UNINSTALL_APP.value
             ) and (
                 appSelection < 0 or appLabel == "No available app(s) on this device"
             ):
@@ -1692,6 +1706,10 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
+            elif action == GeneralActions.INSTALL_APP.value:
+                installAppOnDevices(appToUse)
+            elif action == GeneralActions.UNINSTALL_APP.value:
+                uninstallAppOnDevice(appToUse)
             limitActiveThreads(threads)
 
             value = int(num / maxGauge * 100)
@@ -2480,3 +2498,79 @@ class NewFrameLayout(wx.Frame):
         with self.groupManage as manage:
             manage.ShowModal()
             self.groupManage = None
+
+    @api_tool_decorator()
+    def installApp(self, event):
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            res = version = pkg = None
+            with InstalledDevicesDlg(
+                self.sidePanel.apps, title="Install Application"
+            ) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    _, version, pkg = dlg.getAppValues(returnPkgName=True)
+            if pkg and version:
+                t = None
+                if self.sidePanel.selectedDevicesList:
+                    t = wxThread.GUIThread(
+                        self,
+                        installAppOnDevices,
+                        args=(pkg, version),
+                        eventType=wxThread.myEVT_COMMAND,
+                        name="installAppOnDevices",
+                    )
+                elif self.sidePanel.selectedGroupsList:
+                    t = wxThread.GUIThread(
+                        self,
+                        installAppOnGroups,
+                        args=(pkg, version),
+                        eventType=wxThread.myEVT_COMMAND,
+                        name="installAppOnGroups",
+                    )
+                if t:
+                    t.start()
+        else:
+            displayMessageBox(
+                (
+                    "Please select the group(s) and or device(s) you wish to install an app to!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )
+
+    @api_tool_decorator()
+    def uninstallApp(self, event):
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            res = pkg = None
+            with InstalledDevicesDlg(
+                self.sidePanel.apps, hide_version=True, title="Uninstall Application"
+            ) as dlg:
+                res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                _, _, pkg = dlg.getAppValues(returnPkgName=True)
+            if pkg:
+                t = None
+                if self.sidePanel.selectedDevicesList:
+                    t = wxThread.GUIThread(
+                        self,
+                        uninstallAppOnDevice,
+                        args=(pkg),
+                        eventType=wxThread.myEVT_COMMAND,
+                        name="uninstallAppOnDevice",
+                    )
+                elif self.sidePanel.selectedGroupsList:
+                    t = wxThread.GUIThread(
+                        self,
+                        uninstallAppOnGroup,
+                        args=(pkg),
+                        eventType=wxThread.myEVT_COMMAND,
+                        name="uninstallAppOnGroup",
+                    )
+                if t:
+                    t.start()
+        else:
+            displayMessageBox(
+                (
+                    "Please select the group(s) and or device(s) you wish to uninstall an app from!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )

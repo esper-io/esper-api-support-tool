@@ -56,6 +56,8 @@ GENERAL_ACTIONS = {
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
     "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Device to new Group": GeneralActions.MOVE_GROUP.value,
+    "Action -> Install App": GeneralActions.INSTALL_APP.value,
+    "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {

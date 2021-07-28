@@ -89,16 +89,19 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = runMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         runMenu.Append(wx.ID_SEPARATOR)
-        installedDevices = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        self.appSubMenu = wx.Menu()
+        self.installApp = self.appSubMenu.Append(wx.ID_ANY, "Install App")
+        self.uninstallApp = self.appSubMenu.Append(wx.ID_ANY, "Uninstall App")
+        self.installedDevices = self.appSubMenu.Append(
+            wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
-        self.installedDevices = runMenu.Append(installedDevices)
-        self.installedDevices.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
+        self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
+        self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
         self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
-        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Group", self.groupSubMenu)
+        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
         runMenu.Append(wx.ID_SEPARATOR)
         self.collectionSubMenu = wx.Menu()
         collectionItem = wx.MenuItem(
@@ -224,6 +227,8 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
+        self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
+        self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
 
     @api_tool_decorator()
     def onAbout(self, event):

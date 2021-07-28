@@ -4,14 +4,21 @@ from datetime import datetime, timedelta
 import esperclient
 import time
 import json
+
+import wx
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.EastUtility import iterateThroughDeviceList
+from Utility.EastUtility import (
+    executeCommandOnDevice,
+    executeCommandOnGroup,
+    iterateThroughDeviceList,
+)
 from Utility.Resource import (
+    displayMessageBox,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -1495,3 +1502,75 @@ def renameGroup(groupId, newName):
     body = {"name": newName}
     resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
     return resp
+
+
+def uninstallAppOnDevice(packageName):
+    return executeCommandOnDevice(
+        Globals.frame, {"package_name": packageName}, command_type="UNINSTALL"
+    )
+
+
+def uninstallAppOnGroup(packageName):
+    return executeCommandOnGroup(
+        Globals.frame, {"package_name": packageName}, command_type="UNINSTALL"
+    )
+
+
+def installAppOnDevices(packageName, version=None):
+    appVersion = version
+    appVersionId = version
+    if not appVersion:
+        appList = getAllApplications(packageName=packageName)
+        for app in appList.results:
+            if app.package_name == packageName:
+                app.versions.sort(key=lambda s: s.version_code.split("."))
+                appVersion = app.versions[-1]
+                appVersionId = appVersion.id
+                break
+    if appVersion:
+        return executeCommandOnDevice(
+            Globals.frame,
+            {
+                "app_version": appVersionId,
+                "package_name": packageName,
+            },
+            command_type="INSTALL",
+        )
+    else:
+        displayMessageBox(
+            (
+                "Failed to find application! Please upload application (%s) to the endpoint."
+                % packageName,
+                wx.ICON_ERROR,
+            )
+        )
+
+
+def installAppOnGroups(packageName, version=None):
+    appVersion = version
+    appVersionId = version
+    if not appVersion:
+        appList = getAllApplications(packageName=packageName)
+        for app in appList.results:
+            if app.package_name == packageName:
+                app.versions.sort(key=lambda s: s.version_code.split("."))
+                appVersion = app.versions[-1]
+                appVersionId = appVersion.id
+                break
+    if appVersion:
+        return executeCommandOnGroup(
+            Globals.frame,
+            {
+                "app_version": appVersionId,
+                "package_name": packageName,
+            },
+            command_type="INSTALL",
+        )
+    else:
+        displayMessageBox(
+            (
+                "Failed to find application! Please upload application (%s) to the endpoint."
+                % packageName,
+                wx.ICON_ERROR,
+            )
+        )

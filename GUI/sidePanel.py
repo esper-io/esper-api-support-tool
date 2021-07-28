@@ -391,6 +391,9 @@ class SidePanel(wx.Panel):
                 if (
                     key != "app_name"
                     and key != "app_state"
+                    and key != "id"
+                    and key != "appPkgName"
+                    and key != "packageName"
                     and key not in self.appChoice.Items
                     and (
                         (Globals.SHOW_PKG_NAME and " (" in key)
