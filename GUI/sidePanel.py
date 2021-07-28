@@ -425,6 +425,8 @@ class SidePanel(wx.Panel):
             or clientData == GeneralActions.SET_APP_STATE_DISABLE.value
             or clientData == GeneralActions.SET_APP_STATE_HIDE.value
             or clientData == GeneralActions.SET_APP_STATE_SHOW.value
+            or clientData == GeneralActions.INSTALL_APP.value
+            or clientData == GeneralActions.UNINSTALL_APP.value
         ) and clientData < GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # self.parentFrame.PopulateApps()
             self.appChoice.Enable(True)
