@@ -2396,6 +2396,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.collectionSubMenu.Enable(state)
         self.menubar.groupSubMenu.Enable(state)
 
+    @api_tool_decorator()
     def onInstalledDevices(self, event):
         with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
             res = dlg.ShowModal()
@@ -2427,6 +2428,7 @@ class NewFrameLayout(wx.Frame):
                         )
             dlg.DestroyLater()
 
+    @api_tool_decorator()
     def moveGroup(self, event=None):
         if self.sidePanel.selectedDevicesList:
             choices = list(self.sidePanel.groups.keys())
@@ -2436,6 +2438,7 @@ class NewFrameLayout(wx.Frame):
                 label="Select Group to move to",
                 title="Select Group to move to",
                 single=True,
+                resp=self.sidePanel.groupsResp,
             )
 
             if groupMultiDialog.ShowModal() == wx.ID_OK:
@@ -2470,6 +2473,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
 
+    @api_tool_decorator()
     def createGroup(self, event):
         if not self.groupManage:
             self.groupManage = GroupManagement(self.groups)
