@@ -65,6 +65,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         sizer_4 = wx.GridSizer(1, 2, 0, 0)
 
         self.checkbox_1 = wx.CheckBox(self.panel_4, wx.ID_ANY, "Select All")
+        self.checkbox_1.SetToolTip("Select all entries on the page")
         sizer_4.Add(self.checkbox_1, 0, wx.EXPAND, 5)
 
         self.search = wx.SearchCtrl(self.panel_4, wx.ID_ANY, "")
@@ -248,7 +249,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             else:
-                self.selected = self.originalChoices[self.page]
+                self.selected = self.selected + self.originalChoices[self.page]
         else:
             self.selected = []
         if not self.isFiltered:
@@ -299,24 +300,30 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def onNext(self, event):
         self.setCursorBusy()
+        self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         self.checkbox_1.Enable(False)
+        self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
         self.checkbox_1.Enable(True)
+        self.check_list_box_1.Enable(True)
         self.setCursorDefault()
 
     def onPrev(self, event):
         self.setCursorBusy()
+        self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
         self.checkbox_1.Enable(False)
+        self.check_list_box_1.Enable(False)
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
         self.checkbox_1.Enable(True)
+        self.check_list_box_1.Enable(True)
         self.setCursorDefault()
 
     def checkPageButton(self):
@@ -325,7 +332,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         else:
             self.button_1.Enable(True)
 
-        if self.page == self.limit:
+        if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
         else:
             self.button_2.Enable(True)
