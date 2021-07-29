@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.wxThread import GUIThread
 import Common.Globals as Globals
 import json
 import sys
@@ -38,20 +39,26 @@ def api_tool_decorator(locks=None):
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
-                    otherThreadsRunning = False
+                    # otherThreadsRunning = False
+                    currThread = threading.current_thread()
+                    invalidThreadNames = [
+                        "InternetCheck",
+                        "updateErrorTracker",
+                        "SavePrefs",
+                        currThread.name,
+                    ]
                     for thread in threading.enumerate():
                         if (
-                            thread.name != "InternetCheck"
-                            and thread.name != "updateErrorTracker"
-                            and "main" in thread.name.lower()
-                            and thread.name != "SavePrefs"
+                            thread.name not in invalidThreadNames
+                            and "main" not in thread.name.lower()
+                            and type(thread) == GUIThread
                         ):
-                            otherThreadsRunning = True
-                            break
-                    if not otherThreadsRunning:
-                        Globals.frame.onComplete(None, True)
-                        Globals.frame.setCursorDefault()
-                        Globals.frame.setGaugeValue(100)
+                            # otherThreadsRunning = True
+                            thread.stop()
+                    # if not otherThreadsRunning:
+                    Globals.frame.onComplete(None, True)
+                    Globals.frame.setCursorDefault()
+                    Globals.frame.setGaugeValue(100)
                     if Globals.msg_lock.locked():
                         Globals.msg_lock.release()
                     if "locks" in kwargs:

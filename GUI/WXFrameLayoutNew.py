@@ -1885,7 +1885,11 @@ class NewFrameLayout(wx.Frame):
         action = None
         cmdResults = None
         if event:
-            eventVal = event.GetValue()
+            eventVal = None
+            if hasattr(event, "GetValue"):
+                eventVal = event.GetValue()
+            else:
+                eventVal = event
             if type(eventVal) == tuple:
                 enable = eventVal[0]
                 if len(eventVal) > 1:
