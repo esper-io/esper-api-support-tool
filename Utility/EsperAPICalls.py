@@ -1504,23 +1504,29 @@ def renameGroup(groupId, newName):
     return resp
 
 
-def uninstallAppOnDevice(packageName):
+def uninstallAppOnDevice(packageName, device=None):
     return executeCommandOnDevice(
-        Globals.frame, {"package_name": packageName}, command_type="UNINSTALL"
+        Globals.frame,
+        {"package_name": packageName},
+        command_type="UNINSTALL",
+        deviceIds=device,
     )
 
 
-def uninstallAppOnGroup(packageName):
+def uninstallAppOnGroup(packageName, groups=None):
     return executeCommandOnGroup(
-        Globals.frame, {"package_name": packageName}, command_type="UNINSTALL"
+        Globals.frame,
+        {"package_name": packageName},
+        command_type="UNINSTALL",
+        groupIds=groups,
     )
 
 
-def installAppOnDevices(packageName, version=None):
+def installAppOnDevices(packageName, version=None, devices=None):
     appVersion = version
     appVersionId = version
     if not appVersion:
-        appList = getAllApplications(packageName=packageName)
+        appList = getAllApplications()
         for app in appList.results:
             if app.package_name == packageName:
                 app.versions.sort(key=lambda s: s.version_code.split("."))
@@ -1535,6 +1541,7 @@ def installAppOnDevices(packageName, version=None):
                 "package_name": packageName,
             },
             command_type="INSTALL",
+            deviceIds=devices,
         )
     else:
         displayMessageBox(
@@ -1546,11 +1553,11 @@ def installAppOnDevices(packageName, version=None):
         )
 
 
-def installAppOnGroups(packageName, version=None):
+def installAppOnGroups(packageName, version=None, groups=None):
     appVersion = version
     appVersionId = version
     if not appVersion:
-        appList = getAllApplications(packageName=packageName)
+        appList = getAllApplications()
         for app in appList.results:
             if app.package_name == packageName:
                 app.versions.sort(key=lambda s: s.version_code.split("."))
@@ -1565,6 +1572,7 @@ def installAppOnGroups(packageName, version=None):
                 "package_name": packageName,
             },
             command_type="INSTALL",
+            groupIds=groups,
         )
     else:
         displayMessageBox(

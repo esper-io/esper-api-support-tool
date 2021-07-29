@@ -1056,6 +1056,8 @@ class NewFrameLayout(wx.Frame):
                 or action == GridActions.SET_APP_STATE_DISABLE.value
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
+                or action == GeneralActions.INSTALL_APP.value
+                or action == GeneralActions.UNINSTALL_APP.value
             ):
                 for t in threads:
                     if t.result:
@@ -1707,9 +1709,23 @@ class NewFrameLayout(wx.Frame):
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.INSTALL_APP.value:
-                installAppOnDevices(appToUse)
+                thread = wxThread.GUIThread(
+                    self,
+                    installAppOnDevices,
+                    (appToUse, None, device.id),
+                    name="installAppOnDevices",
+                )
+                thread.start()
+                threads.append(thread)
             elif action == GeneralActions.UNINSTALL_APP.value:
-                uninstallAppOnDevice(appToUse)
+                thread = wxThread.GUIThread(
+                    self,
+                    uninstallAppOnDevice,
+                    (appToUse, device.id),
+                    name="uninstallAppOnDevice",
+                )
+                thread.start()
+                threads.append(thread)
             limitActiveThreads(threads)
 
             value = int(num / maxGauge * 100)

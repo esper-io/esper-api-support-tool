@@ -142,7 +142,7 @@ class InstalledDevicesDlg(wx.Dialog):
         packageName = None
         version_id = None
         selection = self.list_box_2.GetSelection() if self.list_box_2 else None
-        if selection and selection >= 0:
+        if type(selection) == int and selection >= 0:
             verMatches = list(
                 filter(
                     lambda x: x.version_code
@@ -157,8 +157,11 @@ class InstalledDevicesDlg(wx.Dialog):
                 filter(
                     lambda x: x["app_name"]
                     == self.list_box_1.GetString(self.list_box_1.GetSelection())
-                    or x["appPkgName"]
-                    == self.list_box_1.GetString(self.list_box_1.GetSelection()),
+                    or (
+                        "appPkgName" in x
+                        and x["appPkgName"]
+                        == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    ),
                     self.apps,
                 )
             )
