@@ -673,7 +673,7 @@ class NewFrameLayout(wx.Frame):
                             colName = "devicename"
                             expectedCol = "devicename"
                         ratio = getStrRatioSimilarity(
-                            colName.lower(), expectedCol.replace(" ", "").lower(), True
+                            colName.lower(), expectedCol.replace(" ", "").lower()
                         )
                         if (
                             fileCol < len(header)
@@ -723,6 +723,8 @@ class NewFrameLayout(wx.Frame):
                                 toolCol,
                                 isEditable,
                             )
+                            fileCol += 1
+                            break
                         fileCol += 1
                     toolCol += 1
         if lock:
