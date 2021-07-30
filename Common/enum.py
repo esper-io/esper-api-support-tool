@@ -24,6 +24,7 @@ class GridActions(Enum):
     SET_APP_STATE_SHOW = 31
     SET_APP_STATE_HIDE = 32
     SET_APP_STATE_DISABLE = 33
+    MOVE_GROUP = 34
 
 
 class Color(Enum):

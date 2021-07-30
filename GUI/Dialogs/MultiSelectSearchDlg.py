@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from Utility.EsperAPICalls import getAllDevices, getAllGroups
-from Utility.Resource import resourcePath, scale_bitmap
+from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
 import Common.Globals as Globals
+import Utility.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 
@@ -28,7 +29,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.label = label
         self.page = 0
         self.resp = resp
-        self.limit = math.floor(resp.count / len(resp.results))
+        self.limit = 0
+        if resp and hasattr(resp, "count") and hasattr(resp, "results"):
+            self.limit = math.floor(resp.count / len(resp.results))
         self.group = None
 
         if hasattr(parent, "sidePanel"):
@@ -176,7 +179,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         if queryString:
             sortedList = list(
                 filter(
-                    lambda i: queryString.lower() in i.lower(),
+                    lambda i: queryString.lower() in i.lower()
+                    or getStrRatioSimilarity(i.lower(), queryString) > 90,
                     self.originalChoices[self.page],
                 )
             )
@@ -305,11 +309,20 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
+        wxThread.GUIThread(self, self.processNext, None, name="processNext").start()
+
+    def processNext(self):
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+        self.button_OK.Enable(False)
+        self.search.Enable(False)
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
         self.checkbox_1.Enable(True)
         self.check_list_box_1.Enable(True)
+        self.search.Enable(True)
+        self.button_OK.Enable(True)
         self.setCursorDefault()
 
     def onPrev(self, event):
@@ -317,13 +330,22 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
+        wxThread.GUIThread(self, self.processPrev, None, name="processPrev").start()
+
+    def processPrev(self):
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
+        self.search.Enable(False)
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+        self.button_OK.Enable(False)
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
         self.checkbox_1.Enable(True)
         self.check_list_box_1.Enable(True)
+        self.search.Enable(True)
+        self.button_OK.Enable(True)
         self.setCursorDefault()
 
     def checkPageButton(self):

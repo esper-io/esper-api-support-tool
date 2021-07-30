@@ -183,4 +183,5 @@ class GUIThread(threading.Thread):
                 evt = CustomEvent(self.eventType, -1, self.eventArg)
             else:
                 evt = CustomEvent(self.eventType, -1, self.result)
-            wx.PostEvent(self._parent, evt)
+            if self._parent:
+                wx.PostEvent(self._parent, evt)

@@ -15,6 +15,7 @@ from Utility.EsperAPICalls import (
 import wx
 import wx.grid as gridlib
 import Common.Globals as Globals
+import Utility.wxThread as wxThread
 
 
 class TabPanel(wx.Panel):
@@ -31,6 +32,11 @@ class GroupManagement(wx.Dialog):
         self.groupTree = {}
         self.tree = {}
         self.current_page = None
+        self.expectedHeaders = [
+            "Group Name",
+            "Parent Group Identifier",
+            "New Group Name",
+        ]
 
         super(GroupManagement, self).__init__(
             None,
@@ -117,9 +123,18 @@ class GroupManagement(wx.Dialog):
         label_3.Wrap(1)
         grid_sizer_4.Add(label_3, 0, wx.BOTTOM | wx.EXPAND, 5)
 
+        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+        self.button_7 = wx.Button(
+            self.notebook_1_pane_2, wx.ID_ANY, "Download Group CSV"
+        )
+        self.button_7.SetToolTip("Upload CSV file")
+        sizer_3.Add(self.button_7, 0, wx.BOTTOM | wx.RIGHT, 5)
+
         self.button_6 = wx.Button(self.notebook_1_pane_2, wx.ID_ANY, "Upload CSV")
         self.button_6.SetToolTip("Upload CSV file")
-        grid_sizer_4.Add(self.button_6, 0, wx.ALIGN_RIGHT | wx.BOTTOM | wx.RIGHT, 5)
+        sizer_3.Add(self.button_6, 0, wx.BOTTOM | wx.RIGHT, 5)
 
         self.grid_1 = wx.grid.Grid(self.notebook_1_pane_2, wx.ID_ANY, size=(1, 1))
         self.grid_1.CreateGrid(0, 3)
@@ -165,7 +180,8 @@ class GroupManagement(wx.Dialog):
         self.button_3.Bind(wx.EVT_BUTTON, self.refreshTree)
         self.button_2.Bind(wx.EVT_BUTTON, self.deleteGroup)
         self.button_1.Bind(wx.EVT_BUTTON, self.addSubGroup)
-        self.button_6.Bind(wx.EVT_BUTTON, self.uploadCSV)
+        self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
+        self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
         self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
@@ -229,6 +245,8 @@ class GroupManagement(wx.Dialog):
             self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
+            self.grid_1.GetGridWindow().SetCursor(myCursor)
+            self.grid_1.GetTargetWindow().SetCursor(myCursor)
         except:
             pass
 
@@ -238,6 +256,8 @@ class GroupManagement(wx.Dialog):
         self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
+        self.grid_1.GetGridWindow().SetCursor(myCursor)
+        self.grid_1.GetTargetWindow().SetCursor(myCursor)
 
     def deleteGroup(self, event):
         if not self.current_page or self.current_page.name == "Single":
@@ -332,7 +352,9 @@ class GroupManagement(wx.Dialog):
             if self.tree_ctrl_1.GetSelection():
                 self.button_1.Enable(True)
                 self.button_4.Enable(True)
-                hasChild = self.tree_ctrl_1.ItemHasChildren(self.tree_ctrl_1.GetSelection())
+                hasChild = self.tree_ctrl_1.ItemHasChildren(
+                    self.tree_ctrl_1.GetSelection()
+                )
                 if (
                     hasChild
                     or self.tree_ctrl_1.GetItemData(self.tree_ctrl_1.GetSelection())
@@ -437,9 +459,7 @@ class GroupManagement(wx.Dialog):
                 % (numSuccess, self.grid_1.GetNumberRows())
             )
 
-    def uploadCSV(self, event):
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+    def openCSV(self, event):
         filePath = None
         with wx.FileDialog(
             self,
@@ -452,21 +472,28 @@ class GroupManagement(wx.Dialog):
                 # Proceed loading the file chosen by the user
                 filePath = fileDialog.GetPath()
         if filePath:
-            self.tree_ctrl_1.UnselectAll()
-            data = None
-            try:
-                with open(filePath, "r", encoding="utf-8-sig") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-            except UnicodeDecodeError as e:
-                with open(filePath, "r") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-            for row in data:
+            self.uploadCSV(filePath)
+
+    def uploadCSV(self, filePath):
+        self.setCursorBusy()
+        if self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        self.tree_ctrl_1.UnselectAll()
+        data = None
+        try:
+            with open(filePath, "r", encoding="utf-8-sig") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+        except UnicodeDecodeError as e:
+            with open(filePath, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+        for row in data:
+            if row != self.expectedHeaders:
                 self.grid_1.AppendRows(1)
                 colNum = 0
                 for col in row:
@@ -474,8 +501,9 @@ class GroupManagement(wx.Dialog):
                         self.grid_1.GetNumberRows() - 1, colNum, str(col)
                     )
                     colNum += 1
-            self.grid_1.AutoSizeColumns()
-            self.checkActions()
+        self.grid_1.AutoSizeColumns()
+        self.checkActions()
+        self.setCursorDefault()
 
     def on_tab_change(self, event):
         self.current_page = self.notebook_1.GetPage(event.GetSelection())
@@ -484,3 +512,53 @@ class GroupManagement(wx.Dialog):
         elif self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         event.Skip()
+
+    def downloadCSV(self, event):
+        dlg = wx.FileDialog(
+            self,
+            message="Save Group Manage CSV as...",
+            defaultFile="",
+            wildcard="*.csv",
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        )
+        result = dlg.ShowModal()
+        inFile = dlg.GetPath()
+        dlg.DestroyLater()
+
+        if result == wx.ID_OK:
+            self.setCursorBusy()
+            self.button_7.Enable(False)
+            thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
+            thread.start()
+
+    def saveGroupCSV(self, inFile):
+        gridData = []
+        gridData.append(self.expectedHeaders)
+        self.getGroupCSV(self.groupTree, None, gridData)
+
+        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerows(gridData)
+        self.button_7.Enable(True)
+        self.setCursorDefault()
+
+    def getGroupCSV(self, src, parentId, gridData):
+        data = []
+        tenant = Globals.configuration.host.replace("https://", "").replace(
+            "-api.esper.cloud/api", ""
+        )
+        for id, children in src.items():
+            url = "https://%s-api.esper.cloud/api/enterprise/%s/devicegroup/%s/" % (
+                tenant,
+                Globals.enterprise_id,
+                id,
+            )
+            groupName = fetchGroupName(url)
+            if groupName and groupName.lower() != "all devices":
+                data.append(groupName)
+                data.append(parentId)
+                data.append("")
+                if data not in gridData:
+                    gridData.append(data)
+            for child in children:
+                self.getGroupCSV(child, id, gridData)

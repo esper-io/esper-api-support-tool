@@ -119,6 +119,8 @@ def iterateThroughGridRows(frame, action):
         setAppStateForAllAppsListed(action)
     if action == 50:
         setAppStateForSpecificAppListed(action)
+    if action == GridActions.MOVE_GROUP.value:
+        relocateDeviceToNewGroup(frame)
 
 
 @api_tool_decorator()
@@ -203,7 +205,9 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
     joinThreadList(threads)
     if source == 1:
         deviceList = {}
-        initPercent = Globals.frame.gauge.GetValue()
+        initPercent = 0
+        if Globals.frame.gauge:
+            initPercent = Globals.frame.gauge.GetValue()
         initVal = 0
         if maxGauge:
             initVal = math.ceil((initPercent / 100) * maxGauge)
@@ -222,17 +226,17 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         postEventToFrame(wxThread.myEVT_COMPLETE, None)
         changeSucceeded = succeeded = numNewName = 0
         statuses = []
-        tagsFromGrid = None
+        devices = []
         for thread in threads:
             if type(thread.result) == tuple:
                 changeSucceeded += thread.result[0]
                 succeeded += thread.result[1]
                 numNewName += thread.result[2]
-                tagsFromGrid = thread.result[3]
+                devices += thread._args[1]
                 statuses += thread.result[4]
         msg = (
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-            % (changeSucceeded, len(tagsFromGrid.keys()), succeeded, numNewName)
+            % (changeSucceeded, len(devices), succeeded, numNewName)
         )
         postEventToFrame(wxThread.myEVT_LOG, msg)
         postEventToFrame(wxThread.myEVT_COMMAND, (msg, statuses))
@@ -250,6 +254,15 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         )
     if source == 4:
         postEventToFrame(wxThread.myEVT_THREAD_WAIT, (threads, 3, action))
+    if source == 5:
+        msg = "Results of moving devices' groups."
+        statuses = []
+        for t in threads:
+            if t.result:
+                for val in t.result.values():
+                    statuses.append(val)
+        postEventToFrame(wxThread.myEVT_COMPLETE, None)
+        postEventToFrame(wxThread.myEVT_COMMAND, (msg, statuses))
 
 
 def processInstallDevices(deviceList):
@@ -645,77 +658,87 @@ def modifyDevice(frame):
 @api_tool_decorator()
 def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                executeDeviceModification.__name__,
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                postEventToFrame(
-                    wxThread.myEVT_LOG,
-                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
-                )
-                print(e)
-                ApiToolLog().LogError(e)
-                return
-            time.sleep(Globals.RETRY_SLEEP)
-
-    tagsFromGrid = frame.gridPanel.getDeviceTagsFromGrid()
+    tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
     aliasDic = frame.gridPanel.getDeviceAliasFromList()
     frame.gauge.SetValue(1)
-
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
-    if api_response:
-        tempRes = []
-        for device in api_response.results:
-            if (
-                device.device_name in tagsFromGrid.keys()
-                or (
-                    "serialNumber" in device.hardware_info
-                    and device.hardware_info["serialNumber"] in tagsFromGrid.keys()
-                )
-                or (
-                    "customSerialNumber" in device.hardware_info
-                    and device.hardware_info["customSerialNumber"]
-                    in tagsFromGrid.keys()
-                )
-            ):
-                tempRes.append(device)
-        if tempRes:
-            api_response.results = tempRes
 
-        splitResults = splitListIntoChunks(api_response.results)
+    devices = []
+    for row in rowTaglist.keys():
+        entry = rowTaglist[row]
 
-        threads = []
-        for chunk in splitResults:
-            t = wxThread.GUIThread(
-                frame,
-                processDeviceModificationForList,
-                args=(frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction),
-                name="processDeviceModificationForList",
+        api_instance = esperclient.DeviceApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = None
+        identifier = None
+        for attempt in range(maxAttempt):
+            try:
+                if "esperName" in entry.keys():
+                    identifier = entry["esperName"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        name=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif "sn" in entry.keys():
+                    identifier = entry["sn"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        serial=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif "csn" in entry.keys():
+                    identifier = entry["csn"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        search=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllDevices",
+                    api_instance.get_all_devices,
+                    Globals.PRINT_API_LOGS,
+                )
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        if api_response:
+            devices += api_response.results
+            api_response = None
+        else:
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "---> ERROR: Failed to find device with identifer: %s" % identifier,
             )
-            threads.append(t)
-            t.start()
-            limitActiveThreads(threads)
 
+    splitResults = splitListIntoChunks(devices)
+
+    threads = []
+    for chunk in splitResults:
         t = wxThread.GUIThread(
             frame,
-            waitTillThreadsFinish,
-            args=(tuple(threads), -1, -1, 2),
-            name="waitTillThreadsFinish",
+            processDeviceModificationForList,
+            args=(frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction),
+            name="processDeviceModificationForList",
         )
+        threads.append(t)
         t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        frame,
+        waitTillThreadsFinish,
+        args=(tuple(threads), -1, -1, 2),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
 
 
 @api_tool_decorator()
@@ -868,53 +891,11 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
 
 @api_tool_decorator()
 def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                setAppStateForAllAppsListed.__name__,
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                postEventToFrame(
-                    wxThread.myEVT_LOG,
-                    "---> ERROR: Failed to get devices ids to modify tags and aliases",
-                )
-                print(e)
-                ApiToolLog().LogError(e)
-                return
-            time.sleep(Globals.RETRY_SLEEP)
-
     deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
-    if api_response:
-        tempRes = []
-        for device in api_response.results:
-            for deviceIds in deviceIdentifers:
-                if (
-                    device.device_name in deviceIds
-                    or (
-                        "serialNumber" in device.hardware_info
-                        and device.hardware_info["serialNumber"] in deviceIds
-                    )
-                    or (
-                        "customSerialNumber" in device.hardware_info
-                        and device.hardware_info["customSerialNumber"] in deviceIds
-                    )
-                ):
-                    tempRes.append(device)
-        if tempRes:
-            api_response.results = tempRes
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    if devices:
         threads = []
-        for device in api_response.results:
+        for device in devices:
             if (
                 device.device_name in deviceIdentifers
                 or (
@@ -1082,31 +1063,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
 
 
 def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                setAppStateForSpecificAppListed.__name__,
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                postEventToFrame(
-                    wxThread.myEVT_LOG,
-                    "---> ERROR: Failed to get devices in order to set app state",
-                )
-                print(e)
-                ApiToolLog().LogError(e)
-                return
-            time.sleep(Globals.RETRY_SLEEP)
+    api_response = getDevicesFromGrid()
     state = None
     if action == 50:
         state == "HIDE"
@@ -1336,3 +1293,129 @@ def executeCommandOnDevice(
 def clearKnownGroups():
     global knownGroups
     knownGroups.clear()
+
+
+def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
+    if not deviceIdentifers:
+        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+    devices = []
+    for entry in deviceIdentifers:
+        api_instance = esperclient.DeviceApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = None
+        identifier = None
+        for attempt in range(maxAttempt):
+            try:
+                if entry[0]:
+                    identifier = entry[0]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        name=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif entry[1]:
+                    identifier = entry[1]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        serial=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif entry[2]:
+                    identifier = entry[2]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        search=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllDevices",
+                    api_instance.get_all_devices,
+                    Globals.PRINT_API_LOGS,
+                )
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        if api_response:
+            devices += api_response.results
+            api_response = None
+        else:
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "---> ERROR: Failed to find device with identifer: %s" % identifier,
+            )
+    return devices
+
+
+def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
+    devices = getDevicesFromGrid()
+    newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
+
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            frame,
+            processDeviceGroupMove,
+            args=(chunk, newGroupList),
+            name="processDeviceGroupMove",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        frame,
+        waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
+
+
+def processDeviceGroupMove(deviceChunk, groupList):
+    groupId = None
+    results = {}
+    for device in deviceChunk:
+        groupName = None
+        if device.device_name in groupList.keys():
+            groupName = groupList[device.device_name]
+        elif (
+            "serialNumber" in device.hardware_info
+            and device.hardware_info["serialNumber"] in groupList.keys()
+        ):
+            groupName = groupList[device.hardware_info["serialNumber"]]
+        elif (
+            "customSerialNumber" in device.hardware_info
+            and device.hardware_info["customSerialNumber"] in groupList.keys()
+        ):
+            groupName = groupList[device.hardware_info["customSerialNumber"]]
+        if groupName:
+            if len(groupName) == 36 and "-" in groupName:
+                resp = apiCalls.moveGroup(groupName, device.id)
+                results[device.device_name] = {
+                    "Device Name": device.device_name,
+                    "Device Id": device.id,
+                    "Status Code": resp.status_code,
+                    "Response": resp.text,
+                }
+            else:
+                groups = apiCalls.getAllGroups(name=groupName).results
+                if groups:
+                    groupId = groups[0].id
+                    resp = apiCalls.moveGroup(groupId, device.id)
+                    results[device.device_name] = {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Status Code": resp.status_code,
+                        "Response": resp.text,
+                    }
+
+    return results

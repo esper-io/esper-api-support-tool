@@ -78,7 +78,7 @@ def fetchGroupName(groupURL, returnJson=False):
     headers = getHeader()
     resp = performGetRequestWithRetry(groupURL, headers=headers)
     try:
-        if resp.status_code < 300:
+        if resp and resp.status_code < 300:
             json_resp = resp.json()
             logBadResponse(groupURL, resp, json_resp)
 
@@ -413,10 +413,12 @@ def setdevicename(
 
 
 @api_tool_decorator()
-def getAllGroups(
-    name="", limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY
-):
+def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Groups belonging to the Enterprise """
+    if not limit:
+        limit = Globals.limit
+    if not offset:
+        offset = Globals.offset
     try:
         api_instance = esperclient.DeviceGroupApi(
             esperclient.ApiClient(Globals.configuration)
@@ -554,10 +556,12 @@ def getDeviceGroupForHost(
 
 
 @api_tool_decorator()
-def getAllDevices(
-    groupToUse, limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY
-):
+def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Devices belonging to the Enterprise """
+    if not limit:
+        limit = Globals.limit
+    if not offset:
+        offset = Globals.offset
     if not groupToUse:
         return None
     try:
