@@ -55,7 +55,7 @@ GENERAL_ACTIONS = {
     "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
     "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
     "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
-    "Action -> Move Device to new Group": GeneralActions.MOVE_GROUP.value,
+    "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
 }
 
 GRID_ACTIONS = {
@@ -64,6 +64,7 @@ GRID_ACTIONS = {
     "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
     "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
     "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
+    "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
     # "Action -> Set Specific Apps' State to Hide": 50,
 }
 

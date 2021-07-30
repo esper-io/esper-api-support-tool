@@ -612,7 +612,7 @@ class NewFrameLayout(wx.Frame):
             Globals.grid2_lock,
         )
         indx = self.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GRID_ACTIONS.keys())[1]
+            list(Globals.GRID_ACTIONS.keys())[0]
         )
         self.sidePanel.actionChoice.SetSelection(indx)
         if self.gridPanel.grid_1.IsFrozen():
@@ -668,9 +668,6 @@ class NewFrameLayout(wx.Frame):
                         if expectedCol == "Esper Name" and colName == "devicename":
                             colName = "devicename"
                             expectedCol = "devicename"
-                        ratio = getStrRatioSimilarity(
-                            colName.lower(), expectedCol.replace(" ", "").lower()
-                        )
                         if (
                             fileCol < len(header)
                             and header[fileCol].strip()
@@ -679,14 +676,10 @@ class NewFrameLayout(wx.Frame):
                             fileCol < len(header)
                             and header[fileCol].strip() not in headers.keys()
                             and colName != "devicename"
-                            and ratio < 90
                         ):
                             fileCol += 1
                             continue
-                        if (
-                            colName == expectedCol.replace(" ", "").lower()
-                            or ratio >= 90
-                        ):
+                        if colName == expectedCol.replace(" ", "").lower():
                             if expectedCol == "Tags":
                                 try:
                                     ast.literal_eval(colValue)
@@ -1052,6 +1045,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GridActions.SET_APP_STATE_DISABLE.value
                 or action == GridActions.SET_APP_STATE_HIDE.value
                 or action == GridActions.SET_APP_STATE_SHOW.value
+                or action == GridActions.MOVE_GROUP.value
             ):
                 for t in threads:
                     if t.result:
@@ -1580,8 +1574,8 @@ class NewFrameLayout(wx.Frame):
                     result += formattedRes
                     result += "\n\n"
             with ConfirmTextDialog(
-                "Command(s) have been fired.",
-                "%s Check the Esper Console for details. Last command status listed below."
+                "Action has been executed.",
+                "%s Check the Esper Console for details. Last known status listed below."
                 % msg
                 + "\n"
                 if msg
@@ -2452,13 +2446,16 @@ class NewFrameLayout(wx.Frame):
                     )
                     if resp and resp.status_code == 200:
                         displayMessageBox(
-                            "Selected device have been moved to the %s Group."
+                            "Selected device(s) have been moved to the %s Group."
                             % groups.results[0].name
                         )
+                        self.sidePanel.clearGroupAndDeviceSelections()
                     elif resp:
                         displayMessageBox(str(resp))
                 else:
                     displayMessageBox("No Group found with the name: %s" % selction)
+                evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+                wx.PostEvent(self, evt)
                 return
             else:
                 self.isRunning = False
@@ -2468,7 +2465,7 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(
                 (
-                    "Please select a Group and then the devices you wish to move!",
+                    "Please select a Group and then the device(s) you wish to move from the selectors!",
                     wx.OK | wx.ICON_ERROR,
                 )
             )
