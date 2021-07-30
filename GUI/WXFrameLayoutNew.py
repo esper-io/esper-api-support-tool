@@ -669,7 +669,7 @@ class NewFrameLayout(wx.Frame):
                             colName = "devicename"
                             expectedCol = "devicename"
                         ratio = getStrRatioSimilarity(
-                            colName.lower(), expectedCol.replace(" ", "").lower(), True
+                            colName.lower(), expectedCol.replace(" ", "").lower()
                         )
                         if (
                             fileCol < len(header)
