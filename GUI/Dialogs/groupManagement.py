@@ -540,6 +540,7 @@ class GroupManagement(wx.Dialog):
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
         self.button_7.Enable(True)
+        self.setCursorDefault()
 
     def getGroupCSV(self, src, parentId, gridData):
         data = []
