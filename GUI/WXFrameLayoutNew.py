@@ -72,7 +72,6 @@ from Utility.EastUtility import (
 )
 from Utility.Resource import (
     checkForInternetAccess,
-    getStrRatioSimilarity,
     limitActiveThreads,
     postEventToFrame,
     resourcePath,
