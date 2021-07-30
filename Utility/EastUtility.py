@@ -205,7 +205,9 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
     joinThreadList(threads)
     if source == 1:
         deviceList = {}
-        initPercent = Globals.frame.gauge.GetValue()
+        initPercent = 0
+        if Globals.frame.gauge:
+            initPercent = Globals.frame.gauge.GetValue()
         initVal = 0
         if maxGauge:
             initVal = math.ceil((initPercent / 100) * maxGauge)

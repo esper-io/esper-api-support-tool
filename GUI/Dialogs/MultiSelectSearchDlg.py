@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from Utility.EsperAPICalls import getAllDevices, getAllGroups
-from Utility.Resource import resourcePath, scale_bitmap
+from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
 import Common.Globals as Globals
@@ -179,7 +179,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         if queryString:
             sortedList = list(
                 filter(
-                    lambda i: queryString.lower() in i.lower(),
+                    lambda i: queryString.lower() in i.lower()
+                    or getStrRatioSimilarity(i.lower(), queryString) > 90,
                     self.originalChoices[self.page],
                 )
             )
