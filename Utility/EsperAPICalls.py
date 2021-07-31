@@ -584,6 +584,7 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
                             raise e
                         if hasattr(e, "status") and e.status == 504:
                             limit = int(limit / 4)
+                            Globals.limit = limit
                             postEventToFrame(
                                 wxThread.myEVT_LOG,
                                 "---> Encountered a 504 error, retrying with lower limit: %s"
@@ -615,6 +616,7 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
                         raise e
                     if hasattr(e, "status") and e.status == 504:
                         limit = int(limit / 4)
+                        Globals.limit = limit
                         postEventToFrame(
                             wxThread.myEVT_LOG,
                             "---> Encountered a 504 error, retrying with lower limit: %s"
