@@ -1467,6 +1467,7 @@ def getAllDeviceInfo(frame):
             )
 
     postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 25)
+    postEventToFrame(wxThread.myEVT_LOG, "Finished fetching device information")
     threads = []
     if devices:
         number_of_devices = 0
