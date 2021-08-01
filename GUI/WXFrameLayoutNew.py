@@ -468,6 +468,7 @@ class NewFrameLayout(wx.Frame):
             ):  # Either the cancel button was pressed or the window was closed
                 return False
 
+    @api_tool_decorator()
     def onSaveBothAll(self, event):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             dlg = wx.FileDialog(
@@ -501,6 +502,7 @@ class NewFrameLayout(wx.Frame):
                 ("Please select a group and or device(s) first!", wx.OK | wx.ICON_ERROR)
             )
 
+    @api_tool_decorator()
     def getCSVHeaders(self, visibleOnly=False):
         headers = []
         deviceHeaders = Globals.CSV_TAG_ATTR_NAME.keys()
@@ -541,6 +543,7 @@ class NewFrameLayout(wx.Frame):
         headers = headersNoDup
         return headers, deviceHeaders, networkHeaders
 
+    @api_tool_decorator()
     def saveAllFile(self, inFile):
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
         deviceList = getAllDeviceInfo(self)
@@ -569,10 +572,12 @@ class NewFrameLayout(wx.Frame):
         )
         postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
 
+    @api_tool_decorator()
     def fetchAllGridData(self, chunk, gridDeviceData):
         for entry in chunk:
             gridDeviceData.append(self.gridPanel.getDeviceNetworkInfoListing(*entry))
 
+    @api_tool_decorator()
     def saveFile(self, inFile):
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
@@ -597,6 +602,7 @@ class NewFrameLayout(wx.Frame):
         )
         postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
 
+    @api_tool_decorator()
     def saveGridData(
         self, inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
     ):
