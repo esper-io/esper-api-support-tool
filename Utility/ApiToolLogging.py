@@ -72,9 +72,11 @@ class ApiToolLog:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exc_traceback = format_list(extract_tb(exc_traceback))
         message += "".join(traceback.format_exception(type, value, tb))
-        message += "Exc Type: %s\n" % str(exc_type)
-        message += "Exc Value: %s\n" % str(exc_value)
-        message += "Exc Traceback: %s\n" % str(exc_traceback)
+        message += "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type
+        message += "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value
+        message += (
+            "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb
+        )
         for line in exc_traceback:
             message += str(line)
         message += "\n"

@@ -99,6 +99,7 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = False
         self.isSavingPrefs = False
         self.isRunningUpdate = False
+        self.isUploading = False
         self.isForceUpdate = False
         self.kill = False
         self.CSVUploaded = False
@@ -214,6 +215,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wxThread.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
+        self.Bind(wxThread.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
+        self.Bind(wxThread.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
 
         if self.kill:
             return
@@ -439,7 +442,7 @@ class NewFrameLayout(wx.Frame):
             None, Globals.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
-        thread.join()
+        thread.join(timeout=30)
         self.DestroyLater()
 
     @api_tool_decorator()
@@ -664,26 +667,43 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
-                try:
-                    with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
-                        reader = csv.reader(
-                            csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                        )
-                        data = list(reader)
-                        self.processDeviceCSVUpload(data)
-                        self.gridPanel.grid_1.AutoSizeColumns()
-                except UnicodeDecodeError as e:
-                    with open(csv_auth_path, "r") as csvFile:
-                        reader = csv.reader(
-                            csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                        )
-                        data = list(reader)
-                        self.processDeviceCSVUpload(data)
-                        self.gridPanel.grid_1.AutoSizeColumns()
+                thread = wxThread.GUIThread(
+                    self, self.openDeviceCSV, (csv_auth_path), name="openDeviceCSV"
+                )
+                thread.start()
+                wxThread.GUIThread(
+                    self,
+                    self.waitForThreadsThenSetCursorDefault,
+                    ([thread], 2),
+                    name="waitForThreadsThenSetCursorDefault_2",
+                ).start()
             elif result == wx.ID_CANCEL:
                 return  # the user changed their mind
-        wx.CallLater(3000, self.setGaugeValue, 0)
+
+    def openDeviceCSV(self, csv_auth_path):
+        self.isUploading = True
+        try:
+            with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+                self.processDeviceCSVUpload(data)
+        except UnicodeDecodeError as e:
+            with open(csv_auth_path, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+                self.processDeviceCSVUpload(data)
+        # self.gridPanel.grid_1.AutoSizeColumns()
+        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+        postEventToFrame(
+            wxThread.myEVT_DISPLAY_NOTIFICATION,
+            ("E.A.S.T.", "Device CSV Upload Completed"),
+        )
         self.setCursorDefault()
+        self.isUploading = False
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
@@ -1106,17 +1126,7 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(True)
             else:
                 self.sidePanel.deviceChoice.Enable(False)
-            if not self.IsActive():
-                self.notification = wxadv.NotificationMessage(
-                    "Finished loading devices", "", self
-                )
-                if self.notification:
-                    if hasattr(self.notification, "MSWUseToasts"):
-                        try:
-                            self.notification.MSWUseToasts()
-                        except:
-                            pass
-                    self.notification.Show()
+            self.displayNotification("Finished loading devices", "")
         if source == 2:
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[1]
@@ -1958,6 +1968,8 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
         self.setGaugeValue(100)
         if not self.IsActive() and not isError:
+            title = "Action Completed"
+            msg = ""
             if (
                 self.sidePanel.actionChoice.GetClientData(
                     self.sidePanel.actionChoice.GetSelection()
@@ -1967,20 +1979,10 @@ class NewFrameLayout(wx.Frame):
                 actionName = self.sidePanel.actionChoice.GetValue().replace(
                     "Action -> ", ""
                 )
-                self.notification = wxadv.NotificationMessage(
-                    "Action Completed", "%s has completed." % actionName, self
-                )
+                msg = "%s has completed." % actionName
             else:
-                self.notification = wxadv.NotificationMessage(
-                    "Action Completed", "Action has completed.", self
-                )
-            if self.notification:
-                if hasattr(self.notification, "MSWUseToasts"):
-                    try:
-                        self.notification.MSWUseToasts()
-                    except:
-                        pass
-                self.notification.Show()
+                msg = "Action has completed."
+            self.displayNotification(title, msg)
         if self.IsFrozen():
             self.Thaw()
         self.gridPanel.button_2.Enable(self.gridArrowState["next"])
@@ -2007,7 +2009,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onActivate(self, event, skip=True):
-        if not self.isRunning:
+        if not self.isRunning and not self.isUploading:
             wx.CallLater(3000, self.setGaugeValue, 0)
         if self.notification:
             self.notification.Close()
@@ -2582,3 +2584,33 @@ class NewFrameLayout(wx.Frame):
         with self.groupManage as manage:
             manage.ShowModal()
             self.groupManage = None
+
+    def callSetGaugeLater(self, event):
+        delayMs = 3000
+        value = 0
+        if event and hasattr(event, "GetValue"):
+            val = event.GetValue()
+            if type(val) == tuple:
+                delayMs = val[0]
+                value = val[1]
+        wx.CallLater(delayMs, self.setGaugeValue, value)
+
+    def displayNotificationEvent(self, event):
+        title = msg = ""
+        if event and hasattr(event, "GetValue"):
+            val = event.GetValue()
+            if type(val) == tuple:
+                title = val[0]
+                msg = val[1]
+        self.displayNotification(title, msg)
+
+    def displayNotification(self, title, msg, displayActive=False):
+        if not self.IsActive() or displayActive:
+            self.notification = wxadv.NotificationMessage(title, msg, self)
+            if self.notification:
+                if hasattr(self.notification, "MSWUseToasts"):
+                    try:
+                        self.notification.MSWUseToasts()
+                    except:
+                        pass
+                self.notification.Show()

@@ -82,7 +82,7 @@ def api_tool_decorator(locks=None):
 
 
 def determineErrorDisplay(e):
-    Globals.error_lock.acquire()
+    Globals.error_lock.acquire(timeout=10)
     if str(e) in Globals.error_tracker:
         occurred = Globals.error_tracker[str(e)]
         timeDiff = datetime.now() - occurred
