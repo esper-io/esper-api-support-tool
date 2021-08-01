@@ -487,7 +487,9 @@ class NewFrameLayout(wx.Frame):
                 self.toggleEnabledState(False)
                 self.Logging("Attempting to save CSV at %s" % inFile)
                 self.gauge.Pulse()
-                thread = wxThread.GUIThread(self, self.saveAllFile, (inFile), name="saveAllFile")
+                thread = wxThread.GUIThread(
+                    self, self.saveAllFile, (inFile), name="saveAllFile"
+                )
                 thread.start()
                 return True
             elif (
@@ -543,7 +545,7 @@ class NewFrameLayout(wx.Frame):
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
         deviceList = getAllDeviceInfo(self)
         self.Logging("Finished fetching device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 33)
+        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
         splitResults = splitListIntoChunks(list(deviceList.values()))
@@ -560,7 +562,7 @@ class NewFrameLayout(wx.Frame):
         joinThreadList(threads)
 
         self.Logging("Finished compiling device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 66)
+        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
