@@ -552,7 +552,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAllFile(self, inFile):
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(visibleOnly=Globals.SAVE_VISIBILITY)
         deviceList = getAllDeviceInfo(self)
         self.Logging("Finished fetching device and network information for CSV")
         postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 50)
@@ -603,7 +603,7 @@ class NewFrameLayout(wx.Frame):
             if deviceListing:
                 tempDict.update(deviceListing[0])
             gridDeviceData.append(tempDict)
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(visibleOnly=Globals.SAVE_VISIBILITY)
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )

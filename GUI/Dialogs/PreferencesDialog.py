@@ -46,6 +46,7 @@ class PreferencesDialog(wx.Dialog):
             "immediateChild",
             "aliasDayDelta",
             "fontSize",
+            "saveColVisibility",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -83,7 +84,7 @@ class PreferencesDialog(wx.Dialog):
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(5, 1, 0, 0)
 
         (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.general,
@@ -137,6 +138,14 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        (_, _, self.checkbox_15,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Save only visible columns",
+            wx.CheckBox,
+            "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
+        )
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -197,7 +206,7 @@ class PreferencesDialog(wx.Dialog):
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
 
         (_, _, self.checkbox_3,) = self.addPrefToPanel(
             self.grid,
@@ -241,6 +250,14 @@ class PreferencesDialog(wx.Dialog):
             "Only Show Immediate Subgroups",
             wx.CheckBox,
             "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
+        )
+
+        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Scroll to load next page",
+            wx.CheckBox,
+            "Enable event where after scrolling a certain distance you till gather the next page of Grid data and append to current results.",
         )
 
         # App Preferences
@@ -585,6 +602,20 @@ class PreferencesDialog(wx.Dialog):
                 ]
             self.parent.gridPanel.setColVisibility()
 
+        if prefDict and "saveColVisibility" in prefDict:
+            if (
+                isinstance(self.prefs["saveColVisibility"], str)
+                and prefDict["saveColVisibility"].lower() == "true"
+            ) or prefDict["saveColVisibility"] == True:
+                self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SAVE_VISIBILITY = True
+            else:
+                self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SAVE_VISIBILITY = False
+        else:
+            self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SAVE_VISIBILITY = False
+
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
@@ -655,6 +686,7 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
+            "saveColVisibility": self.checkbox_15.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -677,6 +709,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
         Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
+        Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -919,6 +952,16 @@ class PreferencesDialog(wx.Dialog):
                 self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
                     1
                 ]
+        if "saveColVisibility" in self.prefs:
+            if (
+                isinstance(self.prefs["saveColVisibility"], str)
+                and self.prefs["saveColVisibility"].lower() == "true"
+            ) or self.prefs["saveColVisibility"] == True:
+                self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SAVE_VISIBILITY = True
+            else:
+                self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SAVE_VISIBILITY = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -949,6 +992,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
+        self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
 
         return self.prefs
 
@@ -1004,6 +1048,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
             return Globals.FONT_SIZE
+        elif key == "saveColVisibility":
+            return Globals.SAVE_VISIBILITY
         else:
             return None
 

@@ -300,7 +300,6 @@ ALIAS_MAX_DAY_DELTA = 356
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 GET_IMMEDIATE_SUBGROUPS = False
-limit = (
-    MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
-)
-offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
+SAVE_VISIBILITY = False
+limit = MAX_LIMIT  # Number of results to return per page
+offset = 0  # The initial index from which to return the results
