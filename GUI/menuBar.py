@@ -57,6 +57,11 @@ class ToolMenuBar(wx.MenuBar):
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
+        fas = wx.MenuItem(
+            fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save All Info\tCtrl+Alt+S"
+        )
+        self.fileSaveAs = fileMenu.Append(fas)
+
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
         fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
@@ -196,6 +201,8 @@ class ToolMenuBar(wx.MenuBar):
         self.eqlQuery.Enable(False)
         self.collectionSubMenu.Enable(False)
         self.groupSubMenu.Enable(False)
+        self.fileSave.Enable(False)
+        self.fileSaveAs.Enable(False)
 
         self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
@@ -209,6 +216,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onUploadCSV, self.fileOpenConfig)
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBothAll, self.fileSaveAs)
         self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)

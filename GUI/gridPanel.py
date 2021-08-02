@@ -699,6 +699,21 @@ class GridPanel(wx.Panel):
                 self.grid_1_contents.append(device)
         Globals.grid1_lock.release()
 
+    def getDeviceNetworkInfoListing(self, device, device_info):
+        device = {}
+        for attribute in Globals.CSV_TAG_ATTR_NAME.keys():
+            value = (
+                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                else ""
+            )
+            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+        networkInfo = constructNetworkInfo(device, device_info)
+        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+            value = networkInfo[attribute] if attribute in networkInfo else ""
+            device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
+        return device
+
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
     def setStatusCellColor(self, value, rowNum, colNum):
         Globals.grid1_status_lock.acquire()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from re import search
 import time
 import ast
 import json
@@ -1419,3 +1420,81 @@ def processDeviceGroupMove(deviceChunk, groupList):
                     }
 
     return results
+
+
+def getAllDeviceInfo(frame):
+    devices = []
+    if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
+        api_instance = esperclient.DeviceApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        labels = list(
+            filter(
+                lambda key: frame.sidePanel.devices[key]
+                in frame.sidePanel.selectedDevicesList,
+                frame.sidePanel.devices,
+            )
+        )
+        for label in labels:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                search=label,
+                limit=Globals.limit,
+                offset=Globals.offset,
+            )
+            if api_response and api_response.results:
+                devices += api_response.results
+    elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
+        api_response = apiCalls.getAllDevices(
+            Globals.frame.sidePanel.selectedGroupsList
+        )
+        if api_response:
+            devices += api_response.results
+            while api_response and api_response.next:
+                respOffset = api_response.next.split("&offset=")[-1]
+                respLimit = api_response.next.split("?limit=")[-1].split("&")[0]
+                api_response = apiCalls.getAllDevices(
+                    Globals.frame.sidePanel.selectedGroupsList,
+                    limit=respLimit,
+                    offset=respOffset,
+                )
+                if api_response and api_response.results:
+                    devices += api_response.results
+        else:
+            postEventToFrame(
+                wxThread.myEVT_LOG,
+                "---> ERROR: Failed to get devices",
+            )
+
+    postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 25)
+    postEventToFrame(wxThread.myEVT_LOG, "Finished fetching device information")
+    threads = []
+    if devices:
+        number_of_devices = 0
+        splitResults = splitListIntoChunks(
+            devices, maxThread=int(Globals.MAX_THREAD_COUNT * (2 / 3))
+        )
+
+        for chunk in splitResults:
+            t = wxThread.GUIThread(
+                frame,
+                processDevices,
+                args=(
+                    chunk,
+                    number_of_devices,
+                    -1,
+                ),
+                name="processDevices",
+            )
+            threads.append(t)
+            t.start()
+            number_of_devices += len(chunk)
+
+    joinThreadList(threads)
+
+    deviceList = {}
+    for thread in threads:
+        if type(thread.result) == tuple:
+            deviceList = {**deviceList, **thread.result[1]}
+
+    return deviceList

@@ -3,10 +3,10 @@
 import Common.Globals as Globals
 
 
-def getSecurityPatch(device):
+def getSecurityPatch(device, deviceInfo=None):
     patch_ver = ""
     if type(device) == dict:
-        if device["software"]:
+        if "software" in device and device["software"]:
             if "security_patch_level" in device["software"]:
                 if device["software"]["security_patch_level"] is not None:
                     patch_ver = device["software"]["security_patch_level"]
@@ -17,7 +17,7 @@ def getSecurityPatch(device):
             ):
                 patch_ver = device["securityPatchLevel"]
     else:
-        if device.software_info:
+        if hasattr(device, "software_info") and device.software_info:
             if "securityPatchLevel" in device.software_info:
                 if device.software_info["securityPatchLevel"] is not None:
                     patch_ver = device.software_info["securityPatchLevel"]
@@ -190,7 +190,7 @@ def getLocation(device):
 
 def constructNetworkInfo(device, deviceInfo):
     networkInfo = {}
-    networkInfo["Security Patch"] = getSecurityPatch(device)
+    networkInfo["Security Patch"] = getSecurityPatch(device, deviceInfo)
     wifiStatus = getWifiStatus(deviceInfo).split(",")
     networkInfo["[WIFI ACCESS POINTS]"] = wifiStatus[0]
     networkInfo["[Current WIFI Connection]"] = wifiStatus[1]

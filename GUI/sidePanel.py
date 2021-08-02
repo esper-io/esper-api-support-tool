@@ -403,8 +403,9 @@ class SidePanel(wx.Panel):
                     self.appChoice.Append(key, value)
                     break
             num += 1
-            val = percent + int(float(num / len(self.apps) / 2) * 25)
-            self.parentFrame.setGaugeValue(val)
+            if len(self.apps):
+                val = percent + int(float(num / len(self.apps) / 2) * 25)
+                self.parentFrame.setGaugeValue(val)
 
     @api_tool_decorator()
     def onActionSelection(self, event):
