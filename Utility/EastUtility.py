@@ -1419,6 +1419,8 @@ def processDeviceGroupMove(deviceChunk, groupList):
                         "Response": resp.text,
                     }
 
+    if not results:
+        results["error"] = {"Error": "Failed to find devices to move, check endpoint."}
     return results
 
 

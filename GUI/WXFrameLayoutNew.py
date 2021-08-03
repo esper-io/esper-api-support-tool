@@ -552,7 +552,9 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAllFile(self, inFile):
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(visibleOnly=Globals.SAVE_VISIBILITY)
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
+            visibleOnly=Globals.SAVE_VISIBILITY
+        )
         deviceList = getAllDeviceInfo(self)
         self.Logging("Finished fetching device and network information for CSV")
         postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 50)
@@ -603,7 +605,9 @@ class NewFrameLayout(wx.Frame):
             if deviceListing:
                 tempDict.update(deviceListing[0])
             gridDeviceData.append(tempDict)
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(visibleOnly=Globals.SAVE_VISIBILITY)
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
+            visibleOnly=Globals.SAVE_VISIBILITY
+        )
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
@@ -729,19 +733,6 @@ class NewFrameLayout(wx.Frame):
             Globals.CSV_NETWORK_ATTR_NAME,
             Globals.grid2_lock,
         )
-        indx = self.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GRID_ACTIONS.keys())[0]
-        )
-        self.sidePanel.actionChoice.SetSelection(indx)
-        if self.gridPanel.grid_1.IsFrozen():
-            self.gridPanel.grid_1.Thaw()
-        if self.gridPanel.grid_2.IsFrozen():
-            self.gridPanel.grid_2.Thaw()
-        self.gridPanel.enableGridProperties()
-        self.gridPanel.autoSizeGridsColumns()
-        self.sidePanel.groupChoice.Enable(True)
-        self.sidePanel.deviceChoice.Enable(True)
-        self.toggleEnabledState(True)
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def processCsvDataByGrid(self, grid, data, headers, lock=None):
@@ -1135,7 +1126,7 @@ class NewFrameLayout(wx.Frame):
             self.displayNotification("Finished loading devices", "")
         if source == 2:
             indx = self.sidePanel.actionChoice.GetItems().index(
-                list(Globals.GRID_ACTIONS.keys())[1]
+                list(Globals.GRID_ACTIONS.keys())[0]
             )
             self.sidePanel.actionChoice.SetSelection(indx)
             if self.gridPanel.grid_1.IsFrozen():
@@ -1578,8 +1569,7 @@ class NewFrameLayout(wx.Frame):
                     self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
                 if runAction:
                     self.Logging(
-                        '---> Attempting to run grid action, "%s".'
-                        % GridActions.MODIFY_ALIAS_AND_TAGS.name
+                        '---> Attempting to run grid action, "%s".' % actionLabel
                     )
                     self.gridPanel.applyTextColorToDevice(
                         None,
