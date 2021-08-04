@@ -1407,23 +1407,42 @@ def processDeviceGroupMove(deviceChunk, groupList):
         if groupName:
             if len(groupName) == 36 and "-" in groupName:
                 resp = apiCalls.moveGroup(groupName, device.id)
+                respText = resp.text if hasattr(resp, "text") else str(resp)
                 results[device.device_name] = {
                     "Device Name": device.device_name,
                     "Device Id": device.id,
-                    "Status Code": resp.status_code,
-                    "Response": resp.text,
+                    "Status Code": resp.status_code
+                    if hasattr(resp, "status_code")
+                    else None,
+                    "Response": resp.json() if hasattr(resp, "json") else respText,
                 }
             else:
                 groups = apiCalls.getAllGroups(name=groupName).results
                 if groups:
                     groupId = groups[0].id
                     resp = apiCalls.moveGroup(groupId, device.id)
+                    respText = resp.text if hasattr(resp, "text") else str(resp)
                     results[device.device_name] = {
                         "Device Name": device.device_name,
                         "Device Id": device.id,
-                        "Status Code": resp.status_code,
-                        "Response": resp.text,
+                        "Status Code": resp.status_code
+                        if hasattr(resp, "status_code")
+                        else None,
+                        "Response": resp.json() if hasattr(resp, "json") else respText,
                     }
+                else:
+                    results[device.device_name] = {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Error": "Invalid Group Name given, no matches found, '%s'"
+                        % groupName,
+                    }
+        else:
+            results[device.device_name] = {
+                "Device Name": device.device_name,
+                "Device Id": device.id,
+                "Error": "Invalid Group Name given, '%s'" % groupName,
+            }
 
     if not results:
         results["error"] = {"Error": "Failed to find devices to move, check endpoint."}

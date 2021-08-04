@@ -9,7 +9,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.187"
+VERSION = "v0.1873"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -202,7 +202,7 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
-CSV_EDITABLE_COL = ["Alias", "Tags"]
+CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 CSV_TAG_ATTR_NAME = {
     # "Esper Id": "id",
     "Esper Name": "EsperName",
@@ -242,6 +242,23 @@ CSV_TAG_ATTR_NAME = {
     "Alarm Volume": "STREAM_ALARM",
     "Notification Volume": "STREAM_NOTIFICATION",
     "Registered On": "provisioned_on",
+    "Power Source": "powerSource",
+    "Power Status": "powerStatus",
+    "Battery Present": "batteryPresent",
+    "Battery State": "batteryState",
+    "Battery Health": "batteryHealth",
+    "Battery Level (%)": "batteryLevel",
+    "Battery Scale": "batteryScale",
+    "Battery Current (μA)": "batteryCurrent",
+    "Battery Current Avg. (μA)": "batteryCurrentAvg",
+    "Battery Voltage (Volt)": "batteryVoltage",
+    "Battery Energy Count": "batteryEnergyCount",
+    "Battery Temperature (Celsius)": "batteryTemperature",
+    "Battery Low Indicator": "batteryLowIndicator",
+    "Battery Technology": "batteryTechnology",
+    "Battery Capacity Count (%)": "batteryCapacityCount",
+    "Battery Capacity Total (Ah)": "batteryCapacityTotal",
+    "Battery Level Absolute": "batteryLevelAbsolute",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
