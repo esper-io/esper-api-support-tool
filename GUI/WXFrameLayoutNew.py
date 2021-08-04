@@ -790,7 +790,6 @@ class NewFrameLayout(wx.Frame):
                             continue
                         if colName == expectedCol.replace(" ", "").lower():
                             if expectedCol == "Tags":
-                                colValue = colValue.replace("’", "'")
                                 try:
                                     ast.literal_eval(colValue)
                                 except:
@@ -801,10 +800,12 @@ class NewFrameLayout(wx.Frame):
                                             (
                                                 colValue.count('"') % 2 != 0
                                                 or colValue.count("'") % 2 != 0
+                                                or colValue.count("’") % 2 != 0
                                             )
                                             or (
                                                 '"' not in colValue
-                                                or "'" not in colValue
+                                                and "'" not in colValue
+                                                and "’" not in colValue
                                             )
                                         )
                                     ):

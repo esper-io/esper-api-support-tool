@@ -867,34 +867,39 @@ class GridPanel(wx.Panel):
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
                 for r in re.findall(
-                    r"\".+?\"|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+", tags
+                    r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
+                    tags,
                 ):
                     processedTag = r.strip()
                     while (
                         processedTag.startswith('"')
                         or processedTag.startswith("'")
                         or processedTag.startswith("[")
+                        or processedTag.startswith("’")
                     ):
                         processedTag = processedTag[1 : len(processedTag)]
                     while (
                         processedTag.endswith('"')
                         or processedTag.endswith("'")
                         or processedTag.endswith("]")
+                        or processedTag.endswith("’")
                     ):
                         processedTag = processedTag[0 : len(processedTag) - 1]
                     if processedTag:
                         properTagList.append(processedTag.strip())
+                    if len(properTagList) >= Globals.MAX_TAGS:
+                        break
                 if esperName:
                     if len(properTagList) <= 5:
                         tagList[esperName] = properTagList
                     else:
-                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
+                        tagList[esperName] = properTagList[: Globals.MAX_TAGS]
                     rowTagList[rowNum] = {"esperName": esperName, "tags": properTagList}
                 if serialNum:
                     if len(properTagList) <= 5:
                         tagList[esperName] = properTagList
                     else:
-                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
+                        tagList[esperName] = properTagList[: Globals.MAX_TAGS]
                     if rowNum in rowTagList.keys():
                         rowTagList[rowNum]["sn"] = serialNum
                     else:
@@ -903,7 +908,7 @@ class GridPanel(wx.Panel):
                     if len(properTagList) <= 5:
                         tagList[esperName] = properTagList
                     else:
-                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
+                        tagList[esperName] = properTagList[: Globals.MAX_TAGS]
                     if rowNum in rowTagList.keys():
                         rowTagList[rowNum]["csn"] = cusSerialNum
                     else:
