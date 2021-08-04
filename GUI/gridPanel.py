@@ -248,6 +248,7 @@ class GridPanel(wx.Panel):
     def onCellEdit(self, event):
         indx1 = self.grid1HeaderLabels.index("Tags")
         indx2 = self.grid1HeaderLabels.index("Alias")
+        indx3 = self.grid1HeaderLabels.index("Group")
         x, y = self.grid_1.GetGridCursorCoords()
         esperName = self.grid_1.GetCellValue(x, 0)
         deviceListing = list(
@@ -282,6 +283,18 @@ class GridPanel(wx.Panel):
                     and deviceListing[0]["OriginalTags"]
                     != self.grid_1.GetCellValue(x, y)
                 )
+                or (
+                    y == indx3
+                    and not "OriginalGroup" in deviceListing[0]
+                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Group"]]
+                    != self.grid_1.GetCellValue(x, y)
+                )
+                or (
+                    y == indx3
+                    and "OriginalGroup" in deviceListing[0]
+                    and deviceListing[0]["OriginalGroup"]
+                    != self.grid_1.GetCellValue(x, y)
+                )
             ):
                 self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
                 if y == indx2:
@@ -292,10 +305,16 @@ class GridPanel(wx.Panel):
                     deviceListing[0][
                         Globals.CSV_TAG_ATTR_NAME["Tags"]
                     ] = self.grid_1.GetCellValue(x, y)
+                if y == indx3:
+                    deviceListing[0][
+                        Globals.CSV_TAG_ATTR_NAME["Group"]
+                    ] = self.grid_1.GetCellValue(x, y)
                 if y == indx2 and not "OriginalAlias" in deviceListing[0]:
                     deviceListing[0]["OriginalAlias"] = event.GetString()
                 if y == indx1 and not "OriginalTags" in deviceListing[0]:
                     deviceListing[0]["OriginalTags"] = event.GetString()
+                if y == indx3 and not "OriginalGroup" in deviceListing[0]:
+                    deviceListing[0]["OriginalGroup"] = event.GetString()
             else:
                 if (
                     y == indx1
@@ -314,6 +333,15 @@ class GridPanel(wx.Panel):
                 ):
                     deviceListing[0][
                         Globals.CSV_TAG_ATTR_NAME["Alias"]
+                    ] = self.grid_1.GetCellValue(x, y)
+                if (
+                    y == indx2
+                    and "OriginalGroup" in deviceListing[0]
+                    and deviceListing[0]["OriginalGroup"]
+                    == self.grid_1.GetCellValue(x, y)
+                ):
+                    deviceListing[0][
+                        Globals.CSV_TAG_ATTR_NAME["Group"]
                     ] = self.grid_1.GetCellValue(x, y)
                 self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
         event.Skip()
