@@ -817,11 +817,8 @@ class GridPanel(wx.Panel):
                 self.grid_2.SetCellValue(
                     self.grid_2.GetNumberRows() - 1, num, str(value)
                 )
-                isEditable = True
-                if attribute in Globals.CSV_EDITABLE_COL:
-                    isEditable = False
                 self.grid_2.SetReadOnly(
-                    self.grid_2.GetNumberRows() - 1, num, isEditable
+                    self.grid_2.GetNumberRows() - 1, num, True
                 )
                 num += 1
             if networkInfo not in self.grid_2_contents:
