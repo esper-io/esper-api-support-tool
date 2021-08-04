@@ -236,8 +236,8 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                 devices += thread._args[1]
                 statuses += thread.result[4]
         msg = (
-            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices."
-            % (changeSucceeded, len(devices), succeeded, numNewName)
+            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags max may be currently applied to a device "
+            % (changeSucceeded, len(devices), succeeded, numNewName, Globals.MAX_TAGS)
         )
         postEventToFrame(wxThread.myEVT_LOG, msg)
         postEventToFrame(wxThread.myEVT_COMMAND, (msg, statuses))
@@ -750,6 +750,7 @@ def processDeviceModificationForList(
     succeeded = 0
     numNewName = 0
     status = []
+    tagStatus = []
     for device in chunk:
         t = wxThread.GUIThread(
             frame,
@@ -767,12 +768,16 @@ def processDeviceModificationForList(
         t2.start()
         joinThreadList([t, t2])
         if t.result:
-            changeSucceeded += t.result
+            changeSucceeded += t.result[0]
+            if len(t.result) > 1 and t.result[1]:
+                tagStatus.append(t.result[1])
         if t2.result:
             numNewName += t2.result[0]
             succeeded += t2.result[1]
             if len(t2.result) > 2 and t2.result[2]:
                 status.append(t2.result[2])
+
+    status += tagStatus
 
     return (changeSucceeded, succeeded, numNewName, tagsFromGrid, status)
 
@@ -887,7 +892,8 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             wxThread.myEVT_UPDATE_GAUGE,
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
-    return changeSucceeded
+        status = {"Device Identifier": key, "Tags": tags}
+    return changeSucceeded, status
 
 
 @api_tool_decorator()

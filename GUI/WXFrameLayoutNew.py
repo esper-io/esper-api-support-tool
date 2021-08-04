@@ -795,6 +795,7 @@ class NewFrameLayout(wx.Frame):
                             continue
                         if colName == expectedCol.replace(" ", "").lower():
                             if expectedCol == "Tags":
+                                colValue = colValue.replace("’", "'")
                                 try:
                                     ast.literal_eval(colValue)
                                 except:
@@ -1684,7 +1685,7 @@ class NewFrameLayout(wx.Frame):
                     result += "\n\n"
             with ConfirmTextDialog(
                 "Action has been executed.",
-                "%s Check the Esper Console for details. Last known status listed below."
+                "%s\n\nCheck the Esper Console for details. Last known status listed below."
                 % msg
                 + "\n"
                 if msg
