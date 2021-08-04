@@ -442,7 +442,6 @@ class NewFrameLayout(wx.Frame):
             None, Globals.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
-        # thread.join(timeout=30)
         thread.join()
         self.DestroyLater()
 
