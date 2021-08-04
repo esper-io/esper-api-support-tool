@@ -465,8 +465,12 @@ class GridPanel(wx.Panel):
         if self.disableProperties:
             event.Skip()
             return
-        indx1 = self.grid1HeaderLabels.index("Tags")
-        indx2 = self.grid1HeaderLabels.index("Alias")
+        validIndexes = [
+            self.grid1HeaderLabels.index(col)
+            for col in Globals.CSV_EDITABLE_COL
+            if col in self.grid1HeaderLabels
+        ]
+
         grid_win = self.grid_1.GetTargetWindow()
         grid_win2 = self.grid_2.GetTargetWindow()
 
@@ -474,7 +478,7 @@ class GridPanel(wx.Panel):
         coords = self.grid_1.XYToCell(x, y)
         col = coords[1]
 
-        if col == indx1 or col == indx2:
+        if col in validIndexes:
             grid_win.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         elif self.parentFrame.isBusy:
             grid_win.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
@@ -817,9 +821,7 @@ class GridPanel(wx.Panel):
                 self.grid_2.SetCellValue(
                     self.grid_2.GetNumberRows() - 1, num, str(value)
                 )
-                self.grid_2.SetReadOnly(
-                    self.grid_2.GetNumberRows() - 1, num, True
-                )
+                self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, True)
                 num += 1
             if networkInfo not in self.grid_2_contents:
                 self.grid_2_contents.append(networkInfo)
