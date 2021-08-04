@@ -428,9 +428,16 @@ class SidePanel(wx.Panel):
             or clientData == GeneralActions.SET_APP_STATE_SHOW.value
             or clientData == GeneralActions.INSTALL_APP.value
             or clientData == GeneralActions.UNINSTALL_APP.value
-        ) and clientData < GridActions.MODIFY_ALIAS_AND_TAGS.value:
+            or clientData == GridActions.INSTALL_APP.value
+            or clientData == GridActions.UNINSTALL_APP.value
+        ):
             self.appChoice.Enable(True)
-            if self.selectedGroupsList or self.selectedDevicesList:
+            if (
+                self.selectedGroupsList
+                or self.selectedDevicesList
+                or clientData == GridActions.INSTALL_APP.value
+                or clientData == GridActions.UNINSTALL_APP.value
+            ):
                 self.notebook_1.SetSelection(2)
         else:
             self.appChoice.Enable(False)
@@ -443,7 +450,12 @@ class SidePanel(wx.Panel):
         res = version = pkg = app_id = app_name = None
         self.selectedApp.Clear()
         action = self.actionChoice.GetClientData(self.actionChoice.GetSelection())
-        hideVersion = True if action != GeneralActions.INSTALL_APP.value else False
+        hideVersion = (
+            True
+            if action != GeneralActions.INSTALL_APP.value
+            and action != GridActions.INSTALL_APP.value
+            else False
+        )
         with InstalledDevicesDlg(
             self.apps, hide_version=hideVersion, title="Select Application"
         ) as dlg:

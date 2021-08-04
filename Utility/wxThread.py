@@ -4,7 +4,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.Resource import joinThreadList, postEventToFrame
 import math
-from Common.enum import GeneralActions
+from Common.enum import GeneralActions, GridActions
 import Common.Globals as Globals
 import threading
 import wx
@@ -93,13 +93,22 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
     if source == 4:
         postEventToFrame(eventUtil.EVT_THREAD_WAIT, (threads, 3, action))
     if source == 5:
-        msg = "Results of moving devices' groups."
+        msg = ""
+        if action == GridActions.MOVE_GROUP.value:
+            msg = "Results of moving devices' groups."
+        if action == GridActions.INSTALL_LATEST_APP.value:
+            msg = "Results of installing given app packages."
+        if action == GridActions.UNINSTALL_LISTED_APP.value:
+            msg = "Results of uninstalling given app packages."
         statuses = []
         for t in threads:
-            if t.result:
+            if t.result and type(t.result) == dict:
                 for val in t.result.values():
                     statuses.append(val)
-        postEventToFrame(eventUtil.EVT_COMPLETE, None)
+            elif t.result and type(t.result) == list:
+                for val in t.result:
+                    statuses.append(val)
+        postEventToFrame(eventUtil.myEVT_COMPLETE, None)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
 
 

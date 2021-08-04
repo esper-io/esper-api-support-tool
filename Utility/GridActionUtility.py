@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from platform import version
+from urllib3 import packages
+from Utility.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 import time
 
 import esperclient
@@ -37,9 +40,13 @@ def iterateThroughGridRows(frame, action):
     if action == GridActions.MOVE_GROUP.value:
         relocateDeviceToNewGroup(frame)
     if action == GridActions.INSTALL_LATEST_APP.value:
-        pass
+        installListedLatestApp(frame)
     if action == GridActions.UNINSTALL_LISTED_APP.value:
-        pass
+        uninstallListedApp(frame)
+    if action == GridActions.INSTALL_APP.value:
+        installApp(frame)
+    if action == GridActions.UNINSTALL_APP.value:
+        uninstallApp(frame)
 
 
 @api_tool_decorator()
@@ -392,6 +399,7 @@ def setAllAppsState(frame, device, state):
     return stateStatuses
 
 
+@api_tool_decorator()
 def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
     api_response = getDevicesFromGrid()
     state = None
@@ -470,6 +478,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
         t.start()
 
 
+@api_tool_decorator()
 def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
@@ -528,6 +537,7 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
     return devices
 
 
+@api_tool_decorator()
 def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
     devices = getDevicesFromGrid()
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
@@ -555,6 +565,7 @@ def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
     t.start()
 
 
+@api_tool_decorator()
 def processDeviceGroupMove(deviceChunk, groupList):
     groupId = None
     results = {}
@@ -617,9 +628,10 @@ def processDeviceGroupMove(deviceChunk, groupList):
     return results
 
 
-def installLatestApp(frame):
-    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
-    gridAppList, _ = Globals.frame.gridPanel.getAppsFromGrid()
+@api_tool_decorator()
+def installListedLatestApp(frame):
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    gridAppList, _ = frame.gridPanel.getAppsFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
     splitResults = splitListIntoChunks(devices)
@@ -645,17 +657,84 @@ def installLatestApp(frame):
     t.start()
 
 
-def processInstallLatestAppChunk(devices, appList):
+@api_tool_decorator()
+def processInstallLatestAppChunk(devices, appList, appChoice=False):
     status = []
     for device in devices:
-        for app in appList:
-            status.append(apiCalls.installAppOnDevices(app, devices=[device.id]))
+        if not appChoice:
+            package_name = None
+            if device.id in appList.keys():
+                package_name = appList[device.id]
+            elif device.device_name in appList.keys():
+                package_name = appList[device.device_name]
+            elif (
+                "serialNumber" in device.hardware_info
+                and device.hardware_info["serialNumber"] in appList.keys()
+            ):
+                package_name = appList[device.hardware_info["serialNumber"]]
+            elif (
+                "customSerialNumber" in device.hardware_info
+                and device.hardware_info["customSerialNumber"] in appList.keys()
+            ):
+                package_name = appList[device.hardware_info["customSerialNumber"]]
+            if package_name:
+                for package in package_name:
+                    resp = installAppOnDevices(package, devices=[device.id])
+                    if type(resp) == dict and "Error" in resp.keys():
+                        status.append(
+                            {
+                                "Device Name": device.device_name,
+                                "Device Id": device.id,
+                                "Error": resp["Error"],
+                            }
+                        )
+                    else:
+                        status += resp
+            else:
+                status.append(
+                    {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Error": "No packages found to install",
+                    }
+                )
+        else:
+            version = None
+            pkgName = None
+            if "version" in appList:
+                version = appList["version"]
+            if "pkgName" in appList:
+                pkgName = appList["pkgName"]
+            if pkgName:
+                resp = installAppOnDevices(
+                    pkgName, version=version, devices=[device.id]
+                )
+                if type(resp) == dict and "Error" in resp.keys():
+                    status.append(
+                        {
+                            "Device Name": device.device_name,
+                            "Device Id": device.id,
+                            "Error": resp["Error"],
+                        }
+                    )
+                else:
+                    status += resp
+            else:
+                status.append(
+                    {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Error": "Failed to get package name for %s"
+                        % appList["app_name"],
+                    }
+                )
     return status
 
 
-def uninstallApp(frame):
-    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
-    gridAppList, _ = Globals.frame.gridPanel.getAppsFromGrid()
+@api_tool_decorator()
+def uninstallListedApp(frame):
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    gridAppList, _ = frame.gridPanel.getAppsFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
     splitResults = splitListIntoChunks(devices)
@@ -681,9 +760,105 @@ def uninstallApp(frame):
     t.start()
 
 
-def processUninstallAppChunk(devices, appList):
+@api_tool_decorator()
+def processUninstallAppChunk(devices, appList, appChoice=False):
     status = []
     for device in devices:
-        for app in appList:
-            status.append(apiCalls.uninstallAppOnDevice(app, device=[device.id]))
+        if not appChoice:
+            package_name = None
+            if device.id in appList.keys():
+                package_name = appList[device.id]
+            elif device.device_name in appList.keys():
+                package_name = appList[device.device_name]
+            elif (
+                "serialNumber" in device.hardware_info
+                and device.hardware_info["serialNumber"] in appList.keys()
+            ):
+                package_name = appList[device.hardware_info["serialNumber"]]
+            elif (
+                "customSerialNumber" in device.hardware_info
+                and device.hardware_info["customSerialNumber"] in appList.keys()
+            ):
+                package_name = appList[device.hardware_info["customSerialNumber"]]
+            if package_name:
+                for package in package_name:
+                    resp = uninstallAppOnDevice(package, device=[device.id])
+                    status += resp
+            else:
+                status.append(
+                    {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Error": "No packages found to install",
+                    }
+                )
+        else:
+            pkgName = None
+            if "pkgName" in appList:
+                pkgName = appList["pkgName"]
+            if pkgName:
+                resp = uninstallAppOnDevice(pkgName, device=[device.id])
+                status += resp
+            else:
+                status.append(
+                    {
+                        "Device Name": device.device_name,
+                        "Device Id": device.id,
+                        "Error": "Failed to get package name for %s"
+                        % appList["app_name"],
+                    }
+                )
     return status
+
+
+def installApp(frame):
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            frame,
+            processInstallLatestAppChunk,
+            args=(chunk, frame.sidePanel.selectedAppEntry, True),
+            name="processInstallLatestAppChunk",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        frame,
+        wxThread.waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
+
+
+def uninstallApp(frame):
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            frame,
+            processUninstallAppChunk,
+            args=(chunk, frame.sidePanel.selectedAppEntry, True),
+            name="processUninstallAppChunk",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        frame,
+        wxThread.waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()

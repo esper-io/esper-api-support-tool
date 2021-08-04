@@ -55,7 +55,6 @@ def installAppOnDevices(packageName, version=None, devices=None):
             )
         )
         return {
-            "Device Id(s)": devices,
             "Error": "Failed to find app version for %s. Please ensure app package name is correct!"
             % packageName,
         }

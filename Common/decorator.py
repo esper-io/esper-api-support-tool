@@ -50,9 +50,8 @@ def api_tool_decorator(locks=None):
                         if (
                             thread.name not in invalidThreadNames
                             and "main" not in thread.name.lower()
-                            and type(thread) != threading.Thread
+                            and hasattr(thread, "stop")
                         ):
-                            # otherThreadsRunning = True
                             thread.stop()
                     # if not otherThreadsRunning:
                     Globals.frame.onComplete(None, True)
