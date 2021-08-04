@@ -258,93 +258,48 @@ class GridPanel(wx.Panel):
             )
         )
         if deviceListing:
-            if (
-                (
-                    y == indx2
-                    and not "OriginalAlias" in deviceListing[0]
-                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Alias"]]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-                or (
-                    y == indx2
-                    and "OriginalAlias" in deviceListing[0]
-                    and deviceListing[0]["OriginalAlias"]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-                or (
-                    y == indx1
-                    and not "OriginalTags" in deviceListing[0]
-                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Tags"]]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-                or (
-                    y == indx1
-                    and "OriginalTags" in deviceListing[0]
-                    and deviceListing[0]["OriginalTags"]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-                or (
-                    y == indx3
-                    and not "OriginalGroup" in deviceListing[0]
-                    and deviceListing[0][Globals.CSV_TAG_ATTR_NAME["Group"]]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-                or (
-                    y == indx3
-                    and "OriginalGroup" in deviceListing[0]
-                    and deviceListing[0]["OriginalGroup"]
-                    != self.grid_1.GetCellValue(x, y)
-                )
-            ):
-                self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
-                if y == indx2:
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Alias"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                if y == indx1:
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Tags"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                if y == indx3:
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Group"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                if y == indx2 and not "OriginalAlias" in deviceListing[0]:
-                    deviceListing[0]["OriginalAlias"] = event.GetString()
-                if y == indx1 and not "OriginalTags" in deviceListing[0]:
-                    deviceListing[0]["OriginalTags"] = event.GetString()
-                if y == indx3 and not "OriginalGroup" in deviceListing[0]:
-                    deviceListing[0]["OriginalGroup"] = event.GetString()
-            else:
-                if (
-                    y == indx1
-                    and "OriginalTags" in deviceListing[0]
-                    and deviceListing[0]["OriginalTags"]
-                    == self.grid_1.GetCellValue(x, y)
-                ):
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Tags"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                if (
-                    y == indx2
-                    and "OriginalAlias" in deviceListing[0]
-                    and deviceListing[0]["OriginalAlias"]
-                    == self.grid_1.GetCellValue(x, y)
-                ):
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Alias"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                if (
-                    y == indx2
-                    and "OriginalGroup" in deviceListing[0]
-                    and deviceListing[0]["OriginalGroup"]
-                    == self.grid_1.GetCellValue(x, y)
-                ):
-                    deviceListing[0][
-                        Globals.CSV_TAG_ATTR_NAME["Group"]
-                    ] = self.grid_1.GetCellValue(x, y)
-                self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
+            self.onCellEditHelper(
+                deviceListing, event, indx1, "OriginalTags", "Tags", x, y
+            )
+            self.onCellEditHelper(
+                deviceListing, event, indx2, "OriginalAlias", "Alias", x, y
+            )
+            self.onCellEditHelper(
+                deviceListing, event, indx3, "OriginalGroup", "Group", x, y
+            )
         event.Skip()
+
+    def onCellEditHelper(
+        self, deviceListing, event, indx, orginalFieldName, AlteredfieldName, x, y
+    ):
+        if (
+            y == indx
+            and not orginalFieldName in deviceListing[0]
+            and deviceListing[0][Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]]
+            != self.grid_1.GetCellValue(x, y)
+        ) or (
+            y == indx
+            and orginalFieldName in deviceListing[0]
+            and deviceListing[0][orginalFieldName] != self.grid_1.GetCellValue(x, y)
+        ):
+            self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
+            if y == indx:
+                deviceListing[0][
+                    Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]
+                ] = self.grid_1.GetCellValue(x, y)
+            if y == indx and not orginalFieldName in deviceListing[0]:
+                deviceListing[0][orginalFieldName] = event.GetString()
+        else:
+            if (
+                y == indx
+                and orginalFieldName in deviceListing[0]
+                and deviceListing[0][orginalFieldName] == self.grid_1.GetCellValue(x, y)
+            ):
+                deviceListing[0][
+                    Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]
+                ] = self.grid_1.GetCellValue(x, y)
+            if y == indx:
+                self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
 
     @api_tool_decorator()
     def onDeviceGridSort(self, event):
