@@ -866,25 +866,44 @@ class GridPanel(wx.Panel):
                 indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
                 properTagList = []
-                for r in re.findall(r"\".+?\"|[\w\d '-+\\/^%$#!@$%^&]+", tags):
+                for r in re.findall(
+                    r"\".+?\"|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+", tags
+                ):
                     processedTag = r.strip()
-                    while processedTag.startswith('"') or processedTag.startswith("'"):
+                    while (
+                        processedTag.startswith('"')
+                        or processedTag.startswith("'")
+                        or processedTag.startswith("[")
+                    ):
                         processedTag = processedTag[1 : len(processedTag)]
-                    while processedTag.endswith('"') or processedTag.endswith("'"):
+                    while (
+                        processedTag.endswith('"')
+                        or processedTag.endswith("'")
+                        or processedTag.endswith("]")
+                    ):
                         processedTag = processedTag[0 : len(processedTag) - 1]
                     if processedTag:
                         properTagList.append(processedTag.strip())
                 if esperName:
-                    tagList[esperName] = properTagList
+                    if len(properTagList) <= 5:
+                        tagList[esperName] = properTagList
+                    else:
+                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
                     rowTagList[rowNum] = {"esperName": esperName, "tags": properTagList}
                 if serialNum:
-                    tagList[serialNum] = properTagList
+                    if len(properTagList) <= 5:
+                        tagList[esperName] = properTagList
+                    else:
+                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
                     if rowNum in rowTagList.keys():
                         rowTagList[rowNum]["sn"] = serialNum
                     else:
                         rowTagList[rowNum] = {"sn": serialNum, "tags": properTagList}
                 if cusSerialNum:
-                    tagList[cusSerialNum] = properTagList
+                    if len(properTagList) <= 5:
+                        tagList[esperName] = properTagList
+                    else:
+                        tagList[esperName] = properTagList[:Globals.MAX_TAGS]
                     if rowNum in rowTagList.keys():
                         rowTagList[rowNum]["csn"] = cusSerialNum
                     else:
