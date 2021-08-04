@@ -41,6 +41,8 @@ if __name__ == "__main__":
             app_name,
             "--distpath",
             dispath,
+            "--version-file",
+            curDirPath + "/file_version_info.txt",
             "--add-data",
             curDirPath
             + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
