@@ -446,7 +446,7 @@ class NewFrameLayout(wx.Frame):
             None, Globals.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
-        thread.join(timeout=30)
+        thread.join()
         self.DestroyLater()
 
     @api_tool_decorator()
@@ -1559,8 +1559,8 @@ class NewFrameLayout(wx.Frame):
                 if Globals.SHOW_GRID_DIALOG:
                     result = CheckboxMessageBox(
                         "Confirmation",
-                        "The %s will attempt to process the action on all devices in the Device Info grid. \n\nContinue?"
-                        % Globals.TITLE,
+                        "The %s will attempt to process the action on all devices in the Device Info grid.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!\n\nContinue?"
+                        % (Globals.TITLE, Globals.MAX_TAGS),
                     )
 
                     if result.ShowModal() != wx.ID_OK:
@@ -1587,6 +1587,10 @@ class NewFrameLayout(wx.Frame):
                         (self, actionClientData),
                         name="iterateThroughGridRows",
                     ).start()
+                else:
+                    self.isRunning = False
+                    self.setCursorDefault()
+                    self.toggleEnabledState(True)
             else:
                 displayMessageBox(
                     (

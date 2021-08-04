@@ -236,7 +236,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
                 devices += thread._args[1]
                 statuses += thread.result[4]
         msg = (
-            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags max may be currently applied to a device "
+            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
             % (changeSucceeded, len(devices), succeeded, numNewName, Globals.MAX_TAGS)
         )
         postEventToFrame(wxThread.myEVT_LOG, msg)
