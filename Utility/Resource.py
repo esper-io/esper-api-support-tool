@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.EventUtility import CustomEvent
 from Common.decorator import api_tool_decorator
 import json
 import os
@@ -11,7 +12,6 @@ import time
 import subprocess
 import wx
 import webbrowser
-import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
@@ -53,7 +53,7 @@ def postEventToFrame(eventType, eventValue=None):
     """ Post an Event to the Main Thread """
     if eventType:
         try:
-            evt = wxThread.CustomEvent(eventType, -1, eventValue)
+            evt = CustomEvent(eventType, -1, eventValue)
             if Globals.frame:
                 wx.PostEvent(Globals.frame, evt)
         except Exception as e:
@@ -442,3 +442,78 @@ def getStrRatioSimilarity(s, t, usePartial=False):
     if usePartial:
         return fuzz.partial_ratio(s.lower(), t.lower())
     return fuzz.ratio(s.lower(), t.lower())
+
+
+def getAppDictEntry(app, update=True):
+    entry = None
+    appName = None
+    appPkgName = None
+
+    if type(app) == dict and "application" in app:
+        appName = app["application"]["application_name"]
+        appPkgName = appName + (" (%s)" % app["application"]["package_name"])
+        entry = {
+            "app_name": app["application"]["application_name"],
+            appName: app["application"]["package_name"],
+            appPkgName: app["application"]["package_name"],
+            "appPkgName": appPkgName,
+            "packageName": app["application"]["package_name"],
+            "id": app["id"],
+            "app_state": None,
+        }
+    elif hasattr(app, "application_name"):
+        appName = app.application_name
+        appPkgName = appName + (" (%s)" % app.package_name)
+        entry = {
+            "app_name": app.application_name,
+            appName: app.package_name,
+            appPkgName: app.package_name,
+            "appPkgName": appPkgName,
+            "packageName": app.package_name,
+            "versions": app.versions,
+            "id": app.id,
+        }
+    else:
+        appName = app["app_name"]
+        appPkgName = appName + (" (%s)" % app["package_name"])
+        entry = {
+            "app_name": app["app_name"],
+            appName: app["package_name"],
+            appPkgName: app["package_name"],
+            "appPkgName": appPkgName,
+            "packageName": app["package_name"],
+            "app_state": app["state"],
+            "id": app["id"],
+        }
+
+    if Globals.frame and hasattr(Globals.frame, "sidePanel"):
+        selectedDeviceAppsMatch = list(
+            filter(
+                lambda entry: entry["app_name"] == appName
+                and entry["appPkgName"] == appPkgName,
+                Globals.frame.sidePanel.selectedDeviceApps,
+            )
+        )
+        enterpriseAppsMatch = list(
+            filter(
+                lambda entry: entry["app_name"] == appName
+                and entry["appPkgName"] == appPkgName,
+                Globals.frame.sidePanel.enterpriseApps,
+            )
+        )
+        if selectedDeviceAppsMatch:
+            indx = Globals.frame.sidePanel.selectedDeviceApps.index(
+                selectedDeviceAppsMatch[0]
+            )
+            oldEntry = Globals.frame.sidePanel.selectedDeviceApps[indx]
+            if update:
+                oldEntry.update(entry)
+                Globals.frame.sidePanel.selectedDeviceApps[indx] = entry = oldEntry
+        if enterpriseAppsMatch:
+            indx = Globals.frame.sidePanel.enterpriseApps.index(enterpriseAppsMatch[0])
+            oldEntry = Globals.frame.sidePanel.enterpriseApps[indx]
+            if update:
+                oldEntry.update(entry)
+                Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
+
+    return entry

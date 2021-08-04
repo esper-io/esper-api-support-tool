@@ -7,6 +7,7 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import platform
 import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 
 from Common.enum import Color
 
@@ -93,7 +94,7 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def onClose(self, event):
-        evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
+        evt = wxThread.CustomEvent(eventUtil.myEVT_UNCHECK_CONSOLE, -1, None)
         if Globals.frame:
             wx.PostEvent(Globals.frame, evt)
         if event.EventType != wx.EVT_CLOSE.typeId:

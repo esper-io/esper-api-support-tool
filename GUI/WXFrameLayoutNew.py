@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.GridActionUtility import iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
@@ -15,6 +16,7 @@ import json
 import tempfile
 import ast
 import wx.adv as wxadv
+import Utility.EventUtility as eventUtil
 
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
@@ -50,8 +52,6 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
     getInstallDevices,
-    installAppOnGroups,
-    moveGroup,
     setAppState,
     setKiosk,
     setMulti,
@@ -59,9 +59,6 @@ from Utility.EsperAPICalls import (
     getAllDevices,
     getAllGroups,
     getAllApplications,
-    installAppOnDevices,
-    uninstallAppOnDevice,
-    uninstallAppOnGroup,
     validateConfiguration,
     getTokenInfo,
     clearAppData,
@@ -69,14 +66,13 @@ from Utility.EsperAPICalls import (
 from Utility.EastUtility import (
     TakeAction,
     clearKnownGroups,
-    createCommand,
     getAllDeviceInfo,
-    iterateThroughGridRows,
     processInstallDevices,
     removeNonWhitelisted,
 )
 from Utility.Resource import (
     checkForInternetAccess,
+    getAppDictEntry,
     limitActiveThreads,
     postEventToFrame,
     resourcePath,
@@ -86,6 +82,14 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
+from Utility.CommandUtility import createCommand
+from Utility.AppUtilities import (
+    installAppOnDevices,
+    uninstallAppOnDevice,
+    installAppOnGroups,
+    uninstallAppOnGroup,
+)
+from Utility.GroupUtility import moveGroup
 
 
 class NewFrameLayout(wx.Frame):
@@ -141,11 +145,15 @@ class NewFrameLayout(wx.Frame):
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
 
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        self.sidePanel = SidePanel(self, self.panel_1, sizer_4)
+        sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
+        self.sidePanel = SidePanel(self, self.panel_1)
+        sizer_4.Add(self.sidePanel, 1, wx.EXPAND, 0)
 
         self.gridPanel = GridPanel(self, self.panel_1, wx.ID_ANY)
-        sizer_4.Add(self.gridPanel, 1, wx.ALL | wx.EXPAND, 4)
+        sizer_4.Add(self.gridPanel, 1, wx.TOP | wx.BOTTOM | wx.RIGHT | wx.EXPAND, 4)
+
+        sizer_4.AddGrowableRow(0)
+        sizer_4.AddGrowableCol(1)
 
         self.panel_1.SetSizer(sizer_4)
 
@@ -199,28 +207,28 @@ class NewFrameLayout(wx.Frame):
         # Bound Events
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
-        self.Bind(wxThread.EVT_FETCH, self.onFetch)
-        self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
-        self.Bind(wxThread.EVT_UPDATE_DONE, self.onUpdateComplete)
-        self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
-        self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
-        self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
-        self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
-        self.Bind(wxThread.EVT_LOG, self.onLog)
-        self.Bind(wxThread.EVT_COMMAND, self.onCommandDone)
-        self.Bind(wxThread.EVT_UPDATE_GAUGE, self.setGaugeValue)
-        self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
-        self.Bind(wxThread.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
-        self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
-        self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
-        self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
-        self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
-        self.Bind(wxThread.EVT_MESSAGE_BOX, displayMessageBox)
-        self.Bind(wxThread.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
+        self.Bind(eventUtil.EVT_FETCH, self.onFetch)
+        self.Bind(eventUtil.EVT_UPDATE, self.onUpdate)
+        self.Bind(eventUtil.EVT_UPDATE_DONE, self.onUpdateComplete)
+        self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
+        self.Bind(eventUtil.EVT_APPS, self.addAppsToAppChoice)
+        self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
+        self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
+        self.Bind(eventUtil.EVT_LOG, self.onLog)
+        self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
+        self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.setGaugeValue)
+        self.Bind(eventUtil.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
+        self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
+        self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
+        self.Bind(eventUtil.EVT_ON_FAILED, self.onFail)
+        self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
+        self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
+        self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
+        self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
-        self.Bind(wxThread.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
-        self.Bind(wxThread.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
+        self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
+        self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
 
         if self.kill:
             return
@@ -259,7 +267,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
-        self.SetBackgroundColour(Color.grey.value)
+        self.SetBackgroundColour(Color.lightGrey.value)
         self.SetThemeEnabled(False)
 
         if self.kill:
@@ -557,7 +565,7 @@ class NewFrameLayout(wx.Frame):
         )
         deviceList = getAllDeviceInfo(self)
         self.Logging("Finished fetching device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 50)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
         splitResults = splitListIntoChunks(list(deviceList.values()))
@@ -574,12 +582,12 @@ class NewFrameLayout(wx.Frame):
         joinThreadList(threads)
 
         self.Logging("Finished compiling device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 75)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
-        postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
+        postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
     def fetchAllGridData(self, chunk, gridDeviceData):
@@ -611,7 +619,7 @@ class NewFrameLayout(wx.Frame):
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
-        postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
+        postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
     def saveGridData(
@@ -705,9 +713,9 @@ class NewFrameLayout(wx.Frame):
                 data = list(reader)
                 self.processDeviceCSVUpload(data)
         # self.gridPanel.grid_1.AutoSizeColumns()
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
-            wxThread.myEVT_DISPLAY_NOTIFICATION,
+            eventUtil.myEVT_DISPLAY_NOTIFICATION,
             ("E.A.S.T.", "Device CSV Upload Completed"),
         )
         self.setCursorDefault()
@@ -932,7 +940,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
-        self.sidePanel.appChoice.Clear()
+        # self.sidePanel.appChoice.Clear()
         self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
         self.setCursorBusy()
@@ -1098,7 +1106,7 @@ class NewFrameLayout(wx.Frame):
                             self,
                             getdeviceapps,
                             args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
-                            eventType=wxThread.myEVT_APPS,
+                            eventType=eventUtil.myEVT_APPS,
                             waitForJoin=False,
                             name="GetDeviceAppsToPopulateApps",
                         )
@@ -1162,7 +1170,7 @@ class NewFrameLayout(wx.Frame):
                             cmdResults = cmdResults + t.result
                         else:
                             cmdResults.append(t.result)
-            postEventToFrame(wxThread.myEVT_COMPLETE, (True, action, cmdResults))
+            postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         self.setGaugeValue(100)
@@ -1176,7 +1184,7 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.doAPICallInThread(
             self,
             getAllGroups,
-            eventType=wxThread.myEVT_GROUP,
+            eventType=eventUtil.myEVT_GROUP,
             waitForJoin=False,
             name="PopulateGroupsGetAll",
         )
@@ -1280,7 +1288,7 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        self.sidePanel.appChoice.Clear()
+        # self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self,
             self.fetchAllApps,
@@ -1331,43 +1339,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def addAppToAppList(self, app):
-        entry = None
-        if type(app) == dict and "application" in app:
-            appName = app["application"]["application_name"]
-            appPkgName = appName + (" (%s)" % app["application"]["package_name"])
-            entry = {
-                "app_name": app["application"]["application_name"],
-                appName: app["application"]["package_name"],
-                appPkgName: app["application"]["package_name"],
-                "appPkgName": appPkgName,
-                "packageName": app["application"]["package_name"],
-                "id": app["id"],
-                "app_state": None,
-            }
-        elif hasattr(app, "application_name"):
-            appName = app.application_name
-            appPkgName = appName + (" (%s)" % app.package_name)
-            entry = {
-                "app_name": app.application_name,
-                appName: app.package_name,
-                appPkgName: app.package_name,
-                "appPkgName": appPkgName,
-                "packageName": app.package_name,
-                "versions": app.versions,
-                "id": app.id,
-            }
-        else:
-            appName = app["app_name"]
-            appPkgName = appName + (" (%s)" % app["package_name"])
-            entry = {
-                "app_name": app["app_name"],
-                appName: app["package_name"],
-                appPkgName: app["package_name"],
-                "appPkgName": appPkgName,
-                "packageName": app["package_name"],
-                "app_state": app["state"],
-                "id": app["id"],
-            }
+        entry = getAppDictEntry(app)
         if entry and entry not in self.sidePanel.enterpriseApps:
             self.sidePanel.enterpriseApps.append(entry)
         if (
@@ -1396,14 +1368,13 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
 
-        appSelection = self.sidePanel.appChoice.GetSelection()
+        appSelection = self.sidePanel.selectedApp.GetSelection()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
         appLabel = (
-            self.sidePanel.appChoice.Items[appSelection]
-            if len(self.sidePanel.appChoice.Items) > 0
-            and self.sidePanel.appChoice.Items[appSelection]
+            self.sidePanel.selectedAppEntry["name"]
+            if self.sidePanel.selectedAppEntry
             else ""
         )
         actionLabel = (
@@ -1740,9 +1711,10 @@ class NewFrameLayout(wx.Frame):
         """ Given device data perform the specified action """
         threads = []
         appToUse = None
-        appSelection = self.sidePanel.appChoice.GetSelection()
-        if appSelection > 0:
-            appToUse = self.sidePanel.appChoice.GetClientData(appSelection)
+        appVersion = None
+        if self.sidePanel.selectedAppEntry:
+            appToUse = self.sidePanel.selectedAppEntry["pkgName"]
+            appVersion = self.sidePanel.selectedAppEntry["version"]
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
@@ -1777,7 +1749,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "DISABLE"),
+                    (device.id, appToUse, appVersion, "DISABLE"),
                     name="SetAppDisable",
                 )
                 thread.start()
@@ -1786,7 +1758,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "HIDE"),
+                    (device.id, appToUse, appVersion, "HIDE"),
                     name="SetAppHide",
                 )
                 thread.start()
@@ -1795,7 +1767,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "SHOW"),
+                    (device.id, appToUse, appVersion, "SHOW"),
                     name="SetAppShow",
                 )
                 thread.start()
@@ -1813,7 +1785,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     installAppOnDevices,
-                    (appToUse, None, device.id),
+                    (appToUse, appVersion, device.id),
                     name="installAppOnDevices",
                 )
                 thread.start()
@@ -1870,13 +1842,13 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.addDevicesApps,
                 args=None,
-                eventType=wxThread.myEVT_COMPLETE,
+                eventType=eventUtil.myEVT_COMPLETE,
                 eventArg=(not self.isRunning and not self.isSavingPrefs),
                 sendEventArgInsteadOfResult=True,
                 name="addDeviceApps",
             ).start()
         else:
-            evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+            evt = wxThread.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
             wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -1903,8 +1875,8 @@ class NewFrameLayout(wx.Frame):
             )
             num += 1
         if not appAdded:
-            self.sidePanel.appChoice.Append("No available app(s) on this device")
-            self.sidePanel.appChoice.SetSelection(0)
+            self.sidePanel.selectedApp.Append("No available app(s) on this device")
+            self.sidePanel.selectedApp.SetSelection(0)
         self.menubar.fileSave.Enable(True)
         self.menubar.fileSaveAs.Enable(True)
 
@@ -2138,7 +2110,7 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Preferences' Saved")
+        evt = wxThread.CustomEvent(eventUtil.myEVT_LOG, -1, "---> Preferences' Saved")
         wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -2263,7 +2235,7 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.updateGrids,
                 None,
-                eventType=wxThread.myEVT_UPDATE,
+                eventType=eventUtil.myEVT_UPDATE,
                 name="fetchUpdateData",
             )
             self.refresh.start()
@@ -2318,7 +2290,7 @@ class NewFrameLayout(wx.Frame):
             threads = self.fetchData(True)
             self.isRunningUpdate = False
         joinThreadList(threads)
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        evt = wxThread.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
         wx.PostEvent(self, evt)
 
     def fetchData(self, isUpdate=False):
@@ -2460,7 +2432,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
         self.isRunning = False
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
+        evt = wxThread.CustomEvent(eventUtil.myEVT_COMPLETE, -1, None)
         wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -2597,7 +2569,7 @@ class NewFrameLayout(wx.Frame):
                         displayMessageBox(str(resp))
                 else:
                     displayMessageBox("No Group found with the name: %s" % selction)
-                evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+                evt = wxThread.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
                 wx.PostEvent(self, evt)
                 return
             else:
@@ -2638,7 +2610,7 @@ class NewFrameLayout(wx.Frame):
                         self,
                         installAppOnDevices,
                         args=(pkg, version),
-                        eventType=wxThread.myEVT_COMMAND,
+                        eventType=eventUtil.myEVT_COMMAND,
                         name="installAppOnDevices",
                     )
                 elif self.sidePanel.selectedGroupsList:
@@ -2646,7 +2618,7 @@ class NewFrameLayout(wx.Frame):
                         self,
                         installAppOnGroups,
                         args=(pkg, version),
-                        eventType=wxThread.myEVT_COMMAND,
+                        eventType=eventUtil.myEVT_COMMAND,
                         name="installAppOnGroups",
                     )
                 if t:
@@ -2676,7 +2648,7 @@ class NewFrameLayout(wx.Frame):
                         self,
                         uninstallAppOnDevice,
                         args=(pkg),
-                        eventType=wxThread.myEVT_COMMAND,
+                        eventType=eventUtil.myEVT_COMMAND,
                         name="uninstallAppOnDevice",
                     )
                 elif self.sidePanel.selectedGroupsList:
@@ -2684,7 +2656,7 @@ class NewFrameLayout(wx.Frame):
                         self,
                         uninstallAppOnGroup,
                         args=(pkg),
-                        eventType=wxThread.myEVT_COMMAND,
+                        eventType=eventUtil.myEVT_COMMAND,
                         name="uninstallAppOnGroup",
                     )
                 if t:

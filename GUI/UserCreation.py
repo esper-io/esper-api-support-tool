@@ -7,7 +7,7 @@ from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
 import os
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 from Utility.Resource import (
     createNewFile,
     displayMessageBox,
@@ -583,7 +583,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully modified %s of %s users!" % (
                     numCreated,
@@ -593,7 +593,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     @api_tool_decorator()
@@ -648,7 +648,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully created %s of %s users!" % (
                     numCreated,
@@ -658,7 +658,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     def onDelete(self):
@@ -712,7 +712,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully deleted %s of %s users!" % (
                     numCreated,
@@ -722,7 +722,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     def tryToMakeActive(self):

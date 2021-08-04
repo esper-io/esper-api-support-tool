@@ -5,12 +5,10 @@ from wx.core import TextEntryDialog
 from Utility.Resource import displayMessageBox, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import (
-    createGroup,
-    deleteGroup,
     fetchGroupName,
     getAllGroups,
-    renameGroup,
 )
+from Utility.GroupUtility import deleteGroup, createGroup, renameGroup
 
 import wx
 import wx.grid as gridlib

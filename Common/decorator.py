@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from Utility.wxThread import GUIThread
 import Common.Globals as Globals
 import json
 import sys
@@ -51,7 +50,7 @@ def api_tool_decorator(locks=None):
                         if (
                             thread.name not in invalidThreadNames
                             and "main" not in thread.name.lower()
-                            and type(thread) == GUIThread
+                            and type(thread) != threading.Thread
                         ):
                             # otherThreadsRunning = True
                             thread.stop()

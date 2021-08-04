@@ -69,6 +69,8 @@ GRID_ACTIONS = {
     "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
     "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
+    "Action -> Install Latest App": GridActions.INSTALL_LATEST_APP.value,
+    "Action -> Uninstall Listed App": GridActions.UNINSTALL_LISTED_APP.value,
     # "Action -> Set Specific Apps' State to Hide": 50,
 }
 

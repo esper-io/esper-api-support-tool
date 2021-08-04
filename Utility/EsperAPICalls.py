@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 
+
+from Utility.Resource import getAppDictEntry
 from datetime import datetime, timedelta
 import esperclient
 import time
 import json
 
-import wx
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.EastUtility import (
-    executeCommandOnDevice,
-    executeCommandOnGroup,
-    iterateThroughDeviceList,
+from Utility.CommandUtility import (
+    getCommandsApiInstance,
+    waitForCommandToFinish,
 )
 from Utility.Resource import (
-    displayMessageBox,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -211,17 +210,18 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         and createAppList
     ):
         for app in json_resp["results"]:
+            if (
+                "install_state" in app and "uninstall" in app["install_state"].lower()
+            ) or (
+                hasattr(app, "install_state")
+                and "uninstall" in app.install_state.lower()
+            ):
+                continue
             entry = None
             if "application" in app:
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                appName = app["application"]["application_name"]
-                appPkgName = appName + (" (%s)" % app["application"]["package_name"])
-                entry = {
-                    "app_name": app["application"]["application_name"],
-                    appName: app["application"]["package_name"],
-                    appPkgName: app["application"]["package_name"],
-                }
+                entry = getAppDictEntry(app, False)
                 if entry not in Globals.frame.sidePanel.selectedDeviceApps:
                     Globals.frame.sidePanel.selectedDeviceApps.append(entry)
                 if entry not in Globals.frame.sidePanel.enterpriseApps:
@@ -245,14 +245,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
             else:
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                appName = app["app_name"]
-                appPkgName = appName + (" (%s)" % app["package_name"])
-                entry = {
-                    "app_name": app["app_name"],
-                    appName: app["package_name"],
-                    appPkgName: app["package_name"],
-                    "app_state": app["state"],
-                }
+                entry = getAppDictEntry(app, False)
                 version = (
                     app["version_code"][1 : len(app["version_code"])]
                     if app["version_code"].startswith("v")
@@ -441,7 +434,7 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
                     ApiToolLog().LogError(e)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
-        postEventToFrame(wxThread.myEVT_LOG, "---> Group API Request Finished")
+        postEventToFrame(eventUtil.myEVT_LOG, "---> Group API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception(
@@ -593,7 +586,7 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
                             limit = int(limit / 4)
                             Globals.limit = limit
                             postEventToFrame(
-                                wxThread.myEVT_LOG,
+                                eventUtil.myEVT_LOG,
                                 "---> Encountered a 504 error, retrying with lower limit: %s"
                                 % limit,
                             )
@@ -625,12 +618,12 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
                         limit = int(limit / 4)
                         Globals.limit = limit
                         postEventToFrame(
-                            wxThread.myEVT_LOG,
+                            eventUtil.myEVT_LOG,
                             "---> Encountered a 504 error, retrying with lower limit: %s"
                             % limit,
                         )
                     time.sleep(Globals.RETRY_SLEEP)
-        postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
+        postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -663,7 +656,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     ApiToolLog().LogError(e)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
-        postEventToFrame(wxThread.myEVT_LOG, "---> App API Request Finished")
+        postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception(
@@ -753,7 +746,7 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
             api_response.results = api_response_list
         elif api_response:
             api_response.results = [api_response]
-        postEventToFrame(wxThread.myEVT_LOG, "---> Device API Request Finished")
+        postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
@@ -785,38 +778,15 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def iterateThroughAllGroups(frame, action, api_instance, group=None):
-    groupToUse = None
-    if group:
-        groupToUse = group[0]
-    try:
-        frame.Logging("---> Making API Request")
-        wxThread.doAPICallInThread(
-            frame,
-            getAllDevices,
-            args=(groupToUse),
-            eventType=wxThread.myEVT_RESPONSE,
-            callback=iterateThroughDeviceList,
-            callbackArgs=(frame, action, Globals.enterprise_id),
-            optCallbackArgs=(Globals.enterprise_id),
-            waitForJoin=False,
-            name="iterateThroughDeviceListForAllDeviceGroup",
-        )
-    except ApiException as e:
-        print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-        ApiToolLog().LogError(e)
-
-
-@api_tool_decorator()
 def setKiosk(frame, device, deviceInfo):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
     failed = False
     warning = False
-    appSelection = frame.sidePanel.appChoice.GetSelection()
-    if appSelection < 0:
+    appSelection = frame.sidePanel.selectedAppEntry
+    if not appSelection:
         return {}
-    appToUse = frame.sidePanel.appChoice.GetClientData(appSelection)
+    appToUse = frame.sidePanel.selectedAppEntry["id"]
     logString = (
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
         + " -> Kiosk ->"
@@ -843,11 +813,11 @@ def setKiosk(frame, device, deviceInfo):
             failed = True
         if deviceInfo["Status"] != "Online":
             logString = logString + " (Device offline)"
-        postEventToFrame(wxThread.myEVT_LOG, logString)
+        postEventToFrame(eventUtil.myEVT_LOG, logString)
         if failed:
-            postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
+            postEventToFrame(eventUtil.myEVT_ON_FAILED, deviceInfo)
         if warning:
-            postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+            postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
         if status and hasattr(status, "state"):
             entry = {
                 "Esper Name": device.device_name,
@@ -901,11 +871,11 @@ def setMulti(frame, device, deviceInfo):
         logString = logString + " (Already Multi mode, skipping)"
     if deviceInfo["Status"] != "Online":
         logString = logString + " (Device offline)"
-    postEventToFrame(wxThread.myEVT_LOG, logString)
+    postEventToFrame(eventUtil.myEVT_LOG, logString)
     if failed:
-        postEventToFrame(wxThread.myEVT_ON_FAILED, deviceInfo)
+        postEventToFrame(eventUtil.myEVT_ON_FAILED, deviceInfo)
     if warning:
-        postEventToFrame(wxThread.myEVT_ON_FAILED, (device, "Queued"))
+        postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
     if status and hasattr(status, "state"):
         entry = {
             "Esper Name": device.device_name,
@@ -929,120 +899,6 @@ def setMulti(frame, device, deviceInfo):
             "Device Id": device.id,
             "Status": "Already Multi mode",
         }
-
-
-@api_tool_decorator()
-def getCommandsApiInstance():
-    """ Returns an instace of the Commands API """
-    return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
-
-
-def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
-    api_instance = getCommandsApiInstance()
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.create_command(Globals.enterprise_id, request)
-            ApiToolLog().LogApiRequestOccurrence(
-                "executeCommandAndWait",
-                api_instance.create_command,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if hasattr(e, "body") and (
-                "invalid device id" in e.body or "invalid group id" in e.body
-            ):
-                logBadResponse("create command api", api_response, None)
-                return None
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                raise e
-            time.sleep(Globals.RETRY_SLEEP)
-    ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-    last_status = waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
-    return last_status
-
-
-@api_tool_decorator()
-def waitForCommandToFinish(
-    request_id,
-    ignoreQueue=False,
-    timeout=Globals.COMMAND_TIMEOUT,
-    maxAttempt=Globals.MAX_RETRY,
-):
-    """ Wait until a Command is done or it times out """
-    api_instance = getCommandsApiInstance()
-    response = None
-    for attempt in range(maxAttempt):
-        try:
-            response = api_instance.get_command_request_status(
-                Globals.enterprise_id, request_id
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "waitForCommandToFinish",
-                api_instance.get_command_request_status,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                raise e
-            time.sleep(Globals.RETRY_SLEEP)
-    if response and response.results:
-        status = response.results[0]
-        postEventToFrame(
-            wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
-        )
-
-        stateList = [
-            "Command Success",
-            "Command Failure",
-            "Command TimeOut",
-            "Command Cancelled",
-            "Command Queued",
-            "Command Scheduled",
-        ]
-        if ignoreQueue:
-            stateList.remove("Command Queued")
-
-        start = time.perf_counter()
-        while status.state not in stateList:
-            end = time.perf_counter()
-            duration = end - start
-            if duration >= timeout:
-                postEventToFrame(
-                    wxThread.myEVT_LOG,
-                    "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
-                    % str(status.state),
-                )
-                break
-            for attempt in range(maxAttempt):
-                try:
-                    response = api_instance.get_command_request_status(
-                        Globals.enterprise_id, request_id
-                    )
-                    ApiToolLog().LogApiRequestOccurrence(
-                        "waitForCommandToFinish",
-                        api_instance.get_command_request_status,
-                        Globals.PRINT_API_LOGS,
-                    )
-                    break
-                except Exception as e:
-                    if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
-                        raise e
-                    time.sleep(Globals.RETRY_SLEEP)
-            if response and response.results:
-                status = response.results[0]
-            postEventToFrame(
-                wxThread.myEVT_LOG, "---> Command state: %s" % str(status.state)
-            )
-            time.sleep(3)
-        return status
-    else:
-        return response.results
 
 
 @api_tool_decorator()
@@ -1110,9 +966,7 @@ def postEsperCommand(command_data, useV0=True):
 def clearAppData(frame, device):
     json_resp = None
     try:
-        appToUse = frame.sidePanel.appChoice.GetClientData(
-            frame.sidePanel.appChoice.GetSelection()
-        )
+        appToUse = frame.sidePanel.selectedAppEntry["id"]
         _, apps = getdeviceapps(
             device.id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
         )
@@ -1141,7 +995,7 @@ def clearAppData(frame, device):
             resp, json_resp = postEsperCommand(reqData)
             logBadResponse(resp.request.url, resp, json_resp)
             if resp.status_code > 300:
-                postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+                postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
@@ -1150,14 +1004,17 @@ def clearAppData(frame, device):
         else:
             frame.Logging(
                 "ERROR: Failed to send Clear %s App Data Command to %s"
-                % (frame.sidePanel.appChoice.GetValue(), device.device_name)
+                % (
+                    frame.sidePanel.selectedAppEntry["name"],
+                    device.device_name,
+                )
             )
     except Exception as e:
         ApiToolLog().LogError(e)
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (device.device_name)
         )
-        postEventToFrame(wxThread.myEVT_ON_FAILED, device)
+        postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
     return json_resp
 
 
@@ -1429,162 +1286,3 @@ def deleteUser(user):
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
-
-
-def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/enterprise/{enterprise}/devicegroup/{group}/?action=add".format(
-        tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
-    )
-    resp = None
-
-    if type(deviceList) == list:
-        body = {"device_ids": deviceList}
-        resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    elif type(deviceList) == str:
-        body = {"device_ids": [deviceList]}
-        resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    return resp
-
-
-def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceGroupApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    data = esperclient.DeviceGroupUpdate(name=groupName, parent=groupParent)
-    try:
-        # Create a device group
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.create_group(Globals.enterprise_id, data)
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    return json.loads(e.body)
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except ApiException as e:
-        print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
-
-
-def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceGroupApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    try:
-        # Create a device group
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_instance.delete_group(group_id, Globals.enterprise_id)
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    return json.loads(e.body)
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except ApiException as e:
-        print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
-
-
-def renameGroup(groupId, newName):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/enterprise/{enterprise}/devicegroup/{group}/".format(
-        tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
-    )
-    body = {"name": newName}
-    resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    return resp
-
-
-def uninstallAppOnDevice(packageName, device=None):
-    return executeCommandOnDevice(
-        Globals.frame,
-        {"package_name": packageName},
-        command_type="UNINSTALL",
-        deviceIds=device,
-    )
-
-
-def uninstallAppOnGroup(packageName, groups=None):
-    return executeCommandOnGroup(
-        Globals.frame,
-        {"package_name": packageName},
-        command_type="UNINSTALL",
-        groupIds=groups,
-    )
-
-
-def installAppOnDevices(packageName, version=None, devices=None):
-    appVersion = version
-    appVersionId = version
-    if not appVersion:
-        appList = getAllApplications()
-        for app in appList.results:
-            if app.package_name == packageName:
-                app.versions.sort(key=lambda s: s.version_code.split("."))
-                appVersion = app.versions[-1]
-                appVersionId = appVersion.id
-                break
-    if appVersion:
-        return executeCommandOnDevice(
-            Globals.frame,
-            {
-                "app_version": appVersionId,
-                "package_name": packageName,
-            },
-            command_type="INSTALL",
-            deviceIds=devices,
-        )
-    else:
-        displayMessageBox(
-            (
-                "Failed to find application! Please upload application (%s) to the endpoint."
-                % packageName,
-                wx.ICON_ERROR,
-            )
-        )
-
-
-def installAppOnGroups(packageName, version=None, groups=None):
-    appVersion = version
-    appVersionId = version
-    if not appVersion:
-        appList = getAllApplications()
-        for app in appList.results:
-            if app.package_name == packageName:
-                app.versions.sort(key=lambda s: s.version_code.split("."))
-                appVersion = app.versions[-1]
-                appVersionId = appVersion.id
-                break
-    if appVersion:
-        return executeCommandOnGroup(
-            Globals.frame,
-            {
-                "app_version": appVersionId,
-                "package_name": packageName,
-            },
-            command_type="INSTALL",
-            groupIds=groups,
-        )
-    else:
-        displayMessageBox(
-            (
-                "Failed to find application! Please upload application (%s) to the endpoint."
-                % packageName,
-                wx.ICON_ERROR,
-            )
-        )

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from urllib3 import packages
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
@@ -137,10 +136,11 @@ class InstalledDevicesDlg(wx.Dialog):
         self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
         self.list_box_1.Enable(True)
 
-    def getAppValues(self, returnPkgName=False):
+    def getAppValues(self, returnPkgName=False, returnAppName=False):
         app_id = None
         packageName = None
         version_id = None
+        app_name = None
         selection = self.list_box_2.GetSelection() if self.list_box_2 else None
         if type(selection) == int and selection >= 0:
             verMatches = list(
@@ -168,7 +168,15 @@ class InstalledDevicesDlg(wx.Dialog):
             if matches:
                 app_id = matches[0]["id"]
                 packageName = matches[0]["packageName"]
-        if returnPkgName:
+                if Globals.SHOW_PKG_NAME:
+                    app_name = matches[0]["appPkgName"]
+                else:
+                    app_name = matches[0]["app_name"]
+        if returnPkgName and not returnAppName:
             return app_id, version_id, packageName
+        elif returnAppName and returnPkgName:
+            return app_id, version_id, packageName, app_name
+        elif returnAppName and not returnPkgName:
+            return app_id, version_id, app_name
         else:
             return app_id, version_id

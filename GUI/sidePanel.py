@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from Common.enum import GeneralActions, GridActions
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
+from Common.enum import Color, GeneralActions, GridActions
 from Common.decorator import api_tool_decorator
 import csv
 import wx
@@ -11,8 +12,8 @@ from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 
 
 class SidePanel(wx.Panel):
-    def __init__(self, parentFrame, parent, parentSizer, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(self, parentFrame, parent, *args, **kw):
+        super().__init__(parent, *args, **kw)
 
         self.parentFrame = parentFrame
         self.configChoice = {}
@@ -25,25 +26,25 @@ class SidePanel(wx.Panel):
         self.groups = {}
         self.enterpriseApps = []
         self.selectedDeviceApps = []
+        self.selectedAppEntry = []
         self.knownApps = []
 
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
 
-        sizer_1 = wx.FlexGridSizer(5, 1, 0, 0)
-        parentSizer.Add(sizer_1, 0, wx.EXPAND, 0)
+        sizer_1 = wx.FlexGridSizer(7, 1, 0, 0)
 
-        self.panel_2 = wx.Panel(parent, wx.ID_ANY)
-        sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
+        self.panel_2 = wx.Panel(self, wx.ID_ANY)
+        sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
 
-        sizer_2 = wx.BoxSizer(wx.VERTICAL)
+        sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
         self.panel_3 = wx.Panel(self.panel_2, wx.ID_ANY)
-        sizer_2.Add(self.panel_3, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_2.Add(self.panel_3, 0, wx.EXPAND, 0)
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Configuration:")
+        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Endpoint:")
         label_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -68,16 +69,12 @@ class SidePanel(wx.Panel):
             wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
             0,
         )
-        self.removeEndpointBtn.SetToolTip("Remove Endpoint from %s" % Globals.TITLE)
-        self.removeEndpointBtn.Enable(False)
-
-        self.panel_4 = wx.Panel(self.panel_2, wx.ID_ANY)
-        sizer_2.Add(self.panel_4, 1, wx.EXPAND, 0)
-
-        grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
 
         self.configList = wx.TextCtrl(
-            self.panel_4, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY
+            self.panel_2,
+            wx.ID_ANY,
+            "",
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
         self.configList.SetFont(
             wx.Font(
@@ -89,20 +86,31 @@ class SidePanel(wx.Panel):
                 "",
             )
         )
-        grid_sizer_2.Add(self.configList, 0, wx.EXPAND, 0)
-        self.configList.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "",
-            )
+        sizer_2.Add(self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3)
+
+        static_line_4 = wx.StaticLine(self, wx.ID_ANY)
+        sizer_1.Add(
+            static_line_4,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
         )
 
-        self.panel_8 = wx.Panel(parent, wx.ID_ANY)
-        sizer_1.Add(self.panel_8, 1, wx.ALL | wx.EXPAND, 5)
+        self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetFont(
+            wx.Font(
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
+        sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
+
+        self.panel_8 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.notebook_1.AddPage(self.panel_8, "Groups")
 
         grid_sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
@@ -111,7 +119,7 @@ class SidePanel(wx.Panel):
             "Select which group(s) you wish to run an action on."
         )
         self.groupChoice.SetFocus()
-        grid_sizer_6.Add(self.groupChoice, 0, wx.EXPAND, 0)
+        grid_sizer_6.Add(self.groupChoice, 0, wx.EXPAND | wx.TOP, 5)
 
         self.panel_13 = wx.Panel(self.panel_8, wx.ID_ANY)
         grid_sizer_6.Add(self.panel_13, 1, wx.EXPAND | wx.TOP, 5)
@@ -122,8 +130,8 @@ class SidePanel(wx.Panel):
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
         grid_sizer_8.Add(self.selectedGroups, 0, wx.EXPAND, 0)
 
-        self.panel_9 = wx.Panel(parent, wx.ID_ANY)
-        sizer_1.Add(self.panel_9, 1, wx.ALL | wx.EXPAND, 5)
+        self.panel_9 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.notebook_1.AddPage(self.panel_9, "Devices")
 
         grid_sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
@@ -133,7 +141,7 @@ class SidePanel(wx.Panel):
         self.deviceChoice.SetToolTip(
             "Select which device(s) you specifically wish to run an action on, optional."
         )
-        grid_sizer_3.Add(self.deviceChoice, 0, wx.EXPAND, 0)
+        grid_sizer_3.Add(self.deviceChoice, 0, wx.EXPAND | wx.TOP, 5)
 
         self.panel_12 = wx.Panel(self.panel_9, wx.ID_ANY)
         grid_sizer_3.Add(self.panel_12, 1, wx.EXPAND | wx.TOP, 5)
@@ -144,7 +152,27 @@ class SidePanel(wx.Panel):
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
         grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
 
-        self.panel_10 = wx.Panel(parent, wx.ID_ANY)
+        self.panel_16 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.notebook_1.AddPage(self.panel_16, "Application")
+
+        sizer_8 = wx.BoxSizer(wx.VERTICAL)
+
+        self.appChoice = wx.Button(self.panel_16, wx.ID_ANY, "Select Application")
+        sizer_8.Add(self.appChoice, 0, wx.EXPAND | wx.TOP, 5)
+
+        self.panel_17 = wx.Panel(self.panel_16, wx.ID_ANY)
+        sizer_8.Add(self.panel_17, 1, wx.EXPAND | wx.TOP, 5)
+
+        grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
+
+        self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[])
+        self.selectedApp.SetToolTip("Currently Selected Application")
+        grid_sizer_9.Add(self.selectedApp, 0, wx.EXPAND, 0)
+
+        static_line_2 = wx.StaticLine(self, wx.ID_ANY)
+        sizer_1.Add(static_line_2, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+
+        self.panel_10 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_10, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
@@ -163,48 +191,21 @@ class SidePanel(wx.Panel):
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)
 
         self.actionChoice = wx.ComboBox(
-            self.panel_10,
-            wx.ID_ANY,
-            choices=[],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY,
-        )
-        actions = {
-            **Globals.GENERAL_ACTIONS,
-            **Globals.GRID_ACTIONS,
-        }
-        for key, val in actions.items():
-            self.actionChoice.Append(key, val)
-        sizer_5.Add(self.actionChoice, 0, wx.EXPAND, 0)
-
-        label_4 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Application:")
-        label_4.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
-        sizer_5.Add(label_4, 0, wx.EXPAND | wx.TOP, 5)
-
-        self.appChoice = wx.ComboBox(
             self.panel_10, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
         )
-        sizer_5.Add(self.appChoice, 0, wx.EXPAND, 0)
+        sizer_5.Add(self.actionChoice, 0, wx.EXPAND | wx.TOP, 5)
 
-        self.panel_11 = wx.Panel(parent, wx.ID_ANY)
-        sizer_1.Add(self.panel_11, 1, wx.EXPAND, 0)
+        static_line_3 = wx.StaticLine(self, wx.ID_ANY)
+        sizer_1.Add(static_line_3, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
 
-        grid_sizer_5 = wx.GridSizer(1, 1, 0, 0)
-
-        self.runBtn = wx.Button(self.panel_11, wx.ID_ANY, "Run")
-        grid_sizer_5.Add(self.runBtn, 0, wx.ALL | wx.EXPAND, 5)
-
-        self.panel_11.SetSizer(grid_sizer_5)
+        self.runBtn = wx.Button(self, wx.ID_ANY, "Run", style=wx.BU_AUTODRAW)
+        sizer_1.Add(self.runBtn, 0, wx.ALL | wx.EXPAND, 5)
 
         self.panel_10.SetSizer(sizer_5)
+
+        self.panel_17.SetSizer(grid_sizer_9)
+
+        self.panel_16.SetSizer(sizer_8)
 
         self.panel_12.SetSizer(grid_sizer_7)
 
@@ -214,17 +215,29 @@ class SidePanel(wx.Panel):
 
         self.panel_8.SetSizer(grid_sizer_6)
 
-        self.panel_4.SetSizer(grid_sizer_2)
-
         self.panel_3.SetSizer(grid_sizer_1)
 
+        sizer_2.AddGrowableRow(1)
+        sizer_2.AddGrowableCol(0)
         self.panel_2.SetSizer(sizer_2)
 
         sizer_1.AddGrowableRow(0)
-        sizer_1.AddGrowableRow(1)
         sizer_1.AddGrowableRow(2)
-        sizer_1.AddGrowableRow(3)
         sizer_1.AddGrowableRow(4)
+        sizer_1.AddGrowableRow(6)
+
+        sizer_1.AddGrowableCol(0)
+
+        self.SetSizer(sizer_1)
+
+        self.Layout()
+
+        actions = {
+            **Globals.GENERAL_ACTIONS,
+            **Globals.GRID_ACTIONS,
+        }
+        for key, val in actions.items():
+            self.actionChoice.Append(key, val)
 
         self.__set_properties()
 
@@ -232,6 +245,7 @@ class SidePanel(wx.Panel):
     def __set_properties(self):
         self.actionChoice.SetSelection(1)
 
+        self.removeEndpointBtn.Enable(False)
         self.actionChoice.Enable(False)
         self.deviceChoice.Enable(False)
         self.groupChoice.Enable(False)
@@ -241,6 +255,7 @@ class SidePanel(wx.Panel):
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
+        self.appChoice.Bind(wx.EVT_BUTTON, self.onAppSelection)
         self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
         self.deviceChoice.Bind(
@@ -350,7 +365,7 @@ class SidePanel(wx.Panel):
                 )
             if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
-                self.appChoice.Clear()
+                # self.appChoice.Clear()
                 self.selectedDevices.Clear()
                 self.selectedDevicesList = []
                 self.selectedDeviceApps = []
@@ -381,31 +396,16 @@ class SidePanel(wx.Panel):
             self.apps = self.selectedDeviceApps
         if not self.apps:
             self.apps = self.knownApps + self.selectedDeviceApps + self.enterpriseApps
+        tmp = []
+        for app in self.apps:
+            if app not in tmp:
+                tmp.append(app)
+        self.apps = tmp
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
-        self.appChoice.Clear()
-        self.appChoice.Append("", "")
-        percent = self.parentFrame.gauge.GetValue()
-        num = 0
-        for entry in self.apps:
-            for key, value in entry.items():
-                if (
-                    key != "app_name"
-                    and key != "app_state"
-                    and key != "id"
-                    and key != "appPkgName"
-                    and key != "packageName"
-                    and key not in self.appChoice.Items
-                    and (
-                        (Globals.SHOW_PKG_NAME and " (" in key)
-                        or (not Globals.SHOW_PKG_NAME and " (" not in key)
-                    )
-                ):
-                    self.appChoice.Append(key, value)
-                    break
-            num += 1
-            if len(self.apps):
-                val = percent + int(float(num / len(self.apps) / 2) * 25)
-                self.parentFrame.setGaugeValue(val)
+        if len(self.apps):
+            percent = self.parentFrame.gauge.GetValue()
+            val = percent + int(float(len(self.apps) / 2) * 25)
+            self.parentFrame.setGaugeValue(val)
 
     @api_tool_decorator()
     def onActionSelection(self, event):
@@ -429,7 +429,37 @@ class SidePanel(wx.Panel):
             or clientData == GeneralActions.INSTALL_APP.value
             or clientData == GeneralActions.UNINSTALL_APP.value
         ) and clientData < GridActions.MODIFY_ALIAS_AND_TAGS.value:
-            # self.parentFrame.PopulateApps()
             self.appChoice.Enable(True)
+            if self.selectedGroupsList or self.selectedDevicesList:
+                self.notebook_1.SetSelection(2)
         else:
             self.appChoice.Enable(False)
+            if self.selectedGroupsList:
+                self.notebook_1.SetSelection(1)
+            else:
+                self.notebook_1.SetSelection(0)
+
+    def onAppSelection(self, event):
+        res = version = pkg = app_id = app_name = None
+        self.selectedApp.Clear()
+        action = self.actionChoice.GetClientData(self.actionChoice.GetSelection())
+        hideVersion = True if action != GeneralActions.INSTALL_APP.value else False
+        with InstalledDevicesDlg(
+            self.apps, hide_version=hideVersion, title="Select Application"
+        ) as dlg:
+            res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                app_id, version, pkg, app_name = dlg.getAppValues(
+                    returnPkgName=True, returnAppName=True
+                )
+        if app_name:
+            self.selectedApp.Append(app_name)
+            self.selectedApp.SetSelection(0)
+            self.selectedAppEntry = {
+                "id": app_id,
+                "version": version,
+                "pkgName": pkg,
+                "name": app_name,
+            }
+        if event:
+            event.Skip()

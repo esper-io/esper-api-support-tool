@@ -206,7 +206,7 @@ class PreferencesDialog(wx.Dialog):
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_3,) = self.addPrefToPanel(
             self.grid,
@@ -250,14 +250,6 @@ class PreferencesDialog(wx.Dialog):
             "Only Show Immediate Subgroups",
             wx.CheckBox,
             "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
-        )
-
-        (_, _, self.checkbox_16,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Scroll to load next page",
-            wx.CheckBox,
-            "Enable event where after scrolling a certain distance you till gather the next page of Grid data and append to current results.",
         )
 
         # App Preferences

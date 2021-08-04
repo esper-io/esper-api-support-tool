@@ -25,6 +25,8 @@ class GridActions(Enum):
     SET_APP_STATE_HIDE = 32
     SET_APP_STATE_DISABLE = 33
     MOVE_GROUP = 34
+    INSTALL_LATEST_APP = 35
+    UNINSTALL_LISTED_APP = 36
 
 
 class Color(Enum):
@@ -44,6 +46,7 @@ class Color(Enum):
     lightRed = wx.Colour(255, 235, 234)
     lightOrange = wx.Colour(255, 241, 216)
     lightPurple = wx.Colour(255, 226, 255)
+    lightGrey = wx.Colour(211, 211, 211)
 
     errorBg = wx.Colour(255, 235, 234)
     warnBg = wx.Colour(255, 241, 216)
