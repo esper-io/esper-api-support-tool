@@ -58,6 +58,7 @@ def postEventToFrame(eventType, eventValue=None):
                 wx.PostEvent(Globals.frame, evt)
         except Exception as e:
             ApiToolLog().LogError(e)
+            raise e
 
 
 def download(url, file_name, overwrite=True):

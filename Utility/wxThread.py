@@ -91,7 +91,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
             len(deviceList) * 3,
         )
     if source == 4:
-        postEventToFrame(eventUtil.EVT_THREAD_WAIT, (threads, 3, action))
+        postEventToFrame(eventUtil.myEVT_THREAD_WAIT, (threads, 3, action))
     if source == 5:
         msg = ""
         if action == GridActions.MOVE_GROUP.value:
