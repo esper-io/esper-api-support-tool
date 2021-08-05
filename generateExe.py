@@ -1,13 +1,53 @@
 #!/usr/bin/env python
 
+import datetime
 import subprocess
 import pathlib
 import platform
 import os
+import re
 import shutil
 import Common.Globals as Globals
 
 from Utility.Resource import isModuleInstalled, installRequiredModules
+
+
+def updateFileVersionInfo(path="file_version_info.txt"):
+    content = []
+    newContent = []
+    with open(path, "r") as file:
+        content = file.readlines()
+    # StringStruct(u'FileVersion', u'0.187'),
+    # StringStruct(u'LegalCopyright', u'No Copyright © 2021'),
+    # StringStruct(u'ProductVersion', u'0.187')])
+
+    if content:
+        for line in content:
+            match = re.search(
+                r"StringStruct\(u'(?:FileVersion|LegalCopyright|ProductVersion)', u'.+",
+                line,
+            )
+            newLine = ""
+            if match:
+                match = match.group(0)
+                parts = match.split(", u'")
+                field = parts[1]
+                if field.endswith("'),") and "FileVersion" in parts[0]:
+                    field = Globals.VERSION[1:] + "'),"
+                elif field.endswith("'),") and "LegalCopyright" in parts[0]:
+                    field = str(datetime.datetime.now().year) + "'),"
+                elif field.endswith("')])"):
+                    field = Globals.VERSION[1:] + "')])"
+                parts[1] = field
+                tmp = ", u'".join(parts)
+                newLine = line.replace(match, tmp)
+            if newLine:
+                newContent.append(newLine)
+            else:
+                newContent.append(line)
+    with open(path, "w") as file:
+        for line in newContent:
+            file.write(line)
 
 
 if __name__ == "__main__":
@@ -30,6 +70,7 @@ if __name__ == "__main__":
 
     cmd = []
     if platform.system() == "Windows":
+        updateFileVersionInfo()
         cmd = [
             "pyinstaller",
             "--noconfirm",
