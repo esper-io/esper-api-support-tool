@@ -99,7 +99,8 @@ def determineErrorDisplay(e):
             displayApiExcpetionMsg(e)
         else:
             displayGenericErrorMsg(e)
-    Globals.error_lock.release()
+    if Globals.error_lock.locked():
+        Globals.error_lock.release()
     return e
 
 

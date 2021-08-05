@@ -16,6 +16,7 @@ from Utility.Resource import (
     splitListIntoChunks,
 )
 from Utility import wxThread
+from Utility.GroupUtility import moveGroup
 import Utility.EsperAPICalls as apiCalls
 
 from Common.decorator import api_tool_decorator
@@ -157,6 +158,7 @@ def processDeviceModificationForList(
     succeeded = 0
     numNewName = 0
     status = []
+    aliasStatus = []
     tagStatus = []
     for device in chunk:
         t = wxThread.GUIThread(
@@ -182,9 +184,36 @@ def processDeviceModificationForList(
             numNewName += t2.result[0]
             succeeded += t2.result[1]
             if len(t2.result) > 2 and t2.result[2]:
-                status.append(t2.result[2])
+                aliasStatus.append(t2.result[2])
 
-    status += tagStatus
+    tmp = []
+    for entry in aliasStatus:
+        match = list(
+            filter(
+                lambda x: x["Device Name"] == entry["Device Name"],
+                tagStatus,
+            )
+        )
+        newEntry = {}
+        for m in match:
+            newEntry.update(m)
+        newEntry.update(entry)
+        if newEntry not in tmp:
+            tmp.append(newEntry)
+
+    for entry in tagStatus:
+        match = list(
+            filter(
+                lambda x: x["Device Name"] == entry["Device Name"],
+                tmp,
+            )
+        )
+        newEntry = {}
+        for m in match:
+            newEntry.update(m)
+        newEntry.update(entry)
+        if newEntry not in status:
+            status.append(newEntry)
 
     return (changeSucceeded, succeeded, numNewName, tagsFromGrid, status)
 
@@ -224,7 +253,12 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             "--->" + str(device.device_name) + " : " + str(newName) + "--->"
         )
         if not newName and not device.alias_name:
-            return
+            status = {
+                "Device Name": device.device_name,
+                "Device Id": device.id,
+                "Alias Status": "No alias to set",
+            }
+            return (numNewName, succeeded, status)
         if newName != str(device.alias_name):
             numNewName += 1
             status = ""
@@ -247,6 +281,11 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
                 postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
         else:
             logString = logString + " (Alias Name already set)"
+            status = {
+                "Device Name": device.device_name,
+                "Device Id": device.id,
+                "Alias Status": "Alias Name already set",
+            }
         if "Success" in logString or "Queued" in logString:
             postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
@@ -254,6 +293,12 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
+    if type(status) != dict:
+        status = {
+            "Device Name": device.device_name,
+            "Device Id": device.id,
+            "Alias Status": status if status else "No alias to set",
+        }
     return (numNewName, succeeded, status)
 
 
@@ -299,7 +344,11 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             eventUtil.myEVT_UPDATE_GAUGE,
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
-        status = {"Device Identifier": key, "Tags": tags}
+        status = {
+            "Device Name": device.device_name,
+            "Device Id": device.id,
+            "Tags": tags,
+        }
     return changeSucceeded, status
 
 
@@ -585,7 +634,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
         if groupName:
             if len(groupName) == 36 and "-" in groupName:
-                resp = apiCalls.moveGroup(groupName, device.id)
+                resp = moveGroup(groupName, device.id)
                 respText = resp.text if hasattr(resp, "text") else str(resp)
                 results[device.device_name] = {
                     "Device Name": device.device_name,
@@ -599,7 +648,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
                 groups = apiCalls.getAllGroups(name=groupName).results
                 if groups:
                     groupId = groups[0].id
-                    resp = apiCalls.moveGroup(groupId, device.id)
+                    resp = moveGroup(groupId, device.id)
                     respText = resp.text if hasattr(resp, "text") else str(resp)
                     results[device.device_name] = {
                         "Device Name": device.device_name,

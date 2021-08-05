@@ -328,7 +328,7 @@ def waitForCommandToFinish(
             time.sleep(3)
         return status
     else:
-        return response.results
+        return "No status found"
 
 
 @api_tool_decorator()

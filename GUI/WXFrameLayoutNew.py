@@ -1929,7 +1929,8 @@ class NewFrameLayout(wx.Frame):
                 value = 0
             if value >= 0 and value <= maxValue:
                 self.gauge.SetValue(value)
-        Globals.gauge_lock.release()
+        if Globals.gauge_lock.locked():
+            Globals.gauge_lock.release()
 
     @api_tool_decorator()
     def performAPIResponse(self, event):

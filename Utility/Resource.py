@@ -225,7 +225,8 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
         for thread in threads:
             thread.join()
         time.sleep(1)
-    Globals.lock.release()
+    if Globals.lock.locked():
+        Globals.lock.release()
 
 
 def ipv6Tomac(ipv6):
@@ -273,7 +274,8 @@ def displayMessageBox(event):
     Globals.msg_lock.acquire()
     if msg:
         res = wx.MessageBox(msg, style=sty)
-    Globals.msg_lock.release()
+    if Globals.msg_lock.locked():
+        Globals.msg_lock.release()
     return res
 
 
@@ -429,7 +431,8 @@ def updateErrorTracker():
                     if minutes <= Globals.MAX_ERROR_TIME_DIFF:
                         new_tracker[key] = value
                 Globals.error_tracker = new_tracker
-            Globals.error_lock.release()
+            if Globals.error_lock.locked():
+                Globals.error_lock.release()
             time.sleep(60)
         except Exception as e:
             ApiToolLog().LogError(e)

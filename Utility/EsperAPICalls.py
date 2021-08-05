@@ -402,6 +402,8 @@ def setdevicename(
     if response.results:
         status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
+    if status == "No status found":
+        status = status + ": %s" % str(api_response)
     return status
 
 

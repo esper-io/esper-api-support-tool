@@ -153,4 +153,5 @@ class ApiToolLog:
             except:
                 pass
             finally:
-                Globals.api_log_lock.release()
+                if Globals.api_log_lock.locked():
+                    Globals.api_log_lock.release()
