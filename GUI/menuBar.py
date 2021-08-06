@@ -60,6 +60,7 @@ class ToolMenuBar(wx.MenuBar):
         fas = wx.MenuItem(
             fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save All Info\tCtrl+Alt+S"
         )
+        fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
 
         fileMenu.Append(wx.ID_SEPARATOR)
