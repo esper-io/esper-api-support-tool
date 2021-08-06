@@ -297,16 +297,29 @@ class NewFrameLayout(wx.Frame):
                     currentFont.GetWeight() >= wx.FONTWEIGHT_BOLD
                     and child.Id == wx.ID_BOLD
                 ):
-                    child.SetFont(
-                        wx.Font(
-                            Globals.HEADER_FONT_SIZE,
-                            wx.FONTFAMILY_SWISS,
-                            wx.FONTSTYLE_NORMAL,
-                            wx.FONTWEIGHT_BOLD,
-                            0,
-                            "",
+                    boldNormalFontSize = ["GridNotebook"]
+                    if child.GetFaceName() in boldNormalFontSize:
+                        child.SetFont(
+                            wx.Font(
+                                Globals.FONT_SIZE,
+                                currentFont.GetFamily(),
+                                currentFont.GetStyle(),
+                                currentFont.GetWeight(),
+                                0,
+                                "GridNotebook",
+                            )
                         )
-                    )
+                    else:
+                        child.SetFont(
+                            wx.Font(
+                                Globals.HEADER_FONT_SIZE,
+                                currentFont.GetFamily(),
+                                currentFont.GetStyle(),
+                                currentFont.GetWeight(),
+                                0,
+                                "",
+                            )
+                        )
                 else:
                     child.SetFont(
                         wx.Font(

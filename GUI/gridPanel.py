@@ -69,7 +69,7 @@ class GridPanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "GridNotebook",
             )
         )
 
