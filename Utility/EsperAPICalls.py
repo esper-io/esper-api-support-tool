@@ -222,9 +222,9 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                if entry not in Globals.frame.sidePanel.selectedDeviceApps:
+                if entry not in Globals.frame.sidePanel.selectedDeviceApps and "versions" not in entry:
                     Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-                if entry not in Globals.frame.sidePanel.enterpriseApps:
+                if entry not in Globals.frame.sidePanel.enterpriseApps and "versions" not in entry:
                     Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
                     app["application"]["version"]["version_code"][

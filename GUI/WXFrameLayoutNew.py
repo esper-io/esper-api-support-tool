@@ -1346,12 +1346,14 @@ class NewFrameLayout(wx.Frame):
             entry
             and self.sidePanel.selectedDevicesList
             and entry not in self.sidePanel.selectedDeviceApps
+            and "versions" not in entry
         ):
             self.sidePanel.selectedDeviceApps.append(entry)
         if (
             entry
             and self.sidePanel.selectedGroupsList
             and entry not in self.sidePanel.knownApps
+            and "versions" not in entry
         ):
             self.sidePanel.knownApps.append(entry)
 
@@ -1882,7 +1884,11 @@ class NewFrameLayout(wx.Frame):
                 entry = [app for app in self.sidePanel.apps if app_name in app]
                 if entry:
                     entry = entry[0]
-                if entry and entry not in self.sidePanel.selectedDeviceApps:
+                if (
+                    entry
+                    and entry not in self.sidePanel.selectedDeviceApps
+                    and "versions" not in entry
+                ):
                     self.sidePanel.selectedDeviceApps.append(entry)
             self.setGaugeValue(
                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
