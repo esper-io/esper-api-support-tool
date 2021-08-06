@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 
-from Utility.Resource import getAppDictEntry
 from datetime import datetime, timedelta
 import esperclient
 import time
@@ -222,14 +221,12 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                if (
-                    entry not in Globals.frame.sidePanel.selectedDeviceApps
-                    and "versions" not in entry
+                if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
+                    "isValid" in entry and entry["isValid"]
                 ):
                     Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-                if (
-                    entry not in Globals.frame.sidePanel.enterpriseApps
-                    and "versions" not in entry
+                if entry not in Globals.frame.sidePanel.enterpriseApps and (
+                    "isValid" in entry and entry["isValid"]
                 ):
                     Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
@@ -266,7 +263,11 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     )
                     + version
                 )
-            if entry and entry not in Globals.frame.sidePanel.knownApps:
+            if (
+                entry
+                and entry not in Globals.frame.sidePanel.knownApps
+                and ("isValid" in entry and entry["isValid"])
+            ):
                 Globals.frame.sidePanel.knownApps.append(entry)
     return applist, json_resp
 
@@ -1340,3 +1341,88 @@ def deleteUser(user):
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
+
+
+def getAppDictEntry(app, update=True):
+    entry = None
+    appName = None
+    appPkgName = None
+
+    if type(app) == dict and "application" in app:
+        appName = app["application"]["application_name"]
+        appPkgName = appName + (" (%s)" % app["application"]["package_name"])
+        entry = {
+            "app_name": app["application"]["application_name"],
+            appName: app["application"]["package_name"],
+            appPkgName: app["application"]["package_name"],
+            "appPkgName": appPkgName,
+            "packageName": app["application"]["package_name"],
+            "id": app["id"],
+            "app_state": None,
+        }
+    elif hasattr(app, "application_name"):
+        appName = app.application_name
+        appPkgName = appName + (" (%s)" % app.package_name)
+        entry = {
+            "app_name": app.application_name,
+            appName: app.package_name,
+            appPkgName: app.package_name,
+            "appPkgName": appPkgName,
+            "packageName": app.package_name,
+            "versions": app.versions,
+            "id": app.id,
+        }
+    else:
+        appName = app["app_name"]
+        appPkgName = appName + (" (%s)" % app["package_name"])
+        entry = {
+            "app_name": app["app_name"],
+            appName: app["package_name"],
+            appPkgName: app["package_name"],
+            "appPkgName": appPkgName,
+            "packageName": app["package_name"],
+            "app_state": app["state"],
+            "id": app["id"],
+        }
+
+    validApp = None
+    if type(app) == esperclient.models.application.Application:
+        entry["isValid"] = True
+    else:
+        if type(app) == dict and "install_state" not in app:
+            validApp = getApplication(entry["id"])
+
+    if hasattr(validApp, "id") or (type(validApp) == dict and "id" in validApp):
+        entry["isValid"] = True
+
+    if Globals.frame and hasattr(Globals.frame, "sidePanel") and "isValid" in entry:
+        selectedDeviceAppsMatch = list(
+            filter(
+                lambda entry: entry["app_name"] == appName
+                and entry["appPkgName"] == appPkgName,
+                Globals.frame.sidePanel.selectedDeviceApps,
+            )
+        )
+        enterpriseAppsMatch = list(
+            filter(
+                lambda entry: entry["app_name"] == appName
+                and entry["appPkgName"] == appPkgName,
+                Globals.frame.sidePanel.enterpriseApps,
+            )
+        )
+        if selectedDeviceAppsMatch and "isValid" in entry:
+            indx = Globals.frame.sidePanel.selectedDeviceApps.index(
+                selectedDeviceAppsMatch[0]
+            )
+            oldEntry = Globals.frame.sidePanel.selectedDeviceApps[indx]
+            if update:
+                oldEntry.update(entry)
+                Globals.frame.sidePanel.selectedDeviceApps[indx] = entry = oldEntry
+        if enterpriseAppsMatch and "isValid" in entry:
+            indx = Globals.frame.sidePanel.enterpriseApps.index(enterpriseAppsMatch[0])
+            oldEntry = Globals.frame.sidePanel.enterpriseApps[indx]
+            if update:
+                oldEntry.update(entry)
+                Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
+
+    return entry

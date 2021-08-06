@@ -52,6 +52,7 @@ from pathlib import Path
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
+    getAppDictEntry,
     getInstallDevices,
     setAppState,
     setKiosk,
@@ -73,7 +74,6 @@ from Utility.EastUtility import (
 )
 from Utility.Resource import (
     checkForInternetAccess,
-    getAppDictEntry,
     limitActiveThreads,
     postEventToFrame,
     resourcePath,
@@ -1352,20 +1352,24 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addAppToAppList(self, app):
         entry = getAppDictEntry(app)
-        if entry and entry not in self.sidePanel.enterpriseApps:
+        if (
+            entry
+            and entry not in self.sidePanel.enterpriseApps
+            and ("isValid" in entry and entry["isValid"])
+        ):
             self.sidePanel.enterpriseApps.append(entry)
         if (
             entry
             and self.sidePanel.selectedDevicesList
             and entry not in self.sidePanel.selectedDeviceApps
-            and "versions" not in entry
+            and ("isValid" in entry and entry["isValid"])
         ):
             self.sidePanel.selectedDeviceApps.append(entry)
         if (
             entry
             and self.sidePanel.selectedGroupsList
             and entry not in self.sidePanel.knownApps
-            and "versions" not in entry
+            and ("isValid" in entry and entry["isValid"])
         ):
             self.sidePanel.knownApps.append(entry)
 
@@ -1899,7 +1903,7 @@ class NewFrameLayout(wx.Frame):
                 if (
                     entry
                     and entry not in self.sidePanel.selectedDeviceApps
-                    and "versions" not in entry
+                    and ("isValid" in entry and entry["isValid"])
                 ):
                     self.sidePanel.selectedDeviceApps.append(entry)
             self.setGaugeValue(
@@ -2540,35 +2544,50 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
-        with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
-            res = dlg.ShowModal()
-            if res == wx.ID_OK:
-                app, version = dlg.getAppValues()
-                if app and version:
-                    self.onClearGrids(None)
-                    self.gauge.Pulse()
-                    resp = getInstallDevices(version, app)
-                    res = []
-                    for r in resp.results:
-                        if r:
-                            res.append(r.to_dict())
-                    if res:
-                        wxThread.doAPICallInThread(
-                            self,
-                            processInstallDevices,
-                            args=(res),
-                            eventType=None,
-                            waitForJoin=False,
-                            name="iterateThroughDeviceList",
-                        )
+        if self.sidePanel.apps:
+            with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    app, version = dlg.getAppValues()
+                    if app and version:
+                        self.onClearGrids(None)
+                        self.gauge.Pulse()
+                        resp = getInstallDevices(version, app)
+                        res = []
+                        for r in resp.results:
+                            if r:
+                                res.append(r.to_dict())
+                        if res:
+                            wxThread.doAPICallInThread(
+                                self,
+                                processInstallDevices,
+                                args=(res),
+                                eventType=None,
+                                waitForJoin=False,
+                                name="iterateThroughDeviceList",
+                            )
+                        else:
+                            displayMessageBox(
+                                (
+                                    "No device with that app version found",
+                                    wx.ICON_INFORMATION,
+                                )
+                            )
                     else:
                         displayMessageBox(
                             (
-                                "No device with that app version found",
+                                "Failed to get app id or version",
                                 wx.ICON_INFORMATION,
                             )
                         )
-            dlg.DestroyLater()
+                dlg.DestroyLater()
+        else:
+            displayMessageBox(
+                (
+                    "No apps found",
+                    wx.ICON_INFORMATION,
+                )
+            )
 
     @api_tool_decorator()
     def moveGroup(self, event=None):

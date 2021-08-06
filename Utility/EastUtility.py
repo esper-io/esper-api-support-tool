@@ -262,6 +262,7 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
             deviceInfo = {}
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
             deviceList[number_of_devices] = [device, deviceInfo]
+            number_of_devices += 1
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
