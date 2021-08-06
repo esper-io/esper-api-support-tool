@@ -110,8 +110,8 @@ class Console(wx.Frame):
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
         self.loggingList.AppendText(entry)
-        self.loggingList.AppendText("\n")
-        self.totalPosition = len(entry + "\n")
+        self.loggingList.AppendText("\n\n")
+        self.totalPosition = len(entry + "\n\n")
         if self.WINDOWS:
             position = int((self.totalPosition) * 0.75)
             position = 0 if position < 0 else position
