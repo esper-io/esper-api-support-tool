@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from ssl import HAS_SNI
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import getAppVersions
 import wx
@@ -123,11 +124,17 @@ class InstalledDevicesDlg(wx.Dialog):
         for match in matches:
             if "id" in match:
                 id = match["id"]
-                versions = getAppVersions(id)
-                self.versions = versions.results
-                for version in versions.results:
-                    # self.list_box_2.Append(version.version_code, version.id)
-                    self.list_box_2.Append(version.version_code)
+                versions = getAppVersions(id, getPlayStore=True)
+                self.versions = (
+                    versions.results
+                    if not type(versions) == dict
+                    else versions["results"]
+                )
+                for version in self.versions:
+                    if hasattr(version, "version_code"):
+                        self.list_box_2.Append(version.version_code)
+                    elif type(versions) == dict:
+                        self.list_box_2.Append(version["version_code"])
         if matches:
             self.list_box_2.Enable(True)
         else:
@@ -144,13 +151,24 @@ class InstalledDevicesDlg(wx.Dialog):
         if type(selection) == int and selection >= 0:
             verMatches = list(
                 filter(
-                    lambda x: x.version_code
-                    == self.list_box_2.GetString(self.list_box_2.GetSelection()),
+                    lambda x: (
+                        hasattr(x, "version_code")
+                        and x.version_code
+                        == self.list_box_2.GetString(self.list_box_2.GetSelection())
+                    )
+                    or (
+                        type(x) == dict
+                        and x["version_code"]
+                        == self.list_box_2.GetString(self.list_box_2.GetSelection())
+                    ),
                     self.versions,
                 )
             )
             if verMatches:
-                version_id = verMatches[0].id
+                if hasattr(verMatches[0], "id"):
+                    version_id = verMatches[0].id
+                elif type(verMatches[0]) == dict and "id" in verMatches[0]:
+                    version_id = verMatches[0]["id"]
         if self.list_box_1.GetSelection() >= 0:
             matches = list(
                 filter(

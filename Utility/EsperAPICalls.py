@@ -641,44 +641,47 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
 @api_tool_decorator()
 def getAllApplications(maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Applications belonging to the Enterprise """
-    try:
-        api_instance = esperclient.ApplicationApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.get_all_applications(
-                    Globals.enterprise_id,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                    is_hidden=False,
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllApplications",
-                    api_instance.get_all_applications,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
-        return api_response
-    except ApiException as e:
-        raise Exception(
-            "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
-        )
+    if Globals.USE_ENTERPRISE_APP:
+        try:
+            api_instance = esperclient.ApplicationApi(
+                esperclient.ApiClient(Globals.configuration)
+            )
+            api_response = None
+            for attempt in range(maxAttempt):
+                try:
+                    api_response = api_instance.get_all_applications(
+                        Globals.enterprise_id,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                        is_hidden=False,
+                    )
+                    ApiToolLog().LogApiRequestOccurrence(
+                        "getAllApplications",
+                        api_instance.get_all_applications,
+                        Globals.PRINT_API_LOGS,
+                    )
+                    break
+                except Exception as e:
+                    if attempt == maxAttempt - 1:
+                        ApiToolLog().LogError(e)
+                        raise e
+                    time.sleep(Globals.RETRY_SLEEP)
+            postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
+            return api_response
+        except ApiException as e:
+            raise Exception(
+                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+            )
+    else:
+        return getAppsEnterpriseAndPlayStore()
 
 
 @api_tool_decorator()
 def getAllApplicationsForHost(
     config,
     enterprise_id,
-    application_name=None,
-    package_name=None,
+    application_name="",
+    package_name="",
     maxAttempt=Globals.MAX_RETRY,
 ):
     """ Make a API call to get all Applications belonging to the Enterprise """
@@ -1171,34 +1174,63 @@ def getApplication(application_id):
 
 
 def getAppVersions(
-    application_id, version_code="", build_number="", maxAttempt=Globals.MAX_RETRY
+    application_id, version_code="", build_number="", getPlayStore=False, maxAttempt=Globals.MAX_RETRY
 ):
-    api_instance = esperclient.ApplicationApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    enterprise_id = Globals.enterprise_id
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_app_versions(
-                application_id,
-                enterprise_id,
-                version_code=version_code,
-                build_number=build_number,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getAppVersions", api_instance.get_app_versions, Globals.PRINT_API_LOGS
-            )
-            return api_response
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                print(
-                    "Exception when calling ApplicationApi->get_app_versions: %s\n" % e
+    if Globals.USE_ENTERPRISE_APP and not getPlayStore:
+        api_instance = esperclient.ApplicationApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        enterprise_id = Globals.enterprise_id
+        for attempt in range(maxAttempt):
+            try:
+                api_response = api_instance.get_app_versions(
+                    application_id,
+                    enterprise_id,
+                    version_code=version_code,
+                    build_number=build_number,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
                 )
-                raise e
-            time.sleep(1)
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAppVersions",
+                    api_instance.get_app_versions,
+                    Globals.PRINT_API_LOGS,
+                )
+                return api_response
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    print(
+                        "Exception when calling ApplicationApi->get_app_versions: %s\n"
+                        % e
+                    )
+                    raise e
+                time.sleep(1)
+    else:
+        return getAppVersionsEnterpriseAndPlayStore(application_id)
+
+
+def getAppVersionsEnterpriseAndPlayStore(application_id):
+    url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/{app_id}/version/".format(
+        tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        ent_id=Globals.enterprise_id,
+        app_id=application_id,
+    )
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    jsonResp = resp.json()
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+    return jsonResp
+
+
+def getAppsEnterpriseAndPlayStore():
+    url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/".format(
+        tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        ent_id=Globals.enterprise_id,
+    )
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    jsonResp = resp.json()
+    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+    return jsonResp
 
 
 def getAppVersion(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
