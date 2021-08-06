@@ -475,7 +475,6 @@ class UserCreation(wx.Frame):
                             user["groups"] = tmp
                         self.users.append(user)
                 else:
-                    # headers = entry
                     for header in entry:
                         headers.append(header.lower().replace(" ", ""))
         self.grid_1.Thaw()

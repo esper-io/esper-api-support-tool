@@ -727,7 +727,6 @@ class NewFrameLayout(wx.Frame):
                 )
                 data = list(reader)
                 self.processDeviceCSVUpload(data)
-        # self.gridPanel.grid_1.AutoSizeColumns()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
             eventUtil.myEVT_DISPLAY_NOTIFICATION,
@@ -955,7 +954,6 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
-        # self.sidePanel.appChoice.Clear()
         self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
         self.setCursorBusy()
@@ -1303,7 +1301,6 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        # self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self,
             self.fetchAllApps,

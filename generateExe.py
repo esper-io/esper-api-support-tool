@@ -17,9 +17,6 @@ def updateFileVersionInfo(path="file_version_info.txt"):
     newContent = []
     with open(path, "r") as file:
         content = file.readlines()
-    # StringStruct(u'FileVersion', u'0.187'),
-    # StringStruct(u'LegalCopyright', u'No Copyright © 2021'),
-    # StringStruct(u'ProductVersion', u'0.187')])
 
     if content:
         for line in content:

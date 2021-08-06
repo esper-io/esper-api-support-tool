@@ -104,7 +104,6 @@ class InstalledDevicesDlg(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
-        # self.DestroyLater()
 
     def onAppSelect(self, event):
         val = event.String

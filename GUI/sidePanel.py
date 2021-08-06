@@ -365,7 +365,6 @@ class SidePanel(wx.Panel):
                 )
             if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
-                # self.appChoice.Clear()
                 self.selectedDevices.Clear()
                 self.selectedDevicesList = []
                 self.selectedDeviceApps = []

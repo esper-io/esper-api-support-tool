@@ -53,7 +53,6 @@ def api_tool_decorator(locks=None):
                             and hasattr(thread, "stop")
                         ):
                             thread.stop()
-                    # if not otherThreadsRunning:
                     Globals.frame.onComplete(None, True)
                     Globals.frame.setCursorDefault()
                     Globals.frame.setGaugeValue(100)

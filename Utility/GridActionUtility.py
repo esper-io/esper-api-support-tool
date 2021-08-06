@@ -391,7 +391,6 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
 @api_tool_decorator()
 def setAllAppsState(frame, device, state):
     stateStatuses = []
-    # for device in chunk:
     _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
     for app in resp["results"]:
         stateStatus = None
@@ -455,7 +454,6 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
     if action == 50:
         state == "HIDE"
 
-    # deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     appList = Globals.frame.gridPanel.getDeviceAppFromGrid()
     if api_response:
         tempRes = []
