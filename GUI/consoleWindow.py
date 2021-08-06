@@ -55,7 +55,7 @@ class Console(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
 

@@ -44,7 +44,7 @@ class LargeTextEntryDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_3.Add(label_1, 0, 0, 0)

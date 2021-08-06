@@ -139,7 +139,7 @@ class GridPanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         self.grid_2.SetLabelFont(
@@ -149,7 +149,7 @@ class GridPanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         self.grid_1.SetDefaultCellFont(
@@ -159,7 +159,7 @@ class GridPanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         self.grid_2.SetDefaultCellFont(
@@ -169,7 +169,7 @@ class GridPanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         self.enableGridProperties()

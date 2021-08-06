@@ -36,7 +36,7 @@ class ConfirmTextDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         sizer_9.Add(label_2, 0, wx.EXPAND, 0)

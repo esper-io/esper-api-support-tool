@@ -52,7 +52,7 @@ class SidePanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_1.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 0)
@@ -83,7 +83,7 @@ class SidePanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_2.Add(self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3)
@@ -104,7 +104,7 @@ class SidePanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
@@ -185,7 +185,7 @@ class SidePanel(wx.Panel):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)

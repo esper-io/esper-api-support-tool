@@ -73,7 +73,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "Header",
             )
         )
         sizer_1.Add(label_1, 0, 0, 0)
@@ -99,7 +99,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_1.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -120,7 +120,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -141,7 +141,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_7.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -168,7 +168,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_1.Add(label_3, 0, wx.TOP, 5)

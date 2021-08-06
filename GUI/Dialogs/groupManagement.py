@@ -58,12 +58,12 @@ class GroupManagement(wx.Dialog):
         label_1 = wx.StaticText(self.notebook_1_pane_1, wx.ID_ANY, "Groups:")
         label_1.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_1.Add(label_1, 0, wx.TOP, 5)
@@ -99,12 +99,12 @@ class GroupManagement(wx.Dialog):
         label_4 = wx.StaticText(self.notebook_1_pane_2, wx.ID_ANY, "CSV Upload:")
         label_4.SetFont(
             wx.Font(
-                11,
+                Globals.FONT_SIZE,
                 wx.FONTFAMILY_DEFAULT,
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_4.Add(label_4, 0, wx.TOP, 5)
