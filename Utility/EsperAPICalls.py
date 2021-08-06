@@ -222,9 +222,15 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                if entry not in Globals.frame.sidePanel.selectedDeviceApps and "versions" not in entry:
+                if (
+                    entry not in Globals.frame.sidePanel.selectedDeviceApps
+                    and "versions" not in entry
+                ):
                     Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-                if entry not in Globals.frame.sidePanel.enterpriseApps and "versions" not in entry:
+                if (
+                    entry not in Globals.frame.sidePanel.enterpriseApps
+                    and "versions" not in entry
+                ):
                     Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
                     app["application"]["version"]["version_code"][
@@ -667,7 +673,13 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
+def getAllApplicationsForHost(
+    config,
+    enterprise_id,
+    application_name=None,
+    package_name=None,
+    maxAttempt=Globals.MAX_RETRY,
+):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
@@ -677,6 +689,8 @@ def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETR
                 api_response = api_instance.get_all_applications(
                     enterprise_id,
                     limit=Globals.limit,
+                    application_name=application_name,
+                    package_name=package_name,
                     offset=0,
                     is_hidden=False,
                 )
@@ -695,6 +709,44 @@ def getAllApplicationsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETR
     except Exception as e:
         raise Exception(
             "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+        )
+
+
+@api_tool_decorator()
+def getAllAppVersionsForHost(
+    config,
+    enterprise_id,
+    app_id,
+    maxAttempt=Globals.MAX_RETRY,
+):
+    """ Make a API call to get all Applications belonging to the Enterprise """
+    try:
+        api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
+        api_response = None
+        for attempt in range(maxAttempt):
+            try:
+                api_response = api_instance.get_app_versions(
+                    app_id,
+                    enterprise_id,
+                    limit=Globals.limit,
+                    offset=0,
+                    is_hidden=False,
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllAppVersionsForHost",
+                    api_instance.get_app_versions,
+                    Globals.PRINT_API_LOGS,
+                )
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        return api_response
+    except Exception as e:
+        raise Exception(
+            "Exception when calling ApplicationApi->get_app_versions: %s\n" % e
         )
 
 

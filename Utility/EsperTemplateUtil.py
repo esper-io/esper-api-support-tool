@@ -22,6 +22,7 @@ from Utility.Resource import (
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
+    getAllAppVersionsForHost,
     getAllApplicationsForHost,
     createDeviceGroupForHost,
     getDeviceGroupsForHost,
@@ -368,7 +369,36 @@ class EsperTemplateUtil:
             if ("isGPlay" in app and app["isGPlay"]) or (
                 "is_g_play" in app and app["is_g_play"]
             ):
-                newTemplate["application"]["apps"].append(app)
+                matchingApps = getAllApplicationsForHost(
+                    self.getEsperConfig(self.toApi, self.toKey),
+                    self.toEntId,
+                    package_name=app["packageName"],
+                )
+                if matchingApps and hasattr(matchingApps, "results"):
+                    found = False
+                    for match in matchingApps.results:
+                        appId = match["id"]
+                        versions = getAllAppVersionsForHost(
+                            self.getEsperConfig(self.toApi, self.toKey),
+                            self.toEntId,
+                            appId,
+                        )
+                        if versions and hasattr(versions, "results"):
+                            for ver in versions.results:
+                                if ("isGPlay" in ver and ver["isGPlay"]) or (
+                                    "is_g_play" in ver and ver["is_g_play"]
+                                ):
+                                    newTemplate["application"]["apps"].append(ver)
+                                    found = True
+                                    break
+                        if found:
+                            break
+                if not found:
+                    postEventToFrame(
+                        eventUtil.myEVT_LOG,
+                        "ERROR: Failed to find matching Play Store app, %s. Please make sure it is Approved and add to template"
+                        % app["packageName"],
+                    )
             else:
                 for toApp in apps:
                     if (
