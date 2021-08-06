@@ -19,6 +19,7 @@ import wx.adv as wxadv
 import Utility.EventUtility as eventUtil
 
 import Common.Globals as Globals
+import Common.ApiTracker as ApiTracker
 import GUI.EnhancedStatusBar as ESB
 
 import Utility.wxThread as wxThread
@@ -229,6 +230,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
         self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
+        self.Bind(wx.EVT_POWER_SUSPENDING, self.onSuspend)
 
         if self.kill:
             return
@@ -464,7 +466,7 @@ class NewFrameLayout(wx.Frame):
             self.groupManage.Close()
             self.groupManage.DestroyLater()
         thread = ApiToolLog().LogApiRequestOccurrence(
-            None, Globals.API_REQUEST_TRACKER, True
+            None, ApiTracker.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
         thread.join()
@@ -2735,3 +2737,14 @@ class NewFrameLayout(wx.Frame):
                     except:
                         pass
                 self.notification.Show()
+
+    def onSuspend(self, event):
+        if (
+            self.isRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+            and hasattr(event, "Veto")
+        ):
+            event.Veto()
