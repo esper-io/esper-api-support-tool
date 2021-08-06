@@ -99,7 +99,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "API Request Limit",
             wx.SpinCtrl,
-            "Maximum amount of results that the API will return.",
+            "Maximum amount of results that the API will return. Min: %s Max: %s"
+            % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
         )
         self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
@@ -110,7 +111,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "API Request Offset",
             wx.SpinCtrl,
-            "Page of results the API sends back (starts at 0)",
+            "Page of results the API sends back (starts at 0). Min:0 Max: 100",
         )
         panel_9.Hide()
         self.spin_ctrl_2.SetMin(0)
@@ -121,7 +122,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Max Threads",
             wx.SpinCtrl,
-            "Maximum number of threads that will be created to perform an action.",
+            "Maximum number of threads that will be created to perform an action. Min: 10 Max: 100",
         )
         panel_43.Hide()
         self.spin_ctrl_8.SetMin(10)
@@ -133,7 +134,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Font Size",
             wx.SpinCtrl,
-            "Font size",
+            "Font size. Min: 10 Max: 72",
         )
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
@@ -159,7 +160,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Command Timeout (seconds)",
             wx.SpinCtrl,
-            "How long a command should wait on the status check before skipping.",
+            "How long a command should wait on the status check before skipping. Min: 0 Max: 100",
         )
         self.spin_ctrl_6.SetMin(0)
         self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
@@ -195,7 +196,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Date Delta for Alias Command",
             wx.SpinCtrl,
-            "Time difference for when the Alias command schedule should end.",
+            "Time difference for when the Alias command schedule should end. Min: %s Max: %s"
+            % (0, Globals.ALIAS_MAX_DAY_DELTA),
         )
         self.spin_ctrl_9.SetMin(0)
         self.spin_ctrl_9.SetMax(Globals.ALIAS_MAX_DAY_DELTA)
@@ -222,7 +224,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_16,
             "Grid Refresh Rate (seconds)",
             wx.SpinCtrl,
-            "How often the Grid should update its cell data.",
+            "How often the Grid should update its cell data. Min: %s Max: %s"
+            % (Globals.GRID_UPDATE_RATE, Globals.MAX_GRID_UPDATE_RATE),
         )
         self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
         self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
