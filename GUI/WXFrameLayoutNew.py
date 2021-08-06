@@ -1837,7 +1837,7 @@ class NewFrameLayout(wx.Frame):
         if action and action == GeneralActions.CLEAR_APP_DATA.value:
             displayMessageBox(
                 (
-                    "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
+                    "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
                     wx.ICON_INFORMATION,
                 )
             )
@@ -2599,6 +2599,9 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_ERROR,
                 )
             )
+            self.isRunning = False
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def createGroup(self, event):
