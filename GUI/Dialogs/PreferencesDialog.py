@@ -265,7 +265,7 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_2,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Fetch All Installed Applications",
+            "Fetch All Installed Apps on Device",
             wx.CheckBox,
             "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
