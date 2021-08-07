@@ -134,6 +134,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.list_box_1 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=self.appNameList)
         grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
+        self.list_box_2 = None
         if not hide_version:
             grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
             grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
