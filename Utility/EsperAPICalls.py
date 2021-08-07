@@ -1174,7 +1174,11 @@ def getApplication(application_id):
 
 
 def getAppVersions(
-    application_id, version_code="", build_number="", getPlayStore=False, maxAttempt=Globals.MAX_RETRY
+    application_id,
+    version_code="",
+    build_number="",
+    getPlayStore=False,
+    maxAttempt=Globals.MAX_RETRY,
 ):
     if Globals.USE_ENTERPRISE_APP and not getPlayStore:
         api_instance = esperclient.ApplicationApi(
@@ -1222,11 +1226,19 @@ def getAppVersionsEnterpriseAndPlayStore(application_id):
     return jsonResp
 
 
-def getAppsEnterpriseAndPlayStore():
-    url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/".format(
-        tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
-        ent_id=Globals.enterprise_id,
-    )
+def getAppsEnterpriseAndPlayStore(package_name=""):
+    url = ""
+    if package_name:
+        url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/?package_name={pkg}".format(
+            tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+            ent_id=Globals.enterprise_id,
+            pkg=package_name,
+        )
+    else:
+        url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/".format(
+            tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+            ent_id=Globals.enterprise_id,
+        )
     resp = performGetRequestWithRetry(url, headers=getHeader())
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
