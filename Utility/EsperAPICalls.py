@@ -266,6 +266,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
             if (
                 entry
                 and entry not in Globals.frame.sidePanel.knownApps
+                and not Globals.frame.sidePanel.selectedDevicesList
                 and ("isValid" in entry and entry["isValid"])
             ):
                 Globals.frame.sidePanel.knownApps.append(entry)

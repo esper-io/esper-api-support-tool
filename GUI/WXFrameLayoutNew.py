@@ -1374,6 +1374,7 @@ class NewFrameLayout(wx.Frame):
         if (
             entry
             and self.sidePanel.selectedGroupsList
+            and not self.sidePanel.selectedDevicesList
             and entry not in self.sidePanel.knownApps
             and ("isValid" in entry and entry["isValid"])
         ):
