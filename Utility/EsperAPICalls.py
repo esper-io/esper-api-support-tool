@@ -1433,10 +1433,13 @@ def getAppDictEntry(app, update=True):
     if type(app) == esperclient.models.application.Application:
         entry["isValid"] = True
     else:
-        if type(app) == dict and "install_state" not in app:
+        if type(app) == dict and "id" in app and "install_state" not in app and "app_state" not in app:
             validApp = getApplication(entry["id"])
+            if hasattr(validApp, "results"):
+                validApp = validApp.results[0] if validApp.results else validApp
 
     if hasattr(validApp, "id") or (type(validApp) == dict and "id" in validApp):
+        entry["id"] = validApp.id if hasattr(validApp, "id") else validApp["id"]
         entry["isValid"] = True
 
     if Globals.frame and hasattr(Globals.frame, "sidePanel") and "isValid" in entry:
