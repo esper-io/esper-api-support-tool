@@ -11,9 +11,6 @@ EVT_FETCH = wx.PyEventBinder(myEVT_FETCH, 1)
 myEVT_UPDATE = wx.NewEventType()
 EVT_UPDATE = wx.PyEventBinder(myEVT_UPDATE, 1)
 
-myEVT_UPDATE_DONE = wx.NewEventType()
-EVT_UPDATE_DONE = wx.PyEventBinder(myEVT_UPDATE_DONE, 1)
-
 myEVT_COMPLETE = wx.NewEventType()
 EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
 

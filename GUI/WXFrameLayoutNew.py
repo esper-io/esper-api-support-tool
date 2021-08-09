@@ -210,7 +210,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
         self.Bind(eventUtil.EVT_FETCH, self.onFetch)
         self.Bind(eventUtil.EVT_UPDATE, self.onUpdate)
-        self.Bind(eventUtil.EVT_UPDATE_DONE, self.onUpdateComplete)
         self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
         self.Bind(eventUtil.EVT_APPS, self.addAppsToAppChoice)
         self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
@@ -1183,6 +1182,16 @@ class NewFrameLayout(wx.Frame):
                             cmdResults = cmdResults + t.result
                         else:
                             cmdResults.append(t.result)
+            if action and action == GeneralActions.CLEAR_APP_DATA.value:
+                for t in threads:
+                    if t.result:
+                        displayMessageBox(
+                            (
+                                "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
+                                wx.ICON_INFORMATION,
+                            )
+                        )
+                        break
             postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
@@ -1776,7 +1785,14 @@ class NewFrameLayout(wx.Frame):
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.CLEAR_APP_DATA.value:
-                clearAppData(self, device)
+                thread = wxThread.GUIThread(
+                    self,
+                    clearAppData,
+                    (self, device),
+                    name="clearAppData",
+                )
+                thread.start()
+                threads.append(thread)
             elif action == GeneralActions.SET_APP_STATE_DISABLE.value:
                 thread = wxThread.GUIThread(
                     self,
@@ -1843,22 +1859,6 @@ class NewFrameLayout(wx.Frame):
             (threads, 3, action),
             name="waitForThreadsThenSetCursorDefault_3",
         ).start()
-
-    @api_tool_decorator()
-    def onUpdateComplete(self, event):
-        """ Alert user to chcek the Esper Console for detailed results for some actions """
-        action = None
-        if hasattr(event, "GetValue"):
-            action = event.GetValue()
-        else:
-            action = event
-        if action and action == GeneralActions.CLEAR_APP_DATA.value:
-            displayMessageBox(
-                (
-                    "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
-                    wx.ICON_INFORMATION,
-                )
-            )
 
     @api_tool_decorator()
     def onDeviceSelections(self, event):
@@ -2050,8 +2050,6 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
-        if action:
-            self.onUpdateComplete(action)
         if cmdResults:
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()

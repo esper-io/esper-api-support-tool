@@ -1024,7 +1024,7 @@ def postEsperCommand(command_data, useV0=True):
 def clearAppData(frame, device):
     json_resp = None
     try:
-        appToUse = frame.sidePanel.selectedAppEntry["id"]
+        appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
         _, apps = getdeviceapps(
             device.id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
         )
