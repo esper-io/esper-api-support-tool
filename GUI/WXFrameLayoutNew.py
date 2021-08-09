@@ -1460,7 +1460,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on group
-            if self.checkAppRequirement():
+            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1497,7 +1497,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on device
-            if self.checkAppRequirement():
+            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1607,7 +1607,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
             self.toggleEnabledState(True)
 
-    @api_tool_decorator
+    @api_tool_decorator()
     def checkAppRequirement(self, actionClientData, appSelection, appLabel):
         if (
             actionClientData == GeneralActions.SET_KIOSK.value
