@@ -2545,6 +2545,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onInstalledDevices(self, event):
         if self.sidePanel.apps:
+            self.setCursorBusy()
+            self.setGaugeValue(0)
+            self.toggleEnabledState(False)
             with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
@@ -2552,6 +2555,7 @@ class NewFrameLayout(wx.Frame):
                     if app and version:
                         self.onClearGrids(None)
                         self.gauge.Pulse()
+                        self.isRunning = True
                         resp = getInstallDevices(version, app)
                         res = []
                         for r in resp.results:
@@ -2588,6 +2592,9 @@ class NewFrameLayout(wx.Frame):
                     wx.ICON_INFORMATION,
                 )
             )
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+        self.setCursorDefault()
+        self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def moveGroup(self, event=None):
