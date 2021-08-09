@@ -31,9 +31,8 @@ def iterateThroughGridRows(frame, action):
     if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
         modifyDevice(frame)
     if (
-        action == GridActions.SET_APP_STATE_DISABLE.value
-        or action == GridActions.SET_APP_STATE_HIDE.value
-        or action == GridActions.SET_APP_STATE_SHOW.value
+        action
+        == GridActions.SET_APP_STATE.value
     ):
         setAppStateForAllAppsListed(action)
     if action == 50:
@@ -373,7 +372,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
                 t = wxThread.GUIThread(
                     Globals.frame,
                     setAllAppsState,
-                    args=(Globals.frame, device, state),
+                    args=(Globals.frame, device, Globals.frame.AppState),
                     name="setAllAppsState",
                 )
                 threads.append(t)
@@ -406,21 +405,21 @@ def setAllAppsState(frame, device, state):
             app_version = app["version_code"]
             if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                 continue
-        if state == GridActions.SET_APP_STATE_DISABLE.value:
+        if state == "DISABLE":
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,
                 appVer=app_version,
                 state="DISABLE",
             )
-        if state == GridActions.SET_APP_STATE_HIDE.value:
+        if state == "HIDE":
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,
                 appVer=app_version,
                 state="HIDE",
             )
-        if state == GridActions.SET_APP_STATE_SHOW.value:
+        if state == "SHOW":
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,

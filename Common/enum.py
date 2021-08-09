@@ -10,9 +10,7 @@ class GeneralActions(Enum):
     SET_KIOSK = 2
     SET_MULTI = 3
     CLEAR_APP_DATA = 4
-    SET_APP_STATE_SHOW = 5
-    SET_APP_STATE_HIDE = 6
-    SET_APP_STATE_DISABLE = 7
+    SET_APP_STATE = 7
     REMOVE_NON_WHITELIST_AP = 8
     MOVE_GROUP = 9
     INSTALL_APP = 10
@@ -21,9 +19,7 @@ class GeneralActions(Enum):
 
 class GridActions(Enum):
     MODIFY_ALIAS_AND_TAGS = 30
-    SET_APP_STATE_SHOW = 31
-    SET_APP_STATE_HIDE = 32
-    SET_APP_STATE_DISABLE = 33
+    SET_APP_STATE = 33
     MOVE_GROUP = 34
     INSTALL_APP = 35
     UNINSTALL_APP = 36

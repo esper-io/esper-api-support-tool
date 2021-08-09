@@ -116,6 +116,7 @@ class NewFrameLayout(wx.Frame):
         self.gridArrowState = {"next": False, "prev": False}
         self.groups = None
         self.groupManage = None
+        self.AppState = None
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -1164,14 +1165,10 @@ class NewFrameLayout(wx.Frame):
             if (
                 action == GeneralActions.SET_KIOSK.value
                 or action == GeneralActions.SET_MULTI.value
-                or action == GeneralActions.SET_APP_STATE_DISABLE.value
-                or action == GeneralActions.SET_APP_STATE_HIDE.value
-                or action == GeneralActions.SET_APP_STATE_SHOW.value
+                or action == GeneralActions.SET_APP_STATE.value
                 or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
-                or action == GridActions.SET_APP_STATE_DISABLE.value
-                or action == GridActions.SET_APP_STATE_HIDE.value
-                or action == GridActions.SET_APP_STATE_SHOW.value
+                or action == GridActions.SET_APP_STATE.value
                 or action == GeneralActions.INSTALL_APP.value
                 or action == GeneralActions.UNINSTALL_APP.value
                 or action == GridActions.MOVE_GROUP.value
@@ -1391,6 +1388,7 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = True
         self.setGaugeValue(0)
         self.toggleEnabledState(False)
+        self.AppState = None
 
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
@@ -1443,6 +1441,13 @@ class NewFrameLayout(wx.Frame):
         if actionClientData == GeneralActions.MOVE_GROUP.value:
             self.moveGroup()
             return
+        if (
+            actionClientData == GeneralActions.SET_APP_STATE.value
+            or actionClientData == GridActions.SET_APP_STATE.value
+        ):
+            self.displayAppStateChoiceDlg()
+            if not self.AppState:
+                return
 
         if (
             self.sidePanel.selectedGroupsList
@@ -1452,20 +1457,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on group
-            if (
-                actionClientData == GeneralActions.SET_KIOSK.value
-                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-                or actionClientData == GeneralActions.INSTALL_APP.value
-                or actionClientData == GeneralActions.UNINSTALL_APP.value
-            ) and (
-                appSelection < 0 or appLabel == "No available app(s) on this device"
-            ):
-                displayMessageBox(
-                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                )
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+            if self.checkAppRequirement():
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1502,20 +1494,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on device
-            if (
-                actionClientData == GeneralActions.SET_KIOSK.value
-                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-                or actionClientData == GeneralActions.INSTALL_APP.value
-                or actionClientData == GeneralActions.UNINSTALL_APP.value
-            ) and (
-                appSelection < 0 or appLabel == "No available app(s) on this device"
-            ):
-                displayMessageBox(
-                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                )
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+            if self.checkAppRequirement():
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1624,6 +1603,28 @@ class NewFrameLayout(wx.Frame):
             self.isRunning = False
             self.setCursorDefault()
             self.toggleEnabledState(True)
+
+    @api_tool_decorator
+    def checkAppRequirement(self, actionClientData, appSelection, appLabel):
+        if (
+                actionClientData == GeneralActions.SET_KIOSK.value
+                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
+                or actionClientData == GeneralActions.INSTALL_APP.value
+                or actionClientData == GeneralActions.UNINSTALL_APP.value
+                or actionClientData == GeneralActions.SET_APP_STATE.value
+                or actionClientData == GridActions.SET_APP_STATE.value
+            ) and (
+                appSelection < 0 or appLabel == "No available app(s) on this device"
+            ):
+                displayMessageBox(
+                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
+                )
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return True
+        return False
+
 
     @api_tool_decorator()
     def showConsole(self, event):
@@ -1793,7 +1794,10 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
-            elif action == GeneralActions.SET_APP_STATE_DISABLE.value:
+            elif (
+                action == GeneralActions.SET_APP_STATE.value
+                and self.AppState == "DISABLE"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
@@ -1802,7 +1806,9 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
-            elif action == GeneralActions.SET_APP_STATE_HIDE.value:
+            elif (
+                action == GeneralActions.SET_APP_STATE.value and self.AppState == "HIDE"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
@@ -1811,7 +1817,9 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
-            elif action == GeneralActions.SET_APP_STATE_SHOW.value:
+            elif (
+                action == GeneralActions.SET_APP_STATE.value and self.AppState == "SHOW"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
@@ -2774,3 +2782,14 @@ class NewFrameLayout(wx.Frame):
             and hasattr(event, "Veto")
         ):
             event.Veto()
+
+    def displayAppStateChoiceDlg(self):
+        res = None
+        with wx.SingleChoiceDialog(
+            self, "Select App State:", "", ["DISABLE", "HIDE", "SHOW"]
+        ) as dlg:
+            res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                self.AppState = dlg.GetStringSelection()
+            else:
+                self.AppState = None

@@ -455,19 +455,14 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def onSetAppState(self, event):
         showIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[7]
-        )
-        hideIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[6]
-        )
-        disableIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
             list(Globals.GENERAL_ACTIONS.keys())[5]
         )
         menuItem = event.EventObject.FindItemById(event.Id)
         if "disable" in menuItem.GetItemLabelText().lower():
-            self.parentFrame.sidePanel.actionChoice.SetSelection(disableIndx)
+            self.parentFrame.AppState = "DISABLE"
         elif "hide" in menuItem.GetItemLabelText().lower():
-            self.parentFrame.sidePanel.actionChoice.SetSelection(hideIndx)
+            self.parentFrame.AppState = "HIDE"
         else:
-            self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
+            self.parentFrame.AppState = "SHOW"
+        self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
         self.parentFrame.onRun()

@@ -422,9 +422,7 @@ class SidePanel(wx.Panel):
         if (
             clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value
-            or clientData == GeneralActions.SET_APP_STATE_DISABLE.value
-            or clientData == GeneralActions.SET_APP_STATE_HIDE.value
-            or clientData == GeneralActions.SET_APP_STATE_SHOW.value
+            or clientData == GeneralActions.SET_APP_STATE.value
             or clientData == GeneralActions.INSTALL_APP.value
             or clientData == GeneralActions.UNINSTALL_APP.value
             or clientData == GridActions.INSTALL_APP.value
