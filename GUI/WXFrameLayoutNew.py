@@ -1550,19 +1550,9 @@ class NewFrameLayout(wx.Frame):
                     Globals.SHOW_GRID_DIALOG = False
                     self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
                 if runAction:
-                    if (
-                        actionClientData == GridActions.INSTALL_APP.value
-                        or actionClientData == GridActions.UNINSTALL_APP.value
-                    ) and (
-                        appSelection < 0
-                        or appLabel == "No available app(s) on this device"
+                    if self.checkAppRequirement(
+                        actionClientData, appSelection, appLabel
                     ):
-                        displayMessageBox(
-                            ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                        )
-                        self.isRunning = False
-                        self.setCursorDefault()
-                        self.toggleEnabledState(True)
                         return
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % actionLabel
@@ -1615,7 +1605,8 @@ class NewFrameLayout(wx.Frame):
             or actionClientData == GeneralActions.INSTALL_APP.value
             or actionClientData == GeneralActions.UNINSTALL_APP.value
             or actionClientData == GeneralActions.SET_APP_STATE.value
-            or actionClientData == GridActions.SET_APP_STATE.value
+            or actionClientData == GridActions.INSTALL_APP.value
+            or actionClientData == GridActions.UNINSTALL_APP.value
         ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
             displayMessageBox(
                 ("Please select a valid application", wx.OK | wx.ICON_ERROR)
