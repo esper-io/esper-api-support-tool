@@ -114,11 +114,14 @@ class ToolMenuBar(wx.MenuBar):
         self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
         self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
         self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
         self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
+        self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.collectionSubMenu = wx.Menu()
         collectionItem = wx.MenuItem(
             self.collectionSubMenu,
@@ -136,6 +139,9 @@ class ToolMenuBar(wx.MenuBar):
         self.eqlQuery.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/search.png")))
         self.collectionSubMenu = runMenu.Append(
             wx.ID_ANY, "&Collections", self.collectionSubMenu
+        )
+        self.collectionSubMenu.SetBitmap(
+            wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
 
         # View Menu
