@@ -842,9 +842,9 @@ def setKiosk(frame, device, deviceInfo):
     failed = False
     warning = False
     appSelection = frame.sidePanel.selectedAppEntry
-    if not appSelection:
+    if not appSelection or "pkgName" not in appSelection:
         return {}
-    appToUse = frame.sidePanel.selectedAppEntry["id"]
+    appToUse = appSelection["pkgName"]
     logString = (
         str("--->" + str(device.device_name) + " " + str(device.alias_name))
         + " -> Kiosk ->"
@@ -1433,16 +1433,38 @@ def getAppDictEntry(app, update=True):
     if type(app) == esperclient.models.application.Application:
         entry["isValid"] = True
     else:
-        if type(app) == dict and "id" in app and "install_state" not in app and "app_state" not in app:
+        if (
+            type(app) == dict
+            and "id" in app
+            and "install_state" not in app
+            and "device" not in app
+        ):
             validApp = getApplication(entry["id"])
             if hasattr(validApp, "results"):
                 validApp = validApp.results[0] if validApp.results else validApp
 
-    if hasattr(validApp, "id") or (type(validApp) == dict and "id" in validApp):
-        entry["id"] = validApp.id if hasattr(validApp, "id") else validApp["id"]
+    if (
+        hasattr(validApp, "id")
+        or (type(validApp) == dict and "id" in validApp)
+        or (type(app) == dict and "device" in app)
+    ):
+        entry["id"] = (
+            validApp.id
+            if hasattr(validApp, "id")
+            else (
+                validApp["id"]
+                if (type(validApp) == dict and "id" in validApp)
+                else entry["id"]
+            )
+        )
         entry["isValid"] = True
 
-    if Globals.frame and hasattr(Globals.frame, "sidePanel") and "isValid" in entry:
+    if (
+        Globals.frame
+        and hasattr(Globals.frame, "sidePanel")
+        and "isValid" in entry
+        and update
+    ):
         selectedDeviceAppsMatch = list(
             filter(
                 lambda entry: entry["app_name"] == appName

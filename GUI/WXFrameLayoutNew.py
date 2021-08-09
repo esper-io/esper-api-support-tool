@@ -1888,7 +1888,12 @@ class NewFrameLayout(wx.Frame):
         num = 1
         appAdded = False
         self.sidePanel.selectedDeviceApps = []
-        self.sidePanel.apps = self.sidePanel.knownApps + self.sidePanel.enterpriseApps
+        if not Globals.USE_ENTERPRISE_APP:
+            self.sidePanel.apps = self.sidePanel.enterpriseApps
+        else:
+            self.sidePanel.apps = (
+                self.sidePanel.knownApps + self.sidePanel.enterpriseApps
+            )
         for deviceId in self.sidePanel.selectedDevicesList:
             appList, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
@@ -2665,7 +2670,7 @@ class NewFrameLayout(wx.Frame):
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
                     _, version, pkg = dlg.getAppValues(returnPkgName=True)
-            if pkg and version:
+            if pkg:
                 t = None
                 if self.sidePanel.selectedDevicesList:
                     t = wxThread.GUIThread(

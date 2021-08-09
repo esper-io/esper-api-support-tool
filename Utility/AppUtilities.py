@@ -30,12 +30,13 @@ def installAppOnDevices(packageName, version=None, devices=None):
     appVersionId = version
     if not appVersion:
         appList = getAllApplications()
-        for app in appList.results:
-            if app.package_name == packageName:
-                app.versions.sort(key=lambda s: s.version_code.split("."))
-                appVersion = app.versions[-1]
-                appVersionId = appVersion.id
-                break
+        if appList:
+            for app in appList.results:
+                if app.package_name == packageName:
+                    app.versions.sort(key=lambda s: s.version_code.split("."))
+                    appVersion = app.versions[-1]
+                    appVersionId = appVersion.id
+                    break
     if appVersion:
         return executeCommandOnDevice(
             Globals.frame,
