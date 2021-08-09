@@ -2662,7 +2662,7 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = version = pkg = None
             with InstalledDevicesDlg(
-                self.sidePanel.apps, title="Install Application"
+                self.sidePanel.enterpriseApps, title="Install Application"
             ) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
