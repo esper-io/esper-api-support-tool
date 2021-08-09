@@ -98,6 +98,16 @@ class ToolMenuBar(wx.MenuBar):
         self.appSubMenu = wx.Menu()
         self.installApp = self.appSubMenu.Append(wx.ID_ANY, "Install App")
         self.uninstallApp = self.appSubMenu.Append(wx.ID_ANY, "Uninstall App")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.setKiosk = self.appSubMenu.Append(wx.ID_ANY, "Set Kiosk App")
+        self.setMultiApp = self.appSubMenu.Append(wx.ID_ANY, "Set to Multi-App Mode")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.clearData = self.appSubMenu.Append(wx.ID_ANY, "Clear App Data")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.setShow = self.appSubMenu.Append(wx.ID_ANY, "Set App State: SHOW")
+        self.setDisabled = self.appSubMenu.Append(wx.ID_ANY, "Set App State: DISABLED")
+        self.setHide = self.appSubMenu.Append(wx.ID_ANY, "Set App State: HIDE")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
         self.installedDevices = self.appSubMenu.Append(
             wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
@@ -238,6 +248,12 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
+        self.Bind(wx.EVT_MENU, self.onClearData, self.clearData)
+        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setDisabled)
+        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setHide)
+        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setShow)
+        self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
+        self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -404,6 +420,7 @@ class ToolMenuBar(wx.MenuBar):
             self.collection.Hide()
             self.eqlQuery.Hide()
 
+    @api_tool_decorator()
     def AddUser(self, event):
         if not self.uc:
             self.uc = UserCreation(self)
@@ -411,3 +428,46 @@ class ToolMenuBar(wx.MenuBar):
         self.parentFrame.isRunning = True
         self.uc.Show()
         self.uc.tryToMakeActive()
+
+    @api_tool_decorator()
+    def onClearData(self, event):
+        indx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[4]
+        )
+        self.parentFrame.sidePanel.actionChoice.SetSelection(indx)
+        self.parentFrame.onRun()
+
+    @api_tool_decorator()
+    def onSetMode(self, event):
+        kioskIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[2]
+        )
+        multiIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[3]
+        )
+        menuItem = event.EventObject.FindItemById(event.Id)
+        if "multi" in menuItem.GetItemLabelText().lower():
+            self.parentFrame.sidePanel.actionChoice.SetSelection(multiIndx)
+        else:
+            self.parentFrame.sidePanel.actionChoice.SetSelection(kioskIndx)
+        self.parentFrame.onRun()
+
+    @api_tool_decorator()
+    def onSetAppState(self, event):
+        showIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[7]
+        )
+        hideIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[6]
+        )
+        disableIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[5]
+        )
+        menuItem = event.EventObject.FindItemById(event.Id)
+        if "disable" in menuItem.GetItemLabelText().lower():
+            self.parentFrame.sidePanel.actionChoice.SetSelection(disableIndx)
+        elif "hide" in menuItem.GetItemLabelText().lower():
+            self.parentFrame.sidePanel.actionChoice.SetSelection(hideIndx)
+        else:
+            self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
+        self.parentFrame.onRun()

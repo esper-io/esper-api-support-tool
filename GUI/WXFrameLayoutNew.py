@@ -1383,7 +1383,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.knownApps.append(entry)
 
     @api_tool_decorator()
-    def onRun(self, event):
+    def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
