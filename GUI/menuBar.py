@@ -104,9 +104,7 @@ class ToolMenuBar(wx.MenuBar):
         self.appSubMenu.Append(wx.ID_SEPARATOR)
         self.clearData = self.appSubMenu.Append(wx.ID_ANY, "Clear App Data")
         self.appSubMenu.Append(wx.ID_SEPARATOR)
-        self.setShow = self.appSubMenu.Append(wx.ID_ANY, "Set App State: SHOW")
-        self.setDisabled = self.appSubMenu.Append(wx.ID_ANY, "Set App State: DISABLED")
-        self.setHide = self.appSubMenu.Append(wx.ID_ANY, "Set App State: HIDE")
+        self.setAppState = self.appSubMenu.Append(wx.ID_ANY, "Set App State")
         self.appSubMenu.Append(wx.ID_SEPARATOR)
         self.installedDevices = self.appSubMenu.Append(
             wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
@@ -255,9 +253,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
         self.Bind(wx.EVT_MENU, self.onClearData, self.clearData)
-        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setDisabled)
-        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setHide)
-        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setShow)
+        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setAppState)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
 
@@ -463,12 +459,5 @@ class ToolMenuBar(wx.MenuBar):
         showIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
             list(Globals.GENERAL_ACTIONS.keys())[5]
         )
-        menuItem = event.EventObject.FindItemById(event.Id)
-        if "disable" in menuItem.GetItemLabelText().lower():
-            self.parentFrame.AppState = "DISABLE"
-        elif "hide" in menuItem.GetItemLabelText().lower():
-            self.parentFrame.AppState = "HIDE"
-        else:
-            self.parentFrame.AppState = "SHOW"
         self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
         self.parentFrame.onRun()
