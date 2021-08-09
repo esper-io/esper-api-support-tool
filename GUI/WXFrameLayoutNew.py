@@ -1447,6 +1447,9 @@ class NewFrameLayout(wx.Frame):
         ):
             self.displayAppStateChoiceDlg()
             if not self.AppState:
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
                 return
 
         if (
@@ -1607,24 +1610,21 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator
     def checkAppRequirement(self, actionClientData, appSelection, appLabel):
         if (
-                actionClientData == GeneralActions.SET_KIOSK.value
-                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-                or actionClientData == GeneralActions.INSTALL_APP.value
-                or actionClientData == GeneralActions.UNINSTALL_APP.value
-                or actionClientData == GeneralActions.SET_APP_STATE.value
-                or actionClientData == GridActions.SET_APP_STATE.value
-            ) and (
-                appSelection < 0 or appLabel == "No available app(s) on this device"
-            ):
-                displayMessageBox(
-                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                )
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
-                return True
+            actionClientData == GeneralActions.SET_KIOSK.value
+            or actionClientData == GeneralActions.CLEAR_APP_DATA.value
+            or actionClientData == GeneralActions.INSTALL_APP.value
+            or actionClientData == GeneralActions.UNINSTALL_APP.value
+            or actionClientData == GeneralActions.SET_APP_STATE.value
+            or actionClientData == GridActions.SET_APP_STATE.value
+        ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
+            displayMessageBox(
+                ("Please select a valid application", wx.OK | wx.ICON_ERROR)
+            )
+            self.isRunning = False
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
+            return True
         return False
-
 
     @api_tool_decorator()
     def showConsole(self, event):
