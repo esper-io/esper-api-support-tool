@@ -12,6 +12,7 @@ from Common.decorator import api_tool_decorator
 
 class MyApp(wx.App):
     def OnInit(self):
+        self.locale = wx.Locale(wx.LANGUAGE_ENGLISH)
         self.name = "EAST-%s" % wx.GetUserId()
         self.instance = wx.SingleInstanceChecker(self.name)
 
