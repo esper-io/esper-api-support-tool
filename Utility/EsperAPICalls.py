@@ -466,6 +466,28 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
 
 
 @api_tool_decorator()
+def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
+    try:
+        api_instance = esperclient.ApplicationApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        enterprise_id = Globals.enterprise_id
+        api_response = None
+        for attempt in range(maxAttempt):
+            try:
+                api_response = api_instance.upload(enterprise_id, file)
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        return api_response
+    except ApiException as e:
+        raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
+
+
+@api_tool_decorator()
 def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))

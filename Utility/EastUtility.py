@@ -682,3 +682,20 @@ def getAllDeviceInfo(frame):
             deviceList = {**deviceList, **thread.result[1]}
 
     return deviceList
+
+
+def uploadAppToEndpoint(path):
+    postEventToFrame(eventUtil.myEVT_LOG, "Attempting to upload app...")
+    resp = apiCalls.uploadApplication(path)
+    if resp:
+        postEventToFrame(eventUtil.myEVT_LOG, "App upload succeed!")
+        displayMessageBox(("Application has been uploaded", wx.ICON_INFORMATION))
+    else:
+        postEventToFrame(eventUtil.myEVT_LOG, "App upload FAILED!")
+        displayMessageBox(
+            (
+                "ERROR: Failed to upload apk. Please try again!",
+                wx.ICON_ERROR,
+            )
+        )
+    postEventToFrame(eventUtil.myEVT_COMPLETE, True)

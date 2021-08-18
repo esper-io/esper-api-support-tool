@@ -71,6 +71,7 @@ from Utility.EastUtility import (
     getAllDeviceInfo,
     processInstallDevices,
     removeNonWhitelisted,
+    uploadAppToEndpoint,
 )
 from Utility.Resource import (
     checkForInternetAccess,
@@ -2783,3 +2784,19 @@ class NewFrameLayout(wx.Frame):
                 self.AppState = dlg.GetStringSelection()
             else:
                 self.AppState = None
+
+    def uploadApplication(self, event, title="", joinThread=False):
+        with wx.FileDialog(
+            self,
+            "Upload APK" if not title else title,
+            wildcard="APK files (*.apk)|*.apk",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+            defaultDir=str(self.defaultDir),
+        ) as fileDialog:
+            result = fileDialog.ShowModal()
+            if result == wx.ID_OK:
+                apk_path = fileDialog.GetPath()
+                t = wxThread.GUIThread(self, uploadAppToEndpoint, (apk_path))
+                t.start()
+                if joinThread:
+                    t.join()

@@ -52,6 +52,13 @@ class ToolsToolBar(wx.ToolBar):
 
         self.AddSeparator()
 
+        uploadIcon = scale_bitmap(resourcePath("Images/upload.png"), *size)
+        self.uploadApp = self.AddTool(
+            wx.ID_ANY, "Upload App (APK)", uploadIcon, "Upload App (APK)"
+        )
+
+        self.AddSeparator()
+
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
         self.AddControl(self.search)
@@ -77,6 +84,7 @@ class ToolsToolBar(wx.ToolBar):
         self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.Parent.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
+        self.Bind(wx.EVT_TOOL, self.Parent.uploadApplication, self.uploadApp)
 
         self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
         self.search.Bind(wx.EVT_KEY_DOWN, self.onKey)

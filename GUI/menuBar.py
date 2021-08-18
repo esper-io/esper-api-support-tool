@@ -96,6 +96,8 @@ class ToolMenuBar(wx.MenuBar):
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         runMenu.Append(wx.ID_SEPARATOR)
         self.appSubMenu = wx.Menu()
+        self.uploadApp = self.appSubMenu.Append(wx.ID_ANY, "Upload App (APK)")
+        self.uploadApp.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/upload.png")))
         self.installApp = self.appSubMenu.Append(wx.ID_ANY, "Install App")
         self.uninstallApp = self.appSubMenu.Append(wx.ID_ANY, "Uninstall App")
         self.appSubMenu.Append(wx.ID_SEPARATOR)
@@ -256,6 +258,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onSetAppState, self.setAppState)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
+        self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
 
     @api_tool_decorator()
     def onAbout(self, event):
