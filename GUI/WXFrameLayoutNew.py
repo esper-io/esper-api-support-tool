@@ -469,7 +469,8 @@ class NewFrameLayout(wx.Frame):
             None, ApiTracker.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
-        thread.join()
+        if thread:
+            thread.join()
         self.DestroyLater()
 
     @api_tool_decorator()
