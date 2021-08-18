@@ -1610,6 +1610,7 @@ class NewFrameLayout(wx.Frame):
             displayMessageBox(
                 ("Please select a valid application", wx.OK | wx.ICON_ERROR)
             )
+            self.sidePanel.notebook_1.SetSelection(2)
             self.isRunning = False
             self.setCursorDefault()
             self.toggleEnabledState(True)

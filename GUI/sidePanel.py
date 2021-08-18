@@ -127,6 +127,16 @@ class SidePanel(wx.Panel):
 
         self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[])
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
+        self.selectedGroups.SetFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "Normal",
+            )
+        )
         grid_sizer_8.Add(self.selectedGroups, 0, wx.EXPAND, 0)
 
         self.panel_9 = wx.Panel(self.notebook_1, wx.ID_ANY)
@@ -149,6 +159,16 @@ class SidePanel(wx.Panel):
 
         self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[])
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
+        self.selectedDevices.SetFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "Normal",
+            )
+        )
         grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.notebook_1, wx.ID_ANY)
@@ -166,6 +186,16 @@ class SidePanel(wx.Panel):
 
         self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[])
         self.selectedApp.SetToolTip("Currently Selected Application")
+        self.selectedApp.SetFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "Normal",
+            )
+        )
         grid_sizer_9.Add(self.selectedApp, 0, wx.EXPAND, 0)
 
         static_line_2 = wx.StaticLine(self, wx.ID_ANY)
