@@ -505,12 +505,13 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     if ipKey:
         deviceInfo["ipv4Address"] = []
         deviceInfo["ipv6Address"] = []
-        for ip in deviceInfo[ipKey]:
-            if ":" not in ip:
-                deviceInfo["ipv4Address"].append(ip)
-            elif ip.endswith("/64"):
-                deviceInfo["ipv6Address"].append(ip)
-                deviceInfo["macAddress"].append(ipv6Tomac(ip))
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                elif ip.endswith("/64"):
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
     if location_info:
         if (
