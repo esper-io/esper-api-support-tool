@@ -15,6 +15,8 @@ import wx.grid as gridlib
 import Common.Globals as Globals
 import Utility.wxThread as wxThread
 
+from Common.enum import Color
+
 
 class TabPanel(wx.Panel):
     def __init__(self, parent, id, name):
@@ -29,7 +31,12 @@ class GroupManagement(wx.Dialog):
         self.groups = groups
         self.groupTree = {}
         self.tree = {}
+        self.uploadTree = {}
+        self.uploadTreeItems = {}
+        self.uploadCSVTreeItems = []
         self.current_page = None
+        self.groupNameToId = {}
+        self.groupIdToName = {}
         self.expectedHeaders = [
             "Group Name",
             "Parent Group Identifier",
@@ -66,7 +73,7 @@ class GroupManagement(wx.Dialog):
                 "NormalBold",
             )
         )
-        grid_sizer_1.Add(label_1, 0, wx.TOP, 5)
+        grid_sizer_1.Add(label_1, 0, 0, 0)
 
         label_2 = wx.StaticText(
             self.notebook_1_pane_1,
@@ -107,7 +114,7 @@ class GroupManagement(wx.Dialog):
                 "NormalBold",
             )
         )
-        grid_sizer_4.Add(label_4, 0, wx.TOP, 5)
+        grid_sizer_4.Add(label_4, 0, 0, 0)
 
         label_3 = wx.StaticText(
             self.notebook_1_pane_2,
@@ -134,13 +141,29 @@ class GroupManagement(wx.Dialog):
         self.button_6.SetToolTip("Upload CSV file")
         sizer_3.Add(self.button_6, 0, wx.BOTTOM | wx.RIGHT, 5)
 
-        self.grid_1 = wx.grid.Grid(self.notebook_1_pane_2, wx.ID_ANY, size=(1, 1))
+        self.notebook_2 = wx.Notebook(self.notebook_1_pane_2, wx.ID_ANY)
+        grid_sizer_4.Add(self.notebook_2, 1, wx.EXPAND, 0)
+
+        self.notebook_2_pane_1 = TabPanel(self.notebook_2, wx.ID_ANY, "Tree")
+        self.notebook_2.AddPage(self.notebook_2_pane_1, "Tree Preview")
+
+        sizer_4 = wx.GridSizer(1, 1, 0, 0)
+
+        self.tree_ctrl_2 = wx.TreeCtrl(self.notebook_2_pane_1, wx.ID_ANY)
+        sizer_4.Add(self.tree_ctrl_2, 1, wx.EXPAND, 0)
+
+        self.notebook_2_pane_2 = TabPanel(self.notebook_2, wx.ID_ANY, "Grid")
+        self.notebook_2.AddPage(self.notebook_2_pane_2, "Grid Preview")
+
+        sizer_5 = wx.GridSizer(1, 1, 0, 0)
+
+        self.grid_1 = gridlib.Grid(self.notebook_2_pane_2, wx.ID_ANY, size=(1, 1))
         self.grid_1.CreateGrid(0, 3)
         self.grid_1.EnableDragGridSize(0)
         self.grid_1.SetColLabelValue(0, "Group Name")
         self.grid_1.SetColLabelValue(1, "Parent Group Identifier")
         self.grid_1.SetColLabelValue(2, "New Group Name")
-        grid_sizer_4.Add(self.grid_1, 1, wx.EXPAND, 0)
+        sizer_5.Add(self.grid_1, 1, wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -155,6 +178,10 @@ class GroupManagement(wx.Dialog):
         sizer_2.Add(self.button_2, 0, wx.LEFT, 5)
 
         sizer_2.Realize()
+
+        self.notebook_2_pane_2.SetSizer(sizer_5)
+
+        self.notebook_2_pane_1.SetSizer(sizer_4)
 
         grid_sizer_4.AddGrowableRow(3)
         grid_sizer_4.AddGrowableCol(0)
@@ -182,25 +209,39 @@ class GroupManagement(wx.Dialog):
         self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
         self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
+        # self.notebook_2.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
+        self.tree_ctrl_2.ExpandAll()
 
     def createTreeLayout(self):
         unsorted = []
         for group in self.groups:
+            if group.name not in self.groupNameToId:
+                self.groupNameToId[group.name] = []
+            self.groupNameToId[group.name].append(group.id)
+            self.groupIdToName[group.id] = group.name
             parentId = self.getGroupIdFromURL(group.parent)
             if not group.parent:
                 self.groupTree[group.id] = []
+                self.uploadTree[group.id] = []
                 self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
+                root2 = self.tree_ctrl_2.AddRoot(group.name, data=group.id)
                 self.tree[group.id] = self.root
+                self.uploadTreeItems[group.id] = root2
                 continue
             if parentId in self.groupTree.keys():
                 self.groupTree[parentId].append({group.id: []})
+                self.uploadTree[parentId].append({group.id: []})
                 entry = self.tree_ctrl_1.AppendItem(
                     self.tree[parentId], group.name, data=group.id
                 )
+                entry2 = self.tree_ctrl_2.AppendItem(
+                    self.uploadTreeItems[parentId], group.name, data=group.id
+                )
                 self.tree[group.id] = entry
+                self.uploadTreeItems[group.id] = entry2
             else:
                 unsorted.append(group)
 
@@ -220,7 +261,11 @@ class GroupManagement(wx.Dialog):
                 entry = self.tree_ctrl_1.AppendItem(
                     self.tree[dest], group.name, data=group.id
                 )
+                entry2 = self.tree_ctrl_2.AppendItem(
+                    self.uploadTreeItems[dest], group.name, data=group.id
+                )
                 self.tree[group.id] = entry
+                self.uploadTreeItems[group.id] = entry2
                 return True
             for child in value:
                 success = self.addGroupAsChild(child, dest, group)
@@ -231,9 +276,11 @@ class GroupManagement(wx.Dialog):
     def refreshTree(self, event=None):
         self.setCursorBusy()
         self.tree_ctrl_1.DeleteAllItems()
+        self.tree_ctrl_2.DeleteAllItems()
         self.groups = getAllGroups().results
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
+        self.tree_ctrl_2.ExpandAll()
         self.setCursorDefault()
 
     @api_tool_decorator()
@@ -289,7 +336,14 @@ class GroupManagement(wx.Dialog):
                             and "-" in parent
                             and parentGroup["id"] == parent
                         ):
+                            treeItem = None
+                            if group.id in self.uploadTreeItems:
+                                treeItem = self.uploadTreeItems[group.id]
                             deleteGroup(group.id)
+                            if treeItem:
+                                self.tree_ctrl_2.SetItemTextColour(
+                                    treeItem, Color.green.value
+                                )
                             numSuccess += 1
                             break
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
@@ -335,9 +389,20 @@ class GroupManagement(wx.Dialog):
                         matchingGroups = getAllGroups(name=parent)
                         for group in matchingGroups.results:
                             if parent == group.name:
+                                treeItem = None
+                                if group.id in self.uploadTreeItems:
+                                    treeItem = self.uploadTreeItems[group.id]
                                 resp = createGroup(oldName, group.id)
                                 if resp:
                                     numSuccess += 1
+                                    if treeItem:
+                                        self.tree_ctrl_2.SetItemTextColour(
+                                            treeItem, Color.green.value
+                                        )
+                                elif treeItem:
+                                    self.tree_ctrl_2.SetItemTextColour(
+                                        treeItem, Color.red.value
+                                    )
                                 break
             displayMessageBox(
                 "%s out of %s Groups have been created"
@@ -444,6 +509,9 @@ class GroupManagement(wx.Dialog):
                             and "-" in parent
                             and parentGroup["id"] == parent
                         ):
+                            treeItem = None
+                            if group.id in self.uploadTreeItems:
+                                treeItem = self.uploadTreeItems[group.id]
                             resp = renameGroup(group.id, newName)
                             if (
                                 resp
@@ -451,6 +519,14 @@ class GroupManagement(wx.Dialog):
                                 and resp.status_code >= 200
                             ):
                                 numSuccess += 1
+                                if treeItem:
+                                    self.tree_ctrl_2.SetItemTextColour(
+                                        treeItem, Color.green.value
+                                    )
+                            elif treeItem:
+                                self.tree_ctrl_2.SetItemTextColour(
+                                    treeItem, Color.red.value
+                                )
                             break
             displayMessageBox(
                 "%s out of %s Groups have been renamed"
@@ -478,6 +554,9 @@ class GroupManagement(wx.Dialog):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         self.tree_ctrl_1.UnselectAll()
         data = None
+        for item in self.uploadCSVTreeItems:
+            self.tree_ctrl_2.Delete(item)
+        self.uploadCSVTreeItems = []
         try:
             with open(filePath, "r", encoding="utf-8-sig") as csvFile:
                 reader = csv.reader(
@@ -494,11 +573,67 @@ class GroupManagement(wx.Dialog):
             if row != self.expectedHeaders:
                 self.grid_1.AppendRows(1)
                 colNum = 0
+                rowEntry = []
                 for col in row:
                     self.grid_1.SetCellValue(
                         self.grid_1.GetNumberRows() - 1, colNum, str(col)
                     )
+                    if (colNum == 0 or colNum == 1) and not (
+                        len(str(col)) == 36 and "-" in str(col)
+                    ):
+                        groupId = None
+                        if str(col) in self.groupNameToId:
+                            groupId = self.groupNameToId[str(col)]
+                        if groupId:
+                            groupId = groupId[0]
+                            rowEntry.append(groupId)
+                        else:
+                            rowEntry.append(str(col))
+                    else:
+                        rowEntry.append(str(col))
                     colNum += 1
+                if rowEntry[0] in self.uploadTreeItems:
+                    item = self.uploadTreeItems[rowEntry[0]]
+                    self.tree_ctrl_2.SetItemFont(
+                        item,
+                        wx.Font(
+                            Globals.FONT_SIZE,
+                            wx.FONTFAMILY_DEFAULT,
+                            wx.FONTSTYLE_NORMAL,
+                            wx.FONTWEIGHT_BOLD,
+                            True,
+                            "NormalBold",
+                        ),
+                    )
+                    self.tree_ctrl_2.SetItemTextColour(item, Color.blue.value)
+                    name = rowEntry[0]
+                    if len(rowEntry) > 2 and rowEntry[2]:
+                        name = "%s (Deletable;Rename To: %s)" % (
+                            self.tree_ctrl_2.GetItemText(item),
+                            rowEntry[2],
+                        )
+                        self.tree_ctrl_2.SetItemText(item, name)
+                elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
+                    item = self.uploadTreeItems[rowEntry[1]]
+                    name = rowEntry[0]
+                    if len(rowEntry) > 2 and rowEntry[2]:
+                        name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
+                    entry = self.tree_ctrl_2.AppendItem(item, name)
+                    self.tree_ctrl_2.SetItemFont(
+                        entry,
+                        wx.Font(
+                            Globals.FONT_SIZE,
+                            wx.FONTFAMILY_DEFAULT,
+                            wx.FONTSTYLE_NORMAL,
+                            wx.FONTWEIGHT_BOLD,
+                            True,
+                            "NormalBold",
+                        ),
+                    )
+                    self.tree_ctrl_2.SetItemTextColour(entry, Color.blue.value)
+                    self.uploadTreeItems[rowEntry[0]] = entry
+                    self.uploadTreeItems[name] = entry
+        self.tree_ctrl_2.ExpandAll()
         self.grid_1.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()
@@ -508,6 +643,7 @@ class GroupManagement(wx.Dialog):
         if self.current_page.name == "Single":
             self.refreshTree()
         elif self.grid_1.GetNumberRows() > 0:
+            self.notebook_2.SetSelection(0)
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         event.Skip()
 

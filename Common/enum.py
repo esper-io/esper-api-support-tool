@@ -32,6 +32,7 @@ class Color(Enum):
     black = wx.Colour(0, 0, 0)
     grey = wx.Colour(192, 192, 192)
     red = wx.Colour(255, 0, 0)
+    blue = wx.Colour(0, 0, 255)
     orange = wx.Colour(255, 165, 0)
     green = wx.Colour(0, 128, 0)
     purple = wx.Colour(128, 0, 128)
