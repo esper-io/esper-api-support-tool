@@ -1333,7 +1333,7 @@ class NewFrameLayout(wx.Frame):
         if hasattr(api_response, "results"):
             results = api_response.results
         elif api_response:
-            results = api_response[1]["results"]
+            results = api_response["results"]
 
         if results and type(results[0]) == dict and "application" in results[0]:
             results = sorted(
@@ -1344,6 +1344,11 @@ class NewFrameLayout(wx.Frame):
             results = sorted(
                 results,
                 key=lambda i: i.application_name.lower(),
+            )
+        elif results and type(results[0]) == dict and "application_name" in results[0]:
+            results = sorted(
+                results,
+                key=lambda i: i["application_name"].lower(),
             )
         elif results:
             results = sorted(

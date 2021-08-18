@@ -1417,7 +1417,18 @@ def getAppDictEntry(app, update=True):
             "versions": app.versions,
             "id": app.id,
         }
-    else:
+    elif type(app) == dict and "application_name" in app:
+        appName = app["application_name"]
+        appPkgName = appName + (" (%s)" % app["package_name"])
+        entry = {
+            "app_name": app["application_name"],
+            appName: app["package_name"],
+            appPkgName: app["package_name"],
+            "appPkgName": appPkgName,
+            "packageName": app["package_name"],
+            "id": app["id"],
+        }
+    elif type(app) == dict and "app_name" in app:
         appName = app["app_name"]
         appPkgName = appName + (" (%s)" % app["package_name"])
         entry = {
@@ -1440,9 +1451,22 @@ def getAppDictEntry(app, update=True):
             and "install_state" not in app
             and "device" not in app
         ):
-            validApp = getApplication(entry["id"])
-            if hasattr(validApp, "results"):
-                validApp = validApp.results[0] if validApp.results else validApp
+            if (
+                "latest_version" in app
+                and "icon_url" in app["latest_version"]
+                and app["latest_version"]["icon_url"]
+                and "amazonaws" in app["latest_version"]["icon_url"]
+            ) or (
+                "versions" in app
+                and "icon_url" in app["versions"]
+                and app["versions"]["icon_url"]
+                and "amazonaws" in app["versions"]["icon_url"]
+            ):
+                entry["isValid"] = True
+            else:
+                validApp = getApplication(entry["id"])
+                if hasattr(validApp, "results"):
+                    validApp = validApp.results[0] if validApp.results else validApp
 
     if (
         hasattr(validApp, "id")
