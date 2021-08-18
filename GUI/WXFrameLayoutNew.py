@@ -247,14 +247,14 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.menubar.checkCollectionEnabled()
-        internetCheck = wxThread.GUIThread(
+        self.internetCheck = wxThread.GUIThread(
             self, checkForInternetAccess, (self), name="InternetCheck"
         )
-        internetCheck.start()
-        errorTracker = wxThread.GUIThread(
+        self.internetCheck.start()
+        self.errorTracker = wxThread.GUIThread(
             self, updateErrorTracker, None, name="updateErrorTracker"
         )
-        errorTracker.start()
+        self.errorTracker.start()
         self.menubar.onUpdateCheck(showDlg=False)
 
     @api_tool_decorator()
@@ -471,7 +471,11 @@ class NewFrameLayout(wx.Frame):
         self.savePrefs(self.prefDialog)
         if thread:
             thread.join()
-        self.DestroyLater()
+        if self.internetCheck:
+            self.internetCheck.stop()
+        if self.errorTracker:
+            self.errorTracker.stop()
+        self.Destroy()
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
@@ -1107,6 +1111,7 @@ class NewFrameLayout(wx.Frame):
                 self.menubar.fileSaveAs.Enable(False)
                 self.Logging("---> No Devices found")
             else:
+                self.sidePanel.deviceChoice.Enable(True)
                 if (
                     self.preferences
                     and "getAppsForEachDevice" in self.preferences
@@ -1143,7 +1148,9 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.enableConfigMenu()
                 self.menubar.fileSave.Enable(True)
                 self.menubar.fileSaveAs.Enable(True)
-            if not self.preferences or self.preferences["enableDevice"] == True:
+            if (
+                not self.preferences or self.preferences["enableDevice"] == True
+            ) and self.sidePanel.devices:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
                 self.sidePanel.deviceChoice.Enable(False)
@@ -1370,21 +1377,6 @@ class NewFrameLayout(wx.Frame):
             and ("isValid" in entry and entry["isValid"])
         ):
             self.sidePanel.enterpriseApps.append(entry)
-        if (
-            entry
-            and self.sidePanel.selectedDevicesList
-            and entry not in self.sidePanel.selectedDeviceApps
-            and ("isValid" in entry and entry["isValid"])
-        ):
-            self.sidePanel.selectedDeviceApps.append(entry)
-        if (
-            entry
-            and self.sidePanel.selectedGroupsList
-            and not self.sidePanel.selectedDevicesList
-            and entry not in self.sidePanel.knownApps
-            and ("isValid" in entry and entry["isValid"])
-        ):
-            self.sidePanel.knownApps.append(entry)
 
     @api_tool_decorator()
     def onRun(self, event=None):
@@ -1898,7 +1890,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.apps = self.sidePanel.enterpriseApps
         else:
             self.sidePanel.apps = (
-                self.sidePanel.knownApps + self.sidePanel.enterpriseApps
+                self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
             )
         for deviceId in self.sidePanel.selectedDevicesList:
             appList, _ = getdeviceapps(
@@ -2176,7 +2168,6 @@ class NewFrameLayout(wx.Frame):
             )
             save.start()
             if self.sidePanel.selectedGroupsList:
-                self.sidePanel.knownApps = []
                 self.PopulateDevices(None)
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []

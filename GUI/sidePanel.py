@@ -27,7 +27,6 @@ class SidePanel(wx.Panel):
         self.enterpriseApps = []
         self.selectedDeviceApps = []
         self.selectedAppEntry = []
-        self.knownApps = []
 
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
@@ -328,7 +327,6 @@ class SidePanel(wx.Panel):
 
             if self.groupMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
-                self.knownApps = []
                 self.clearGroupAndDeviceSelections()
                 selections = self.groupMultiDialog.GetSelections()
                 if selections:
@@ -351,7 +349,7 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):
-        if not self.parentFrame.isRunning:
+        if not self.parentFrame.isRunning and self.devices:
             choices = list(self.devices.keys())
             if self.deviceMultiDialog:
                 self.deviceMultiDialog = None
@@ -394,7 +392,7 @@ class SidePanel(wx.Panel):
         else:
             self.apps = self.selectedDeviceApps
         if not self.apps:
-            self.apps = self.knownApps + self.selectedDeviceApps + self.enterpriseApps
+            self.apps = self.selectedDeviceApps + self.enterpriseApps
         tmp = []
         for app in self.apps:
             if app not in tmp:
@@ -453,8 +451,11 @@ class SidePanel(wx.Panel):
             and action != GridActions.INSTALL_APP.value
             else False
         )
+        apps = self.enterpriseApps
+        if self.selectedDevicesList and hideVersion and self.selectedDeviceApps:
+            apps = self.selectedDeviceApps
         with InstalledDevicesDlg(
-            self.apps, hide_version=hideVersion, title="Select Application"
+            apps, hide_version=hideVersion, title="Select Application"
         ) as dlg:
             res = dlg.ShowModal()
             if res == wx.ID_OK:

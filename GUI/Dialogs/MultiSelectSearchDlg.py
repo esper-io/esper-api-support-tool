@@ -31,7 +31,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.resp = resp
         self.limit = 0
         if resp and hasattr(resp, "count") and hasattr(resp, "results"):
-            self.limit = math.floor(resp.count / len(resp.results))
+            if len(resp.results) > 0:
+                self.limit = math.floor(resp.count / len(resp.results))
         self.group = None
 
         if hasattr(parent, "sidePanel"):

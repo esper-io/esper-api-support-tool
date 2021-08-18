@@ -221,14 +221,6 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
-                    "isValid" in entry and entry["isValid"]
-                ):
-                    Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-                if entry not in Globals.frame.sidePanel.enterpriseApps and (
-                    "isValid" in entry and entry["isValid"]
-                ):
-                    Globals.frame.sidePanel.enterpriseApps.append(entry)
                 version = (
                     app["application"]["version"]["version_code"][
                         1 : len(app["application"]["version"]["version_code"])
@@ -263,13 +255,10 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     )
                     + version
                 )
-            if (
-                entry
-                and entry not in Globals.frame.sidePanel.knownApps
-                and not Globals.frame.sidePanel.selectedDevicesList
-                and ("isValid" in entry and entry["isValid"])
+            if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
+                "isValid" in entry and entry["isValid"]
             ):
-                Globals.frame.sidePanel.knownApps.append(entry)
+                Globals.frame.sidePanel.selectedDeviceApps.append(entry)
     return applist, json_resp
 
 
