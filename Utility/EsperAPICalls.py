@@ -478,7 +478,10 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                 api_response = api_instance.upload(enterprise_id, file)
                 break
             except Exception as e:
-                if attempt == maxAttempt - 1:
+                if (
+                    attempt == maxAttempt - 1
+                    or "App Upload failed as this version already exists" in str(e)
+                ):
                     ApiToolLog().LogError(e)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
