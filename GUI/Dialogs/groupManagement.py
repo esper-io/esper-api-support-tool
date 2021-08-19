@@ -345,6 +345,7 @@ class GroupManagement(wx.Dialog):
                                 )
                             numSuccess += 1
                             break
+            self.refreshTree()
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
 
     def addSubGroup(self, event):
@@ -375,6 +376,7 @@ class GroupManagement(wx.Dialog):
                         self.refreshTree()
         elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
             numSuccess = 0
+            numAlreadyExists = 0
             for row in range(self.grid_1.GetNumberRows()):
                 oldName = self.grid_1.GetCellValue(row, 0)
                 parent = self.grid_1.GetCellValue(row, 1)
@@ -393,19 +395,27 @@ class GroupManagement(wx.Dialog):
                                     treeItem = self.uploadTreeItems[group.id]
                                 resp = createGroup(oldName, group.id)
                                 if resp:
-                                    numSuccess += 1
-                                    if treeItem:
-                                        self.tree_ctrl_2.SetItemTextColour(
-                                            treeItem, Color.green.value
-                                        )
+                                    if type(resp) == dict and "message" in resp and "Device group already exists" in resp["message"]:
+                                        numAlreadyExists += 1
+                                        if treeItem:
+                                            self.tree_ctrl_2.SetItemTextColour(
+                                                treeItem, Color.green.value
+                                            )
+                                    else:
+                                        numSuccess += 1
+                                        if treeItem:
+                                            self.tree_ctrl_2.SetItemTextColour(
+                                                treeItem, Color.green.value
+                                            )
                                 elif treeItem:
                                     self.tree_ctrl_2.SetItemTextColour(
                                         treeItem, Color.red.value
                                     )
                                 break
+            self.refreshTree()
             displayMessageBox(
-                "%s out of %s Groups have been created"
-                % (numSuccess, self.grid_1.GetNumberRows())
+                "%s out of %s Groups have been created! %s already exists."
+                % (numSuccess, self.grid_1.GetNumberRows(), numAlreadyExists)
             )
         self.setCursorDefault()
 
@@ -527,6 +537,7 @@ class GroupManagement(wx.Dialog):
                                     treeItem, Color.red.value
                                 )
                             break
+            self.refreshTree()
             displayMessageBox(
                 "%s out of %s Groups have been renamed"
                 % (numSuccess, self.grid_1.GetNumberRows())
