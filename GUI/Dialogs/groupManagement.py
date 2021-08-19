@@ -612,12 +612,16 @@ class GroupManagement(wx.Dialog):
                             self.tree_ctrl_2.GetItemText(item),
                             rowEntry[2],
                         )
-                        self.tree_ctrl_2.SetItemText(item, name)
+                    else:
+                        name = "%s (Deletable)" % (self.tree_ctrl_2.GetItemText(item))
+                    self.tree_ctrl_2.SetItemText(item, name)
                 elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
                     item = self.uploadTreeItems[rowEntry[1]]
                     name = rowEntry[0]
                     if len(rowEntry) > 2 and rowEntry[2]:
                         name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
+                    else:
+                        name = "%s (To Add)" % (rowEntry[0])
                     entry = self.tree_ctrl_2.AppendItem(item, name)
                     self.tree_ctrl_2.SetItemFont(
                         entry,
