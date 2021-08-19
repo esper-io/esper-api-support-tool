@@ -209,7 +209,6 @@ class GroupManagement(wx.Dialog):
         self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
         self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
-        # self.notebook_2.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
@@ -643,12 +642,13 @@ class GroupManagement(wx.Dialog):
         self.setCursorDefault()
 
     def on_tab_change(self, event):
-        self.current_page = self.notebook_1.GetPage(event.GetSelection())
-        if self.current_page.name == "Single":
-            self.refreshTree()
-        elif self.grid_1.GetNumberRows() > 0:
-            self.notebook_2.SetSelection(0)
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if event.EventObject == self.notebook_1:
+            self.current_page = self.notebook_1.GetPage(event.GetSelection())
+            if self.current_page.name == "Single":
+                self.refreshTree()
+            elif self.grid_1.GetNumberRows() > 0:
+                self.notebook_2.SetSelection(0)
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         event.Skip()
 
     def downloadCSV(self, event):
