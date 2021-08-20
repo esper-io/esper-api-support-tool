@@ -74,7 +74,7 @@ class GroupManagement(wx.Dialog):
                 "NormalBold",
             )
         )
-        grid_sizer_1.Add(label_1, 0, 0, 0)
+        grid_sizer_1.Add(label_1, 0, wx.TOP, 5)
 
         label_2 = wx.StaticText(
             self.notebook_1_pane_1,
@@ -115,7 +115,7 @@ class GroupManagement(wx.Dialog):
                 "NormalBold",
             )
         )
-        grid_sizer_4.Add(label_4, 0, 0, 0)
+        grid_sizer_4.Add(label_4, 0, wx.TOP, 5)
 
         label_3 = wx.StaticText(
             self.notebook_1_pane_2,
@@ -214,8 +214,10 @@ class GroupManagement(wx.Dialog):
         self.button_1.Enable(False)
         self.button_4.Enable(False)
 
-        self.button_4.Bind(wx.EVT_BUTTON, self.renameGroup)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
+
         self.button_3.Bind(wx.EVT_BUTTON, self.refreshTree)
+        self.button_4.Bind(wx.EVT_BUTTON, self.renameGroup)
         self.button_2.Bind(wx.EVT_BUTTON, self.deleteGroup)
         self.button_1.Bind(wx.EVT_BUTTON, self.addSubGroup)
         self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
@@ -227,6 +229,20 @@ class GroupManagement(wx.Dialog):
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
         self.tree_ctrl_2.ExpandAll()
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_ESCAPE:
+            self.onClose(event)
+
+    @api_tool_decorator()
+    def onClose(self, event):
+        if self.IsModal():
+            self.EndModal(event.EventObject.Id)
+        elif self.IsShown():
+            self.Close()
+        self.DestroyLater()
 
     def createTreeLayout(self):
         unsorted = []
@@ -324,10 +340,12 @@ class GroupManagement(wx.Dialog):
 
     def deleteGroup(self, event):
         if not self.isBusy:
+            self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
             thread.start()
 
     def deleteGroupHelper(self):
+        self.isBusy = True
         if not self.current_page or self.current_page.name == "Single":
             if self.tree_ctrl_1.GetSelection():
                 hasChild = self.tree_ctrl_1.ItemHasChildren(
@@ -389,6 +407,8 @@ class GroupManagement(wx.Dialog):
                         )
             self.refreshTree(forceRefresh=True)
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
+            self.setActionButtonState(True)
+            self.isBusy = False
 
     def fetchGroupsThenDelete(self, oldName, parent, numSuccess):
         matchingGroups = getAllGroups(name=oldName)
@@ -422,10 +442,12 @@ class GroupManagement(wx.Dialog):
 
     def addSubGroup(self, event):
         if not self.isBusy:
+            self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
             thread.start()
 
     def addSubGroupHelper(self):
+        self.isBusy = True
         self.setCursorBusy()
         if not self.current_page or self.current_page.name == "Single":
             if self.tree_ctrl_1.GetSelection():
@@ -531,6 +553,8 @@ class GroupManagement(wx.Dialog):
                 "%s out of %s Groups have been created! %s already exists."
                 % (numSuccess, self.grid_1.GetNumberRows(), numAlreadyExists)
             )
+        self.setActionButtonState(True)
+        self.isBusy = False
         self.setCursorDefault()
 
     def attemptParentGroupFetchThenAddGroup(
@@ -632,12 +656,20 @@ class GroupManagement(wx.Dialog):
     def getGroupIdFromURL(self, url):
         return url.split("/")[-2] if url else None
 
+    def setActionButtonState(self, state):
+        self.button_4.Enable(state)
+        self.button_2.Enable(state)
+        self.button_1.Enable(state)
+        self.notebook_1.Enable(state)
+
     def renameGroup(self, event):
         if not self.isBusy:
+            self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
             thread.start()
 
     def renameGroupHelper(self):
+        self.isBusy = True
         if not self.current_page or self.current_page.name == "Single":
             if self.tree_ctrl_1.GetSelection():
                 groupName = None
@@ -692,16 +724,18 @@ class GroupManagement(wx.Dialog):
                             )
                         else:
                             numSuccess = self.attemptGroupFetchThenRename(
-                                oldName, parent, newName
+                                oldName, parent, newName, numSuccess
                             )
                     else:
                         numSuccess = self.attemptGroupFetchThenRename(
-                            oldName, parent, newName
+                            oldName, parent, newName, numSuccess
                         )
             displayMessageBox(
                 "%s out of %s Groups have been renamed!"
                 % (numSuccess, self.grid_1.GetNumberRows())
             )
+            self.setActionButtonState(True)
+            self.isBusy = False
 
     def attemptGroupFetchThenRename(self, oldName, parent, newName, numSuccess):
         matchingGroups = getAllGroups(name=oldName)
