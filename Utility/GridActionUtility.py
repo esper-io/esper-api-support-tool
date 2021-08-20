@@ -10,6 +10,7 @@ from Common import Globals
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
+    isApiKey,
     joinThreadList,
     limitActiveThreads,
     postEventToFrame,
@@ -30,10 +31,7 @@ def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
     if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
         modifyDevice(frame)
-    if (
-        action
-        == GridActions.SET_APP_STATE.value
-    ):
+    if action == GridActions.SET_APP_STATE.value:
         setAppStateForAllAppsListed(action)
     if action == 50:
         setAppStateForSpecificAppListed(action)
@@ -630,7 +628,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
         ):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
         if groupName:
-            if len(groupName) == 36 and "-" in groupName:
+            if isApiKey(groupName):
                 resp = moveGroup(groupName, device.id)
                 respText = resp.text if hasattr(resp, "text") else str(resp)
                 results[device.device_name] = {

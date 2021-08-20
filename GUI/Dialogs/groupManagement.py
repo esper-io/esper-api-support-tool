@@ -3,7 +3,7 @@
 import csv
 from requests.api import delete
 from wx.core import TextEntryDialog
-from Utility.Resource import displayMessageBox, resourcePath, scale_bitmap
+from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import (
     fetchGroupName,
@@ -348,24 +348,21 @@ class GroupManagement(wx.Dialog):
             for row in range(self.grid_1.GetNumberRows()):
                 oldName = self.grid_1.GetCellValue(row, 0)
                 parent = self.grid_1.GetCellValue(row, 1)
+                treeItem = None
+                groupId = oldName
+                if oldName in self.groupNameToId:
+                    groupId = self.groupNameToId[oldName]
+                    if groupId:
+                        groupId = groupId[0]
+                if groupId in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupId]
 
                 if oldName and parent:
-                    matchingGroups = getAllGroups(name=oldName)
-                    for group in matchingGroups.results:
-                        parentGroup = fetchGroupName(group.parent, returnJson=True)
-                        if parent == parentGroup["name"] or (
-                            len(parent) == 36
-                            and "-" in parent
-                            and parentGroup["id"] == parent
-                        ):
-                            treeItem = None
-                            if group.id in self.uploadTreeItems:
-                                treeItem = self.uploadTreeItems[group.id]
-                            elif group.name in self.uploadTreeItems:
-                                treeItem = self.uploadTreeItems[group.name]
-                            elif group.id in self.tree:
-                                treeItem = self.tree[group.id]
-                            deleteGroup(group.id)
+                    if treeItem:
+                        itemData = self.tree_ctrl_2.GetItemData(treeItem)
+                        itemText = self.tree_ctrl_2.GetItemText(treeItem)
+                        if oldName in itemText and itemData:
+                            deleteGroup(itemData)
                             if treeItem:
                                 self.tree_ctrl_2.SetItemTextColour(
                                     treeItem, Color.green.value
@@ -381,10 +378,46 @@ class GroupManagement(wx.Dialog):
                                         "NormalBold",
                                     ).Strikethrough(),
                                 )
-                            numSuccess += 1
-                            break
+                        else:
+                            numSuccess = self.fetchGroupsThenDelete(
+                                oldName, parent, numSuccess
+                            )
+                    else:
+                        numSuccess = self.fetchGroupsThenDelete(
+                            oldName, parent, numSuccess
+                        )
             self.refreshTree(forceRefresh=True)
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
+
+    def fetchGroupsThenDelete(self, oldName, parent, numSuccess):
+        matchingGroups = getAllGroups(name=oldName)
+        for group in matchingGroups.results:
+            parentGroup = fetchGroupName(group.parent, returnJson=True)
+            if parent == parentGroup["name"] or (
+                isApiKey(parent) and parentGroup["id"] == parent
+            ):
+                treeItem = None
+                if group.id in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[group.id]
+                elif group.name in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[group.name]
+                deleteGroup(group.id)
+                if treeItem:
+                    self.tree_ctrl_2.SetItemTextColour(treeItem, Color.green.value)
+                    self.tree_ctrl_2.SetItemFont(
+                        treeItem,
+                        wx.Font(
+                            Globals.FONT_SIZE,
+                            wx.FONTFAMILY_DEFAULT,
+                            wx.FONTSTYLE_NORMAL,
+                            wx.FONTWEIGHT_BOLD,
+                            True,
+                            "NormalBold",
+                        ).Strikethrough(),
+                    )
+                numSuccess += 1
+                break
+        return numSuccess
 
     def addSubGroup(self, event):
         if not self.isBusy:
@@ -423,17 +456,17 @@ class GroupManagement(wx.Dialog):
             for row in range(self.grid_1.GetNumberRows()):
                 oldName = self.grid_1.GetCellValue(row, 0)
                 parent = self.grid_1.GetCellValue(row, 1)
+                treeItem = None
+                groupId = oldName
+                if oldName in self.groupNameToId:
+                    groupId = self.groupNameToId[oldName]
+                    if groupId:
+                        groupId = groupId[0]
+                if groupId in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupId]
 
                 if oldName and parent:
-                    if len(parent) == 36 and "-" in parent:
-                        treeItem = None
-                        groupId = oldName
-                        if oldName in self.groupNameToId:
-                            groupId = self.groupNameToId[oldName]
-                        if groupId in self.uploadTreeItems:
-                            treeItem = self.uploadTreeItems[groupId]
-                        elif group.id in self.tree:
-                            treeItem = self.tree[groupId]
+                    if isApiKey(parent):
                         resp = createGroup(oldName, parent)
                         if (
                             resp
@@ -465,54 +498,83 @@ class GroupManagement(wx.Dialog):
                                 treeItem, Color.red.value
                             )
                     else:
-                        matchingGroups = getAllGroups(name=parent)
-                        for group in matchingGroups.results:
-                            treeItem = None
-                            if oldName in self.uploadTreeItems:
-                                treeItem = self.uploadTreeItems[oldName]
-                            if parent == group.name:
-                                resp = createGroup(oldName, group.id)
-                                if resp:
-                                    if (
-                                        type(resp) == dict
-                                        and "message" in resp
-                                        and "Device group already exists"
-                                        in resp["message"]
-                                    ):
-                                        numAlreadyExists += 1
-                                        if treeItem:
-                                            self.tree_ctrl_2.SetItemTextColour(
-                                                treeItem, Color.green.value
-                                            )
-                                            text = self.tree_ctrl_2.GetItemText(
-                                                treeItem
-                                            )
-                                            text = text.replace(" (To Add)", "")
-                                            text = text.replace("To Add;", "")
-                                            self.tree_ctrl_2.SetItemText(treeItem, text)
-
-                                    else:
-                                        numSuccess += 1
-                                        if treeItem:
-                                            self.tree_ctrl_2.SetItemTextColour(
-                                                treeItem, Color.green.value
-                                            )
-                                            text = self.tree_ctrl_2.GetItemText(
-                                                treeItem
-                                            )
-                                            text = text.replace(" (To Add)", "")
-                                            text = text.replace("To Add;", "")
-                                            self.tree_ctrl_2.SetItemText(treeItem, text)
-                                elif treeItem:
-                                    self.tree_ctrl_2.SetItemTextColour(
-                                        treeItem, Color.red.value
-                                    )
-                                break
+                        if oldName in self.uploadTreeItems:
+                            parentNode = self.tree_ctrl_2.GetItemParent(
+                                self.uploadTreeItems[oldName]
+                            )
+                            parentData = self.tree_ctrl_2.GetItemData(parentNode)
+                            parentText = self.tree_ctrl_2.GetItemText(parentNode)
+                            if parent in parentText and parentData:
+                                resp = createGroup(oldName, parentData)
+                                (
+                                    numAlreadyExists,
+                                    numSuccess,
+                                ) = self.processAddGroupResult(
+                                    resp, numAlreadyExists, numSuccess, treeItem
+                                )
+                            else:
+                                (
+                                    numAlreadyExists,
+                                    numSuccess,
+                                ) = self.attemptParentGroupFetchThenAddGroup(
+                                    parent, oldName, numAlreadyExists, numSuccess
+                                )
+                        else:
+                            (
+                                numAlreadyExists,
+                                numSuccess,
+                            ) = self.attemptParentGroupFetchThenAddGroup(
+                                parent, oldName, numAlreadyExists, numSuccess
+                            )
             displayMessageBox(
                 "%s out of %s Groups have been created! %s already exists."
                 % (numSuccess, self.grid_1.GetNumberRows(), numAlreadyExists)
             )
         self.setCursorDefault()
+
+    def attemptParentGroupFetchThenAddGroup(
+        self, parent, oldName, numAlreadyExists, numSuccess
+    ):
+        matchingGroups = getAllGroups(name=parent)
+        for group in matchingGroups.results:
+            treeItem = None
+            if oldName in self.uploadTreeItems:
+                treeItem = self.uploadTreeItems[oldName]
+            if parent == group.name:
+                resp = createGroup(oldName, group.id)
+                if resp:
+                    (numAlreadyExists, numSuccess,) = self.processAddGroupResult(
+                        resp, numAlreadyExists, numSuccess, treeItem
+                    )
+                elif treeItem:
+                    self.tree_ctrl_2.SetItemTextColour(treeItem, Color.red.value)
+                break
+        return numAlreadyExists, numSuccess
+
+    def processAddGroupResult(self, resp, numAlreadyExists, numSuccess, treeItem):
+        if (
+            resp
+            and type(resp) == dict
+            and "message" in resp
+            and "Device group already exists" in resp["message"]
+        ):
+            numAlreadyExists += 1
+            if treeItem:
+                self.tree_ctrl_2.SetItemTextColour(treeItem, Color.green.value)
+                text = self.tree_ctrl_2.GetItemText(treeItem)
+                text = text.replace(" (To Add)", "")
+                text = text.replace("To Add;", "")
+                self.tree_ctrl_2.SetItemText(treeItem, text)
+
+        else:
+            numSuccess += 1
+            if treeItem:
+                self.tree_ctrl_2.SetItemTextColour(treeItem, Color.green.value)
+                text = self.tree_ctrl_2.GetItemText(treeItem)
+                text = text.replace(" (To Add)", "")
+                text = text.replace("To Add;", "")
+                self.tree_ctrl_2.SetItemText(treeItem, text)
+        return numAlreadyExists, numSuccess
 
     def checkActions(self, event=None):
         if not self.current_page or self.current_page.name == "Single":
@@ -609,61 +671,78 @@ class GroupManagement(wx.Dialog):
                 parent = self.grid_1.GetCellValue(row, 1)
                 newName = self.grid_1.GetCellValue(row, 2)
 
+                treeItem = None
+                groupId = oldName
+                if oldName in self.groupNameToId:
+                    groupId = self.groupNameToId[oldName]
+                    if groupId:
+                        groupId = groupId[0]
+                if groupId in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupId]
+
                 if oldName and parent and newName:
-                    matchingGroups = getAllGroups(name=oldName)
-                    if hasattr(matchingGroups, "results") and matchingGroups.results:
-                        for group in matchingGroups.results:
-                            treeItem = None
-                            if group.id in self.uploadTreeItems:
-                                treeItem = self.uploadTreeItems[group.id]
-                            elif group.name in self.uploadTreeItems:
-                                treeItem = self.uploadTreeItems[group.name]
-                            elif group.id in self.tree:
-                                treeItem = self.tree[group.id]
-                            parentGroup = fetchGroupName(group.parent, returnJson=True)
-                            if parent == parentGroup["name"] or (
-                                len(parent) == 36
-                                and "-" in parent
-                                and parentGroup["id"] == parent
-                            ):
-                                resp = renameGroup(group.id, newName)
-                                if (
-                                    resp
-                                    and resp.status_code <= 299
-                                    and resp.status_code >= 200
-                                ):
-                                    numSuccess += 1
-                                    if treeItem:
-                                        self.tree_ctrl_2.SetItemTextColour(
-                                            treeItem, Color.green.value
-                                        )
-                                        replaceText = "Rename To: %s" % newName
-                                        text = self.tree_ctrl_2.GetItemText(treeItem)
-                                        text = text.replace(replaceText, "")
-                                        text = text.replace(" ()", "")
-                                        self.tree_ctrl_2.SetItemText(treeItem, text)
-                                elif treeItem:
-                                    self.tree_ctrl_2.SetItemTextColour(
-                                        treeItem, Color.red.value
-                                    )
-                                break
-                    else:
-                        treeItem = None
-                        groupId = oldName
-                        if oldName in self.groupNameToId:
-                            groupId = self.groupNameToId[oldName]
-                        if groupId in self.uploadTreeItems:
-                            treeItem = self.uploadTreeItems[groupId]
-                        elif groupId in self.tree:
-                            treeItem = self.tree[groupId]
-                        if treeItem:
-                            self.tree_ctrl_2.SetItemTextColour(
-                                treeItem, Color.red.value
+                    if treeItem:
+                        itemData = self.tree_ctrl_2.GetItemData(treeItem)
+                        itemText = self.tree_ctrl_2.GetItemText(treeItem)
+                        if oldName in itemText and itemData:
+                            resp = renameGroup(itemData, newName)
+                            self.processRenameGroupResult(
+                                resp, numSuccess, treeItem, newName
                             )
+                        else:
+                            numSuccess = self.attemptGroupFetchThenRename(
+                                oldName, parent, newName
+                            )
+                    else:
+                        numSuccess = self.attemptGroupFetchThenRename(
+                            oldName, parent, newName
+                        )
             displayMessageBox(
-                "%s out of %s Groups have been renamed"
+                "%s out of %s Groups have been renamed!"
                 % (numSuccess, self.grid_1.GetNumberRows())
             )
+
+    def attemptGroupFetchThenRename(self, oldName, parent, newName, numSuccess):
+        matchingGroups = getAllGroups(name=oldName)
+        if hasattr(matchingGroups, "results") and matchingGroups.results:
+            for group in matchingGroups.results:
+                treeItem = None
+                if group.id in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[group.id]
+                elif group.name in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[group.name]
+                elif group.id in self.tree:
+                    treeItem = self.tree[group.id]
+                parentGroup = fetchGroupName(group.parent, returnJson=True)
+                if parent == parentGroup["name"] or (
+                    isApiKey(parent) and parentGroup["id"] == parent
+                ):
+                    resp = renameGroup(group.id, newName)
+                    self.processRenameGroupResult(resp, numSuccess, treeItem, newName)
+                    break
+        else:
+            treeItem = None
+            groupId = oldName
+            if oldName in self.groupNameToId:
+                groupId = self.groupNameToId[oldName]
+            if groupId in self.uploadTreeItems:
+                treeItem = self.uploadTreeItems[groupId]
+            if treeItem:
+                self.tree_ctrl_2.SetItemTextColour(treeItem, Color.red.value)
+        return numSuccess
+
+    def processRenameGroupResult(self, resp, numSuccess, treeItem, newName):
+        if resp and resp.status_code <= 299 and resp.status_code >= 200:
+            numSuccess += 1
+            if treeItem:
+                self.tree_ctrl_2.SetItemTextColour(treeItem, Color.green.value)
+                replaceText = "Rename To: %s" % newName
+                text = self.tree_ctrl_2.GetItemText(treeItem)
+                text = text.replace(replaceText, "")
+                text = text.replace(" ()", "")
+                self.tree_ctrl_2.SetItemText(treeItem, text)
+        elif treeItem:
+            self.tree_ctrl_2.SetItemTextColour(treeItem, Color.red.value)
 
     def openCSV(self, event):
         filePath = None
@@ -711,9 +790,7 @@ class GroupManagement(wx.Dialog):
                     self.grid_1.SetCellValue(
                         self.grid_1.GetNumberRows() - 1, colNum, str(col)
                     )
-                    if (colNum == 0 or colNum == 1) and not (
-                        len(str(col)) == 36 and "-" in str(col)
-                    ):
+                    if (colNum == 0 or colNum == 1) and not isApiKey(str(col)):
                         groupId = None
                         if str(col) in self.groupNameToId:
                             groupId = self.groupNameToId[str(col)]
@@ -740,6 +817,8 @@ class GroupManagement(wx.Dialog):
                     )
                     self.tree_ctrl_2.SetItemTextColour(item, Color.blue.value)
                     name = rowEntry[0]
+                    if isApiKey(name) and rowEntry[0] in self.groupIdToName:
+                        name = self.groupIdToName[rowEntry[0]]
                     if len(rowEntry) > 2 and rowEntry[2]:
                         name = "%s (Deletable;Rename To: %s)" % (
                             self.tree_ctrl_2.GetItemText(item),
@@ -751,6 +830,8 @@ class GroupManagement(wx.Dialog):
                 elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
                     item = self.uploadTreeItems[rowEntry[1]]
                     name = rowEntry[0]
+                    if isApiKey(name) and rowEntry[0] in self.groupIdToName:
+                        name = self.groupIdToName[rowEntry[0]]
                     if len(rowEntry) > 2 and rowEntry[2]:
                         name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
                     else:

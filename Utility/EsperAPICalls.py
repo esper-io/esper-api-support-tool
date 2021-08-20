@@ -17,6 +17,7 @@ from Utility.CommandUtility import (
     waitForCommandToFinish,
 )
 from Utility.Resource import (
+    isApiKey,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -1339,7 +1340,7 @@ def getUserBody(user):
         body["profile"]["groups"] = list(body["profile"]["groups"])
     groups = []
     for group in body["profile"]["groups"]:
-        if len(group) == 36 and "-" in group:
+        if isApiKey(group):
             groups.append(group)
         else:
             resp = getAllGroups(name=group)
