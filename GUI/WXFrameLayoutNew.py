@@ -956,7 +956,7 @@ class NewFrameLayout(wx.Frame):
         Globals.LAST_GROUP_ID = []
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
-        self.sidePanel.clearGroupAndDeviceSelections()
+        self.sidePanel.clearSelections(clearApp=True)
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
@@ -1895,22 +1895,9 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
             )
         for deviceId in self.sidePanel.selectedDevicesList:
-            appList, _ = getdeviceapps(
+            _, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
-
-            for app in appList:
-                appAdded = True
-                app_name = app.split(" v")[0]
-                entry = [app for app in self.sidePanel.apps if app_name in app]
-                if entry:
-                    entry = entry[0]
-                if (
-                    entry
-                    and entry not in self.sidePanel.selectedDeviceApps
-                    and ("isValid" in entry and entry["isValid"])
-                ):
-                    self.sidePanel.selectedDeviceApps.append(entry)
             self.setGaugeValue(
                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
             )
@@ -2625,7 +2612,7 @@ class NewFrameLayout(wx.Frame):
                             "Selected device(s) have been moved to the %s Group."
                             % groups.results[0].name
                         )
-                        self.sidePanel.clearGroupAndDeviceSelections()
+                        self.sidePanel.clearSelections()
                     elif resp:
                         displayMessageBox(str(resp))
                 else:

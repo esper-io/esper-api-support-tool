@@ -323,11 +323,15 @@ class SidePanel(wx.Panel):
                     )
 
     @api_tool_decorator()
-    def clearGroupAndDeviceSelections(self):
+    def clearSelections(self, clearApp=False):
         self.selectedGroups.Clear()
         self.selectedDevices.Clear()
         self.selectedGroupsList = []
         self.selectedDevicesList = []
+        if clearApp:
+            self.selectedApp.Clear()
+            self.enterpriseApps = []
+            self.selectedDeviceApps = []
 
     @api_tool_decorator()
     def destroyMultiChoiceDialogs(self):
@@ -357,7 +361,7 @@ class SidePanel(wx.Panel):
 
             if self.groupMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
-                self.clearGroupAndDeviceSelections()
+                self.clearSelections()
                 selections = self.groupMultiDialog.GetSelections()
                 if selections:
                     for groupName in selections:
