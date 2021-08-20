@@ -45,6 +45,7 @@ Thumbs.db
 *.war
 *.pdf
 *.zip
+*.txt
 
 # Large media files
 *.mp4
