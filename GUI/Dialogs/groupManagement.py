@@ -405,8 +405,8 @@ class GroupManagement(wx.Dialog):
                         numSuccess = self.fetchGroupsThenDelete(
                             oldName, parent, numSuccess
                         )
-            self.refreshTree(forceRefresh=True)
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
+            self.refreshTree(forceRefresh=True)
             self.setActionButtonState(True)
             self.isBusy = False
 
