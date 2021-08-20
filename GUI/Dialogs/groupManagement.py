@@ -156,6 +156,7 @@ class GroupManagement(wx.Dialog):
             wx.ID_ANY,
             refresh,
         )
+        self.button_5.SetToolTip("Refresh Preview Tree. Will clear uploaded data.")
         self.button_5.SetMinSize((20, 20))
         sizer_4.Add(self.button_5, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
