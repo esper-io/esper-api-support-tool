@@ -7,7 +7,7 @@ from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
 import os
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 from Utility.Resource import (
     createNewFile,
     displayMessageBox,
@@ -73,7 +73,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "Header",
             )
         )
         sizer_1.Add(label_1, 0, 0, 0)
@@ -99,7 +99,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_1.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -120,7 +120,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -141,7 +141,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         grid_sizer_7.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -168,7 +168,7 @@ class UserCreation(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_1.Add(label_3, 0, wx.TOP, 5)
@@ -475,7 +475,6 @@ class UserCreation(wx.Frame):
                             user["groups"] = tmp
                         self.users.append(user)
                 else:
-                    # headers = entry
                     for header in entry:
                         headers.append(header.lower().replace(" ", ""))
         self.grid_1.Thaw()
@@ -583,7 +582,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully modified %s of %s users!" % (
                     numCreated,
@@ -593,7 +592,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     @api_tool_decorator()
@@ -648,7 +647,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully created %s of %s users!" % (
                     numCreated,
@@ -658,7 +657,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     def onDelete(self):
@@ -712,7 +711,7 @@ class UserCreation(wx.Frame):
                 if logMsg:
                     logs.append(logMsg)
                 postEventToFrame(
-                    wxThread.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.users) * 100)
                 )
                 dlgMsg = "Successfully deleted %s of %s users!" % (
                     numCreated,
@@ -722,7 +721,7 @@ class UserCreation(wx.Frame):
                     int(num / len(self.users) * 100),
                     dlgMsg,
                 )
-                postEventToFrame(wxThread.myEVT_LOG, logMsg)
+                postEventToFrame(eventUtil.myEVT_LOG, logMsg)
             return logs, dlgMsg
 
     def tryToMakeActive(self):

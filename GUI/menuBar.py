@@ -60,6 +60,7 @@ class ToolMenuBar(wx.MenuBar):
         fas = wx.MenuItem(
             fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save All Info\tCtrl+Alt+S"
         )
+        fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
 
         fileMenu.Append(wx.ID_SEPARATOR)
@@ -94,17 +95,33 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = runMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         runMenu.Append(wx.ID_SEPARATOR)
-        installedDevices = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        self.appSubMenu = wx.Menu()
+        self.uploadApp = self.appSubMenu.Append(wx.ID_ANY, "Upload App (APK)")
+        self.uploadApp.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/upload.png")))
+        self.installApp = self.appSubMenu.Append(wx.ID_ANY, "Install App")
+        self.uninstallApp = self.appSubMenu.Append(wx.ID_ANY, "Uninstall App")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.setKiosk = self.appSubMenu.Append(wx.ID_ANY, "Set Kiosk App")
+        self.setMultiApp = self.appSubMenu.Append(wx.ID_ANY, "Set to Multi-App Mode")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.clearData = self.appSubMenu.Append(wx.ID_ANY, "Clear App Data")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.setAppState = self.appSubMenu.Append(wx.ID_ANY, "Set App State")
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.installedDevices = self.appSubMenu.Append(
+            wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
-        self.installedDevices = runMenu.Append(installedDevices)
-        self.installedDevices.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
+        self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
+        self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
         self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
-        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Group", self.groupSubMenu)
+        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
+        self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.collectionSubMenu = wx.Menu()
         collectionItem = wx.MenuItem(
             self.collectionSubMenu,
@@ -122,6 +139,9 @@ class ToolMenuBar(wx.MenuBar):
         self.eqlQuery.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/search.png")))
         self.collectionSubMenu = runMenu.Append(
             wx.ID_ANY, "&Collections", self.collectionSubMenu
+        )
+        self.collectionSubMenu.SetBitmap(
+            wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
 
         # View Menu
@@ -232,6 +252,13 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
+        self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
+        self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
+        self.Bind(wx.EVT_MENU, self.onClearData, self.clearData)
+        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setAppState)
+        self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
+        self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
+        self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -242,7 +269,7 @@ class ToolMenuBar(wx.MenuBar):
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
-        info.SetCopyright("(C) 2021 Esper - All Rights Reserved")
+        info.SetCopyright("No Copyright (C) 2021 Esper")
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
@@ -398,6 +425,7 @@ class ToolMenuBar(wx.MenuBar):
             self.collection.Hide()
             self.eqlQuery.Hide()
 
+    @api_tool_decorator()
     def AddUser(self, event):
         if not self.uc:
             self.uc = UserCreation(self)
@@ -405,3 +433,34 @@ class ToolMenuBar(wx.MenuBar):
         self.parentFrame.isRunning = True
         self.uc.Show()
         self.uc.tryToMakeActive()
+
+    @api_tool_decorator()
+    def onClearData(self, event):
+        indx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[4]
+        )
+        self.parentFrame.sidePanel.actionChoice.SetSelection(indx)
+        self.parentFrame.onRun()
+
+    @api_tool_decorator()
+    def onSetMode(self, event):
+        kioskIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[2]
+        )
+        multiIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[3]
+        )
+        menuItem = event.EventObject.FindItemById(event.Id)
+        if "multi" in menuItem.GetItemLabelText().lower():
+            self.parentFrame.sidePanel.actionChoice.SetSelection(multiIndx)
+        else:
+            self.parentFrame.sidePanel.actionChoice.SetSelection(kioskIndx)
+        self.parentFrame.onRun()
+
+    @api_tool_decorator()
+    def onSetAppState(self, event):
+        showIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
+            list(Globals.GENERAL_ACTIONS.keys())[5]
+        )
+        self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
+        self.parentFrame.onRun()

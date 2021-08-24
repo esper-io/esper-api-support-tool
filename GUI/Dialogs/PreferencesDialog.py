@@ -46,6 +46,7 @@ class PreferencesDialog(wx.Dialog):
             "immediateChild",
             "aliasDayDelta",
             "fontSize",
+            "saveColVisibility",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -83,7 +84,7 @@ class PreferencesDialog(wx.Dialog):
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(4, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(5, 1, 0, 0)
 
         (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.general,
@@ -98,7 +99,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "API Request Limit",
             wx.SpinCtrl,
-            "Maximum amount of results that the API will return.",
+            "Maximum amount of results that the API will return. Min: %s Max: %s"
+            % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
         )
         self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
@@ -109,7 +111,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "API Request Offset",
             wx.SpinCtrl,
-            "Page of results the API sends back (starts at 0)",
+            "Page of results the API sends back (starts at 0). Min:0 Max: 100",
         )
         panel_9.Hide()
         self.spin_ctrl_2.SetMin(0)
@@ -120,7 +122,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Max Threads",
             wx.SpinCtrl,
-            "Maximum number of threads that will be created to perform an action.",
+            "Maximum number of threads that will be created to perform an action. Min: 10 Max: 100",
         )
         panel_43.Hide()
         self.spin_ctrl_8.SetMin(10)
@@ -132,11 +134,19 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Font Size",
             wx.SpinCtrl,
-            "Font size",
+            "Font size. Min: 10 Max: 72",
         )
         self.spin_ctrl_10.SetMin(10)
         self.spin_ctrl_10.SetMax(72)
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        (_, _, self.checkbox_15,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Save only visible columns",
+            wx.CheckBox,
+            "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
+        )
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -150,7 +160,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Command Timeout (seconds)",
             wx.SpinCtrl,
-            "How long a command should wait on the status check before skipping.",
+            "How long a command should wait on the status check before skipping. Min: 0 Max: 100",
         )
         self.spin_ctrl_6.SetMin(0)
         self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
@@ -186,7 +196,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Date Delta for Alias Command",
             wx.SpinCtrl,
-            "Time difference for when the Alias command schedule should end.",
+            "Time difference for when the Alias command schedule should end. Min: %s Max: %s"
+            % (0, Globals.ALIAS_MAX_DAY_DELTA),
         )
         self.spin_ctrl_9.SetMin(0)
         self.spin_ctrl_9.SetMax(Globals.ALIAS_MAX_DAY_DELTA)
@@ -213,7 +224,8 @@ class PreferencesDialog(wx.Dialog):
             sizer_16,
             "Grid Refresh Rate (seconds)",
             wx.SpinCtrl,
-            "How often the Grid should update its cell data.",
+            "How often the Grid should update its cell data. Min: %s Max: %s"
+            % (Globals.GRID_UPDATE_RATE, Globals.MAX_GRID_UPDATE_RATE),
         )
         self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
         self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
@@ -253,7 +265,7 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_2,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Fetch All Installed Applications",
+            "Fetch All Installed Apps on Device",
             wx.CheckBox,
             "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
@@ -585,6 +597,20 @@ class PreferencesDialog(wx.Dialog):
                 ]
             self.parent.gridPanel.setColVisibility()
 
+        if prefDict and "saveColVisibility" in prefDict:
+            if (
+                isinstance(self.prefs["saveColVisibility"], str)
+                and prefDict["saveColVisibility"].lower() == "true"
+            ) or prefDict["saveColVisibility"] == True:
+                self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SAVE_VISIBILITY = True
+            else:
+                self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SAVE_VISIBILITY = False
+        else:
+            self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SAVE_VISIBILITY = False
+
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
@@ -655,6 +681,7 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
+            "saveColVisibility": self.checkbox_15.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -677,6 +704,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
         Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
+        Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -919,6 +947,16 @@ class PreferencesDialog(wx.Dialog):
                 self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
                     1
                 ]
+        if "saveColVisibility" in self.prefs:
+            if (
+                isinstance(self.prefs["saveColVisibility"], str)
+                and self.prefs["saveColVisibility"].lower() == "true"
+            ) or self.prefs["saveColVisibility"] == True:
+                self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SAVE_VISIBILITY = True
+            else:
+                self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SAVE_VISIBILITY = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -949,6 +987,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
+        self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
 
         return self.prefs
 
@@ -1004,6 +1043,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
             return Globals.FONT_SIZE
+        elif key == "saveColVisibility":
+            return Globals.SAVE_VISIBILITY
         else:
             return None
 

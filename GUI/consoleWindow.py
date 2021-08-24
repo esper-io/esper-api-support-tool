@@ -7,6 +7,7 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import platform
 import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 
 from Common.enum import Color
 
@@ -54,7 +55,7 @@ class Console(wx.Frame):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_NORMAL,
                 0,
-                "",
+                "Normal",
             )
         )
 
@@ -93,7 +94,7 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def onClose(self, event):
-        evt = wxThread.CustomEvent(wxThread.myEVT_UNCHECK_CONSOLE, -1, None)
+        evt = eventUtil.CustomEvent(eventUtil.myEVT_UNCHECK_CONSOLE, -1, None)
         if Globals.frame:
             wx.PostEvent(Globals.frame, evt)
         if event.EventType != wx.EVT_CLOSE.typeId:
@@ -109,8 +110,8 @@ class Console(wx.Frame):
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
         self.loggingList.AppendText(entry)
-        self.loggingList.AppendText("\n")
-        self.totalPosition = len(entry + "\n")
+        self.loggingList.AppendText("\n\n")
+        self.totalPosition = len(entry + "\n\n")
         if self.WINDOWS:
             position = int((self.totalPosition) * 0.75)
             position = 0 if position < 0 else position

@@ -64,7 +64,6 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
-        # self.DestroyLater()
 
     @api_tool_decorator()
     def OnClose(self, event):

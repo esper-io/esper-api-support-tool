@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.EventUtility import CustomEvent
 from Common.decorator import api_tool_decorator
 import json
 import os
@@ -11,7 +12,6 @@ import time
 import subprocess
 import wx
 import webbrowser
-import Utility.wxThread as wxThread
 import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
@@ -53,11 +53,12 @@ def postEventToFrame(eventType, eventValue=None):
     """ Post an Event to the Main Thread """
     if eventType:
         try:
-            evt = wxThread.CustomEvent(eventType, -1, eventValue)
+            evt = CustomEvent(eventType, -1, eventValue)
             if Globals.frame:
                 wx.PostEvent(Globals.frame, evt)
         except Exception as e:
             ApiToolLog().LogError(e)
+            raise e
 
 
 def download(url, file_name, overwrite=True):
@@ -225,7 +226,8 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
         for thread in threads:
             thread.join()
         time.sleep(1)
-    Globals.lock.release()
+    if Globals.lock.locked():
+        Globals.lock.release()
 
 
 def ipv6Tomac(ipv6):
@@ -273,7 +275,8 @@ def displayMessageBox(event):
     Globals.msg_lock.acquire()
     if msg:
         res = wx.MessageBox(msg, style=sty)
-    Globals.msg_lock.release()
+    if Globals.msg_lock.locked():
+        Globals.msg_lock.release()
     return res
 
 
@@ -429,7 +432,8 @@ def updateErrorTracker():
                     if minutes <= Globals.MAX_ERROR_TIME_DIFF:
                         new_tracker[key] = value
                 Globals.error_tracker = new_tracker
-            Globals.error_lock.release()
+            if Globals.error_lock.locked():
+                Globals.error_lock.release()
             time.sleep(60)
         except Exception as e:
             ApiToolLog().LogError(e)
@@ -442,3 +446,9 @@ def getStrRatioSimilarity(s, t, usePartial=False):
     if usePartial:
         return fuzz.partial_ratio(s.lower(), t.lower())
     return fuzz.ratio(s.lower(), t.lower())
+
+
+def isApiKey(key):
+    if type(key) != str:
+        return False
+    return len(key) == 36 and "-" in key

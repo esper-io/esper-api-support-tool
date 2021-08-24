@@ -7,6 +7,7 @@ import wx
 import time
 
 import Utility.wxThread as wxThread
+import Utility.EventUtility as eventUtil
 import Common.Globals as Globals
 
 from Utility.ApiToolLogging import ApiToolLog
@@ -21,6 +22,7 @@ from Utility.Resource import (
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
+    getAllAppVersionsForHost,
     getAllApplicationsForHost,
     createDeviceGroupForHost,
     getDeviceGroupsForHost,
@@ -89,7 +91,7 @@ class EsperTemplateUtil:
             if templateExist:
                 templateFound["id"] = templateExist[0]["id"]
                 postEventToFrame(
-                    wxThread.myEVT_CONFIRM_CLONE_UPDATE,
+                    eventUtil.myEVT_CONFIRM_CLONE_UPDATE,
                     (
                         self,
                         self.toApi,
@@ -102,7 +104,7 @@ class EsperTemplateUtil:
             else:
                 templateFound["id"] = maxId + 1
                 postEventToFrame(
-                    wxThread.myEVT_CONFIRM_CLONE,
+                    eventUtil.myEVT_CONFIRM_CLONE,
                     (
                         self,
                         self.toApi,
@@ -114,7 +116,7 @@ class EsperTemplateUtil:
                 )
         else:
             postEventToFrame(
-                wxThread.myEVT_LOG, "Template was not found. Check arguements."
+                eventUtil.myEVT_LOG, "Template was not found. Check arguements."
             )
 
     @api_tool_decorator()
@@ -127,7 +129,7 @@ class EsperTemplateUtil:
             templateFound, toDeviceGroups, allDeviceGroupId
         )
         if not found:
-            postEventToFrame(wxThread.myEVT_LOG, "Creating new device group...")
+            postEventToFrame(eventUtil.myEVT_LOG, "Creating new device group...")
             res = createDeviceGroupForHost(
                 self.getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
@@ -143,7 +145,7 @@ class EsperTemplateUtil:
             else:
                 templateFound["template"]["device_group"] = allDeviceGroupId
                 postEventToFrame(
-                    wxThread.myEVT_LOG,
+                    eventUtil.myEVT_LOG,
                     "Failed to recreate Device Group, using All Device group!",
                 )
                 wx.MessageBox(
@@ -155,7 +157,9 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processWallpapers(self, templateFound):
         if self.toApi and self.toKey and self.toEntId:
-            postEventToFrame(wxThread.myEVT_LOG, "Processing wallpapers in template...")
+            postEventToFrame(
+                eventUtil.myEVT_LOG, "Processing wallpapers in template..."
+            )
             if templateFound["template"]["brand"]:
                 bgList = []
                 for bg in templateFound["template"]["brand"]["wallpapers"]:
@@ -203,16 +207,16 @@ class EsperTemplateUtil:
                 )
                 files = {"image_file": open("wallpaper.jpeg", "rb")}
                 postEventToFrame(
-                    wxThread.myEVT_LOG, "Attempting to upload wallpaper..."
+                    eventUtil.myEVT_LOG, "Attempting to upload wallpaper..."
                 )
                 resp = performPostRequestWithRetry(
                     url, headers=headers, data=payload, files=files
                 )
                 if resp.ok:
-                    postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Succeeded!")
+                    postEventToFrame(eventUtil.myEVT_LOG, "Wallpaper upload Succeeded!")
                     json_resp = resp.json()
                 else:
-                    postEventToFrame(wxThread.myEVT_LOG, "Wallpaper upload Failed!")
+                    postEventToFrame(eventUtil.myEVT_LOG, "Wallpaper upload Failed!")
                     wx.MessageBox(
                         "Wallpaper upload Failed! Source: %s" % bg["url"],
                         style=wx.OK | wx.ICON_ERROR,
@@ -365,7 +369,36 @@ class EsperTemplateUtil:
             if ("isGPlay" in app and app["isGPlay"]) or (
                 "is_g_play" in app and app["is_g_play"]
             ):
-                newTemplate["application"]["apps"].append(app)
+                matchingApps = getAllApplicationsForHost(
+                    self.getEsperConfig(self.toApi, self.toKey),
+                    self.toEntId,
+                    package_name=app["packageName"],
+                )
+                if matchingApps and hasattr(matchingApps, "results"):
+                    found = False
+                    for match in matchingApps.results:
+                        appId = match["id"]
+                        versions = getAllAppVersionsForHost(
+                            self.getEsperConfig(self.toApi, self.toKey),
+                            self.toEntId,
+                            appId,
+                        )
+                        if versions and hasattr(versions, "results"):
+                            for ver in versions.results:
+                                if ("isGPlay" in ver and ver["isGPlay"]) or (
+                                    "is_g_play" in ver and ver["is_g_play"]
+                                ):
+                                    newTemplate["application"]["apps"].append(ver)
+                                    found = True
+                                    break
+                        if found:
+                            break
+                if not found:
+                    postEventToFrame(
+                        eventUtil.myEVT_LOG,
+                        "ERROR: Failed to find matching Play Store app, %s. Please make sure it is Approved and add to template"
+                        % app["packageName"],
+                    )
             else:
                 for toApp in apps:
                     if (
@@ -392,7 +425,7 @@ class EsperTemplateUtil:
                             }
                         )
                         postEventToFrame(
-                            wxThread.myEVT_LOG,
+                            eventUtil.myEVT_LOG,
                             "Added the '%s' app to the template"
                             % app["applicationName"],
                         )
@@ -401,7 +434,7 @@ class EsperTemplateUtil:
     def uploadMissingApk(self, app, template, newTemplate, config, entId):
         try:
             postEventToFrame(
-                wxThread.myEVT_LOG,
+                eventUtil.myEVT_LOG,
                 "Attempting to download %s to upload to endpoint" % app["packageName"],
             )
             file = "%s.apk" % app["applicationName"]
@@ -427,7 +460,7 @@ class EsperTemplateUtil:
             print(e)
             ApiToolLog().LogError(e)
             postEventToFrame(
-                wxThread.myEVT_LOG,
+                eventUtil.myEVT_LOG,
                 "To Enterprise is missing app, %s, not adding to template"
                 % app["applicationName"],
             )
@@ -534,7 +567,7 @@ class EsperTemplateUtil:
             if hasattr(resp, "status_code"):
                 if resp.status_code > 299:
                     postEventToFrame(
-                        wxThread.myEVT_MESSAGE_BOX,
+                        eventUtil.myEVT_MESSAGE_BOX,
                         (str(json_resp), wx.ICON_ERROR),
                     )
             return json_resp

@@ -61,7 +61,7 @@ class CollectionsDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -98,7 +98,7 @@ class CollectionsDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_2.Add(
@@ -123,7 +123,7 @@ class CollectionsDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -145,7 +145,7 @@ class CollectionsDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_5.Add(label_3, 0, 0, 0)
@@ -171,7 +171,7 @@ class CollectionsDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_BOLD,
                 0,
-                "",
+                "NormalBold",
             )
         )
         grid_sizer_6.Add(label_4, 0, 0, 0)
@@ -260,7 +260,6 @@ class CollectionsDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
-        # self.DestroyLater()
 
     @api_tool_decorator()
     def onInput(self, event):

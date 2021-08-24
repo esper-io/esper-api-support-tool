@@ -9,7 +9,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.1873"
+VERSION = "v0.188"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -18,8 +18,6 @@ MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
-
-API_REQUEST_SESSION_TRACKER = 0
 
 MAX_ERROR_TIME_DIFF = 2
 MAX_THREAD_COUNT = 16
@@ -52,20 +50,20 @@ GENERAL_ACTIONS = {
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
-    "Action -> Set App's State to Disable": GeneralActions.SET_APP_STATE_DISABLE.value,
-    "Action -> Set App's State to Hide": GeneralActions.SET_APP_STATE_HIDE.value,
-    "Action -> Set App's State to Show": GeneralActions.SET_APP_STATE_SHOW.value,
+    "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
     "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
+    "Action -> Install App": GeneralActions.INSTALL_APP.value,
+    "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {
     "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
-    "Action -> Set All Apps' State to Disable": GridActions.SET_APP_STATE_DISABLE.value,
-    "Action -> Set All Apps' State to Hide": GridActions.SET_APP_STATE_HIDE.value,
-    "Action -> Set All Apps' State to Show": GridActions.SET_APP_STATE_SHOW.value,
+    "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
+    "Action -> Install Selected App": GridActions.INSTALL_APP.value,
+    "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
     # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
@@ -109,80 +107,6 @@ JSON_COMMAND_TYPES = [
     "WIPE",
     "UPDATE_LATEST_DPC",
 ]
-
-API_REQUEST_TRACKER = {
-    "/application": 0,
-    "/collection": 0,
-    "/command": 0,
-    "/content": 0,
-    "/device/": 0,
-    "/devicegroup": 0,
-    "/v1/enterprise": 0,
-    "/policy": 0,
-    "/geofence": 0,
-    "/GroupCommandsApi": 0,
-    "/subscription": 0,
-    "/token": 0,
-    "/user": 0,
-    "OtherAPI": 0,
-    "/devicetemplate": 0,
-}
-
-API_FUNCTIONS = {
-    "delete_app_version": "/application",
-    "delete_application": "/application",
-    "get_all_applications": "/application",
-    "get_app_version": "/application",
-    "get_app_versions": "/application",
-    "get_application": "/application",
-    "get_install_devices": "/application",
-    "upload": "/application",
-    "get_command": "/command",
-    "run_command": "/command",
-    "create_command": "/command",
-    "get_command_request_status": "/command",
-    "get_device_command_history": "/command",
-    "list_command_request": "/command",
-    "delete_content": "/content",
-    "get_all_content": "/content",
-    "get_content": "/content",
-    "patch_content": "/content",
-    "post_content": "/content",
-    "get_all_devices": "/device/",
-    "get_app_installs": "/device/",
-    "get_device_app_by_id": "/device/",
-    "get_device_apps": "/device/",
-    "get_device_by_id": "/device/",
-    "get_device_event": "/device/",
-    "create_group": "/devicegroup",
-    "delete_group": "/devicegroup",
-    "get_all_groups": "/devicegroup",
-    "get_group_by_id": "/devicegroup",
-    "partial_update_group": "/devicegroup",
-    "update_group": "/devicegroup",
-    "get_enterprise": "/v1/enterprise",
-    "partial_update_enterprise": "/v1/enterprise",
-    "create_policy": "/policy",
-    "delete_enterprise_policy": "/policy",
-    "get_policy_by_id": "/policy",
-    "list_policies": "/policy",
-    "partialupdate_policy": "/policy",
-    "update_policy": "/policy",
-    "create_geofence": "/geofence",
-    "delete_geofence": "/geofence",
-    "get_all_geofences": "/geofence",
-    "get_geofence": "/geofence",
-    "partial_update_geofence": "/geofence",
-    "update_geofence": "/geofence",
-    "get_group_command": "/GroupCommandsApi",
-    "run_group_command": "/GroupCommandsApi",
-    "create_subscription": "/subscription",
-    "delete_subscription": "/subscription",
-    "get_all_subscriptions": "/subscription",
-    "get_subscription": "/subscription",
-    "get_token_info": "/token",
-    "renew_token": "/token",
-}
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
@@ -315,7 +239,6 @@ ALIAS_MAX_DAY_DELTA = 356
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 GET_IMMEDIATE_SUBGROUPS = False
-limit = (
-    MAX_LIMIT  # int | Number of results to return per page. (optional) (default to 20)
-)
-offset = 0  # int | The initial index from which to return the results. (optional) (default to 0)
+SAVE_VISIBILITY = False
+limit = MAX_LIMIT  # Number of results to return per page
+offset = 0  # The initial index from which to return the results

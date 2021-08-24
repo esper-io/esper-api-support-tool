@@ -6,6 +6,7 @@ import sys
 import os
 import traceback
 import Common.Globals as Globals
+import Common.ApiTracker as ApiTracker
 import threading
 
 from datetime import datetime
@@ -100,25 +101,25 @@ class ApiToolLog:
             strToWrite = "%s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(api_func),
-                Globals.API_REQUEST_SESSION_TRACKER,
+                ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
         else:
-            Globals.API_REQUEST_SESSION_TRACKER += 1
+            ApiTracker.API_REQUEST_SESSION_TRACKER += 1
             incremented = False
-            for key in Globals.API_REQUEST_TRACKER.keys():
+            for key in ApiTracker.API_REQUEST_TRACKER.keys():
                 if (
                     api_func
                     and hasattr(api_func, "__name__")
                     and key.replace("/", "") in api_func.__name__
                 ):
-                    Globals.API_REQUEST_TRACKER[key] += 1
+                    ApiTracker.API_REQUEST_TRACKER[key] += 1
                     incremented = True
                 elif (
                     api_func
                     and type(api_func) == str
                     and (key in api_func or api_func.endswith(key))
                 ):
-                    Globals.API_REQUEST_TRACKER[key] += 1
+                    ApiTracker.API_REQUEST_TRACKER[key] += 1
                     incremented = True
                 if incremented:
                     break
@@ -126,13 +127,13 @@ class ApiToolLog:
                 if (
                     api_func
                     and hasattr(api_func, "__name__")
-                    and api_func.__name__ in Globals.API_FUNCTIONS.keys()
+                    and api_func.__name__ in ApiTracker.API_FUNCTIONS.keys()
                 ):
-                    Globals.API_REQUEST_TRACKER[
-                        Globals.API_FUNCTIONS[api_func.__name__]
+                    ApiTracker.API_REQUEST_TRACKER[
+                        ApiTracker.API_FUNCTIONS[api_func.__name__]
                     ] += 1
                 else:
-                    Globals.API_REQUEST_TRACKER["OtherAPI"] += 1
+                    ApiTracker.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
             strToWrite = (
                 "%s API Request orginated from %s, triggerring %s. Total Requests: %s\n"
@@ -142,7 +143,7 @@ class ApiToolLog:
                     str(api_func)
                     if not hasattr(api_func, "__name__")
                     else api_func.__name__,
-                    Globals.API_REQUEST_SESSION_TRACKER,
+                    ApiTracker.API_REQUEST_SESSION_TRACKER,
                 )
             )
         if strToWrite and writeToFile:
@@ -153,4 +154,5 @@ class ApiToolLog:
             except:
                 pass
             finally:
-                Globals.api_log_lock.release()
+                if Globals.api_log_lock.locked():
+                    Globals.api_log_lock.release()

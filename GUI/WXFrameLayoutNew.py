@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from Utility.GridActionUtility import iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
@@ -15,8 +16,10 @@ import json
 import tempfile
 import ast
 import wx.adv as wxadv
+import Utility.EventUtility as eventUtil
 
 import Common.Globals as Globals
+import Common.ApiTracker as ApiTracker
 import GUI.EnhancedStatusBar as ESB
 
 import Utility.wxThread as wxThread
@@ -49,8 +52,8 @@ from pathlib import Path
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
+    getAppDictEntry,
     getInstallDevices,
-    moveGroup,
     setAppState,
     setKiosk,
     setMulti,
@@ -65,11 +68,10 @@ from Utility.EsperAPICalls import (
 from Utility.EastUtility import (
     TakeAction,
     clearKnownGroups,
-    createCommand,
     getAllDeviceInfo,
-    iterateThroughGridRows,
     processInstallDevices,
     removeNonWhitelisted,
+    uploadAppToEndpoint,
 )
 from Utility.Resource import (
     checkForInternetAccess,
@@ -82,6 +84,14 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
+from Utility.CommandUtility import createCommand
+from Utility.AppUtilities import (
+    installAppOnDevices,
+    uninstallAppOnDevice,
+    installAppOnGroups,
+    uninstallAppOnGroup,
+)
+from Utility.GroupUtility import moveGroup
 
 
 class NewFrameLayout(wx.Frame):
@@ -107,6 +117,7 @@ class NewFrameLayout(wx.Frame):
         self.gridArrowState = {"next": False, "prev": False}
         self.groups = None
         self.groupManage = None
+        self.AppState = None
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -137,11 +148,15 @@ class NewFrameLayout(wx.Frame):
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
 
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        self.sidePanel = SidePanel(self, self.panel_1, sizer_4)
+        sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
+        self.sidePanel = SidePanel(self, self.panel_1)
+        sizer_4.Add(self.sidePanel, 1, wx.EXPAND, 0)
 
         self.gridPanel = GridPanel(self, self.panel_1, wx.ID_ANY)
-        sizer_4.Add(self.gridPanel, 1, wx.ALL | wx.EXPAND, 4)
+        sizer_4.Add(self.gridPanel, 1, wx.TOP | wx.BOTTOM | wx.RIGHT | wx.EXPAND, 4)
+
+        sizer_4.AddGrowableRow(0)
+        sizer_4.AddGrowableCol(1)
 
         self.panel_1.SetSizer(sizer_4)
 
@@ -195,28 +210,28 @@ class NewFrameLayout(wx.Frame):
         # Bound Events
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
-        self.Bind(wxThread.EVT_FETCH, self.onFetch)
-        self.Bind(wxThread.EVT_UPDATE, self.onUpdate)
-        self.Bind(wxThread.EVT_UPDATE_DONE, self.onUpdateComplete)
-        self.Bind(wxThread.EVT_GROUP, self.addGroupsToGroupChoice)
-        self.Bind(wxThread.EVT_APPS, self.addAppsToAppChoice)
-        self.Bind(wxThread.EVT_RESPONSE, self.performAPIResponse)
-        self.Bind(wxThread.EVT_COMPLETE, self.onComplete)
-        self.Bind(wxThread.EVT_LOG, self.onLog)
-        self.Bind(wxThread.EVT_COMMAND, self.onCommandDone)
-        self.Bind(wxThread.EVT_UPDATE_GAUGE, self.setGaugeValue)
-        self.Bind(wxThread.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
-        self.Bind(wxThread.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
-        self.Bind(wxThread.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
-        self.Bind(wxThread.EVT_ON_FAILED, self.onFail)
-        self.Bind(wxThread.EVT_CONFIRM_CLONE, self.confirmClone)
-        self.Bind(wxThread.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
-        self.Bind(wxThread.EVT_MESSAGE_BOX, displayMessageBox)
-        self.Bind(wxThread.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
+        self.Bind(eventUtil.EVT_FETCH, self.onFetch)
+        self.Bind(eventUtil.EVT_UPDATE, self.onUpdate)
+        self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
+        self.Bind(eventUtil.EVT_APPS, self.addAppsToAppChoice)
+        self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
+        self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
+        self.Bind(eventUtil.EVT_LOG, self.onLog)
+        self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
+        self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.setGaugeValue)
+        self.Bind(eventUtil.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
+        self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
+        self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
+        self.Bind(eventUtil.EVT_ON_FAILED, self.onFail)
+        self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
+        self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
+        self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
+        self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
-        self.Bind(wxThread.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
-        self.Bind(wxThread.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
+        self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
+        self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
+        self.Bind(wx.EVT_POWER_SUSPENDING, self.onSuspend)
 
         if self.kill:
             return
@@ -233,14 +248,14 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.menubar.checkCollectionEnabled()
-        internetCheck = wxThread.GUIThread(
+        self.internetCheck = wxThread.GUIThread(
             self, checkForInternetAccess, (self), name="InternetCheck"
         )
-        internetCheck.start()
-        errorTracker = wxThread.GUIThread(
+        self.internetCheck.start()
+        self.errorTracker = wxThread.GUIThread(
             self, updateErrorTracker, None, name="updateErrorTracker"
         )
-        errorTracker.start()
+        self.errorTracker.start()
         self.menubar.onUpdateCheck(showDlg=False)
 
     @api_tool_decorator()
@@ -255,7 +270,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def __set_properties(self):
         self.SetTitle(Globals.TITLE)
-        self.SetBackgroundColour(Color.grey.value)
+        self.SetBackgroundColour(Color.lightGrey.value)
         self.SetThemeEnabled(False)
 
         if self.kill:
@@ -285,16 +300,29 @@ class NewFrameLayout(wx.Frame):
                     currentFont.GetWeight() >= wx.FONTWEIGHT_BOLD
                     and child.Id == wx.ID_BOLD
                 ):
-                    child.SetFont(
-                        wx.Font(
-                            Globals.HEADER_FONT_SIZE,
-                            wx.FONTFAMILY_SWISS,
-                            wx.FONTSTYLE_NORMAL,
-                            wx.FONTWEIGHT_BOLD,
-                            0,
-                            "",
+                    boldNormalFontSize = ["GridNotebook", "NormalBold"]
+                    if child.GetFaceName() in boldNormalFontSize:
+                        child.SetFont(
+                            wx.Font(
+                                Globals.FONT_SIZE,
+                                currentFont.GetFamily(),
+                                currentFont.GetStyle(),
+                                currentFont.GetWeight(),
+                                0,
+                                "GridNotebook",
+                            )
                         )
-                    )
+                    else:
+                        child.SetFont(
+                            wx.Font(
+                                Globals.HEADER_FONT_SIZE,
+                                currentFont.GetFamily(),
+                                currentFont.GetStyle(),
+                                currentFont.GetWeight(),
+                                0,
+                                "Header",
+                            )
+                        )
                 else:
                     child.SetFont(
                         wx.Font(
@@ -303,7 +331,7 @@ class NewFrameLayout(wx.Frame):
                             currentFont.GetStyle(),
                             currentFont.GetWeight(),
                             0,
-                            "",
+                            "Normal",
                         )
                     )
             if child.GetChildren():
@@ -439,11 +467,16 @@ class NewFrameLayout(wx.Frame):
             self.groupManage.Close()
             self.groupManage.DestroyLater()
         thread = ApiToolLog().LogApiRequestOccurrence(
-            None, Globals.API_REQUEST_TRACKER, True
+            None, ApiTracker.API_REQUEST_TRACKER, True
         )
         self.savePrefs(self.prefDialog)
-        thread.join()
-        self.DestroyLater()
+        if thread:
+            thread.join()
+        if self.internetCheck:
+            self.internetCheck.stop()
+        if self.errorTracker:
+            self.errorTracker.stop()
+        self.Destroy()
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
@@ -548,10 +581,12 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAllFile(self, inFile):
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
+            visibleOnly=Globals.SAVE_VISIBILITY
+        )
         deviceList = getAllDeviceInfo(self)
         self.Logging("Finished fetching device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 50)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
         splitResults = splitListIntoChunks(list(deviceList.values()))
@@ -568,12 +603,12 @@ class NewFrameLayout(wx.Frame):
         joinThreadList(threads)
 
         self.Logging("Finished compiling device and network information for CSV")
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE, 75)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
-        postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
+        postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
     def fetchAllGridData(self, chunk, gridDeviceData):
@@ -599,11 +634,13 @@ class NewFrameLayout(wx.Frame):
             if deviceListing:
                 tempDict.update(deviceListing[0])
             gridDeviceData.append(tempDict)
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders()
+        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
+            visibleOnly=Globals.SAVE_VISIBILITY
+        )
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
-        postEventToFrame(wxThread.myEVT_COMPLETE, (True, -1))
+        postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
     def saveGridData(
@@ -696,10 +733,9 @@ class NewFrameLayout(wx.Frame):
                 )
                 data = list(reader)
                 self.processDeviceCSVUpload(data)
-        # self.gridPanel.grid_1.AutoSizeColumns()
-        postEventToFrame(wxThread.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
-            wxThread.myEVT_DISPLAY_NOTIFICATION,
+            eventUtil.myEVT_DISPLAY_NOTIFICATION,
             ("E.A.S.T.", "Device CSV Upload Completed"),
         )
         self.setCursorDefault()
@@ -725,19 +761,6 @@ class NewFrameLayout(wx.Frame):
             Globals.CSV_NETWORK_ATTR_NAME,
             Globals.grid2_lock,
         )
-        indx = self.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GRID_ACTIONS.keys())[0]
-        )
-        self.sidePanel.actionChoice.SetSelection(indx)
-        if self.gridPanel.grid_1.IsFrozen():
-            self.gridPanel.grid_1.Thaw()
-        if self.gridPanel.grid_2.IsFrozen():
-            self.gridPanel.grid_2.Thaw()
-        self.gridPanel.enableGridProperties()
-        self.gridPanel.autoSizeGridsColumns()
-        self.sidePanel.groupChoice.Enable(True)
-        self.sidePanel.deviceChoice.Enable(True)
-        self.toggleEnabledState(True)
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def processCsvDataByGrid(self, grid, data, headers, lock=None):
@@ -828,6 +851,8 @@ class NewFrameLayout(wx.Frame):
                                 toolCol,
                                 isEditable,
                             )
+                            fileCol += 1
+                            break
                         fileCol += 1
                     toolCol += 1
         if lock:
@@ -931,11 +956,10 @@ class NewFrameLayout(wx.Frame):
         Globals.LAST_GROUP_ID = []
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
-        self.sidePanel.clearGroupAndDeviceSelections()
+        self.sidePanel.clearSelections(clearApp=True)
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
-        self.sidePanel.appChoice.Clear()
         self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
         self.setCursorBusy()
@@ -1088,6 +1112,7 @@ class NewFrameLayout(wx.Frame):
                 self.menubar.fileSaveAs.Enable(False)
                 self.Logging("---> No Devices found")
             else:
+                self.sidePanel.deviceChoice.Enable(True)
                 if (
                     self.preferences
                     and "getAppsForEachDevice" in self.preferences
@@ -1101,7 +1126,7 @@ class NewFrameLayout(wx.Frame):
                             self,
                             getdeviceapps,
                             args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
-                            eventType=wxThread.myEVT_APPS,
+                            eventType=eventUtil.myEVT_APPS,
                             waitForJoin=False,
                             name="GetDeviceAppsToPopulateApps",
                         )
@@ -1124,14 +1149,16 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.enableConfigMenu()
                 self.menubar.fileSave.Enable(True)
                 self.menubar.fileSaveAs.Enable(True)
-            if not self.preferences or self.preferences["enableDevice"] == True:
+            if (
+                not self.preferences or self.preferences["enableDevice"] == True
+            ) and self.sidePanel.devices:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
                 self.sidePanel.deviceChoice.Enable(False)
             self.displayNotification("Finished loading devices", "")
         if source == 2:
             indx = self.sidePanel.actionChoice.GetItems().index(
-                list(Globals.GRID_ACTIONS.keys())[1]
+                list(Globals.GRID_ACTIONS.keys())[0]
             )
             self.sidePanel.actionChoice.SetSelection(indx)
             if self.gridPanel.grid_1.IsFrozen():
@@ -1147,14 +1174,12 @@ class NewFrameLayout(wx.Frame):
             if (
                 action == GeneralActions.SET_KIOSK.value
                 or action == GeneralActions.SET_MULTI.value
-                or action == GeneralActions.SET_APP_STATE_DISABLE.value
-                or action == GeneralActions.SET_APP_STATE_HIDE.value
-                or action == GeneralActions.SET_APP_STATE_SHOW.value
+                or action == GeneralActions.SET_APP_STATE.value
                 or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
-                or action == GridActions.SET_APP_STATE_DISABLE.value
-                or action == GridActions.SET_APP_STATE_HIDE.value
-                or action == GridActions.SET_APP_STATE_SHOW.value
+                or action == GridActions.SET_APP_STATE.value
+                or action == GeneralActions.INSTALL_APP.value
+                or action == GeneralActions.UNINSTALL_APP.value
                 or action == GridActions.MOVE_GROUP.value
             ):
                 for t in threads:
@@ -1163,7 +1188,17 @@ class NewFrameLayout(wx.Frame):
                             cmdResults = cmdResults + t.result
                         else:
                             cmdResults.append(t.result)
-            postEventToFrame(wxThread.myEVT_COMPLETE, (True, action, cmdResults))
+            if action and action == GeneralActions.CLEAR_APP_DATA.value:
+                for t in threads:
+                    if t.result:
+                        displayMessageBox(
+                            (
+                                "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
+                                wx.ICON_INFORMATION,
+                            )
+                        )
+                        break
+            postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         self.setGaugeValue(100)
@@ -1177,7 +1212,7 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.doAPICallInThread(
             self,
             getAllGroups,
-            eventType=wxThread.myEVT_GROUP,
+            eventType=eventUtil.myEVT_GROUP,
             waitForJoin=False,
             name="PopulateGroupsGetAll",
         )
@@ -1281,7 +1316,6 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        self.sidePanel.appChoice.Clear()
         thread = wxThread.doAPICallInThread(
             self,
             self.fetchAllApps,
@@ -1308,7 +1342,7 @@ class NewFrameLayout(wx.Frame):
         if hasattr(api_response, "results"):
             results = api_response.results
         elif api_response:
-            results = api_response[1]["results"]
+            results = api_response["results"]
 
         if results and type(results[0]) == dict and "application" in results[0]:
             results = sorted(
@@ -1319,6 +1353,11 @@ class NewFrameLayout(wx.Frame):
             results = sorted(
                 results,
                 key=lambda i: i.application_name.lower(),
+            )
+        elif results and type(results[0]) == dict and "application_name" in results[0]:
+            results = sorted(
+                results,
+                key=lambda i: i["application_name"].lower(),
             )
         elif results:
             results = sorted(
@@ -1332,54 +1371,16 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def addAppToAppList(self, app):
-        entry = None
-        if type(app) == dict and "application" in app:
-            appName = app["application"]["application_name"]
-            appPkgName = appName + (" (%s)" % app["application"]["package_name"])
-            entry = {
-                "app_name": app["application"]["application_name"],
-                appName: app["application"]["package_name"],
-                appPkgName: app["application"]["package_name"],
-                "id": app["id"],
-                "app_state": None,
-            }
-        elif hasattr(app, "application_name"):
-            appName = app.application_name
-            appPkgName = appName + (" (%s)" % app.package_name)
-            entry = {
-                "app_name": app.application_name,
-                appName: app.package_name,
-                appPkgName: app.package_name,
-                "versions": app.versions,
-                "id": app.id,
-            }
-        else:
-            appName = app["app_name"]
-            appPkgName = appName + (" (%s)" % app["package_name"])
-            entry = {
-                "app_name": app["app_name"],
-                appName: app["package_name"],
-                appPkgName: app["package_name"],
-                "app_state": app["state"],
-                "id": app["id"],
-            }
-        if entry and entry not in self.sidePanel.enterpriseApps:
+        entry = getAppDictEntry(app)
+        if (
+            entry
+            and entry not in self.sidePanel.enterpriseApps
+            and ("isValid" in entry and entry["isValid"])
+        ):
             self.sidePanel.enterpriseApps.append(entry)
-        if (
-            entry
-            and self.sidePanel.selectedDevicesList
-            and entry not in self.sidePanel.selectedDeviceApps
-        ):
-            self.sidePanel.selectedDeviceApps.append(entry)
-        if (
-            entry
-            and self.sidePanel.selectedGroupsList
-            and entry not in self.sidePanel.knownApps
-        ):
-            self.sidePanel.knownApps.append(entry)
 
     @api_tool_decorator()
-    def onRun(self, event):
+    def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
@@ -1387,18 +1388,18 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = True
         self.setGaugeValue(0)
         self.toggleEnabledState(False)
+        self.AppState = None
 
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
 
-        appSelection = self.sidePanel.appChoice.GetSelection()
+        appSelection = self.sidePanel.selectedApp.GetSelection()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
         appLabel = (
-            self.sidePanel.appChoice.Items[appSelection]
-            if len(self.sidePanel.appChoice.Items) > 0
-            and self.sidePanel.appChoice.Items[appSelection]
+            self.sidePanel.selectedAppEntry["name"]
+            if self.sidePanel.selectedAppEntry
             else ""
         )
         actionLabel = (
@@ -1440,6 +1441,16 @@ class NewFrameLayout(wx.Frame):
         if actionClientData == GeneralActions.MOVE_GROUP.value:
             self.moveGroup()
             return
+        if (
+            actionClientData == GeneralActions.SET_APP_STATE.value
+            or actionClientData == GridActions.SET_APP_STATE.value
+        ):
+            self.displayAppStateChoiceDlg()
+            if not self.AppState:
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return
 
         if (
             self.sidePanel.selectedGroupsList
@@ -1449,18 +1460,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on group
-            if (
-                actionClientData == GeneralActions.SET_KIOSK.value
-                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-            ) and (
-                appSelection < 0 or appLabel == "No available app(s) on this device"
-            ):
-                displayMessageBox(
-                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                )
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1497,18 +1497,7 @@ class NewFrameLayout(wx.Frame):
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
         ):
             # run action on device
-            if (
-                actionClientData == GeneralActions.SET_KIOSK.value
-                or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-            ) and (
-                appSelection < 0 or appLabel == "No available app(s) on this device"
-            ):
-                displayMessageBox(
-                    ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-                )
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
@@ -1561,9 +1550,12 @@ class NewFrameLayout(wx.Frame):
                     Globals.SHOW_GRID_DIALOG = False
                     self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
                 if runAction:
+                    if self.checkAppRequirement(
+                        actionClientData, appSelection, appLabel
+                    ):
+                        return
                     self.Logging(
-                        '---> Attempting to run grid action, "%s".'
-                        % GridActions.MODIFY_ALIAS_AND_TAGS.name
+                        '---> Attempting to run grid action, "%s".' % actionLabel
                     )
                     self.gridPanel.applyTextColorToDevice(
                         None,
@@ -1604,6 +1596,27 @@ class NewFrameLayout(wx.Frame):
             self.isRunning = False
             self.setCursorDefault()
             self.toggleEnabledState(True)
+
+    @api_tool_decorator()
+    def checkAppRequirement(self, actionClientData, appSelection, appLabel):
+        if (
+            actionClientData == GeneralActions.SET_KIOSK.value
+            or actionClientData == GeneralActions.CLEAR_APP_DATA.value
+            or actionClientData == GeneralActions.INSTALL_APP.value
+            or actionClientData == GeneralActions.UNINSTALL_APP.value
+            or actionClientData == GeneralActions.SET_APP_STATE.value
+            or actionClientData == GridActions.INSTALL_APP.value
+            or actionClientData == GridActions.UNINSTALL_APP.value
+        ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
+            displayMessageBox(
+                ("Please select a valid application", wx.OK | wx.ICON_ERROR)
+            )
+            self.sidePanel.notebook_1.SetSelection(2)
+            self.isRunning = False
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
+            return True
+        return False
 
     @api_tool_decorator()
     def showConsole(self, event):
@@ -1732,9 +1745,10 @@ class NewFrameLayout(wx.Frame):
         """ Given device data perform the specified action """
         threads = []
         appToUse = None
-        appSelection = self.sidePanel.appChoice.GetSelection()
-        if appSelection > 0:
-            appToUse = self.sidePanel.appChoice.GetClientData(appSelection)
+        appVersion = None
+        if self.sidePanel.selectedAppEntry:
+            appToUse = self.sidePanel.selectedAppEntry["pkgName"]
+            appVersion = self.sidePanel.selectedAppEntry["version"]
         if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
@@ -1764,30 +1778,44 @@ class NewFrameLayout(wx.Frame):
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.CLEAR_APP_DATA.value:
-                clearAppData(self, device)
-            elif action == GeneralActions.SET_APP_STATE_DISABLE.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    clearAppData,
+                    (self, device),
+                    name="clearAppData",
+                )
+                thread.start()
+                threads.append(thread)
+            elif (
+                action == GeneralActions.SET_APP_STATE.value
+                and self.AppState == "DISABLE"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "DISABLE"),
+                    (device.id, appToUse, appVersion, "DISABLE"),
                     name="SetAppDisable",
                 )
                 thread.start()
                 threads.append(thread)
-            elif action == GeneralActions.SET_APP_STATE_HIDE.value:
+            elif (
+                action == GeneralActions.SET_APP_STATE.value and self.AppState == "HIDE"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "HIDE"),
+                    (device.id, appToUse, appVersion, "HIDE"),
                     name="SetAppHide",
                 )
                 thread.start()
                 threads.append(thread)
-            elif action == GeneralActions.SET_APP_STATE_SHOW.value:
+            elif (
+                action == GeneralActions.SET_APP_STATE.value and self.AppState == "SHOW"
+            ):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, None, "SHOW"),
+                    (device.id, appToUse, appVersion, "SHOW"),
                     name="SetAppShow",
                 )
                 thread.start()
@@ -1798,6 +1826,24 @@ class NewFrameLayout(wx.Frame):
                     removeNonWhitelisted,
                     (device.id, deviceInfo),
                     name="removeNonWhitelisted",
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.INSTALL_APP.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    installAppOnDevices,
+                    (appToUse, appVersion, device.id),
+                    name="installAppOnDevices",
+                )
+                thread.start()
+                threads.append(thread)
+            elif action == GeneralActions.UNINSTALL_APP.value:
+                thread = wxThread.GUIThread(
+                    self,
+                    uninstallAppOnDevice,
+                    (appToUse, device.id),
+                    name="uninstallAppOnDevice",
                 )
                 thread.start()
                 threads.append(thread)
@@ -1815,22 +1861,6 @@ class NewFrameLayout(wx.Frame):
         ).start()
 
     @api_tool_decorator()
-    def onUpdateComplete(self, event):
-        """ Alert user to chcek the Esper Console for detailed results for some actions """
-        action = None
-        if hasattr(event, "GetValue"):
-            action = event.GetValue()
-        else:
-            action = event
-        if action and action == GeneralActions.CLEAR_APP_DATA.value:
-            displayMessageBox(
-                (
-                    "Clear App Data Command has been sent to the device(s). Please check devices' event feeds for command status.",
-                    wx.ICON_INFORMATION,
-                )
-            )
-
-    @api_tool_decorator()
     def onDeviceSelections(self, event):
         """ When the user selects a device showcase apps related to that device """
         self.menubar.fileSave.Enable(False)
@@ -1844,13 +1874,13 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.addDevicesApps,
                 args=None,
-                eventType=wxThread.myEVT_COMPLETE,
+                eventType=eventUtil.myEVT_COMPLETE,
                 eventArg=(not self.isRunning and not self.isSavingPrefs),
                 sendEventArgInsteadOfResult=True,
                 name="addDeviceApps",
             ).start()
         else:
-            evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+            evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
             wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -1858,27 +1888,23 @@ class NewFrameLayout(wx.Frame):
         num = 1
         appAdded = False
         self.sidePanel.selectedDeviceApps = []
-        self.sidePanel.apps = self.sidePanel.knownApps + self.sidePanel.enterpriseApps
+        if not Globals.USE_ENTERPRISE_APP:
+            self.sidePanel.apps = self.sidePanel.enterpriseApps
+        else:
+            self.sidePanel.apps = (
+                self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
+            )
         for deviceId in self.sidePanel.selectedDevicesList:
-            appList, _ = getdeviceapps(
+            _, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
-
-            for app in appList:
-                appAdded = True
-                app_name = app.split(" v")[0]
-                entry = [app for app in self.sidePanel.apps if app_name in app]
-                if entry:
-                    entry = entry[0]
-                if entry and entry not in self.sidePanel.selectedDeviceApps:
-                    self.sidePanel.selectedDeviceApps.append(entry)
             self.setGaugeValue(
                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
             )
             num += 1
         if not appAdded:
-            self.sidePanel.appChoice.Append("No available app(s) on this device")
-            self.sidePanel.appChoice.SetSelection(0)
+            self.sidePanel.selectedApp.Append("No available app(s) on this device")
+            self.sidePanel.selectedApp.SetSelection(0)
         self.menubar.fileSave.Enable(True)
         self.menubar.fileSaveAs.Enable(True)
 
@@ -1917,7 +1943,8 @@ class NewFrameLayout(wx.Frame):
                 value = 0
             if value >= 0 and value <= maxValue:
                 self.gauge.SetValue(value)
-        Globals.gauge_lock.release()
+        if Globals.gauge_lock.locked():
+            Globals.gauge_lock.release()
 
     @api_tool_decorator()
     def performAPIResponse(self, event):
@@ -1962,7 +1989,11 @@ class NewFrameLayout(wx.Frame):
         action = None
         cmdResults = None
         if event:
-            eventVal = event.GetValue()
+            eventVal = None
+            if hasattr(event, "GetValue"):
+                eventVal = event.GetValue()
+            else:
+                eventVal = event
             if type(eventVal) == tuple:
                 enable = eventVal[0]
                 if len(eventVal) > 1:
@@ -2006,8 +2037,6 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
-        if action:
-            self.onUpdateComplete(action)
         if cmdResults:
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
@@ -2108,7 +2137,7 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
-        evt = wxThread.CustomEvent(wxThread.myEVT_LOG, -1, "---> Preferences' Saved")
+        evt = eventUtil.CustomEvent(eventUtil.myEVT_LOG, -1, "---> Preferences' Saved")
         wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -2128,7 +2157,6 @@ class NewFrameLayout(wx.Frame):
             )
             save.start()
             if self.sidePanel.selectedGroupsList:
-                self.sidePanel.knownApps = []
                 self.PopulateDevices(None)
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
@@ -2233,7 +2261,7 @@ class NewFrameLayout(wx.Frame):
                 self,
                 self.updateGrids,
                 None,
-                eventType=wxThread.myEVT_UPDATE,
+                eventType=eventUtil.myEVT_UPDATE,
                 name="fetchUpdateData",
             )
             self.refresh.start()
@@ -2288,7 +2316,7 @@ class NewFrameLayout(wx.Frame):
             threads = self.fetchData(True)
             self.isRunningUpdate = False
         joinThreadList(threads)
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+        evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
         wx.PostEvent(self, evt)
 
     def fetchData(self, isUpdate=False):
@@ -2430,7 +2458,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
         self.isRunning = False
-        evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, None)
+        evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, None)
         wx.PostEvent(self, evt)
 
     @api_tool_decorator()
@@ -2505,35 +2533,57 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
-        with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
-            res = dlg.ShowModal()
-            if res == wx.ID_OK:
-                app, version = dlg.getAppValues()
-                if app and version:
-                    self.onClearGrids(None)
-                    self.gauge.Pulse()
-                    resp = getInstallDevices(version, app)
-                    res = []
-                    for r in resp.results:
-                        if r:
-                            res.append(r.to_dict())
-                    if res:
-                        wxThread.doAPICallInThread(
-                            self,
-                            processInstallDevices,
-                            args=(res),
-                            eventType=None,
-                            waitForJoin=False,
-                            name="iterateThroughDeviceList",
-                        )
+        if self.sidePanel.apps:
+            self.setCursorBusy()
+            self.setGaugeValue(0)
+            self.toggleEnabledState(False)
+            with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    app, version = dlg.getAppValues()
+                    if app and version:
+                        self.onClearGrids(None)
+                        self.gauge.Pulse()
+                        self.isRunning = True
+                        resp = getInstallDevices(version, app)
+                        res = []
+                        for r in resp.results:
+                            if r:
+                                res.append(r.to_dict())
+                        if res:
+                            wxThread.doAPICallInThread(
+                                self,
+                                processInstallDevices,
+                                args=(res),
+                                eventType=None,
+                                waitForJoin=False,
+                                name="iterateThroughDeviceList",
+                            )
+                        else:
+                            displayMessageBox(
+                                (
+                                    "No device with that app version found",
+                                    wx.ICON_INFORMATION,
+                                )
+                            )
                     else:
                         displayMessageBox(
                             (
-                                "No device with that app version found",
+                                "Failed to get app id or version",
                                 wx.ICON_INFORMATION,
                             )
                         )
-            dlg.DestroyLater()
+                dlg.DestroyLater()
+        else:
+            displayMessageBox(
+                (
+                    "No apps found",
+                    wx.ICON_INFORMATION,
+                )
+            )
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+        self.setCursorDefault()
+        self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def moveGroup(self, event=None):
@@ -2562,12 +2612,12 @@ class NewFrameLayout(wx.Frame):
                             "Selected device(s) have been moved to the %s Group."
                             % groups.results[0].name
                         )
-                        self.sidePanel.clearGroupAndDeviceSelections()
+                        self.sidePanel.clearSelections()
                     elif resp:
                         displayMessageBox(str(resp))
                 else:
                     displayMessageBox("No Group found with the name: %s" % selction)
-                evt = wxThread.CustomEvent(wxThread.myEVT_COMPLETE, -1, True)
+                evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
                 wx.PostEvent(self, evt)
                 return
             else:
@@ -2582,6 +2632,9 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_ERROR,
                 )
             )
+            self.isRunning = False
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def createGroup(self, event):
@@ -2590,6 +2643,82 @@ class NewFrameLayout(wx.Frame):
         with self.groupManage as manage:
             manage.ShowModal()
             self.groupManage = None
+
+    @api_tool_decorator()
+    def installApp(self, event):
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            res = version = pkg = None
+            with InstalledDevicesDlg(
+                self.sidePanel.enterpriseApps, title="Install Application"
+            ) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    _, version, pkg = dlg.getAppValues(returnPkgName=True)
+            if pkg:
+                t = None
+                if self.sidePanel.selectedDevicesList:
+                    t = wxThread.GUIThread(
+                        self,
+                        installAppOnDevices,
+                        args=(pkg, version),
+                        eventType=eventUtil.myEVT_COMMAND,
+                        name="installAppOnDevices",
+                    )
+                elif self.sidePanel.selectedGroupsList:
+                    t = wxThread.GUIThread(
+                        self,
+                        installAppOnGroups,
+                        args=(pkg, version),
+                        eventType=eventUtil.myEVT_COMMAND,
+                        name="installAppOnGroups",
+                    )
+                if t:
+                    t.start()
+        else:
+            displayMessageBox(
+                (
+                    "Please select the group(s) and or device(s) you wish to install an app to!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )
+
+    @api_tool_decorator()
+    def uninstallApp(self, event):
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            res = pkg = None
+            with InstalledDevicesDlg(
+                self.sidePanel.apps, hide_version=True, title="Uninstall Application"
+            ) as dlg:
+                res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                _, _, pkg = dlg.getAppValues(returnPkgName=True)
+            if pkg:
+                t = None
+                if self.sidePanel.selectedDevicesList:
+                    t = wxThread.GUIThread(
+                        self,
+                        uninstallAppOnDevice,
+                        args=(pkg),
+                        eventType=eventUtil.myEVT_COMMAND,
+                        name="uninstallAppOnDevice",
+                    )
+                elif self.sidePanel.selectedGroupsList:
+                    t = wxThread.GUIThread(
+                        self,
+                        uninstallAppOnGroup,
+                        args=(pkg),
+                        eventType=eventUtil.myEVT_COMMAND,
+                        name="uninstallAppOnGroup",
+                    )
+                if t:
+                    t.start()
+        else:
+            displayMessageBox(
+                (
+                    "Please select the group(s) and or device(s) you wish to uninstall an app from!",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            )
 
     def callSetGaugeLater(self, event):
         delayMs = 3000
@@ -2620,3 +2749,41 @@ class NewFrameLayout(wx.Frame):
                     except:
                         pass
                 self.notification.Show()
+
+    def onSuspend(self, event):
+        if (
+            self.isRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+            and hasattr(event, "Veto")
+        ):
+            event.Veto()
+
+    def displayAppStateChoiceDlg(self):
+        res = None
+        with wx.SingleChoiceDialog(
+            self, "Select App State:", "", ["DISABLE", "HIDE", "SHOW"]
+        ) as dlg:
+            res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                self.AppState = dlg.GetStringSelection()
+            else:
+                self.AppState = None
+
+    def uploadApplication(self, event, title="", joinThread=False):
+        with wx.FileDialog(
+            self,
+            "Upload APK" if not title else title,
+            wildcard="APK files (*.apk)|*.apk",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+            defaultDir=str(self.defaultDir),
+        ) as fileDialog:
+            result = fileDialog.ShowModal()
+            if result == wx.ID_OK:
+                apk_path = fileDialog.GetPath()
+                t = wxThread.GUIThread(self, uploadAppToEndpoint, (apk_path))
+                t.start()
+                if joinThread:
+                    t.join()

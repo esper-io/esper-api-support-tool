@@ -10,19 +10,21 @@ class GeneralActions(Enum):
     SET_KIOSK = 2
     SET_MULTI = 3
     CLEAR_APP_DATA = 4
-    SET_APP_STATE_SHOW = 5
-    SET_APP_STATE_HIDE = 6
-    SET_APP_STATE_DISABLE = 7
+    SET_APP_STATE = 7
     REMOVE_NON_WHITELIST_AP = 8
     MOVE_GROUP = 9
+    INSTALL_APP = 10
+    UNINSTALL_APP = 11
 
 
 class GridActions(Enum):
     MODIFY_ALIAS_AND_TAGS = 30
-    SET_APP_STATE_SHOW = 31
-    SET_APP_STATE_HIDE = 32
-    SET_APP_STATE_DISABLE = 33
+    SET_APP_STATE = 33
     MOVE_GROUP = 34
+    INSTALL_APP = 35
+    UNINSTALL_APP = 36
+    INSTALL_LATEST_APP = 37
+    UNINSTALL_LISTED_APP = 38
 
 
 class Color(Enum):
@@ -30,6 +32,7 @@ class Color(Enum):
     black = wx.Colour(0, 0, 0)
     grey = wx.Colour(192, 192, 192)
     red = wx.Colour(255, 0, 0)
+    blue = wx.Colour(0, 0, 255)
     orange = wx.Colour(255, 165, 0)
     green = wx.Colour(0, 128, 0)
     purple = wx.Colour(128, 0, 128)
@@ -42,6 +45,7 @@ class Color(Enum):
     lightRed = wx.Colour(255, 235, 234)
     lightOrange = wx.Colour(255, 241, 216)
     lightPurple = wx.Colour(255, 226, 255)
+    lightGrey = wx.Colour(211, 211, 211)
 
     errorBg = wx.Colour(255, 235, 234)
     warnBg = wx.Colour(255, 241, 216)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from Utility.wxThread import GUIThread
 import Common.Globals as Globals
 import json
 import sys
@@ -51,11 +50,9 @@ def api_tool_decorator(locks=None):
                         if (
                             thread.name not in invalidThreadNames
                             and "main" not in thread.name.lower()
-                            and type(thread) == GUIThread
+                            and hasattr(thread, "stop")
                         ):
-                            # otherThreadsRunning = True
                             thread.stop()
-                    # if not otherThreadsRunning:
                     Globals.frame.onComplete(None, True)
                     Globals.frame.setCursorDefault()
                     Globals.frame.setGaugeValue(100)
@@ -101,7 +98,8 @@ def determineErrorDisplay(e):
             displayApiExcpetionMsg(e)
         else:
             displayGenericErrorMsg(e)
-    Globals.error_lock.release()
+    if Globals.error_lock.locked():
+        Globals.error_lock.release()
     return e
 
 

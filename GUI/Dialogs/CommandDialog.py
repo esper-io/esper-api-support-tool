@@ -59,7 +59,7 @@ class CommandDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_7.Add(label_1, 0, wx.ALL, 5)
@@ -89,7 +89,7 @@ class CommandDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_8.Add(label_3, 0, wx.ALL, 5)
@@ -117,7 +117,7 @@ class CommandDialog(wx.Dialog):
                 wx.FONTSTYLE_NORMAL,
                 wx.FONTWEIGHT_LIGHT,
                 0,
-                "",
+                "Normal",
             )
         )
         sizer_5.Add(label_2, 0, wx.ALL, 5)
@@ -734,4 +734,3 @@ class CommandDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
-        # self.DestroyLater()

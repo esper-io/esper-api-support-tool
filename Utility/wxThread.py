@@ -1,75 +1,20 @@
 #!/usr/bin/env python
 
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from Utility.Resource import joinThreadList, postEventToFrame
+import math
+from Common.enum import GeneralActions, GridActions
 import Common.Globals as Globals
 import threading
 import wx
-
-myEVT_RESPONSE = wx.NewEventType()
-EVT_RESPONSE = wx.PyEventBinder(myEVT_RESPONSE, 1)
-
-myEVT_FETCH = wx.NewEventType()
-EVT_FETCH = wx.PyEventBinder(myEVT_FETCH, 1)
-
-myEVT_UPDATE = wx.NewEventType()
-EVT_UPDATE = wx.PyEventBinder(myEVT_UPDATE, 1)
-
-myEVT_UPDATE_DONE = wx.NewEventType()
-EVT_UPDATE_DONE = wx.PyEventBinder(myEVT_UPDATE_DONE, 1)
-
-myEVT_COMPLETE = wx.NewEventType()
-EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
-
-myEVT_GROUP = wx.NewEventType()
-EVT_GROUP = wx.PyEventBinder(myEVT_GROUP, 1)
-
-myEVT_APPS = wx.NewEventType()
-EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
-
-myEVT_LOG = wx.NewEventType()
-EVT_LOG = wx.PyEventBinder(myEVT_LOG, 1)
-
-myEVT_COMMAND = wx.NewEventType()
-EVT_COMMAND = wx.PyEventBinder(myEVT_COMMAND, 1)
-
-myEVT_UPDATE_GAUGE = wx.NewEventType()
-EVT_UPDATE_GAUGE = wx.PyEventBinder(myEVT_UPDATE_GAUGE, 1)
-
-myEVT_UPDATE_GAUGE_LATER = wx.NewEventType()
-EVT_UPDATE_GAUGE_LATER = wx.PyEventBinder(myEVT_UPDATE_GAUGE_LATER, 1)
-
-myEVT_UPDATE_TAG_CELL = wx.NewEventType()
-EVT_UPDATE_TAG_CELL = wx.PyEventBinder(myEVT_UPDATE_TAG_CELL, 1)
-
-myEVT_UNCHECK_CONSOLE = wx.NewEventType()
-EVT_UNCHECK_CONSOLE = wx.PyEventBinder(myEVT_UNCHECK_CONSOLE, 1)
-
-myEVT_ON_FAILED = wx.NewEventType()
-EVT_ON_FAILED = wx.PyEventBinder(myEVT_ON_FAILED, 1)
-
-myEVT_CONFIRM_CLONE = wx.NewEventType()
-EVT_CONFIRM_CLONE = wx.PyEventBinder(myEVT_CONFIRM_CLONE, 1)
-
-myEVT_CONFIRM_CLONE_UPDATE = wx.NewEventType()
-EVT_CONFIRM_CLONE_UPDATE = wx.PyEventBinder(myEVT_CONFIRM_CLONE_UPDATE, 1)
-
-myEVT_MESSAGE_BOX = wx.NewEventType()
-EVT_MESSAGE_BOX = wx.PyEventBinder(myEVT_MESSAGE_BOX, 1)
-
-myEVT_THREAD_WAIT = wx.NewEventType()
-EVT_THREAD_WAIT = wx.PyEventBinder(myEVT_THREAD_WAIT, 1)
-
-myEVT_UPDATE_GRID_CONTENT = wx.NewEventType()
-EVT_UPDATE_GRID_CONTENT = wx.PyEventBinder(myEVT_UPDATE_GRID_CONTENT, 1)
-
-myEVT_DISPLAY_NOTIFICATION = wx.NewEventType()
-EVT_DISPLAY_NOTIFICATION = wx.PyEventBinder(myEVT_DISPLAY_NOTIFICATION, 1)
 
 
 def doAPICallInThread(
     frame,
     func,
     args=None,
-    eventType=myEVT_UPDATE,
+    eventType=eventUtil.myEVT_UPDATE,
     callback=None,
     callbackArgs=None,
     optCallbackArgs=None,
@@ -92,20 +37,79 @@ def doAPICallInThread(
     return t
 
 
-class CustomEvent(wx.PyCommandEvent):
-    """Event to signal that a count value is ready"""
-
-    def __init__(self, etype, eid, value=None):
-        """Creates the event object"""
-        wx.PyCommandEvent.__init__(self, etype, eid)
-        self._value = value
-
-    def GetValue(self):
-        """Returns the value from the event.
-        @return: the value of this event
-
-        """
-        return self._value
+@api_tool_decorator()
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
+    """ Wait till all threads have finished then send a signal back to the Main thread """
+    joinThreadList(threads)
+    if source == 1:
+        deviceList = {}
+        initPercent = 0
+        if Globals.frame.gauge:
+            initPercent = Globals.frame.gauge.GetValue()
+        initVal = 0
+        if maxGauge:
+            initVal = math.ceil((initPercent / 100) * maxGauge)
+        for thread in threads:
+            if type(thread.result) == tuple:
+                deviceList = {**deviceList, **thread.result[1]}
+                if maxGauge:
+                    val = int((initVal + len(deviceList)) / maxGauge * 100)
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE,
+                        val,
+                    )
+        postEventToFrame(event, action)
+        return (action, entId, deviceList, True, len(deviceList) * 3)
+    if source == 2:
+        postEventToFrame(eventUtil.myEVT_COMPLETE, None)
+        changeSucceeded = succeeded = numNewName = 0
+        statuses = []
+        devices = []
+        for thread in threads:
+            if type(thread.result) == tuple:
+                changeSucceeded += thread.result[0]
+                succeeded += thread.result[1]
+                numNewName += thread.result[2]
+                devices += thread._args[1]
+                statuses += thread.result[4]
+        msg = (
+            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
+            % (changeSucceeded, len(devices), succeeded, numNewName, Globals.MAX_TAGS)
+        )
+        postEventToFrame(eventUtil.myEVT_LOG, msg)
+        postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
+    if source == 3:
+        deviceList = {}
+        for thread in threads:
+            if type(thread.result) == dict:
+                deviceList = {**deviceList, **thread.result}
+        return (
+            GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+            Globals.enterprise_id,
+            deviceList,
+            True,
+            len(deviceList) * 3,
+        )
+    if source == 4:
+        postEventToFrame(eventUtil.myEVT_THREAD_WAIT, (threads, 3, action))
+    if source == 5:
+        msg = ""
+        if action == GridActions.MOVE_GROUP.value:
+            msg = "Results of moving devices' groups."
+        if action == GridActions.INSTALL_LATEST_APP.value:
+            msg = "Results of installing given app packages."
+        if action == GridActions.UNINSTALL_LISTED_APP.value:
+            msg = "Results of uninstalling given app packages."
+        statuses = []
+        for t in threads:
+            if t.result and type(t.result) == dict:
+                for val in t.result.values():
+                    statuses.append(val)
+            elif t.result and type(t.result) == list:
+                for val in t.result:
+                    statuses.append(val)
+        postEventToFrame(eventUtil.myEVT_COMPLETE, None)
+        postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
 
 
 class GUIThread(threading.Thread):
@@ -186,8 +190,8 @@ class GUIThread(threading.Thread):
         if self.eventType:
             evt = None
             if self.sendEventArgInsteadOfResult:
-                evt = CustomEvent(self.eventType, -1, self.eventArg)
+                evt = eventUtil.CustomEvent(self.eventType, -1, self.eventArg)
             else:
-                evt = CustomEvent(self.eventType, -1, self.result)
+                evt = eventUtil.CustomEvent(self.eventType, -1, self.result)
             if self._parent:
                 wx.PostEvent(self._parent, evt)
