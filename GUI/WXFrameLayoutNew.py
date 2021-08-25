@@ -472,11 +472,17 @@ class NewFrameLayout(wx.Frame):
         self.savePrefs(self.prefDialog)
         if thread:
             thread.join()
-        if self.internetCheck:
+        if hasattr(self, "internetCheck") and self.internetCheck:
             self.internetCheck.stop()
-        if self.errorTracker:
+        if hasattr(self, "errorTracker") and self.errorTracker:
             self.errorTracker.stop()
         self.Destroy()
+        for item in list(wx.GetTopLevelWindows()):
+            if not isinstance(item, NewFrameLayout):
+                if isinstance(item, wx.Dialog):
+                    item.Destroy()
+                item.Close()
+        wx.Exit()
 
     @api_tool_decorator()
     def onSaveBoth(self, event):

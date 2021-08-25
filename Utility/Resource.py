@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import threading
 from Utility.EventUtility import CustomEvent
 from Common.decorator import api_tool_decorator
 import json
@@ -434,12 +435,15 @@ def updateErrorTracker():
                 Globals.error_tracker = new_tracker
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
-            time.sleep(60)
         except Exception as e:
             ApiToolLog().LogError(e)
         finally:
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
+            time.sleep(60)
+            if hasattr(threading.current_thread(), "isStopped"):
+                if threading.current_thread().isStopped():
+                    break
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
