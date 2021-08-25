@@ -376,7 +376,11 @@ class SidePanel(wx.Panel):
                         if groupId not in self.selectedGroupsList:
                             self.selectedGroupsList.append(groupId)
 
-            if self.selectedGroupsList:
+            if (
+                self.selectedGroupsList
+                and not self.parentFrame.preferences
+                or self.parentFrame.preferences["enableDevice"] == True
+            ):
                 self.parentFrame.setCursorBusy()
                 self.devices = {}
                 self.parentFrame.PopulateDevices(None)
