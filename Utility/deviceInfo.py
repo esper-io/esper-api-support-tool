@@ -97,14 +97,14 @@ def getCellularStatus(deviceInfo):
     cellular_connections = "[NOT CONNECTED]"
     current_active_connection = ""
 
-    if "currentActiveConnection" in network_event:
+    if network_event and "currentActiveConnection" in network_event:
         current_active_connection = network_event["currentActiveConnection"]
-    if "active_connection" in network_event:
+    if network_event and "active_connection" in network_event:
         current_active_connection = network_event["active_connection"]
 
     simoperator = ""
     connection_status = ""
-    if "cellularNetworkInfo" in network_event:
+    if network_event and "cellularNetworkInfo" in network_event:
         cellularNetworkInfo = network_event["cellularNetworkInfo"]
         if cellularNetworkInfo:
             if "mobileNetworkStatus" in cellularNetworkInfo:
@@ -119,7 +119,7 @@ def getCellularStatus(deviceInfo):
             + ","
             + current_active_connection
         )
-    elif "cellular" in network_event:
+    elif network_event and "cellular" in network_event:
         cellularNetworkInfo = network_event["cellular"]
         connection_status = cellularNetworkInfo["status"]
         if (
