@@ -479,12 +479,16 @@ class GridPanel(wx.Panel):
         if col in validIndexes:
             grid_win.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         elif self.parentFrame.isBusy:
-            grid_win.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
-            grid_win2.SetCursor(wx.Cursor(wx.CURSOR_WAIT))
+            self.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
         else:
-            grid_win.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
-            grid_win2.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+            self.setGridsCursor(wx.Cursor(wx.CURSOR_ARROW))
         event.Skip()
+
+    def setGridsCursor(self, icon):
+        grid_win = self.grid_1.GetTargetWindow()
+        grid_win2 = self.grid_2.GetTargetWindow()
+        grid_win.SetCursor(icon)
+        grid_win2.SetCursor(icon)
 
     @api_tool_decorator()
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
@@ -493,6 +497,9 @@ class GridPanel(wx.Panel):
         if grid != self.grid_1:
             statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
+            if hasattr(threading.current_thread(), "isStopped"):
+                if threading.current_thread().isStopped():
+                    return
             if rowNum < grid.GetNumberRows():
                 match = []
                 [

@@ -118,6 +118,7 @@ class NewFrameLayout(wx.Frame):
         self.groups = None
         self.groupManage = None
         self.AppState = None
+        self.searchThreads = []
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -966,6 +967,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
+        self.frame_toolbar.search.SetValue("")
         self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
         self.setCursorBusy()
@@ -2476,6 +2478,31 @@ class NewFrameLayout(wx.Frame):
             queryString = event
         else:
             queryString = self.frame_toolbar.search.GetValue()
+
+        if self.searchThreads:
+            for thread in self.searchThreads:
+                if thread.is_alive():
+                    if hasattr(thread, "stop"):
+                        thread.stop()
+            self.searchThreads = []
+
+        t = wxThread.GUIThread(
+            self,
+            self.processSearch,
+            args=(event, queryString),
+            name="processSearch",
+        )
+        t.start()
+        self.searchThreads.append(t)
+
+    def processSearch(self, event, queryString):
+        if self.searchThreads:
+            for thread in self.searchThreads:
+                if thread.is_alive() and threading.current_thread() != thread:
+                    thread.join()
+
+        self.setCursorBusy()
+        self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
         if (
             hasattr(event, "EventType")
             and (
@@ -2485,22 +2512,22 @@ class NewFrameLayout(wx.Frame):
             )
             or wx.EVT_CHAR.typeId == event
         ):
-            self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_1, queryString, Color.white.value, True
-            )
-            self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_2, queryString, Color.white.value, True
-            )
+            self.applySearchColor(queryString, Color.white.value, True)
         if queryString:
-            self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_1, queryString, Color.lightYellow.value
-            )
-            self.gridPanel.applyTextColorMatchingGridRow(
-                self.gridPanel.grid_2, queryString, Color.lightYellow.value
-            )
+            self.applySearchColor(queryString, Color.lightYellow.value)
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
+        self.setCursorDefault()
+        self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+
+    def applySearchColor(self, queryString, color, applyAll=False):
+        self.gridPanel.applyTextColorMatchingGridRow(
+            self.gridPanel.grid_1, queryString, color, applyAll
+        )
+        self.gridPanel.applyTextColorMatchingGridRow(
+            self.gridPanel.grid_2, queryString, color, applyAll
+        )
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
