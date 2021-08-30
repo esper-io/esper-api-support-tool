@@ -226,18 +226,18 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     app["application"]["version"]["version_code"][
                         1 : len(app["application"]["version"]["version_code"])
                     ]
-                    if app["application"]["version"]["version_code"].startswith("v")
+                    if (
+                        app["application"]["version"]["version_code"]
+                        and app["application"]["version"]["version_code"].startswith(
+                            "v"
+                        )
+                    )
                     else app["application"]["version"]["version_code"]
                 )
-                applist.append(
-                    app["application"]["application_name"]
-                    + (
-                        " (%s) v" % app["application"]["package_name"]
-                        if Globals.SHOW_PKG_NAME
-                        else " v"
-                    )
-                    + version
-                )
+
+                appName = app["application"]["application_name"]
+                pkgName = app["application"]["package_name"]
+                applist.append(constructAppPkgVerStr(appName, pkgName, version))
             else:
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
@@ -248,19 +248,33 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     else app["version_code"]
                 )
                 applist.append(
-                    app["app_name"]
-                    + (
-                        " (%s) v" % app["package_name"]
-                        if Globals.SHOW_PKG_NAME
-                        else " v"
-                    )
-                    + version
+                    constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )
             if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
                 "isValid" in entry and entry["isValid"]
             ):
                 Globals.frame.sidePanel.selectedDeviceApps.append(entry)
     return applist, json_resp
+
+
+def constructAppPkgVerStr(appName, pkgName, version):
+    appPkgVerStr = ""
+    if appName:
+        appPkgVerStr += appName
+    else:
+        appPkgVerStr += "Invalid App Name - "
+    if Globals.SHOW_PKG_NAME:
+        if pkgName:
+            appPkgVerStr += " (%s) v"
+        else:
+            appPkgVerStr += " (Invalid Package Name) v"
+    else:
+        appPkgVerStr += " v"
+    if version:
+        appPkgVerStr += version
+    else:
+        appPkgVerStr += "Unknown Version"
+    return appPkgVerStr
 
 
 @api_tool_decorator()
