@@ -65,8 +65,8 @@ class SidePanel(wx.Panel):
         grid_sizer_1.Add(
             self.removeEndpointBtn,
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
-            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.RIGHT,
+            3,
         )
 
         self.configList = wx.TextCtrl(
