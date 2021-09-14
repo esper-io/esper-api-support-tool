@@ -556,6 +556,11 @@ def populateDeviceInfoDictionary(device, deviceInfo):
                 elif audio["ringerMode"] == 2:
                     deviceInfo["ringerMode"] = "Normal"
 
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
     return deviceInfo
 
 
