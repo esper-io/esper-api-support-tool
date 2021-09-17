@@ -1173,6 +1173,8 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.grid_1.Thaw()
             if self.gridPanel.grid_2.IsFrozen():
                 self.gridPanel.grid_2.Thaw()
+            if self.gridPanel.grid_3.IsFrozen():
+                self.gridPanel.grid_3.Thaw()
             self.gridPanel.enableGridProperties()
             self.gridPanel.autoSizeGridsColumns()
             self.sidePanel.groupChoice.Enable(True)
@@ -1400,6 +1402,7 @@ class NewFrameLayout(wx.Frame):
 
         self.gridPanel.grid_1.UnsetSortingColumn()
         self.gridPanel.grid_2.UnsetSortingColumn()
+        self.gridPanel.grid_3.UnsetSortingColumn()
 
         appSelection = self.sidePanel.selectedApp.GetSelection()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
@@ -1472,6 +1475,7 @@ class NewFrameLayout(wx.Frame):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
+            self.gridPanel.grid_3_contents = []
             self.gridPanel.userEdited = []
             self.gridPanel.disableGridProperties()
             Globals.LAST_DEVICE_ID = None
@@ -1509,6 +1513,7 @@ class NewFrameLayout(wx.Frame):
                 return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
+            self.gridPanel.grid_3_contents = []
             self.gridPanel.userEdited = []
             self.gridPanel.disableGridProperties()
             Globals.LAST_DEVICE_ID = self.sidePanel.selectedDevicesList
@@ -1773,6 +1778,7 @@ class NewFrameLayout(wx.Frame):
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                 self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                self.gridPanel.populateAppGrid(device, deviceInfo["appObj"])
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self, setKiosk, (self, device, deviceInfo), name="SetKiosk"
@@ -2036,6 +2042,8 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_1.Thaw()
         if self.gridPanel.grid_2.IsFrozen():
             self.gridPanel.grid_2.Thaw()
+        if self.gridPanel.grid_3.IsFrozen():
+            self.gridPanel.grid_3.Thaw()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
         self.gridPanel.autoSizeGridsColumns()
@@ -2079,6 +2087,14 @@ class NewFrameLayout(wx.Frame):
             name="emptyNetworkGrid",
         )
         netThread.start()
+        appThread = wxThread.GUIThread(
+            self,
+            self.gridPanel.emptyAppGrid,
+            None,
+            eventType=None,
+            name="emptyAppGrid",
+        )
+        appThread.start()
 
     @api_tool_decorator()
     def readAuthCSV(self):

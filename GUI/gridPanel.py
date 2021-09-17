@@ -23,6 +23,7 @@ class GridPanel(wx.Panel):
         self.userEdited = []
         self.grid_1_contents = []
         self.grid_2_contents = []
+        self.grid_3_contents = []
 
         self.deviceDescending = False
         self.networkDescending = False
@@ -33,6 +34,7 @@ class GridPanel(wx.Panel):
 
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.grid2HeaderLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
+        self.grid3HeaderLabels = Globals.CSV_APP_ATTR_NAME
         self.grid1ColVisibility = {}
         self.grid2ColVisibility = {}
 
@@ -89,6 +91,17 @@ class GridPanel(wx.Panel):
         self.grid_2 = wx.grid.Grid(self.panel_15, wx.ID_ANY, size=(1, 1))
         sizer_7.Add(self.grid_2, 1, wx.EXPAND, 0)
 
+
+        self.panel_16 = wx.Panel(self.notebook_2, wx.ID_ANY)
+        self.notebook_2.AddPage(self.panel_16, "Application Information")
+
+        sizer_8 = wx.BoxSizer(wx.VERTICAL)
+
+        self.grid_3 = wx.grid.Grid(self.panel_16, wx.ID_ANY, size=(1, 1))
+        sizer_8.Add(self.grid_3, 1, wx.EXPAND, 0)
+
+        self.panel_16.SetSizer(sizer_8)
+
         self.panel_15.SetSizer(sizer_7)
 
         self.panel_14.SetSizer(sizer_6)
@@ -113,8 +126,10 @@ class GridPanel(wx.Panel):
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
+        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onAppGridSort)
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
         self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
@@ -124,57 +139,42 @@ class GridPanel(wx.Panel):
         self.grid_1.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.grid_2.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
 
+        self.grid_3.CreateGrid(0, len(Globals.CSV_APP_ATTR_NAME))
         self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
         self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
-        self.grid_1.UseNativeColHeader()
-        self.grid_2.UseNativeColHeader()
-        self.grid_1.DisableDragRowSize()
-        self.grid_2.DisableDragRowSize()
-        self.grid_1.EnableDragColMove(True)
-        self.grid_2.EnableDragColMove(True)
-        self.grid_1.SetLabelFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        self.grid_2.SetLabelFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        self.grid_1.SetDefaultCellFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
-        self.grid_2.SetDefaultCellFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
+        self.setupGrid(self.grid_1)
+        self.setupGrid(self.grid_2)
+        self.setupGrid(self.grid_3)
         self.enableGridProperties()
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
+        self.fillAppGridHeaders()
+    
+    def setupGrid(self, grid):
+        grid.UseNativeColHeader()
+        grid.DisableDragRowSize()
+        grid.EnableDragColMove(True)
+        grid.SetLabelFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "NormalBold",
+            )
+        )
+        grid.SetDefaultCellFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_NORMAL,
+                0,
+                "Normal",
+            )
+        )
+
 
     @api_tool_decorator()
     def fillDeviceGridHeaders(self):
@@ -206,6 +206,21 @@ class GridPanel(wx.Panel):
             pass
         self.grid_2.AutoSizeColumns()
 
+    @api_tool_decorator()
+    def fillAppGridHeaders(self):
+        """ Populate Device Grid Headers """
+        num = 0
+        try:
+            for head in self.grid3HeaderLabels:
+                if head:
+                    if self.grid_3.GetNumberCols() < len(self.grid3HeaderLabels):
+                        self.grid_3.AppendCols(1)
+                    self.grid_3.SetColLabelValue(num, head)
+                    num += 1
+        except:
+            pass
+        self.grid_3.AutoSizeColumns()
+
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def emptyDeviceGrid(self, emptyContents=True):
         """ Empty Device Grid """
@@ -234,18 +249,36 @@ class GridPanel(wx.Panel):
         if Globals.grid2_lock.locked():
             Globals.grid2_lock.release()
 
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
+    @api_tool_decorator(locks=[Globals.grid3_lock])
+    def emptyAppGrid(self, emptyContents=True):
+        Globals.grid3_lock.acquire()
+        if emptyContents:
+            self.grid_3_contents = []
+        if self.grid_3.GetNumberRows() > 0:
+            self.grid_3.DeleteRows(0, self.grid_3.GetNumberRows())
+        self.grid_3.SetScrollLineX(15)
+        self.grid_3.SetScrollLineY(15)
+        self.fillAppGridHeaders()
+        if Globals.grid3_lock.locked():
+            Globals.grid3_lock.release()
+
+    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
     def autoSizeGridsColumns(self, event=None):
         Globals.grid1_lock.acquire()
         Globals.grid2_lock.acquire()
+        Globals.grid3_lock.acquire()
         self.grid_1.AutoSizeColumns()
         self.grid_2.AutoSizeColumns()
+        self.grid_3.AutoSizeColumns()
         self.grid_1.ForceRefresh()
         self.grid_2.ForceRefresh()
+        self.grid_3.ForceRefresh()
         if Globals.grid1_lock.locked():
             Globals.grid1_lock.release()
         if Globals.grid2_lock.locked():
             Globals.grid2_lock.release()
+        if Globals.grid3_lock.locked():
+            Globals.grid3_lock.release()
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def onCellChange(self, event):
@@ -424,6 +457,56 @@ class GridPanel(wx.Panel):
         )
         thread.start()
 
+    @api_tool_decorator()
+    def onAppGridSort(self, event):
+        if (
+            self.parentFrame.isRunning
+            or (
+                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
+                and self.parentFrame.gauge.GetValue() != 0
+            )
+            or self.parentFrame.CSVUploaded
+            or self.disableProperties
+        ):
+            return
+        if hasattr(event, "Col"):
+            col = event.Col
+        else:
+            col = event
+        keyName = Globals.CSV_APP_ATTR_NAME[col]
+
+        curSortCol = self.grid_3.GetSortingColumn()
+        if curSortCol == col and hasattr(event, "Col"):
+            self.networkDescending = not self.networkDescending
+        self.grid_3.SetSortingColumn(col, bool(not self.networkDescending))
+        if self.grid_3_contents and all(
+            s[keyName].isdigit() for s in self.grid_3_contents
+        ):
+            self.grid_3_contents = sorted(
+                self.grid_3_contents,
+                key=lambda i: i[keyName] and int(i[keyName]),
+                reverse=self.networkDescending,
+            )
+        else:
+            self.grid_3_contents = sorted(
+                self.grid_3_contents,
+                key=lambda i: i[keyName].lower(),
+                reverse=self.networkDescending,
+            )
+        self.parentFrame.Logging(
+            "---> Sorting App Grid on Column: %s Order: %s"
+            % (keyName, "Descending" if self.networkDescending else "Ascending")
+        )
+        self.parentFrame.setGaugeValue(0)
+        self.emptyAppGrid(emptyContents=False)
+        self.grid_3.Freeze()
+        thread = wxThread.GUIThread(
+            self.parentFrame,
+            self.repopulateGrid,
+            (self.grid_3_contents, col, "App"),
+        )
+        thread.start()
+
     def repopulateGrid(self, content, col, action="Device"):
         num = 1
         for info in content:
@@ -439,6 +522,12 @@ class GridPanel(wx.Panel):
                     int(num / len(self.grid_2_contents) * 100)
                 )
                 num += 1
+            elif action == "App":
+                self.addApptoAppGrid(info)
+                self.parentFrame.setGaugeValue(
+                    int(num / len(self.grid_3_contents) * 100)
+                )
+                num += 1
         if action == "Device":
             self.grid_1.AutoSizeColumns()
             self.grid_1.MakeCellVisible(0, col)
@@ -447,6 +536,10 @@ class GridPanel(wx.Panel):
             self.grid_2.AutoSizeColumns()
             self.grid_2.MakeCellVisible(0, col)
             self.grid_2.Thaw()
+        elif action == "App":
+            self.grid_3.AutoSizeColumns()
+            self.grid_3.MakeCellVisible(0, col)
+            self.grid_3.Thaw()
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
         time.sleep(3)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (0))
@@ -1128,26 +1221,32 @@ class GridPanel(wx.Panel):
         if Globals.grid2_lock.locked():
             Globals.grid2_lock.release()
 
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
+    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
     def enableGridProperties(
         self, enableGrid=True, enableColSize=True, enableColMove=True
     ):
         Globals.grid1_lock.acquire()
         Globals.grid2_lock.acquire()
+        Globals.grid3_lock.acquire()
         if enableGrid:
             self.grid_1.Enable(True)
             self.grid_2.Enable(True)
+            self.grid_3.Enable(True)
         if enableColSize:
             self.grid_1.EnableDragColSize()
             self.grid_2.EnableDragColSize()
+            self.grid_3.EnableDragColSize()
         if enableColMove:
             self.grid_1.EnableDragColMove()
             self.grid_2.EnableDragColMove()
+            self.grid_3.EnableDragColMove()
         self.disableProperties = False
         if Globals.grid1_lock.locked():
             Globals.grid1_lock.release()
         if Globals.grid2_lock.locked():
             Globals.grid2_lock.release()
+        if Globals.grid3_lock.locked():
+            Globals.grid3_lock.release()
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceIdentifersFromGrid(self):
@@ -1345,3 +1444,53 @@ class GridPanel(wx.Panel):
         if Globals.grid1_lock.locked():
             Globals.grid1_lock.release()
         return groupList
+
+    @api_tool_decorator(locks=[Globals.grid3_lock])
+    def populateAppGrid(self, device, apps):
+        Globals.grid3_lock.acquire()
+        if apps and type(apps) == dict and "results" in apps:
+            for app in apps["results"]:
+                if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
+                    info = {
+                        "Esper Name": device.device_name,
+                        "Application Name": app["app_name"],
+                        "Application Type": app["app_type"],
+                        "Application Version Code": app["version_code"],
+                        "Application Version Name": app["version_name"],
+                        "Package Name": app["package_name"],
+                        "State": app["state"],
+                        "Whitelisted": app["whitelisted"],
+                        "Can Clear Data": app["is_data_clearable"],
+                        "Can Uninstall": app["is_uninstallable"]
+                    }
+                    self.addApptoAppGrid(info)
+        if Globals.grid3_lock.locked():
+            Globals.grid3_lock.release()
+
+    @api_tool_decorator()
+    def addApptoAppGrid(self, info):
+        num = 0
+        self.grid_3.AppendRows(1)
+        for attribute in Globals.CSV_APP_ATTR_NAME:
+            value = (
+                info[attribute]
+                if attribute in info
+                else ""
+            )
+            if hasattr(threading.current_thread(), "isStopped"):
+                if threading.current_thread().isStopped():
+                    if Globals.grid3_lock.locked():
+                        Globals.grid3_lock.release()
+                    return
+            self.grid_3.SetCellValue(
+                self.grid_3.GetNumberRows() - 1, num, str(value)
+            )
+            isEditable = True
+            if attribute in Globals.CSV_EDITABLE_COL:
+                isEditable = False
+            self.grid_3.SetReadOnly(
+                self.grid_3.GetNumberRows() - 1, num, isEditable
+            )
+            num += 1
+            if info not in self.grid_3_contents:
+                self.grid_3_contents.append(info)

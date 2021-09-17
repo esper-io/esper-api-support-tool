@@ -42,6 +42,7 @@ grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
+grid3_lock = threading.Lock()
 
 """ Actions """
 GENERAL_ACTIONS = {
@@ -118,7 +119,7 @@ BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "/app?app_type=ENTERPRISE"
 DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 
 """ CSV Headers """
@@ -206,6 +207,18 @@ CSV_NETWORK_ATTR_NAME = {
     "Data Speed Down": "dataSpeedDown",
     "Data Speed Up": "dataSpeedUp",
 }
+CSV_APP_ATTR_NAME = [
+    "Esper Name",
+    "Application Name",
+    "Application Type",
+    "Application Version Code",
+    "Application Version Name",
+    "Package Name",
+    "State",
+    "Whitelisted",
+    "Can Clear Data",
+    "Can Uninstall",
+]
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
 WHITELIST_AP = []
 

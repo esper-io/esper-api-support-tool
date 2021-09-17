@@ -405,7 +405,7 @@ class PreferencesDialog(wx.Dialog):
 
         if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
             self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SHOW_PKG_NAME = False
+            Globals.GET_APP_EACH_DEVICE = False
         elif prefDict and prefDict["getAppsForEachDevice"]:
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)

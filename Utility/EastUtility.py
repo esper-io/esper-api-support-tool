@@ -46,6 +46,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         frame.gridPanel.button_1.Enable(False)
         frame.gridPanel.emptyDeviceGrid()
         frame.gridPanel.emptyNetworkGrid()
+        frame.gridPanel.emptyAppGrid()
         frame.gridPanel.disableGridProperties()
         if platform.system() == "Windows":
             frame.gridPanel.grid_1.Freeze()
@@ -478,8 +479,9 @@ def populateDeviceInfoDictionary(device, deviceInfo):
             device.tags = []
 
     appThread.join()
-    apps, _ = appThread.result
+    apps, json = appThread.result
     deviceInfo.update({"Apps": str(apps)})
+    deviceInfo.update({"appObj": json})
 
     if kioskMode == 0:
         eventThread.join()
