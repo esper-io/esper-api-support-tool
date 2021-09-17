@@ -51,6 +51,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         if platform.system() == "Windows":
             frame.gridPanel.grid_1.Freeze()
             frame.gridPanel.grid_2.Freeze()
+            frame.gridPanel.grid_3.Freeze()
         frame.CSVUploaded = False
 
     deviceList = None
