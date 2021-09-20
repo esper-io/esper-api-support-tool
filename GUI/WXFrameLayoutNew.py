@@ -658,6 +658,7 @@ class NewFrameLayout(wx.Frame):
 
         createNewFile(inFile)
 
+        num = 1
         for deviceData in gridDeviceData:
             rowValues = []
             for header in headers:
@@ -673,12 +674,17 @@ class NewFrameLayout(wx.Frame):
                             value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
                 rowValues.append(value)
             gridData.append(rowValues)
+            val = (num / len(gridDeviceData)) * 100
+            if val <= 95:
+                self.setGaugeValue(int(val))
+            num += 1
 
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
 
         self.Logging("---> Info saved to csv file - " + inFile)
+        self.setGaugeValue(100)
 
     @api_tool_decorator()
     def saveAppInfo(self, event):
@@ -711,14 +717,20 @@ class NewFrameLayout(wx.Frame):
         gridData.append(Globals.CSV_APP_ATTR_NAME)
         createNewFile(inFile)
 
+        num = 1
         for entry in self.gridPanel.grid_3_contents:
             gridData.append(list(entry.values()))
+            val = (num / len(self.gridPanel.grid_3_contents)) * 100
+            if val <= 95:
+                self.setGaugeValue(int(val))
+            num += 1
 
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
 
         self.Logging("---> Info saved to csv file - " + inFile)
+        self.setGaugeValue(100)
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
