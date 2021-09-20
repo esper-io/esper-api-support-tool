@@ -1811,7 +1811,8 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedAppEntry:
             appToUse = self.sidePanel.selectedAppEntry["pkgName"]
             appVersion = self.sidePanel.selectedAppEntry["version"]
-        if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+        if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value or action == GeneralActions.GENERATE_APP_REPORT.value
+            or action == GeneralActions.GENERATE_INFO_REPORT.value):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
         for entry in deviceList.values():
@@ -1825,9 +1826,21 @@ class NewFrameLayout(wx.Frame):
             device = entry[0]
             deviceInfo = entry[1]
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                self.gridPanel.populateAppGrid(device, deviceInfo["appObj"])
+                deviceThread = wxThread.GUIThread(
+                    self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                )
+                deviceThread.start()
+                networkThread = wxThread.GUIThread(
+                    self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                )
+                networkThread.start()
+                appThread = wxThread.GUIThread(
+                    self, self.gridPanel.populateAppGrid, (device, deviceInfo["appObj"]), name="populateAppGrid"
+                )
+                appThread.start()
+                threads.append(deviceThread)
+                threads.append(networkThread)
+                threads.append(appThread)
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self, setKiosk, (self, device, deviceInfo), name="SetKiosk"
@@ -1910,7 +1923,25 @@ class NewFrameLayout(wx.Frame):
                 )
                 thread.start()
                 threads.append(thread)
-            limitActiveThreads(threads)
+            elif action == GeneralActions.GENERATE_APP_REPORT.value:
+                appThread = wxThread.GUIThread(
+                    self, self.gridPanel.populateAppGrid, (device, deviceInfo["appObj"]), name="populateAppGrid"
+                )
+                appThread.start()
+                threads.append(appThread)
+            elif action == GeneralActions.GENERATE_INFO_REPORT.value:
+                deviceThread = wxThread.GUIThread(
+                    self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                )
+                deviceThread.start()
+                networkThread = wxThread.GUIThread(
+                    self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                )
+                networkThread.start()
+                threads.append(deviceThread)
+                threads.append(networkThread)
+            maxThread = Globals.MAX_THREAD_COUNT * 2 if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value else Globals.MAX_THREAD_COUNT
+            limitActiveThreads(threads, max_alive=maxThread)
 
             value = int(num / maxGauge * 100)
             if updateGauge and value <= 99:

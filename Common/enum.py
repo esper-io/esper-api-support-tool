@@ -15,6 +15,8 @@ class GeneralActions(Enum):
     MOVE_GROUP = 9
     INSTALL_APP = 10
     UNINSTALL_APP = 11
+    GENERATE_APP_REPORT = 12
+    GENERATE_INFO_REPORT = 13
 
 
 class GridActions(Enum):

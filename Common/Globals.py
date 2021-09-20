@@ -47,7 +47,9 @@ grid3_lock = threading.Lock()
 """ Actions """
 GENERAL_ACTIONS = {
     "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
-    "Show Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
+    "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,

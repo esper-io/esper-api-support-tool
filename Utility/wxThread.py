@@ -84,7 +84,7 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
             if type(thread.result) == dict:
                 deviceList = {**deviceList, **thread.result}
         return (
-            GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+            action,
             Globals.enterprise_id,
             deviceList,
             True,

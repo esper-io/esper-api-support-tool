@@ -41,7 +41,7 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
         frame.menubar.disableConfigMenu()
 
     logActionExecution(frame, action, group)
-    if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value) and not isUpdate:
+    if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value or action == GeneralActions.GENERATE_APP_REPORT.value or action == GeneralActions.GENERATE_INFO_REPORT.value) and not isUpdate:
         frame.gridPanel.button_2.Enable(False)
         frame.gridPanel.button_1.Enable(False)
         frame.gridPanel.emptyDeviceGrid()
