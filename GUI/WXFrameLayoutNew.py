@@ -681,6 +681,46 @@ class NewFrameLayout(wx.Frame):
         self.Logging("---> Info saved to csv file - " + inFile)
 
     @api_tool_decorator()
+    def saveAppInfo(self, event):
+        if self.gridPanel.grid_3.GetNumberRows() > 0:
+            dlg = wx.FileDialog(
+                self,
+                message="Save App Info CSV...",
+                defaultFile="",
+                wildcard="*.csv",
+                defaultDir=str(self.defaultDir),
+                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+            )
+            result = dlg.ShowModal()
+            inFile = dlg.GetPath()
+            dlg.DestroyLater()
+
+            if result == wx.ID_OK:  # Save button was pressed
+                self.setCursorBusy()
+                self.toggleEnabledState(False)
+                thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (inFile))
+                thread.start()
+                return True
+            elif (
+                result == wx.ID_CANCEL
+            ):  # Either the cancel button was pressed or the window was closed
+                return False
+
+    def saveAppInfoAsFile(self, inFile):
+        gridData = []
+        gridData.append(Globals.CSV_APP_ATTR_NAME)
+        createNewFile(inFile)
+
+        for entry in self.gridPanel.grid_3_contents:
+            gridData.append(list(entry.values()))
+
+        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            writer.writerows(gridData)
+
+        self.Logging("---> Info saved to csv file - " + inFile)
+
+    @api_tool_decorator()
     def onUploadCSV(self, event):
         """ Upload device CSV to the device Grid """
         if not Globals.enterprise_id:
@@ -1116,8 +1156,7 @@ class NewFrameLayout(wx.Frame):
             if not self.sidePanel.devices:
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")
                 self.sidePanel.deviceChoice.Enable(False)
-                self.menubar.fileSave.Enable(False)
-                self.menubar.fileSaveAs.Enable(False)
+                self.menubar.setSaveMenuOptionsEnableState(False)
                 self.Logging("---> No Devices found")
             else:
                 self.sidePanel.deviceChoice.Enable(True)
@@ -1155,8 +1194,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging("---> Application list populated")
                 if not self.isRunning:
                     self.menubar.enableConfigMenu()
-                self.menubar.fileSave.Enable(True)
-                self.menubar.fileSaveAs.Enable(True)
+                self.menubar.setSaveMenuOptionsEnableState(True)
             if (
                 not self.preferences or self.preferences["enableDevice"] == True
             ) and self.sidePanel.devices:
@@ -1251,8 +1289,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def PopulateDevices(self, event):
         """ Populate Device Choice """
-        self.menubar.fileSave.Enable(False)
-        self.menubar.fileSaveAs.Enable(False)
+        self.menubar.setSaveMenuOptionsEnableState(False)
         self.SetFocus()
         self.Logging("--->Attempting to populate devices of selected group(s)")
         self.setCursorBusy()
@@ -1877,8 +1914,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onDeviceSelections(self, event):
         """ When the user selects a device showcase apps related to that device """
-        self.menubar.fileSave.Enable(False)
-        self.menubar.fileSaveAs.Enable(False)
+        self.menubar.setSaveMenuOptionsEnableState(False)
         self.SetFocus()
         self.gauge.Pulse()
         self.setCursorBusy()
@@ -1919,8 +1955,7 @@ class NewFrameLayout(wx.Frame):
         if not appAdded:
             self.sidePanel.selectedApp.Append("No available app(s) on this device")
             self.sidePanel.selectedApp.SetSelection(0)
-        self.menubar.fileSave.Enable(True)
-        self.menubar.fileSaveAs.Enable(True)
+        self.menubar.setSaveMenuOptionsEnableState(True)
 
     @api_tool_decorator()
     def MacReopenApp(self, event):
@@ -2544,6 +2579,9 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.applyTextColorMatchingGridRow(
             self.gridPanel.grid_2, queryString, color, applyAll
         )
+        self.gridPanel.applyTextColorMatchingGridRow(
+            self.gridPanel.grid_3, queryString, color, applyAll
+        )
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
@@ -2577,8 +2615,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.command.Enable(state)
         self.menubar.collectionSubMenu.Enable(state)
         self.menubar.groupSubMenu.Enable(state)
-        self.menubar.fileSave.Enable(state)
-        self.menubar.fileSaveAs.Enable(state)
+        self.menubar.setSaveMenuOptionsEnableState(state)
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
