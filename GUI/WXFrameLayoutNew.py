@@ -1825,7 +1825,9 @@ class NewFrameLayout(wx.Frame):
                     break
             device = entry[0]
             deviceInfo = entry[1]
+            maxThread = Globals.MAX_THREAD_COUNT 
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+                maxThread = Globals.MAX_THREAD_COUNT * 6
                 deviceThread = wxThread.GUIThread(
                     self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
                 )
@@ -1929,6 +1931,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 appThread.start()
                 threads.append(appThread)
+                maxThread = Globals.MAX_THREAD_COUNT * 3
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
                 deviceThread = wxThread.GUIThread(
                     self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
@@ -1940,7 +1943,7 @@ class NewFrameLayout(wx.Frame):
                 networkThread.start()
                 threads.append(deviceThread)
                 threads.append(networkThread)
-            maxThread = Globals.MAX_THREAD_COUNT * 2 if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value else Globals.MAX_THREAD_COUNT
+                maxThread = Globals.MAX_THREAD_COUNT * 4
             limitActiveThreads(threads, max_alive=maxThread)
 
             value = int(num / maxGauge * 100)
@@ -2128,6 +2131,10 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
+        if action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+            self.sidePanel.notebook_1.SetSelection(0)
+        elif action == GeneralActions.GENERATE_APP_REPORT:
+            self.sidePanel.notebook_1.SetSelection(2)
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
