@@ -58,6 +58,7 @@ def getInfo(request_extension, deviceid):
         + request_extension
     )
     resp = performGetRequestWithRetry(url, headers=headers)
+    json_resp = None
     try:
         json_resp = resp.json()
     except:
