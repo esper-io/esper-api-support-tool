@@ -211,6 +211,7 @@ CSV_NETWORK_ATTR_NAME = {
 }
 CSV_APP_ATTR_NAME = [
     "Esper Name",
+    "Group",
     "Application Name",
     "Application Type",
     "Application Version Code",

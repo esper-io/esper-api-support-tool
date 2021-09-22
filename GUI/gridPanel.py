@@ -1446,13 +1446,14 @@ class GridPanel(wx.Panel):
         return groupList
 
     @api_tool_decorator(locks=[Globals.grid3_lock])
-    def populateAppGrid(self, device, apps):
+    def populateAppGrid(self, device, deviceInfo, apps):
         Globals.grid3_lock.acquire()
         if apps and type(apps) == dict and "results" in apps:
             for app in apps["results"]:
                 if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
                     info = {
                         "Esper Name": device.device_name,
+                        "Group": deviceInfo["groups"],
                         "Application Name": app["app_name"],
                         "Application Type": app["app_type"],
                         "Application Version Code": app["version_code"],

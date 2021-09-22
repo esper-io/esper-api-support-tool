@@ -1837,7 +1837,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 networkThread.start()
                 appThread = wxThread.GUIThread(
-                    self, self.gridPanel.populateAppGrid, (device, deviceInfo["appObj"]), name="populateAppGrid"
+                    self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
                 )
                 appThread.start()
                 threads.append(deviceThread)
@@ -1927,7 +1927,7 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
                 appThread = wxThread.GUIThread(
-                    self, self.gridPanel.populateAppGrid, (device, deviceInfo["appObj"]), name="populateAppGrid"
+                    self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
                 )
                 appThread.start()
                 threads.append(appThread)
