@@ -384,14 +384,16 @@ def populateDeviceInfoDictionary(device, deviceInfo):
     if Globals.frame and deviceGroups:
         subgroupsIds = []
         urlFormat = None
-        for group in deviceGroups:
-            groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
-            if not urlFormat:
-                urlFormat = deviceGroups[0].replace(groupId, "{id}")
-            if knownGroups[group].lower() != "all devices":
-                subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
-            else:
-                subgroupsIds += ["<All Device Groups>"]
+        if Globals.frame.groupManage:
+            for group in deviceGroups:
+                # none type error from groupManage
+                groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
+                if not urlFormat:
+                    urlFormat = deviceGroups[0].replace(groupId, "{id}")
+                if knownGroups[group].lower() != "all devices":
+                    subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
+                else:
+                    subgroupsIds += ["<All Device Groups>"]
         deviceInfo["subgroups"] = []
         for id in subgroupsIds:
             if id == "<All Device Groups>":

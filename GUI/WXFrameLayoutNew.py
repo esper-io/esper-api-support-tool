@@ -411,6 +411,7 @@ class NewFrameLayout(wx.Frame):
                         self.auth_data,
                     )
                 )
+                # TODO: FIX DUPLICATE ENTRY causing loop cycle
             if (
                 not self.auth_data or not csvRow in self.auth_data
             ) and not matchingConfig:
@@ -731,6 +732,8 @@ class NewFrameLayout(wx.Frame):
 
         self.Logging("---> Info saved to csv file - " + inFile)
         self.setGaugeValue(100)
+        self.toggleEnabledState(True)
+        self.setCursorDefault()
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
@@ -1129,6 +1132,9 @@ class NewFrameLayout(wx.Frame):
             ) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
                     newToken = dlg.GetValue()
+                else:
+                    break
+            newToken = newToken.strip()
             if newToken:
                 csvRow = [
                     self.configMenuItem.GetItemLabelText(),
@@ -2132,9 +2138,9 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(True)
         self.isRunning = False
         if action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-            self.sidePanel.notebook_1.SetSelection(0)
-        elif action == GeneralActions.GENERATE_APP_REPORT:
-            self.sidePanel.notebook_1.SetSelection(2)
+            self.gridPanel.notebook_2.SetSelection(0)
+        elif action == GeneralActions.GENERATE_APP_REPORT.value:
+            self.gridPanel.notebook_2.SetSelection(2)
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             wx.CallLater(3000, self.setGaugeValue, 0)
@@ -2778,7 +2784,6 @@ class NewFrameLayout(wx.Frame):
             self.groupManage = GroupManagement(self.groups)
         with self.groupManage as manage:
             manage.ShowModal()
-            self.groupManage = None
 
     @api_tool_decorator()
     def installApp(self, event):

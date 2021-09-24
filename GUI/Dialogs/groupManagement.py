@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import csv
-from requests.api import delete
-from wx.core import TextEntryDialog
+
 from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
 from Utility.EsperAPICalls import (
@@ -58,45 +57,35 @@ class GroupManagement(wx.Dialog):
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.notebook_1_pane_1 = TabPanel(self.notebook_1, wx.ID_ANY, "Single")
+        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, wx.ID_ANY)
         self.notebook_1.AddPage(self.notebook_1_pane_1, "Single")
 
-        grid_sizer_1 = wx.FlexGridSizer(4, 1, 0, 0)
+        grid_sizer_1 = wx.FlexGridSizer(5, 1, 0, 0)
 
         label_1 = wx.StaticText(self.notebook_1_pane_1, wx.ID_ANY, "Groups:")
-        label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        grid_sizer_1.Add(label_1, 0, wx.TOP, 5)
+        label_1.SetFont(wx.Font(Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, "NormalBold"))
+        grid_sizer_1.Add(label_1, 0, 0, 0)
 
-        label_2 = wx.StaticText(
-            self.notebook_1_pane_1,
-            wx.ID_ANY,
-            "Select a group from the list below and then select one of the actions below",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_2.SetToolTip(
-            "Select a group from the list below and then select one of the actions below"
-        )
+        label_2 = wx.StaticText(self.notebook_1_pane_1, wx.ID_ANY, "Select a group from the list below and then select one of the actions below", style=wx.ST_ELLIPSIZE_END)
+        label_2.SetToolTip("Select a group from the list below and then select one of the actions below")
         label_2.Wrap(1)
         grid_sizer_1.Add(label_2, 0, wx.BOTTOM | wx.EXPAND, 5)
+
+        grid_sizer_2 = wx.GridSizer(1, 2, 0, 0)
+        grid_sizer_1.Add(grid_sizer_2, 1, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+
+        label_5 = wx.StaticText(self.notebook_1_pane_1, wx.ID_ANY, "Group Name")
+        label_5.SetFont(wx.Font(Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, "NormalBold"))
+        grid_sizer_2.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND, 0)
+
+        self.text_ctrl_1 = wx.TextCtrl(self.notebook_1_pane_1, wx.ID_ANY, "")
+        grid_sizer_2.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
         self.button_3 = wx.Button(self.notebook_1_pane_1, wx.ID_REFRESH, "")
         self.button_3.SetToolTip("Rerfresh Group listing")
         grid_sizer_1.Add(self.button_3, 0, wx.ALIGN_RIGHT | wx.BOTTOM, 5)
 
-        self.tree_ctrl_1 = wx.TreeCtrl(
-            self.notebook_1_pane_1,
-            wx.ID_ANY,
-            style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS,
-        )
+        self.tree_ctrl_1 = wx.TreeCtrl(self.notebook_1_pane_1, wx.ID_ANY, style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS)
         grid_sizer_1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
 
         self.notebook_1_pane_2 = TabPanel(self.notebook_1, wx.ID_ANY, "Bulk")
@@ -105,36 +94,18 @@ class GroupManagement(wx.Dialog):
         grid_sizer_4 = wx.FlexGridSizer(4, 1, 0, 0)
 
         label_4 = wx.StaticText(self.notebook_1_pane_2, wx.ID_ANY, "CSV Upload:")
-        label_4.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        grid_sizer_4.Add(label_4, 0, wx.TOP, 5)
+        label_4.SetFont(wx.Font(Globals.FONT_SIZE, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, "NormalBold"))
+        grid_sizer_4.Add(label_4, 0, 0, 0)
 
-        label_3 = wx.StaticText(
-            self.notebook_1_pane_2,
-            wx.ID_ANY,
-            "Upload a CSV bulk perform an Action (Adding Groups works best with unique Parent names): ",
-            style=wx.ST_ELLIPSIZE_END,
-        )
-        label_3.SetToolTip(
-            "Select a group from the list below and then select one of the actions below"
-        )
+        label_3 = wx.StaticText(self.notebook_1_pane_2, wx.ID_ANY, "Upload a CSV to rename a bunch of groups: ", style=wx.ST_ELLIPSIZE_END)
+        label_3.SetToolTip("Select a group from the list below and then select one of the actions below")
         label_3.Wrap(1)
         grid_sizer_4.Add(label_3, 0, wx.BOTTOM | wx.EXPAND, 5)
 
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
-        self.button_7 = wx.Button(
-            self.notebook_1_pane_2, wx.ID_ANY, "Download Group CSV"
-        )
+        self.button_7 = wx.Button(self.notebook_1_pane_2, wx.ID_ANY, "Download Group CSV")
         self.button_7.SetToolTip("Upload CSV file")
         sizer_3.Add(self.button_7, 0, wx.BOTTOM | wx.RIGHT, 5)
 
@@ -200,7 +171,7 @@ class GroupManagement(wx.Dialog):
         grid_sizer_4.AddGrowableCol(0)
         self.notebook_1_pane_2.SetSizer(grid_sizer_4)
 
-        grid_sizer_1.AddGrowableRow(3)
+        grid_sizer_1.AddGrowableRow(4)
         grid_sizer_1.AddGrowableCol(0)
         self.notebook_1_pane_1.SetSizer(grid_sizer_1)
 
@@ -451,13 +422,7 @@ class GroupManagement(wx.Dialog):
         self.setCursorBusy()
         if not self.current_page or self.current_page.name == "Single":
             if self.tree_ctrl_1.GetSelection():
-                groupName = None
-                with TextEntryDialog(
-                    self,
-                    "Please enter new Group Name:",
-                ) as dlg:
-                    if dlg.ShowModal() == wx.ID_OK:
-                        groupName = dlg.GetValue()
+                groupName = self.text_ctrl_1.GetValue()
                 if groupName:
                     resp = createGroup(
                         groupName,
@@ -672,14 +637,7 @@ class GroupManagement(wx.Dialog):
         self.isBusy = True
         if not self.current_page or self.current_page.name == "Single":
             if self.tree_ctrl_1.GetSelection():
-                groupName = None
-                with TextEntryDialog(
-                    self,
-                    "Please enter new Group Name for %s:"
-                    % self.tree_ctrl_1.GetItemText(self.tree_ctrl_1.GetSelection()),
-                ) as dlg:
-                    if dlg.ShowModal() == wx.ID_OK:
-                        groupName = dlg.GetValue()
+                groupName = self.text_ctrl_1.GetValue()
                 if groupName:
                     self.setCursorBusy()
                     resp = renameGroup(
