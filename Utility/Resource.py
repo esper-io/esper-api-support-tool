@@ -217,7 +217,7 @@ def joinThreadList(threads):
 
 
 @api_tool_decorator(locks=[])
-def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, sleep=1, timeout=10):
+def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeout=10):
     if threads:
         numAlive = 0
         for thread in threads:
@@ -226,7 +226,6 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, sleep
         if numAlive >= max_alive:
             for thread in threads:
                 thread.join()
-        time.sleep(1)
     elif (threading.active_count() - 5) > max_alive:
         currThread = threading.current_thread()
         invalidThreadNames = [

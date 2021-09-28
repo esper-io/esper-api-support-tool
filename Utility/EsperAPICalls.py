@@ -2,6 +2,7 @@
 
 
 from datetime import datetime, timedelta
+import threading
 import esperclient
 import time
 import json
@@ -18,6 +19,7 @@ from Utility.CommandUtility import (
 )
 from Utility.Resource import (
     isApiKey,
+    joinThreadList,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -598,75 +600,93 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
     if not groupToUse:
         return None
     try:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
         api_response = None
         if type(groupToUse) == list:
-            for group in groupToUse:
-                for attempt in range(maxAttempt):
-                    try:
-                        response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            group=group,
-                            limit=limit,
-                            offset=offset,
-                        )
-                        ApiToolLog().LogApiRequestOccurrence(
-                            "getAllDevices",
-                            api_instance.get_all_devices,
-                            Globals.PRINT_API_LOGS,
-                        )
-                        break
-                    except Exception as e:
-                        if attempt == maxAttempt - 1:
-                            ApiToolLog().LogError(e)
-                            raise e
-                        if hasattr(e, "status") and e.status == 504:
-                            limit = int(limit / 4)
-                            Globals.limit = limit
-                            postEventToFrame(
-                                eventUtil.myEVT_LOG,
-                                "---> Encountered a 504 error, retrying with lower limit: %s"
-                                % limit,
-                            )
-                        time.sleep(Globals.RETRY_SLEEP)
-                if not api_response:
-                    api_response = response
-                else:
-                    api_response.results = api_response.results + response.results
+            api_response = fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt)
         else:
-            for attempt in range(maxAttempt):
-                try:
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        group=groupToUse,
-                        limit=limit,
-                        offset=offset,
-                    )
-                    ApiToolLog().LogApiRequestOccurrence(
-                        "getAllDevices",
-                        api_instance.get_all_devices,
-                        Globals.PRINT_API_LOGS,
-                    )
-                    break
-                except Exception as e:
-                    if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
-                        raise e
-                    if hasattr(e, "status") and e.status == 504:
-                        limit = int(limit / 4)
-                        Globals.limit = limit
-                        postEventToFrame(
-                            eventUtil.myEVT_LOG,
-                            "---> Encountered a 504 error, retrying with lower limit: %s"
-                            % limit,
-                        )
-                    time.sleep(Globals.RETRY_SLEEP)
+            api_response = get_all_devices(groupToUse, limit, offset, maxAttempt)
         postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+
+def get_all_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
+    api_instance = esperclient.DeviceApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_all_devices(
+                Globals.enterprise_id,
+                group=groupToUse,
+                limit=limit,
+                offset=offset,
+            )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getAllDevices",
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            if hasattr(e, "status") and e.status == 504:
+                limit = int(limit / 4)
+                Globals.limit = limit
+                postEventToFrame(
+                    eventUtil.myEVT_LOG,
+                    "---> Encountered a 504 error, retrying with lower limit: %s"
+                    % limit,
+                )
+            time.sleep(Globals.RETRY_SLEEP)
+    if type(responses) == list:
+        responses.append(api_response)
+    return api_response
+
+def get_all_devices(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY):
+    response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
+    if Globals.GROUP_FETCH_ALL:
+        devices = getAllDevicesFromOffsets(response, groupToUse, maxAttempt)
+        response.results = response.results + devices
+        response.next = None
+        response.prev = None
+    return response
+
+
+def fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY):
+    api_response = None
+    for group in groupToUse:
+        for _ in range(maxAttempt):
+            response = get_all_devices(group, limit, offset, maxAttempt)
+            if api_response:
+                api_response = api_response + response.results
+            else:
+                api_response = response
+            break
+    return api_response
+
+
+def getAllDevicesFromOffsets(api_response, group, maxAttempt=Globals.MAX_RETRY, devices=[]):
+    threads = []
+    count = api_response.count
+    if api_response.next:
+        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+        respOffsetInt = int(respOffset)
+        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+        responses = []
+        while int(respOffsetInt) < count and int(respLimit) < count:
+            thread = threading.Thread(target=get_all_devices_helper, args=(group, respLimit, respOffset, maxAttempt, responses))
+            threads.append(thread)
+            thread.start()
+            respOffsetInt += int(respLimit)
+    joinThreadList(threads)
+    for resp in responses:
+        if resp and resp.results:
+            devices += resp.results
+    return devices
 
 
 @api_tool_decorator()

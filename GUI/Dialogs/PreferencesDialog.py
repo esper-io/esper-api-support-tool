@@ -47,6 +47,7 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
+            "groupFetchAll"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -84,7 +85,7 @@ class PreferencesDialog(wx.Dialog):
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.general,
@@ -146,6 +147,14 @@ class PreferencesDialog(wx.Dialog):
             "Save only visible columns",
             wx.CheckBox,
             "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
+        )
+
+        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Fetch all devices in one page",
+            wx.CheckBox,
+            "Attempts to fetch all info for devices in a group and display them in one page (For Groups)",
         )
 
         # Command Preferences
@@ -611,6 +620,20 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.SAVE_VISIBILITY = False
 
+        if prefDict and "groupFetchAll" in prefDict:
+            if (
+                isinstance(self.prefs["groupFetchAll"], str)
+                and prefDict["groupFetchAll"].lower() == "true"
+            ) or prefDict["groupFetchAll"] == True:
+                self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GROUP_FETCH_ALL = True
+            else:
+                self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GROUP_FETCH_ALL = False
+        else:
+            self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.GROUP_FETCH_ALL = False
+
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
@@ -682,6 +705,7 @@ class PreferencesDialog(wx.Dialog):
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
+            "groupFetchAll": self.checkbox_16.IsChecked()
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -705,6 +729,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
+        Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -957,6 +982,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SAVE_VISIBILITY = False
+        if "groupFetchAll" in self.prefs:
+            if (
+                isinstance(self.prefs["groupFetchAll"], str)
+                and self.prefs["groupFetchAll"].lower() == "true"
+            ) or self.prefs["groupFetchAll"] == True:
+                self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GROUP_FETCH_ALL = True
+            else:
+                self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GROUP_FETCH_ALL = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -988,6 +1023,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
         self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
+        self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
 
         return self.prefs
 
@@ -1045,6 +1081,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.FONT_SIZE
         elif key == "saveColVisibility":
             return Globals.SAVE_VISIBILITY
+        elif key == "groupFetchAll":
+            return Globals.GROUP_FETCH_ALL
         else:
             return None
 

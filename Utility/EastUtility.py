@@ -133,8 +133,9 @@ def iterateThroughDeviceList(
     if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
+            maxThread = max(int(Globals.MAX_THREAD_COUNT / 2), 10)
             splitResults = splitListIntoChunks(
-                api_response.results, maxThread=int(Globals.MAX_THREAD_COUNT * (2 / 3))
+                api_response.results, maxThread=maxThread
             )
 
             threads = []
@@ -277,12 +278,18 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=Tru
     """ Try to obtain more device info for a given device """
     deviceList = {}
     threads = []
+    maxThread = min(int(Globals.MAX_THREAD_COUNT / 2), 3)
     for device in chunk:
         try:
             thread = wxThread.GUIThread(None, processDevicesHelper, (device, getApps))
-            thread.start()
+            for _ in range(Globals.MAX_RETRY):
+                try:
+                    thread.start()
+                    break
+                except:
+                    pass
             threads.append(thread)
-            limitActiveThreads(threads)
+            limitActiveThreads(threads, maxThread)
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
@@ -666,20 +673,7 @@ def getAllDeviceInfo(frame):
         )
         if api_response:
             devices += api_response.results
-            threads = []
-            count = api_response.count
-            respOffset = api_response.next.split("offset=")[-1].split("&")[0]
-            respOffsetInt = int(respOffset)
-            respLimit = api_response.next.split("limit=")[-1].split("&")[0]
-            while int(respOffsetInt) < count:
-                thread = wxThread.GUIThread(frame, apiCalls.getAllDevices, (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset))
-                threads.append(thread)
-                thread.start()
-                respOffsetInt += int(respLimit)
-            joinThreadList(threads)
-            for thread in threads:
-                if thread and thread.result:
-                    devices += thread.result.results
+            getAllDevicesFromOffsets(api_response, devices)
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
@@ -721,6 +715,25 @@ def getAllDeviceInfo(frame):
             deviceList = {**deviceList, **thread.result[1]}
 
     return deviceList
+
+
+def getAllDevicesFromOffsets(api_response, devices=[]):
+    threads = []
+    count = api_response.count
+    if api_response.next:
+        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+        respOffsetInt = int(respOffset)
+        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+        while int(respOffsetInt) < count and int(respLimit) < count:
+            thread = wxThread.GUIThread(Globals.frame, apiCalls.getAllDevices, (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset))
+            threads.append(thread)
+            thread.start()
+            respOffsetInt += int(respLimit)
+        joinThreadList(threads)
+    for thread in threads:
+        if thread and thread.result:
+            devices += thread.result.results
+    return devices
 
 
 def uploadAppToEndpoint(path):
