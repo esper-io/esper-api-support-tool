@@ -216,19 +216,32 @@ def joinThreadList(threads):
                 thread.join()
 
 
-@api_tool_decorator(locks=[Globals.lock])
-def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
-    Globals.lock.acquire()
-    numAlive = 0
-    for thread in threads:
-        if thread.is_alive():
-            numAlive += 1
-    if numAlive >= max_alive:
+@api_tool_decorator(locks=[])
+def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, sleep=1, timeout=10):
+    if threads:
+        numAlive = 0
         for thread in threads:
-            thread.join()
+            if thread.is_alive():
+                numAlive += 1
+        if numAlive >= max_alive:
+            for thread in threads:
+                thread.join()
         time.sleep(1)
-    if Globals.lock.locked():
-        Globals.lock.release()
+    elif (threading.active_count() - 5) > max_alive:
+        currThread = threading.current_thread()
+        invalidThreadNames = [
+            "InternetCheck",
+            "updateErrorTracker",
+            "MainThread",
+            currThread.name,
+        ]
+        for thread in threading.enumerate():
+            if (currThread != thread 
+                and thread.name not in invalidThreadNames 
+                and "pydevd" not in thread.name 
+                and "save" not in thread.name.lower()
+                and thread.is_alive()):
+                thread.join(timeout)
 
 
 def ipv6Tomac(ipv6):

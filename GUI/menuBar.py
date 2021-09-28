@@ -64,7 +64,7 @@ class ToolMenuBar(wx.MenuBar):
         self.fileSaveAs = fileMenu.Append(fas)
 
         saveApps = wx.MenuItem(
-            fileMenu, wx.ID_SAVEAS, "&Save App Info \tCtrl+Shift+S"
+            fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S"
         )
         # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveApps = fileMenu.Append(saveApps)

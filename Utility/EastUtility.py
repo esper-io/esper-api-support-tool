@@ -21,6 +21,7 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
+    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -272,22 +273,38 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 
 
 @api_tool_decorator()
-def processDevices(chunk, number_of_devices, action, isUpdate=False):
+def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=True):
     """ Try to obtain more device info for a given device """
     deviceList = {}
+    threads = []
     for device in chunk:
         try:
-            number_of_devices = number_of_devices + 1
-            deviceInfo = {}
-            deviceInfo.update({"num": number_of_devices})
-            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-
-            deviceList[number_of_devices] = [device, deviceInfo]
+            thread = wxThread.GUIThread(None, processDevicesHelper, (device, getApps))
+            thread.start()
+            threads.append(thread)
+            limitActiveThreads(threads)
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)
 
+    joinThreadList(threads)
+
+    num = 0
+    for thread in threads:
+        number_of_devices = number_of_devices + 1
+        deviceInfo = thread.result
+        deviceInfo.update({"num": number_of_devices})
+        device = chunk[num]
+        num += 1
+        deviceList[number_of_devices] = [device, deviceInfo]
+
     return (action, deviceList)
+
+
+def processDevicesHelper(device, getApps):
+    deviceInfo = {}
+    deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps)
+    return deviceInfo
 
 
 @api_tool_decorator()
@@ -307,7 +324,7 @@ def unpackageDict(deviceInfo, deviceDict):
 
 
 @api_tool_decorator()
-def populateDeviceInfoDictionary(device, deviceInfo):
+def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
     """Populates Device Info Dictionary"""
     deviceId = None
     deviceName = None
@@ -340,7 +357,8 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         apiCalls.getdeviceapps,
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
-    appThread.start()
+    if getApps:
+        appThread.start()
     eventThread = wxThread.GUIThread(
         Globals.frame,
         apiCalls.getLatestEvent,
@@ -481,8 +499,12 @@ def populateDeviceInfoDictionary(device, deviceInfo):
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
 
-    appThread.join()
-    apps, json = appThread.result
+    if appThread.is_alive():
+        appThread.join()
+    apps = ""
+    json = {}
+    if appThread.result:
+        apps, json = appThread.result
     deviceInfo.update({"Apps": str(apps)})
     deviceInfo.update({"appObj": json})
 
@@ -644,16 +666,20 @@ def getAllDeviceInfo(frame):
         )
         if api_response:
             devices += api_response.results
-            while api_response and api_response.next:
-                respOffset = api_response.next.split("&offset=")[-1]
-                respLimit = api_response.next.split("?limit=")[-1].split("&")[0]
-                api_response = apiCalls.getAllDevices(
-                    Globals.frame.sidePanel.selectedGroupsList,
-                    limit=respLimit,
-                    offset=respOffset,
-                )
-                if api_response and api_response.results:
-                    devices += api_response.results
+            threads = []
+            count = api_response.count
+            respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+            respOffsetInt = int(respOffset)
+            respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+            while int(respOffsetInt) < count:
+                thread = wxThread.GUIThread(frame, apiCalls.getAllDevices, (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset))
+                threads.append(thread)
+                thread.start()
+                respOffsetInt += int(respLimit)
+            joinThreadList(threads)
+            for thread in threads:
+                if thread and thread.result:
+                    devices += thread.result.results
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
@@ -665,8 +691,9 @@ def getAllDeviceInfo(frame):
     threads = []
     if devices:
         number_of_devices = 0
+        maxThread = max(int(Globals.MAX_THREAD_COUNT / 2), 10)
         splitResults = splitListIntoChunks(
-            devices, maxThread=int(Globals.MAX_THREAD_COUNT * (2 / 3))
+            devices, maxThread=maxThread
         )
 
         for chunk in splitResults:
@@ -677,6 +704,8 @@ def getAllDeviceInfo(frame):
                     chunk,
                     number_of_devices,
                     -1,
+                    False,
+                    True
                 ),
                 name="processDevices",
             )

@@ -422,6 +422,7 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateConfig(auth=self.authPath)
                 displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
+                # TODO: This will create mulitple entries
                 self.auth_data = [
                     csvRow if x == matchingConfig[0] else x for x in self.auth_data
                 ]
@@ -589,10 +590,12 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAllFile(self, inFile):
+        start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self)
+        print("Time to get all devices: %s sec" % (time.time() - start_time))
         self.Logging("Finished fetching device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
@@ -610,12 +613,14 @@ class NewFrameLayout(wx.Frame):
             t.start()
         joinThreadList(threads)
 
+        print("Time to get all grid data: %s sec" % (time.time() - start_time))
         self.Logging("Finished compiling device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
+        print("Time to get save grid data: %s sec" % (time.time() - start_time))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
