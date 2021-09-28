@@ -411,7 +411,6 @@ class NewFrameLayout(wx.Frame):
                         self.auth_data,
                     )
                 )
-                # TODO: FIX DUPLICATE ENTRY causing loop cycle
             if (
                 not self.auth_data or not csvRow in self.auth_data
             ) and not matchingConfig:
@@ -422,15 +421,16 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateConfig(auth=self.authPath)
                 displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
-                # TODO: This will create mulitple entries
                 self.auth_data = [
                     csvRow if x == matchingConfig[0] else x for x in self.auth_data
                 ]
+                tmp = []
+                for auth in self.auth_data:
+                    if auth not in tmp:
+                        tmp.append(auth)
+                self.auth_data = tmp
                 with open(self.authPath, "w", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    res = []
-                    [res.append(x) for x in self.auth_data if x not in res]
-                    self.auth_data = res
                     writer.writerows(self.auth_data)
                 self.readAuthCSV()
                 self.PopulateConfig(auth=self.authPath)
@@ -595,7 +595,6 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self)
-        print("Time to get all devices: %s sec" % (time.time() - start_time))
         self.Logging("Finished fetching device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
@@ -613,14 +612,12 @@ class NewFrameLayout(wx.Frame):
             t.start()
         joinThreadList(threads)
 
-        print("Time to get all grid data: %s sec" % (time.time() - start_time))
         self.Logging("Finished compiling device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
-        print("Time to get save grid data: %s sec" % (time.time() - start_time))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
     @api_tool_decorator()
