@@ -671,12 +671,12 @@ def fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETR
 
 def getAllDevicesFromOffsets(api_response, group, maxAttempt=Globals.MAX_RETRY, devices=[]):
     threads = []
+    responses = []
     count = api_response.count
     if api_response.next:
         respOffset = api_response.next.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
         respLimit = api_response.next.split("limit=")[-1].split("&")[0]
-        responses = []
         while int(respOffsetInt) < count and int(respLimit) < count:
             thread = threading.Thread(target=get_all_devices_helper, args=(group, respLimit, respOffset, maxAttempt, responses))
             threads.append(thread)
