@@ -384,6 +384,8 @@ class SidePanel(wx.Panel):
                 self.parentFrame.setCursorBusy()
                 self.devices = {}
                 self.parentFrame.PopulateDevices(None)
+            else:
+                self.parentFrame.menubar.enableConfigMenu()
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):
