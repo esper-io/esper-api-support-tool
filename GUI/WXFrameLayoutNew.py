@@ -1826,8 +1826,6 @@ class NewFrameLayout(wx.Frame):
             or action == GeneralActions.GENERATE_INFO_REPORT.value):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
-        self.gridPanel.grid_1.AppendRows(num)
-        self.gridPanel.grid_2.AppendRows(num)
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
