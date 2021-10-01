@@ -154,7 +154,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_6,
             "Fetch all devices in one page",
             wx.CheckBox,
-            "Attempts to fetch all info for devices in a group and display them in one page (For Groups)",
+            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
         )
 
         # Command Preferences

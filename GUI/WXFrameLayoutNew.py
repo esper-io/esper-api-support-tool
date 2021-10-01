@@ -233,6 +233,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
         self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
         self.Bind(wx.EVT_POWER_SUSPENDING, self.onSuspend)
+        # self.gauge.Bind(wx.EVT_LEFT_UP, self.showDetailedGauge)
 
         if self.kill:
             return
@@ -590,7 +591,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAllFile(self, inFile):
-        start_time = time.time()
+        self.start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
@@ -619,6 +620,7 @@ class NewFrameLayout(wx.Frame):
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
+        print("Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def fetchAllGridData(self, chunk, gridDeviceData):
@@ -1451,6 +1453,7 @@ class NewFrameLayout(wx.Frame):
         """ Try to run the specifed Action on a group or device """
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
+        self.start_time = time.time()
         self.setCursorBusy()
         self.isRunning = True
         self.setGaugeValue(0)
@@ -1823,6 +1826,8 @@ class NewFrameLayout(wx.Frame):
             or action == GeneralActions.GENERATE_INFO_REPORT.value):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
+        self.gridPanel.grid_1.AppendRows(num)
+        self.gridPanel.grid_2.AppendRows(num)
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -1833,9 +1838,8 @@ class NewFrameLayout(wx.Frame):
                     break
             device = entry[0]
             deviceInfo = entry[1]
-            maxThread = Globals.MAX_THREAD_COUNT 
+            
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                maxThread = Globals.MAX_THREAD_COUNT * 6
                 deviceThread = wxThread.GUIThread(
                     self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
                 )
@@ -1939,7 +1943,6 @@ class NewFrameLayout(wx.Frame):
                 )
                 appThread.start()
                 threads.append(appThread)
-                maxThread = Globals.MAX_THREAD_COUNT * 3
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
                 deviceThread = wxThread.GUIThread(
                     self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
@@ -1951,8 +1954,7 @@ class NewFrameLayout(wx.Frame):
                 networkThread.start()
                 threads.append(deviceThread)
                 threads.append(networkThread)
-                maxThread = Globals.MAX_THREAD_COUNT * 4
-            limitActiveThreads(threads, max_alive=maxThread)
+            joinThreadList(threads)
 
             value = int(num / maxGauge * 100)
             if updateGauge and value <= 99:
@@ -2122,7 +2124,6 @@ class NewFrameLayout(wx.Frame):
                 msg = "%s has completed." % actionName
             else:
                 msg = "Action has completed."
-            self.displayNotification(title, msg)
         if self.IsFrozen():
             self.Thaw()
         self.gridPanel.button_2.Enable(self.gridArrowState["next"])
@@ -2150,10 +2151,12 @@ class NewFrameLayout(wx.Frame):
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
+        self.displayNotification(title, msg)
+        print("Run Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def onActivate(self, event, skip=True):
-        if not self.isRunning and not self.isUploading:
+        if not self.isRunning and not self.isUploading and not self.isBusy:
             wx.CallLater(3000, self.setGaugeValue, 0)
         if self.notification:
             self.notification.Close()
@@ -2930,3 +2933,6 @@ class NewFrameLayout(wx.Frame):
                 t.start()
                 if joinThread:
                     t.join()
+    
+    def showDetailedGauge(self, event):
+        self.Logging("Toolbar gauge clicked")

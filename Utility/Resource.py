@@ -226,21 +226,6 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeo
         if numAlive >= max_alive:
             for thread in threads:
                 thread.join()
-    elif (threading.active_count() - 5) > max_alive:
-        currThread = threading.current_thread()
-        invalidThreadNames = [
-            "InternetCheck",
-            "updateErrorTracker",
-            "MainThread",
-            currThread.name,
-        ]
-        for thread in threading.enumerate():
-            if (currThread != thread 
-                and thread.name not in invalidThreadNames 
-                and "pydevd" not in thread.name 
-                and "save" not in thread.name.lower()
-                and thread.is_alive()):
-                thread.join(timeout)
 
 
 def ipv6Tomac(ipv6):
@@ -468,3 +453,21 @@ def isApiKey(key):
     if type(key) != str:
         return False
     return len(key) == 36 and "-" in key
+
+def switch_display(wnd):
+    combined_screen_size = wx.DisplaySize()
+        
+    current_w, _ = wnd.GetPosition()
+    
+    screen_one = wx.Display(0)
+    _, _, screen_one_w, screen_one_h = screen_one.GetGeometry()
+    screen_two = wx.Display(1)
+    _, _, screen_two_w, screen_two_h = screen_two.GetGeometry()
+    
+    if current_w > combined_screen_size[0] / 2:
+        # probably on second screen
+        wnd.SetPosition((int(screen_one_w / 2),
+                                int(screen_one_h / 2)))
+    else:
+        wnd.SetPosition((int(screen_one_w + (screen_two_w / 2)),
+                                int(screen_two_h / 2)))

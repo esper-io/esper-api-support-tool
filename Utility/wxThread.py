@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
+import time
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.Resource import joinThreadList, postEventToFrame
 import math
-from Common.enum import GeneralActions, GridActions
+from Common.enum import GridActions
 import Common.Globals as Globals
 import threading
 import wx
@@ -195,3 +196,12 @@ class GUIThread(threading.Thread):
                 evt = eventUtil.CustomEvent(self.eventType, -1, self.result)
             if self._parent:
                 wx.PostEvent(self._parent, evt)
+
+    def start(self):
+        for attempt in range(Globals.MAX_RETRY):
+            try:
+                return super().start()
+            except Exception as e:
+                time.sleep(3)
+                if attempt == Globals.MAX_RETRY - 1:
+                    raise e

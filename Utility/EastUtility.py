@@ -133,7 +133,7 @@ def iterateThroughDeviceList(
     if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            maxThread = max(int(Globals.MAX_THREAD_COUNT / 2), 10)
+            maxThread = int(Globals.MAX_THREAD_COUNT / 4)
             splitResults = splitListIntoChunks(
                 api_response.results, maxThread=maxThread
             )
@@ -277,32 +277,12 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=True):
     """ Try to obtain more device info for a given device """
     deviceList = {}
-    threads = []
-    maxThread = min(int(Globals.MAX_THREAD_COUNT / 2), 3)
+
     for device in chunk:
-        try:
-            thread = wxThread.GUIThread(None, processDevicesHelper, (device, getApps))
-            for _ in range(Globals.MAX_RETRY):
-                try:
-                    thread.start()
-                    break
-                except:
-                    pass
-            threads.append(thread)
-            limitActiveThreads(threads, maxThread)
-        except Exception as e:
-            print(e)
-            ApiToolLog().LogError(e)
-
-    joinThreadList(threads)
-
-    num = 0
-    for thread in threads:
+        deviceInfo = {}
+        deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps)
         number_of_devices = number_of_devices + 1
-        deviceInfo = thread.result
         deviceInfo.update({"num": number_of_devices})
-        device = chunk[num]
-        num += 1
         deviceList[number_of_devices] = [device, deviceInfo]
 
     return (action, deviceList)
@@ -685,7 +665,7 @@ def getAllDeviceInfo(frame):
     threads = []
     if devices:
         number_of_devices = 0
-        maxThread = max(int(Globals.MAX_THREAD_COUNT / 2), 10)
+        maxThread = int(Globals.MAX_THREAD_COUNT / 4)
         splitResults = splitListIntoChunks(
             devices, maxThread=maxThread
         )

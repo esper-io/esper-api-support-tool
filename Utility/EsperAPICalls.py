@@ -662,7 +662,10 @@ def fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETR
         for _ in range(maxAttempt):
             response = get_all_devices(group, limit, offset, maxAttempt)
             if api_response:
-                api_response = api_response + response.results
+                for device in response.results:
+                    if device not in api_response.results:
+                        api_response.results.append(device)
+                api_response.count = len(api_response.results)
             else:
                 api_response = response
             break
@@ -685,7 +688,11 @@ def getAllDevicesFromOffsets(api_response, group, maxAttempt=Globals.MAX_RETRY, 
     joinThreadList(threads)
     for resp in responses:
         if resp and resp.results:
-            devices += resp.results
+            for entry in resp.results:
+                if entry not in devices:
+                    devices.append(entry)
+                else:
+                    print("dup")
     return devices
 
 
