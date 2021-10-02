@@ -691,8 +691,6 @@ def getAllDevicesFromOffsets(api_response, group, maxAttempt=Globals.MAX_RETRY, 
             for entry in resp.results:
                 if entry not in devices:
                     devices.append(entry)
-                else:
-                    print("dup")
     return devices
 
 
