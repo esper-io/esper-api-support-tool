@@ -2274,7 +2274,7 @@ class NewFrameLayout(wx.Frame):
                 name="SavePrefs",
             )
             save.start()
-            if self.sidePanel.selectedGroupsList:
+            if self.sidePanel.selectedGroupsList and self.preferences["enableDevice"]:
                 self.PopulateDevices(None)
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
