@@ -1349,9 +1349,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, groupId):
         """ Populate Device Choice """
-        api_response = getAllDevices(groupId, limit=Globals.limit)
+        api_response = getAllDevices(groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL)
         self.sidePanel.deviceResp = api_response
         if hasattr(api_response, "results") and len(api_response.results):
+            self.Logging("---> Processing fetched devices...")
             api_response.results = sorted(
                 api_response.results,
                 key=lambda i: i.device_name.lower(),
@@ -2107,9 +2108,9 @@ class NewFrameLayout(wx.Frame):
                 enable = eventVal
         self.setCursorDefault()
         self.setGaugeValue(100)
+        title = "Action Completed"
+        msg = ""
         if not self.IsActive() and not isError:
-            title = "Action Completed"
-            msg = ""
             if (
                 self.sidePanel.actionChoice.GetClientData(
                     self.sidePanel.actionChoice.GetSelection()
@@ -2150,7 +2151,8 @@ class NewFrameLayout(wx.Frame):
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
-        print("Run Execution time: %s" % (time.time() - self.start_time))
+        if hasattr(self, "start_time"):
+            print("Run Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def onActivate(self, event, skip=True):

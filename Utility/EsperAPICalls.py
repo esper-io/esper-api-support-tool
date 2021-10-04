@@ -20,6 +20,7 @@ from Utility.CommandUtility import (
 from Utility.Resource import (
     isApiKey,
     joinThreadList,
+    limitActiveThreads,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -591,7 +592,7 @@ def getDeviceGroupForHost(
 
 
 @api_tool_decorator()
-def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
+def getAllDevices(groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not limit:
         limit = Globals.limit
@@ -602,9 +603,9 @@ def getAllDevices(groupToUse, limit=None, offset=None, maxAttempt=Globals.MAX_RE
     try:
         api_response = None
         if type(groupToUse) == list:
-            api_response = fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt)
+            api_response = fetchDevicesFromGroup(groupToUse, limit, offset, fetchAll, maxAttempt)
         else:
-            api_response = get_all_devices(groupToUse, limit, offset, maxAttempt)
+            api_response = get_all_devices(groupToUse, limit, offset, fetchAll, maxAttempt)
         postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
@@ -646,9 +647,9 @@ def get_all_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RET
         responses.append(api_response)
     return api_response
 
-def get_all_devices(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY):
+def get_all_devices(groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
-    if Globals.GROUP_FETCH_ALL:
+    if Globals.GROUP_FETCH_ALL or fetchAll:
         devices = getAllDevicesFromOffsets(response, groupToUse, maxAttempt)
         response.results = response.results + devices
         response.next = None
@@ -656,11 +657,11 @@ def get_all_devices(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY):
     return response
 
 
-def fetchDevicesFromGroup(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY):
+def fetchDevicesFromGroup(groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for group in groupToUse:
         for _ in range(maxAttempt):
-            response = get_all_devices(group, limit, offset, maxAttempt)
+            response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)
             if api_response:
                 for device in response.results:
                     if device not in api_response.results:
@@ -681,10 +682,19 @@ def getAllDevicesFromOffsets(api_response, group, maxAttempt=Globals.MAX_RETRY, 
         respOffsetInt = int(respOffset)
         respLimit = api_response.next.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = threading.Thread(target=get_all_devices_helper, args=(group, respLimit, respOffset, maxAttempt, responses))
+            thread = threading.Thread(target=get_all_devices_helper, args=(group, respLimit, str(respOffsetInt), maxAttempt, responses))
             threads.append(thread)
             thread.start()
             respOffsetInt += int(respLimit)
+            limitActiveThreads(threads)
+        remainder = count % int(respLimit)
+        if remainder > 0:
+            respOffsetInt -= int(respLimit)
+            respOffsetInt += 1
+            thread = threading.Thread(target=get_all_devices_helper, args=(group, respLimit, str(respOffsetInt), maxAttempt, responses))
+            threads.append(thread)
+            thread.start()
+            limitActiveThreads(threads)
     joinThreadList(threads)
     for resp in responses:
         if resp and resp.results:
