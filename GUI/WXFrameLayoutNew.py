@@ -2003,9 +2003,10 @@ class NewFrameLayout(wx.Frame):
             _, _ = getdeviceapps(
                 deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
             )
-            self.setGaugeValue(
-                int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
-            )
+            if len(self.sidePanel.selectedDevicesList) > 0:
+                self.setGaugeValue(
+                    int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
+                )
             num += 1
         if not appAdded:
             self.sidePanel.selectedApp.Append("No available app(s) on this device")

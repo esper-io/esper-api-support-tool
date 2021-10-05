@@ -288,12 +288,6 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=Tru
     return (action, deviceList)
 
 
-def processDevicesHelper(device, getApps):
-    deviceInfo = {}
-    deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps)
-    return deviceInfo
-
-
 @api_tool_decorator()
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
@@ -693,6 +687,8 @@ def getAllDeviceInfo(frame):
     for thread in threads:
         if type(thread.result) == tuple:
             deviceList = {**deviceList, **thread.result[1]}
+            val = (len(thread.result[1]) / len(devices)) * 0.5
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, val)
 
     return deviceList
 
