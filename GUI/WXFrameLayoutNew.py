@@ -1973,7 +1973,7 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.gauge.Pulse()
         self.setCursorBusy()
-        if len(self.sidePanel.selectedDevicesList) > 0:
+        if len(self.sidePanel.selectedDevicesList) > 0 and Globals.GET_APP_EACH_DEVICE:
             self.sidePanel.runBtn.Enable(False)
             wxThread.GUIThread(
                 self,
