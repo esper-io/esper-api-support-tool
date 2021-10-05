@@ -687,7 +687,7 @@ def getAllDeviceInfo(frame):
     for thread in threads:
         if type(thread.result) == tuple:
             deviceList = {**deviceList, **thread.result[1]}
-            val = (len(thread.result[1]) / len(devices)) * 0.5
+            val = (len(thread.result[1]) / len(devices)) * 50
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, val)
 
     return deviceList
