@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 from Utility.EsperAPICalls import getAllDevices, getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
@@ -256,7 +257,8 @@ class MultiSelectSearchDlg(wx.Dialog):
             elif "device" in self.label.lower():
                 wxThread.GUIThread(self, self.selectAllDevices, None, name="selectAllDevices").start()
             else:
-                self.selected = self.selected + self.originalChoices[self.page]
+                tmp = copy.deepcopy(self.originalChoices[self.page])
+                self.selected = self.selected + tmp
         else:
             self.selected = []
         if not self.isFiltered:
@@ -434,7 +436,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.originalChoices[0] = self.processDevices(resp.results)
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
-        self.selected = self.originalChoices[0]
+        self.selected = copy.deepcopy(self.originalChoices[0])
         tmpSelection = []
         num = 0
         for item in self.selected:
