@@ -829,43 +829,20 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
         )
         api_response_list = []
         api_response = None
+        threads = []
         if type(deviceToUse) == list:
+            num = 0
             for device in deviceToUse:
-                for attempt in range(maxAttempt):
-                    try:
-                        api_response = api_instance.get_device_by_id(
-                            Globals.enterprise_id, device_id=device
-                        )
-                        ApiToolLog().LogApiRequestOccurrence(
-                            "getDeviceById",
-                            api_instance.get_device_by_id,
-                            Globals.PRINT_API_LOGS,
-                        )
-                        break
-                    except Exception as e:
-                        if attempt == maxAttempt - 1:
-                            ApiToolLog().LogError(e)
-                            raise e
-                        time.sleep(Globals.RETRY_SLEEP)
-                if api_response:
-                    api_response_list.append(api_response)
+                if num == 0:
+                    api_response, api_response_list = getDeviceByIdHelper(device, api_instance, api_response_list, api_response, maxAttempt)
+                else:
+                    thread = threading.Thread(target=getDeviceByIdHelper, args=(device, api_instance, api_response_list, api_response, maxAttempt))
+                    thread.start()
+                    threads.append(thread)
+                    limitActiveThreads(threads)
         else:
-            for attempt in range(maxAttempt):
-                try:
-                    api_response = api_instance.get_device_by_id(
-                        Globals.enterprise_id, device_id=deviceToUse
-                    )
-                    ApiToolLog().LogApiRequestOccurrence(
-                        "getDeviceById",
-                        api_instance.get_device_by_id,
-                        Globals.PRINT_API_LOGS,
-                    )
-                    break
-                except Exception as e:
-                    if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
-                        raise e
-                    time.sleep(Globals.RETRY_SLEEP)
+            api_response, api_response_list = getDeviceByIdHelper(deviceToUse, api_instance, api_response_list, api_response, maxAttempt)
+        joinThreadList(threads)
         if api_response and api_response_list:
             api_response.results = api_response_list
         elif api_response:
@@ -876,6 +853,28 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
         ApiToolLog().LogError(e)
 
+
+def getDeviceByIdHelper(device, api_instance, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY):
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.get_device_by_id(
+                Globals.enterprise_id, device_id=device
+            )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getDeviceById",
+                api_instance.get_device_by_id,
+                Globals.PRINT_API_LOGS,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            time.sleep(Globals.RETRY_SLEEP)
+    if api_response:
+        api_response_list.append(api_response)
+
+    return api_response, api_response_list
 
 @api_tool_decorator()
 def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
