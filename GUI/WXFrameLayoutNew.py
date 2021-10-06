@@ -1186,7 +1186,7 @@ class NewFrameLayout(wx.Frame):
                     self.preferences
                     and "getAppsForEachDevice" in self.preferences
                     and self.preferences["getAppsForEachDevice"]
-                ):
+                ) or Globals.GET_APP_EACH_DEVICE:
                     newThreads = []
                     self.Logging("---> Attempting to populate Application list")
                     self.gauge.Pulse()
