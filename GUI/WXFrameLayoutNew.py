@@ -1469,6 +1469,8 @@ class NewFrameLayout(wx.Frame):
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
+        allDevicesSelected = True if hasattr(self.sidePanel.deviceResp, "count") and len(self.sidePanel.selectedDevicesList) == self.sidePanel.deviceResp.count else False
+
         appLabel = (
             self.sidePanel.selectedAppEntry["name"]
             if self.sidePanel.selectedAppEntry
@@ -1526,7 +1528,7 @@ class NewFrameLayout(wx.Frame):
 
         if (
             self.sidePanel.selectedGroupsList
-            and not self.sidePanel.selectedDevicesList
+            and (not self.sidePanel.selectedDevicesList or allDevicesSelected)
             and actionSelection > 0
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
