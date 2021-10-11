@@ -1955,22 +1955,30 @@ class NewFrameLayout(wx.Frame):
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
-                appThread = wxThread.GUIThread(
-                    self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
-                )
-                appThread.start()
-                threads.append(appThread)
+                if len(self.gridPanel.grid_3_contents) < Globals.MAX_GRID_LOAD + 1:
+                    appThread = wxThread.GUIThread(
+                        self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                    )
+                    appThread.start()
+                    threads.append(appThread)
+                else:
+                    self.gridPanel.constructAppGridContent(device, deviceInfo, deviceInfo["appObj"])
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
-                deviceThread = wxThread.GUIThread(
-                    self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
-                )
-                deviceThread.start()
-                networkThread = wxThread.GUIThread(
-                    self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
-                )
-                networkThread.start()
-                threads.append(deviceThread)
-                threads.append(networkThread)
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                    deviceThread = wxThread.GUIThread(
+                        self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                    )
+                    deviceThread.start()
+                    networkThread = wxThread.GUIThread(
+                        self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                    )
+                    networkThread.start()
+                    threads.append(deviceThread)
+                    threads.append(networkThread)
+                else:
+                    # construct and add info to grid contents
+                    self.gridPanel.constructDeviceGridContent(deviceInfo)
+                    self.gridPanel.constructNetworkGridContent(device, deviceInfo)
             joinThreadList(threads)
 
             value = int(num / maxGauge * 100)
