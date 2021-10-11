@@ -187,6 +187,7 @@ class NewFrameLayout(wx.Frame):
         self.statusBar.AddWidget(
             self.sbText, pos=0, horizontalalignment=ESB.ESB_EXACT_FIT
         )
+        self.sbText.Bind(wx.EVT_LEFT_UP, self.showConsole)
 
         self.gauge = wx.Gauge(
             self.statusBar,
@@ -506,7 +507,7 @@ class NewFrameLayout(wx.Frame):
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
-                thread = wxThread.GUIThread(self, self.saveFile, (inFile))
+                thread = wxThread.GUIThread(self, self.saveFile, (inFile), name="saveFile")
                 thread.start()
                 return True
             elif (
@@ -631,21 +632,13 @@ class NewFrameLayout(wx.Frame):
     def saveFile(self, inFile):
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
+        threads = []
         for device in self.gridPanel.grid_1_contents:
-            tempDict = {}
-            tempDict.update(device)
-            deviceListing = list(
-                filter(
-                    lambda x: (
-                        x["Device Name"]
-                        == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-                    ),
-                    self.gridPanel.grid_2_contents,
-                )
-            )
-            if deviceListing:
-                tempDict.update(deviceListing[0])
-            gridDeviceData.append(tempDict)
+            thread = threading.Thread(target=self.mergeDeviceAndNetworkInfo, args=(device, gridDeviceData))
+            thread.start()
+            threads.append(thread)
+            limitActiveThreads(threads)
+        joinThreadList(threads)
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
@@ -653,6 +646,23 @@ class NewFrameLayout(wx.Frame):
             inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
+
+    def mergeDeviceAndNetworkInfo(self, device, gridDeviceData):
+        tempDict = {}
+        tempDict.update(device)
+        deviceListing = list(
+            filter(
+                lambda x: (
+                    x["Device Name"]
+                    == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
+                ),
+                self.gridPanel.grid_2_contents,
+            )
+        )
+        if deviceListing:
+            tempDict.update(deviceListing[0])
+        gridDeviceData.append(tempDict)
+
 
     @api_tool_decorator()
     def saveGridData(
@@ -1841,21 +1851,27 @@ class NewFrameLayout(wx.Frame):
             deviceInfo = entry[1]
             
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                deviceThread = wxThread.GUIThread(
-                    self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
-                )
-                deviceThread.start()
-                networkThread = wxThread.GUIThread(
-                    self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
-                )
-                networkThread.start()
-                appThread = wxThread.GUIThread(
-                    self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
-                )
-                appThread.start()
-                threads.append(deviceThread)
-                threads.append(networkThread)
-                threads.append(appThread)
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                    deviceThread = wxThread.GUIThread(
+                        self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                    )
+                    deviceThread.start()
+                    networkThread = wxThread.GUIThread(
+                        self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                    )
+                    networkThread.start()
+                    appThread = wxThread.GUIThread(
+                        self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                    )
+                    appThread.start()
+                    threads.append(deviceThread)
+                    threads.append(networkThread)
+                    threads.append(appThread)
+                else:
+                    # construct and add info to grid contents
+                    self.gridPanel.constructDeviceGridContent(deviceInfo)
+                    self.gridPanel.constructNetworkGridContent(device, deviceInfo)
+                    self.gridPanel.constructAppGridContent(device, deviceInfo, deviceInfo["appObj"])
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self, setKiosk, (self, device, deviceInfo), name="SetKiosk"

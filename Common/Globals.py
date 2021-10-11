@@ -261,5 +261,6 @@ HEADER_FONT_SIZE = FONT_SIZE + 7
 GET_IMMEDIATE_SUBGROUPS = False
 SAVE_VISIBILITY = False
 GROUP_FETCH_ALL = False
+MAX_GRID_LOAD = 100
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

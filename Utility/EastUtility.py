@@ -133,7 +133,7 @@ def iterateThroughDeviceList(
     if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
         if not isDevice and not isUpdate:
-            maxThread = int(Globals.MAX_THREAD_COUNT / 5)
+            maxThread = int(Globals.MAX_THREAD_COUNT / 2)
             splitResults = splitListIntoChunks(
                 api_response.results, maxThread=maxThread
             )
@@ -660,7 +660,7 @@ def getAllDeviceInfo(frame):
     threads = []
     if devices:
         number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT / 5)
+        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
         splitResults = splitListIntoChunks(
             devices, maxThread=maxThread
         )

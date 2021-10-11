@@ -124,9 +124,11 @@ class GridPanel(wx.Panel):
     @api_tool_decorator()
     def __set_properties(self):
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
+
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
         self.grid_3.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onAppGridSort)
+
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
         self.grid_3.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -134,6 +136,7 @@ class GridPanel(wx.Panel):
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
         self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
         self.grid_2.Bind(wx.EVT_SCROLLWIN, self.onGrid2Scroll)
+        self.grid_3.Bind(wx.EVT_SCROLLWIN, self.onGrid3Scroll)
         self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.grid_2.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.grid_1.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
@@ -480,7 +483,7 @@ class GridPanel(wx.Panel):
             self.networkDescending = not self.networkDescending
         self.grid_3.SetSortingColumn(col, bool(not self.networkDescending))
         if self.grid_3_contents and all(
-            s[keyName].isdigit() for s in self.grid_3_contents
+            s[keyName].isdigit() if type(s) == str else False for s in self.grid_3_contents
         ):
             self.grid_3_contents = sorted(
                 self.grid_3_contents,
@@ -806,6 +809,27 @@ class GridPanel(wx.Panel):
         if Globals.grid1_lock.locked():
             Globals.grid1_lock.release()
 
+    def constructDeviceGridContent(self, device_info):
+        device = {}
+        for attribute in Globals.CSV_TAG_ATTR_NAME:
+            value = (
+                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                else ""
+            )
+            if "Esper Name" == attribute:
+                esperName = value
+            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+        deviceListing = list(
+                filter(
+                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                    self.grid_1_contents,
+                )
+            )
+        if device not in self.grid_1_contents and not deviceListing:
+            self.grid_1_contents.append(device)
+        return device
+
     def getDeviceNetworkInfoListing(self, device, device_info):
         device = {}
         for attribute in Globals.CSV_TAG_ATTR_NAME.keys():
@@ -931,6 +955,13 @@ class GridPanel(wx.Panel):
                 num += 1
             if networkInfo not in self.grid_2_contents:
                 self.grid_2_contents.append(networkInfo)
+
+    def constructNetworkGridContent(self, device, deviceInfo):
+        networkInfo = constructNetworkInfo(device, deviceInfo)
+        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+            value = networkInfo[attribute] if attribute in networkInfo else ""
+        if networkInfo not in self.grid_2_contents:
+            self.grid_2_contents.append(networkInfo)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
@@ -1325,11 +1356,19 @@ class GridPanel(wx.Panel):
 
     def onGrid1Scroll(self, event):
         event.Skip()
-        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_1, self.grid_2)
+        wx.CallAfter(self.setBothGridPositionsAndLoad, self.grid_1, self.grid_2)
 
     def onGrid2Scroll(self, event):
         event.Skip()
-        wx.CallAfter(self.setBothGridVSCrollPositions, self.grid_2, self.grid_1)
+        wx.CallAfter(self.setBothGridPositionsAndLoad, self.grid_2, self.grid_1)
+
+    def onGrid3Scroll(self, event):
+        event.Skip()
+        wx.CallAfter(self.onScroll, None)
+
+    def setBothGridPositionsAndLoad(self, gridOne, gridTwo):
+        self.onScroll(None)
+        self.setBothGridVSCrollPositions(gridOne, gridTwo)
 
     def setBothGridVSCrollPositions(self, gridOne, gridTwo):
         if (
@@ -1493,5 +1532,90 @@ class GridPanel(wx.Panel):
                 self.grid_3.GetNumberRows() - 1, num, isEditable
             )
             num += 1
-            if info not in self.grid_3_contents:
+            if info and info not in self.grid_3_contents:
                 self.grid_3_contents.append(info)
+
+    def constructAppGridContent(self, device, deviceInfo, apps):
+        info = {}
+        for app in apps["results"]:
+            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
+                info = {
+                    "Esper Name": device.device_name,
+                    "Group": deviceInfo["groups"],
+                    "Application Name": app["app_name"],
+                    "Application Type": app["app_type"],
+                    "Application Version Code": app["version_code"],
+                    "Application Version Name": app["version_name"],
+                    "Package Name": app["package_name"],
+                    "State": app["state"],
+                    "Whitelisted": app["whitelisted"],
+                    "Can Clear Data": app["is_data_clearable"],
+                    "Can Uninstall": app["is_uninstallable"]
+                }
+        if info and info not in self.grid_3_contents:
+            self.grid_3_contents.append(info)
+
+    def onScroll(self, event):
+        scrollPosPercentage = (self.grid_1.GetScrollThumb(wx.VERTICAL) + self.grid_1.GetScrollPos(wx.VERTICAL)) / self.grid_1.GetScrollRange(wx.VERTICAL) * 100
+        if scrollPosPercentage >= 90:
+            self.populateGridRows(self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME)
+        
+        scrollPosPercentage = (self.grid_2.GetScrollThumb(wx.VERTICAL) + self.grid_2.GetScrollPos(wx.VERTICAL)) / self.grid_2.GetScrollRange(wx.VERTICAL) * 100
+        if scrollPosPercentage >= 90:
+            self.populateGridRows(self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME)
+        
+        scrollPosPercentage = (self.grid_2.GetScrollThumb(wx.VERTICAL) + self.grid_3.GetScrollPos(wx.VERTICAL)) / self.grid_3.GetScrollRange(wx.VERTICAL) * 100
+        if scrollPosPercentage >= 90:
+            self.populateGridRows(self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME)
+        if event:
+            event.Skip()
+
+    def populateGridRows(self, grid, content, fields):
+        if content:
+            curNumRow = grid.GetNumberRows()
+            num = curNumRow
+            limit = curNumRow + Globals.MAX_GRID_LOAD
+            if curNumRow < len(content) and num != limit:
+                grid.Freeze()
+                Globals.frame.setCursorBusy()
+            while curNumRow < len(content) and num != limit:
+                grid.AppendRows(1)
+                entry = content[num]
+                col = 0
+                for attr in fields:
+                    value = None
+                    if type(fields) == dict:
+                        value = (
+                            entry[fields[attr]]
+                            if fields[attr] in entry
+                            else ""
+                        )
+                    if type(fields) == list or not value:
+                        value = (
+                            entry[attr]
+                            if attr in entry
+                            else ""
+                        )
+                    grid.SetCellValue(
+                        grid.GetNumberRows() - 1, col, str(value)
+                    )
+                    isEditable = True
+                    if attr in Globals.CSV_EDITABLE_COL:
+                        isEditable = False
+                    grid.SetReadOnly(
+                        grid.GetNumberRows() - 1, col, isEditable
+                    )
+                    self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
+                    self.setAlteredCellColor(
+                        grid,
+                        entry,
+                        grid.GetNumberRows() - 1,
+                        attr,
+                        col,
+                    )
+                    col += 1
+                num += 1
+                curNumRow = grid.GetNumberRows()
+        if grid.IsFrozen():
+            grid.Thaw()
+        Globals.frame.setCursorDefault()

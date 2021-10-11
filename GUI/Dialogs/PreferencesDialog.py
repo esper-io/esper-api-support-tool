@@ -47,7 +47,8 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
-            "groupFetchAll"
+            "groupFetchAll",
+            "loadXDevices"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -263,6 +264,17 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
         )
+
+        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Load X Number of Devices in Grid",
+            wx.SpinCtrl,
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once user has scrolled down far enough.",
+        )
+        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
+        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -480,6 +492,12 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(prefDict["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        if prefDict and "loadXDevices" in prefDict:
+            Globals.MAX_GRID_LOAD = int(prefDict["loadXDevices"])
+            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
+                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
+            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         if not prefDict or (
             prefDict
@@ -705,7 +723,8 @@ class PreferencesDialog(wx.Dialog):
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
-            "groupFetchAll": self.checkbox_16.IsChecked()
+            "groupFetchAll": self.checkbox_16.IsChecked(),
+            "loadXDevices": self.spin_ctrl_11.GetValue(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -730,6 +749,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
+        Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -962,6 +982,11 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(self.prefs["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+        if "loadXDevices" in self.prefs:
+            Globals.MAX_GRID_LOAD = int(self.prefs["loadXDevices"])
+            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
+                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
+            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
             if self.prefs["colVisibility"]:
@@ -1083,6 +1108,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SAVE_VISIBILITY
         elif key == "groupFetchAll":
             return Globals.GROUP_FETCH_ALL
+        elif key == "loadXDevices":
+            return Globals.MAX_GRID_LOAD
         else:
             return None
 
