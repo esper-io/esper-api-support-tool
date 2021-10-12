@@ -46,6 +46,14 @@ class ApiToolLog:
             with open(self.placePath, "w"):
                 pass
 
+        self.limitFileSize(self.logPath)
+        self.limitFileSize(self.placePath)
+
+    def limitFileSize(self, file, maxFileSizeInMb=5):
+        if (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb:
+            with open(file, "w"):
+                pass
+
     def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
         if exc_type == None or exc_value == None or exc_traceback == None:
             exc_type, exc_value, exc_traceback = sys.exc_info()
