@@ -633,11 +633,17 @@ class NewFrameLayout(wx.Frame):
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
         threads = []
+        num = 1
         for device in self.gridPanel.grid_1_contents:
-            thread = threading.Thread(target=self.mergeDeviceAndNetworkInfo, args=(device, gridDeviceData))
-            thread.start()
-            threads.append(thread)
-            limitActiveThreads(threads)
+            # thread = threading.Thread(target=self.mergeDeviceAndNetworkInfo, args=(device, gridDeviceData))
+            # thread.start()
+            # threads.append(thread)
+            # limitActiveThreads(threads)
+            self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
+            val = (num / (len(gridDeviceData) * 2)) * 100
+            if val <= 50:
+                self.setGaugeValue(int(val))
+            num += 1
         joinThreadList(threads)
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
@@ -673,7 +679,7 @@ class NewFrameLayout(wx.Frame):
 
         createNewFile(inFile)
 
-        num = 1
+        num = len(gridDeviceData)
         for deviceData in gridDeviceData:
             rowValues = []
             for header in headers:
@@ -689,7 +695,7 @@ class NewFrameLayout(wx.Frame):
                             value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
                 rowValues.append(value)
             gridData.append(rowValues)
-            val = (num / len(gridDeviceData)) * 100
+            val = (num / (len(gridDeviceData) * 2)) * 100
             if val <= 95:
                 self.setGaugeValue(int(val))
             num += 1
