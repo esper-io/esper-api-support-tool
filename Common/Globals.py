@@ -262,5 +262,6 @@ GET_IMMEDIATE_SUBGROUPS = False
 SAVE_VISIBILITY = False
 GROUP_FETCH_ALL = False
 MAX_GRID_LOAD = 100
+REPLACE_SERIAL = True
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

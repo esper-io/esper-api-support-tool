@@ -215,7 +215,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_FETCH, self.onFetch)
         self.Bind(eventUtil.EVT_UPDATE, self.onUpdate)
         self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
-        self.Bind(eventUtil.EVT_APPS, self.addAppsToAppChoice)
+        self.Bind(eventUtil.EVT_APPS, self.addAppstoAppChoiceThread)
         self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
         self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
         self.Bind(eventUtil.EVT_LOG, self.onLog)
@@ -1415,6 +1415,27 @@ class NewFrameLayout(wx.Frame):
         resp = getAllApplications()
         self.addAppsToAppChoice(resp)
 
+    def addAppstoAppChoiceThread(self, event):
+        api_response = None
+        if hasattr(event, "GetValue"):
+            api_response = event.GetValue()
+        else:
+            api_response = event
+        if hasattr(api_response, "results"):
+            api_response = api_response.results
+        elif type(api_response) == tuple and "results" in api_response[1]:
+            api_response = api_response[1]["results"]
+        elif type(api_response) == dict:
+            api_response = api_response["results"]
+        if api_response:
+            thread = wxThread.GUIThread(
+                self,
+                self.addAppsToAppChoice,
+                args=(api_response),
+                name="addAppstoAppChoiceThread",
+            )
+            thread.start()
+
     @api_tool_decorator()
     def addAppsToAppChoice(self, event):
         """ Populate App Choice """
@@ -1427,7 +1448,9 @@ class NewFrameLayout(wx.Frame):
 
         if hasattr(api_response, "results"):
             results = api_response.results
-        elif api_response:
+        elif type(api_response) == tuple and "results" in api_response[1]:
+            results = api_response[1]["results"]
+        elif type(api_response) == dict:
             results = api_response["results"]
 
         if results and type(results[0]) == dict and "application" in results[0]:
@@ -1451,7 +1474,7 @@ class NewFrameLayout(wx.Frame):
                 key=lambda i: i["app_name"].lower(),
             )
 
-        if len(results):
+        if results and len(results):
             for app in results:
                 self.addAppToAppList(app)
 

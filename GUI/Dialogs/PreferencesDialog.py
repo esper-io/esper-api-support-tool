@@ -48,7 +48,8 @@ class PreferencesDialog(wx.Dialog):
             "fontSize",
             "saveColVisibility",
             "groupFetchAll",
-            "loadXDevices"
+            "loadXDevices",
+            "replaceSerial"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -275,6 +276,14 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
         self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
+
+        (_, _, self.checkbox_17,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Replace Serial Number with Custom",
+            wx.CheckBox,
+            "Replaces Serial Number entry with Custom Serial Number, if available.",
+        )
 
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -651,6 +660,17 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.GROUP_FETCH_ALL = False
+        
+        if prefDict and "replaceSerial" in prefDict:
+            if (
+                isinstance(prefDict["replaceSerial"], str)
+                and prefDict["replaceSerial"].lower() == "true"
+            ) or prefDict["replaceSerial"] == True:
+                self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REPLACE_SERIAL = True
+            else:
+                self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REPLACE_SERIAL = False
 
     @api_tool_decorator()
     def showMatchingPanel(self, event):
@@ -725,6 +745,7 @@ class PreferencesDialog(wx.Dialog):
             "saveColVisibility": self.checkbox_15.IsChecked(),
             "groupFetchAll": self.checkbox_16.IsChecked(),
             "loadXDevices": self.spin_ctrl_11.GetValue(),
+            "replaceSerial": self.checkbox_17.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -750,6 +771,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
         Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
+        Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -846,18 +868,12 @@ class PreferencesDialog(wx.Dialog):
         if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
-                and self.prefs["getAppsForEachDevice"].lower() == "false"
-            ) or not self.prefs["getAppsForEachDevice"]:
-                Globals.SHOW_PKG_NAME = False
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            elif (
-                isinstance(self.prefs["getAppsForEachDevice"], str)
                 and self.prefs["getAppsForEachDevice"].lower()
             ) == "true" or self.prefs["getAppsForEachDevice"]:
-                Globals.SHOW_PKG_NAME = True
+                Globals.GET_APP_EACH_DEVICE = True
                 self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
             else:
-                Globals.SHOW_PKG_NAME = True
+                Globals.GET_APP_EACH_DEVICE = False
                 self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
         if "getAllApps" in self.prefs:
             if (
@@ -1017,6 +1033,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.GROUP_FETCH_ALL = False
+        if "replaceSerial" in self.prefs:
+            if (
+                isinstance(self.prefs["replaceSerial"], str)
+                and self.prefs["replaceSerial"].lower() == "true"
+            ) or self.prefs["replaceSerial"] == True:
+                self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REPLACE_SERIAL = True
+            else:
+                self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REPLACE_SERIAL = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -1049,6 +1075,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
         self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
         self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
+        self.prefs["replaceSerial"] = Globals.REPLACE_SERIAL
 
         return self.prefs
 
@@ -1110,6 +1137,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.GROUP_FETCH_ALL
         elif key == "loadXDevices":
             return Globals.MAX_GRID_LOAD
+        elif key == "replaceSerial":
+            return Globals.REPLACE_SERIAL
         else:
             return None
 

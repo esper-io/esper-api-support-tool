@@ -462,15 +462,26 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
     elif "customSerialNumber" in deviceHardware:
         custHdwareKey = "customSerialNumber"
 
-    if hdwareKey and bool(deviceHardware[hdwareKey]):
-        deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
+    if Globals.REPLACE_SERIAL:
+        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
+            deviceInfo.update({"Serial": str(deviceHardware[custHdwareKey])})
+        elif hdwareKey and bool(deviceHardware[hdwareKey]):
+            deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
+        else:
+            deviceInfo.update({"Serial": ""})
     else:
-        deviceInfo.update({"Serial": ""})
+        if hdwareKey and bool(deviceHardware[hdwareKey]):
+            deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
+        else:
+            deviceInfo.update({"Serial": ""})
 
-    if custHdwareKey and bool(deviceHardware[custHdwareKey]):
-        deviceInfo.update({"Custom Serial": str(deviceHardware[custHdwareKey])})
-    else:
+    if Globals.REPLACE_SERIAL:
         deviceInfo.update({"Custom Serial": ""})
+    else:
+        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
+            deviceInfo.update({"Custom Serial": str(deviceHardware[custHdwareKey])})
+        else:
+            deviceInfo.update({"Custom Serial": ""})
 
     if bool(deviceTags):
         # Add Functionality For Modifying Multiple Tags
