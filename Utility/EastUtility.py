@@ -281,9 +281,10 @@ def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=Tru
     for device in chunk:
         deviceInfo = {}
         deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps)
-        number_of_devices = number_of_devices + 1
-        deviceInfo.update({"num": number_of_devices})
-        deviceList[number_of_devices] = [device, deviceInfo]
+        if deviceInfo:
+            number_of_devices = number_of_devices + 1
+            deviceInfo.update({"num": number_of_devices})
+            deviceList[number_of_devices] = [device, deviceInfo]
 
     return (action, deviceList)
 
@@ -315,6 +316,8 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
     deviceHardware = None
     deviceTags = None
     if type(device) == dict:
+        if "is_active" in device and not device["is_active"]:
+            return
         deviceId = device["id"]
         deviceName = device["name"]
         deviceGroups = device["group"]
@@ -324,6 +327,8 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
+        if not device.is_active:
+            return
         deviceId = device.id
         deviceName = device.device_name
         deviceGroups = device.groups

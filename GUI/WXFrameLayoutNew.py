@@ -507,6 +507,7 @@ class NewFrameLayout(wx.Frame):
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
+                self.gridPanel.disableGridProperties()
                 thread = wxThread.GUIThread(self, self.saveFile, (inFile), name="saveFile")
                 thread.start()
                 return True
@@ -533,6 +534,7 @@ class NewFrameLayout(wx.Frame):
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
+                self.gridPanel.disableGridProperties()
                 self.Logging("Attempting to save CSV at %s" % inFile)
                 self.gauge.Pulse()
                 thread = wxThread.GUIThread(
@@ -635,10 +637,6 @@ class NewFrameLayout(wx.Frame):
         threads = []
         num = 1
         for device in self.gridPanel.grid_1_contents:
-            # thread = threading.Thread(target=self.mergeDeviceAndNetworkInfo, args=(device, gridDeviceData))
-            # thread.start()
-            # threads.append(thread)
-            # limitActiveThreads(threads)
             self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
             val = (num / (len(gridDeviceData) * 2)) * 100
             if val <= 50:
@@ -706,6 +704,11 @@ class NewFrameLayout(wx.Frame):
 
         self.Logging("---> Info saved to csv file - " + inFile)
         self.setGaugeValue(100)
+        self.gridPanel.enableGridProperties()
+
+        displayMessageBox(
+            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+        )
 
     @api_tool_decorator()
     def saveAppInfo(self, event):
@@ -725,6 +728,7 @@ class NewFrameLayout(wx.Frame):
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
+                self.gridPanel.disableGridProperties()
                 thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (inFile))
                 thread.start()
                 return True
@@ -754,6 +758,11 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(100)
         self.toggleEnabledState(True)
         self.setCursorDefault()
+        self.gridPanel.enableGridProperties()
+
+        displayMessageBox(
+            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+        )
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
@@ -1195,6 +1204,7 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")
                 self.sidePanel.deviceChoice.Enable(False)
                 self.menubar.setSaveMenuOptionsEnableState(False)
+                self.menubar.enableConfigMenu()
                 self.Logging("---> No Devices found")
             else:
                 self.sidePanel.deviceChoice.Enable(True)
