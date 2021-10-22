@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 
+from datetime import datetime
 from re import search
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
@@ -11,6 +12,8 @@ import wx
 import platform
 import Utility.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
+import math
+import pytz
 
 from Common.decorator import api_tool_decorator
 from Common.enum import GeneralActions
@@ -25,6 +28,7 @@ from Utility.Resource import (
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
+    utc_to_local,
 )
 
 from esperclient.rest import ApiException
@@ -585,6 +589,31 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
         for event in deviceInfo["memoryEvents"]:
             if "eventType" in event and "countInMb" in event:
                 deviceInfo[event["eventType"]] = event["countInMb"]
+
+    if device and "createTime" in network_info:
+        dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+        utc_date_time = dt.astimezone(pytz.utc)
+        updatedOnDate = utc_to_local(utc_date_time)
+
+        time_delta = (utc_to_local(datetime.now()) - updatedOnDate)
+        total_seconds = time_delta.total_seconds()
+        minutes = total_seconds / 60
+        if minutes < 0:
+            deviceInfo["last_seen"] = "Less than 1 minute ago"
+        elif minutes > 0 and minutes < 60:
+            deviceInfo["last_seen"] = "%s minute ago" % minutes
+        elif minutes > 60 and minutes < 1440:
+            hours = int(math.ceil(minutes / 60))
+            deviceInfo["last_seen"] = "%s hours ago" % hours
+        elif  minutes > 1440:
+            days = int(math.ceil(minutes / 1440))
+            deviceInfo["last_seen"] = "%s days ago" % days
+    else:
+        deviceInfo["last_seen"] =  "No data available"
+
+    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
+        provisionedOnDate = utc_to_local(device.provisioned_on)
+        deviceInfo["provisioned_on"] = str(provisionedOnDate)
 
     return deviceInfo
 

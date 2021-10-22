@@ -16,7 +16,7 @@ import webbrowser
 import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
-from datetime import datetime
+from datetime import datetime, timezone
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
@@ -471,3 +471,6 @@ def switch_display(wnd):
     else:
         wnd.SetPosition((int(screen_one_w + (screen_two_w / 2)),
                                 int(screen_two_h / 2)))
+
+def utc_to_local(utc_dt):
+    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)

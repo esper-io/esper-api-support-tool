@@ -170,6 +170,8 @@ CSV_TAG_ATTR_NAME = {
     "Alarm Volume": "STREAM_ALARM",
     "Notification Volume": "STREAM_NOTIFICATION",
     "Registered On": "provisioned_on",
+    "Updated On": "updated_on",
+    "Last Seen": "last_seen",
     "Power Source": "powerSource",
     "Power Status": "powerStatus",
     "Battery Present": "batteryPresent",
