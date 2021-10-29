@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import time
-from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
+from Utility.Resource import acquireLocks, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
 import Common.Globals as Globals
 import re
 import threading
@@ -227,7 +227,7 @@ class GridPanel(wx.Panel):
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def emptyDeviceGrid(self, emptyContents=True):
         """ Empty Device Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         if emptyContents:
             self.grid_1_contents = []
         if self.grid_1.GetNumberRows() > 0:
@@ -235,13 +235,12 @@ class GridPanel(wx.Panel):
         self.grid_1.SetScrollLineX(15)
         self.grid_1.SetScrollLineY(15)
         self.fillDeviceGridHeaders()
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
 
     @api_tool_decorator(locks=[Globals.grid2_lock])
     def emptyNetworkGrid(self, emptyContents=True):
         """ Empty Network Grid """
-        Globals.grid2_lock.acquire()
+        acquireLocks([Globals.grid2_lock])
         if emptyContents:
             self.grid_2_contents = []
         if self.grid_2.GetNumberRows() > 0:
@@ -249,12 +248,11 @@ class GridPanel(wx.Panel):
         self.grid_2.SetScrollLineX(15)
         self.grid_2.SetScrollLineY(15)
         self.fillNetworkGridHeaders()
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
+        releaseLocks([Globals.grid2_lock])
 
     @api_tool_decorator(locks=[Globals.grid3_lock])
     def emptyAppGrid(self, emptyContents=True):
-        Globals.grid3_lock.acquire()
+        acquireLocks([Globals.grid3_lock])
         if emptyContents:
             self.grid_3_contents = []
         if self.grid_3.GetNumberRows() > 0:
@@ -262,38 +260,29 @@ class GridPanel(wx.Panel):
         self.grid_3.SetScrollLineX(15)
         self.grid_3.SetScrollLineY(15)
         self.fillAppGridHeaders()
-        if Globals.grid3_lock.locked():
-            Globals.grid3_lock.release()
+        releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
     def autoSizeGridsColumns(self, event=None):
-        Globals.grid1_lock.acquire()
-        Globals.grid2_lock.acquire()
-        Globals.grid3_lock.acquire()
+        acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
         self.grid_1.AutoSizeColumns()
         self.grid_2.AutoSizeColumns()
         self.grid_3.AutoSizeColumns()
         self.grid_1.ForceRefresh()
         self.grid_2.ForceRefresh()
         self.grid_3.ForceRefresh()
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
-        if Globals.grid3_lock.locked():
-            Globals.grid3_lock.release()
+        releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def onCellChange(self, event):
         """ Try to Auto size Columns on change """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         self.userEdited.append((event.Row, event.Col))
         editor = self.grid_1.GetCellEditor(event.Row, event.Col)
         if not editor.IsCreated():
             self.grid_1.AutoSizeColumns()
         self.onCellEdit(event)
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
 
     @api_tool_decorator()
     def onCellEdit(self, event):
@@ -693,7 +682,7 @@ class GridPanel(wx.Panel):
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
         """ Add device info to Device Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         num = 0
         device = {}
         if isUpdate:
@@ -716,11 +705,9 @@ class GridPanel(wx.Panel):
                         else:
                             if hasattr(threading.current_thread(), "isStopped"):
                                 if threading.current_thread().isStopped():
-                                    if Globals.grid1_lock.locked():
-                                        Globals.grid1_lock.release()
+                                    releaseLocks([Globals.grid1_lock])
                                     return
-                            if Globals.grid1_lock.locked():
-                                Globals.grid1_lock.release()
+                            releaseLocks([Globals.grid1_lock])
                             self.addDeviceToDeviceGrid(device_info, isUpdate=False)
                             break
                         deviceListing.update(device)
@@ -742,8 +729,7 @@ class GridPanel(wx.Panel):
                             ):
                                 if hasattr(threading.current_thread(), "isStopped"):
                                     if threading.current_thread().isStopped():
-                                        if Globals.grid1_lock.locked():
-                                            Globals.grid1_lock.release()
+                                        releaseLocks([Globals.grid1_lock])
                                         return
                                 self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
                                 self.setStatusCellColor(fecthValue, rowNum, indx)
@@ -777,8 +763,7 @@ class GridPanel(wx.Panel):
                 device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
                 if hasattr(threading.current_thread(), "isStopped"):
                     if threading.current_thread().isStopped():
-                        if Globals.grid1_lock.locked():
-                            Globals.grid1_lock.release()
+                        releaseLocks([Globals.grid1_lock])
                         return
                 self.grid_1.SetCellValue(
                     self.grid_1.GetNumberRows() - 1, num, str(value)
@@ -806,8 +791,7 @@ class GridPanel(wx.Panel):
             )
             if device not in self.grid_1_contents and not deviceListing:
                 self.grid_1_contents.append(device)
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
 
     def constructDeviceGridContent(self, device_info):
         device = {}
@@ -847,7 +831,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
     def setStatusCellColor(self, value, rowNum, colNum):
-        Globals.grid1_status_lock.acquire()
+        acquireLocks(Globals.grid1_status_lock)
         if value == "Offline":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.red.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
@@ -866,12 +850,11 @@ class GridPanel(wx.Panel):
         elif value == "Unkown":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
-        if Globals.grid1_status_lock.locked():
-            Globals.grid1_status_lock.release()
+        releaseLocks([Globals.grid1_status_lock])
 
     @api_tool_decorator(locks=[Globals.grid_color_lock])
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
-        Globals.grid_color_lock.acquire()
+        acquireLocks([Globals.grid_color_lock])
         if (
             attribute == "Alias"
             and "OriginalAlias" in device_info
@@ -884,17 +867,15 @@ class GridPanel(wx.Panel):
             and device_info["Tags"] != device_info["OriginalTags"]
         ):
             grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
-        if Globals.grid_color_lock.locked():
-            Globals.grid_color_lock.release()
+        releaseLocks([Globals.grid_color_lock])
 
     @api_tool_decorator(locks=[Globals.grid2_lock])
     def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
         """ Construct network info and add to grid """
-        Globals.grid2_lock.acquire()
+        acquireLocks([Globals.grid2_lock])
         networkInfo = constructNetworkInfo(device, deviceInfo)
         self.addToNetworkGrid(networkInfo, isUpdate, device_info=deviceInfo)
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
+        releaseLocks([Globals.grid2_lock])
 
     @api_tool_decorator()
     def addToNetworkGrid(self, networkInfo, isUpdate=False, device_info=None):
@@ -966,7 +947,7 @@ class GridPanel(wx.Panel):
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         statusIndex = self.grid1HeaderLabels.index("Status")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
@@ -983,13 +964,12 @@ class GridPanel(wx.Panel):
                                     rowNum, colNum, bgColor
                                 )
         self.grid_1.ForceRefresh()
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        release([Globals.grid1_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceTagsFromGrid(self):
         """ Return the tags from Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         tagList = {}
         rowTagList = {}
         en_indx = self.grid1HeaderLabels.index("Esper Name")
@@ -1053,14 +1033,13 @@ class GridPanel(wx.Panel):
                             "csn": cusSerialNum,
                             "tags": properTagList,
                         }
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return tagList, rowTagList
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getAppsFromGrid(self):
         """ Return the tags from Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         appList = {}
         rowAppList = {}
         en_indx = self.grid1HeaderLabels.index("Esper Name")
@@ -1114,14 +1093,13 @@ class GridPanel(wx.Panel):
                             "csn": cusSerialNum,
                             "tags": properAppList,
                         }
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return appList, rowAppList
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceAliasFromGrid(self):
         """ Return a list of Aliases from the Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         aliasList = {}
         indx = self.grid1HeaderLabels.index("Alias")
         en_indx = self.grid1HeaderLabels.index("Esper Name")
@@ -1139,8 +1117,7 @@ class GridPanel(wx.Panel):
                     aliasList[serialNum] = alias
                 if cusSerialNum and cusSerialNum not in aliasList.keys():
                     aliasList[cusSerialNum] = alias
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return aliasList
 
     @api_tool_decorator()
@@ -1157,7 +1134,7 @@ class GridPanel(wx.Panel):
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def toggleColVisibilityInGridOne(self, event, showState=None):
         """ Toggle Column Visibility in Device Grid """
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         index = None
         if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
             index = event
@@ -1173,13 +1150,12 @@ class GridPanel(wx.Panel):
                     self.grid_1.HideCol(index)
                 else:
                     self.grid_1.ShowCol(index)
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
 
     @api_tool_decorator(locks=[Globals.grid2_lock])
     def toggleColVisibilityInGridTwo(self, event, showState):
         """ Toggle Column Visibility in Network Grid """
-        Globals.grid2_lock.acquire()
+        acquireLocks([Globals.grid2_lock])
         index = None
         if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
             index = event
@@ -1195,8 +1171,7 @@ class GridPanel(wx.Panel):
                     self.grid_2.HideCol(index)
                 else:
                     self.grid_2.ShowCol(index)
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
+        releaseLocks([Globals.grid2_lock])
 
     @api_tool_decorator()
     def updateTagCell(self, name, tags=None):
@@ -1210,7 +1185,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def processUpdateTagCell(self, name, tags=None):
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         self.disableGridProperties()
         name = tags = None
         if hasattr(name, "GetValue"):
@@ -1228,15 +1203,13 @@ class GridPanel(wx.Panel):
                         else:
                             self.grid_1.SetCellValue(rowNum, indx, "")
         self.enableGridProperties()
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def disableGridProperties(
         self, disableGrid=True, disableColSize=True, disableColMove=True
     ):
-        Globals.grid1_lock.acquire()
-        Globals.grid2_lock.acquire()
+        acquireLocks([Globals.grid1_lock, Globals.grid2_lock])
         if disableGrid:
             self.grid_1.Enable(False)
             self.grid_2.Enable(False)
@@ -1247,18 +1220,13 @@ class GridPanel(wx.Panel):
             self.grid_1.DisableDragColMove()
             self.grid_2.DisableDragColMove()
         self.disableProperties = True
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
+        releaseLocks([Globals.grid1_lock, Globals.grid2_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
     def enableGridProperties(
         self, enableGrid=True, enableColSize=True, enableColMove=True
     ):
-        Globals.grid1_lock.acquire()
-        Globals.grid2_lock.acquire()
-        Globals.grid3_lock.acquire()
+        acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
         if enableGrid:
             self.grid_1.Enable(True)
             self.grid_2.Enable(True)
@@ -1272,16 +1240,11 @@ class GridPanel(wx.Panel):
             self.grid_2.EnableDragColMove()
             self.grid_3.EnableDragColMove()
         self.disableProperties = False
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
-        if Globals.grid2_lock.locked():
-            Globals.grid2_lock.release()
-        if Globals.grid3_lock.locked():
-            Globals.grid3_lock.release()
+        releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceIdentifersFromGrid(self):
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         identifers = []
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
@@ -1293,13 +1256,12 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 if esperName or serialNum:
                     identifers.append((esperName, serialNum, cusSerialNum))
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return identifers
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceAppFromGrid(self):
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         appList = {}
         indx = self.grid1HeaderLabels.index("Applications")
         en_indx = self.grid1HeaderLabels.index("Esper Name")
@@ -1317,8 +1279,7 @@ class GridPanel(wx.Panel):
                     appList[serialNum] = apps
                 elif cusSerialNum and cusSerialNum not in appList.keys():
                     appList[cusSerialNum] = apps
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return appList
 
     def updateGridContent(self, event):
@@ -1462,7 +1423,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceGroupFromGrid(self):
-        Globals.grid1_lock.acquire()
+        acquireLocks([Globals.grid1_lock])
         groupList = {}
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
@@ -1480,13 +1441,12 @@ class GridPanel(wx.Panel):
                     groupList[serialNum] = group
                 if cusSerialNum:
                     groupList[cusSerialNum] = group
-        if Globals.grid1_lock.locked():
-            Globals.grid1_lock.release()
+        releaseLocks([Globals.grid1_lock])
         return groupList
 
     @api_tool_decorator(locks=[Globals.grid3_lock])
     def populateAppGrid(self, device, deviceInfo, apps):
-        Globals.grid3_lock.acquire()
+        acquireLocks([Globals.grid3_lock])
         if apps and type(apps) == dict and "results" in apps:
             for app in apps["results"]:
                 if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
@@ -1504,8 +1464,7 @@ class GridPanel(wx.Panel):
                         "Can Uninstall": app["is_uninstallable"]
                     }
                     self.addApptoAppGrid(info)
-        if Globals.grid3_lock.locked():
-            Globals.grid3_lock.release()
+        releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator()
     def addApptoAppGrid(self, info):
@@ -1519,8 +1478,7 @@ class GridPanel(wx.Panel):
             )
             if hasattr(threading.current_thread(), "isStopped"):
                 if threading.current_thread().isStopped():
-                    if Globals.grid3_lock.locked():
-                        Globals.grid3_lock.release()
+                    releaseLocks([Globals.grid3_lock])
                     return
             self.grid_3.SetCellValue(
                 self.grid_3.GetNumberRows() - 1, num, str(value)

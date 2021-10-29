@@ -2779,6 +2779,9 @@ class NewFrameLayout(wx.Frame):
                                     wx.ICON_INFORMATION,
                                 )
                             )
+                            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+                            self.setCursorDefault()
+                            self.toggleEnabledState(True)
                     else:
                         displayMessageBox(
                             (
@@ -2786,6 +2789,9 @@ class NewFrameLayout(wx.Frame):
                                 wx.ICON_INFORMATION,
                             )
                         )
+                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+                        self.setCursorDefault()
+                        self.toggleEnabledState(True)
                 dlg.DestroyLater()
         else:
             displayMessageBox(
@@ -2794,9 +2800,9 @@ class NewFrameLayout(wx.Frame):
                     wx.ICON_INFORMATION,
                 )
             )
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
-        self.setCursorDefault()
-        self.toggleEnabledState(True)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def moveGroup(self, event=None):
