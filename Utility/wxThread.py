@@ -39,15 +39,16 @@ def doAPICallInThread(
 
 
 @api_tool_decorator()
-def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
+    
+    initPercent = 0
+    if Globals.frame.gauge:
+        initPercent = Globals.frame.gauge.GetValue()
+    initVal = 0
     if source == 1:
         deviceList = {}
-        initPercent = 0
-        if Globals.frame.gauge:
-            initPercent = Globals.frame.gauge.GetValue()
-        initVal = 0
         if maxGauge:
             initVal = math.ceil((initPercent / 100) * maxGauge)
         for thread in threads:
@@ -84,6 +85,12 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         for thread in threads:
             if type(thread.result) == dict:
                 deviceList = {**deviceList, **thread.result}
+                if maxGauge:
+                    val = int((initVal + len(deviceList)) / maxGauge * 100)
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE,
+                        val,
+                    )
         return (
             action,
             Globals.enterprise_id,

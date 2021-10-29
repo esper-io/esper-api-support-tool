@@ -635,7 +635,7 @@ def get_all_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RET
                 ApiToolLog().LogError(e)
                 raise e
             if hasattr(e, "status") and e.status == 504:
-                limit = int(limit / 4)
+                limit = int(int(limit) / 4)
                 Globals.limit = limit
                 postEventToFrame(
                     eventUtil.myEVT_LOG,

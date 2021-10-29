@@ -213,11 +213,26 @@ def iterateThroughAllGroups(frame, action, api_instance, group=None):
 
 def processInstallDevices(deviceList):
     newDeviceList = []
-    for device in deviceList:
+    splitResults = splitListIntoChunks(deviceList)
+    threads = []
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            processInstallDevicesHelper,
+            args=(chunk, newDeviceList),
+            name="processInstallDevicesHelper",
+        )
+        threads.append(t)
+        t.start()
+    joinThreadList(threads)
+    processCollectionDevices({"results": newDeviceList})
+
+
+def processInstallDevicesHelper(chunk, newDeviceList):
+    for device in chunk:
         id = device["id"]
         deviceListing = apiCalls.getDeviceById(id)
         newDeviceList.append(deviceListing)
-    processCollectionDevices({"results": newDeviceList})
 
 
 @api_tool_decorator()
@@ -269,8 +284,9 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
         try:
             deviceInfo = {}
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
-            deviceList[number_of_devices] = [device, deviceInfo]
-            number_of_devices += 1
+            if deviceInfo:
+                deviceList[number_of_devices] = [device, deviceInfo]
+                number_of_devices += 1
         except Exception as e:
             print(e)
             ApiToolLog().LogError(e)

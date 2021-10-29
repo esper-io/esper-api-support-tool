@@ -474,3 +474,19 @@ def switch_display(wnd):
 
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
+def acquireLocks(locks, timeout=5):
+    if type(locks) == list:
+        for lock in locks:
+            if type(locks) == threading.Lock:
+                locks.acquire(timeout=5)
+    elif type(locks) == threading.Lock:
+        locks.acquire(timeout=5)
+
+def releaseLocks(locks):
+    if type(locks) == list:
+        for lock in locks:
+            if type(locks) == threading.Lock and lock.locked():
+                lock.release()
+    elif type(locks) == threading.Lock and locks.locked():
+        locks.release()
