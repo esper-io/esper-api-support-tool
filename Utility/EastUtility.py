@@ -606,7 +606,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
             if "eventType" in event and "countInMb" in event:
                 deviceInfo[event["eventType"]] = event["countInMb"]
 
-    if device and "createTime" in network_info:
+    if network_info and "createTime" in network_info:
         dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
         utc_date_time = dt.astimezone(pytz.utc)
         updatedOnDate = utc_to_local(utc_date_time)
