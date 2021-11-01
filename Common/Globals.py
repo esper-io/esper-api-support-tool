@@ -55,7 +55,7 @@ GENERAL_ACTIONS = {
     "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
-    "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
+    "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
     "Action -> Install App": GeneralActions.INSTALL_APP.value,
     "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
