@@ -129,7 +129,7 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 CSV_TAG_ATTR_NAME = {
-    "Esper Id": "id",
+    # "Esper Id": "id",
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
