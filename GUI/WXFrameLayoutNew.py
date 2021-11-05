@@ -231,7 +231,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
         self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
         self.Bind(wx.EVT_POWER_SUSPENDING, self.onSuspend)
-        # self.gauge.Bind(wx.EVT_LEFT_UP, self.showDetailedGauge)
 
         if self.kill:
             return
