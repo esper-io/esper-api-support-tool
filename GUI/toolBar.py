@@ -41,12 +41,6 @@ class ToolsToolBar(wx.ToolBar):
         self.rtool = self.AddTool(wx.ID_ANY, "Run Action", exe_icon, "Run Action")
         self.AddSeparator()
 
-        ref_icon = scale_bitmap(resourcePath("Images/refresh.png"), *size)
-        self.rftool = self.AddTool(
-            wx.ID_ANY, "Refresh Grids", ref_icon, "Refresh Grids"
-        )
-        self.AddSeparator()
-
         cmd_icon = scale_bitmap(resourcePath("Images/command.png"), *size)
         self.cmdtool = self.AddTool(wx.ID_ANY, "Run Command", cmd_icon, "Run Command")
 
@@ -75,14 +69,12 @@ class ToolsToolBar(wx.ToolBar):
 
         self.EnableTool(self.rtool.Id, False)
         self.EnableTool(self.cmdtool.Id, False)
-        self.EnableTool(self.rftool.Id, False)
 
         self.Bind(wx.EVT_TOOL, self.Parent.OnQuit, self.qtool)
         self.Bind(wx.EVT_TOOL, self.Parent.AddEndpoint, self.atool)
         self.Bind(wx.EVT_TOOL, self.Parent.onUploadCSV, self.otool)
         self.Bind(wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
         self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
-        self.Bind(wx.EVT_TOOL, self.Parent.updateGrids, self.rftool)
         self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
         self.Bind(wx.EVT_TOOL, self.Parent.uploadApplication, self.uploadApp)
 

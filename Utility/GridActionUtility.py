@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from platform import version
-from urllib3 import packages
 from Utility.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 import time
 

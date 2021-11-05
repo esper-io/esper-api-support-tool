@@ -110,7 +110,6 @@ class NewFrameLayout(wx.Frame):
         self.isSavingPrefs = False
         self.isRunningUpdate = False
         self.isUploading = False
-        self.isForceUpdate = False
         self.kill = False
         self.CSVUploaded = False
         self.defaultDir = os.getcwd()
@@ -1042,8 +1041,6 @@ class NewFrameLayout(wx.Frame):
         self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
         clearKnownGroups()
-        Globals.LAST_DEVICE_ID = []
-        Globals.LAST_GROUP_ID = []
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.clearSelections(clearApp=True)
@@ -1343,7 +1340,6 @@ class NewFrameLayout(wx.Frame):
         if not self.preferences or self.preferences["enableDevice"] == True:
             self.sidePanel.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
             self.setGaugeValue(0)
             self.gauge.Pulse()
@@ -1351,7 +1347,6 @@ class NewFrameLayout(wx.Frame):
             if not self.isRunning or not self.isBusy:
                 self.sidePanel.runBtn.Enable(True)
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-                self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
         threads = []
         for clientData in self.sidePanel.selectedGroupsList:
@@ -1573,6 +1568,17 @@ class NewFrameLayout(wx.Frame):
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
                 return
+        if actionClientData == GeneralActions.SET_DEVICE_MODE.value:
+            res = None
+            with wx.SingleChoiceDialog(
+                self, "Select Device Mode:", "", ["Multi-App", "Kiosk"]
+            ) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    if dlg.GetStringSelection() == "Multi-App":
+                        actionClientData = GeneralActions.SET_MULTI.value
+                    else:
+                        actionClientData = GeneralActions.SET_KIOSK.value
 
         if (
             self.sidePanel.selectedGroupsList
@@ -1589,8 +1595,6 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_3_contents = []
             self.gridPanel.userEdited = []
             self.gridPanel.disableGridProperties()
-            Globals.LAST_DEVICE_ID = None
-            Globals.LAST_GROUP_ID = self.sidePanel.selectedGroupsList
 
             groupLabel = ""
             for groupId in self.sidePanel.selectedGroupsList:
@@ -1609,7 +1613,6 @@ class NewFrameLayout(wx.Frame):
                     self,
                     self.sidePanel.selectedGroupsList,
                     actionClientData,
-                    groupLabel,
                 ),
                 name="TakeActionOnGroups",
             ).start()
@@ -1627,8 +1630,6 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.grid_3_contents = []
             self.gridPanel.userEdited = []
             self.gridPanel.disableGridProperties()
-            Globals.LAST_DEVICE_ID = self.sidePanel.selectedDevicesList
-            Globals.LAST_GROUP_ID = None
             for deviceId in self.sidePanel.selectedDevicesList:
                 deviceLabel = None
                 try:
@@ -1651,8 +1652,7 @@ class NewFrameLayout(wx.Frame):
                     self,
                     self.sidePanel.selectedDevicesList,
                     actionClientData,
-                    None,
-                    True,
+                    True
                 ),
                 name="TakeActionOnDevices",
             ).start()
@@ -2609,7 +2609,6 @@ class NewFrameLayout(wx.Frame):
 
         self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rftool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
 
         self.menubar.fileOpenConfig.Enable(state)
@@ -2870,7 +2869,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.AppState = None
 
-    def uploadApplication(self, event, title="", joinThread=False):
+    def uploadApplication(self, event=None, title="", joinThread=False):
         with wx.FileDialog(
             self,
             "Upload APK" if not title else title,
@@ -2885,6 +2884,5 @@ class NewFrameLayout(wx.Frame):
                 t.start()
                 if joinThread:
                     t.join()
-    
-    def showDetailedGauge(self, event):
-        self.Logging("Toolbar gauge clicked")
+        if event:
+            event.Skip()

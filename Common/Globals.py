@@ -51,8 +51,7 @@ GENERAL_ACTIONS = {
     "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
-    "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
-    "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
+    "Action -> Set Device Mode": 1.5,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
@@ -129,7 +128,6 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 CSV_TAG_ATTR_NAME = {
-    # "Esper Id": "id",
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
@@ -149,10 +147,13 @@ CSV_TAG_ATTR_NAME = {
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
-    "Applications": "Apps",
+    # "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
     "Device Type": "device_type",
+    "Registered On": "provisioned_on",
+    "Updated On": "updated_on",
+    "Last Seen": "last_seen",
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
     "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
@@ -169,9 +170,6 @@ CSV_TAG_ATTR_NAME = {
     "Ring Volume": "STREAM_RING",
     "Alarm Volume": "STREAM_ALARM",
     "Notification Volume": "STREAM_NOTIFICATION",
-    "Registered On": "provisioned_on",
-    "Updated On": "updated_on",
-    "Last Seen": "last_seen",
     "Power Source": "powerSource",
     "Power Status": "powerStatus",
     "Battery Present": "batteryPresent",
@@ -189,6 +187,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Count (%)": "batteryCapacityCount",
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
+    "Esper Id": "id",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
@@ -237,9 +236,6 @@ app = None
 """ CSV Save File """
 csv_auth_path = ""
 
-LAST_DEVICE_ID = None
-LAST_GROUP_ID = None
-
 """ Preferences """
 SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
@@ -262,7 +258,7 @@ FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 GET_IMMEDIATE_SUBGROUPS = False
 SAVE_VISIBILITY = False
-GROUP_FETCH_ALL = False
+GROUP_FETCH_ALL = True
 MAX_GRID_LOAD = 100
 REPLACE_SERIAL = True
 limit = MAX_LIMIT  # Number of results to return per page

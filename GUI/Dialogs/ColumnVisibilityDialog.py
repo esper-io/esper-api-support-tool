@@ -37,10 +37,11 @@ class ColumnVisibilityDialog(wx.Dialog):
             self.Bind(wx.EVT_LISTBOX, self.OnSelection)
             self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
-        colNum = 0
+        colNum = 0 if "Esper Id" not in Globals.CSV_TAG_ATTR_NAME.keys() else 1
+        originalColNum = colNum
         for _ in choiceData:
             isShown = self.grid.IsColShown(colNum + 1)
-            self.check_list_box_1.Check(colNum, isShown)
+            self.check_list_box_1.Check(colNum - originalColNum, isShown)
             colNum += 1
 
         self.__set_properties()
@@ -75,7 +76,10 @@ class ColumnVisibilityDialog(wx.Dialog):
 
     @api_tool_decorator()
     def isChecked(self, item):
-        return self.check_list_box_1.IsChecked(item)
+        cols = len(self.check_list_box_1.GetItems())
+        if item < cols:
+            return self.check_list_box_1.IsChecked(item)
+        return True
 
     @api_tool_decorator()
     def __set_properties(self):

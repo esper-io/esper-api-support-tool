@@ -170,10 +170,6 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log")
         )
         viewMenu.Append(wx.ID_SEPARATOR)
-        self.refreshGrids = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids' Data")
-        )
-        self.refreshGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
         self.colSize = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
         )
@@ -232,7 +228,6 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
 
         self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
-        self.Bind(wx.EVT_MENU, self.parentFrame.updateGrids, self.refreshGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)

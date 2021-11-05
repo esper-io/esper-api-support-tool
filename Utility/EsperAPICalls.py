@@ -117,16 +117,6 @@ def patchInfo(request_extension, deviceid, tags):
 
 
 @api_tool_decorator()
-def iskioskmode(deviceid):
-    """Checks If Device Is In Kiosk Mode"""
-    kioskmode = False
-    json_resp = getInfo(Globals.BASE_REQUEST_EXTENSION, deviceid)
-    if json_resp["current_app_mode"] == 0:
-        kioskmode = True
-    return kioskmode
-
-
-@api_tool_decorator()
 def toggleKioskMode(
     frame,
     deviceid,
@@ -185,16 +175,6 @@ def toggleKioskMode(
         api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
     )
     return status
-
-
-@api_tool_decorator()
-def getdevicetags(deviceid):
-    """Retrieves Device Tags"""
-    tags = ""
-    json_resp = getInfo(Globals.BASE_REQUEST_EXTENSION, deviceid)
-    if "tags" in json_resp:
-        tags = json_resp["tags"]
-    return tags
 
 
 @api_tool_decorator()
@@ -288,45 +268,6 @@ def getLatestEvent(deviceId):
     if json_resp and "results" in json_resp and json_resp["results"]:
         respData = json_resp["results"][0]["data"]
     return respData
-
-
-@api_tool_decorator()
-def getkioskmodeapp(deviceid):
-    """Retrieves The Kiosk Mode Application ID"""
-    json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = None
-    if json_resp and "results" in json_resp and json_resp["results"]:
-        respData = json_resp["results"][0]["data"]
-    appName = ""
-    if respData and "kioskAppName" in respData:
-        appName = respData["kioskAppName"]
-    return appName
-
-
-@api_tool_decorator()
-def getNetworkInfo(deviceid):
-    """Retrieves The Kiosk Mode Application ID"""
-    json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = None
-    if json_resp and "results" in json_resp and json_resp["results"]:
-        respData = json_resp["results"][0]["data"]
-    network_event = ""
-    if respData and "networkEvent" in respData:
-        network_event = respData["networkEvent"]
-    return network_event
-
-
-@api_tool_decorator()
-def getLocationInfo(deviceid):
-    """Retrieves The Kiosk Mode Application ID"""
-    json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceid)
-    respData = None
-    if json_resp and "results" in json_resp and json_resp["results"]:
-        respData = json_resp["results"][0]["data"]
-    location_event = ""
-    if respData and "locationEvent" in respData:
-        location_event = respData["locationEvent"]
-    return location_event, respData
 
 
 @api_tool_decorator()
@@ -561,35 +502,6 @@ def createDeviceGroupForHost(
         return api_response
     except Exception as e:
         raise e
-
-
-@api_tool_decorator()
-def getDeviceGroupForHost(
-    config, enterprise_id, group_id, maxAttempt=Globals.MAX_RETRY
-):
-    try:
-        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.get_group_by_id(
-                    group_id=group_id, enterprise_id=enterprise_id
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getDeviceGroupForHost",
-                    api_instance.get_group_by_id,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except Exception as e:
-        raise e
-
 
 @api_tool_decorator()
 def getAllDevices(groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
@@ -1142,24 +1054,6 @@ def clearAppData(frame, device):
 
 
 @api_tool_decorator()
-def getDeviceApplicationById(device_id, application_id):
-    try:
-        headers = getHeader()
-        url = "https://%s-api.esper.cloud/api/enterprise/%s/device/%s/app/%s" % (
-            Globals.configuration.host.split("-api")[0].replace("https://", ""),
-            Globals.enterprise_id,
-            device_id,
-            application_id,
-        )
-        resp = performGetRequestWithRetry(url, headers=headers)
-        json_resp = resp.json()
-        logBadResponse(url, resp, json_resp)
-    except Exception as e:
-        ApiToolLog().LogError(e)
-    return resp, json_resp
-
-
-@api_tool_decorator()
 def setAppState(
     device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
 ):
@@ -1308,31 +1202,6 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
     jsonResp = resp.json()
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
     return jsonResp
-
-
-def getAppVersion(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.ApplicationApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    enterprise_id = Globals.enterprise_id
-    for attempt in range(maxAttempt):
-        try:
-            # Get app version information
-            api_response = api_instance.get_app_version(
-                version_id, application_id, enterprise_id
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getAppVersion", api_instance.get_app_version, Globals.PRINT_API_LOGS
-            )
-            return api_response
-        except ApiException as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                print(
-                    "Exception when calling ApplicationApi->get_app_version: %s\n" % e
-                )
-                raise e
-            time.sleep(1)
 
 
 def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):

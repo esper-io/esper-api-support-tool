@@ -658,8 +658,8 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.GROUP_FETCH_ALL = False
         else:
-            self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.GROUP_FETCH_ALL = False
+            self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+            Globals.GROUP_FETCH_ALL = True
         
         if prefDict and "replaceSerial" in prefDict:
             if (

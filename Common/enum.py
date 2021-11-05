@@ -7,6 +7,7 @@ from enum import Enum
 
 class GeneralActions(Enum):
     SHOW_ALL_AND_GENERATE_REPORT = 1
+    SET_DEVICE_MODE = 1.5
     SET_KIOSK = 2
     SET_MULTI = 3
     CLEAR_APP_DATA = 4

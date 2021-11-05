@@ -37,7 +37,7 @@ knownGroups = {}
 
 ####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
 @api_tool_decorator()
-def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
+def TakeAction(frame, input, action, isDevice=False):
     """Calls API To Perform Action And Logs Result To UI"""
     if not Globals.enterprise_id:
         frame.loadConfigPrompt()
@@ -45,8 +45,22 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
     if frame:
         frame.menubar.disableConfigMenu()
 
-    logActionExecution(frame, action, group)
-    if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value or action == GeneralActions.GENERATE_APP_REPORT.value or action == GeneralActions.GENERATE_INFO_REPORT.value) and not isUpdate:
+    actionName = ""
+    if (
+        frame.sidePanel.actionChoice.GetValue() in Globals.GRID_ACTIONS
+        or frame.sidePanel.actionChoice.GetValue() in Globals.GENERAL_ACTIONS
+    ):
+        actionName = '"%s"' % frame.sidePanel.actionChoice.GetValue()
+    if input:
+        frame.Logging("---> Starting Execution " + actionName + " on " + str(input))
+    else:
+        frame.Logging("---> Starting Execution " + actionName)
+
+    if (
+        action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value 
+        or action == GeneralActions.GENERATE_APP_REPORT.value 
+        or action == GeneralActions.GENERATE_INFO_REPORT.value
+    ):
         frame.gridPanel.button_2.Enable(False)
         frame.gridPanel.button_1.Enable(False)
         frame.gridPanel.emptyDeviceGrid()
@@ -59,58 +73,26 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             frame.gridPanel.grid_3.Freeze()
         frame.CSVUploaded = False
 
-    deviceList = None
-    if isDevice:
-        deviceToUse = group
-        frame.Logging("---> Making API Request")
-        wxThread.doAPICallInThread(
-            frame,
-            apiCalls.getDeviceById,
-            args=(deviceToUse),
-            eventType=eventUtil.myEVT_RESPONSE,
-            callback=iterateThroughDeviceList,
-            callbackArgs=(frame, action),
-            optCallbackArgs=(Globals.enterprise_id, False, isUpdate),
-            waitForJoin=False,
-            name="iterateThroughDeviceListForDevice",
-        )
-    elif action in Globals.GRID_ACTIONS:
+    if action in Globals.GRID_ACTIONS:
         iterateThroughGridRows(frame, action)
+    elif isDevice:
+        frame.Logging("---> Making API Request")
+        api_response = apiCalls.getDeviceById(input)
+        iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
         # Iterate Through Each Device in Group VIA Api Request
         try:
-            groupToUse = group
             frame.Logging("---> Making API Request")
-            if isUpdate:
-                api_response = apiCalls.getAllDevices(groupToUse)
-                deviceList = iterateThroughDeviceList(
-                    frame, action, api_response, Globals.enterprise_id, isUpdate=True
-                )
-            else:
-                wxThread.doAPICallInThread(
-                    frame,
-                    apiCalls.getAllDevices,
-                    args=(groupToUse),
-                    eventType=eventUtil.myEVT_RESPONSE,
-                    callback=iterateThroughDeviceList,
-                    callbackArgs=(frame, action),
-                    optCallbackArgs=(Globals.enterprise_id),
-                    waitForJoin=False,
-                    name="iterateThroughDeviceListForGroup",
-                )
+            api_response = apiCalls.getAllDevices(input)
+            iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
             ApiToolLog().LogError(e)
 
-    if deviceList:
-        postEventToFrame(
-            eventUtil.myEVT_FETCH, (action, Globals.enterprise_id, deviceList)
-        )
-
 
 @api_tool_decorator()
 def iterateThroughDeviceList(
-    frame, action, api_response, entId, isDevice=False, isUpdate=False
+    frame, action, api_response, entId
 ):
     """Iterates Through Each Device And Performs A Specified Action"""
     if api_response:
@@ -133,48 +115,47 @@ def iterateThroughDeviceList(
 
     if hasattr(api_response, "results") and len(api_response.results):
         number_of_devices = 0
-        if not isDevice and not isUpdate:
-            maxThread = int(Globals.MAX_THREAD_COUNT / 2)
-            splitResults = splitListIntoChunks(
-                api_response.results, maxThread=maxThread
-            )
+        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
+        splitResults = splitListIntoChunks(
+            api_response.results, maxThread=maxThread
+        )
 
-            threads = []
-            for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    frame,
-                    processDevices,
-                    args=(
-                        chunk,
-                        number_of_devices,
-                        action,
-                    ),
-                    name="processDevices",
-                )
-                threads.append(t)
-                t.start()
-                number_of_devices += len(chunk)
+        getApps = action == GeneralActions.GENERATE_APP_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        getLatestEvents = action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
 
+        threads = []
+        for chunk in splitResults:
             t = wxThread.GUIThread(
                 frame,
-                wxThread.waitTillThreadsFinish,
+                processDevices,
                 args=(
-                    tuple(threads),
+                    chunk,
+                    number_of_devices,
                     action,
-                    entId,
-                    1,
-                    None,
-                    len(api_response.results) * 3,
+                    getApps,
+                    getLatestEvents
                 ),
-                name="waitTillThreadsFinish_1",
-                eventType=eventUtil.myEVT_FETCH,
+                name="processDevices",
             )
+            threads.append(t)
             t.start()
-        else:
-            deviceList = processDevices(
-                api_response.results, number_of_devices, action, isUpdate=isUpdate
-            )[1]
-            return deviceList
+            number_of_devices += len(chunk)
+
+        t = wxThread.GUIThread(
+            frame,
+            wxThread.waitTillThreadsFinish,
+            args=(
+                tuple(threads),
+                action,
+                entId,
+                1,
+                None,
+                len(api_response.results) * 3,
+            ),
+            name="waitTillThreadsFinish_1",
+            eventType=eventUtil.myEVT_FETCH,
+        )
+        t.start()
     else:
         if hasattr(threading.current_thread(), "isStopped"):
             if threading.current_thread().isStopped():
@@ -183,29 +164,6 @@ def iterateThroughDeviceList(
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
-
-
-@api_tool_decorator()
-def iterateThroughAllGroups(frame, action, api_instance, group=None):
-    groupToUse = None
-    if group:
-        groupToUse = group[0]
-    try:
-        frame.Logging("---> Making API Request")
-        wxThread.doAPICallInThread(
-            frame,
-            apiCalls.getAllDevices,
-            args=(groupToUse),
-            eventType=eventUtil.myEVT_RESPONSE,
-            callback=iterateThroughDeviceList,
-            callbackArgs=(frame, action, Globals.enterprise_id),
-            optCallbackArgs=(Globals.enterprise_id),
-            waitForJoin=False,
-            name="iterateThroughDeviceListForAllDeviceGroup",
-        )
-    except ApiException as e:
-        print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-        ApiToolLog().LogError(e)
 
 
 def processInstallDevices(deviceList):
@@ -243,7 +201,7 @@ def processCollectionDevices(collectionList):
                 t = wxThread.GUIThread(
                     Globals.frame,
                     fillInDeviceInfoDict,
-                    args=(chunk, number_of_devices, len(collectionList["results"] * 2)),
+                    args=(chunk, number_of_devices),
                     name="fillInDeviceInfoDict",
                 )
                 threads.append(t)
@@ -275,9 +233,12 @@ def processCollectionDevices(collectionList):
 
 
 @api_tool_decorator()
-def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
+def fillInDeviceInfoDict(chunk, number_of_devices):
     deviceList = {}
     for device in chunk:
+        if hasattr(threading.current_thread(), "isStopped"):
+            if threading.current_thread().isStopped():
+                return
         try:
             deviceInfo = {}
             deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
@@ -291,13 +252,16 @@ def fillInDeviceInfoDict(chunk, number_of_devices, maxGauge):
 
 
 @api_tool_decorator()
-def processDevices(chunk, number_of_devices, action, isUpdate=False, getApps=True):
+def processDevices(chunk, number_of_devices, action, getApps=True, getLatestEvents=True):
     """ Try to obtain more device info for a given device """
     deviceList = {}
 
     for device in chunk:
+        if hasattr(threading.current_thread(), "isStopped"):
+            if threading.current_thread().isStopped():
+                return
         deviceInfo = {}
-        deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps)
+        deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps, getLatestEvents)
         if deviceInfo:
             number_of_devices = number_of_devices + 1
             deviceInfo.update({"num": number_of_devices})
@@ -323,7 +287,7 @@ def unpackageDict(deviceInfo, deviceDict):
 
 
 @api_tool_decorator()
-def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
+def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEvents=True):
     """Populates Device Info Dictionary"""
     deviceId = None
     deviceName = None
@@ -332,6 +296,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
     deviceStatus = None
     deviceHardware = None
     deviceTags = None
+    # Handle response from Collections API
     if type(device) == dict:
         if "is_active" in device and not device["is_active"]:
             return
@@ -344,6 +309,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
+        # Handles response from Python API
         if not device.is_active:
             return
         deviceId = device.id
@@ -367,7 +333,8 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
         apiCalls.getLatestEvent,
         (deviceId),
     )
-    eventThread.start()
+    if getLatestEvents:
+        eventThread.start()
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
@@ -523,16 +490,15 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True):
     deviceInfo.update({"Apps": str(apps)})
     deviceInfo.update({"appObj": json})
 
-    if kioskMode == 0:
+    if eventThread.is_alive():
         eventThread.join()
+    if kioskMode == 0:
         latestEvent = eventThread.result
         kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
         deviceInfo.update({"KioskApp": str(kioskModeApp)})
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    if eventThread.is_alive():
-        eventThread.join()
     latestEvent = eventThread.result
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
@@ -639,20 +605,6 @@ def getValueFromLatestEvent(respData, eventName):
     return event
 
 
-@api_tool_decorator()
-def logActionExecution(frame, action, selection=None):
-    actionName = ""
-    if (
-        frame.sidePanel.actionChoice.GetValue() in Globals.GRID_ACTIONS
-        or frame.sidePanel.actionChoice.GetValue() in Globals.GENERAL_ACTIONS
-    ):
-        actionName = '"%s"' % frame.sidePanel.actionChoice.GetValue()
-    if selection:
-        frame.Logging("---> Starting Execution " + actionName + " on " + str(selection))
-    else:
-        frame.Logging("---> Starting Execution " + actionName)
-
-
 def removeNonWhitelisted(deviceId, deviceInfo=None):
     detailInfo = None
     if not deviceInfo:
@@ -731,7 +683,7 @@ def getAllDeviceInfo(frame):
                     chunk,
                     number_of_devices,
                     -1,
-                    False,
+                    True,
                     True
                 ),
                 name="processDevices",
