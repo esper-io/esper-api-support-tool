@@ -685,112 +685,47 @@ class GridPanel(wx.Panel):
         acquireLocks([Globals.grid1_lock])
         num = 0
         device = {}
-        if isUpdate:
-            deviceName = device_info[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-            for rowNum in range(self.grid_1.GetNumberRows()):
-                if rowNum < self.grid_1.GetNumberRows():
-                    esperName = self.grid_1.GetCellValue(rowNum, 0)
-                    if deviceName == esperName:
-                        deviceListing = list(
-                            filter(
-                                lambda x: (
-                                    x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-                                    == esperName
-                                ),
-                                self.grid_1_contents,
-                            )
-                        )
-                        if deviceListing:
-                            deviceListing = deviceListing[0]
-                        else:
-                            if hasattr(threading.current_thread(), "isStopped"):
-                                if threading.current_thread().isStopped():
-                                    releaseLocks([Globals.grid1_lock])
-                                    return
-                            releaseLocks([Globals.grid1_lock])
-                            self.addDeviceToDeviceGrid(device_info, isUpdate=False)
-                            break
-                        deviceListing.update(device)
-                        for attribute in Globals.CSV_TAG_ATTR_NAME:
-                            indx = self.grid1HeaderLabels.index(attribute)
-                            cellValue = self.grid_1.GetCellValue(rowNum, indx)
-                            fecthValue = (
-                                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                                else ""
-                            )
-                            if (
-                                not (
-                                    rowNum,
-                                    indx,
-                                )
-                                in self.userEdited
-                                and cellValue != str(fecthValue)
-                            ):
-                                if hasattr(threading.current_thread(), "isStopped"):
-                                    if threading.current_thread().isStopped():
-                                        releaseLocks([Globals.grid1_lock])
-                                        return
-                                self.grid_1.SetCellValue(rowNum, indx, str(fecthValue))
-                                self.setStatusCellColor(fecthValue, rowNum, indx)
-                                self.setAlteredCellColor(
-                                    self.grid_1,
-                                    device_info,
-                                    rowNum,
-                                    attribute,
-                                    indx,
-                                )
-                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
-                                    fecthValue
-                                )
-                            else:
-                                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(
-                                    cellValue
-                                )
-                        break
-            # Don't add if not found as potential Endpoint swap could have occurred
-        else:
-            self.grid_1.AppendRows(1)
-            esperName = ""
-            for attribute in Globals.CSV_TAG_ATTR_NAME:
-                value = (
-                    device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                    if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                    else ""
-                )
-                if "Esper Name" == attribute:
-                    esperName = value
-                device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-                if hasattr(threading.current_thread(), "isStopped"):
-                    if threading.current_thread().isStopped():
-                        releaseLocks([Globals.grid1_lock])
-                        return
-                self.grid_1.SetCellValue(
-                    self.grid_1.GetNumberRows() - 1, num, str(value)
-                )
-                isEditable = True
-                if attribute in Globals.CSV_EDITABLE_COL:
-                    isEditable = False
-                self.grid_1.SetReadOnly(
-                    self.grid_1.GetNumberRows() - 1, num, isEditable
-                )
-                self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
-                self.setAlteredCellColor(
-                    self.grid_1,
-                    device_info,
-                    self.grid_1.GetNumberRows() - 1,
-                    attribute,
-                    num,
-                )
-                num += 1
-            deviceListing = list(
-                filter(
-                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
-                    self.grid_1_contents,
-                )
+        self.grid_1.AppendRows(1)
+        esperName = ""
+        for attribute in Globals.CSV_TAG_ATTR_NAME:
+            value = (
+                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
+                else ""
             )
-            if device not in self.grid_1_contents and not deviceListing:
-                self.grid_1_contents.append(device)
+            if "Esper Name" == attribute:
+                esperName = value
+            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+            if hasattr(threading.current_thread(), "isStopped"):
+                if threading.current_thread().isStopped():
+                    releaseLocks([Globals.grid1_lock])
+                    return
+            self.grid_1.SetCellValue(
+                self.grid_1.GetNumberRows() - 1, num, str(value)
+            )
+            isEditable = True
+            if attribute in Globals.CSV_EDITABLE_COL:
+                isEditable = False
+            self.grid_1.SetReadOnly(
+                self.grid_1.GetNumberRows() - 1, num, isEditable
+            )
+            self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+            self.setAlteredCellColor(
+                self.grid_1,
+                device_info,
+                self.grid_1.GetNumberRows() - 1,
+                attribute,
+                num,
+            )
+            num += 1
+        deviceListing = list(
+            filter(
+                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                self.grid_1_contents,
+            )
+        )
+        if device not in self.grid_1_contents and not deviceListing:
+            self.grid_1_contents.append(device)
         releaseLocks([Globals.grid1_lock])
 
     def constructDeviceGridContent(self, device_info):
@@ -881,61 +816,16 @@ class GridPanel(wx.Panel):
     def addToNetworkGrid(self, networkInfo, isUpdate=False, device_info=None):
         """ Add info to the network grid """
         num = 0
-        if isUpdate:
-            deviceName = device_info[Globals.CSV_NETWORK_ATTR_NAME["Device Name"]]
-            found = False
-            for rowNum in range(self.grid_2.GetNumberRows()):
-                if rowNum < self.grid_2.GetNumberRows():
-                    esperName = self.grid_2.GetCellValue(rowNum, 0)
-                    if deviceName == esperName:
-                        found = True
-                        deviceListing = list(
-                            filter(
-                                lambda x: (x["Device Name"] == esperName),
-                                self.grid_2_contents,
-                            )
-                        )
-                        if deviceListing:
-                            deviceListing = deviceListing[0]
-                        else:
-                            self.addToNetworkGrid(
-                                networkInfo, device_info=device_info, isUpdate=False
-                            )
-                            break
-                        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-                            indx = self.grid2HeaderLabels.index(attribute)
-                            cellValue = self.grid_2.GetCellValue(rowNum, indx)
-                            fecthValue = (
-                                networkInfo[attribute]
-                                if attribute in networkInfo
-                                else ""
-                            )
-                            if (
-                                not (
-                                    rowNum,
-                                    indx,
-                                )
-                                in self.userEdited
-                                and cellValue != str(fecthValue)
-                            ):
-                                self.grid_2.SetCellValue(rowNum, indx, str(fecthValue))
-                            deviceListing.update(networkInfo)
-                        break
-            if not found:
-                self.addToNetworkGrid(
-                    networkInfo, device_info=device_info, isUpdate=False
-                )
-        else:
-            self.grid_2.AppendRows(1)
-            for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-                value = networkInfo[attribute] if attribute in networkInfo else ""
-                self.grid_2.SetCellValue(
-                    self.grid_2.GetNumberRows() - 1, num, str(value)
-                )
-                self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, True)
-                num += 1
-            if networkInfo not in self.grid_2_contents:
-                self.grid_2_contents.append(networkInfo)
+        self.grid_2.AppendRows(1)
+        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+            value = networkInfo[attribute] if attribute in networkInfo else ""
+            self.grid_2.SetCellValue(
+                self.grid_2.GetNumberRows() - 1, num, str(value)
+            )
+            self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, True)
+            num += 1
+        if networkInfo not in self.grid_2_contents:
+            self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
         networkInfo = constructNetworkInfo(device, deviceInfo)

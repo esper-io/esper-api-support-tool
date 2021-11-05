@@ -103,12 +103,9 @@ def TakeAction(frame, group, action, label, isDevice=False, isUpdate=False):
             ApiToolLog().LogError(e)
 
     if deviceList:
-        if isUpdate:
-            postEventToFrame(eventUtil.myEVT_UPDATE, deviceList)
-        else:
-            postEventToFrame(
-                eventUtil.myEVT_FETCH, (action, Globals.enterprise_id, deviceList)
-            )
+        postEventToFrame(
+            eventUtil.myEVT_FETCH, (action, Globals.enterprise_id, deviceList)
+        )
 
 
 @api_tool_decorator()

@@ -213,7 +213,6 @@ class NewFrameLayout(wx.Frame):
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
         self.Bind(eventUtil.EVT_FETCH, self.onFetch)
-        self.Bind(eventUtil.EVT_UPDATE, self.onUpdate)
         self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
         self.Bind(eventUtil.EVT_APPS, self.addAppstoAppChoiceThread)
         self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
@@ -2413,125 +2412,6 @@ class NewFrameLayout(wx.Frame):
                             return
                         self.processDeviceCSVUpload(data)
                         self.gridPanel.grid_1.AutoSizeColumns()
-
-    @api_tool_decorator()
-    def onUpdate(self, event):
-        if event:
-            deviceList = event.GetValue()
-            if deviceList:
-                for entry in deviceList.values():
-                    device = entry[0]
-                    deviceInfo = entry[1]
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo, isUpdate=True)
-                    self.gridPanel.addDeviceToNetworkGrid(
-                        device, deviceInfo, isUpdate=True
-                    )
-                if self.gridPanel.grid_1.GetSortingColumn() != wx.NOT_FOUND:
-                    self.gridPanel.onDeviceGridSort(
-                        self.gridPanel.grid_1.GetSortingColumn()
-                    )
-                if self.gridPanel.grid_2.GetSortingColumn() != wx.NOT_FOUND:
-                    self.gridPanel.onNetworkGridSort(
-                        self.gridPanel.grid_2.GetSortingColumn()
-                    )
-                self.toggleEnabledState(True)
-                if self.isForceUpdate:
-                    self.isForceUpdate = False
-                    self.setGaugeValue(100)
-                    wx.CallLater(3000, self.setGaugeValue, 0)
-
-    @api_tool_decorator()
-    def startUpdateThread(self):
-        if not self.refresh:
-            self.refresh = wxThread.GUIThread(
-                self,
-                self.updateGrids,
-                None,
-                eventType=eventUtil.myEVT_UPDATE,
-                name="fetchUpdateData",
-            )
-            self.refresh.start()
-
-    @api_tool_decorator()
-    def updateGrids(self, event=None):
-        if event:
-            self.Logging("---> Updating Grids' Data")
-            self.toggleEnabledState(False)
-            self.gauge.Pulse()
-            thread = wxThread.GUIThread(
-                self,
-                self.fetchUpdateData,
-                (True),
-                eventType=None,
-                name="fetchUpdateData",
-            )
-            thread.start()
-        else:
-            while Globals.ENABLE_GRID_UPDATE:
-                time.sleep(Globals.GRID_UPDATE_RATE)
-                if self.kill:
-                    break
-                if hasattr(threading.current_thread(), "isStopped"):
-                    if threading.current_thread().isStopped():
-                        break
-                if self.IsActive() and not self.IsIconized():
-                    self.fetchUpdateData()
-            self.refresh = None
-
-    @api_tool_decorator()
-    def fetchUpdateData(self, forceUpdate=False):
-        if not self.gridPanel.grid_1_contents and not self.gridPanel.grid_2_contents:
-            return
-        threads = []
-        if self.isForceUpdate:
-            self.isForceUpdate = forceUpdate
-        if (
-            not self.isRunning
-            and not self.isRunningUpdate
-            and self.IsActive()
-            and (
-                (
-                    self.gridPanel.grid_1_contents
-                    and self.gridPanel.grid_2_contents
-                    and len(self.gridPanel.grid_1_contents) <= Globals.MAX_UPDATE_COUNT
-                    and len(self.gridPanel.grid_2_contents) <= Globals.MAX_UPDATE_COUNT
-                )
-                or forceUpdate
-            )
-        ):
-            threads = self.fetchData(True)
-            self.isRunningUpdate = False
-        joinThreadList(threads)
-        evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
-        wx.PostEvent(self, evt)
-
-    def fetchData(self, isUpdate=False):
-        threads = []
-        if Globals.LAST_GROUP_ID and not Globals.LAST_DEVICE_ID:
-            self.isRunningUpdate = True
-            for groupId in Globals.LAST_GROUP_ID:
-                thread = wxThread.GUIThread(
-                    self,
-                    TakeAction,
-                    (self, groupId, 1, None, False, isUpdate),
-                    eventType=None,
-                    name="fetchUpdateDataActionThread",
-                )
-                thread.start()
-                threads.append(thread)
-        elif Globals.LAST_DEVICE_ID:
-            self.isRunningUpdate = True
-            for deviceId in Globals.LAST_DEVICE_ID:
-                thread = wxThread.GUIThread(
-                    self,
-                    TakeAction,
-                    (self, deviceId, 1, None, True, isUpdate),
-                    eventType=None,
-                    name="fetchUpdateDataActionThread",
-                )
-                thread.start()
-                threads.append(thread)
-        return threads
 
     @api_tool_decorator()
     def onClone(self, event):

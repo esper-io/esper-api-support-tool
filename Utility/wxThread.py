@@ -15,7 +15,7 @@ def doAPICallInThread(
     frame,
     func,
     args=None,
-    eventType=eventUtil.myEVT_UPDATE,
+    eventType=None,
     callback=None,
     callbackArgs=None,
     optCallbackArgs=None,

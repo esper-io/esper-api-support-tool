@@ -8,9 +8,6 @@ EVT_RESPONSE = wx.PyEventBinder(myEVT_RESPONSE, 1)
 myEVT_FETCH = wx.NewEventType()
 EVT_FETCH = wx.PyEventBinder(myEVT_FETCH, 1)
 
-myEVT_UPDATE = wx.NewEventType()
-EVT_UPDATE = wx.PyEventBinder(myEVT_UPDATE, 1)
-
 myEVT_COMPLETE = wx.NewEventType()
 EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
 
