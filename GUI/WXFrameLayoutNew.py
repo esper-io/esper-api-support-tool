@@ -382,6 +382,8 @@ class NewFrameLayout(wx.Frame):
                         isValid = self.addEndpointEntry(
                             name, host, entId, key, prefix, csvRow
                         )
+                        if isValid and type(isValid) == wx.MenuItem:
+                            self.loadConfiguartion(isValid)
                     except:
                         displayMessageBox(
                             (
@@ -416,7 +418,7 @@ class NewFrameLayout(wx.Frame):
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                     writer.writerow(csvRow)
                 self.readAuthCSV()
-                self.PopulateConfig(auth=self.authPath)
+                isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
                 self.auth_data = [
@@ -431,7 +433,7 @@ class NewFrameLayout(wx.Frame):
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                     writer.writerows(self.auth_data)
                 self.readAuthCSV()
-                self.PopulateConfig(auth=self.authPath)
+                isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             else:
                 displayMessageBox(
@@ -946,7 +948,7 @@ class NewFrameLayout(wx.Frame):
             lock.release()
 
     @api_tool_decorator()
-    def PopulateConfig(self, auth=None, event=None):
+    def PopulateConfig(self, auth=None, event=None, getItemForName=None):
         """Populates Configuration From CSV"""
         self.Logging("--->Loading Configurations from %s" % Globals.csv_auth_path)
         if auth:
@@ -962,6 +964,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.configMenuOptions = []
 
         self.setGaugeValue(0)
+        returnItem = None
         if os.path.isfile(configfile):
             with open(configfile, newline="") as csvfile:
                 auth_csv_reader = csv.DictReader(csvfile)
@@ -985,6 +988,8 @@ class NewFrameLayout(wx.Frame):
                         )
                         self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
                         self.menubar.configMenuOptions.append(item)
+                        if str(getItemForName) == row["name"]:
+                            returnItem = item
                     else:
                         self.Logging(
                             "--->ERROR: Please check that the Auth CSV is set up correctly!"
@@ -1015,6 +1020,7 @@ class NewFrameLayout(wx.Frame):
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
         wx.CallLater(3000, self.setGaugeValue, 0)
+        return returnItem
 
     @api_tool_decorator()
     def setCursorDefault(self):
