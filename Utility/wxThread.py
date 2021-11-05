@@ -11,33 +11,6 @@ import threading
 import wx
 
 
-def doAPICallInThread(
-    frame,
-    func,
-    args=None,
-    eventType=None,
-    callback=None,
-    callbackArgs=None,
-    optCallbackArgs=None,
-    waitForJoin=True,
-    name=None,
-):
-    t = GUIThread(
-        frame,
-        func,
-        args=args,
-        eventType=eventType,
-        callback=callback,
-        optCallbackArgs=optCallbackArgs,
-        callbackArgs=callbackArgs,
-        name=name,
-    )
-    t.start()
-    if waitForJoin:
-        t.join()
-    return t
-
-
 @api_tool_decorator()
 def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
     """ Wait till all threads have finished then send a signal back to the Main thread """

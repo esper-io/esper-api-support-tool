@@ -214,7 +214,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_FETCH, self.onFetch)
         self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
         self.Bind(eventUtil.EVT_APPS, self.addAppstoAppChoiceThread)
-        self.Bind(eventUtil.EVT_RESPONSE, self.performAPIResponse)
         self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
@@ -1213,14 +1212,14 @@ class NewFrameLayout(wx.Frame):
                     self.Logging("---> Attempting to populate Application list")
                     self.gauge.Pulse()
                     for deviceId in self.sidePanel.devices.values():
-                        thread = wxThread.doAPICallInThread(
+                        thread = wxThread.GUIThread(
                             self,
                             getdeviceapps,
-                            args=(deviceId, True, Globals.USE_ENTERPRISE_APP),
+                            (deviceId, True, Globals.USE_ENTERPRISE_APP),
                             eventType=eventUtil.myEVT_APPS,
-                            waitForJoin=False,
                             name="GetDeviceAppsToPopulateApps",
                         )
+                        thread.start()
                         newThreads.append(thread)
                         limitActiveThreads(newThreads)
                     num = 0
@@ -1301,13 +1300,8 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
-        thread = wxThread.doAPICallInThread(
-            self,
-            getAllGroups,
-            eventType=eventUtil.myEVT_GROUP,
-            waitForJoin=False,
-            name="PopulateGroupsGetAll",
-        )
+        thread = wxThread.GUIThread(self, getAllGroups, None, eventType=eventUtil.myEVT_GROUP, name="PopulateGroupsGetAll")
+        thread.start()
         return thread
 
     @api_tool_decorator()
@@ -1350,14 +1344,8 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
         threads = []
         for clientData in self.sidePanel.selectedGroupsList:
-            thread = wxThread.doAPICallInThread(
-                self,
-                self.addDevicesToDeviceChoice,
-                args=(clientData),
-                eventType=None,
-                waitForJoin=False,
-                name="AddDevicesToDeviceChoice",
-            )
+            thread = wxThread.GUIThread(self, self.addDevicesToDeviceChoice, clientData, name="AddDevicesToDeviceChoice")
+            thread.start()
             threads.append(thread)
         wxThread.GUIThread(
             self,
@@ -1406,13 +1394,8 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        thread = wxThread.doAPICallInThread(
-            self,
-            self.fetchAllApps,
-            eventType=None,
-            waitForJoin=False,
-            name="PopulateApps",
-        )
+        thread = wxThread.GUIThread(self, self.fetchAllApps, None, name="PopulateApps")
+        thread.start()
         return thread
 
     def fetchAllApps(self):
@@ -2116,42 +2099,6 @@ class NewFrameLayout(wx.Frame):
             Globals.gauge_lock.release()
 
     @api_tool_decorator()
-    def performAPIResponse(self, event):
-        """ Once an API has given its response attempt to run the specififed callback """
-        self.Logging("---> API Response Returned")
-        self.gauge.Pulse()
-        evtValue = event.GetValue()
-        response = evtValue[0]
-        callback = evtValue[1]
-        cbArgs = evtValue[2]
-        optCbArgs = evtValue[3]
-
-        if callback:
-            self.Logging("---> Attempting to Process API Response")
-            if optCbArgs:
-                if type(cbArgs) == tuple and type(optCbArgs) == tuple:
-                    wxThread.GUIThread(
-                        self, callback, (*cbArgs, response, *optCbArgs)
-                    ).start()
-                elif type(cbArgs) == tuple and type(optCbArgs) != tuple:
-                    wxThread.GUIThread(
-                        self, callback, (*cbArgs, response, optCbArgs)
-                    ).start()
-                elif type(cbArgs) != tuple and type(optCbArgs) == tuple:
-                    wxThread.GUIThread(
-                        self, callback, (cbArgs, response, *optCbArgs)
-                    ).start()
-                elif type(cbArgs) != tuple and type(optCbArgs) != tuple:
-                    wxThread.GUIThread(
-                        self, callback, (cbArgs, response, optCbArgs)
-                    ).start()
-            else:
-                if type(cbArgs) == tuple:
-                    wxThread.GUIThread(self, callback, (*cbArgs, response)).start()
-                else:
-                    wxThread.GUIThread(self, callback, (cbArgs, response)).start()
-
-    @api_tool_decorator()
     def onComplete(self, event, isError=False):
         """ Things that should be done once an Action is completed """
         enable = False
@@ -2643,14 +2590,12 @@ class NewFrameLayout(wx.Frame):
                             if r:
                                 res.append(r.to_dict())
                         if res:
-                            wxThread.doAPICallInThread(
+                            wxThread.GUIThread(
                                 self,
                                 processInstallDevices,
-                                args=(res),
-                                eventType=None,
-                                waitForJoin=False,
+                                res,
                                 name="iterateThroughDeviceList",
-                            )
+                            ).start()
                         else:
                             displayMessageBox(
                                 (

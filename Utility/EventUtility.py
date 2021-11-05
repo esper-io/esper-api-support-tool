@@ -2,9 +2,6 @@
 
 import wx
 
-myEVT_RESPONSE = wx.NewEventType()
-EVT_RESPONSE = wx.PyEventBinder(myEVT_RESPONSE, 1)
-
 myEVT_FETCH = wx.NewEventType()
 EVT_FETCH = wx.PyEventBinder(myEVT_FETCH, 1)
 
