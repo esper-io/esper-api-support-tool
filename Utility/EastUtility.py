@@ -380,7 +380,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
                 groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
                 if not urlFormat:
                     urlFormat = deviceGroups[0].replace(groupId, "{id}")
-                if knownGroups[group].lower() != "all devices":
+                if knownGroups[group] and knownGroups[group].lower() != "all devices":
                     subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
                 else:
                     subgroupsIds += ["<All Device Groups>"]
