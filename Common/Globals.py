@@ -261,5 +261,6 @@ SAVE_VISIBILITY = False
 GROUP_FETCH_ALL = True
 MAX_GRID_LOAD = 100
 REPLACE_SERIAL = True
+SHOW_DISABLED_DEVICES = False
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

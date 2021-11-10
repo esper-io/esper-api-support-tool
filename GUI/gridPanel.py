@@ -621,7 +621,6 @@ class GridPanel(wx.Panel):
             headerLabels.remove("Device Name")
         if "Esper Id" in headerLabels:
             headerLabels.remove("Esper Id")
-            colNum = 1
         originalColNum = colNum
 
         with ColumnVisibilityDialog(
@@ -652,7 +651,6 @@ class GridPanel(wx.Panel):
             headerLabels.remove("Device Name")
         if "Esper Id" in headerLabels:
             headerLabels.remove("Esper Id")
-            colNum = 1
         originalColNum = colNum
 
         with ColumnVisibilityDialog(

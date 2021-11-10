@@ -49,7 +49,8 @@ class PreferencesDialog(wx.Dialog):
             "saveColVisibility",
             "groupFetchAll",
             "loadXDevices",
-            "replaceSerial"
+            "replaceSerial",
+            "showDisabledDevices"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -158,6 +159,15 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
         )
+
+        (_, _, self.checkbox_18,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Show Disabled Devices",
+            wx.CheckBox,
+            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
+        )
+        self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED)
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -672,6 +682,17 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REPLACE_SERIAL = False
 
+        if prefDict and "showDisabledDevices" in prefDict:
+            if (
+                isinstance(prefDict["showDisabledDevices"], str)
+                and prefDict["showDisabledDevices"].lower() == "true"
+            ) or prefDict["showDisabledDevices"] == True:
+                self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_DISABLED_DEVICES = True
+            else:
+                self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_DISABLED_DEVICES = False
+
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
@@ -746,6 +767,7 @@ class PreferencesDialog(wx.Dialog):
             "groupFetchAll": self.checkbox_16.IsChecked(),
             "loadXDevices": self.spin_ctrl_11.GetValue(),
             "replaceSerial": self.checkbox_17.IsChecked(),
+            "showDisabledDevices": self.checkbox_18.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -772,6 +794,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
         Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
         Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
+        Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -1043,6 +1066,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.REPLACE_SERIAL = False
+        if "showDisabledDevices" in self.prefs:
+            if (
+                isinstance(self.prefs["showDisabledDevices"], str)
+                and self.prefs["showDisabledDevices"].lower() == "true"
+            ) or self.prefs["showDisabledDevices"] == True:
+                self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_DISABLED_DEVICES = True
+            else:
+                self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_DISABLED_DEVICES = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -1076,6 +1109,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
         self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
         self.prefs["replaceSerial"] = Globals.REPLACE_SERIAL
+        self.prefs["showDisabledDevices"] = Globals.SHOW_DISABLED_DEVICES
 
         return self.prefs
 
@@ -1139,6 +1173,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.MAX_GRID_LOAD
         elif key == "replaceSerial":
             return Globals.REPLACE_SERIAL
+        elif key == "showDisabledDevices":
+            return Globals.SHOW_DISABLED_DEVICES
         else:
             return None
 

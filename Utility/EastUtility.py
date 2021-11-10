@@ -16,7 +16,7 @@ import math
 import pytz
 
 from Common.decorator import api_tool_decorator
-from Common.enum import GeneralActions
+from Common.enum import DeviceState, GeneralActions
 
 from Utility.CommandUtility import executeCommandOnDevice
 from Utility.GridActionUtility import iterateThroughGridRows
@@ -298,25 +298,26 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
     deviceTags = None
     # Handle response from Collections API
     if type(device) == dict:
-        if "is_active" in device and not device["is_active"]:
-            return
         deviceId = device["id"]
         deviceName = device["name"]
         deviceGroups = device["group"]
         deviceAlias = device["alias"]
         deviceStatus = device["status"]
+        if not Globals.SHOW_DISABLED_DEVICES and "disable" in deviceStatus.lower():
+            return
         deviceHardware = device["hardware"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
         # Handles response from Python API
-        if not device.is_active:
-            return
         deviceId = device.id
         deviceName = device.device_name
         deviceGroups = device.groups
         deviceAlias = device.alias_name
         deviceStatus = device.status
+        # Device is disabled return
+        if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
+            return
         deviceHardware = device.hardware_info
         deviceTags = device.tags
         deviceDict = device.__dict__
@@ -417,18 +418,25 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
             deviceInfo.update({"Status": "Offline"})
         elif "wipe" in deviceStatus.lower():
             deviceInfo.update({"Status": "Wipe In-Progress"})
+        elif deviceStatus.lower() == "disabled":
+            deviceInfo.update({"Status": "Disabled"})
         else:
             deviceInfo.update({"Status": "Unknown"})
     else:
-        if deviceStatus == 1:
-            deviceInfo.update({"Status": "Online"})
-        elif deviceStatus == 0:
+        if not Globals.SHOW_DISABLED_DEVICES:
+            return
+
+        if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
             deviceInfo.update({"Status": "Unspecified"})
-        elif deviceStatus > 1 and deviceStatus < 60:
+        elif deviceStatus == DeviceState.ACTIVE.value:
+            deviceInfo.update({"Status": "Online"})
+        elif deviceStatus == DeviceState.DISABLED.value:
+            deviceInfo.update({"Status": "Disabled"})
+        elif deviceStatus >= DeviceState.PROVISIONING_BEGIN.value and deviceStatus < DeviceState.INACTIVE.value:
             deviceInfo.update({"Status": "Provisioning"})
-        elif deviceStatus == 60:
+        elif deviceStatus == DeviceState.INACTIVE.value:
             deviceInfo.update({"Status": "Offline"})
-        elif deviceStatus == 70:
+        elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
             deviceInfo.update({"Status": "Wipe In-Progress"})
         else:
             deviceInfo.update({"Status": "Unknown"})
