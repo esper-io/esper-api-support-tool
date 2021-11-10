@@ -423,7 +423,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
         else:
             deviceInfo.update({"Status": "Unknown"})
     else:
-        if not Globals.SHOW_DISABLED_DEVICES:
+        if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
             return
 
         if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:

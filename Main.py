@@ -37,7 +37,10 @@ class MyApp(wx.App):
 @api_tool_decorator()
 def main():
     """Launches Main App"""
-    sys.excepthook = ApiToolLog().excepthook
+    logger = ApiToolLog()
+    sys.excepthook = logger.excepthook
+
+    logger.limitLogFileSizes()
     try:
         Globals.app = MyApp(0)
         Globals.app.MainLoop()
