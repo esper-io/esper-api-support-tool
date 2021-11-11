@@ -73,7 +73,7 @@ def getInfo(request_extension, deviceid):
 
 @api_tool_decorator()
 def getDeviceDetail(deviceId):
-    return getInfo("/?format=json&show_policy=true", deviceId)
+    return getInfo("?format=json&show_policy=true", deviceId)
 
 
 @api_tool_decorator()
