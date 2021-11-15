@@ -1878,21 +1878,26 @@ class NewFrameLayout(wx.Frame):
             
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    deviceThread = wxThread.GUIThread(
-                        self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
-                    )
-                    deviceThread.start()
-                    networkThread = wxThread.GUIThread(
-                        self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
-                    )
-                    networkThread.start()
-                    appThread = wxThread.GUIThread(
-                        self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
-                    )
-                    appThread.start()
-                    threads.append(deviceThread)
-                    threads.append(networkThread)
-                    threads.append(appThread)
+                    if self.WINDOWS:
+                        deviceThread = wxThread.GUIThread(
+                            self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                        )
+                        deviceThread.start()
+                        networkThread = wxThread.GUIThread(
+                            self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                        )
+                        networkThread.start()
+                        appThread = wxThread.GUIThread(
+                            self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                        )
+                        appThread.start()
+                        threads.append(deviceThread)
+                        threads.append(networkThread)
+                        threads.append(appThread)
+                    else:
+                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                        self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
+                        self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"])
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
