@@ -35,6 +35,7 @@ class SidePanel(wx.Panel):
 
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
+        self.SetMinSize((300, 400))
 
         sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
