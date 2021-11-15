@@ -10,11 +10,11 @@ class PreferencesDialog(wx.Dialog):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
-            size=(525, 400),
+            size=(800, 500),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.size = (550, 400)
+        self.size = (800, 500)
         self.SetSize(self.size)
         self.SetMinSize(self.size)
 
