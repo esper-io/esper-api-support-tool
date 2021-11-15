@@ -1987,25 +1987,32 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
                 if len(self.gridPanel.grid_3_contents) < Globals.MAX_GRID_LOAD + 1:
-                    appThread = wxThread.GUIThread(
-                        self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
-                    )
-                    appThread.start()
-                    threads.append(appThread)
+                    if self.WINDOWS:
+                        appThread = wxThread.GUIThread(
+                            self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                        )
+                        appThread.start()
+                        threads.append(appThread)
+                    else:
+                        self.gridPanel.populateAppGrid(device, deviceInfo, deviceInfo["appObj"])
                 else:
                     self.gridPanel.constructAppGridContent(device, deviceInfo, deviceInfo["appObj"])
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    deviceThread = wxThread.GUIThread(
-                        self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
-                    )
-                    deviceThread.start()
-                    networkThread = wxThread.GUIThread(
-                        self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
-                    )
-                    networkThread.start()
-                    threads.append(deviceThread)
-                    threads.append(networkThread)
+                    if self.WINDOWS:
+                        deviceThread = wxThread.GUIThread(
+                            self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                        )
+                        deviceThread.start()
+                        networkThread = wxThread.GUIThread(
+                            self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                        )
+                        networkThread.start()
+                        threads.append(deviceThread)
+                        threads.append(networkThread)
+                    else:
+                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                        self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
