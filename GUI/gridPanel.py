@@ -1412,19 +1412,27 @@ class GridPanel(wx.Panel):
             self.grid_3_contents.append(info)
 
     def onScroll(self, event):
-        scrollPosPercentage = (self.grid_1.GetScrollThumb(wx.VERTICAL) + self.grid_1.GetScrollPos(wx.VERTICAL)) / self.grid_1.GetScrollRange(wx.VERTICAL) * 100
+        scrollPosPercentage = self.getScrollpercentage(self.grid_1)
         if scrollPosPercentage >= 90:
             self.populateGridRows(self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME)
         
-        scrollPosPercentage = (self.grid_2.GetScrollThumb(wx.VERTICAL) + self.grid_2.GetScrollPos(wx.VERTICAL)) / self.grid_2.GetScrollRange(wx.VERTICAL) * 100
+        scrollPosPercentage = self.getScrollpercentage(self.grid_2)
         if scrollPosPercentage >= 90:
             self.populateGridRows(self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME)
         
-        scrollPosPercentage = (self.grid_2.GetScrollThumb(wx.VERTICAL) + self.grid_3.GetScrollPos(wx.VERTICAL)) / self.grid_3.GetScrollRange(wx.VERTICAL) * 100
+        scrollPosPercentage = self.getScrollpercentage(self.grid_3)
         if scrollPosPercentage >= 90:
             self.populateGridRows(self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME)
         if event:
             event.Skip()
+
+    def getScrollpercentage(self, grid):
+        numerator = (grid.GetScrollThumb(wx.VERTICAL) + grid.GetScrollPos(wx.VERTICAL))
+        denominator = grid.GetScrollRange(wx.VERTICAL)
+        scrollPosPercentage = 0
+        if denominator > 0:
+            scrollPosPercentage = numerator / denominator * 100
+        return scrollPosPercentage
 
     def populateGridRows(self, grid, content, fields):
         if content:
