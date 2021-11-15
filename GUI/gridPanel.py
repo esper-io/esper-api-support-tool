@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import platform
 import time
 from Utility.Resource import acquireLocks, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
 import Common.Globals as Globals
@@ -393,10 +394,13 @@ class GridPanel(wx.Panel):
         self.parentFrame.setGaugeValue(0)
         self.emptyDeviceGrid(emptyContents=False)
         self.grid_1.Freeze()
-        thread = wxThread.GUIThread(
-            self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
-        )
-        thread.start()
+        if platform.system() == "Windows":
+            thread = wxThread.GUIThread(
+                self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
+            )
+            thread.start()
+        else:
+            self.repopulateGrid(self.grid_1_contents, col)
 
     @api_tool_decorator()
     def onNetworkGridSort(self, event):
@@ -442,12 +446,15 @@ class GridPanel(wx.Panel):
         self.parentFrame.setGaugeValue(0)
         self.emptyNetworkGrid(emptyContents=False)
         self.grid_2.Freeze()
-        thread = wxThread.GUIThread(
-            self.parentFrame,
-            self.repopulateGrid,
-            (self.grid_2_contents, col, "Network"),
-        )
-        thread.start()
+        if platform.system() == "Windows":
+            thread = wxThread.GUIThread(
+                self.parentFrame,
+                self.repopulateGrid,
+                (self.grid_2_contents, col, "Network"),
+            )
+            thread.start()
+        else:
+            self.repopulateGrid(self.grid_2_contents, col, "Network")
 
     @api_tool_decorator()
     def onAppGridSort(self, event):
@@ -492,12 +499,15 @@ class GridPanel(wx.Panel):
         self.parentFrame.setGaugeValue(0)
         self.emptyAppGrid(emptyContents=False)
         self.grid_3.Freeze()
-        thread = wxThread.GUIThread(
-            self.parentFrame,
-            self.repopulateGrid,
-            (self.grid_3_contents, col, "App"),
-        )
-        thread.start()
+        if platform.system() == "Windows":
+            thread = wxThread.GUIThread(
+                self.parentFrame,
+                self.repopulateGrid,
+                (self.grid_3_contents, col, "App"),
+            )
+            thread.start()
+        else:
+            self.repopulateGrid(self.grid_3_contents, col, "App"),
 
     def repopulateGrid(self, content, col, action="Device"):
         num = 1
@@ -1074,12 +1084,15 @@ class GridPanel(wx.Panel):
     @api_tool_decorator()
     def updateTagCell(self, name, tags=None):
         """ Update the Tag Column in the Device Grid """
-        wxThread.GUIThread(
-            self.parentFrame,
-            self.processUpdateTagCell,
-            (name, tags),
-            name="UpdateTagCell",
-        )
+        if platform.system() == "Windows":
+            wxThread.GUIThread(
+                self.parentFrame,
+                self.processUpdateTagCell,
+                (name, tags),
+                name="UpdateTagCell",
+            )
+        else:
+            self.processUpdateTagCell(name, tags)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def processUpdateTagCell(self, name, tags=None):
