@@ -231,14 +231,14 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
 
-        (_, _, self.checkbox_3,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Enable Grid Refresh",
-            wx.CheckBox,
-            "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
-            % Globals.MAX_UPDATE_COUNT,
-        )
+        # (_, _, self.checkbox_3,) = self.addPrefToPanel(
+        #     self.grid,
+        #     sizer_16,
+        #     "Enable Grid Refresh",
+        #     wx.CheckBox,
+        #     "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
+        #     % Globals.MAX_UPDATE_COUNT,
+        # )
 
         (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
             self.grid,
@@ -401,17 +401,17 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
-        if prefDict and not prefDict["enableGridUpdate"]:
-            self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.ENABLE_GRID_UPDATE = False
-        elif prefDict and prefDict["enableGridUpdate"]:
-            self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
-            Globals.ENABLE_GRID_UPDATE = True
-            if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-                self.parent.startUpdateThread()
-        else:
-            self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.ENABLE_GRID_UPDATE = False
+        # if prefDict and not prefDict["enableGridUpdate"]:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = False
+        # elif prefDict and prefDict["enableGridUpdate"]:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = True
+        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        #         self.parent.startUpdateThread()
+        # else:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = False
 
         if not prefDict or (prefDict and not prefDict["getAllApps"]):
             self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
@@ -742,7 +742,7 @@ class PreferencesDialog(wx.Dialog):
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
             "updateRate": self.spin_ctrl_7.GetValue(),
-            "enableGridUpdate": self.checkbox_3.IsChecked(),
+            # "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
             if self.parent
@@ -782,7 +782,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.offset = self.prefs["offset"]
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-        Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
+        # Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
@@ -860,11 +860,11 @@ class PreferencesDialog(wx.Dialog):
         if "updateRate" in self.prefs and self.prefs["updateRate"]:
             Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
             self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
-        if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
-            self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
-            Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
-            if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-                self.parent.startUpdateThread()
+        # if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
+        #     self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
+        #     Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
+        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        #         self.parent.startUpdateThread()
         if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
                 size = tuple(
