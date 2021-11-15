@@ -2,6 +2,7 @@
 
 import esperclient
 import threading
+import platform
 
 from Common.enum import GridActions, GeneralActions
 
@@ -46,8 +47,9 @@ grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 
 """ Actions """
+NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
-    "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
+    "\t" if platform.system() == "Windows" else "" + "* " * NUM_STARS + "General Actions " + "* " * NUM_STARS: -1,
     "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
@@ -61,7 +63,7 @@ GENERAL_ACTIONS = {
 }
 
 GRID_ACTIONS = {
-    "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
+    "\t" if platform.system() == "Windows" else "" + "* " * NUM_STARS + "Grid Actions " + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,

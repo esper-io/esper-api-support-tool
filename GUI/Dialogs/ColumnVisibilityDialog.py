@@ -30,11 +30,11 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnApply)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
 
+        self.Bind(wx.EVT_LISTBOX, self.OnSelection)
         if (
             hasattr(self.Parent.parentFrame, "WINDOWS")
             and self.Parent.parentFrame.WINDOWS
         ):
-            self.Bind(wx.EVT_LISTBOX, self.OnSelection)
             self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         colNum = 0 if "Esper Id" not in Globals.CSV_TAG_ATTR_NAME.keys() else 1
