@@ -793,10 +793,13 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
-                thread = wxThread.GUIThread(
-                    self, self.openDeviceCSV, (csv_auth_path), name="openDeviceCSV"
-                )
-                thread.start()
+                if self.WINDOWS:
+                    thread = wxThread.GUIThread(
+                        self, self.openDeviceCSV, (csv_auth_path), name="openDeviceCSV"
+                    )
+                    thread.start()
+                else:
+                    self.openDeviceCSV(csv_auth_path)
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
