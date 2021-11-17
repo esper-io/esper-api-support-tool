@@ -53,6 +53,8 @@ EVT_UPDATE_GRID_CONTENT = wx.PyEventBinder(myEVT_UPDATE_GRID_CONTENT, 1)
 myEVT_DISPLAY_NOTIFICATION = wx.NewEventType()
 EVT_DISPLAY_NOTIFICATION = wx.PyEventBinder(myEVT_DISPLAY_NOTIFICATION, 1)
 
+myEVT_PROCESS_FUNCTION = wx.NewEventType()
+EVT_PROCESS_FUNCTION = wx.PyEventBinder(myEVT_PROCESS_FUNCTION, 1)
 
 class CustomEvent(wx.PyCommandEvent):
     """Event to signal that a count value is ready"""

@@ -226,6 +226,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
         self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
+        self.Bind(eventUtil.EVT_PROCESS_FUNCTION, self.processFunc)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
@@ -793,6 +794,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
+                thread = None
                 if self.WINDOWS:
                     thread = wxThread.GUIThread(
                         self, self.openDeviceCSV, (csv_auth_path), name="openDeviceCSV"
@@ -1258,16 +1260,29 @@ class NewFrameLayout(wx.Frame):
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
             self.sidePanel.actionChoice.SetSelection(indx)
-            if self.gridPanel.grid_1.IsFrozen():
-                self.gridPanel.grid_1.Thaw()
-            if self.gridPanel.grid_2.IsFrozen():
-                self.gridPanel.grid_2.Thaw()
-            if self.gridPanel.grid_3.IsFrozen():
-                self.gridPanel.grid_3.Thaw()
-            self.gridPanel.enableGridProperties()
-            self.gridPanel.autoSizeGridsColumns()
-            self.sidePanel.groupChoice.Enable(True)
-            self.sidePanel.deviceChoice.Enable(True)
+            #TODO: FIX
+            if self.WINDOWS:
+                if self.gridPanel.grid_1.IsFrozen():
+                    self.gridPanel.grid_1.Thaw()
+                if self.gridPanel.grid_2.IsFrozen():
+                    self.gridPanel.grid_2.Thaw()
+                if self.gridPanel.grid_3.IsFrozen():
+                    self.gridPanel.grid_3.Thaw()
+                self.gridPanel.enableGridProperties()
+                self.gridPanel.autoSizeGridsColumns()
+                self.sidePanel.groupChoice.Enable(True)
+                self.sidePanel.deviceChoice.Enable(True)
+            else:
+                if self.gridPanel.grid_1.IsFrozen():
+                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_1.Thaw)
+                if self.gridPanel.grid_2.IsFrozen():
+                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_2.Thaw)
+                if self.gridPanel.grid_3.IsFrozen():
+                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_3.Thaw)
+                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.enableGridProperties)
+                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.enableGridProperties)
+                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, (self.sidePanel.groupChoice.Enable, True))
+                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, (self.sidePanel.deviceChoice.Enable, True))
         if source == 3:
             cmdResults = []
             if (
@@ -2851,3 +2866,14 @@ class NewFrameLayout(wx.Frame):
                     t.join()
         if event:
             event.Skip()
+
+    def processFunc(self, event):
+        """ Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
+        fun = event.GetValue()
+        if callable(fun):
+            fun()
+        elif type(fun) == tuple and callable(fun[0]):
+            if type(fun[1]) == tuple:
+                fun[0](*fun[1])
+            else:
+                fun[0](fun[1])
