@@ -102,6 +102,22 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
+                elif "imei1" in entry.keys():
+                    identifier = entry["imei1"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif "imei2" in entry.keys():
+                    identifier = entry["imei2"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllDevices",
                     api_instance.get_all_devices,
