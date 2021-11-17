@@ -653,20 +653,31 @@ def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
 def processDeviceGroupMove(deviceChunk, groupList):
     groupId = None
     results = {}
+    groupListKeys = groupList.keys()
     for device in deviceChunk:
         groupName = None
-        if device.device_name in groupList.keys():
+        if device.device_name in groupListKeys:
             groupName = groupList[device.device_name]
         elif (
             "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in groupList.keys()
+            and device.hardware_info["serialNumber"] in groupListKeys
         ):
             groupName = groupList[device.hardware_info["serialNumber"]]
         elif (
             "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in groupList.keys()
+            and device.hardware_info["customSerialNumber"] in groupListKeys
         ):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
+        elif (
+                hasattr(device, "networkInfo")
+                and "imei1" in device.networkInfo and device.networkInfo["imei1"] in groupListKeys
+            ):
+            groupName = groupList[device.networkInfo["imei1"]]
+        elif (
+                hasattr(device, "networkInfo")
+                and "imei2" in device.networkInfo and device.networkInfo["imei2"] in groupListKeys
+            ):
+            groupName = groupList[device.networkInfo["imei1"]]
         if groupName:
             if isApiKey(groupName):
                 resp = moveGroup(groupName, device.id)
