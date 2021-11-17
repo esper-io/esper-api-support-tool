@@ -57,7 +57,7 @@ class GroupManagement(wx.Dialog):
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.notebook_1_pane_1 = TabPanel(self.notebook_1, wx.ID_ANY, "Single")
         self.notebook_1.AddPage(self.notebook_1_pane_1, "Single")
 
         grid_sizer_1 = wx.FlexGridSizer(5, 1, 0, 0)
