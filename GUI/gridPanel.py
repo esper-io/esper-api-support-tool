@@ -1160,13 +1160,17 @@ class GridPanel(wx.Panel):
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
+        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
+        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
+                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
+                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
                 if esperName or serialNum:
-                    identifers.append((esperName, serialNum, cusSerialNum))
+                    identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
         releaseLocks([Globals.grid1_lock])
         return identifers
 

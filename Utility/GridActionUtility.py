@@ -557,6 +557,22 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
+                elif entry[3]:
+                    identifier = entry[3]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif entry[4]:
+                    identifier = entry[4]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllDevices",
                     api_instance.get_all_devices,
