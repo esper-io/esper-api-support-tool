@@ -370,36 +370,15 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
     if devices:
         threads = []
         for device in devices:
-            if (
-                (
-                    hasattr(device, "device_name")
-                    and device.device_name in deviceIdentifers
-                )
-                or (
-                    hasattr(device, "hardware_info")
-                    and "serialNumber" in device.hardware_info
-                    and device.hardware_info["serialNumber"] in deviceIdentifers
-                )
-                or (
-                    hasattr(device, "hardware_info")
-                    and "customSerialNumber" in device.hardware_info
-                    and device.hardware_info["customSerialNumber"] in deviceIdentifers
-                )
-                or (
-                    hasattr(device, "networkInfo")
-                    and (("imei1" in device.networkInfo and device.networkInfo["imei1"] in deviceIdentifers)
-                    or ("imei2" in device.networkInfo and device.networkInfo["imei2"] in deviceIdentifers))
-                )
-            ):
-                t = wxThread.GUIThread(
-                    Globals.frame,
-                    setAllAppsState,
-                    args=(Globals.frame, device, Globals.frame.AppState),
-                    name="setAllAppsState",
-                )
-                threads.append(t)
-                t.start()
-                limitActiveThreads(threads)
+            t = wxThread.GUIThread(
+                Globals.frame,
+                setAllAppsState,
+                args=(Globals.frame, device, Globals.frame.AppState),
+                name="setAllAppsState",
+            )
+            threads.append(t)
+            t.start()
+            limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
             wxThread.waitTillThreadsFinish,
