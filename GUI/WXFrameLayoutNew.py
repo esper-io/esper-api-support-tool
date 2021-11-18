@@ -1341,7 +1341,10 @@ class NewFrameLayout(wx.Frame):
         )
         if len(results):
             for group in results:
-                self.sidePanel.groups[group.name] = group.id
+                if group.name not in self.sidePanel.groups:
+                    self.sidePanel.groups[group.name] = group.id
+                else:
+                    self.sidePanel.groups[group.path] = group.id
                 self.setGaugeValue(50 + int(float(num / len(results)) * 25))
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
