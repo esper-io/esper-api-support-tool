@@ -63,6 +63,12 @@ class ToolMenuBar(wx.MenuBar):
         fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
 
+        saveApps = wx.MenuItem(
+            fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S"
+        )
+        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
+        self.fileSaveApps = fileMenu.Append(saveApps)
+
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
         fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
@@ -164,10 +170,6 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log")
         )
         viewMenu.Append(wx.ID_SEPARATOR)
-        self.refreshGrids = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids' Data")
-        )
-        self.refreshGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
         self.colSize = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
         )
@@ -220,12 +222,12 @@ class ToolMenuBar(wx.MenuBar):
         self.groupSubMenu.Enable(False)
         self.fileSave.Enable(False)
         self.fileSaveAs.Enable(False)
+        self.fileSaveApps.Enable(False)
 
         self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
 
         self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
-        self.Bind(wx.EVT_MENU, self.parentFrame.updateGrids, self.refreshGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
@@ -234,6 +236,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBothAll, self.fileSaveAs)
+        self.Bind(wx.EVT_MENU, self.parentFrame.saveAppInfo, self.fileSaveApps)
         self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
@@ -380,14 +383,8 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    wxThread.doAPICallInThread(
-                        self,
-                        processCollectionDevices,
-                        args=(deviceListResp),
-                        eventType=None,
-                        waitForJoin=False,
-                        name="eqlIterateThroughDeviceList",
-                    )
+                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="eqlIterateThroughDeviceList")
+                    thread.start()
             else:
                 self.parentFrame.setCursorDefault()
 
@@ -407,14 +404,8 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    wxThread.doAPICallInThread(
-                        self,
-                        processCollectionDevices,
-                        args=(deviceListResp),
-                        eventType=None,
-                        waitForJoin=False,
-                        name="collectionIterateThroughDeviceList",
-                    )
+                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="collectionIterateThroughDeviceList")
+                    thread.start()
             else:
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()
@@ -464,3 +455,8 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
         self.parentFrame.onRun()
+
+    def setSaveMenuOptionsEnableState(self, state):
+        self.fileSave.Enable(state)
+        self.fileSaveAs.Enable(state)
+        self.fileSaveApps.Enable(state)

@@ -16,7 +16,7 @@ import webbrowser
 import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
-from datetime import datetime
+from datetime import datetime, timezone
 from Utility.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
@@ -216,19 +216,16 @@ def joinThreadList(threads):
                 thread.join()
 
 
-@api_tool_decorator(locks=[Globals.lock])
-def limitActiveThreads(threads, max_alive=Globals.MAX_THREAD_COUNT, sleep=1):
-    Globals.lock.acquire()
-    numAlive = 0
-    for thread in threads:
-        if thread.is_alive():
-            numAlive += 1
-    if numAlive >= max_alive:
+@api_tool_decorator(locks=[])
+def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeout=10):
+    if threads:
+        numAlive = 0
         for thread in threads:
-            thread.join()
-        time.sleep(1)
-    if Globals.lock.locked():
-        Globals.lock.release()
+            if thread.is_alive():
+                numAlive += 1
+        if numAlive >= max_alive:
+            for thread in threads:
+                thread.join()
 
 
 def ipv6Tomac(ipv6):
@@ -456,3 +453,22 @@ def isApiKey(key):
     if type(key) != str:
         return False
     return len(key) == 36 and "-" in key
+
+def utc_to_local(utc_dt):
+    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
+def acquireLocks(locks, timeout=5):
+    if type(locks) == list:
+        for lock in locks:
+            if type(locks) == threading.Lock:
+                locks.acquire(timeout=5)
+    elif type(locks) == threading.Lock:
+        locks.acquire(timeout=5)
+
+def releaseLocks(locks):
+    if type(locks) == list:
+        for lock in locks:
+            if type(locks) == threading.Lock and lock.locked():
+                lock.release()
+    elif type(locks) == threading.Lock and locks.locked():
+        locks.release()

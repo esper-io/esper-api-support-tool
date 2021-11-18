@@ -161,8 +161,8 @@ class TemplateDialog(wx.Dialog):
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
         self.choice_2.Bind(wx.EVT_CHOICE, self.onChoice2Select)
+        self.list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
         if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
-            self.list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
             self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         self.__set_properties()

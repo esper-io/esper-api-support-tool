@@ -35,6 +35,7 @@ class SidePanel(wx.Panel):
 
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_2, 0, wx.ALL | wx.EXPAND, 5)
+        self.SetMinSize((300, 400))
 
         sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
@@ -65,8 +66,8 @@ class SidePanel(wx.Panel):
         grid_sizer_1.Add(
             self.removeEndpointBtn,
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
-            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.RIGHT,
+            3,
         )
 
         self.configList = wx.TextCtrl(
@@ -384,6 +385,8 @@ class SidePanel(wx.Panel):
                 self.parentFrame.setCursorBusy()
                 self.devices = {}
                 self.parentFrame.PopulateDevices(None)
+            else:
+                self.parentFrame.menubar.enableConfigMenu()
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):

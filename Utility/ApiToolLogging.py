@@ -46,10 +46,21 @@ class ApiToolLog:
             with open(self.placePath, "w"):
                 pass
 
+    def limitLogFileSizes(self):
+        self.limitFileSize(self.logPath)
+        self.limitFileSize(self.placePath)
+
+    def limitFileSize(self, file, maxFileSizeInMb=5):
+        if os.path.exists(file) and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb:
+            with open(file, "w"):
+                pass
+
     def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
         if exc_type == None or exc_value == None or exc_traceback == None:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             exc_traceback = format_list(extract_tb(exc_traceback))
+
+        self.limitLogFileSizes()
 
         with open(self.logPath, "a") as myfile:
             myfile.write("\n%s\t: An Error has occured: %s\n" % (datetime.now(), e))
@@ -82,6 +93,7 @@ class ApiToolLog:
             message += str(line)
         message += "\n"
         print(message)
+        self.limitLogFileSizes()
         with open(self.logPath, "a") as myfile:
             myfile.write(message)
 
@@ -135,6 +147,7 @@ class ApiToolLog:
                 else:
                     ApiTracker.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
+        if writeToFile:
             strToWrite = (
                 "%s API Request orginated from %s, triggerring %s. Total Requests: %s\n"
                 % (
@@ -146,8 +159,8 @@ class ApiToolLog:
                     ApiTracker.API_REQUEST_SESSION_TRACKER,
                 )
             )
-        if strToWrite and writeToFile:
             Globals.api_log_lock.acquire()
+            self.limitLogFileSizes()
             try:
                 with open(self.logPath, "a") as myfile:
                     myfile.write(strToWrite)

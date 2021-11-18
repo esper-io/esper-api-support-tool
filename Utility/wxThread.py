@@ -1,52 +1,27 @@
 #!/usr/bin/env python
 
+import time
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.Resource import joinThreadList, postEventToFrame
 import math
-from Common.enum import GeneralActions, GridActions
+from Common.enum import GridActions
 import Common.Globals as Globals
 import threading
 import wx
 
 
-def doAPICallInThread(
-    frame,
-    func,
-    args=None,
-    eventType=eventUtil.myEVT_UPDATE,
-    callback=None,
-    callbackArgs=None,
-    optCallbackArgs=None,
-    waitForJoin=True,
-    name=None,
-):
-    t = GUIThread(
-        frame,
-        func,
-        args=args,
-        eventType=eventType,
-        callback=callback,
-        optCallbackArgs=optCallbackArgs,
-        callbackArgs=callbackArgs,
-        name=name,
-    )
-    t.start()
-    if waitForJoin:
-        t.join()
-    return t
-
-
 @api_tool_decorator()
-def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=None):
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
+    
+    initPercent = 0
+    if Globals.frame.gauge:
+        initPercent = Globals.frame.gauge.GetValue()
+    initVal = 0
     if source == 1:
         deviceList = {}
-        initPercent = 0
-        if Globals.frame.gauge:
-            initPercent = Globals.frame.gauge.GetValue()
-        initVal = 0
         if maxGauge:
             initVal = math.ceil((initPercent / 100) * maxGauge)
         for thread in threads:
@@ -83,8 +58,14 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=N
         for thread in threads:
             if type(thread.result) == dict:
                 deviceList = {**deviceList, **thread.result}
+                if maxGauge:
+                    val = int((initVal + len(deviceList)) / maxGauge * 100)
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE,
+                        val,
+                    )
         return (
-            GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+            action,
             Globals.enterprise_id,
             deviceList,
             True,
@@ -195,3 +176,12 @@ class GUIThread(threading.Thread):
                 evt = eventUtil.CustomEvent(self.eventType, -1, self.result)
             if self._parent:
                 wx.PostEvent(self._parent, evt)
+
+    def start(self):
+        for attempt in range(Globals.MAX_RETRY):
+            try:
+                return super().start()
+            except Exception as e:
+                time.sleep(3)
+                if attempt == Globals.MAX_RETRY - 1:
+                    raise e

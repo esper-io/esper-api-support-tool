@@ -6,18 +6,20 @@ from Utility.ApiToolLogging import ApiToolLog
 import Common.Globals as Globals
 import sys
 import wx
+import locale
 
 from Common.decorator import api_tool_decorator
 
 
 class MyApp(wx.App):
     def OnInit(self):
-        self.locale = wx.Locale(wx.LANGUAGE_ENGLISH)
+        self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
+        locale.setlocale(locale.LC_ALL, 'en_US')
         self.name = "EAST-%s" % wx.GetUserId()
         self.instance = wx.SingleInstanceChecker(self.name)
 
         if self.instance.IsAnotherRunning():
-            print("Another instance is running")
+            wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
             return False
 
         Globals.frame = FrameLayout()
@@ -35,7 +37,10 @@ class MyApp(wx.App):
 @api_tool_decorator()
 def main():
     """Launches Main App"""
-    sys.excepthook = ApiToolLog().excepthook
+    logger = ApiToolLog()
+    sys.excepthook = logger.excepthook
+
+    logger.limitLogFileSizes()
     try:
         Globals.app = MyApp(0)
         Globals.app.MainLoop()

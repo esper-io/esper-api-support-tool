@@ -7,6 +7,7 @@ from enum import Enum
 
 class GeneralActions(Enum):
     SHOW_ALL_AND_GENERATE_REPORT = 1
+    SET_DEVICE_MODE = 1.5
     SET_KIOSK = 2
     SET_MULTI = 3
     CLEAR_APP_DATA = 4
@@ -15,6 +16,8 @@ class GeneralActions(Enum):
     MOVE_GROUP = 9
     INSTALL_APP = 10
     UNINSTALL_APP = 11
+    GENERATE_APP_REPORT = 12
+    GENERATE_INFO_REPORT = 13
 
 
 class GridActions(Enum):
@@ -26,6 +29,17 @@ class GridActions(Enum):
     INSTALL_LATEST_APP = 37
     UNINSTALL_LISTED_APP = 38
 
+
+class DeviceState(Enum):
+    DEVICE_STATE_UNSPECIFIED = 0
+    ACTIVE = 1
+    DISABLED = 20
+    PROVISIONING_BEGIN = 30
+    GOOGLE_PLAY_CONFIGURATION = 40
+    POLICY_APPLICATION_IN_PROGRESS = 50
+
+    INACTIVE = 60  # This state is set by cloud, when device is unreachable
+    WIPE_IN_PROGRESS = 70  # State set by cloud, in the 5 minute waiting period for WIPE
 
 class Color(Enum):
     white = wx.Colour(255, 255, 255)

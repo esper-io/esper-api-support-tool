@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import copy
 from Utility.EsperAPICalls import getAllDevices, getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
@@ -144,8 +145,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
-        if hasattr(self.Parent, "WINDOWS") and self.Parent.WINDOWS:
-            self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
+        self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
         self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
 
@@ -253,8 +253,11 @@ class MultiSelectSearchDlg(wx.Dialog):
         if self.checkbox_1.IsChecked():
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
+            elif "device" in self.label.lower():
+                wxThread.GUIThread(self, self.selectAllDevices, None, name="selectAllDevices").start()
             else:
-                self.selected = self.selected + self.originalChoices[self.page]
+                tmp = copy.deepcopy(self.originalChoices[self.page])
+                self.selected = self.selected + tmp
         else:
             self.selected = []
         if not self.isFiltered:
@@ -352,12 +355,12 @@ class MultiSelectSearchDlg(wx.Dialog):
     def checkPageButton(self):
         if self.page == 0:
             self.button_1.Enable(False)
-        else:
+        elif self.resp.next:
             self.button_1.Enable(True)
 
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
-        else:
+        elif self.resp.previous:
             self.button_2.Enable(True)
 
     def updateChoices(self):
@@ -410,3 +413,39 @@ class MultiSelectSearchDlg(wx.Dialog):
             if name not in nameList:
                 nameList.append(name)
         return nameList
+
+    def selectAllDevices(self):
+        self.setCursorBusy()
+        self.button_1.Enable(False)
+        self.button_2.Enable(False)
+        self.button_OK.Enable(False)
+        self.search.Enable(False)
+        self.checkbox_1.Enable(False)
+        self.check_list_box_1.Enable(False)
+
+        if self.resp.count > len(self.originalChoices[0]):
+            resp = getAllDevices(
+                self.group,
+                limit=len(self.resp.results),
+                offset=0,
+                fetchAll=True
+            )
+            if resp:
+                self.check_list_box_1.Clear()
+                self.originalChoices[0] = self.processDevices(resp.results)
+                for item in self.originalChoices[0]:
+                    self.check_list_box_1.Append(item)
+        self.selected = copy.deepcopy(self.originalChoices[0])
+        tmpSelection = []
+        num = 0
+        for item in self.selected:
+            tmpSelection.append(num)
+            num += 1
+        self.check_list_box_1.SetCheckedItems(tmpSelection)
+
+        self.search.Clear()
+        self.checkbox_1.Enable(True)
+        self.check_list_box_1.Enable(True)
+        self.search.Enable(True)
+        self.button_OK.Enable(True)
+        self.setCursorDefault()

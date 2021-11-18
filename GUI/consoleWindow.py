@@ -91,6 +91,7 @@ class Console(wx.Frame):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_ESCAPE:
             self.onClose(event)
+        event.Skip()
 
     @api_tool_decorator()
     def onClose(self, event):

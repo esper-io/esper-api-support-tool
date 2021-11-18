@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from platform import version
-from urllib3 import packages
 from Utility.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 import time
 
@@ -101,6 +99,22 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                     api_response = api_instance.get_all_devices(
                         Globals.enterprise_id,
                         search=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif "imei1" in entry.keys():
+                    identifier = entry["imei1"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif "imei2" in entry.keys():
+                    identifier = entry["imei2"]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
@@ -356,26 +370,15 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
     if devices:
         threads = []
         for device in devices:
-            if (
-                device.device_name in deviceIdentifers
-                or (
-                    "serialNumber" in device.hardware_info
-                    and device.hardware_info["serialNumber"] in deviceIdentifers
-                )
-                or (
-                    "customSerialNumber" in device.hardware_info
-                    and device.hardware_info["customSerialNumber"] in deviceIdentifers
-                )
-            ):
-                t = wxThread.GUIThread(
-                    Globals.frame,
-                    setAllAppsState,
-                    args=(Globals.frame, device, Globals.frame.AppState),
-                    name="setAllAppsState",
-                )
-                threads.append(t)
-                t.start()
-                limitActiveThreads(threads)
+            t = wxThread.GUIThread(
+                Globals.frame,
+                setAllAppsState,
+                args=(Globals.frame, device, Globals.frame.AppState),
+                name="setAllAppsState",
+            )
+            threads.append(t)
+            t.start()
+            limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
             wxThread.waitTillThreadsFinish,
@@ -559,6 +562,22 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
+                elif entry[3]:
+                    identifier = entry[3]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
+                elif entry[4]:
+                    identifier = entry[4]
+                    api_response = api_instance.get_all_devices(
+                        Globals.enterprise_id,
+                        imei=identifier,
+                        limit=Globals.limit,
+                        offset=Globals.offset,
+                    )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllDevices",
                     api_instance.get_all_devices,
@@ -613,20 +632,31 @@ def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
 def processDeviceGroupMove(deviceChunk, groupList):
     groupId = None
     results = {}
+    groupListKeys = groupList.keys()
     for device in deviceChunk:
         groupName = None
-        if device.device_name in groupList.keys():
+        if device.device_name in groupListKeys:
             groupName = groupList[device.device_name]
         elif (
             "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in groupList.keys()
+            and device.hardware_info["serialNumber"] in groupListKeys
         ):
             groupName = groupList[device.hardware_info["serialNumber"]]
         elif (
             "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in groupList.keys()
+            and device.hardware_info["customSerialNumber"] in groupListKeys
         ):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
+        elif (
+                hasattr(device, "networkInfo")
+                and "imei1" in device.networkInfo and device.networkInfo["imei1"] in groupListKeys
+            ):
+            groupName = groupList[device.networkInfo["imei1"]]
+        elif (
+                hasattr(device, "networkInfo")
+                and "imei2" in device.networkInfo and device.networkInfo["imei2"] in groupListKeys
+            ):
+            groupName = groupList[device.networkInfo["imei1"]]
         if groupName:
             if isApiKey(groupName):
                 resp = moveGroup(groupName, device.id)

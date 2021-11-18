@@ -10,11 +10,11 @@ class PreferencesDialog(wx.Dialog):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
-            size=(525, 400),
+            size=(800, 500),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.size = (525, 400)
+        self.size = (800, 500)
         self.SetSize(self.size)
         self.SetMinSize(self.size)
 
@@ -47,6 +47,10 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
+            "groupFetchAll",
+            "loadXDevices",
+            "replaceSerial",
+            "showDisabledDevices"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -84,7 +88,7 @@ class PreferencesDialog(wx.Dialog):
         self.general.Hide()
         sizer_5.Add(self.general, 1, wx.EXPAND, 0)
 
-        sizer_6 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_6 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.general,
@@ -148,6 +152,23 @@ class PreferencesDialog(wx.Dialog):
             "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
         )
 
+        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Fetch all devices in one page",
+            wx.CheckBox,
+            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
+        )
+
+        (_, _, self.checkbox_18,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Show Disabled Devices",
+            wx.CheckBox,
+            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
+        )
+        self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED)
+
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.command.Hide()
@@ -210,14 +231,14 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
 
-        (_, _, self.checkbox_3,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Enable Grid Refresh",
-            wx.CheckBox,
-            "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
-            % Globals.MAX_UPDATE_COUNT,
-        )
+        # (_, _, self.checkbox_3,) = self.addPrefToPanel(
+        #     self.grid,
+        #     sizer_16,
+        #     "Enable Grid Refresh",
+        #     wx.CheckBox,
+        #     "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
+        #     % Globals.MAX_UPDATE_COUNT,
+        # )
 
         (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
             self.grid,
@@ -253,6 +274,25 @@ class PreferencesDialog(wx.Dialog):
             "Only Show Immediate Subgroups",
             wx.CheckBox,
             "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
+        )
+
+        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Load X Number of Devices in Grid",
+            wx.SpinCtrl,
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once user has scrolled down far enough.",
+        )
+        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
+        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
+
+        (_, _, self.checkbox_17,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Replace Serial Number with Custom",
+            wx.CheckBox,
+            "Replaces Serial Number entry with Custom Serial Number, if available.",
         )
 
         # App Preferences
@@ -361,17 +401,17 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
-        if prefDict and not prefDict["enableGridUpdate"]:
-            self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.ENABLE_GRID_UPDATE = False
-        elif prefDict and prefDict["enableGridUpdate"]:
-            self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
-            Globals.ENABLE_GRID_UPDATE = True
-            if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-                self.parent.startUpdateThread()
-        else:
-            self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.ENABLE_GRID_UPDATE = False
+        # if prefDict and not prefDict["enableGridUpdate"]:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = False
+        # elif prefDict and prefDict["enableGridUpdate"]:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = True
+        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        #         self.parent.startUpdateThread()
+        # else:
+        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.ENABLE_GRID_UPDATE = False
 
         if not prefDict or (prefDict and not prefDict["getAllApps"]):
             self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
@@ -404,7 +444,7 @@ class PreferencesDialog(wx.Dialog):
 
         if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
             self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SHOW_PKG_NAME = False
+            Globals.GET_APP_EACH_DEVICE = False
         elif prefDict and prefDict["getAppsForEachDevice"]:
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
@@ -470,6 +510,12 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(prefDict["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        if prefDict and "loadXDevices" in prefDict:
+            Globals.MAX_GRID_LOAD = int(prefDict["loadXDevices"])
+            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
+                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
+            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         if not prefDict or (
             prefDict
@@ -610,6 +656,42 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.SAVE_VISIBILITY = False
 
+        if prefDict and "groupFetchAll" in prefDict:
+            if (
+                isinstance(self.prefs["groupFetchAll"], str)
+                and prefDict["groupFetchAll"].lower() == "true"
+            ) or prefDict["groupFetchAll"] == True:
+                self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GROUP_FETCH_ALL = True
+            else:
+                self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GROUP_FETCH_ALL = False
+        else:
+            self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+            Globals.GROUP_FETCH_ALL = True
+        
+        if prefDict and "replaceSerial" in prefDict:
+            if (
+                isinstance(prefDict["replaceSerial"], str)
+                and prefDict["replaceSerial"].lower() == "true"
+            ) or prefDict["replaceSerial"] == True:
+                self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REPLACE_SERIAL = True
+            else:
+                self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REPLACE_SERIAL = False
+
+        if prefDict and "showDisabledDevices" in prefDict:
+            if (
+                isinstance(prefDict["showDisabledDevices"], str)
+                and prefDict["showDisabledDevices"].lower() == "true"
+            ) or prefDict["showDisabledDevices"] == True:
+                self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_DISABLED_DEVICES = True
+            else:
+                self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_DISABLED_DEVICES = False
+
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
@@ -660,7 +742,7 @@ class PreferencesDialog(wx.Dialog):
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
             "updateRate": self.spin_ctrl_7.GetValue(),
-            "enableGridUpdate": self.checkbox_3.IsChecked(),
+            # "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
             if self.parent
@@ -681,6 +763,10 @@ class PreferencesDialog(wx.Dialog):
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
+            "groupFetchAll": self.checkbox_16.IsChecked(),
+            "loadXDevices": self.spin_ctrl_11.GetValue(),
+            "replaceSerial": self.checkbox_17.IsChecked(),
+            "showDisabledDevices": self.checkbox_18.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -696,7 +782,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.offset = self.prefs["offset"]
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-        Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
+        # Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
@@ -704,6 +790,10 @@ class PreferencesDialog(wx.Dialog):
         Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
+        Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
+        Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
+        Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
+        Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -770,11 +860,11 @@ class PreferencesDialog(wx.Dialog):
         if "updateRate" in self.prefs and self.prefs["updateRate"]:
             Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
             self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
-        if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
-            self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
-            Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
-            if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-                self.parent.startUpdateThread()
+        # if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
+        #     self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
+        #     Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
+        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        #         self.parent.startUpdateThread()
         if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
                 size = tuple(
@@ -800,18 +890,12 @@ class PreferencesDialog(wx.Dialog):
         if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
-                and self.prefs["getAppsForEachDevice"].lower() == "false"
-            ) or not self.prefs["getAppsForEachDevice"]:
-                Globals.SHOW_PKG_NAME = False
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            elif (
-                isinstance(self.prefs["getAppsForEachDevice"], str)
                 and self.prefs["getAppsForEachDevice"].lower()
             ) == "true" or self.prefs["getAppsForEachDevice"]:
-                Globals.SHOW_PKG_NAME = True
+                Globals.GET_APP_EACH_DEVICE = True
                 self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
             else:
-                Globals.SHOW_PKG_NAME = True
+                Globals.GET_APP_EACH_DEVICE = False
                 self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
         if "getAllApps" in self.prefs:
             if (
@@ -936,6 +1020,11 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(self.prefs["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+        if "loadXDevices" in self.prefs:
+            Globals.MAX_GRID_LOAD = int(self.prefs["loadXDevices"])
+            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
+                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
+            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
             if self.prefs["colVisibility"]:
@@ -956,6 +1045,36 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SAVE_VISIBILITY = False
+        if "groupFetchAll" in self.prefs:
+            if (
+                isinstance(self.prefs["groupFetchAll"], str)
+                and self.prefs["groupFetchAll"].lower() == "true"
+            ) or self.prefs["groupFetchAll"] == True:
+                self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
+                Globals.GROUP_FETCH_ALL = True
+            else:
+                self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.GROUP_FETCH_ALL = False
+        if "replaceSerial" in self.prefs:
+            if (
+                isinstance(self.prefs["replaceSerial"], str)
+                and self.prefs["replaceSerial"].lower() == "true"
+            ) or self.prefs["replaceSerial"] == True:
+                self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
+                Globals.REPLACE_SERIAL = True
+            else:
+                self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.REPLACE_SERIAL = False
+        if "showDisabledDevices" in self.prefs:
+            if (
+                isinstance(self.prefs["showDisabledDevices"], str)
+                and self.prefs["showDisabledDevices"].lower() == "true"
+            ) or self.prefs["showDisabledDevices"] == True:
+                self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_DISABLED_DEVICES = True
+            else:
+                self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_DISABLED_DEVICES = False
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -987,6 +1106,9 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
         self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
+        self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
+        self.prefs["replaceSerial"] = Globals.REPLACE_SERIAL
+        self.prefs["showDisabledDevices"] = Globals.SHOW_DISABLED_DEVICES
 
         return self.prefs
 
@@ -1044,6 +1166,14 @@ class PreferencesDialog(wx.Dialog):
             return Globals.FONT_SIZE
         elif key == "saveColVisibility":
             return Globals.SAVE_VISIBILITY
+        elif key == "groupFetchAll":
+            return Globals.GROUP_FETCH_ALL
+        elif key == "loadXDevices":
+            return Globals.MAX_GRID_LOAD
+        elif key == "replaceSerial":
+            return Globals.REPLACE_SERIAL
+        elif key == "showDisabledDevices":
+            return Globals.SHOW_DISABLED_DEVICES
         else:
             return None
 

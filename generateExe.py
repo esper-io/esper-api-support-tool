@@ -81,6 +81,8 @@ if __name__ == "__main__":
             dispath,
             "--version-file",
             curDirPath + "/file_version_info.txt",
+            "--icon",
+            curDirPath + "/Images/icon.ico",
             "--add-data",
             curDirPath
             + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),

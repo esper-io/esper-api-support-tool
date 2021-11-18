@@ -2,6 +2,7 @@
 
 import esperclient
 import threading
+import platform
 
 from Common.enum import GridActions, GeneralActions
 
@@ -9,7 +10,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.1881"
+VERSION = "v0.191"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -20,6 +21,7 @@ MAX_TAGS = 5
 error_tracker = {}
 
 MAX_ERROR_TIME_DIFF = 2
+MAX_ACTIVE_THREAD_COUNT = 32
 MAX_THREAD_COUNT = 16
 MAX_RETRY = 5
 RETRY_SLEEP = 1.5
@@ -42,23 +44,26 @@ grid1_lock = threading.Lock()
 grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
+grid3_lock = threading.Lock()
 
 """ Actions """
+NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
-    "\t" + "* " * 8 + "General Actions " + "* " * 8: -1,
-    "Show Device Info & Network And Security Report": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-    "Action -> Set Kiosk Mode": GeneralActions.SET_KIOSK.value,
-    "Action -> Set Multi-App Mode": GeneralActions.SET_MULTI.value,
+    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "General Actions " + "* " * NUM_STARS: -1,
+    "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
+    "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
+    "Action -> Set Device Mode": 1.5,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
-    "Action -> Remove Non-Whitelisted Wifi Acess Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
+    "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
     "Action -> Install App": GeneralActions.INSTALL_APP.value,
     "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {
-    "\t" + "* " * 8 + "Grid Actions " + "* " * 8: -1,
+    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "Grid Actions " + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
@@ -116,16 +121,15 @@ UPDATE_LINK = (
 )
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
-BASE_REQUEST_EXTENSION = "/?&format=json"
-DEVICE_STATUS_REQUEST_EXTENSION = "/status?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "/install?&format=json"
-DEVICE_APP_LIST_REQUEST_EXTENSION = "/app?&format=json"
+BASE_REQUEST_EXTENSION = "?&format=json"
+DEVICE_STATUS_REQUEST_EXTENSION = "status?&format=json&latest_event=0"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app?app_type=ENTERPRISE"
+DEVICE_APP_LIST_REQUEST_EXTENSION = "app?&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 CSV_TAG_ATTR_NAME = {
-    # "Esper Id": "id",
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
@@ -145,12 +149,18 @@ CSV_TAG_ATTR_NAME = {
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
-    "Applications": "Apps",
+    # "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
     "Device Type": "device_type",
-    "Total RAM": "totalRam",
-    "Total Internal Storage": "totalInternalStorage",
+    "Registered On": "provisioned_on",
+    "Updated On": "updated_on",
+    "Last Seen": "last_seen",
+    "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
+    "Total RAM (MB)": "totalRam",
+    "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
+    "Available Internal Storage (MB)" : "AVAILABLE_INTERNAL_STORAGE_MEASURED",
+    "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
     "Location": "location_info",
@@ -162,7 +172,6 @@ CSV_TAG_ATTR_NAME = {
     "Ring Volume": "STREAM_RING",
     "Alarm Volume": "STREAM_ALARM",
     "Notification Volume": "STREAM_NOTIFICATION",
-    "Registered On": "provisioned_on",
     "Power Source": "powerSource",
     "Power Status": "powerStatus",
     "Battery Present": "batteryPresent",
@@ -180,6 +189,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Count (%)": "batteryCapacityCount",
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
+    "Esper Id": "id",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Device Name": "EsperName",
@@ -203,6 +213,19 @@ CSV_NETWORK_ATTR_NAME = {
     "Data Speed Down": "dataSpeedDown",
     "Data Speed Up": "dataSpeedUp",
 }
+CSV_APP_ATTR_NAME = [
+    "Esper Name",
+    "Group",
+    "Application Name",
+    "Application Type",
+    "Application Version Code",
+    "Application Version Name",
+    "Package Name",
+    "State",
+    "Whitelisted",
+    "Can Clear Data",
+    "Can Uninstall",
+]
 BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
 WHITELIST_AP = []
 
@@ -214,9 +237,6 @@ app = None
 
 """ CSV Save File """
 csv_auth_path = ""
-
-LAST_DEVICE_ID = None
-LAST_GROUP_ID = None
 
 """ Preferences """
 SET_APP_STATE_AS_SHOW = False
@@ -240,5 +260,9 @@ FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 GET_IMMEDIATE_SUBGROUPS = False
 SAVE_VISIBILITY = False
+GROUP_FETCH_ALL = True
+MAX_GRID_LOAD = 100
+REPLACE_SERIAL = True
+SHOW_DISABLED_DEVICES = False
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
