@@ -1221,8 +1221,7 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                if esperName or serialNum:
-                    identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
+                identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
         releaseLocks([Globals.grid1_lock])
         return identifers
 

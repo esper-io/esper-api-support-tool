@@ -648,15 +648,15 @@ def processDeviceGroupMove(deviceChunk, groupList):
         ):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
         elif (
-                hasattr(device, "networkInfo")
-                and "imei1" in device.networkInfo and device.networkInfo["imei1"] in groupListKeys
+                hasattr(device, "network_info")
+                and "imei1" in device.network_info and device.network_info["imei1"] in groupListKeys
             ):
-            groupName = groupList[device.networkInfo["imei1"]]
+            groupName = groupList[device.network_info["imei1"]]
         elif (
-                hasattr(device, "networkInfo")
-                and "imei2" in device.networkInfo and device.networkInfo["imei2"] in groupListKeys
+                hasattr(device, "network_info")
+                and "imei2" in device.network_info and device.network_info["imei2"] in groupListKeys
             ):
-            groupName = groupList[device.networkInfo["imei1"]]
+            groupName = groupList[device.network_info["imei1"]]
         if groupName:
             if isApiKey(groupName):
                 resp = moveGroup(groupName, device.id)

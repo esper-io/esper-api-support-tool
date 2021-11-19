@@ -289,6 +289,7 @@ def waitForCommandToFinish(
             "Command Cancelled",
             "Command Queued",
             "Command Scheduled",
+            # "Command Initated",
         ]
         if ignoreQueue:
             stateList.remove("Command Queued")
