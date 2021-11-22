@@ -483,7 +483,7 @@ class NewFrameLayout(wx.Frame):
         self.Destroy()
         for item in list(wx.GetTopLevelWindows()):
             if not isinstance(item, NewFrameLayout):
-                if isinstance(item, wx.Dialog):
+                if item and isinstance(item, wx.Dialog):
                     item.Destroy()
                 item.Close()
         wx.Exit()
