@@ -25,8 +25,8 @@ class PreferencesDialog(wx.Dialog):
             "limit",
             "offset",
             "gridDialog",
-            "updateRate",
-            "enableGridUpdate",
+            # "updateRate",
+            # "enableGridUpdate",
             "windowSize",
             "windowPosition",
             "isMaximized",
@@ -240,17 +240,17 @@ class PreferencesDialog(wx.Dialog):
         #     % Globals.MAX_UPDATE_COUNT,
         # )
 
-        (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Grid Refresh Rate (seconds)",
-            wx.SpinCtrl,
-            "How often the Grid should update its cell data. Min: %s Max: %s"
-            % (Globals.GRID_UPDATE_RATE, Globals.MAX_GRID_UPDATE_RATE),
-        )
-        self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
-        self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
-        self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
+        # (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
+        #     self.grid,
+        #     sizer_16,
+        #     "Grid Refresh Rate (seconds)",
+        #     wx.SpinCtrl,
+        #     "How often the Grid should update its cell data. Min: %s Max: %s"
+        #     % (Globals.GRID_UPDATE_RATE, Globals.MAX_GRID_UPDATE_RATE),
+        # )
+        # self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
+        # self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
+        # self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
 
         (_, _, self.checkbox_10,) = self.addPrefToPanel(
             self.grid,
@@ -281,7 +281,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_16,
             "Load X Number of Devices in Grid",
             wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once user has scrolled down far enough.",
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
         )
         self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
         self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
@@ -741,7 +741,7 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            "updateRate": self.spin_ctrl_7.GetValue(),
+            # "updateRate": self.spin_ctrl_7.GetValue(),
             # "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
@@ -781,7 +781,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
-        Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
+        # Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
         # Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
@@ -857,9 +857,9 @@ class PreferencesDialog(wx.Dialog):
         if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
             self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
-        if "updateRate" in self.prefs and self.prefs["updateRate"]:
-            Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-            self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
+        # if "updateRate" in self.prefs and self.prefs["updateRate"]:
+        #     Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
+        #     self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
         # if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
         #     self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
         #     Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
@@ -1128,8 +1128,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHOW_TEMPLATE_UPDATE
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
-        elif key == "updateRate":
-            return Globals.GRID_UPDATE_RATE
+        # elif key == "updateRate":
+        #     return Globals.GRID_UPDATE_RATE
         elif key == "enableGridUpdate":
             return Globals.ENABLE_GRID_UPDATE
         elif key == "windowSize":

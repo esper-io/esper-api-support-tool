@@ -4,7 +4,7 @@ The Esper API Support Tool (EAST) makes use of Esper’s API to programmatically
 Link to Useage Documentation: https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit?usp=sharing
 
 UI
-    EAST makes use of WXPython to render and display UI components.
+    EAST makes use of WXPython to render and display UI components. WxPython currently supports up to Python 3.9.
 
     You can find more information about their API here, https://docs.wxpython.org/.
 
