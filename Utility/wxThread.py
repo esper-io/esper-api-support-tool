@@ -81,6 +81,8 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
             msg = "Results of installing given app packages."
         if action == GridActions.UNINSTALL_LISTED_APP.value:
             msg = "Results of uninstalling given app packages."
+        if action == GridActions.FACTORY_RESET.value:
+            msg = "Results of Factory Reset."
         statuses = []
         for t in threads:
             if t.result and type(t.result) == dict:

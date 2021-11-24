@@ -538,43 +538,51 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
         identifier = None
         for attempt in range(maxAttempt):
             try:
-                if entry[0]:
-                    identifier = entry[0]
+                if type(entry) == tuple or  type(entry) == list:
+                    if entry[0]:
+                        identifier = entry[0]
+                        api_response = api_instance.get_all_devices(
+                            Globals.enterprise_id,
+                            name=identifier,
+                            limit=Globals.limit,
+                            offset=Globals.offset,
+                        )
+                    elif entry[1]:
+                        identifier = entry[1]
+                        api_response = api_instance.get_all_devices(
+                            Globals.enterprise_id,
+                            serial=identifier,
+                            limit=Globals.limit,
+                            offset=Globals.offset,
+                        )
+                    elif entry[2]:
+                        identifier = entry[2]
+                        api_response = api_instance.get_all_devices(
+                            Globals.enterprise_id,
+                            search=identifier,
+                            limit=Globals.limit,
+                            offset=Globals.offset,
+                        )
+                    elif entry[3]:
+                        identifier = entry[3]
+                        api_response = api_instance.get_all_devices(
+                            Globals.enterprise_id,
+                            imei=identifier,
+                            limit=Globals.limit,
+                            offset=Globals.offset,
+                        )
+                    elif entry[4]:
+                        identifier = entry[4]
+                        api_response = api_instance.get_all_devices(
+                            Globals.enterprise_id,
+                            imei=identifier,
+                            limit=Globals.limit,
+                            offset=Globals.offset,
+                        )
+                elif type(entry) == str:
                     api_response = api_instance.get_all_devices(
                         Globals.enterprise_id,
-                        name=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif entry[1]:
-                    identifier = entry[1]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        serial=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif entry[2]:
-                    identifier = entry[2]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        search=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif entry[3]:
-                    identifier = entry[3]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif entry[4]:
-                    identifier = entry[4]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
+                        search=entry,
                         limit=Globals.limit,
                         offset=Globals.offset,
                     )
@@ -933,6 +941,47 @@ def uninstallApp(frame):
         frame,
         wxThread.waitTillThreadsFinish,
         args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
+
+def processBulkFactoryReset(devices, numDevices, processed):
+    status = []
+    for device in devices:
+        if device and hasattr(device, "id"):
+            resp = apiCalls.factoryResetDevice(device.id)
+            status.append(resp)
+            processed.append(device)
+        value = int(len(processed) / numDevices * 100)
+        postEventToFrame(
+            eventUtil.myEVT_UPDATE_GAUGE,
+            value,
+        )
+    return status
+
+def bulkFactoryReset(identifers):
+    devices = getDevicesFromGrid(deviceIdentifers=identifers)
+
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+    numDevices = len(devices)
+    processed = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            processBulkFactoryReset,
+            args=(chunk, numDevices, processed),
+            name="processDeviceGroupMove",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        Globals.frame,
+        wxThread.waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.start()

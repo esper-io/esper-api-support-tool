@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from Utility.GridActionUtility import iterateThroughGridRows
+from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
@@ -1295,6 +1296,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.INSTALL_APP.value
                 or action == GeneralActions.UNINSTALL_APP.value
                 or action == GridActions.MOVE_GROUP.value
+                or action == GridActions.FACTORY_RESET.value
             ):
                 for t in threads:
                     if t.result:
@@ -2880,3 +2882,12 @@ class NewFrameLayout(wx.Frame):
                 fun[0](*fun[1])
             else:
                 fun[0](fun[1])
+
+    def onBulkFactoryReset(self, event):
+        with BulkFactoryReset() as dlg:
+            res = dlg.ShowModal()
+
+            if res == wx.ID_OK:
+                self.gauge.Pulse()
+                ids = dlg.getIdentifiers()
+                bulkFactoryReset(ids)

@@ -459,7 +459,8 @@ class SidePanel(wx.Panel):
     @api_tool_decorator()
     def setAppChoiceState(self, clientData):
         if (
-            clientData == GeneralActions.SET_KIOSK.value
+            clientData == GeneralActions.SET_DEVICE_MODE.value
+            or clientData == GeneralActions.SET_KIOSK.value
             or clientData == GeneralActions.CLEAR_APP_DATA.value
             or clientData == GeneralActions.SET_APP_STATE.value
             or clientData == GeneralActions.INSTALL_APP.value

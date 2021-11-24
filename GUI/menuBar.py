@@ -58,7 +58,7 @@ class ToolMenuBar(wx.MenuBar):
         self.fileSave = fileMenu.Append(fs)
 
         fas = wx.MenuItem(
-            fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save All Info\tCtrl+Alt+S"
+            fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save Device Info\tCtrl+Alt+S"
         )
         fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
@@ -149,6 +149,10 @@ class ToolMenuBar(wx.MenuBar):
         self.collectionSubMenu.SetBitmap(
             wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
+
+        bulkReset = wx.MenuItem(runMenu, wx.ID_ANY, "&Bulk Factory Reset\t")
+        self.bulkFactoryReset = runMenu.Append(bulkReset)
+        runMenu.Append(wx.ID_SEPARATOR)
 
         # View Menu
         viewMenu = wx.Menu()
@@ -262,6 +266,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset)
 
     @api_tool_decorator()
     def onAbout(self, event):

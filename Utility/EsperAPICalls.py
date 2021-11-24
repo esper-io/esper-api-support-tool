@@ -1453,3 +1453,55 @@ def getAppDictEntry(app, update=True):
                 Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
 
     return entry
+
+def factoryResetDevice(deviceId, maxAttempt=Globals.MAX_RETRY, timeout=Globals.COMMAND_TIMEOUT):
+    api_instance = getCommandsApiInstance()
+    command_args = {
+        "wipe_FRP": True,
+        "wipe_external_storage": True
+    }
+    command = esperclient.V0CommandRequest(
+        enterprise=Globals.enterprise_id,
+        command_type="DEVICE",
+        device_type=Globals.CMD_DEVICE_TYPE,
+        devices=[deviceId],
+        command="WIPE",
+        command_args=command_args,
+    )
+
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            api_response = api_instance.create_command(Globals.enterprise_id, command)
+            ApiToolLog().LogApiRequestOccurrence(
+                "toggleKioskMode",
+                api_instance.create_command.__name__,
+                Globals.PRINT_API_LOGS,
+            )
+            break
+        except Exception as e:
+            if hasattr(e, "body") and "invalid device id" in e.body:
+                logBadResponse("create command api", api_response, None)
+                return None
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            time.sleep(Globals.RETRY_SLEEP)
+    response = None
+    for attempt in range(maxAttempt):
+        try:
+            response = api_instance.get_command_request_status(
+                Globals.enterprise_id, api_response.id
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            time.sleep(Globals.RETRY_SLEEP)
+    status = response.results[0].state
+    ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+    status = waitForCommandToFinish(
+        api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
+    )
+    return status
