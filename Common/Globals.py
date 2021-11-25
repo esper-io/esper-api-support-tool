@@ -192,7 +192,7 @@ CSV_TAG_ATTR_NAME = {
     "Esper Id": "id",
 }
 CSV_NETWORK_ATTR_NAME = {
-    "Device Name": "EsperName",
+    "Esper Name": "EsperName",
     "Group": "groups",
     "Security Patch": "securityPatchLevel",
     "[WIFI ACCESS POINTS]": "",

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import csv
+from GUI.TabPanel import TabPanel
 
 from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
@@ -16,14 +17,6 @@ import Common.Globals as Globals
 import Utility.wxThread as wxThread
 
 from Common.enum import Color
-
-
-class TabPanel(wx.Panel):
-    def __init__(self, parent, id, name):
-        """"""
-        super().__init__(parent=parent, id=id)
-        self.name = name
-
 
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):

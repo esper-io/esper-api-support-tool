@@ -2,6 +2,7 @@
 
 import platform
 import time
+from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import acquireLocks, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
 import Common.Globals as Globals
 import re
@@ -38,6 +39,7 @@ class GridPanel(wx.Panel):
         self.grid3HeaderLabels = Globals.CSV_APP_ATTR_NAME
         self.grid1ColVisibility = {}
         self.grid2ColVisibility = {}
+        self.grid3ColVisibility = {}
 
         grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
 
@@ -622,68 +624,60 @@ class GridPanel(wx.Panel):
         grid.ForceRefresh()
 
     @api_tool_decorator()
-    def onDeviceColumn(self, event):
-        headerLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        colNum = 0
-        if "Esper Name" in headerLabels:
-            headerLabels.remove("Esper Name")
-        if "Device Name" in headerLabels:
-            headerLabels.remove("Device Name")
-        if "Esper Id" in headerLabels:
-            headerLabels.remove("Esper Id")
-        originalColNum = colNum
+    def onColumnVisibility(self, event):
+        pageGridDict = {
+            "Device": self.grid_1,
+            "Network": self.grid_2,
+            "Application": self.grid_3
+        }
+        exemptedLabels = [
+            "Esper Name",
+            "Esper Id",
+            "Device Name"
+        ]
+        colLabelException = {
+            "Device": exemptedLabels,
+            "Network": exemptedLabels,
+            "Application": exemptedLabels
+        }
 
-        with ColumnVisibilityDialog(
-            self, self.grid_1, choiceData=headerLabels
-        ) as dialog:
-            if dialog.ShowModal() == wx.ID_APPLY:
-                for header in headerLabels:
-                    isChecked = dialog.isChecked(colNum - originalColNum)
-                    self.toggleColVisibilityInGridOne(
-                        colNum + 1, showState=isChecked
-                    )
-                    self.grid1ColVisibility[header] = isChecked
-                    colNum += 1
-            dialog.DestroyLater()
-            self.parentFrame.savePrefs(self.parentFrame.prefDialog)
+        with ColumnVisibility(self, pageGridDict, colLabelException) as dialog:
+            res = dialog.ShowModal()
+            if res == wx.ID_APPLY:
+                selected = dialog.getSelected()
+                for page in pageGridDict.keys():
+                    # checkbox = dialog.getCheckBox(page)
+                    for label, isChecked in selected[page].items():
+                        if page == "Device":
+                            indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
+                            self.toggleColVisibilityInGridOne(
+                                indx, showState=isChecked
+                            )
+                            self.grid1ColVisibility[label] = isChecked
+                        elif page == "Network":
+                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(label)
+                            self.toggleColVisibilityInGridTwo(
+                                indx, showState=isChecked
+                            )
+                            self.grid2ColVisibility[label] = isChecked
+                        elif page == "Application":
+                            indx = Globals.CSV_APP_ATTR_NAME.index(label)
+                            self.toggleColVisibilityInGridThree(
+                                indx, showState=isChecked
+                            )
+                            self.grid2ColVisibility[label] = isChecked
+                # self.parentFrame.savePrefs(self.parentFrame.prefDialog)
+
         self.parentFrame.prefDialog.colVisibilty = (
             self.grid1ColVisibility,
             self.grid2ColVisibility,
-        )
-
-    @api_tool_decorator()
-    def onNetworkColumn(self, event):
-        headerLabels = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
-        colNum = 0
-        if "Esper Name" in headerLabels:
-            headerLabels.remove("Esper Name")
-        if "Device Name" in headerLabels:
-            headerLabels.remove("Device Name")
-        if "Esper Id" in headerLabels:
-            headerLabels.remove("Esper Id")
-        originalColNum = colNum
-
-        with ColumnVisibilityDialog(
-            self, self.grid_2, choiceData=headerLabels
-        ) as dialog:
-            if dialog.ShowModal() == wx.ID_APPLY:
-                for header in headerLabels:
-                    isChecked = dialog.isChecked(colNum - originalColNum)
-                    self.toggleColVisibilityInGridTwo(
-                        colNum + 1, showState=isChecked
-                    )
-                    self.grid2ColVisibility[header] = isChecked
-                    colNum += 1
-            dialog.DestroyLater()
-            self.parentFrame.savePrefs(self.parentFrame.prefDialog)
-        self.parentFrame.prefDialog.colVisibilty = (
-            self.grid1ColVisibility,
-            self.grid2ColVisibility,
+            self.grid3ColVisibility
         )
 
     def setColVisibility(self):
         grid1Cols = self.grid1ColVisibility.keys()
         grid2Cols = self.grid2ColVisibility.keys()
+        grid3Cols = self.grid3ColVisibility.keys()
         for col in grid1Cols:
             if col in self.grid1HeaderLabels:
                 indx = self.grid1HeaderLabels.index(col)
@@ -695,6 +689,12 @@ class GridPanel(wx.Panel):
                 indx = self.grid2HeaderLabels.index(col)
                 self.toggleColVisibilityInGridTwo(
                     indx, showState=self.grid2ColVisibility[col]
+                )
+        for col in grid3Cols:
+            if col in self.grid3HeaderLabels:
+                indx = self.grid3HeaderLabels.index(col)
+                self.toggleColVisibilityInGridThree(
+                    indx, showState=self.grid3ColVisibility[col]
                 )
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
@@ -1132,6 +1132,27 @@ class GridPanel(wx.Panel):
                 else:
                     self.grid_2.ShowCol(index)
         releaseLocks([Globals.grid2_lock])
+
+    @api_tool_decorator(locks=[Globals.grid3_lock])
+    def toggleColVisibilityInGridThree(self, event, showState):
+        """ Toggle Column Visibility in Network Grid """
+        acquireLocks([Globals.grid3_lock])
+        index = None
+        if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
+            index = event
+        if index and index < self.grid_3.GetNumberCols():
+            if type(showState) == bool:
+                if not showState:
+                    self.grid_3.HideCol(index)
+                else:
+                    self.grid_3.ShowCol(index)
+            else:
+                isShown = self.grid_3.IsColShown(index)
+                if isShown:
+                    self.grid_3.HideCol(index)
+                else:
+                    self.grid_3.ShowCol(index)
+        releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator()
     def updateTagCell(self, name, tags=None):

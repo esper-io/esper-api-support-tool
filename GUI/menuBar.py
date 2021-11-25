@@ -157,13 +157,13 @@ class ToolMenuBar(wx.MenuBar):
         # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Device Columns")
+            wx.MenuItem(viewMenu, wx.ID_ANY, "&Toggle Grid Column Visibility\tCtrl+Shift+V")
         )
         self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
-        self.networkColumns = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
-        )
-        self.networkColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
+        # self.networkColumns = viewMenu.Append(
+        #     wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
+        # )
+        # self.networkColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(
@@ -252,11 +252,11 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
         self.Bind(
-            wx.EVT_MENU, self.parentFrame.gridPanel.onDeviceColumn, self.deviceColumns
+            wx.EVT_MENU, self.parentFrame.gridPanel.onColumnVisibility, self.deviceColumns
         )
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
-        )
+        # self.Bind(
+        #     wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
+        # )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
