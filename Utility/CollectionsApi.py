@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from Utility.Resource import (
     logBadResponse,
     performDeleteRequestWithRetry,
