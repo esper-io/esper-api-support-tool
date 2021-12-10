@@ -10,7 +10,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.191"
+VERSION = "v0.192"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -69,6 +69,7 @@ GRID_ACTIONS = {
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,
     "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
+    # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
     # "Action -> Set Specific Apps' State to Hide": 50,
 }
 

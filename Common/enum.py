@@ -29,6 +29,7 @@ class GridActions(Enum):
     INSTALL_LATEST_APP = 37
     UNINSTALL_LISTED_APP = 38
     FACTORY_RESET = 39
+    SET_DEVICE_DISABLED = 40
 
 
 class DeviceState(Enum):

@@ -97,7 +97,7 @@ def fetchGroupName(groupURL, returnJson=False):
 
 
 @api_tool_decorator()
-def patchInfo(request_extension, deviceid, tags):
+def patchInfo(request_extension, deviceid, data=None, json=None, tags=None):
     """Pushes Data To Device Info JSON"""
     headers = getHeader()
     url = (
@@ -108,8 +108,12 @@ def patchInfo(request_extension, deviceid, tags):
         )
         + request_extension
     )
+    requestData = data
+    if tags:
+        requestData = json.dumps({"tags": tags})
+
     resp = performPatchRequestWithRetry(
-        url, headers=headers, data=json.dumps({"tags": tags})
+        url, headers=headers, data=requestData, json=json
     )
     json_resp = resp.json()
     logBadResponse(url, resp, json_resp)
@@ -273,7 +277,7 @@ def getLatestEvent(deviceId):
 @api_tool_decorator()
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""
-    json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags)
+    json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags=tags)
     if json_resp and "tags" in json_resp:
         tags = json_resp["tags"]
     return tags
@@ -1505,3 +1509,8 @@ def factoryResetDevice(deviceId, maxAttempt=Globals.MAX_RETRY, timeout=Globals.C
         api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
     )
     return status
+
+def setDeviceDisabled(deviceId):
+    return patchInfo("", deviceId, json={
+        "state": 20
+    })

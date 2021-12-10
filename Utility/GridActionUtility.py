@@ -43,6 +43,9 @@ def iterateThroughGridRows(frame, action):
         installApp(frame)
     if action == GridActions.UNINSTALL_APP.value:
         uninstallApp(frame)
+    if action == GridActions.SET_DEVICE_DISABLED.value:
+        setDeviceDisabled()
+
 
 
 @api_tool_decorator()
@@ -971,6 +974,47 @@ def bulkFactoryReset(identifers):
         t = wxThread.GUIThread(
             Globals.frame,
             processBulkFactoryReset,
+            args=(chunk, numDevices, processed),
+            name="processDeviceGroupMove",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        Globals.frame,
+        wxThread.waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
+
+def processSetDeviceDisabled(devices, numDevices, processed):
+    status = []
+    for device in devices:
+        if device and hasattr(device, "id"):
+            resp = apiCalls.setDeviceDisabled(device.id)
+            status.append(resp)
+            processed.append(device)
+        value = int(len(processed) / numDevices * 100)
+        postEventToFrame(
+            eventUtil.myEVT_UPDATE_GAUGE,
+            value,
+        )
+    return status
+
+def setDeviceDisabled():
+    devices = getDevicesFromGrid()
+
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+    numDevices = len(devices)
+    processed = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            processSetDeviceDisabled,
             args=(chunk, numDevices, processed),
             name="processDeviceGroupMove",
         )

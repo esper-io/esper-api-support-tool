@@ -558,7 +558,6 @@ class NewFrameLayout(wx.Frame):
         networkHeaders = Globals.CSV_NETWORK_ATTR_NAME.keys()
         headers.extend(deviceHeaders)
         headers.extend(networkHeaders)
-        headers.remove("Device Name")
         headersNoDup = []
         [headersNoDup.append(x) for x in headers if x not in headersNoDup]
         headers = headersNoDup
