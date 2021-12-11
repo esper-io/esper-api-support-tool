@@ -533,10 +533,26 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = []
-    for entry in deviceIdentifers:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
+    api_instance = esperclient.DeviceApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    splitResults = splitListIntoChunks(deviceIdentifers)
+    threads = []
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            getDevicesFromGridHelper,
+            args=(chunk, api_instance, devices),
+            name="getDevicesFromGridHelper",
         )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+    joinThreadList(threads)
+    return devices
+
+def getDevicesFromGridHelper(deviceIdentifers, api_instance, devices, maxAttempt=Globals.MAX_RETRY):
+    for entry in deviceIdentifers:
         api_response = None
         identifier = None
         for attempt in range(maxAttempt):
@@ -608,7 +624,7 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to find device with identifer: %s" % identifier,
             )
-    return devices
+    
 
 
 @api_tool_decorator()
@@ -1016,7 +1032,7 @@ def setDeviceDisabled():
             Globals.frame,
             processSetDeviceDisabled,
             args=(chunk, numDevices, processed),
-            name="processDeviceGroupMove",
+            name="processSetDeviceDisabled",
         )
         threads.append(t)
         t.start()

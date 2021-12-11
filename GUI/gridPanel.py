@@ -3,7 +3,7 @@
 import platform
 import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
-from Utility.Resource import acquireLocks, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
+from Utility.Resource import acquireLocks, joinThreadList, limitActiveThreads, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
 import Common.Globals as Globals
 import re
 import threading
@@ -1230,12 +1230,35 @@ class GridPanel(wx.Panel):
     def getDeviceIdentifersFromGrid(self):
         acquireLocks([Globals.grid1_lock])
         identifers = []
+        numRows = self.grid_1.GetNumberRows()
+        numRowsPerChunk = int(numRows / Globals.MAX_ACTIVE_THREAD_COUNT)
+        threads = []
+        num = 0
+        while num < numRows:
+            t = wxThread.GUIThread(
+                Globals.frame,
+                self.getDeviceIdentifiersHelper,
+                args=(num, numRowsPerChunk, identifers),
+                name="getDeviceIdentifiersHelper",
+            )
+            threads.append(t)
+            t.start()
+            num += numRowsPerChunk
+            limitActiveThreads(threads)
+
+        joinThreadList(threads)
+
+        releaseLocks([Globals.grid1_lock])
+        return identifers
+    
+    def getDeviceIdentifiersHelper(self, start, limit, identifers):
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        for rowNum in range(self.grid_1.GetNumberRows()):
+        rowNum = start
+        while (rowNum - start) < limit:
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
                 serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
@@ -1243,7 +1266,9 @@ class GridPanel(wx.Panel):
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
                 identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
-        releaseLocks([Globals.grid1_lock])
+            else:
+                break
+            rowNum += 1
         return identifers
 
     @api_tool_decorator(locks=[Globals.grid1_lock])

@@ -1259,7 +1259,8 @@ class NewFrameLayout(wx.Frame):
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
-            self.sidePanel.actionChoice.SetSelection(indx)
+            if self.sidePanel.actionChoice.GetSelection() < indx:
+                self.sidePanel.actionChoice.SetSelection(indx)
             #TODO: FIX
             if self.WINDOWS:
                 if self.gridPanel.grid_1.IsFrozen():
