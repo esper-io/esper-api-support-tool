@@ -51,7 +51,10 @@ class ApiToolLog:
         self.limitFileSize(self.placePath)
 
     def limitFileSize(self, file, maxFileSizeInMb=5):
-        if os.path.exists(file) and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb:
+        if (
+            os.path.exists(file)
+            and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb
+        ):
             with open(file, "w"):
                 pass
 

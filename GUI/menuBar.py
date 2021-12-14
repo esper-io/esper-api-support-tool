@@ -63,9 +63,7 @@ class ToolMenuBar(wx.MenuBar):
         fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
 
-        saveApps = wx.MenuItem(
-            fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S"
-        )
+        saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
         # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveApps = fileMenu.Append(saveApps)
 
@@ -157,7 +155,9 @@ class ToolMenuBar(wx.MenuBar):
         # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "&Toggle Grid Column Visibility\tCtrl+Shift+V")
+            wx.MenuItem(
+                viewMenu, wx.ID_ANY, "&Toggle Grid Column Visibility\tCtrl+Shift+V"
+            )
         )
         self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         # self.networkColumns = viewMenu.Append(
@@ -252,7 +252,9 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
         self.Bind(
-            wx.EVT_MENU, self.parentFrame.gridPanel.onColumnVisibility, self.deviceColumns
+            wx.EVT_MENU,
+            self.parentFrame.gridPanel.onColumnVisibility,
+            self.deviceColumns,
         )
         # self.Bind(
         #     wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
@@ -266,7 +268,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset)
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset
+        )
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -388,7 +392,12 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="eqlIterateThroughDeviceList")
+                    thread = wxThread.GUIThread(
+                        self,
+                        processCollectionDevices,
+                        deviceListResp,
+                        name="eqlIterateThroughDeviceList",
+                    )
                     thread.start()
             else:
                 self.parentFrame.setCursorDefault()
@@ -409,7 +418,12 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="collectionIterateThroughDeviceList")
+                    thread = wxThread.GUIThread(
+                        self,
+                        processCollectionDevices,
+                        deviceListResp,
+                        name="collectionIterateThroughDeviceList",
+                    )
                     thread.start()
             else:
                 self.parentFrame.setCursorDefault()

@@ -254,7 +254,9 @@ class MultiSelectSearchDlg(wx.Dialog):
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             elif "device" in self.label.lower():
-                wxThread.GUIThread(self, self.selectAllDevices, None, name="selectAllDevices").start()
+                wxThread.GUIThread(
+                    self, self.selectAllDevices, None, name="selectAllDevices"
+                ).start()
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -425,10 +427,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if self.resp.count > len(self.originalChoices[0]):
             resp = getAllDevices(
-                self.group,
-                limit=len(self.resp.results),
-                offset=0,
-                fetchAll=True
+                self.group, limit=len(self.resp.results), offset=0, fetchAll=True
             )
             if resp:
                 self.check_list_box_1.Clear()

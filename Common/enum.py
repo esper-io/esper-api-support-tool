@@ -43,6 +43,7 @@ class DeviceState(Enum):
     INACTIVE = 60  # This state is set by cloud, when device is unreachable
     WIPE_IN_PROGRESS = 70  # State set by cloud, in the 5 minute waiting period for WIPE
 
+
 class Color(Enum):
     white = wx.Colour(255, 255, 255)
     black = wx.Colour(0, 0, 0)

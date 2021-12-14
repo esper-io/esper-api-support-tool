@@ -49,7 +49,10 @@ grid3_lock = threading.Lock()
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "General Actions " + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "General Actions "
+    + "* " * NUM_STARS: -1,
     "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
@@ -63,7 +66,10 @@ GENERAL_ACTIONS = {
 }
 
 GRID_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "Grid Actions " + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "Grid Actions "
+    + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
@@ -160,7 +166,7 @@ CSV_TAG_ATTR_NAME = {
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
     "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
-    "Available Internal Storage (MB)" : "AVAILABLE_INTERNAL_STORAGE_MEASURED",
+    "Available Internal Storage (MB)": "AVAILABLE_INTERNAL_STORAGE_MEASURED",
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",

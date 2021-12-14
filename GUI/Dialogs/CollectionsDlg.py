@@ -242,7 +242,7 @@ class CollectionsDialog(wx.Dialog):
         if hasattr(self.parentFrame, "WINDOWS") and self.parentFrame.WINDOWS:
             self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.onSelection)
         self.list_box_1.Bind(wx.EVT_LISTBOX, self.onSelection)
-        
+
         self.button_1.Bind(wx.EVT_BUTTON, self.deleteCollection)
         self.button_2.Bind(wx.EVT_BUTTON, self.onExecute)
         self.button_3.Bind(wx.EVT_BUTTON, self.createCollection)

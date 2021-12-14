@@ -47,7 +47,6 @@ def iterateThroughGridRows(frame, action):
         setDeviceDisabled()
 
 
-
 @api_tool_decorator()
 def modifyDevice(frame):
     """ Start a thread that will attempt to modify device data """
@@ -533,9 +532,7 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = []
-    api_instance = esperclient.DeviceApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     splitResults = splitListIntoChunks(deviceIdentifers)
     threads = []
     for chunk in splitResults:
@@ -551,13 +548,16 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
     joinThreadList(threads)
     return devices
 
-def getDevicesFromGridHelper(deviceIdentifers, api_instance, devices, maxAttempt=Globals.MAX_RETRY):
+
+def getDevicesFromGridHelper(
+    deviceIdentifers, api_instance, devices, maxAttempt=Globals.MAX_RETRY
+):
     for entry in deviceIdentifers:
         api_response = None
         identifier = None
         for attempt in range(maxAttempt):
             try:
-                if type(entry) == tuple or  type(entry) == list:
+                if type(entry) == tuple or type(entry) == list:
                     if entry[0]:
                         identifier = entry[0]
                         api_response = api_instance.get_all_devices(
@@ -624,7 +624,6 @@ def getDevicesFromGridHelper(deviceIdentifers, api_instance, devices, maxAttempt
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to find device with identifer: %s" % identifier,
             )
-    
 
 
 @api_tool_decorator()
@@ -675,14 +674,16 @@ def processDeviceGroupMove(deviceChunk, groupList):
         ):
             groupName = groupList[device.hardware_info["customSerialNumber"]]
         elif (
-                hasattr(device, "network_info")
-                and "imei1" in device.network_info and device.network_info["imei1"] in groupListKeys
-            ):
+            hasattr(device, "network_info")
+            and "imei1" in device.network_info
+            and device.network_info["imei1"] in groupListKeys
+        ):
             groupName = groupList[device.network_info["imei1"]]
         elif (
-                hasattr(device, "network_info")
-                and "imei2" in device.network_info and device.network_info["imei2"] in groupListKeys
-            ):
+            hasattr(device, "network_info")
+            and "imei2" in device.network_info
+            and device.network_info["imei2"] in groupListKeys
+        ):
             groupName = groupList[device.network_info["imei1"]]
         if groupName:
             if isApiKey(groupName):
@@ -964,6 +965,7 @@ def uninstallApp(frame):
     )
     t.start()
 
+
 def processBulkFactoryReset(devices, numDevices, processed):
     status = []
     for device in devices:
@@ -977,6 +979,7 @@ def processBulkFactoryReset(devices, numDevices, processed):
             value,
         )
     return status
+
 
 def bulkFactoryReset(identifers):
     devices = getDevicesFromGrid(deviceIdentifers=identifers)
@@ -1005,6 +1008,7 @@ def bulkFactoryReset(identifers):
     )
     t.start()
 
+
 def processSetDeviceDisabled(devices, numDevices, processed):
     status = []
     for device in devices:
@@ -1018,6 +1022,7 @@ def processSetDeviceDisabled(devices, numDevices, processed):
             value,
         )
     return status
+
 
 def setDeviceDisabled():
     devices = getDevicesFromGrid()

@@ -3,7 +3,15 @@
 import platform
 import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
-from Utility.Resource import acquireLocks, joinThreadList, limitActiveThreads, postEventToFrame, releaseLocks, resourcePath, scale_bitmap
+from Utility.Resource import (
+    acquireLocks,
+    joinThreadList,
+    limitActiveThreads,
+    postEventToFrame,
+    releaseLocks,
+    resourcePath,
+    scale_bitmap,
+)
 import Common.Globals as Globals
 import re
 import threading
@@ -94,7 +102,6 @@ class GridPanel(wx.Panel):
         self.grid_2 = wx.grid.Grid(self.panel_15, wx.ID_ANY, size=(1, 1))
         sizer_7.Add(self.grid_2, 1, wx.EXPAND, 0)
 
-
         self.panel_16 = wx.Panel(self.notebook_2, wx.ID_ANY)
         self.notebook_2.AddPage(self.panel_16, "Application Information")
 
@@ -155,7 +162,7 @@ class GridPanel(wx.Panel):
         self.fillDeviceGridHeaders()
         self.fillNetworkGridHeaders()
         self.fillAppGridHeaders()
-    
+
     def setupGrid(self, grid):
         grid.UseNativeColHeader()
         grid.DisableDragRowSize()
@@ -180,7 +187,6 @@ class GridPanel(wx.Panel):
                 "Normal",
             )
         )
-
 
     @api_tool_decorator()
     def fillDeviceGridHeaders(self):
@@ -265,7 +271,9 @@ class GridPanel(wx.Panel):
         self.fillAppGridHeaders()
         releaseLocks([Globals.grid3_lock])
 
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
+    @api_tool_decorator(
+        locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock]
+    )
     def autoSizeGridsColumns(self, event=None):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
         self.grid_1.AutoSizeColumns()
@@ -481,7 +489,8 @@ class GridPanel(wx.Panel):
             self.networkDescending = not self.networkDescending
         self.grid_3.SetSortingColumn(col, bool(not self.networkDescending))
         if self.grid_3_contents and all(
-            s[keyName].isdigit() if type(s) == str else False for s in self.grid_3_contents
+            s[keyName].isdigit() if type(s) == str else False
+            for s in self.grid_3_contents
         ):
             self.grid_3_contents = sorted(
                 self.grid_3_contents,
@@ -628,17 +637,13 @@ class GridPanel(wx.Panel):
         pageGridDict = {
             "Device": self.grid_1,
             "Network": self.grid_2,
-            "Application": self.grid_3
+            "Application": self.grid_3,
         }
-        exemptedLabels = [
-            "Esper Name",
-            "Esper Id",
-            "Device Name"
-        ]
+        exemptedLabels = ["Esper Name", "Esper Id", "Device Name"]
         colLabelException = {
             "Device": exemptedLabels,
             "Network": exemptedLabels,
-            "Application": exemptedLabels
+            "Application": exemptedLabels,
         }
 
         with ColumnVisibility(self, pageGridDict, colLabelException) as dialog:
@@ -650,15 +655,13 @@ class GridPanel(wx.Panel):
                     for label, isChecked in selected[page].items():
                         if page == "Device":
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
-                            self.toggleColVisibilityInGridOne(
-                                indx, showState=isChecked
-                            )
+                            self.toggleColVisibilityInGridOne(indx, showState=isChecked)
                             self.grid1ColVisibility[label] = isChecked
                         elif page == "Network":
-                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(label)
-                            self.toggleColVisibilityInGridTwo(
-                                indx, showState=isChecked
+                            indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(
+                                label
                             )
+                            self.toggleColVisibilityInGridTwo(indx, showState=isChecked)
                             self.grid2ColVisibility[label] = isChecked
                         elif page == "Application":
                             indx = Globals.CSV_APP_ATTR_NAME.index(label)
@@ -671,7 +674,7 @@ class GridPanel(wx.Panel):
         self.parentFrame.prefDialog.colVisibilty = (
             self.grid1ColVisibility,
             self.grid2ColVisibility,
-            self.grid3ColVisibility
+            self.grid3ColVisibility,
         )
 
     def setColVisibility(self):
@@ -718,15 +721,11 @@ class GridPanel(wx.Panel):
                 if threading.current_thread().isStopped():
                     releaseLocks([Globals.grid1_lock])
                     return
-            self.grid_1.SetCellValue(
-                self.grid_1.GetNumberRows() - 1, num, str(value)
-            )
+            self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
-            self.grid_1.SetReadOnly(
-                self.grid_1.GetNumberRows() - 1, num, isEditable
-            )
+            self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
             self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
             self.setAlteredCellColor(
                 self.grid_1,
@@ -758,11 +757,11 @@ class GridPanel(wx.Panel):
                 esperName = value
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
         deviceListing = list(
-                filter(
-                    lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
-                    self.grid_1_contents,
-                )
+            filter(
+                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                self.grid_1_contents,
             )
+        )
         if device not in self.grid_1_contents and not deviceListing:
             self.grid_1_contents.append(device)
         return device
@@ -837,9 +836,7 @@ class GridPanel(wx.Panel):
         self.grid_2.AppendRows(1)
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
-            self.grid_2.SetCellValue(
-                self.grid_2.GetNumberRows() - 1, num, str(value)
-            )
+            self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
             self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, True)
             num += 1
         if networkInfo not in self.grid_2_contents:
@@ -1206,7 +1203,9 @@ class GridPanel(wx.Panel):
         self.disableProperties = True
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock])
 
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
+    @api_tool_decorator(
+        locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock]
+    )
     def enableGridProperties(
         self, enableGrid=True, enableColSize=True, enableColMove=True
     ):
@@ -1250,7 +1249,7 @@ class GridPanel(wx.Panel):
 
         releaseLocks([Globals.grid1_lock])
         return identifers
-    
+
     def getDeviceIdentifiersHelper(self, start, limit, identifers):
         en_indx = self.grid1HeaderLabels.index("Esper Name")
         sn_indx = self.grid1HeaderLabels.index("Serial Number")
@@ -1490,7 +1489,7 @@ class GridPanel(wx.Panel):
                         "State": app["state"],
                         "Whitelisted": app["whitelisted"],
                         "Can Clear Data": app["is_data_clearable"],
-                        "Can Uninstall": app["is_uninstallable"]
+                        "Can Uninstall": app["is_uninstallable"],
                     }
                     self.addApptoAppGrid(info)
         releaseLocks([Globals.grid3_lock])
@@ -1500,24 +1499,16 @@ class GridPanel(wx.Panel):
         num = 0
         self.grid_3.AppendRows(1)
         for attribute in Globals.CSV_APP_ATTR_NAME:
-            value = (
-                info[attribute]
-                if attribute in info
-                else ""
-            )
+            value = info[attribute] if attribute in info else ""
             if hasattr(threading.current_thread(), "isStopped"):
                 if threading.current_thread().isStopped():
                     releaseLocks([Globals.grid3_lock])
                     return
-            self.grid_3.SetCellValue(
-                self.grid_3.GetNumberRows() - 1, num, str(value)
-            )
+            self.grid_3.SetCellValue(self.grid_3.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
-            self.grid_3.SetReadOnly(
-                self.grid_3.GetNumberRows() - 1, num, isEditable
-            )
+            self.grid_3.SetReadOnly(self.grid_3.GetNumberRows() - 1, num, isEditable)
             num += 1
             if info and info not in self.grid_3_contents:
                 self.grid_3_contents.append(info)
@@ -1537,7 +1528,7 @@ class GridPanel(wx.Panel):
                     "State": app["state"],
                     "Whitelisted": app["whitelisted"],
                     "Can Clear Data": app["is_data_clearable"],
-                    "Can Uninstall": app["is_uninstallable"]
+                    "Can Uninstall": app["is_uninstallable"],
                 }
         if info and info not in self.grid_3_contents:
             self.grid_3_contents.append(info)
@@ -1545,20 +1536,26 @@ class GridPanel(wx.Panel):
     def onScroll(self, event):
         scrollPosPercentage = self.getScrollpercentage(self.grid_1)
         if scrollPosPercentage >= 90:
-            self.populateGridRows(self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME)
-        
+            self.populateGridRows(
+                self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME
+            )
+
         scrollPosPercentage = self.getScrollpercentage(self.grid_2)
         if scrollPosPercentage >= 90:
-            self.populateGridRows(self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME)
-        
+            self.populateGridRows(
+                self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME
+            )
+
         scrollPosPercentage = self.getScrollpercentage(self.grid_3)
         if scrollPosPercentage >= 90:
-            self.populateGridRows(self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME)
+            self.populateGridRows(
+                self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME
+            )
         if event:
             event.Skip()
 
     def getScrollpercentage(self, grid):
-        numerator = (grid.GetScrollThumb(wx.VERTICAL) + grid.GetScrollPos(wx.VERTICAL))
+        numerator = grid.GetScrollThumb(wx.VERTICAL) + grid.GetScrollPos(wx.VERTICAL)
         denominator = grid.GetScrollRange(wx.VERTICAL)
         scrollPosPercentage = 0
         if denominator > 0:
@@ -1580,26 +1577,14 @@ class GridPanel(wx.Panel):
                 for attr in fields:
                     value = None
                     if type(fields) == dict:
-                        value = (
-                            entry[fields[attr]]
-                            if fields[attr] in entry
-                            else ""
-                        )
+                        value = entry[fields[attr]] if fields[attr] in entry else ""
                     if type(fields) == list or not value:
-                        value = (
-                            entry[attr]
-                            if attr in entry
-                            else ""
-                        )
-                    grid.SetCellValue(
-                        grid.GetNumberRows() - 1, col, str(value)
-                    )
+                        value = entry[attr] if attr in entry else ""
+                    grid.SetCellValue(grid.GetNumberRows() - 1, col, str(value))
                     isEditable = True
                     if attr in Globals.CSV_EDITABLE_COL:
                         isEditable = False
-                    grid.SetReadOnly(
-                        grid.GetNumberRows() - 1, col, isEditable
-                    )
+                    grid.SetReadOnly(grid.GetNumberRows() - 1, col, isEditable)
                     self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
                     self.setAlteredCellColor(
                         grid,

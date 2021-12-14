@@ -454,8 +454,10 @@ def isApiKey(key):
         return False
     return len(key) == 36 and "-" in key
 
+
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
 
 def acquireLocks(locks, timeout=5):
     if type(locks) == list:
@@ -464,6 +466,7 @@ def acquireLocks(locks, timeout=5):
                 locks.acquire(timeout=5)
     elif type(locks) == threading.Lock:
         locks.acquire(timeout=5)
+
 
 def releaseLocks(locks):
     if type(locks) == list:

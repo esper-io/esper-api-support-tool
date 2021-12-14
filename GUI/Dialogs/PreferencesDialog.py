@@ -50,7 +50,7 @@ class PreferencesDialog(wx.Dialog):
             "groupFetchAll",
             "loadXDevices",
             "replaceSerial",
-            "showDisabledDevices"
+            "showDisabledDevices",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -167,7 +167,9 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
         )
-        self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED)
+        self.checkbox_18.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -669,7 +671,7 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
             Globals.GROUP_FETCH_ALL = True
-        
+
         if prefDict and "replaceSerial" in prefDict:
             if (
                 isinstance(prefDict["replaceSerial"], str)

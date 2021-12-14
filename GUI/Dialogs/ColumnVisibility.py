@@ -108,7 +108,9 @@ class ColumnVisibility(wx.Dialog):
             try:
                 isShown = grid.IsColShown(num)
                 if colLabel in self.choiceDataDict[label]:
-                    self.checkBoxes[label].Check(self.choiceDataDict[label].index(colLabel), isShown)
+                    self.checkBoxes[label].Check(
+                        self.choiceDataDict[label].index(colLabel), isShown
+                    )
                     self.selected[label][colLabel] = isShown
             except:
                 pass
@@ -202,10 +204,16 @@ class ColumnVisibility(wx.Dialog):
         itemName = checkbox.GetString(selection)
         checkbox.Deselect(selection)
         checked = list(checkbox.GetCheckedItems())
-        if (event.EventType == wx.EVT_LISTBOX.typeId or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId) and selection in checked:
+        if (
+            event.EventType == wx.EVT_LISTBOX.typeId
+            or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId
+        ) and selection in checked:
             checked.remove(selection)
             self.selected[self.current_page][itemName] = False
-        elif (event.EventType == wx.EVT_LISTBOX.typeId or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId) and selection not in checked:
+        elif (
+            event.EventType == wx.EVT_LISTBOX.typeId
+            or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId
+        ) and selection not in checked:
             checked.append(selection)
             self.selected[self.current_page][itemName] = True
         elif selection in checked:
