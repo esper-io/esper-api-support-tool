@@ -452,11 +452,12 @@ def populateDeviceInfoDictionary(
         else:
             deviceInfo.update({"Status": "Unknown"})
 
-    kioskMode = deviceInfo["current_app_mode"]
-    if kioskMode == 0:
-        deviceInfo.update({"Mode": "Kiosk"})
-    else:
-        deviceInfo.update({"Mode": "Multi"})
+    if "current_app_mode" in deviceInfo:
+        kioskMode = deviceInfo["current_app_mode"]
+        if kioskMode == 0:
+            deviceInfo.update({"Mode": "Kiosk"})
+        else:
+            deviceInfo.update({"Mode": "Multi"})
 
     hdwareKey = None
     if "serial_number" in deviceHardware:
