@@ -14,7 +14,7 @@ VERSION = "v0.192"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
-MAX_LIMIT = 500000
+MAX_LIMIT = 500
 MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
@@ -196,7 +196,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Count (%)": "batteryCapacityCount",
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
-    "Esper Id": "id",
+    # "Esper Id": "id",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
