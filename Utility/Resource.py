@@ -92,19 +92,25 @@ def checkEsperInternetConnection():
 
 def checkForInternetAccess(frame):
     while not frame.kill:
-        if (
-            not checkEsperInternetConnection()
-            and not checkInternetConnection(Globals.UPDATE_LINK)
-            and frame.IsShownOnScreen()
-            and frame.IsActive()
-        ):
-            displayMessageBox(
-                (
-                    "ERROR: An internet connection is required when using the tool!",
-                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
+        if (frame.IsShownOnScreen()
+            and frame.IsActive()):
+            if (
+                
+                not checkEsperInternetConnection()
+                and not checkInternetConnection(Globals.UPDATE_LINK)
+            ):
+                displayMessageBox(
+                    (
+                        "ERROR: An internet connection is required when using the tool!",
+                        wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                    )
                 )
-            )
-        time.sleep(15)
+                Globals.HAS_INTERNET = False
+            else:
+                if Globals.HAS_INTERNET == None and Globals.frame:
+                    Globals.frame.loadPref()
+                Globals.HAS_INTERNET = True
+        time.sleep(15 if Globals.HAS_INTERNET else 30)
 
 
 def checkForUpdate():
