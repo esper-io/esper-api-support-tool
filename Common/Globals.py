@@ -34,6 +34,8 @@ DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmati
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
 
+HAS_INTERNET = None
+
 """ Locks """
 lock = threading.Lock()
 error_lock = threading.Lock()
