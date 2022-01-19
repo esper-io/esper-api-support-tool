@@ -57,15 +57,16 @@ class ToolMenuBar(wx.MenuBar):
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
+        saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
+        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
+        self.fileSaveApps = fileMenu.Append(saveApps)
+
+        fileMenu.Append(wx.ID_SEPARATOR)
         fas = wx.MenuItem(
             fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save Device Info\tCtrl+Alt+S"
         )
         fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
-
-        saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
-        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
-        self.fileSaveApps = fileMenu.Append(saveApps)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
@@ -182,6 +183,7 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
         self.clearGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clear.png")))
+        viewMenu.Append(wx.ID_SEPARATOR)
 
         # Help Menu
         helpMenu = wx.Menu()
@@ -432,8 +434,10 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def checkCollectionEnabled(self):
         if not checkCollectionIsEnabled():
-            self.collection.Hide()
-            self.eqlQuery.Hide()
+            if hasattr(self.collectionSubMenu, "Hide"):
+                self.collectionSubMenu.Hide()
+            else:
+                self.collectionSubMenu.Enable(False)
 
     @api_tool_decorator()
     def AddUser(self, event):
