@@ -3,5 +3,6 @@ requests
 esperclient
 pyinstaller
 fuzzywuzzy
+python-Levenshtein
 cryptography
 pytz
