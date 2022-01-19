@@ -167,6 +167,8 @@ class TemplateDialog(wx.Dialog):
 
         self.__set_properties()
 
+        self.Fit()
+
     @api_tool_decorator()
     def __set_properties(self):
         # begin wxGlade: MyDialog.__set_properties
@@ -176,6 +178,8 @@ class TemplateDialog(wx.Dialog):
         self.choice_2.SetSelection(0)
         self.button_OK.Enable(False)
         self.button_CANCEL.SetFocus()
+
+        self.Fit()
         # end wxGlade
 
     @api_tool_decorator()

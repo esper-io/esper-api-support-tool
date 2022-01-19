@@ -398,6 +398,8 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
+        self.Fit()
+
         if prefDict and not prefDict["enableDevice"]:
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         else:

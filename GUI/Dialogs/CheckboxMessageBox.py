@@ -27,6 +27,8 @@ class CheckboxMessageBox(wx.Dialog):
         self.__set_properties(title)
         self.__do_layout(caption)
 
+        self.Fit()
+
     @api_tool_decorator()
     def __set_properties(self, title):
         self.SetTitle(title)

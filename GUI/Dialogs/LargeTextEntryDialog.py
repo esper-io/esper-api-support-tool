@@ -82,6 +82,8 @@ class LargeTextEntryDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+        self.Fit()
+
     @api_tool_decorator()
     def GetValue(self):
         return self.text_ctrl_1.GetValue()

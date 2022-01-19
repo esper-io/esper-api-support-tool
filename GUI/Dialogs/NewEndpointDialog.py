@@ -107,6 +107,8 @@ class NewEndpointDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+        self.Fit()
+
     @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():

@@ -153,6 +153,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
         self.checkPageButton()
 
+        self.Fit()
+
     @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():

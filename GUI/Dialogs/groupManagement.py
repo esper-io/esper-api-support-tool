@@ -242,6 +242,8 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1.ExpandAll()
         self.tree_ctrl_2.ExpandAll()
 
+        self.Fit()
+
     @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
@@ -259,31 +261,32 @@ class GroupManagement(wx.Dialog):
 
     def createTreeLayout(self):
         unsorted = []
-        for group in self.groups:
-            if group.name not in self.groupNameToId:
-                self.groupNameToId[group.name] = []
-            self.groupNameToId[group.name].append(group.id)
-            self.groupIdToName[group.id] = group.name
-            parentId = self.getGroupIdFromURL(group.parent)
-            if not group.parent:
-                self.groupTree[group.id] = []
-                self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
-                root2 = self.tree_ctrl_2.AddRoot(group.name, data=group.id)
-                self.tree[group.id] = self.root
-                self.uploadTreeItems[group.id] = root2
-                continue
-            if parentId in self.groupTree.keys():
-                self.groupTree[parentId].append({group.id: []})
-                entry = self.tree_ctrl_1.AppendItem(
-                    self.tree[parentId], group.name, data=group.id
-                )
-                entry2 = self.tree_ctrl_2.AppendItem(
-                    self.uploadTreeItems[parentId], group.name, data=group.id
-                )
-                self.tree[group.id] = entry
-                self.uploadTreeItems[group.id] = entry2
-            else:
-                unsorted.append(group)
+        if self.groups:
+            for group in self.groups:
+                if group.name not in self.groupNameToId:
+                    self.groupNameToId[group.name] = []
+                self.groupNameToId[group.name].append(group.id)
+                self.groupIdToName[group.id] = group.name
+                parentId = self.getGroupIdFromURL(group.parent)
+                if not group.parent:
+                    self.groupTree[group.id] = []
+                    self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
+                    root2 = self.tree_ctrl_2.AddRoot(group.name, data=group.id)
+                    self.tree[group.id] = self.root
+                    self.uploadTreeItems[group.id] = root2
+                    continue
+                if parentId in self.groupTree.keys():
+                    self.groupTree[parentId].append({group.id: []})
+                    entry = self.tree_ctrl_1.AppendItem(
+                        self.tree[parentId], group.name, data=group.id
+                    )
+                    entry2 = self.tree_ctrl_2.AppendItem(
+                        self.uploadTreeItems[parentId], group.name, data=group.id
+                    )
+                    self.tree[group.id] = entry
+                    self.uploadTreeItems[group.id] = entry2
+                else:
+                    unsorted.append(group)
 
         while len(unsorted) > 0:
             newUnsorted = []

@@ -108,6 +108,8 @@ class BulkFactoryReset(wx.Dialog):
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_OK.Bind(wx.EVT_BUTTON, self.onReset)
 
+        self.Fit()
+
     @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():

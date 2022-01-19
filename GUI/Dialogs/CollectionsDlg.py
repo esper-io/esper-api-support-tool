@@ -255,6 +255,8 @@ class CollectionsDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onExecute)
         self.bitmap_button_1.Bind(wx.EVT_BUTTON, self.updateCollectionList)
 
+        self.Fit()
+
     @api_tool_decorator()
     def onExecute(self, event):
         if self.IsModal():
