@@ -16,6 +16,7 @@ import platform
 import json
 import tempfile
 import ast
+# import gc
 import wx.adv as wxadv
 import Utility.EventUtility as eventUtil
 
@@ -75,6 +76,7 @@ from Utility.EastUtility import (
     uploadAppToEndpoint,
 )
 from Utility.Resource import (
+    checkEsperInternetConnection,
     checkForInternetAccess,
     limitActiveThreads,
     postEventToFrame,
@@ -1024,7 +1026,9 @@ class NewFrameLayout(wx.Frame):
             )
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+        )
         return returnItem
 
     @api_tool_decorator()
@@ -1142,9 +1146,13 @@ class NewFrameLayout(wx.Frame):
                         self.menubar.fileAddUser.Enable(False)
 
                 self.setGaugeValue(50)
-                groupThread = self.PopulateGroups()
-                appThread = self.PopulateApps()
-                threads = [groupThread, appThread]
+                threads = []
+                if Globals.HAS_INTERNET == None:
+                    Globals.HAS_INTERNET = checkEsperInternetConnection()
+                if Globals.HAS_INTERNET:
+                    groupThread = self.PopulateGroups()
+                    appThread = self.PopulateApps()
+                    threads = [groupThread, appThread]
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -1356,7 +1364,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
         """ Populate Group Choice """
-        results = event.GetValue().results
+        results = event.GetValue().results if hasattr(event.GetValue(), "results") else event.GetValue()
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
@@ -1537,6 +1545,15 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
+        if not Globals.HAS_INTERNET:
+            displayMessageBox(
+                (
+                    "ERROR: An internet connection is required when using the tool!",
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                )
+            )
+            return
+
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
         self.start_time = time.time()
@@ -1879,7 +1896,10 @@ class NewFrameLayout(wx.Frame):
                 result,
             ) as dialog:
                 res = dialog.ShowModal()
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        # wx.CallLater(3000, self.setGaugeValue, 0)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+        )
 
     @api_tool_decorator()
     def setStatus(self, status, orgingalMsg, isError=False):
@@ -2263,12 +2283,16 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.notebook_2.SetSelection(2)
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
-            wx.CallLater(3000, self.setGaugeValue, 0)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+            )
+            # wx.CallLater(3000, self.setGaugeValue, 0)
         if cmdResults:
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
+        # gc.collect()
         if hasattr(self, "start_time"):
             print("Run Execution time: %s" % (time.time() - self.start_time))
 
