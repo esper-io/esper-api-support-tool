@@ -97,7 +97,7 @@ def fetchGroupName(groupURL, returnJson=False):
 
 
 @api_tool_decorator()
-def patchInfo(request_extension, deviceid, data=None, json=None, tags=None):
+def patchInfo(request_extension, deviceid, data=None, jsonData=None, tags=None):
     """Pushes Data To Device Info JSON"""
     headers = getHeader()
     url = (
@@ -110,10 +110,13 @@ def patchInfo(request_extension, deviceid, data=None, json=None, tags=None):
     )
     requestData = data
     if tags:
-        requestData = json.dumps({"tags": tags})
+        try:
+            requestData = json.dumps({"tags": tags})
+        except Exception as e:
+            print(e)
 
     resp = performPatchRequestWithRetry(
-        url, headers=headers, data=requestData, json=json
+        url, headers=headers, data=requestData, json=jsonData
     )
     json_resp = resp.json()
     logBadResponse(url, resp, json_resp)
@@ -1553,4 +1556,4 @@ def factoryResetDevice(
 
 
 def setDeviceDisabled(deviceId):
-    return patchInfo("", deviceId, json={"state": 20})
+    return patchInfo("", deviceId, jsonData={"state": 20})
