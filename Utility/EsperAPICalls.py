@@ -740,7 +740,7 @@ def getAllAppVersionsForHost(
                     enterprise_id,
                     limit=Globals.limit,
                     offset=0,
-                    is_hidden=False,
+                    # is_hidden=False,
                 )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllAppVersionsForHost",
