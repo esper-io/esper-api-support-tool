@@ -2586,7 +2586,7 @@ class NewFrameLayout(wx.Frame):
         else:
             res = util.createTemplate(toApi, toKey, toEntId, templateFound)
         if "errors" not in res:
-            action = "created" if not update else "updated."
+            action = "created" if not update else "updated"
             self.Logging("Template sucessfully %s." % action)
             displayMessageBox(
                 ("Template sucessfully %s." % action, wx.OK | wx.ICON_INFORMATION)
