@@ -300,7 +300,7 @@ class EsperTemplateUtil:
                 apps = getAllApplicationsForHost(
                     self.getEsperConfig(self.toApi, self.toKey), self.toEntId
                 ).results
-            newTemplate["application"]["apps"] = []
+            # newTemplate["application"]["apps"] = []
             self.processApplications(template, newTemplate, apps)
         if (
             not newTemplate["application"]["startOnBoot"]
@@ -351,18 +351,40 @@ class EsperTemplateUtil:
                 found = False
                 for toApp in apps:
                     if (
-                        toApp.application_name == app["applicationName"]
-                        or toApp.package_name == app["packageName"]
+                        toApp.package_name == app["packageName"]
                     ):
-                        found = True
-                if not found:
-                    upload = wxThread.GUIThread(
-                        self.parent,
-                        self.uploadMissingApk,
-                        (app, template, newTemplate, config, entId),
-                    )
-                    missingAppThreads.append(upload)
-                    upload.start()
+                        appVersions = getAllAppVersionsForHost(self.getEsperConfig(self.toApi, self.toKey), self.toEntId, toApp.id)
+                        if appVersions and hasattr(appVersions, "results"):
+                            for version in appVersions.results:
+                                if (version.version_code == app["versionName"] and version.build_number == str(app["versionCode"])):
+                                    found = True
+                                    newTemplate = self.addAppVersionToTemplate(app, newTemplate, toApp, version.id)
+                                    break
+                        if not found:
+                            upload = wxThread.GUIThread(
+                                self.parent,
+                                self.uploadMissingApk,
+                                (app, template, newTemplate, config, entId),
+                            )
+                            missingAppThreads.append(upload)
+                            upload.start()
+
+    def addAppVersionToTemplate(self, app, template, toApp, appVersion):
+        if (("isGPlay" not in app)
+            or ("isGPlay" in app and not app["isGPlay"])
+            or ("is_g_play" not in app)
+            or ("is_g_play" in app and not app["is_g_play"])):
+            template["application"]["apps"].append(
+                {
+                    "is_g_play": False,
+                    "id": toApp.id,
+                    "app_version": appVersion,
+                    "appVersionId": appVersion,
+                    "package_name": app["packageName"],
+                    "installationRule": app["installationRule"],
+                }
+            )
+        return template
 
     def processApplications(self, template, newTemplate, apps):
         for app in template["template"]["application"]["apps"]:
@@ -401,13 +423,19 @@ class EsperTemplateUtil:
                     )
             else:
                 for toApp in apps:
-                    if (
-                        toApp.application_name == app["applicationName"]
-                        or toApp.package_name == app["packageName"]
-                    ):
+                    if toApp.package_name == app["packageName"]:
+                        appMatch = list(
+                            filter(
+                                lambda x: x["package_name"] == app["packageName"],
+                                newTemplate["application"]["apps"],
+                            )
+                        )
+                        if appMatch:
+                            continue
+
                         versionId = list(
                             filter(
-                                lambda x: x.version_code == app["versionName"],
+                                lambda x: x.version_code == app["versionName"] and x.build_number == app["versionCode"],
                                 toApp.versions,
                             )
                         )
