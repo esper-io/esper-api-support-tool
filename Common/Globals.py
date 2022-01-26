@@ -158,7 +158,7 @@ CSV_TAG_ATTR_NAME = {
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
-    # "Applications": "Apps",
+    "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
     "Device Type": "device_type",

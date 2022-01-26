@@ -256,7 +256,7 @@ def constructAppPkgVerStr(appName, pkgName, version):
         appPkgVerStr += "Invalid App Name - "
     if Globals.SHOW_PKG_NAME:
         if pkgName:
-            appPkgVerStr += " (%s) v"
+            appPkgVerStr += " (%s) v" % pkgName
         else:
             appPkgVerStr += " (Invalid Package Name) v"
     else:
