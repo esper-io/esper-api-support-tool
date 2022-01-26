@@ -590,23 +590,26 @@ def populateDeviceInfoDictionary(
                 deviceInfo[event["eventType"]] = event["countInMb"]
 
     if network_info and "createTime" in network_info:
-        dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-        utc_date_time = dt.astimezone(pytz.utc)
-        updatedOnDate = utc_to_local(utc_date_time)
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ"))
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
 
-        time_delta = utc_to_local(datetime.now()) - updatedOnDate
-        total_seconds = time_delta.total_seconds()
-        minutes = total_seconds / 60
-        if minutes < 0:
-            deviceInfo["last_seen"] = "Less than 1 minute ago"
-        elif minutes > 0 and minutes < 60:
-            deviceInfo["last_seen"] = "%s minute ago" % minutes
-        elif minutes > 60 and minutes < 1440:
-            hours = int(math.ceil(minutes / 60))
-            deviceInfo["last_seen"] = "%s hours ago" % hours
-        elif minutes > 1440:
-            days = int(math.ceil(minutes / 1440))
-            deviceInfo["last_seen"] = "%s days ago" % days
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
     else:
         deviceInfo["last_seen"] = "No data available"
 
