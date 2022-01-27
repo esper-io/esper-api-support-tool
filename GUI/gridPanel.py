@@ -203,6 +203,22 @@ class GridPanel(wx.Panel):
             pass
         self.grid_1.AutoSizeColumns()
 
+    def deleteAppColInDeviceGrid(self):
+        numCols = self.grid_1.GetNumberCols()
+        for num in range(numCols):
+            header = self.grid_1.GetColLabelValue(num)
+            if header == "Applications":
+                self.grid_1.DeleteCols(num)
+                break
+
+    def repopulateApplicationField(self):
+        if "Applications" in self.grid1HeaderLabels:
+            numRows = self.grid_1.GetNumberRows()
+            indx = self.grid1HeaderLabels.index("Applications")
+            for row in range(numRows):
+                data = self.grid_1_contents[row]
+                self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
+
     @api_tool_decorator()
     def fillNetworkGridHeaders(self):
         """ Populate Network Grid Headers """
