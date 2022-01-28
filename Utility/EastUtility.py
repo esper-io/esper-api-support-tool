@@ -453,6 +453,7 @@ def populateDeviceInfoDictionary(
         else:
             deviceInfo.update({"Status": "Unknown"})
 
+    kioskMode = None
     if "current_app_mode" in deviceInfo:
         kioskMode = deviceInfo["current_app_mode"]
         if kioskMode == 0:
