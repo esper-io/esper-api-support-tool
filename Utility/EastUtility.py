@@ -539,7 +539,7 @@ def populateDeviceInfoDictionary(
             for ip in deviceInfo[ipKey]:
                 if ":" not in ip:
                     deviceInfo["ipv4Address"].append(ip)
-                elif ip.endswith("/64"):
+                else:
                     deviceInfo["ipv6Address"].append(ip)
                     deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
