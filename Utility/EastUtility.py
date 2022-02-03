@@ -620,6 +620,9 @@ def populateDeviceInfoDictionary(
         provisionedOnDate = utc_to_local(device.provisioned_on)
         deviceInfo["provisioned_on"] = str(provisionedOnDate)
 
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
     return deviceInfo
 
 

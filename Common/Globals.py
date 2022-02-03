@@ -10,7 +10,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.192"
+VERSION = "v0.1924"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -149,6 +149,7 @@ CSV_TAG_ATTR_NAME = {
     "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
+    "EEA Version": "eeaVersion",
     "Template": "template_name",
     "Policy": "policy_name",
     "Mode": "Mode",
@@ -251,8 +252,8 @@ csv_auth_path = ""
 SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
-GRID_UPDATE_RATE = 60
-MAX_GRID_UPDATE_RATE = 3600
+# GRID_UPDATE_RATE = 60
+# MAX_GRID_UPDATE_RATE = 3600
 ENABLE_GRID_UPDATE = False
 USE_ENTERPRISE_APP = True
 SHOW_PKG_NAME = False
