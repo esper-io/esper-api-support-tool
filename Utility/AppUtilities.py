@@ -132,7 +132,7 @@ def getAllInstallableApps():
     if appsResp:
         appsRespJson = appsResp.json()
 
-        if appsRespJson and "next" in appsRespJson:
+        if appsRespJson and "next" in appsRespJson and appsRespJson["next"]:
             appsRespJson = getAllInstallableAppsOffsets(appsRespJson, appsRespJson["next"])
 
     return appsRespJson
