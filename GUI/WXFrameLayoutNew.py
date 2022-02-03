@@ -89,6 +89,7 @@ from Utility.Resource import (
 )
 from Utility.CommandUtility import createCommand
 from Utility.AppUtilities import (
+    getAllInstallableApps,
     installAppOnDevices,
     uninstallAppOnDevice,
     installAppOnGroups,
@@ -1461,12 +1462,16 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        thread = wxThread.GUIThread(self, self.fetchAllApps, None, name="PopulateApps")
+        thread = wxThread.GUIThread(self, self.fetchAllInstallableApps, None, name="PopulateApps")
         thread.start()
         return thread
 
     def fetchAllApps(self):
         resp = getAllApplications()
+        self.addAppsToAppChoice(resp)
+
+    def fetchAllInstallableApps(self):
+        resp = getAllInstallableApps()
         self.addAppsToAppChoice(resp)
 
     def addAppstoAppChoiceThread(self, event):

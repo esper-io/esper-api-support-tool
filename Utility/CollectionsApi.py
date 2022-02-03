@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from Utility.Resource import (
+    getHeader,
     logBadResponse,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -11,7 +12,7 @@ from Utility.Resource import (
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 
-from Utility.EsperAPICalls import getHeader
+
 
 
 @api_tool_decorator()

@@ -6,10 +6,9 @@ import time
 from esperclient.rest import ApiException
 from Utility.ApiToolLogging import ApiToolLog
 import esperclient
-from Utility.EsperAPICalls import getHeader
 import Common.Globals as Globals
 
-from Utility.Resource import performPatchRequestWithRetry
+from Utility.Resource import getHeader, performPatchRequestWithRetry
 
 
 def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
