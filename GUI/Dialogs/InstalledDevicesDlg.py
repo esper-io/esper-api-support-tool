@@ -19,26 +19,26 @@ class InstalledDevicesDlg(wx.Dialog):
         self.appNameList = []
         self.apps = apps
         for app in self.apps:
-            if Globals.SHOW_PKG_NAME:
-                if "appPkgName" in app:
-                    self.appNameList.append(app["appPkgName"])
-                else:
-                    for key in app.keys():
-                        if (
-                            key != "app_name"
-                            and key != "app_state"
-                            and (
-                                (Globals.SHOW_PKG_NAME and " (" in key)
-                                or (not Globals.SHOW_PKG_NAME and " (" not in key)
-                            )
-                        ):
-                            self.appNameList.append(key)
-                            break
-            else:
-                if app["app_name"] not in self.appNameList:
-                    self.appNameList.append(app["app_name"])
-                elif "appPkgName" in app:
-                    self.appNameList.append(app["appPkgName"])
+            # if Globals.SHOW_PKG_NAME:
+            #     if "appPkgName" in app:
+            #         self.appNameList.append(app["appPkgName"])
+            #     else:
+            #         for key in app.keys():
+            #             if (
+            #                 key != "app_name"
+            #                 and key != "app_state"
+            #                 and (
+            #                     (Globals.SHOW_PKG_NAME and " (" in key)
+            #                     or (not Globals.SHOW_PKG_NAME and " (" not in key)
+            #                 )
+            #             ):
+            #                 self.appNameList.append(key)
+            #                 break
+            # else:
+                # if app["app_name"] not in self.appNameList:
+                #     self.appNameList.append(app["app_name"])
+                # elif "appPkgName" in app:
+                self.appNameList.append(app["appPkgName"])
         self.versions = []
 
         self.SetMinSize((400, 300))
