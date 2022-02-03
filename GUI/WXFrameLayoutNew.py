@@ -1055,6 +1055,11 @@ class NewFrameLayout(wx.Frame):
         self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
         clearKnownGroups()
+        try:
+            if self.groupManage:
+                self.groupManage.Destroy()
+        except:
+            pass
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.clearSelections(clearApp=True)
@@ -1369,12 +1374,6 @@ class NewFrameLayout(wx.Frame):
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
-        wxThread.GUIThread(
-            self,
-            self.populateGroupManagement,
-            None,
-            name="populateGroupManagement",
-        ).start()
         results = sorted(
             results,
             key=lambda i: i.name.lower(),
@@ -1389,9 +1388,6 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
-
-    def populateGroupManagement(self):
-        self.groupManage = GroupManagement(self.groups)
 
     @api_tool_decorator()
     def PopulateDevices(self, event):

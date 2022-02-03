@@ -17,8 +17,6 @@ import Common.Globals as Globals
 import Utility.wxThread as wxThread
 
 from Common.enum import Color
-
-
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):
         # begin wxGlade: MyDialog.__init__
@@ -36,6 +34,7 @@ class GroupManagement(wx.Dialog):
             "Parent Group Identifier",
             "New Group Name",
         ]
+        self.rootId = None
 
         super(GroupManagement, self).__init__(
             None,
@@ -269,6 +268,7 @@ class GroupManagement(wx.Dialog):
                 self.groupIdToName[group.id] = group.name
                 parentId = self.getGroupIdFromURL(group.parent)
                 if not group.parent:
+                    self.rootId = group.id
                     self.groupTree[group.id] = []
                     self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
                     root2 = self.tree_ctrl_2.AddRoot(group.name, data=group.id)
@@ -288,14 +288,25 @@ class GroupManagement(wx.Dialog):
                 else:
                     unsorted.append(group)
 
-        while len(unsorted) > 0:
-            newUnsorted = []
+        if len(unsorted) > 250:
             for group in unsorted:
-                parentId = self.getGroupIdFromURL(group.parent)
-                success = self.addGroupAsChild(self.groupTree, parentId, group)
-                if not success:
-                    newUnsorted.append(group)
-            unsorted = newUnsorted
+                entry = self.tree_ctrl_1.AppendItem(
+                    self.tree[self.rootId], group.name, data=group.id
+                )
+                entry2 = self.tree_ctrl_2.AppendItem(
+                    self.uploadTreeItems[self.rootId], group.name, data=group.id
+                )
+                self.tree[group.id] = entry
+                self.uploadTreeItems[group.id] = entry2
+        else:
+            while len(unsorted) > 0:
+                newUnsorted = []
+                for group in unsorted:
+                    parentId = self.getGroupIdFromURL(group.parent)
+                    success = self.addGroupAsChild(self.groupTree, parentId, group)
+                    if not success:
+                        newUnsorted.append(group)
+                unsorted = newUnsorted
 
     def addGroupAsChild(self, src, dest, group):
         for key, value in src.items():
@@ -953,3 +964,7 @@ class GroupManagement(wx.Dialog):
                     gridData.append(data)
             for child in children:
                 self.getGroupCSV(child, id, gridData)
+
+    # def ShowModal(self):
+    #     self.createTreeLayout()
+    #     return wx.Dialog.ShowModal(self)
