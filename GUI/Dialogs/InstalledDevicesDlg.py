@@ -2,10 +2,10 @@
 
 import wx
 import Common.Globals as Globals
+from Utility.AppUtilities import getAppVersions
 
 from Utility.Resource import getStrRatioSimilarity
 from Common.decorator import api_tool_decorator
-from Utility.EsperAPICalls import getAppVersions
 
 
 class InstalledDevicesDlg(wx.Dialog):

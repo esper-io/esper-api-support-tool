@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Utility.AppUtilities import installAppOnDevices, uninstallAppOnDevice
+from Utility.AppUtilities import getdeviceapps, installAppOnDevices, uninstallAppOnDevice
 import time
 
 import esperclient
@@ -393,7 +393,7 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
 @api_tool_decorator()
 def setAllAppsState(frame, device, state):
     stateStatuses = []
-    _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
+    _, resp = getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
     for app in resp["results"]:
         stateStatus = None
         package_name = None

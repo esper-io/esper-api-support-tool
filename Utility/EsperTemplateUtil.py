@@ -5,6 +5,7 @@ import esperclient
 import os
 import wx
 import time
+from Utility.AppUtilities import getAllAppVersionsForHost, getAllApplicationsForHost, uploadApplicationForHost
 
 import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
@@ -22,11 +23,8 @@ from Utility.Resource import (
 from Utility.Resource import postEventToFrame
 
 from Utility.EsperAPICalls import (
-    getAllAppVersionsForHost,
-    getAllApplicationsForHost,
     createDeviceGroupForHost,
     getDeviceGroupsForHost,
-    uploadApplicationForHost,
 )
 
 from datetime import datetime

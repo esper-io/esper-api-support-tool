@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import logBadResponse, postEventToFrame
+from Utility.Resource import getHeader, logBadResponse, performPostRequestWithRetry, postEventToFrame
 import ast
 import time
 import esperclient
@@ -15,6 +15,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
+from esperclient.models.v0_command_args import V0CommandArgs
 
 @api_tool_decorator()
 def createCommand(frame, command_args, commandType, schedule, schType):
@@ -336,3 +337,28 @@ def waitForCommandToFinish(
 def getCommandsApiInstance():
     """ Returns an instace of the Commands API """
     return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
+
+
+@api_tool_decorator()
+def postEsperCommand(command_data, useV0=True):
+    json_resp = None
+    resp = None
+    try:
+        headers = getHeader()
+        url = ""
+        if useV0:
+            url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
+                Globals.configuration.host.split("-api")[0].replace("https://", ""),
+                Globals.enterprise_id,
+            )
+        else:
+            url = "https://%s-api.esper.cloud/api/enterprise/%s/command/" % (
+                Globals.configuration.host.split("-api")[0].replace("https://", ""),
+                Globals.enterprise_id,
+            )
+        resp = performPostRequestWithRetry(url, headers=headers, json=command_data)
+        json_resp = resp.json()
+        logBadResponse(url, resp, json_resp)
+    except Exception as e:
+        ApiToolLog().LogError(e)
+    return resp, json_resp

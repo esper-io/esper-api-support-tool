@@ -6,6 +6,7 @@ from re import search
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
+from Utility.AppUtilities import getdeviceapps, uploadApplication
 import Utility.wxThread as wxThread
 import threading
 import wx
@@ -330,7 +331,7 @@ def populateDeviceInfoDictionary(
         unpackageDict(deviceInfo, deviceDict)
     appThread = wxThread.GUIThread(
         Globals.frame,
-        apiCalls.getdeviceapps,
+        getdeviceapps,
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
     if getApps:
@@ -746,7 +747,7 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
 
 def uploadAppToEndpoint(path):
     postEventToFrame(eventUtil.myEVT_LOG, "Attempting to upload app...")
-    resp = apiCalls.uploadApplication(path)
+    resp = uploadApplication(path)
     if resp:
         postEventToFrame(eventUtil.myEVT_LOG, "App upload succeed!")
         displayMessageBox(("Application has been uploaded", wx.ICON_INFORMATION))

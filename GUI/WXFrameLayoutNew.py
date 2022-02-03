@@ -54,18 +54,13 @@ from pathlib import Path
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
-    getAppDictEntry,
-    getInstallDevices,
     setAppState,
     setKiosk,
     setMulti,
-    getdeviceapps,
     getAllDevices,
     getAllGroups,
-    getAllApplications,
     validateConfiguration,
     getTokenInfo,
-    clearAppData,
 )
 from Utility.EastUtility import (
     TakeAction,
@@ -89,7 +84,12 @@ from Utility.Resource import (
 )
 from Utility.CommandUtility import createCommand
 from Utility.AppUtilities import (
+    clearAppData,
+    getAllApplications,
     getAllInstallableApps,
+    getAppDictEntry,
+    getInstallDevices,
+    getdeviceapps,
     installAppOnDevices,
     uninstallAppOnDevice,
     installAppOnGroups,
@@ -1369,7 +1369,12 @@ class NewFrameLayout(wx.Frame):
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
-        self.groupManage = GroupManagement(self.groups)
+        wxThread.GUIThread(
+            self,
+            self.populateGroupManagement,
+            None,
+            name="populateGroupManagement",
+        ).start()
         results = sorted(
             results,
             key=lambda i: i.name.lower(),
@@ -1384,6 +1389,9 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
+
+    def populateGroupManagement(self):
+        self.groupManage = GroupManagement(self.groups)
 
     @api_tool_decorator()
     def PopulateDevices(self, event):
@@ -1466,9 +1474,9 @@ class NewFrameLayout(wx.Frame):
         thread.start()
         return thread
 
-    def fetchAllApps(self):
-        resp = getAllApplications()
-        self.addAppsToAppChoice(resp)
+    # def fetchAllApps(self):
+    #     resp = getAllApplications()
+    #     self.addAppsToAppChoice(resp)
 
     def fetchAllInstallableApps(self):
         resp = getAllInstallableApps()
