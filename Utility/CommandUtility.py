@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
 from Utility.ApiToolLogging import ApiToolLog
-from Utility.Resource import getHeader, logBadResponse, performPostRequestWithRetry, postEventToFrame
+from Utility.Resource import (
+    getHeader,
+    logBadResponse,
+    performPostRequestWithRetry,
+    postEventToFrame,
+)
 import ast
 import time
 import esperclient
@@ -16,6 +21,7 @@ from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
 from esperclient.models.v0_command_args import V0CommandArgs
+
 
 @api_tool_decorator()
 def createCommand(frame, command_args, commandType, schedule, schType):

@@ -19,14 +19,9 @@ from Utility.CommandUtility import (
 )
 from Utility.Resource import (
     getHeader,
-    isApiKey,
-    joinThreadList,
-    limitActiveThreads,
     logBadResponse,
-    performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
-    performPostRequestWithRetry,
     postEventToFrame,
 )
 
@@ -34,6 +29,7 @@ from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
 
 ####Esper API Requests####
+
 
 @api_tool_decorator()
 def getInfo(request_extension, deviceid):
@@ -56,31 +52,6 @@ def getInfo(request_extension, deviceid):
     logBadResponse(url, resp, json_resp)
 
     return json_resp
-
-
-@api_tool_decorator()
-def getDeviceDetail(deviceId):
-    return getInfo("?format=json&show_policy=true", deviceId)
-
-
-@api_tool_decorator()
-def fetchGroupName(groupURL, returnJson=False):
-    headers = getHeader()
-    resp = performGetRequestWithRetry(groupURL, headers=headers)
-    try:
-        if resp and resp.status_code < 300:
-            json_resp = resp.json()
-            logBadResponse(groupURL, resp, json_resp)
-
-            if "name" in json_resp:
-                if returnJson:
-                    return json_resp
-                else:
-                    return json_resp["name"]
-    except Exception as e:
-        ApiToolLog().LogError(e)
-        logBadResponse(groupURL, resp, None)
-    return None
 
 
 @api_tool_decorator()
@@ -172,24 +143,6 @@ def toggleKioskMode(
 
 
 @api_tool_decorator()
-def getLatestEvent(deviceId):
-    json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
-    respData = None
-    if json_resp and "results" in json_resp and json_resp["results"]:
-        respData = json_resp["results"][0]["data"]
-    return respData
-
-
-@api_tool_decorator()
-def setdevicetags(deviceid, tags):
-    """Pushes New Tag To Device"""
-    json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags=tags)
-    if json_resp and "tags" in json_resp:
-        tags = json_resp["tags"]
-    return tags
-
-
-@api_tool_decorator()
 def setdevicename(
     frame,
     deviceid,
@@ -272,306 +225,6 @@ def setdevicename(
     if status == "No status found":
         status = status + ": %s" % str(api_response)
     return status
-
-
-@api_tool_decorator()
-def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
-    """ Make a API call to get all Groups belonging to the Enterprise """
-    if not limit:
-        limit = Globals.limit
-    if not offset:
-        offset = Globals.offset
-    try:
-        api_instance = esperclient.DeviceGroupApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.get_all_groups(
-                    Globals.enterprise_id,
-                    name=name,
-                    limit=limit,
-                    offset=offset,
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        postEventToFrame(eventUtil.myEVT_LOG, "---> Group API Request Finished")
-        return api_response
-    except ApiException as e:
-        raise Exception(
-            "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
-        )
-
-
-@api_tool_decorator()
-def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
-    try:
-        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.get_all_groups(
-                    enterprise_id, limit=Globals.limit, offset=Globals.offset
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getDeviceGroupsForHost",
-                    api_instance.get_all_groups,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except Exception as e:
-        raise e
-
-
-@api_tool_decorator()
-def createDeviceGroupForHost(
-    config, enterprise_id, group, maxAttempt=Globals.MAX_RETRY
-):
-    try:
-        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                api_response = api_instance.create_group(
-                    enterprise_id, data={"name": group}
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "createDeviceGroupForHost",
-                    api_instance.create_group,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
-        return api_response
-    except Exception as e:
-        raise e
-
-
-@api_tool_decorator()
-def getAllDevices(
-    groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY
-):
-    """ Make a API call to get all Devices belonging to the Enterprise """
-    if not limit:
-        limit = Globals.limit
-    if not offset:
-        offset = Globals.offset
-    if not groupToUse:
-        return None
-    try:
-        api_response = None
-        if type(groupToUse) == list:
-            api_response = fetchDevicesFromGroup(
-                groupToUse, limit, offset, fetchAll, maxAttempt
-            )
-        else:
-            api_response = get_all_devices(
-                groupToUse, limit, offset, fetchAll, maxAttempt
-            )
-        postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
-        return api_response
-    except ApiException as e:
-        raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-
-
-def get_all_devices_helper(
-    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
-):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                group=groupToUse,
-                limit=limit,
-                offset=offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getAllDevices",
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                raise e
-            if hasattr(e, "status") and e.status == 504:
-                limit = int(int(limit) / 4)
-                Globals.limit = limit
-                postEventToFrame(
-                    eventUtil.myEVT_LOG,
-                    "---> Encountered a 504 error, retrying with lower limit: %s"
-                    % limit,
-                )
-            time.sleep(Globals.RETRY_SLEEP)
-    if type(responses) == list:
-        responses.append(api_response)
-    return api_response
-
-
-def get_all_devices(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
-):
-    response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
-    if Globals.GROUP_FETCH_ALL or fetchAll:
-        devices = getAllDevicesFromOffsets(response, groupToUse, maxAttempt)
-        response.results = response.results + devices
-        response.next = None
-        response.prev = None
-    return response
-
-
-def fetchDevicesFromGroup(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
-):
-    api_response = None
-    for group in groupToUse:
-        for _ in range(maxAttempt):
-            response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)
-            if api_response:
-                for device in response.results:
-                    if device not in api_response.results:
-                        api_response.results.append(device)
-                api_response.count = len(api_response.results)
-            else:
-                api_response = response
-            break
-    return api_response
-
-
-def getAllDevicesFromOffsets(
-    api_response, group, maxAttempt=Globals.MAX_RETRY, devices=[]
-):
-    threads = []
-    responses = []
-    count = api_response.count
-    if api_response.next:
-        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
-        respOffsetInt = int(respOffset)
-        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
-        while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = threading.Thread(
-                target=get_all_devices_helper,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            respOffsetInt += int(respLimit)
-            limitActiveThreads(threads)
-        remainder = count % int(respLimit)
-        if remainder > 0:
-            respOffsetInt -= int(respLimit)
-            respOffsetInt += 1
-            thread = threading.Thread(
-                target=get_all_devices_helper,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            limitActiveThreads(threads)
-    joinThreadList(threads)
-    for resp in responses:
-        if resp and resp.results:
-            for entry in resp.results:
-                if entry not in devices:
-                    devices.append(entry)
-    return devices
-
-
-@api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
-    """ Make a API call to get a Device belonging to the Enterprise by its Id """
-    try:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        api_response_list = []
-        api_response = None
-        threads = []
-        if type(deviceToUse) == list:
-            num = 0
-            for device in deviceToUse:
-                if num == 0:
-                    api_response, api_response_list = getDeviceByIdHelper(
-                        device,
-                        api_instance,
-                        api_response_list,
-                        api_response,
-                        maxAttempt,
-                    )
-                else:
-                    thread = threading.Thread(
-                        target=getDeviceByIdHelper,
-                        args=(
-                            device,
-                            api_instance,
-                            api_response_list,
-                            api_response,
-                            maxAttempt,
-                        ),
-                    )
-                    thread.start()
-                    threads.append(thread)
-                    limitActiveThreads(threads)
-        else:
-            api_response, api_response_list = getDeviceByIdHelper(
-                deviceToUse, api_instance, api_response_list, api_response, maxAttempt
-            )
-        joinThreadList(threads)
-        if api_response and api_response_list:
-            api_response.results = api_response_list
-        elif api_response:
-            api_response.results = [api_response]
-        postEventToFrame(eventUtil.myEVT_LOG, "---> Device API Request Finished")
-        return api_response
-    except ApiException as e:
-        print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
-        ApiToolLog().LogError(e)
-
-
-def getDeviceByIdHelper(
-    device, api_instance, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY
-):
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_device_by_id(
-                Globals.enterprise_id, device_id=device
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getDeviceById",
-                api_instance.get_device_by_id,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                raise e
-            time.sleep(Globals.RETRY_SLEEP)
-    if api_response:
-        api_response_list.append(api_response)
-
-    return api_response, api_response_list
 
 
 @api_tool_decorator()
@@ -758,91 +411,6 @@ def validateConfiguration(
     return False
 
 
-def getUserBody(user):
-    body = {}
-    userKeys = user.keys()
-    body["first_name"] = user["firstname"] if "firstname" in userKeys else ""
-    body["last_name"] = user["lastname"] if "lastname" in userKeys else ""
-    body["username"] = (
-        user["username"]
-        if "username" in userKeys
-        else (body["first_name"] + body["last_name"])
-    )
-    body["password"] = user["password"]
-    body["profile"] = {}
-    body["email"] = user["email"]
-    if "role" in userKeys:
-        body["profile"]["role"] = user["role"]
-    else:
-        body["profile"]["role"] = "Group Viewer"
-    body["profile"]["groups"] = user["groups"]
-    if type(body["profile"]["groups"]) == str:
-        body["profile"]["groups"] = list(body["profile"]["groups"])
-    groups = []
-    for group in body["profile"]["groups"]:
-        if isApiKey(group):
-            groups.append(group)
-        else:
-            resp = getAllGroups(name=group)
-            if resp and resp.results:
-                for gp in resp.results:
-                    groups.append(gp.id)
-    body["profile"]["groups"] = groups
-    body["profile"]["enterprise"] = Globals.enterprise_id
-    return body
-
-
-def createNewUser(user):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    body = getUserBody(user)
-    resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
-    return resp
-
-
-def modifyUser(user):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
-    userId = ""
-    for usr in users["results"]:
-        if usr["username"] == user["username"]:
-            userId = usr["id"]
-            break
-    resp = None
-    if userId:
-        url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
-            tenant=tenant, id=userId
-        )
-        body = getUserBody(user)
-        resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    return resp
-
-
-def deleteUser(user):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
-    userId = ""
-    for usr in users["results"]:
-        if usr["username"] == user["username"]:
-            userId = usr["id"]
-            break
-    resp = None
-    if userId:
-        url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
-            tenant=tenant, id=userId
-        )
-        resp = performDeleteRequestWithRetry(url, headers=getHeader())
-    return resp
-
-
 def factoryResetDevice(
     deviceId, maxAttempt=Globals.MAX_RETRY, timeout=Globals.COMMAND_TIMEOUT
 ):
@@ -894,9 +462,6 @@ def factoryResetDevice(
     )
     return status
 
-
-def setDeviceDisabled(deviceId):
-    return patchInfo("", deviceId, jsonData={"state": 20})
 
 @api_tool_decorator()
 def setAppState(

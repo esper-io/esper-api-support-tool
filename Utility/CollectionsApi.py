@@ -13,8 +13,6 @@ from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 
 
-
-
 @api_tool_decorator()
 def preformEqlSearch(query, who, returnJson=False):
     # api/v0/enterprise/{ent-id}/collection/search/?q={eql_query}

@@ -3,7 +3,6 @@ from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 import json
 from requests.api import head
 from wx.core import YES
-from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
 import os
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
@@ -16,6 +15,8 @@ from Utility.Resource import (
 import csv
 import wx
 import wx.grid
+
+from Utility.UserUtility import createNewUser, deleteUser, modifyUser
 
 
 class UserCreation(wx.Frame):

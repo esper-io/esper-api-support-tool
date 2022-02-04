@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from Utility.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
@@ -16,6 +17,7 @@ import platform
 import json
 import tempfile
 import ast
+
 # import gc
 import wx.adv as wxadv
 import Utility.EventUtility as eventUtil
@@ -57,8 +59,6 @@ from Utility.EsperAPICalls import (
     setAppState,
     setKiosk,
     setMulti,
-    getAllDevices,
-    getAllGroups,
     validateConfiguration,
     getTokenInfo,
 )
@@ -95,7 +95,7 @@ from Utility.AppUtilities import (
     installAppOnGroups,
     uninstallAppOnGroup,
 )
-from Utility.GroupUtility import moveGroup
+from Utility.GroupUtility import getAllGroups, moveGroup
 
 
 class NewFrameLayout(wx.Frame):
@@ -1028,7 +1028,8 @@ class NewFrameLayout(wx.Frame):
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
         postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (wx.CallLater, (3000, self.setGaugeValue, 0)),
         )
         return returnItem
 
@@ -1370,7 +1371,11 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
         """ Populate Group Choice """
-        results = event.GetValue().results if hasattr(event.GetValue(), "results") else event.GetValue()
+        results = (
+            event.GetValue().results
+            if hasattr(event.GetValue(), "results")
+            else event.GetValue()
+        )
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
@@ -1466,7 +1471,9 @@ class NewFrameLayout(wx.Frame):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        thread = wxThread.GUIThread(self, self.fetchAllInstallableApps, None, name="PopulateApps")
+        thread = wxThread.GUIThread(
+            self, self.fetchAllInstallableApps, None, name="PopulateApps"
+        )
         thread.start()
         return thread
 
@@ -1907,7 +1914,8 @@ class NewFrameLayout(wx.Frame):
                 res = dialog.ShowModal()
         # wx.CallLater(3000, self.setGaugeValue, 0)
         postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (wx.CallLater, (3000, self.setGaugeValue, 0)),
         )
 
     @api_tool_decorator()
@@ -2293,7 +2301,8 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION, (wx.CallLater, (3000, self.setGaugeValue, 0))
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (wx.CallLater, (3000, self.setGaugeValue, 0)),
             )
             # wx.CallLater(3000, self.setGaugeValue, 0)
         if cmdResults:

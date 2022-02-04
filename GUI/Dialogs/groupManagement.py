@@ -5,11 +5,13 @@ from GUI.TabPanel import TabPanel
 
 from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
-from Utility.EsperAPICalls import (
+from Utility.GroupUtility import (
+    deleteGroup,
+    createGroup,
     fetchGroupName,
     getAllGroups,
+    renameGroup,
 )
-from Utility.GroupUtility import deleteGroup, createGroup, renameGroup
 
 import wx
 import wx.grid as gridlib
@@ -17,6 +19,8 @@ import Common.Globals as Globals
 import Utility.wxThread as wxThread
 
 from Common.enum import Color
+
+
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):
         # begin wxGlade: MyDialog.__init__

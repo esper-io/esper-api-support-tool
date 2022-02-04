@@ -14,8 +14,19 @@ from Utility import EventUtility
 
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import getInfo
-from Utility.CommandUtility import executeCommandOnDevice, executeCommandOnGroup, postEsperCommand
-from Utility.Resource import displayMessageBox, getHeader, logBadResponse, performGetRequestWithRetry, postEventToFrame
+from Utility.CommandUtility import (
+    executeCommandOnDevice,
+    executeCommandOnGroup,
+    postEsperCommand,
+)
+from Utility.Resource import (
+    displayMessageBox,
+    getHeader,
+    logBadResponse,
+    performGetRequestWithRetry,
+    postEventToFrame,
+)
+
 
 def uninstallAppOnDevice(packageName, device=None):
     return executeCommandOnDevice(
@@ -117,15 +128,15 @@ def installAppOnGroups(packageName, version=None, groups=None):
             )
         )
 
+
 @api_tool_decorator()
 def getAllInstallableApps():
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://%s-api.esper.cloud/api/v1/enterprise/%s/application/?limit=%s&without_download_url=true&format=json&is_hidden=false" % (
-        tenant,
-        Globals.enterprise_id,
-        Globals.limit
+    url = (
+        "https://%s-api.esper.cloud/api/v1/enterprise/%s/application/?limit=%s&without_download_url=true&format=json&is_hidden=false"
+        % (tenant, Globals.enterprise_id, Globals.limit)
     )
     appsResp = performGetRequestWithRetry(url, headers=getHeader())
     appsRespJson = None
@@ -133,9 +144,12 @@ def getAllInstallableApps():
         appsRespJson = appsResp.json()
 
         if appsRespJson and "next" in appsRespJson and appsRespJson["next"]:
-            appsRespJson = getAllInstallableAppsOffsets(appsRespJson, appsRespJson["next"])
+            appsRespJson = getAllInstallableAppsOffsets(
+                appsRespJson, appsRespJson["next"]
+            )
 
     return appsRespJson
+
 
 def getAllInstallableAppsOffsets(respJson, url):
     appsResp = performGetRequestWithRetry(url, headers=getHeader())
@@ -150,6 +164,7 @@ def getAllInstallableAppsOffsets(respJson, url):
             respJson = getAllInstallableAppsOffsets(respJson, appsRespJson["next"])
 
     return respJson
+
 
 @api_tool_decorator()
 def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
@@ -233,6 +248,7 @@ def constructAppPkgVerStr(appName, pkgName, version):
     else:
         appPkgVerStr += "Unknown Version"
     return appPkgVerStr
+
 
 @api_tool_decorator()
 def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX_RETRY):
@@ -641,7 +657,7 @@ def getAppDictEntry(app, update=True):
             #     "latest_version" in app
             #     and app["latest_version"]
             #     and "icon_url" in app["latest_version"]
-            #     and 
+            #     and
             #     ((
             #         app["latest_version"]["icon_url"]
             #         and (

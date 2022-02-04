@@ -5,7 +5,12 @@ import esperclient
 import os
 import wx
 import time
-from Utility.AppUtilities import getAllAppVersionsForHost, getAllApplicationsForHost, uploadApplicationForHost
+from Utility.AppUtilities import (
+    getAllAppVersionsForHost,
+    getAllApplicationsForHost,
+    uploadApplicationForHost,
+)
+from Utility.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 
 import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
@@ -21,11 +26,6 @@ from Utility.Resource import (
     performPostRequestWithRetry,
 )
 from Utility.Resource import postEventToFrame
-
-from Utility.EsperAPICalls import (
-    createDeviceGroupForHost,
-    getDeviceGroupsForHost,
-)
 
 from datetime import datetime
 
@@ -348,15 +348,21 @@ class EsperTemplateUtil:
             else:
                 found = False
                 for toApp in apps:
-                    if (
-                        toApp.package_name == app["packageName"]
-                    ):
-                        appVersions = getAllAppVersionsForHost(self.getEsperConfig(self.toApi, self.toKey), self.toEntId, toApp.id)
+                    if toApp.package_name == app["packageName"]:
+                        appVersions = getAllAppVersionsForHost(
+                            self.getEsperConfig(self.toApi, self.toKey),
+                            self.toEntId,
+                            toApp.id,
+                        )
                         if appVersions and hasattr(appVersions, "results"):
                             for version in appVersions.results:
-                                if (version.version_code == app["versionName"] and version.build_number == str(app["versionCode"])):
+                                if version.version_code == app[
+                                    "versionName"
+                                ] and version.build_number == str(app["versionCode"]):
                                     found = True
-                                    newTemplate = self.addAppVersionToTemplate(app, newTemplate, toApp, version.id)
+                                    newTemplate = self.addAppVersionToTemplate(
+                                        app, newTemplate, toApp, version.id
+                                    )
                                     break
                         if not found:
                             upload = wxThread.GUIThread(
@@ -368,10 +374,12 @@ class EsperTemplateUtil:
                             upload.start()
 
     def addAppVersionToTemplate(self, app, template, toApp, appVersion):
-        if (("isGPlay" not in app)
+        if (
+            ("isGPlay" not in app)
             or ("isGPlay" in app and not app["isGPlay"])
             or ("is_g_play" not in app)
-            or ("is_g_play" in app and not app["is_g_play"])):
+            or ("is_g_play" in app and not app["is_g_play"])
+        ):
             template["application"]["apps"].append(
                 {
                     "is_g_play": False,
@@ -433,7 +441,8 @@ class EsperTemplateUtil:
 
                         versionId = list(
                             filter(
-                                lambda x: x.version_code == app["versionName"] and x.build_number == app["versionCode"],
+                                lambda x: x.version_code == app["versionName"]
+                                and x.build_number == app["versionCode"],
                                 toApp.versions,
                             )
                         )

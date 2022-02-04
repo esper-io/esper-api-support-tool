@@ -7,6 +7,13 @@ import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
 from Utility.AppUtilities import getdeviceapps, uploadApplication
+from Utility.DeviceUtility import (
+    getAllDevices,
+    getDeviceById,
+    getDeviceDetail,
+    getLatestEvent,
+)
+from Utility.GroupUtility import fetchGroupName
 import Utility.wxThread as wxThread
 import threading
 import wx
@@ -78,13 +85,13 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        api_response = apiCalls.getDeviceById(input)
+        api_response = getDeviceById(input)
         iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
         # Iterate Through Each Device in Group VIA Api Request
         try:
             frame.Logging("---> Making API Request")
-            api_response = apiCalls.getAllDevices(input)
+            api_response = getAllDevices(input)
             iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -184,7 +191,7 @@ def processInstallDevices(deviceList):
 def processInstallDevicesHelper(chunk, newDeviceList):
     for device in chunk:
         id = device["id"]
-        deviceListing = apiCalls.getDeviceById(id)
+        deviceListing = getDeviceById(id)
         newDeviceList.append(deviceListing)
 
 
@@ -338,7 +345,7 @@ def populateDeviceInfoDictionary(
         appThread.start()
     eventThread = wxThread.GUIThread(
         Globals.frame,
-        apiCalls.getLatestEvent,
+        getLatestEvent,
         (deviceId),
     )
     if getLatestEvents:
@@ -346,7 +353,7 @@ def populateDeviceInfoDictionary(
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
-    detailInfo = apiCalls.getDeviceDetail(deviceId)
+    detailInfo = getDeviceDetail(deviceId)
     unpackageDict(deviceInfo, detailInfo)
     deviceInfo.update({"id": deviceId})
 
@@ -361,7 +368,7 @@ def populateDeviceInfoDictionary(
                     if type(groupName) == list and len(groupName) == 1:
                         groupName = groupName[0]
                 else:
-                    groupName = apiCalls.fetchGroupName(groupURL)
+                    groupName = fetchGroupName(groupURL)
                 if groupName:
                     groupNames.append(groupName)
                 if groupURL not in knownGroups:
@@ -403,7 +410,7 @@ def populateDeviceInfoDictionary(
                     if type(groupName) == list and len(groupName) == 1:
                         groupName = groupName[0]
                 else:
-                    groupName = apiCalls.fetchGroupName(url)
+                    groupName = fetchGroupName(url)
                 if groupName:
                     deviceInfo["subgroups"].append(groupName)
                 if url not in knownGroups:
@@ -594,7 +601,9 @@ def populateDeviceInfoDictionary(
 
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:
-            deviceInfo["last_seen"] = str(datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ"))
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
         else:
             dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
             utc_date_time = dt.astimezone(pytz.utc)
@@ -640,7 +649,7 @@ def getValueFromLatestEvent(respData, eventName):
 def removeNonWhitelisted(deviceId, deviceInfo=None):
     detailInfo = None
     if not deviceInfo:
-        detailInfo = apiCalls.getDeviceDetail(deviceId)
+        detailInfo = getDeviceDetail(deviceId)
     else:
         detailInfo = deviceInfo
     wifiAP = detailInfo["wifi_access_points"]

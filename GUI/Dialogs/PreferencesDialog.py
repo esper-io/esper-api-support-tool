@@ -304,7 +304,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_16,
             "Last Seen As Date",
             wx.CheckBox,
-            "Display Last Seen Value as a Date instead of \"<period od time> ago\"",
+            'Display Last Seen Value as a Date instead of "<period od time> ago"',
         )
 
         (_, _, self.checkbox_20,) = self.addPrefToPanel(

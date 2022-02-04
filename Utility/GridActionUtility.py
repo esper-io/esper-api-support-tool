@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
-from Utility.AppUtilities import getdeviceapps, installAppOnDevices, uninstallAppOnDevice
+from Utility.AppUtilities import (
+    getdeviceapps,
+    installAppOnDevices,
+    uninstallAppOnDevice,
+)
 import time
 
 import esperclient
 from Common import Globals
 
 from Utility.ApiToolLogging import ApiToolLog
+from Utility.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
     isApiKey,
     joinThreadList,
@@ -15,7 +20,7 @@ from Utility.Resource import (
     splitListIntoChunks,
 )
 from Utility import wxThread
-from Utility.GroupUtility import moveGroup
+from Utility.GroupUtility import getAllGroups, moveGroup
 import Utility.EsperAPICalls as apiCalls
 
 from Common.decorator import api_tool_decorator
@@ -44,7 +49,7 @@ def iterateThroughGridRows(frame, action):
     if action == GridActions.UNINSTALL_APP.value:
         uninstallApp(frame)
     if action == GridActions.SET_DEVICE_DISABLED.value:
-        setDeviceDisabled()
+        setDevicesDisabled()
 
 
 @api_tool_decorator()
@@ -346,7 +351,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             key = device.hardware_info["customSerialNumber"]
         tagsFromCell = tagsFromGrid[key]
         try:
-            tags = apiCalls.setdevicetags(device.id, tagsFromCell)
+            tags = setdevicetags(device.id, tagsFromCell)
         except Exception as e:
             ApiToolLog().LogError(e)
         if tags == tagsFromGrid[key]:
@@ -698,7 +703,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
                     "Response": resp.json() if hasattr(resp, "json") else respText,
                 }
             else:
-                groups = apiCalls.getAllGroups(name=groupName).results
+                groups = getAllGroups(name=groupName).results
                 if groups:
                     groupId = groups[0].id
                     resp = moveGroup(groupId, device.id)
@@ -1013,7 +1018,7 @@ def processSetDeviceDisabled(devices, numDevices, processed):
     status = []
     for device in devices:
         if device and hasattr(device, "id"):
-            resp = apiCalls.setDeviceDisabled(device.id)
+            resp = setDeviceDisabled(device.id)
             status.append(resp)
             processed.append(device)
         value = int(len(processed) / numDevices * 100)
@@ -1024,7 +1029,7 @@ def processSetDeviceDisabled(devices, numDevices, processed):
     return status
 
 
-def setDeviceDisabled():
+def setDevicesDisabled():
     devices = getDevicesFromGrid()
 
     splitResults = splitListIntoChunks(devices)

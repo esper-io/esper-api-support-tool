@@ -92,12 +92,9 @@ def checkEsperInternetConnection():
 
 def checkForInternetAccess(frame):
     while not frame.kill:
-        if (frame.IsShownOnScreen()
-            and frame.IsActive()):
-            if (
-                
-                not checkEsperInternetConnection()
-                and not checkInternetConnection(Globals.UPDATE_LINK)
+        if frame.IsShownOnScreen() and frame.IsActive():
+            if not checkEsperInternetConnection() and not checkInternetConnection(
+                Globals.UPDATE_LINK
             ):
                 displayMessageBox(
                     (
@@ -481,6 +478,7 @@ def releaseLocks(locks):
                 lock.release()
     elif type(locks) == threading.Lock and locks.locked():
         locks.release()
+
 
 @api_tool_decorator()
 def getHeader():

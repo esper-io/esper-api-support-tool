@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import copy
-from Utility.EsperAPICalls import getAllDevices, getAllGroups
+from Utility.DeviceUtility import getAllDevices
+from Utility.GroupUtility import getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
