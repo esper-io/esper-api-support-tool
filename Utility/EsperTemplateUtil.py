@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import requests
 import esperclient
 import os
 import wx
-import time
 from Utility.AppUtilities import (
     getAllAppVersionsForHost,
     getAllApplicationsForHost,
