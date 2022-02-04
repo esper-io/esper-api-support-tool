@@ -410,7 +410,7 @@ class GridPanel(wx.Panel):
             else:
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
-                    key=lambda i: i[keyName].lower(),
+                    key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
                     reverse=self.deviceDescending,
                 )
         self.parentFrame.Logging(
@@ -462,7 +462,7 @@ class GridPanel(wx.Panel):
         else:
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
-                key=lambda i: i[keyName].lower(),
+                key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
                 reverse=self.networkDescending,
             )
         self.parentFrame.Logging(
@@ -516,7 +516,7 @@ class GridPanel(wx.Panel):
         else:
             self.grid_3_contents = sorted(
                 self.grid_3_contents,
-                key=lambda i: i[keyName].lower(),
+                key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
                 reverse=self.networkDescending,
             )
         self.parentFrame.Logging(
@@ -1342,13 +1342,15 @@ class GridPanel(wx.Panel):
     def decrementOffset(self, event):
         if not self.parentFrame.isRunning:
             Globals.offset = Globals.offset - Globals.limit
-            self.parentFrame.fetchData(False)
+            if self.parentFrame and hasattr(self.parentFrame, "fetchData"):
+                self.parentFrame.fetchData(False)
         event.Skip()
 
     def incrementOffset(self, event):
         if not self.parentFrame.isRunning:
             Globals.offset = Globals.offset + Globals.limit
-            self.parentFrame.fetchData(False)
+            if self.parentFrame and hasattr(self.parentFrame, "fetchData"):
+                self.parentFrame.fetchData(False)
         event.Skip()
 
     def onGrid1Scroll(self, event):
