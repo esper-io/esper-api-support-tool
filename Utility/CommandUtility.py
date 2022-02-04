@@ -75,7 +75,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
         for device in selections:
             label += device + commaSeperated
         if label.endswith(", "):
-            label = label[0 : len(label) - len(commaSeperated)]
+            label = label[0:len(label) - len(commaSeperated)]
         applyTo = "device"
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         selections = Globals.frame.sidePanel.groupMultiDialog.GetSelections()
@@ -83,7 +83,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
         for group in selections:
             label += group + commaSeperated
         if label.endswith(", "):
-            label = label[0 : len(label) - len(commaSeperated)]
+            label = label[0:len(label) - len(commaSeperated)]
         applyTo = "group"
         isGroup = True
     modal = wx.NO

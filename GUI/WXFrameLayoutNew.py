@@ -56,6 +56,7 @@ from pathlib import Path
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.EsperAPICalls import (
+    getdeviceapps,
     setAppState,
     setKiosk,
     setMulti,
@@ -88,7 +89,6 @@ from Utility.AppUtilities import (
     getAllInstallableApps,
     getAppDictEntry,
     getInstallDevices,
-    getdeviceapps,
     installAppOnDevices,
     uninstallAppOnDevice,
     installAppOnGroups,

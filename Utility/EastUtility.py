@@ -5,7 +5,7 @@ from datetime import datetime
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
-from Utility.AppUtilities import getdeviceapps, uploadApplication
+from Utility.AppUtilities import uploadApplication
 from Utility.DeviceUtility import (
     getAllDevices,
     getDeviceById,
@@ -336,7 +336,7 @@ def populateDeviceInfoDictionary(
         unpackageDict(deviceInfo, deviceDict)
     appThread = wxThread.GUIThread(
         Globals.frame,
-        getdeviceapps,
+        apiCalls.getdeviceapps,
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
     if getApps:

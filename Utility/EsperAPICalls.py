@@ -7,6 +7,7 @@ import time
 import json
 
 import Common.Globals as Globals
+from Utility.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator
@@ -16,7 +17,6 @@ from Utility.CommandUtility import (
     getCommandsApiInstance,
     waitForCommandToFinish,
 )
-from Utility.AppUtilities import getdeviceapps
 from Utility.Resource import (
     getHeader,
     logBadResponse,
@@ -26,7 +26,6 @@ from Utility.Resource import (
 )
 
 from esperclient.rest import ApiException
-from esperclient.models.v0_command_args import V0CommandArgs
 
 
 @api_tool_decorator()
@@ -459,6 +458,70 @@ def factoryResetDevice(
         api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
     )
     return status
+
+
+@api_tool_decorator()
+def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
+    """Retrieves List Of Installed Apps"""
+    applist = []
+    extention = (
+        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
+        if useEnterprise
+        else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
+    )
+    json_resp = getInfo(extention, deviceid)
+    if (
+        json_resp
+        and "results" in json_resp
+        and len(json_resp["results"])
+        and createAppList
+    ):
+        for app in json_resp["results"]:
+            if (
+                "install_state" in app and "uninstall" in app["install_state"].lower()
+            ) or (
+                hasattr(app, "install_state")
+                and "uninstall" in app.install_state.lower()
+            ):
+                continue
+            entry = None
+            if "application" in app:
+                if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
+                entry = getAppDictEntry(app, False)
+                version = (
+                    app["application"]["version"]["version_code"][
+                        1:len(app["application"]["version"]["version_code"])
+                    ]
+                    if (
+                        app["application"]["version"]["version_code"]
+                        and app["application"]["version"]["version_code"].startswith(
+                            "v"
+                        )
+                    )
+                    else app["application"]["version"]["version_code"]
+                )
+
+                appName = app["application"]["application_name"]
+                pkgName = app["application"]["package_name"]
+                applist.append(constructAppPkgVerStr(appName, pkgName, version))
+            else:
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
+                entry = getAppDictEntry(app, False)
+                version = (
+                    app["version_code"][1:len(app["version_code"])]
+                    if app["version_code"].startswith("v")
+                    else app["version_code"]
+                )
+                applist.append(
+                    constructAppPkgVerStr(app["app_name"], app["package_name"], version)
+                )
+            if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
+                "isValid" in entry and entry["isValid"]
+            ):
+                Globals.frame.sidePanel.selectedDeviceApps.append(entry)
+    return applist, json_resp
 
 
 @api_tool_decorator()

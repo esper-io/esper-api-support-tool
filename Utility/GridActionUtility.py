@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from Utility.AppUtilities import (
-    getdeviceapps,
     installAppOnDevices,
     uninstallAppOnDevice,
 )
@@ -398,7 +397,7 @@ def setAppStateForAllAppsListed(state):
 @api_tool_decorator()
 def setAllAppsState(frame, device, state):
     stateStatuses = []
-    _, resp = getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
+    _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
     for app in resp["results"]:
         stateStatus = None
         package_name = None
