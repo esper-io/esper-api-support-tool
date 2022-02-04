@@ -623,6 +623,9 @@ def populateDeviceInfoDictionary(
     if "eeaVersion" not in deviceInfo:
         deviceInfo["eeaVersion"] = "NON EEA"
 
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
     return deviceInfo
 
 

@@ -150,6 +150,7 @@ CSV_TAG_ATTR_NAME = {
     "Status": "Status",
     "Esper Version": "esper_client",
     "EEA Version": "eeaVersion",
+    # "EMM Device": "emm_device",
     "Template": "template_name",
     "Policy": "policy_name",
     "Mode": "Mode",
