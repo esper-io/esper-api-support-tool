@@ -2,7 +2,6 @@
 
 
 from datetime import datetime
-from re import search
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
@@ -32,7 +31,6 @@ from Utility.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
-    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -43,7 +41,7 @@ from esperclient.rest import ApiException
 
 knownGroups = {}
 
-####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
+
 @api_tool_decorator()
 def TakeAction(frame, input, action, isDevice=False):
     """Calls API To Perform Action And Logs Result To UI"""
@@ -289,7 +287,7 @@ def unpackageDict(deviceInfo, deviceDict):
             unpackageDict(deviceInfo, deviceDict[key])
         else:
             if key.startswith("_"):
-                deviceInfo[key[1 : len(key)]] = deviceDict[key]
+                deviceInfo[key[1:len(key)]] = deviceDict[key]
             else:
                 deviceInfo[key] = deviceDict[key]
     return deviceInfo

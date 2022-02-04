@@ -2,7 +2,6 @@
 
 
 from datetime import datetime, timedelta
-import threading
 import esperclient
 import time
 import json
@@ -17,6 +16,7 @@ from Utility.CommandUtility import (
     getCommandsApiInstance,
     waitForCommandToFinish,
 )
+from Utility.AppUtilities import getdeviceapps
 from Utility.Resource import (
     getHeader,
     logBadResponse,
@@ -27,8 +27,6 @@ from Utility.Resource import (
 
 from esperclient.rest import ApiException
 from esperclient.models.v0_command_args import V0CommandArgs
-
-####Esper API Requests####
 
 
 @api_tool_decorator()

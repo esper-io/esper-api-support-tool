@@ -212,7 +212,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.selected.remove(selectionStr)
         else:
             checked.append(selection)
-            if not selectionStr in self.selected:
+            if selectionStr not in self.selected:
                 self.selected.append(selectionStr)
         self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
@@ -231,7 +231,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         selectionStr = self.check_list_box_1.GetString(selection)
         if selectionStr in self.selected:
             self.selected.remove(selectionStr)
-        elif not selectionStr in self.selected:
+        elif selectionStr not in self.selected:
             self.selected.append(selectionStr)
 
         if "All devices" in self.selected:
@@ -413,7 +413,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 device.device_name,
                 device.alias_name if device.alias_name else "",
             )
-            if name and not name in self.Parent.sidePanel.devicesExtended:
+            if name and name not in self.Parent.sidePanel.devicesExtended:
                 self.Parent.sidePanel.devicesExtended[name] = device.id
             if name not in nameList:
                 nameList.append(name)

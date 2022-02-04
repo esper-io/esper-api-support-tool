@@ -85,7 +85,6 @@ from Utility.Resource import (
 from Utility.CommandUtility import createCommand
 from Utility.AppUtilities import (
     clearAppData,
-    getAllApplications,
     getAllInstallableApps,
     getAppDictEntry,
     getInstallDevices,
@@ -363,7 +362,7 @@ class NewFrameLayout(wx.Frame):
                 isError = True
             if len(entry) >= Globals.MAX_STATUS_CHAR:
                 longEntryMsg = "....(See console for details)"
-                shortMsg = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
+                shortMsg = entry[0:Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
                 shortMsg += longEntryMsg
             self.setStatus(shortMsg, entry, isError)
         except:
@@ -417,7 +416,7 @@ class NewFrameLayout(wx.Frame):
                     )
                 )
             if (
-                not self.auth_data or not csvRow in self.auth_data
+                not self.auth_data or csvRow not in self.auth_data
             ) and not matchingConfig:
                 with open(self.authPath, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
@@ -823,7 +822,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 data = list(reader)
                 self.processDeviceCSVUpload(data)
-        except UnicodeDecodeError as e:
+        except:
             with open(csv_auth_path, "r") as csvFile:
                 reader = csv.reader(
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
@@ -1154,7 +1153,7 @@ class NewFrameLayout(wx.Frame):
 
                 self.setGaugeValue(50)
                 threads = []
-                if Globals.HAS_INTERNET == None:
+                if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 if Globals.HAS_INTERNET:
                     groupThread = self.PopulateGroups()
@@ -1253,7 +1252,7 @@ class NewFrameLayout(wx.Frame):
                         num += 1
                         if (
                             not self.preferences
-                            or self.preferences["enableDevice"] == True
+                            or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
                         ):
                             self.setGaugeValue(
                                 int(float(num / len(newThreads) / 2) * 100)
@@ -1264,7 +1263,7 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.enableConfigMenu()
                 self.menubar.setSaveMenuOptionsEnableState(True)
             if (
-                not self.preferences or self.preferences["enableDevice"] == True
+                not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
             ) and self.sidePanel.devices:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
@@ -1401,7 +1400,7 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.Logging("--->Attempting to populate devices of selected group(s)")
         self.setCursorBusy()
-        if not self.preferences or self.preferences["enableDevice"] == True:
+        if not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"]):
             self.sidePanel.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
@@ -1463,7 +1462,7 @@ class NewFrameLayout(wx.Frame):
                 device.device_name,
                 device.alias_name if device.alias_name else "",
             )
-            if name and not name in self.sidePanel.devices:
+            if name and name not in self.sidePanel.devices:
                 self.sidePanel.devices[name] = device.id
 
     @api_tool_decorator()
@@ -1867,7 +1866,7 @@ class NewFrameLayout(wx.Frame):
                             )
                             ApiToolLog().LogError(e)
                     cmdDialog.DestroyLater()
-                if cmdArgs != None:
+                if cmdArgs is None:
                     createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
                 displayMessageBox(

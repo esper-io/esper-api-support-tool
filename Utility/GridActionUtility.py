@@ -371,7 +371,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
 
 
 @api_tool_decorator()
-def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
+def setAppStateForAllAppsListed(state):
     deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
     if devices:
@@ -455,7 +455,7 @@ def setAllAppsState(frame, device, state):
 
 
 @api_tool_decorator()
-def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
+def setAppStateForSpecificAppListed(action):
     api_response = getDevicesFromGrid()
     state = None
     if action == 50:
@@ -533,7 +533,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
+def getDevicesFromGrid(deviceIdentifers=None):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = []
@@ -632,7 +632,7 @@ def getDevicesFromGridHelper(
 
 
 @api_tool_decorator()
-def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
+def relocateDeviceToNewGroup(frame):
     devices = getDevicesFromGrid()
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
