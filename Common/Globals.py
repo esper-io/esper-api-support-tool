@@ -10,7 +10,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 """ Constants """
-VERSION = "v0.1924"
+VERSION = "v0.1925"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -200,7 +200,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Count (%)": "batteryCapacityCount",
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
-    # "Esper Id": "id",
+    "Esper Id": "id",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
