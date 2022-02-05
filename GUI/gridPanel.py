@@ -23,7 +23,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from Utility.deviceInfo import constructNetworkInfo
-from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
+# from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
 
 class GridPanel(wx.Panel):
@@ -341,7 +341,7 @@ class GridPanel(wx.Panel):
     ):
         if (
             y == indx
-            and not orginalFieldName in deviceListing[0]
+            and orginalFieldName not in deviceListing[0]
             and deviceListing[0][Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]]
             != self.grid_1.GetCellValue(x, y)
         ) or (
@@ -354,7 +354,7 @@ class GridPanel(wx.Panel):
                 deviceListing[0][
                     Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]
                 ] = self.grid_1.GetCellValue(x, y)
-            if y == indx and not orginalFieldName in deviceListing[0]:
+            if y == indx and orginalFieldName not in deviceListing[0]:
                 deviceListing[0][orginalFieldName] = event.GetString()
         else:
             if (
@@ -592,7 +592,7 @@ class GridPanel(wx.Panel):
         ]
 
         grid_win = self.grid_1.GetTargetWindow()
-        grid_win2 = self.grid_2.GetTargetWindow()
+        # grid_win2 = self.grid_2.GetTargetWindow()
 
         x, y = self.grid_1.CalcUnscrolledPosition(event.GetX(), event.GetY())
         coords = self.grid_1.XYToCell(x, y)
@@ -860,8 +860,8 @@ class GridPanel(wx.Panel):
 
     def constructNetworkGridContent(self, device, deviceInfo):
         networkInfo = constructNetworkInfo(device, deviceInfo)
-        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = networkInfo[attribute] if attribute in networkInfo else ""
+        # for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+        #     value = networkInfo[attribute] if attribute in networkInfo else ""
         if networkInfo not in self.grid_2_contents:
             self.grid_2_contents.append(networkInfo)
 
@@ -919,14 +919,14 @@ class GridPanel(wx.Panel):
                         or processedTag.startswith("[")
                         or processedTag.startswith("’")
                     ):
-                        processedTag = processedTag[1 : len(processedTag)]
+                        processedTag = processedTag[1:len(processedTag)]
                     while (
                         processedTag.endswith('"')
                         or processedTag.endswith("'")
                         or processedTag.endswith("]")
                         or processedTag.endswith("’")
                     ):
-                        processedTag = processedTag[0 : len(processedTag) - 1]
+                        processedTag = processedTag[0:len(processedTag) - 1]
                     if processedTag:
                         properTagList.append(processedTag.strip())
                     if len(properTagList) >= Globals.MAX_TAGS:
@@ -1018,14 +1018,14 @@ class GridPanel(wx.Panel):
                         or processedTag.startswith("[")
                         or processedTag.startswith("’")
                     ):
-                        processedTag = processedTag[1 : len(processedTag)]
+                        processedTag = processedTag[1:len(processedTag)]
                     while (
                         processedTag.endswith('"')
                         or processedTag.endswith("'")
                         or processedTag.endswith("]")
                         or processedTag.endswith("’")
                     ):
-                        processedTag = processedTag[0 : len(processedTag) - 1]
+                        processedTag = processedTag[0:len(processedTag) - 1]
                     if processedTag:
                         properAppList.append(processedTag.strip())
                 if esperName:
