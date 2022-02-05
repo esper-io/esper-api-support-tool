@@ -657,16 +657,11 @@ class NewFrameLayout(wx.Frame):
     def mergeDeviceAndNetworkInfo(self, device, gridDeviceData):
         tempDict = {}
         tempDict.update(device)
-        deviceListing = list(
-            filter(
-                lambda x: (
-                    x["Device Name"] == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-                ),
-                self.gridPanel.grid_2_contents,
-            )
-        )
-        if deviceListing:
-            tempDict.update(deviceListing[0])
+        for entry in self.gridPanel.grid_2_contents:
+            if entry["Device Name"] == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]:
+                # if deviceListing:
+                tempDict.update(entry)
+                break
         gridDeviceData.append(tempDict)
 
     @api_tool_decorator()
