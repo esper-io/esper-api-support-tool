@@ -5,7 +5,7 @@ import esperclient
 
 
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility
+from Utility import EventUtility, wxThread
 from Utility.ApiToolLogging import ApiToolLog
 from Utility.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import joinThreadList, limitActiveThreads, postEventToFrame
@@ -115,18 +115,41 @@ def get_all_devices(
 def fetchDevicesFromGroup(
     groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
 ):
+    threads = []
     api_response = None
     for group in groupToUse:
-        for _ in range(maxAttempt):
-            response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)
-            if api_response:
-                for device in response.results:
-                    if device not in api_response.results:
-                        api_response.results.append(device)
-                api_response.count = len(api_response.results)
-            else:
-                api_response = response
-            break
+        thread = wxThread.GUIThread(
+            None,
+            fetchDevicesFromGroupHelper,
+            (group, limit, offset, fetchAll, maxAttempt),
+            name="fetchDevicesFromGroupHelper"
+        )
+        thread.start()
+        threads.append(thread)
+        limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT / 4))
+    joinThreadList(threads)
+
+    for thread in threads:
+        if api_response is None:
+            api_response = thread.result
+        else:
+            api_response.results += thread.result.results
+
+    return api_response
+
+
+def fetchDevicesFromGroupHelper(group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
+    api_response = None
+    for _ in range(maxAttempt):
+        response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)
+        if api_response:
+            for device in response.results:
+                if device not in api_response.results:
+                    api_response.results.append(device)
+            api_response.count = len(api_response.results)
+        else:
+            api_response = response
+        break
     return api_response
 
 
@@ -163,9 +186,7 @@ def getAllDevicesFromOffsets(
     joinThreadList(threads)
     for resp in responses:
         if resp and resp.results:
-            for entry in resp.results:
-                if entry not in devices:
-                    devices.append(entry)
+            devices += resp.results
     return devices
 
 

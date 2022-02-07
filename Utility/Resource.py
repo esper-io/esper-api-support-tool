@@ -228,7 +228,9 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeo
                 numAlive += 1
         if numAlive >= max_alive:
             for thread in threads:
-                thread.join()
+                if thread.is_alive():
+                    thread.join()
+                    break
 
 
 def ipv6Tomac(ipv6):
