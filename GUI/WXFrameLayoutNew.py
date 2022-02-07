@@ -362,7 +362,7 @@ class NewFrameLayout(wx.Frame):
                 isError = True
             if len(entry) >= Globals.MAX_STATUS_CHAR:
                 longEntryMsg = "....(See console for details)"
-                shortMsg = entry[0:Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
+                shortMsg = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
                 shortMsg += longEntryMsg
             self.setStatus(shortMsg, entry, isError)
         except:
@@ -1245,9 +1245,9 @@ class NewFrameLayout(wx.Frame):
                     for thread in newThreads:
                         thread.join()
                         num += 1
-                        if (
-                            not self.preferences
-                            or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
+                        if not self.preferences or (
+                            "enableDevice" in self.preferences
+                            and self.preferences["enableDevice"]
                         ):
                             self.setGaugeValue(
                                 int(float(num / len(newThreads) / 2) * 100)
@@ -1258,7 +1258,11 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.enableConfigMenu()
                 self.menubar.setSaveMenuOptionsEnableState(True)
             if (
-                not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
+                not self.preferences
+                or (
+                    "enableDevice" in self.preferences
+                    and self.preferences["enableDevice"]
+                )
             ) and self.sidePanel.devices:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
@@ -1395,7 +1399,9 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.Logging("--->Attempting to populate devices of selected group(s)")
         self.setCursorBusy()
-        if not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"]):
+        if not self.preferences or (
+            "enableDevice" in self.preferences and self.preferences["enableDevice"]
+        ):
             self.sidePanel.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
@@ -1942,6 +1948,7 @@ class NewFrameLayout(wx.Frame):
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
+        limitThreads = []
         appToUse = None
         appVersion = None
         if self.sidePanel.selectedAppEntry:
@@ -1954,6 +1961,7 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
+        print("Fetch Execution time: %s" % (time.time() - self.start_time))
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -2134,6 +2142,7 @@ class NewFrameLayout(wx.Frame):
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
+
             joinThreadList(threads)
 
             value = int(num / maxGauge * 100)

@@ -122,7 +122,7 @@ def fetchDevicesFromGroup(
             None,
             fetchDevicesFromGroupHelper,
             (group, limit, offset, fetchAll, maxAttempt),
-            name="fetchDevicesFromGroupHelper"
+            name="fetchDevicesFromGroupHelper",
         )
         thread.start()
         threads.append(thread)
@@ -138,7 +138,9 @@ def fetchDevicesFromGroup(
     return api_response
 
 
-def fetchDevicesFromGroupHelper(group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY):
+def fetchDevicesFromGroupHelper(
+    group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
+):
     api_response = None
     for _ in range(maxAttempt):
         response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)

@@ -23,6 +23,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from Utility.deviceInfo import constructNetworkInfo
+
 # from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
 
@@ -410,7 +411,9 @@ class GridPanel(wx.Panel):
             else:
                 self.grid_1_contents = sorted(
                     self.grid_1_contents,
-                    key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
+                    key=lambda i: i[keyName].lower()
+                    if type(i[keyName]) == str
+                    else i[keyName],
                     reverse=self.deviceDescending,
                 )
         self.parentFrame.Logging(
@@ -462,7 +465,9 @@ class GridPanel(wx.Panel):
         else:
             self.grid_2_contents = sorted(
                 self.grid_2_contents,
-                key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
+                key=lambda i: i[keyName].lower()
+                if type(i[keyName]) == str
+                else i[keyName],
                 reverse=self.networkDescending,
             )
         self.parentFrame.Logging(
@@ -516,7 +521,9 @@ class GridPanel(wx.Panel):
         else:
             self.grid_3_contents = sorted(
                 self.grid_3_contents,
-                key=lambda i: i[keyName].lower() if type(i[keyName]) == str else i[keyName],
+                key=lambda i: i[keyName].lower()
+                if type(i[keyName]) == str
+                else i[keyName],
                 reverse=self.networkDescending,
             )
         self.parentFrame.Logging(
@@ -919,14 +926,14 @@ class GridPanel(wx.Panel):
                         or processedTag.startswith("[")
                         or processedTag.startswith("’")
                     ):
-                        processedTag = processedTag[1:len(processedTag)]
+                        processedTag = processedTag[1 : len(processedTag)]
                     while (
                         processedTag.endswith('"')
                         or processedTag.endswith("'")
                         or processedTag.endswith("]")
                         or processedTag.endswith("’")
                     ):
-                        processedTag = processedTag[0:len(processedTag) - 1]
+                        processedTag = processedTag[0 : len(processedTag) - 1]
                     if processedTag:
                         properTagList.append(processedTag.strip())
                     if len(properTagList) >= Globals.MAX_TAGS:
@@ -1018,14 +1025,14 @@ class GridPanel(wx.Panel):
                         or processedTag.startswith("[")
                         or processedTag.startswith("’")
                     ):
-                        processedTag = processedTag[1:len(processedTag)]
+                        processedTag = processedTag[1 : len(processedTag)]
                     while (
                         processedTag.endswith('"')
                         or processedTag.endswith("'")
                         or processedTag.endswith("]")
                         or processedTag.endswith("’")
                     ):
-                        processedTag = processedTag[0:len(processedTag) - 1]
+                        processedTag = processedTag[0 : len(processedTag) - 1]
                     if processedTag:
                         properAppList.append(processedTag.strip())
                 if esperName:

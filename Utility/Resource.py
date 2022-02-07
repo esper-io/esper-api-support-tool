@@ -289,7 +289,7 @@ def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
         n = len(mainList)
     if n > 0:
         splitResults = [
-            mainList[i * n:(i + 1) * n] for i in range((len(mainList) + n - 1) // n)
+            mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)
         ]
     else:
         splitResults = mainList

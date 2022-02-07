@@ -491,7 +491,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 entry = getAppDictEntry(app, False)
                 version = (
                     app["application"]["version"]["version_code"][
-                        1:len(app["application"]["version"]["version_code"])
+                        1 : len(app["application"]["version"]["version_code"])
                     ]
                     if (
                         app["application"]["version"]["version_code"]
@@ -510,7 +510,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                     continue
                 entry = getAppDictEntry(app, False)
                 version = (
-                    app["version_code"][1:len(app["version_code"])]
+                    app["version_code"][1 : len(app["version_code"])]
                     if app["version_code"].startswith("v")
                     else app["version_code"]
                 )

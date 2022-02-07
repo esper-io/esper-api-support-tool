@@ -287,7 +287,7 @@ def unpackageDict(deviceInfo, deviceDict):
             unpackageDict(deviceInfo, deviceDict[key])
         else:
             if key.startswith("_"):
-                deviceInfo[key[1:len(key)]] = deviceDict[key]
+                deviceInfo[key[1 : len(key)]] = deviceDict[key]
             else:
                 deviceInfo[key] = deviceDict[key]
     return deviceInfo
