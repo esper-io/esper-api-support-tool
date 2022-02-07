@@ -2129,7 +2129,7 @@ class NewFrameLayout(wx.Frame):
                         threads.append(networkThread)
                     else:
                         self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                        self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
+                        self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
