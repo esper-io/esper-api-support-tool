@@ -692,7 +692,7 @@ def getAllDeviceInfo(frame):
             if api_response and api_response.results:
                 devices += api_response.results
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        api_response = apiCalls.getAllDevices(
+        api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList
         )
         if api_response:
@@ -745,7 +745,7 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
         while int(respOffsetInt) < count and int(respLimit) < count:
             thread = wxThread.GUIThread(
                 Globals.frame,
-                apiCalls.getAllDevices,
+                getAllDevices,
                 (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
             )
             threads.append(thread)
