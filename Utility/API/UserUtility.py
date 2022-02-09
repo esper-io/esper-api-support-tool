@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import Common.Globals as Globals
-from Utility.GroupUtility import getAllGroups
+from Utility.API.GroupUtility import getAllGroups
 
 from Utility.Resource import (
     getHeader,
     isApiKey,
+)
+
+from Utility.Web.WebRequests import (
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,

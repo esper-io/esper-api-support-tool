@@ -2,7 +2,7 @@
 
 import wx
 import Common.Globals as Globals
-from Utility.AppUtilities import getAppVersions
+from Utility.API.AppUtilities import getAppVersions
 
 from Utility.Resource import getStrRatioSimilarity
 from Common.decorator import api_tool_decorator

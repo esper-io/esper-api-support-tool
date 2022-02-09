@@ -5,19 +5,19 @@ from datetime import datetime
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
-from Utility.AppUtilities import uploadApplication
-from Utility.DeviceUtility import (
+from Utility.API.AppUtilities import uploadApplication
+from Utility.API.DeviceUtility import (
     getAllDevices,
     getDeviceById,
     getDeviceDetail,
     getLatestEvent,
 )
-from Utility.GroupUtility import fetchGroupName
+from Utility.API.GroupUtility import fetchGroupName
 import Utility.wxThread as wxThread
 import threading
 import wx
 import platform
-import Utility.EsperAPICalls as apiCalls
+import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
 import math
 import pytz
@@ -25,9 +25,9 @@ import pytz
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
 
-from Utility.CommandUtility import executeCommandOnDevice
+from Utility.API.CommandUtility import executeCommandOnDevice
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
@@ -632,6 +632,11 @@ def populateDeviceInfoDictionary(
 
     if "emm_device" not in deviceInfo:
         deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
 
     return deviceInfo
 

@@ -3,27 +3,29 @@
 import esperclient
 import os
 import wx
-from Utility.AppUtilities import (
+from Utility.API.AppUtilities import (
     getAllAppVersionsForHost,
     getAllApplicationsForHost,
     uploadApplicationForHost,
 )
-from Utility.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
+from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 
 import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 import Common.Globals as Globals
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     download,
     deleteFile,
     joinThreadList,
+)
+from Utility.Resource import postEventToFrame
+from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
 )
-from Utility.Resource import postEventToFrame
 
 from datetime import datetime
 

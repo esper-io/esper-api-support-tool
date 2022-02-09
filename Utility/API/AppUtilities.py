@@ -11,8 +11,8 @@ from Common.decorator import api_tool_decorator
 
 from esperclient.rest import ApiException
 
-from Utility.ApiToolLogging import ApiToolLog
-from Utility.CommandUtility import (
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.CommandUtility import (
     executeCommandOnDevice,
     executeCommandOnGroup,
     postEsperCommand,
@@ -21,8 +21,11 @@ from Utility.Resource import (
     displayMessageBox,
     getHeader,
     logBadResponse,
-    performGetRequestWithRetry,
     postEventToFrame,
+)
+
+from Utility.Web.WebRequests import (
+    performGetRequestWithRetry,
 )
 
 

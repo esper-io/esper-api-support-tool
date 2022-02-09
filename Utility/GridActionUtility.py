@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-from Utility.AppUtilities import (
+from Utility.API.AppUtilities import (
     installAppOnDevices,
     uninstallAppOnDevice,
 )
 import time
 
 import esperclient
-from Common import Globals
+import Common.Globals as Globals
 
-from Utility.ApiToolLogging import ApiToolLog
-from Utility.DeviceUtility import setDeviceDisabled, setdevicetags
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
     isApiKey,
     joinThreadList,
@@ -19,12 +19,11 @@ from Utility.Resource import (
     splitListIntoChunks,
 )
 from Utility import wxThread
-from Utility.GroupUtility import getAllGroups, moveGroup
-import Utility.EsperAPICalls as apiCalls
+from Utility.API.GroupUtility import getAllGroups, moveGroup
+import Utility.API.EsperAPICalls as apiCalls
 
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
-import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 
 

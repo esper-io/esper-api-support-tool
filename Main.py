@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 import Common.Globals as Globals
 import sys

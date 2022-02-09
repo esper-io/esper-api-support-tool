@@ -7,25 +7,29 @@ import time
 import json
 
 import Common.Globals as Globals
-from Utility.AppUtilities import constructAppPkgVerStr, getAppDictEntry
+from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator
 
-from Utility.ApiToolLogging import ApiToolLog
-from Utility.CommandUtility import (
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.CommandUtility import (
     getCommandsApiInstance,
     waitForCommandToFinish,
 )
 from Utility.Resource import (
     getHeader,
     logBadResponse,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
     postEventToFrame,
 )
 
+from Utility.Web.WebRequests import (
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+)
+
 from esperclient.rest import ApiException
+from esperclient.models.v0_command_args import V0CommandArgs
 
 
 @api_tool_decorator()

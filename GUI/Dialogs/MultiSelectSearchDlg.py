@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import copy
-from Utility.DeviceUtility import getAllDevices
-from Utility.GroupUtility import getAllGroups
+from Utility.API.DeviceUtility import getAllDevices
+from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math

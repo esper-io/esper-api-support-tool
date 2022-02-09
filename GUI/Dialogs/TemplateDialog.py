@@ -2,7 +2,7 @@
 
 from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
 from Common.decorator import api_tool_decorator
-import Utility.EsperTemplateUtil as templateUtil
+import Utility.API.EsperTemplateUtil as templateUtil
 import Utility.wxThread as wxThread
 import wx
 import wx.html as wxHtml

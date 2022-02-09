@@ -10,7 +10,7 @@ import threading
 from datetime import datetime
 from functools import wraps
 from esperclient.rest import ApiException
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from traceback import print_exc, extract_tb, format_list
 
 

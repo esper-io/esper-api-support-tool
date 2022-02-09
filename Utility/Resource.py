@@ -17,7 +17,7 @@ import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
 
@@ -104,7 +104,7 @@ def checkForInternetAccess(frame):
                 )
                 Globals.HAS_INTERNET = False
             else:
-                if Globals.HAS_INTERNET == None and Globals.frame:
+                if Globals.HAS_INTERNET is None and Globals.frame:
                     Globals.frame.loadPref()
                 Globals.HAS_INTERNET = True
         time.sleep(15 if Globals.HAS_INTERNET else 30)
@@ -317,103 +317,6 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
         ApiToolLog().LogResponse("\n%s\t" % datetime.now() + prettyReponse + "\n")
         if displayMsgBox:
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
-
-
-def performGetRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.get(url, headers=headers, json=json, data=data)
-            ApiToolLog().LogApiRequestOccurrence(
-                performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPatchRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.patch(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPutRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.put(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performDeleteRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.delete(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPostRequestWithRetry(
-    url, headers=None, json=None, data=None, files=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.post(
-                url, headers=headers, data=data, json=json, files=files
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                performPostRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
 
 
 def openWebLinkInBrowser(link):

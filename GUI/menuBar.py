@@ -2,7 +2,7 @@
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from Utility.EastUtility import processCollectionDevices
-from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
@@ -14,7 +14,7 @@ import Common.Globals as Globals
 import platform
 
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 from Utility.Resource import (
     downloadFileFromUrl,

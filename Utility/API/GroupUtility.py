@@ -6,16 +6,19 @@ import time
 from esperclient.rest import ApiException
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 import esperclient
 import Common.Globals as Globals
 
 from Utility.Resource import (
     getHeader,
     logBadResponse,
+    postEventToFrame,
+)
+
+from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
-    postEventToFrame,
 )
 
 

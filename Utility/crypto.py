@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from cryptography.fernet import Fernet
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 class crypto:

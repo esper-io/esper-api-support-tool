@@ -6,8 +6,8 @@ import esperclient
 
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility, wxThread
-from Utility.ApiToolLogging import ApiToolLog
-from Utility.EsperAPICalls import getInfo, patchInfo
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import joinThreadList, limitActiveThreads, postEventToFrame
 
 from esperclient.rest import ApiException

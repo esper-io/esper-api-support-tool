@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
-from Utility.DeviceUtility import getAllDevices
+from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
@@ -27,7 +27,7 @@ import Common.ApiTracker as ApiTracker
 import GUI.EnhancedStatusBar as ESB
 
 import Utility.wxThread as wxThread
-import Utility.EsperTemplateUtil as templateUtil
+import Utility.API.EsperTemplateUtil as templateUtil
 
 from functools import partial
 
@@ -53,9 +53,9 @@ from Common.decorator import api_tool_decorator
 
 from pathlib import Path
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
-from Utility.EsperAPICalls import (
+from Utility.API.EsperAPICalls import (
     getdeviceapps,
     setAppState,
     setKiosk,
@@ -83,8 +83,8 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
-from Utility.CommandUtility import createCommand
-from Utility.AppUtilities import (
+from Utility.API.CommandUtility import createCommand
+from Utility.API.AppUtilities import (
     clearAppData,
     getAllInstallableApps,
     getAppDictEntry,
@@ -94,7 +94,7 @@ from Utility.AppUtilities import (
     installAppOnGroups,
     uninstallAppOnGroup,
 )
-from Utility.GroupUtility import getAllGroups, moveGroup
+from Utility.API.GroupUtility import getAllGroups, moveGroup
 
 
 class NewFrameLayout(wx.Frame):
@@ -1948,7 +1948,6 @@ class NewFrameLayout(wx.Frame):
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
-        limitThreads = []
         appToUse = None
         appVersion = None
         if self.sidePanel.selectedAppEntry:

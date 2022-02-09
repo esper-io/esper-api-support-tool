@@ -5,7 +5,7 @@ from GUI.TabPanel import TabPanel
 
 from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
 from Common.decorator import api_tool_decorator
-from Utility.GroupUtility import (
+from Utility.API.GroupUtility import (
     deleteGroup,
     createGroup,
     fetchGroupName,

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     getHeader,
     logBadResponse,
-    performPostRequestWithRetry,
     postEventToFrame,
 )
 import ast
@@ -14,6 +13,7 @@ import json
 import wx
 
 import Common.Globals as Globals
+from Utility.Web.WebRequests import performPostRequestWithRetry
 import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 

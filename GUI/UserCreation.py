@@ -16,7 +16,7 @@ import csv
 import wx
 import wx.grid
 
-from Utility.UserUtility import createNewUser, deleteUser, modifyUser
+from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 
 
 class UserCreation(wx.Frame):

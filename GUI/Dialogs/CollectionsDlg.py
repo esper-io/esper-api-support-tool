@@ -6,7 +6,7 @@ from Common.enum import Color
 import wx
 import Common.Globals as Globals
 
-from Utility.CollectionsApi import (
+from Utility.API.CollectionsApi import (
     fetchCollectionList,
     createCollection,
     updateCollection,
