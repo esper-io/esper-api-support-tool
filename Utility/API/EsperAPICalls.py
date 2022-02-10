@@ -15,6 +15,7 @@ from Common.decorator import api_tool_decorator
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.CommandUtility import (
     getCommandsApiInstance,
+    postEsperCommand,
     waitForCommandToFinish,
 )
 from Utility.Resource import (
@@ -589,3 +590,59 @@ def setAppState(
                 time.sleep(1)
         ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
         return waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
+
+
+@api_tool_decorator()
+def clearAppData(frame, device):
+    json_resp = None
+    try:
+        appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
+        _, apps = getdeviceapps(
+            device.id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
+        )
+        cmdArgs = {}
+        for app in apps["results"]:
+            if app["package_name"] == appToUse:
+                cmdArgs["package_name"] = app["package_name"]
+                cmdArgs["application_name"] = app["app_name"]
+                cmdArgs["version_code"] = app["version_code"]
+                cmdArgs["version_name"] = app["version_name"]
+                if app["app_type"] == "GOOGLE":
+                    cmdArgs["is_g_play"] = True
+                else:
+                    cmdArgs["is_g_play"] = False
+                break
+
+        if cmdArgs:
+            reqData = {
+                "command_type": "DEVICE",
+                "command_args": cmdArgs,
+                "devices": [device.id],
+                "groups": [],
+                "device_type": Globals.CMD_DEVICE_TYPE,
+                "command": "CLEAR_APP_DATA",
+            }
+            resp, json_resp = postEsperCommand(reqData)
+            logBadResponse(resp.request.url, resp, json_resp)
+            if resp.status_code > 300:
+                postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
+            if resp.status_code < 300:
+                frame.Logging(
+                    "---> Clear %s App Data Command has been sent to %s"
+                    % (cmdArgs["application_name"], device.device_name)
+                )
+        else:
+            frame.Logging(
+                "ERROR: Failed to send Clear %s App Data Command to %s"
+                % (
+                    frame.sidePanel.selectedAppEntry["name"],
+                    device.device_name,
+                )
+            )
+    except Exception as e:
+        ApiToolLog().LogError(e)
+        frame.Logging(
+            "ERROR: Failed to send Clear App Data Command to %s" % (device.device_name)
+        )
+        postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
+    return json_resp

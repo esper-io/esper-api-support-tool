@@ -5,8 +5,6 @@ import platform
 import sys
 import os
 import traceback
-
-from matplotlib.style import context
 import Common.Globals as Globals
 import Common.ApiTracker as ApiTracker
 import threading
