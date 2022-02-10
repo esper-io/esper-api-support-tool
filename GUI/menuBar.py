@@ -154,6 +154,10 @@ class ToolMenuBar(wx.MenuBar):
         self.bulkFactoryReset = runMenu.Append(bulkReset)
         runMenu.Append(wx.ID_SEPARATOR)
 
+        geo = wx.MenuItem(runMenu, wx.ID_RETRY, "&Create Geofence")
+        self.geoMenu = runMenu.Append(geo)
+        runMenu.Append(wx.ID_SEPARATOR)
+
         # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
@@ -267,6 +271,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
 
     @api_tool_decorator()
     def onAbout(self, event):
