@@ -1,5 +1,7 @@
 import requests
 import Common.Globals as Globals
+import os
+import json
 
 
 class IssueTracker():
@@ -14,17 +16,26 @@ class IssueTracker():
 
     def createIssue(self, title, body):
         url = "https://api.github.com/repos/esper-io/esper-api-support-tool/issues"
-        header = {
-            "Authorization": "Bearer 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",
-            "Content-Type": "application/json",
-        }
-        body = {
-            "title": title,
-            "body": body,
-            "labels": ["bug"]
-        }
-        resp = self.performPostRequestWithRetry(url, headers=header, json=body)
-        return resp
+        token = self.getAccessToken()
+        if token:
+            header = {
+                "Authorization": "Bearer %s" % token,
+                "Content-Type": "application/json",
+            }
+            body = {
+                "title": title,
+                "body": body,
+                "labels": ["bug"]
+            }
+            resp = self.performPostRequestWithRetry(url, headers=header, json=body)
+            return resp
+
+    def getAccessToken(self):
+        filePath = "Utility/Logging/token.json"
+        if os.path.exists(filePath):
+            tokenJson = json.load(filePath)
+            if "pat" in tokenJson:
+                return tokenJson["pat"]
 
     def postIssueComment(self, issueNum, body):
         url = "https://api.github.com/repos/esper-io/esper-api-support-tool/issues/%s/comments" % issueNum

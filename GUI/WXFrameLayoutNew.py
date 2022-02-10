@@ -1323,9 +1323,9 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SET_APP_STATE.value
                 or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
-                or action == GridActions.SET_APP_STATE.value
                 or action == GeneralActions.INSTALL_APP.value
                 or action == GeneralActions.UNINSTALL_APP.value
+                or action == GridActions.SET_APP_STATE.value
                 or action == GridActions.MOVE_GROUP.value
                 or action == GridActions.FACTORY_RESET.value
             ):
@@ -1660,7 +1660,11 @@ class NewFrameLayout(wx.Frame):
                         actionClientData = GeneralActions.SET_MULTI.value
                     else:
                         actionClientData = GeneralActions.SET_KIOSK.value
-
+            if not res or res == wx.ID_CANCEL:
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return
         if (
             self.sidePanel.selectedGroupsList
             and (not self.sidePanel.selectedDevicesList or allDevicesSelected)
