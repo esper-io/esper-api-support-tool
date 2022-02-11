@@ -717,31 +717,30 @@ class NewFrameLayout(wx.Frame):
             deviceGridData = []
             networkGridData = []
             appGridData = []
+            threads = []
+
+            deviceThread = wxThread.GUIThread(
+                None,
+                self.getGridDataToSave,
+                (self.gridPanel.grid_1_contents, deviceHeaders, Globals.CSV_TAG_ATTR_NAME, deviceGridData)
+            )
+            deviceThread.start()
+            threads.append(deviceThread)
+
+            networkThread = wxThread.GUIThread(
+                None,
+                self.getGridDataToSave,
+                (self.gridPanel.grid_2_contents, networkHeaders, Globals.CSV_NETWORK_ATTR_NAME, networkGridData)
+            )
+            networkThread.start()
+            threads.append(networkThread)
 
             for entry in self.gridPanel.grid_3_contents:
                 appGridData.append(list(entry.values()))
 
-            for entry in self.gridPanel.grid_1_contents:
-                rowValues = []
-                for header in deviceHeaders:
-                    value = ""
-                    if header in entry:
-                        value = entry[header]
-                    elif Globals.CSV_TAG_ATTR_NAME[header] in entry:
-                        value = entry[Globals.CSV_TAG_ATTR_NAME[header]]
-                    rowValues.append(value)
-                deviceGridData.append(rowValues)
-
-            for entry in self.gridPanel.grid_2_contents:
-                rowValues = []
-                for header in networkHeaders:
-                    value = ""
-                    if header in entry:
-                        value = entry[header]
-                    elif Globals.CSV_NETWORK_ATTR_NAME[header] in entry:
-                        value = entry[Globals.CSV_NETWORK_ATTR_NAME[header]]
-                    rowValues.append(value)
-                networkGridData.append(rowValues)
+            joinThreadList(threads)
+            networkGridData = networkThread.result
+            deviceGridData = deviceThread.result
 
             df_1 = pd.DataFrame(deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys())
             df_2 = pd.DataFrame(networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys())
@@ -764,16 +763,36 @@ class NewFrameLayout(wx.Frame):
                     col_idx = df_3.columns.get_loc(column)
                     writer1.sheets['Application'].set_column(col_idx, col_idx, column_width)
 
-        self.Logging("---> Info saved to csv file - " + inFile)
+        self.Logging("---> Info saved to file: " + inFile)
         self.setGaugeValue(100)
         self.gridPanel.enableGridProperties()
 
         displayMessageBox(
-            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+            ("Info saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
         )
+
+    def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
+        for entry in contents:
+            rowValues = []
+            for header in headers:
+                value = ""
+                if header in entry:
+                    value = entry[header]
+                elif headerKeys[header] in entry:
+                    value = entry[headerKeys[header]]
+                rowValues.append(value)
+            deviceGridData.append(rowValues)
+        return deviceGridData
 
     @api_tool_decorator()
     def saveAppInfo(self, event):
+        if type(event) is str:
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (event))
+            thread.start()
+            return True
         if self.gridPanel.grid_3.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,

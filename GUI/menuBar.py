@@ -53,7 +53,7 @@ class ToolMenuBar(wx.MenuBar):
         self.fileOpenConfig = fileMenu.Append(foc)
 
         fileMenu.Append(wx.ID_SEPARATOR)
-        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
+        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save All Reports\tCtrl+S")
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
