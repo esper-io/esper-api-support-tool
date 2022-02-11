@@ -355,15 +355,15 @@ def setAllAppsState(frame, device, state):
     for app in resp["results"]:
         stateStatus = None
         package_name = None
-        app_version = None
+        # app_version = None
         if "application" in app:
             package_name = app["application"]["package_name"]
-            app_version = app["application"]["version"]["version_code"]
+            # app_version = app["application"]["version"]["version_code"]
             if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                 continue
         else:
             package_name = app["package_name"]
-            app_version = app["version_code"]
+            # app_version = app["version_code"]
             if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                 continue
         if state == "DISABLE":

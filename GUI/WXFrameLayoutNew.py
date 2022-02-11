@@ -722,7 +722,7 @@ class NewFrameLayout(wx.Frame):
             deviceThread = wxThread.GUIThread(
                 None,
                 self.getGridDataToSave,
-                (self.gridPanel.grid_1_contents, deviceHeaders, Globals.CSV_TAG_ATTR_NAME, deviceGridData)
+                (gridDeviceData if gridDeviceData else self.gridPanel.grid_1_contents, deviceHeaders, Globals.CSV_TAG_ATTR_NAME, deviceGridData)
             )
             deviceThread.start()
             threads.append(deviceThread)
@@ -730,7 +730,7 @@ class NewFrameLayout(wx.Frame):
             networkThread = wxThread.GUIThread(
                 None,
                 self.getGridDataToSave,
-                (self.gridPanel.grid_2_contents, networkHeaders, Globals.CSV_NETWORK_ATTR_NAME, networkGridData)
+                (gridDeviceData if gridDeviceData else self.gridPanel.grid_2_contents, networkHeaders, Globals.CSV_NETWORK_ATTR_NAME, networkGridData)
             )
             networkThread.start()
             threads.append(networkThread)
