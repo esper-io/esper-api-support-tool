@@ -194,7 +194,7 @@ class ApiToolLog:
         title = None
         if excpt is not None:
             content.insert(0, str(excpt))
-        content.append("EAST Version:\t" % Globals.VERSION)
+        content.append("EAST Version:\t%s" % Globals.VERSION)
         body = "\n".join(str(entry) for entry in content)
 
         if isinstance(excpt, Exception):
