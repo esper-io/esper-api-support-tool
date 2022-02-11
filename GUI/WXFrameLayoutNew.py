@@ -7,6 +7,7 @@ from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+
 import sys
 import threading
 import wx
@@ -17,6 +18,8 @@ import platform
 import json
 import tempfile
 import ast
+
+import pandas as pd
 
 # import gc
 import wx.adv as wxadv
@@ -101,6 +104,8 @@ class NewFrameLayout(wx.Frame):
     def __init__(self):
         self.prefPath = ""
         self.authPath = ""
+
+        pd.options.display.max_rows = 9999
 
         self.consoleWin = None
         self.refresh = None
@@ -494,17 +499,17 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onSaveBoth(self, event):
         if self.gridPanel.grid_1.GetNumberRows() > 0:
+            # "BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|PNG files (*.png)|*.png"
             dlg = wx.FileDialog(
                 self,
                 message="Save Device and Network Info CSV as...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|.xlsx",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
             result = dlg.ShowModal()
             inFile = dlg.GetPath()
-            dlg.DestroyLater()
 
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
@@ -514,10 +519,19 @@ class NewFrameLayout(wx.Frame):
                     self, self.saveFile, (inFile), name="saveFile"
                 )
                 thread.start()
+                if inFile.endswith(".csv"):
+                    newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
+                    inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
+                    thread = wxThread.GUIThread(
+                        self, self.saveAppInfo, (inFile), name="saveAppFile"
+                    )
+                    thread.start()
+                dlg.DestroyLater()
                 return True
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
+                dlg.DestroyLater()
                 return False
 
     @api_tool_decorator()
@@ -527,7 +541,7 @@ class NewFrameLayout(wx.Frame):
                 self,
                 message="Save Device and Network Info CSV as...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|.xlsx",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -637,15 +651,6 @@ class NewFrameLayout(wx.Frame):
     def saveFile(self, inFile):
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
-        threads = []
-        num = 1
-        for device in self.gridPanel.grid_1_contents:
-            self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
-            val = (num / (len(gridDeviceData) * 2)) * 100
-            if val <= 50:
-                self.setGaugeValue(int(val))
-            num += 1
-        joinThreadList(threads)
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
@@ -668,35 +673,96 @@ class NewFrameLayout(wx.Frame):
     def saveGridData(
         self, inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
     ):
-        gridData = []
-        gridData.append(headers)
+        if inFile.endswith(".csv"):
+            threads = []
+            num = 1
+            for device in self.gridPanel.grid_1_contents:
+                self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
+                val = (num / (len(gridDeviceData) * 2)) * 100
+                if val <= 50:
+                    self.setGaugeValue(int(val))
+                num += 1
+            joinThreadList(threads)
 
-        createNewFile(inFile)
+            gridData = []
+            gridData.append(headers)
 
-        num = len(gridDeviceData)
-        for deviceData in gridDeviceData:
-            rowValues = []
-            for header in headers:
-                value = ""
-                if header in deviceData:
-                    value = deviceData[header]
-                else:
-                    if header in deviceHeaders:
-                        if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
-                            value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
-                    if header in networkHeaders:
-                        if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
-                            value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
-                rowValues.append(value)
-            gridData.append(rowValues)
-            val = (num / (len(gridDeviceData) * 2)) * 100
-            if val <= 95:
-                self.setGaugeValue(int(val))
-            num += 1
+            createNewFile(inFile)
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+            num = len(gridDeviceData)
+            for deviceData in gridDeviceData:
+                rowValues = []
+                for header in headers:
+                    value = ""
+                    if header in deviceData:
+                        value = deviceData[header]
+                    else:
+                        if header in deviceHeaders:
+                            if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
+                                value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
+                        if header in networkHeaders:
+                            if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
+                                value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
+                    rowValues.append(value)
+                gridData.append(rowValues)
+                val = (num / (len(gridDeviceData) * 2)) * 100
+                if val <= 95:
+                    self.setGaugeValue(int(val))
+                num += 1
+
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(gridData)
+        elif inFile.endswith(".xlsx"):
+            deviceGridData = []
+            networkGridData = []
+            appGridData = []
+
+            for entry in self.gridPanel.grid_3_contents:
+                appGridData.append(list(entry.values()))
+
+            for entry in self.gridPanel.grid_1_contents:
+                rowValues = []
+                for header in deviceHeaders:
+                    value = ""
+                    if header in entry:
+                        value = entry[header]
+                    elif Globals.CSV_TAG_ATTR_NAME[header] in entry:
+                        value = entry[Globals.CSV_TAG_ATTR_NAME[header]]
+                    rowValues.append(value)
+                deviceGridData.append(rowValues)
+
+            for entry in self.gridPanel.grid_2_contents:
+                rowValues = []
+                for header in networkHeaders:
+                    value = ""
+                    if header in entry:
+                        value = entry[header]
+                    elif Globals.CSV_NETWORK_ATTR_NAME[header] in entry:
+                        value = entry[Globals.CSV_NETWORK_ATTR_NAME[header]]
+                    rowValues.append(value)
+                networkGridData.append(rowValues)
+
+            df_1 = pd.DataFrame(deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys())
+            df_2 = pd.DataFrame(networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys())
+            df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
+
+            with pd.ExcelWriter(inFile) as writer1:
+                df_1.to_excel(writer1, sheet_name='Device', index=False)
+                for column in df_1:
+                    column_width = max(df_1[column].astype(str).map(len).max(), len(column))
+                    col_idx = df_1.columns.get_loc(column)
+                    writer1.sheets['Device'].set_column(col_idx, col_idx, column_width)
+                df_2.to_excel(writer1, sheet_name='Network', index=False)
+                for column in df_2:
+                    column_width = max(df_2[column].astype(str).map(len).max(), len(column))
+                    col_idx = df_2.columns.get_loc(column)
+                    writer1.sheets['Network'].set_column(col_idx, col_idx, column_width)
+                df_3.to_excel(writer1, sheet_name='Application', index=False)
+                for column in df_3:
+                    column_width = max(df_3[column].astype(str).map(len).max(), len(column))
+                    col_idx = df_3.columns.get_loc(column)
+                    writer1.sheets['Application'].set_column(col_idx, col_idx, column_width)
 
         self.Logging("---> Info saved to csv file - " + inFile)
         self.setGaugeValue(100)
@@ -713,7 +779,7 @@ class NewFrameLayout(wx.Frame):
                 self,
                 message="Save App Info CSV...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|.xlsx",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -779,7 +845,7 @@ class NewFrameLayout(wx.Frame):
         with wx.FileDialog(
             self,
             "Open Device CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.defaultDir),
         ) as fileDialog:
@@ -806,24 +872,32 @@ class NewFrameLayout(wx.Frame):
                     name="waitForThreadsThenSetCursorDefault_2",
                 ).start()
             elif result == wx.ID_CANCEL:
+                self.setCursorDefault()
                 return  # the user changed their mind
 
     def openDeviceCSV(self, csv_auth_path):
         self.isUploading = True
-        try:
-            with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-                self.processDeviceCSVUpload(data)
-        except:
-            with open(csv_auth_path, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-                self.processDeviceCSVUpload(data)
+        if csv_auth_path.endswith(".csv"):
+            try:
+                with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    data = list(reader)
+                    self.processDeviceCSVUpload(data)
+            except:
+                with open(csv_auth_path, "r") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    data = list(reader)
+                    self.processDeviceCSVUpload(data)
+        elif csv_auth_path.endswith(".xlsx"):
+            try:
+                dfs = pd.read_excel(csv_auth_path, sheet_name=None, keep_default_na=False)
+                self.processXlsxUpload(dfs)
+            except:
+                pass
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
             eventUtil.myEVT_DISPLAY_NOTIFICATION,
@@ -831,6 +905,34 @@ class NewFrameLayout(wx.Frame):
         )
         self.setCursorDefault()
         self.isUploading = False
+
+    def processXlsxUpload(self, data):
+        self.CSVUploaded = True
+        self.toggleEnabledState(False)
+        self.sidePanel.groupChoice.Enable(False)
+        self.sidePanel.deviceChoice.Enable(False)
+        self.gridPanel.disableGridProperties()
+        self.gridPanel.grid_1.Freeze()
+        self.gridPanel.grid_2.Freeze()
+        dataList = []
+        if "Device" in data:
+            dataList.append(data["Device"].columns.values.tolist())
+            dataList += data["Device"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_1,
+                dataList,
+                Globals.CSV_TAG_ATTR_NAME,
+                Globals.grid1_lock,
+            )
+        if "Network" in data:
+            dataList.append(data["Network"].columns.values.tolist())
+            dataList += data["Network"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_2,
+                dataList,
+                Globals.CSV_NETWORK_ATTR_NAME,
+                Globals.grid2_lock,
+            )
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
@@ -875,7 +977,7 @@ class NewFrameLayout(wx.Frame):
                     fileCol = 0
                     for colValue in row:
                         colName = (
-                            header[fileCol].replace(" ", "").lower()
+                            str(header[fileCol]).replace(" ", "").lower()
                             if len(header) > fileCol
                             else ""
                         )
@@ -888,7 +990,7 @@ class NewFrameLayout(wx.Frame):
                             colName = "Tags"
                             header[fileCol] = "Tags"
                         if (
-                            expectedCol == "Device Name"
+                            (expectedCol == "Device Name" or expectedCol == "Esper Name")
                             and colName == "espername"
                             and grid == self.gridPanel.grid_2
                         ):
@@ -898,11 +1000,11 @@ class NewFrameLayout(wx.Frame):
                             expectedCol = "devicename"
                         if (
                             fileCol < len(header)
-                            and header[fileCol].strip()
+                            and str(header[fileCol]).strip()
                             in Globals.CSV_DEPRECATED_HEADER_LABEL
                         ) or (
                             fileCol < len(header)
-                            and header[fileCol].strip() not in headers.keys()
+                            and str(header[fileCol]).strip() not in headers.keys()
                             and colName != "devicename"
                         ):
                             fileCol += 1

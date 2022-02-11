@@ -534,37 +534,11 @@ def setAppState(
     device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
 ):
     pkgName = pkg_name
-    if not appVer:
-        _, app = getdeviceapps(
-            device_id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
-        )
-        if app["results"] and "application" in app["results"][0]:
-            app = list(
-                filter(
-                    lambda x: x["application"]["package_name"] == pkg_name,
-                    app["results"],
-                )
-            )
-        else:
-            app = list(
-                filter(
-                    lambda x: x["package_name"] == pkg_name,
-                    app["results"],
-                )
-            )
-        if app:
-            app = app[0]
-        if "application" in app:
-            appVer = app["application"]["version"]["version_code"]
-        elif "version_code" in app:
-            appVer = app["version_code"]
-    if pkgName and appVer:
+    if pkgName:
         args = V0CommandArgs(
             app_state=state,
-            app_version=appVer,
             package_name=pkgName,
         )
-        args.version_code = appVer
         request = esperclient.V0CommandRequest(
             enterprise=Globals.enterprise_id,
             command_type="DEVICE",
@@ -646,3 +620,71 @@ def clearAppData(frame, device):
         )
         postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
     return json_resp
+
+
+def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    api_response = None
+    for attempt in range(maxAttempt):
+        try:
+            if "esperName" in entry.keys():
+                identifier = entry["esperName"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    name=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "sn" in entry.keys():
+                identifier = entry["sn"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    serial=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "csn" in entry.keys():
+                identifier = entry["csn"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    search=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "imei1" in entry.keys():
+                identifier = entry["imei1"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    imei=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "imei2" in entry.keys():
+                identifier = entry["imei2"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    imei=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            else:
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    search=entry,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getAllDevices",
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            time.sleep(Globals.RETRY_SLEEP)
+    return api_response

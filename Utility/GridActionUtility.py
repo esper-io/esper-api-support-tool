@@ -76,64 +76,19 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     for row in rowTaglist.keys():
         entry = rowTaglist[row]
 
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        api_response = None
-        identifier = None
-        for attempt in range(maxAttempt):
-            try:
-                if "esperName" in entry.keys():
-                    identifier = entry["esperName"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        name=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "sn" in entry.keys():
-                    identifier = entry["sn"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        serial=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "csn" in entry.keys():
-                    identifier = entry["csn"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        search=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "imei1" in entry.keys():
-                    identifier = entry["imei1"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "imei2" in entry.keys():
-                    identifier = entry["imei2"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllDevices",
-                    api_instance.get_all_devices,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
+        identifier = entry
+        if "esperName" in entry.keys():
+            identifier = entry["esperName"]
+        elif "sn" in entry.keys():
+            identifier = entry["sn"]
+        elif "csn" in entry.keys():
+            identifier = entry["csn"]
+        elif "imei1" in entry.keys():
+            identifier = entry["imei1"]
+        elif "imei2" in entry.keys():
+            identifier = entry["imei2"]
+
+        api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
             devices += api_response.results
             api_response = None
@@ -415,21 +370,21 @@ def setAllAppsState(frame, device, state):
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="DISABLE",
             )
         if state == "HIDE":
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="HIDE",
             )
         if state == "SHOW":
             stateStatus = apiCalls.setAppState(
                 device.id,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="SHOW",
             )
         if stateStatus and hasattr(stateStatus, "state"):
