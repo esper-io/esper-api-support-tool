@@ -6,3 +6,7 @@ fuzzywuzzy
 python-Levenshtein
 cryptography
 pytz
+pandas
+openpyxl
+xlsxwriter
+xlrd
