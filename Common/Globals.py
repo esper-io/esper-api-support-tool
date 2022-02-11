@@ -53,11 +53,15 @@ NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
     ("\t" if platform.system() == "Windows" else "")
     + "* " * NUM_STARS
-    + "General Actions "
+    + "Generate Report "
     + "* " * NUM_STARS: -1,
-    "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "General Actions "
+    + "* " * NUM_STARS: -1,
     "Action -> Set Device Mode": 1.5,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
