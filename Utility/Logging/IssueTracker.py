@@ -1,6 +1,7 @@
 import requests
 import Common.Globals as Globals
 import os
+import sys
 import json
 
 
@@ -32,6 +33,13 @@ class IssueTracker():
 
     def getAccessToken(self):
         filePath = "Utility/Logging/token.json"
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
             tokenJson = json.load(filePath)
             if "pat" in tokenJson:
