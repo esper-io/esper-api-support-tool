@@ -1505,3 +1505,71 @@ def factoryResetDevice(deviceId, maxAttempt=Globals.MAX_RETRY, timeout=Globals.C
         api_response.id, ignoreQueue=ignoreQueued, timeout=timeout
     )
     return status
+
+def searchForMatchingDevice(entry, maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.DeviceApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    api_response = None
+    identifier = None
+    for attempt in range(maxAttempt):
+        try:
+            if "esperName" in entry.keys():
+                identifier = entry["esperName"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    name=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "sn" in entry.keys():
+                identifier = entry["sn"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    serial=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "csn" in entry.keys():
+                identifier = entry["csn"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    search=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "imei1" in entry.keys():
+                identifier = entry["imei1"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    imei=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            elif "imei2" in entry.keys():
+                identifier = entry["imei2"]
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    imei=identifier,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            else:
+                api_response = api_instance.get_all_devices(
+                    Globals.enterprise_id,
+                    search=entry,
+                    limit=Globals.limit,
+                    offset=Globals.offset,
+                )
+            ApiToolLog().LogApiRequestOccurrence(
+                "getAllDevices",
+                api_instance.get_all_devices,
+                Globals.PRINT_API_LOGS,
+            )
+            break
+        except Exception as e:
+            if attempt == maxAttempt - 1:
+                ApiToolLog().LogError(e)
+                raise e
+            time.sleep(Globals.RETRY_SLEEP)
+    return api_response
