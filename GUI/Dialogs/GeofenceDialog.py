@@ -76,7 +76,7 @@ class GeofenceDialog(wx.Dialog):
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Radius (Meters):")
         grid_sizer_8.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.spin_ctrl_1 = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "0", min=1, max=10000)
+        self.spin_ctrl_1 = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "100", min=100, max=10000)
         grid_sizer_8.Add(self.spin_ctrl_1, 0, wx.EXPAND, 0)
 
         grid_sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)
@@ -195,8 +195,8 @@ class GeofenceDialog(wx.Dialog):
                 self.devices = []
                 filePath = fileDialog.GetPath()
                 # Clear grid on previous content
-                wxThread.GUIThread(None, self.processUpload, (filePath,))
-                
+                thread = wxThread.GUIThread(None, self.processUpload, (filePath,))
+                thread.start()
 
     def processUpload(self, filePath):
         if self.grid_1.GetNumberRows() > 0:
@@ -220,7 +220,7 @@ class GeofenceDialog(wx.Dialog):
                 )
                 # Add device identifier to list of devices
                 self.devices.append(entry[0])
-                
+
             self.grid_1.Thaw()
 
 
@@ -231,7 +231,13 @@ class GeofenceDialog(wx.Dialog):
         description = self.text_ctrl_4.GetValue()
         longitude = self.text_ctrl_3.GetValue()
         radius = self.spin_ctrl_1.GetValue()
-        # Repeat for other text inputs
+        actionsList = []
+
+        if self.checkbox_1.IsChecked():
+            actionsList.append("beep")
+        
+        if self.checkbox_2.IsChecked():
+            actionsList.append("lock_down")
 
         properDeviceIdList = []
         for device in self.devices:
@@ -245,7 +251,7 @@ class GeofenceDialog(wx.Dialog):
                     properDeviceIdList.append(deviceResult.results[0].id)
 
         # Ensure that inputs are vaild before calling API
-        if name and latitude and description and longitude and radius:
+        if name and latitude and description and longitude and radius and actionsList:
             dialog = displayMessageBox(
                 (
                     'Found device ids for %s out of %s uploaded entries. Would you like to proceed?' % (len(properDeviceIdList), len(self.devices)),
@@ -253,7 +259,7 @@ class GeofenceDialog(wx.Dialog):
                 )
             )
             if dialog == wx.YES:
-                resp = self.createApplyGeofence(name, description, latitude, longitude, radius, properDeviceIdList)
+                resp = self.createApplyGeofence(name, description, latitude, longitude, radius, properDeviceIdList, actions=actionsList)
                 # You can choose to do something with the response, e.g. showcase the user the results of the API
                 if resp.status_code < 300 and resp.status_code >= 200:
                     displayMessageBox(
@@ -265,7 +271,7 @@ class GeofenceDialog(wx.Dialog):
                 else:
                     displayMessageBox(
                         (
-                            'Failed to create geofence!\n%s' % resp.reason,
+                            'Failed to create geofence!\n%s' % resp.text,
                             wx.ICON_ERROR | wx.OK,
                         )
                     )
