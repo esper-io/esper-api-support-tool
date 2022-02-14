@@ -743,7 +743,8 @@ class NewFrameLayout(wx.Frame):
 
             df_1 = pd.DataFrame(deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys())
             df_2 = pd.DataFrame(networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys())
-            df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
+            if self.gridPanel.grid_3_contents:
+                df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
 
             with pd.ExcelWriter(inFile) as writer1:
                 df_1.to_excel(writer1, sheet_name='Device', index=False)
@@ -756,11 +757,12 @@ class NewFrameLayout(wx.Frame):
                     column_width = max(df_2[column].astype(str).map(len).max(), len(column))
                     col_idx = df_2.columns.get_loc(column)
                     writer1.sheets['Network'].set_column(col_idx, col_idx, column_width)
-                df_3.to_excel(writer1, sheet_name='Application', index=False)
-                for column in df_3:
-                    column_width = max(df_3[column].astype(str).map(len).max(), len(column))
-                    col_idx = df_3.columns.get_loc(column)
-                    writer1.sheets['Application'].set_column(col_idx, col_idx, column_width)
+                if self.gridPanel.grid_3_contents:
+                    df_3.to_excel(writer1, sheet_name='Application', index=False)
+                    for column in df_3:
+                        column_width = max(df_3[column].astype(str).map(len).max(), len(column))
+                        col_idx = df_3.columns.get_loc(column)
+                        writer1.sheets['Application'].set_column(col_idx, col_idx, column_width)
 
         self.Logging("---> Info saved to file: " + inFile)
         self.setGaugeValue(100)
