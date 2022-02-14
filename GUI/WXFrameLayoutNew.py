@@ -502,9 +502,9 @@ class NewFrameLayout(wx.Frame):
             # "BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|PNG files (*.png)|*.png"
             dlg = wx.FileDialog(
                 self,
-                message="Save Device and Network Info CSV as...",
+                message="Save Reports as...",
                 defaultFile="",
-                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -539,9 +539,9 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             dlg = wx.FileDialog(
                 self,
-                message="Save Device and Network Info CSV as...",
+                message="Save Reports as...",
                 defaultFile="",
-                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -798,7 +798,7 @@ class NewFrameLayout(wx.Frame):
                 self,
                 message="Save App Info CSV...",
                 defaultFile="",
-                wildcard="CSV files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -863,7 +863,7 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         with wx.FileDialog(
             self,
-            "Open Device CSV File",
+            "Open Device Spreedsheet File",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.defaultDir),
