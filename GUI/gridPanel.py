@@ -1253,7 +1253,7 @@ class GridPanel(wx.Panel):
         acquireLocks([Globals.grid1_lock])
         identifers = []
         numRows = self.grid_1.GetNumberRows()
-        numRowsPerChunk = int(numRows / Globals.MAX_ACTIVE_THREAD_COUNT)
+        numRowsPerChunk = int(numRows / Globals.MAX_ACTIVE_THREAD_COUNT) if numRows > Globals.MAX_ACTIVE_THREAD_COUNT else numRows
         threads = []
         num = 0
         while num < numRows:
