@@ -148,6 +148,7 @@ class ToolMenuBar(wx.MenuBar):
         self.collectionSubMenu.SetBitmap(
             wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
+        runMenu.Append(wx.ID_SEPARATOR)
 
         bulkReset = wx.MenuItem(runMenu, wx.ID_ANY, "&Bulk Factory Reset\t")
         self.bulkFactoryReset = runMenu.Append(bulkReset)

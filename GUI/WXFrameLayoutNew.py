@@ -1983,6 +1983,8 @@ class NewFrameLayout(wx.Frame):
                                 schArgs,
                                 schType,
                             ) = cmdDialog.GetValue()
+                            if cmdArgs is None:
+                                createCommand(self, cmdArgs, commandType, schArgs, schType)
                         except Exception as e:
                             displayMessageBox(
                                 (
@@ -1992,8 +1994,6 @@ class NewFrameLayout(wx.Frame):
                             )
                             ApiToolLog().LogError(e)
                     cmdDialog.DestroyLater()
-                if cmdArgs is None:
-                    createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
                 displayMessageBox(
                     ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
