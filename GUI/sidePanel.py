@@ -380,7 +380,7 @@ class SidePanel(wx.Panel):
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
-                or self.parentFrame.preferences["enableDevice"] == True
+                or self.parentFrame.preferences["enableDevice"] is True
             ):
                 self.parentFrame.setCursorBusy()
                 self.devices = {}
