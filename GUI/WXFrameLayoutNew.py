@@ -2783,6 +2783,7 @@ class NewFrameLayout(wx.Frame):
 
         self.setCursorBusy()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
+        self.gridPanel.disableGridProperties()
         if (
             hasattr(event, "EventType")
             and (
@@ -2798,8 +2799,10 @@ class NewFrameLayout(wx.Frame):
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
+            self.applySearchColor(queryString, Color.white.value, True)
         self.setCursorDefault()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+        self.gridPanel.enableGridProperties()
 
     def applySearchColor(self, queryString, color, applyAll=False):
         self.gridPanel.applyTextColorMatchingGridRow(
