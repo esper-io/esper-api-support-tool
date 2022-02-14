@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import Common.Globals as Globals
-import wx
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 

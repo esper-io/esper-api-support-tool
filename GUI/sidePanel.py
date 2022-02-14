@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from Common.enum import Color, GeneralActions, GridActions
+from Common.enum import GeneralActions, GridActions
 from Common.decorator import api_tool_decorator
 import csv
 import wx

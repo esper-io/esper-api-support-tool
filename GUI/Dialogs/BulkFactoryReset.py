@@ -182,7 +182,7 @@ class BulkFactoryReset(wx.Dialog):
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                 )
                 data = list(reader)
-        except UnicodeDecodeError as e:
+        except:
             with open(filePath, "r") as csvFile:
                 reader = csv.reader(
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
