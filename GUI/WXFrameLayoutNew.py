@@ -499,7 +499,6 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onSaveBoth(self, event):
         if self.gridPanel.grid_1.GetNumberRows() > 0:
-            # "BMP and GIF files (*.bmp;*.gif)|*.bmp;*.gif|PNG files (*.png)|*.png"
             dlg = wx.FileDialog(
                 self,
                 message="Save Reports as...",
