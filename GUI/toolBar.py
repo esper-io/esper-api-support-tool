@@ -33,9 +33,9 @@ class ToolsToolBar(wx.ToolBar):
         save_icon = scale_bitmap(resourcePath("Images/save.png"), *size)
         self.stool = self.AddTool(
             wx.ID_ANY,
-            "Save Device and Network Info in Grids",
+            "Save All Reports",
             save_icon,
-            "Save Device and Network Info in Grids",
+            "Save All Reports",
         )
         self.AddSeparator()
 
