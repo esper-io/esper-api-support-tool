@@ -571,21 +571,9 @@ def clearAppData(frame, device):
     json_resp = None
     try:
         appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
-        _, apps = getdeviceapps(
-            device.id, createAppList=False, useEnterprise=Globals.USE_ENTERPRISE_APP
-        )
-        cmdArgs = {}
-        for app in apps["results"]:
-            if app["package_name"] == appToUse:
-                cmdArgs["package_name"] = app["package_name"]
-                cmdArgs["application_name"] = app["app_name"]
-                cmdArgs["version_code"] = app["version_code"]
-                cmdArgs["version_name"] = app["version_name"]
-                if app["app_type"] == "GOOGLE":
-                    cmdArgs["is_g_play"] = True
-                else:
-                    cmdArgs["is_g_play"] = False
-                break
+        cmdArgs = {
+            "package_name": appToUse
+        }
 
         if cmdArgs:
             reqData = {
@@ -603,7 +591,7 @@ def clearAppData(frame, device):
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
-                    % (cmdArgs["application_name"], device.device_name)
+                    % (appToUse, device.device_name)
                 )
         else:
             frame.Logging(
