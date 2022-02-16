@@ -21,6 +21,8 @@ class ApiToolLog:
     def __init__(self):
         self.logPath = ""
         self.placePath = ""
+        self.tracker_lock = threading.Lock()
+
         if platform.system() == "Windows":
             self.logPath = (
                 "%s\\EsperApiTool\\ApiTool.log"
@@ -190,6 +192,11 @@ class ApiToolLog:
             if usePartial:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
+        if Globals.IS_DEBUG:
+            return
+
+        self.tracker_lock.acquire()
+
         tracker = IssueTracker()
         title = None
         if excpt is not None:
@@ -215,3 +222,6 @@ class ApiToolLog:
                 tracker.createIssue(title, body)
         else:
             tracker.createIssue(title, body)
+
+        if self.tracker_lock.locked():
+            self.tracker_lock.release()
