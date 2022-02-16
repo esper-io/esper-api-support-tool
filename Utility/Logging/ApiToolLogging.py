@@ -101,7 +101,7 @@ class ApiToolLog:
             "".join(traceback.format_exception(type, value, tb)),
             "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type,
             "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value,
-            "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb
+            "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
         ]
         print_exc()
         for line in exc_traceback:
@@ -192,6 +192,7 @@ class ApiToolLog:
             if usePartial:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
+
         if Globals.IS_DEBUG:
             return
 

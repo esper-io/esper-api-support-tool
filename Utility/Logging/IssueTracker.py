@@ -5,8 +5,7 @@ import sys
 import json
 
 
-class IssueTracker():
-
+class IssueTracker:
     def listOpenIssues(self):
         url = "https://api.github.com/repos/esper-io/esper-api-support-tool/issues?labels=bug&state=open"
         resp = self.performGetRequestWithRetry(url)
@@ -23,11 +22,7 @@ class IssueTracker():
                 "Authorization": "Bearer %s" % token,
                 "Content-Type": "application/json",
             }
-            body = {
-                "title": title,
-                "body": body,
-                "labels": ["bug"]
-            }
+            body = {"title": title, "body": body, "labels": ["bug"]}
             resp = self.performPostRequestWithRetry(url, headers=header, json=body)
             return resp
 
@@ -41,16 +36,17 @@ class IssueTracker():
 
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
-            with open(filePath, 'r') as file:
+            with open(filePath, "r") as file:
                 tokenJson = json.load(file)
             if "pat" in tokenJson:
                 return tokenJson["pat"]
 
     def postIssueComment(self, issueNum, body):
-        url = "https://api.github.com/repos/esper-io/esper-api-support-tool/issues/%s/comments" % issueNum
-        body = {
-            "body": body
-        }
+        url = (
+            "https://api.github.com/repos/esper-io/esper-api-support-tool/issues/%s/comments"
+            % issueNum
+        )
+        body = {"body": body}
         resp = self.performPostRequestWithRetry(url, json=body)
         return resp
 

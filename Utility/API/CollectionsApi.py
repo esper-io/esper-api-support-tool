@@ -6,7 +6,12 @@ from Utility.Resource import (
 )
 from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
-from Utility.Web.WebRequests import performDeleteRequestWithRetry, performGetRequestWithRetry, performPatchRequestWithRetry, performPostRequestWithRetry
+from Utility.Web.WebRequests import (
+    performDeleteRequestWithRetry,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+    performPostRequestWithRetry,
+)
 
 
 @api_tool_decorator()

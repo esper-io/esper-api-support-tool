@@ -558,7 +558,7 @@ def setAppState(
                 )
                 break
             except Exception as e:
-                if hasattr(e, "body") and  (
+                if hasattr(e, "body") and (
                     "invalid device id" in e.body or "invalid group id" in e.body
                 ):
                     return None
@@ -575,9 +575,7 @@ def clearAppData(frame, device):
     json_resp = None
     try:
         appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
-        cmdArgs = {
-            "package_name": appToUse
-        }
+        cmdArgs = {"package_name": appToUse}
 
         if cmdArgs:
             reqData = {
@@ -615,9 +613,7 @@ def clearAppData(frame, device):
 
 
 def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     api_response = None
     for attempt in range(maxAttempt):
         try:
