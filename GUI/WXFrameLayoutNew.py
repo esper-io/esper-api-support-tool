@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from GUI.Dialogs.GeofenceDialog import GeofenceDialog
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -3132,3 +3133,7 @@ class NewFrameLayout(wx.Frame):
                 self.gauge.Pulse()
                 ids = dlg.getIdentifiers()
                 bulkFactoryReset(ids)
+
+    def onGeofence(self, event):
+        with GeofenceDialog() as dlg:
+            dlg.ShowModal()

@@ -75,8 +75,8 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     devices = []
     for row in rowTaglist.keys():
         entry = rowTaglist[row]
-
         identifier = entry
+
         if "esperName" in entry.keys():
             identifier = entry["esperName"]
         elif "sn" in entry.keys():
