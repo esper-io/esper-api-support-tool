@@ -617,7 +617,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
-            if "esperName" in entry.keys():
+            if type(entry) is dict and "esperName" in entry.keys():
                 identifier = entry["esperName"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
@@ -625,7 +625,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif "sn" in entry.keys():
+            elif type(entry) is dict and "sn" in entry.keys():
                 identifier = entry["sn"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
@@ -633,7 +633,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif "csn" in entry.keys():
+            elif type(entry) is dict and "csn" in entry.keys():
                 identifier = entry["csn"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
@@ -641,7 +641,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif "imei1" in entry.keys():
+            elif type(entry) is dict and "imei1" in entry.keys():
                 identifier = entry["imei1"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
@@ -649,7 +649,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif "imei2" in entry.keys():
+            elif type(entry) is dict and "imei2" in entry.keys():
                 identifier = entry["imei2"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
