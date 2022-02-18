@@ -159,6 +159,43 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
 
 
 @api_tool_decorator()
+def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
+    """ Make a API call to get all Groups belonging to the Enterprise """
+    if not limit:
+        limit = Globals.limit
+    if not offset:
+        offset = Globals.offset
+    try:
+        api_instance = esperclient.DeviceGroupApi(
+            esperclient.ApiClient(Globals.configuration)
+        )
+        api_response = None
+        for attempt in range(maxAttempt):
+            try:
+                api_response = api_instance.get_group_by_id(
+                    Globals.enterprise_id,
+                    group_id=group_id,
+                    limit=limit,
+                    offset=offset,
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
+                )
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e)
+                    raise e
+                time.sleep(Globals.RETRY_SLEEP)
+        postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
+        return api_response
+    except ApiException as e:
+        raise Exception(
+            "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
+        )
+
+
+@api_tool_decorator()
 def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))

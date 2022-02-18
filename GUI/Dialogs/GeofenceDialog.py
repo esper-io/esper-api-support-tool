@@ -5,7 +5,9 @@ import csv
 import Common.Globals as Globals
 import wx.grid
 from Utility import wxThread
-from Utility.API.EsperAPICalls import searchForMatchingDevices
+from Utility.API.DeviceUtility import get_all_devices
+from Utility.API.GroupUtility import getAllGroups, getGroupById
+# from Utility.API.EsperAPICalls import searchForMatchingDevices
 
 from Utility.Resource import displayMessageBox, getHeader
 from Utility.Web.WebRequests import performPostRequestWithRetry
@@ -16,15 +18,18 @@ class GeofenceDialog(wx.Dialog):
         super(GeofenceDialog, self).__init__(
             None,
             wx.ID_ANY,
-            size=(500, 500),
+            size=(650, 500),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
-        self.SetSize((500, 500))
+        self.SetSize((650, 500))
+        self.SetMinSize((650, 500))
         self.SetTitle("Create Geofence")
 
-        self.devices = []
+        self.groups = []
         self.gridHeaderLabels = [
-            "Device Identifer"
+            "Given Group Identifer",
+            "Calculated Group Path",
+            "Group Id"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -108,8 +113,8 @@ class GeofenceDialog(wx.Dialog):
         grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_RIGHT, 0)
 
         self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(10, 0)
-        grid_sizer_3.Add(self.grid_1, 1, wx.EXPAND, 0)
+        self.grid_1.CreateGrid(0, 0)
+        grid_sizer_3.Add(self.grid_1, 1, wx.EXPAND | wx.TOP, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -158,6 +163,9 @@ class GeofenceDialog(wx.Dialog):
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
         self.fillGridHeaders()
+        self.grid_1.UseNativeColHeader()
+        self.grid_1.HideCol(2)
+        self.grid_1.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
     def onClose(self, event):
         if Globals.frame:
@@ -193,7 +201,7 @@ class GeofenceDialog(wx.Dialog):
             result = fileDialog.ShowModal()
             if result == wx.ID_OK:
                 # Clear list of devices
-                self.devices = []
+                self.groups = []
                 filePath = fileDialog.GetPath()
                 # Clear grid on previous content
                 thread = wxThread.GUIThread(None, self.processUpload, (filePath,))
@@ -219,9 +227,37 @@ class GeofenceDialog(wx.Dialog):
                     0,
                     str(entry[0]),
                 )
-                # Add device identifier to list of devices
-                self.devices.append(entry[0])
-
+                self.groups.append(entry[0])
+                # Add identifier to list of devices
+                group = None
+                if len(entry[0].split("-")) == 5:
+                    self.grid_1.SetCellValue(
+                        self.grid_1.GetNumberRows() - 1,
+                        2,
+                        str(entry[0]),
+                    )
+                    group = getGroupById(str(entry[0]))
+                else:
+                    groups = getAllGroups(name=entry[0])
+                    if groups:
+                        for groupRes in groups.results:
+                            if groupRes.name == str(entry[0]) or groupRes.path == str(entry[0]):
+                                group = groupRes
+                                break
+                    self.grid_1.SetCellValue(
+                        self.grid_1.GetNumberRows() - 1,
+                        2,
+                        group.id,
+                    )
+                self.grid_1.SetCellValue(
+                    self.grid_1.GetNumberRows() - 1,
+                    1,
+                    group.path,
+                )
+                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 0)
+                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 1)
+                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 2)
+            self.grid_1.AutoSizeColumns()
             self.grid_1.Thaw()
 
     def createGeofence(self, event):
@@ -239,42 +275,25 @@ class GeofenceDialog(wx.Dialog):
         if self.checkbox_2.IsChecked():
             actionsList.append("lock_down")
 
-        properDeviceIdList = []
-        for device in self.devices:
-            # will need to ensure that device identifer is device ID,
-            # if device name (or other id like Serial Number) you will need to fetch the ID
-            if len(device.split("-")) == 5:
-                properDeviceIdList.append(device)
-            else:
-                deviceResult = searchForMatchingDevices(device)
-                if deviceResult and hasattr(deviceResult, "results") and deviceResult.results:
-                    properDeviceIdList.append(deviceResult.results[0].id)
+        properGroupIdList = []
+        for rowNum in range(self.grid_1.GetNumberRows()):
+            identifier = self.grid_1.GetCellValue(rowNum, 2)
+            if len(identifier.split("-")) == 5:
+                properGroupIdList.append(identifier)
 
         # Ensure that inputs are vaild before calling API
         if name and latitude and description and longitude and radius and actionsList:
             dialog = displayMessageBox(
                 (
-                    'Found device ids for %s out of %s uploaded entries. Would you like to proceed?' % (len(properDeviceIdList), len(self.devices)),
+                    'Found group ids for %s out of %s uploaded entries. Would you like to proceed?' % (len(properGroupIdList), len(self.groups)),
                     wx.ICON_INFORMATION | wx.YES_NO,
                 )
             )
             if dialog == wx.YES:
-                resp = self.createApplyGeofence(name, description, latitude, longitude, radius, properDeviceIdList, actions=actionsList)
-                # You can choose to do something with the response, e.g. showcase the user the results of the API
-                if resp.status_code < 300 and resp.status_code >= 200:
-                    displayMessageBox(
-                        (
-                            'Successfully created Geofence.',
-                            wx.ICON_INFORMATION | wx.OK,
-                        )
-                    )
-                else:
-                    displayMessageBox(
-                        (
-                            'Failed to create geofence!\n%s' % resp.text,
-                            wx.ICON_ERROR | wx.OK,
-                        )
-                    )
+                self.button_APPLY.Enable(False)
+                self.setCursorBusy()
+                thread = wxThread.GUIThread(None, self.processCreateGeoFenceRequest, (properGroupIdList, name, description, latitude, longitude, radius, actionsList))
+                thread.start()
         else:
             displayMessageBox(
                 (
@@ -282,6 +301,45 @@ class GeofenceDialog(wx.Dialog):
                     wx.ICON_ERROR | wx.OK,
                 )
             )
+
+    def processCreateGeoFenceRequest(self, properGroupIdList, name, description, latitude, longitude, radius, actionsList):
+        deviceList = []
+        for groupId in properGroupIdList:
+            devices = get_all_devices(groupId, Globals.limit, 0)
+            deviceList += devices.results
+        # Only add active devices
+        deviceList = list(
+            filter(
+                lambda x: (x.status != 20),
+                deviceList,
+            )
+        )
+        deviceIdList = [device.id for device in deviceList]
+        if not deviceIdList:
+            displayMessageBox(
+                (
+                    'No devices found for the uploaded groups',
+                    wx.ICON_ERROR | wx.OK,
+                )
+            )
+        resp = self.createApplyGeofence(name, description, latitude, longitude, radius, deviceIdList, actions=actionsList)
+        # You can choose to do something with the response, e.g. showcase the user the results of the API
+        if resp and hasattr(resp, "status_code") and resp.status_code < 300 and resp.status_code >= 200:
+            displayMessageBox(
+                (
+                    'Successfully created Geofence.',
+                    wx.ICON_INFORMATION | wx.OK,
+                )
+            )
+        else:
+            displayMessageBox(
+                (
+                    'Failed to create geofence!\n%s' % resp.text,
+                    wx.ICON_ERROR | wx.OK,
+                )
+            )
+        self.button_APPLY.Enable(True)
+        self.setCursorDefault()
 
     def createApplyGeofence(self, name, description, lat, long, radius, devices, radiusUnit="METERS", actions=["lock_down", "beep"]):
         tenant = Globals.configuration.host.replace("https://", "").replace(
@@ -304,3 +362,24 @@ class GeofenceDialog(wx.Dialog):
         resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
 
         return resp
+
+    def toogleViewMenuItem(self, event):
+        """
+        Disable native headers ability to hide columns when clicking an entry from the context menu
+        """
+        return
+
+    def setCursorDefault(self):
+        """ Set cursor icon to default state """
+        try:
+            self.isBusy = False
+            myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
+            self.SetCursor(myCursor)
+        except:
+            pass
+
+    def setCursorBusy(self):
+        """ Set cursor icon to busy state """
+        self.isBusy = True
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
