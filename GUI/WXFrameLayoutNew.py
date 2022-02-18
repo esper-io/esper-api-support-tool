@@ -1247,6 +1247,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.configList.AppendText("API Prefix = " + prefix + "\n")
             self.sidePanel.configList.AppendText("Enterprise = " + entId)
             self.sidePanel.configList.ShowPosition(0)
+            Globals.IS_TOKEN_VALID = False
 
             if "https" in str(host):
                 Globals.configuration.host = host.strip()
@@ -1254,20 +1255,12 @@ class NewFrameLayout(wx.Frame):
                 Globals.configuration.api_key_prefix["Authorization"] = prefix.strip()
                 Globals.enterprise_id = entId.strip()
 
-                res = getTokenInfo()
-                if res and hasattr(res, "expires_on"):
-                    if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
-                        self.promptForNewToken()
-                elif (
-                    res
-                    and hasattr(res, "body")
-                    and "Authentication credentials were not provided" in res.body
-                ):
-                    self.promptForNewToken()
-
-                if res and hasattr(res, "scope"):
-                    if "write" not in res.scope:
-                        self.menubar.fileAddUser.Enable(False)
+                wxThread.GUIThread(
+                    self,
+                    self.validateToken,
+                    None,
+                    name="validateToken",
+                ).start()
 
                 self.setGaugeValue(50)
                 threads = []
@@ -1287,6 +1280,33 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(("Invalid Configuration", wx.ICON_ERROR))
             return False
+
+    @api_tool_decorator(locks=[Globals.token_lock])
+    def validateToken(self):
+        Globals.token_lock.acquire()
+        res = getTokenInfo()
+        if res and hasattr(res, "expires_on"):
+            if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+                # self.promptForNewToken()
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.promptForNewToken),
+                )
+        elif (
+            res
+            and hasattr(res, "body")
+            and "Authentication credentials were not provided" in res.body
+        ):
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.promptForNewToken),
+            )
+
+        if res and hasattr(res, "scope"):
+            if "write" not in res.scope:
+                self.menubar.fileAddUser.Enable(False)
+        if Globals.token_lock.locked():
+            Globals.token_lock.release()
 
     def promptForNewToken(self):
         newToken = ""
@@ -1604,9 +1624,13 @@ class NewFrameLayout(wx.Frame):
     #     resp = getAllApplications()
     #     self.addAppsToAppChoice(resp)
 
+    @api_tool_decorator(locks=[Globals.token_lock])
     def fetchAllInstallableApps(self):
-        resp = getAllInstallableApps()
-        self.addAppsToAppChoice(resp)
+        Globals.token_lock.acquire()
+        Globals.token_lock.release()
+        if Globals.IS_TOKEN_VALID:
+            resp = getAllInstallableApps()
+            self.addAppsToAppChoice(resp)
 
     def addAppstoAppChoiceThread(self, event):
         api_response = None

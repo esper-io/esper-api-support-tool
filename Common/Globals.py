@@ -21,6 +21,7 @@ MAX_LIMIT = 500
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
+IS_TOKEN_VALID = False
 
 MAX_ERROR_TIME_DIFF = 2
 MAX_ACTIVE_THREAD_COUNT = 32
@@ -49,6 +50,7 @@ grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
+token_lock = threading.Lock()
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3

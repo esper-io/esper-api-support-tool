@@ -121,9 +121,13 @@ def fetchGroupName(groupURL, returnJson=False):
     return None
 
 
-@api_tool_decorator()
+@api_tool_decorator(locks=[Globals.token_lock])
 def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Groups belonging to the Enterprise """
+    Globals.token_lock.acquire()
+    Globals.token_lock.release()
+    if not Globals.IS_TOKEN_VALID:
+        return
     if not limit:
         limit = Globals.limit
     if not offset:
