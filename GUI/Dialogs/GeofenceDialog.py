@@ -244,16 +244,24 @@ class GeofenceDialog(wx.Dialog):
                             if groupRes.name == str(entry[0]) or groupRes.path == str(entry[0]):
                                 group = groupRes
                                 break
+                    if group:
+                        self.grid_1.SetCellValue(
+                            self.grid_1.GetNumberRows() - 1,
+                            2,
+                            group.id,
+                        )
+                if group:
                     self.grid_1.SetCellValue(
                         self.grid_1.GetNumberRows() - 1,
-                        2,
-                        group.id,
+                        1,
+                        group.path,
                     )
-                self.grid_1.SetCellValue(
-                    self.grid_1.GetNumberRows() - 1,
-                    1,
-                    group.path,
-                )
+                else:
+                    self.grid_1.SetCellValue(
+                        self.grid_1.GetNumberRows() - 1,
+                        1,
+                        "<Could Not Find Group>",
+                    )
                 self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 0)
                 self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 1)
                 self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 2)
