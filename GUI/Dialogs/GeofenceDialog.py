@@ -322,22 +322,23 @@ class GeofenceDialog(wx.Dialog):
                     wx.ICON_ERROR | wx.OK,
                 )
             )
-        resp = self.createApplyGeofence(name, description, latitude, longitude, radius, deviceIdList, actions=actionsList)
-        # You can choose to do something with the response, e.g. showcase the user the results of the API
-        if resp and hasattr(resp, "status_code") and resp.status_code < 300 and resp.status_code >= 200:
-            displayMessageBox(
-                (
-                    'Successfully created Geofence.',
-                    wx.ICON_INFORMATION | wx.OK,
-                )
-            )
         else:
-            displayMessageBox(
-                (
-                    'Failed to create geofence!\n%s' % resp.text,
-                    wx.ICON_ERROR | wx.OK,
+            resp = self.createApplyGeofence(name, description, latitude, longitude, radius, deviceIdList, actions=actionsList)
+            # You can choose to do something with the response, e.g. showcase the user the results of the API
+            if resp and hasattr(resp, "status_code") and resp.status_code < 300 and resp.status_code >= 200:
+                displayMessageBox(
+                    (
+                        'Successfully created Geofence.',
+                        wx.ICON_INFORMATION | wx.OK,
+                    )
                 )
-            )
+            else:
+                displayMessageBox(
+                    (
+                        'Failed to create geofence!\n%s' % resp.text,
+                        wx.ICON_ERROR | wx.OK,
+                    )
+                )
         self.button_APPLY.Enable(True)
         self.setCursorDefault()
 
