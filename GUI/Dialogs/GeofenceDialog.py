@@ -4,6 +4,7 @@ import wx
 import csv
 import Common.Globals as Globals
 import wx.grid
+from Common.decorator import api_tool_decorator
 from Utility import wxThread
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
@@ -167,6 +168,7 @@ class GeofenceDialog(wx.Dialog):
         self.grid_1.HideCol(2)
         self.grid_1.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
+    @api_tool_decorator()
     def onClose(self, event):
         if Globals.frame:
             Globals.frame.isRunning = False
@@ -177,6 +179,7 @@ class GeofenceDialog(wx.Dialog):
             self.Close()
         self.DestroyLater()
 
+    @api_tool_decorator()
     def fillGridHeaders(self):
         """ Populate Grid Headers """
         num = 0
@@ -191,6 +194,7 @@ class GeofenceDialog(wx.Dialog):
             pass
         self.grid_1.AutoSizeColumns()
 
+    @api_tool_decorator()
     def onUpload(self, event):
         with wx.FileDialog(
             self,
@@ -207,6 +211,7 @@ class GeofenceDialog(wx.Dialog):
                 thread = wxThread.GUIThread(None, self.processUpload, (filePath,))
                 thread.start()
 
+    @api_tool_decorator()
     def processUpload(self, filePath):
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
@@ -268,6 +273,7 @@ class GeofenceDialog(wx.Dialog):
             self.grid_1.AutoSizeColumns()
             self.grid_1.Thaw()
 
+    @api_tool_decorator()
     def createGeofence(self, event):
         # Read in inputs from text fields
         name = self.text_ctrl_1.GetValue()
@@ -310,6 +316,7 @@ class GeofenceDialog(wx.Dialog):
                 )
             )
 
+    @api_tool_decorator()
     def processCreateGeoFenceRequest(self, properGroupIdList, name, description, latitude, longitude, radius, actionsList):
         deviceList = []
         for groupId in properGroupIdList:
@@ -350,6 +357,7 @@ class GeofenceDialog(wx.Dialog):
         self.button_APPLY.Enable(True)
         self.setCursorDefault()
 
+    @api_tool_decorator()
     def createApplyGeofence(self, name, description, lat, long, radius, devices, radiusUnit="METERS", actions=["lock_down", "beep"]):
         tenant = Globals.configuration.host.replace("https://", "").replace(
             "-api.esper.cloud/api", ""
@@ -372,12 +380,14 @@ class GeofenceDialog(wx.Dialog):
 
         return resp
 
+    @api_tool_decorator()
     def toogleViewMenuItem(self, event):
         """
         Disable native headers ability to hide columns when clicking an entry from the context menu
         """
         return
 
+    @api_tool_decorator()
     def setCursorDefault(self):
         """ Set cursor icon to default state """
         try:
