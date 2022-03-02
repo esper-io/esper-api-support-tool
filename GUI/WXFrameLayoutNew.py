@@ -1286,7 +1286,9 @@ class NewFrameLayout(wx.Frame):
         Globals.token_lock.acquire()
         res = getTokenInfo()
         if res and hasattr(res, "expires_on"):
+            Globals.IS_TOKEN_VALID = True
             if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+                Globals.IS_TOKEN_VALID = False
                 # self.promptForNewToken()
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
@@ -1297,6 +1299,7 @@ class NewFrameLayout(wx.Frame):
             and hasattr(res, "body")
             and "Authentication credentials were not provided" in res.body
         ):
+            Globals.IS_TOKEN_VALID = False
             postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (self.promptForNewToken),
@@ -1520,11 +1523,12 @@ class NewFrameLayout(wx.Frame):
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
-        results = sorted(
-            results,
-            key=lambda i: i.name.lower(),
-        )
-        if len(results):
+        if results:
+            results = sorted(
+                results,
+                key=lambda i: i.name.lower(),
+            )
+        if results and len(results):
             for group in results:
                 if group.name not in self.sidePanel.groups:
                     self.sidePanel.groups[group.name] = group.id
