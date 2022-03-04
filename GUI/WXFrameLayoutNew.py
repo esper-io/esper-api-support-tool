@@ -2013,7 +2013,7 @@ class NewFrameLayout(wx.Frame):
                                 schArgs,
                                 schType,
                             ) = cmdDialog.GetValue()
-                            if cmdArgs is None:
+                            if cmdArgs is not None:
                                 createCommand(self, cmdArgs, commandType, schArgs, schType)
                         except Exception as e:
                             displayMessageBox(
