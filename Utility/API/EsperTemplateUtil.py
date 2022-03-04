@@ -590,7 +590,7 @@ class EsperTemplateUtil:
             raise e
 
     @api_tool_decorator()
-    def createTemplate(self, link, key, enterprise_id, template):
+    def createTemplate(self, link, key, enterprise_id, template, level=0):
         try:
             headers = {
                 "Authorization": f"Bearer {key}",
@@ -600,7 +600,7 @@ class EsperTemplateUtil:
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
             if hasattr(resp, "status_code"):
-                if resp.status_code > 299:
+                if resp.status_code > 299 and level > 0:
                     postEventToFrame(
                         eventUtil.myEVT_MESSAGE_BOX,
                         (str(json_resp), wx.ICON_ERROR),

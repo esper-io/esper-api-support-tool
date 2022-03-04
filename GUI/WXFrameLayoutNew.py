@@ -2751,21 +2751,25 @@ class NewFrameLayout(wx.Frame):
             self.preferences["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
 
     @api_tool_decorator()
-    def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False):
-        templateFound = util.processDeviceGroup(templateFound)
-        templateFound = util.processWallpapers(templateFound)
+    def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False, level=0):
+        if level == 0:
+            templateFound = util.processDeviceGroup(templateFound)
+            templateFound = util.processWallpapers(templateFound)
         self.Logging("Attempting to copy template...")
         res = None
         if update:
             res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
         else:
-            res = util.createTemplate(toApi, toKey, toEntId, templateFound)
+            res = util.createTemplate(toApi, toKey, toEntId, templateFound, level + 1)
         if "errors" not in res:
             action = "created" if not update else "updated"
             self.Logging("Template sucessfully %s." % action)
             displayMessageBox(
                 ("Template sucessfully %s." % action, wx.OK | wx.ICON_INFORMATION)
             )
+        elif "errors" in res and res["errors"] and "EMM" in res["errors"][0] and level < 2:
+            del templateFound["template"]["application"]["managed_google_play_disabled"]
+            self.createClone(util, templateFound, toApi, toKey, toEntId, update, level + 1)
         else:
             action = "recreate" if not update else "update"
             self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
