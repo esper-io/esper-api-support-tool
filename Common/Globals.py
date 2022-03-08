@@ -9,7 +9,7 @@ from Common.enum import GridActions, GeneralActions
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
-IS_DEBUG = True
+IS_DEBUG = False
 
 """ Constants """
 VERSION = "v0.1926"
