@@ -321,7 +321,10 @@ class GeofenceDialog(wx.Dialog):
         deviceList = []
         for groupId in properGroupIdList:
             devices = get_all_devices(groupId, Globals.limit, 0)
-            deviceList += devices.results
+            if hasattr(devices, "results"):
+                deviceList += devices.results
+            else:
+                deviceList += devices["results"]
         # Only add active devices
         deviceList = list(
             filter(
@@ -329,7 +332,7 @@ class GeofenceDialog(wx.Dialog):
                 deviceList,
             )
         )
-        deviceIdList = [device.id for device in deviceList]
+        deviceIdList = [device.id if hasattr(device, "id") else device["id"] for device in deviceList]
         if not deviceIdList:
             displayMessageBox(
                 (

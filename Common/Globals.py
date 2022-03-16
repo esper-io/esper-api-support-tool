@@ -9,7 +9,7 @@ from Common.enum import GridActions, GeneralActions
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
-IS_DEBUG = False
+IS_DEBUG = True
 
 """ Constants """
 VERSION = "v0.1926"
@@ -17,17 +17,17 @@ TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
 MAX_LIMIT = 500
-# MAX_UPDATE_COUNT = 500
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
 IS_TOKEN_VALID = False
 
 MAX_ERROR_TIME_DIFF = 2
-MAX_ACTIVE_THREAD_COUNT = 32
-MAX_THREAD_COUNT = 16
+MAX_ACTIVE_THREAD_COUNT = 24
+# MAX_DEVICES_PROCESS = 15
+MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
-RETRY_SLEEP = 1.5
+RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False

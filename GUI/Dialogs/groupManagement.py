@@ -271,7 +271,7 @@ class GroupManagement(wx.Dialog):
                 self.groupNameToId[group.name].append(group.id)
                 self.groupIdToName[group.id] = group.name
                 parentId = self.getGroupIdFromURL(group.parent)
-                if not group.parent:
+                if not group.parent and not self.root:
                     self.rootId = group.id
                     self.groupTree[group.id] = []
                     self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)

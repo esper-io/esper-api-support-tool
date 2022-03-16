@@ -407,14 +407,26 @@ class MultiSelectSearchDlg(wx.Dialog):
     def processDevices(self, chunk):
         nameList = []
         for device in chunk:
-            name = "%s %s %s %s" % (
-                device.hardware_info["manufacturer"],
-                device.hardware_info["model"],
-                device.device_name,
-                device.alias_name if device.alias_name else "",
-            )
+            name = ""
+            if hasattr(device, "hardware_info"):
+                name = "%s %s %s %s" % (
+                    device.hardware_info["manufacturer"],
+                    device.hardware_info["model"],
+                    device.device_name,
+                    device.alias_name if device.alias_name else "",
+                )
+            else:
+                name = "%s %s %s %s" % (
+                    device["hardwareInfo"]["manufacturer"],
+                    device["hardwareInfo"]["model"],
+                    device["device_name"],
+                    device["alias_name"] if device["alias_name"] else "",
+                )
             if name and name not in self.Parent.sidePanel.devicesExtended:
-                self.Parent.sidePanel.devicesExtended[name] = device.id
+                if hasattr(device, "id"):
+                    self.Parent.sidePanel.devicesExtended[name] = device.id
+                else:
+                    self.Parent.sidePanel.devicesExtended[name] = device["id"]
             if name not in nameList:
                 nameList.append(name)
         return nameList

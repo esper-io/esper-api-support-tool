@@ -31,6 +31,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
+    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -105,6 +106,11 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 frame.gridArrowState["next"] = True
             else:
                 frame.gridArrowState["next"] = False
+        elif type(api_response) is dict and "next" in api_response:
+            if api_response["next"]:
+                frame.gridArrowState["next"] = True
+            else:
+                frame.gridArrowState["next"] = False
         else:
             frame.gridArrowState["next"] = False
         if hasattr(api_response, "previous"):
@@ -112,25 +118,30 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 frame.gridArrowState["prev"] = True
             else:
                 frame.gridArrowState["prev"] = False
+        elif type(api_response) is dict and "previous" in api_response:
+            if api_response["previous"]:
+                frame.gridArrowState["prev"] = True
+            else:
+                frame.gridArrowState["prev"] = False
         else:
             frame.gridArrowState["prev"] = False
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
+    number_of_devices = 0
+    maxThread = int(Globals.MAX_THREAD_COUNT)
+
+    getApps = (
+        action == GeneralActions.GENERATE_APP_REPORT.value
+        or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
+    )
+    getLatestEvents = (
+        action == GeneralActions.GENERATE_INFO_REPORT.value
+        or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+    )
 
     if hasattr(api_response, "results") and len(api_response.results):
-        number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
         splitResults = splitListIntoChunks(api_response.results, maxThread=maxThread)
-
-        getApps = (
-            action == GeneralActions.GENERATE_APP_REPORT.value
-            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
-        )
-        getLatestEvents = (
-            action == GeneralActions.GENERATE_INFO_REPORT.value
-            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-        )
 
         threads = []
         for chunk in splitResults:
@@ -154,6 +165,48 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 1,
                 None,
                 len(api_response.results) * 3,
+            ),
+            name="waitTillThreadsFinish_1",
+            eventType=eventUtil.myEVT_FETCH,
+        )
+        t.start()
+    elif type(api_response) is dict and "results" in api_response and api_response["results"]:
+        # splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
+
+        # threads = []
+        # for chunk in splitResults:
+        #     t = wxThread.GUIThread(
+        #         frame,
+        #         processDevices,
+        #         args=(chunk, number_of_devices, action, getApps, getLatestEvents),
+        #         name="processDevices",
+        #     )
+        #     threads.append(t)
+        #     t.start()
+        #     number_of_devices += len(chunk)
+
+        for device in api_response["results"]:
+            t = wxThread.GUIThread(
+                frame,
+                processDevices,
+                args=([device], number_of_devices, action, getApps, getLatestEvents),
+                name="processDevices",
+            )
+            threads.append(t)
+            t.start()
+            limitActiveThreads(threads)
+            number_of_devices += 1
+
+        t = wxThread.GUIThread(
+            frame,
+            wxThread.waitTillThreadsFinish,
+            args=(
+                tuple(threads),
+                action,
+                entId,
+                1,
+                None,
+                len(api_response["results"]) * 3,
             ),
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
@@ -293,6 +346,7 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
+
 @api_tool_decorator()
 def populateDeviceInfoDictionary(
     device, deviceInfo, getApps=True, getLatestEvents=True
@@ -308,13 +362,16 @@ def populateDeviceInfoDictionary(
     # Handle response from Collections API
     if type(device) == dict:
         deviceId = device["id"]
-        deviceName = device["name"]
-        deviceGroups = device["group"]
-        deviceAlias = device["alias"]
+        deviceName = device["device_name"]
+        deviceGroups = device["groups"]
+        deviceAlias = device["alias_name"]
         deviceStatus = device["status"]
-        if not Globals.SHOW_DISABLED_DEVICES and "disable" in deviceStatus.lower():
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
             return
-        deviceHardware = device["hardware"]
+        deviceHardware = device["hardwareInfo"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
@@ -341,6 +398,8 @@ def populateDeviceInfoDictionary(
     )
     if getApps:
         appThread.start()
+    if getApps:
+        appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     eventThread = wxThread.GUIThread(
         Globals.frame,
         getLatestEvent,
@@ -348,11 +407,13 @@ def populateDeviceInfoDictionary(
     )
     if getLatestEvents:
         eventThread.start()
+    # if getLatestEvents:
+    #     eventThread = getLatestEvent(deviceId)
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
-    detailInfo = getDeviceDetail(deviceId)
-    unpackageDict(deviceInfo, detailInfo)
+    # detailInfo = getDeviceDetail(deviceId)
+    # unpackageDict(deviceInfo, detailInfo)
     deviceInfo.update({"id": deviceId})
 
     if deviceGroups:
@@ -508,26 +569,36 @@ def populateDeviceInfoDictionary(
 
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
+        elif "tags" in device and device["tags"] is None:
+            device["tags"] = []
 
-    if appThread.is_alive():
+    if hasattr(appThread, "is_alive") and appThread.is_alive():
         appThread.join()
     apps = ""
     json = {}
-    if appThread.result:
+    if hasattr(appThread, "result") and appThread.result:
         apps, json = appThread.result
+    else:
+        apps, json = appThread
     deviceInfo.update({"Apps": str(apps)})
     deviceInfo.update({"appObj": json})
 
-    if eventThread.is_alive():
+    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
         eventThread.join()
     if kioskMode == 0:
-        latestEvent = eventThread.result
+        if hasattr(eventThread, "result"):
+            latestEvent = eventThread.result
+        else:
+            latestEvent = eventThread
         kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
         deviceInfo.update({"KioskApp": str(kioskModeApp)})
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    latestEvent = eventThread.result
+    if hasattr(eventThread, "result"):
+        latestEvent = eventThread.result
+    else:
+        latestEvent = eventThread
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
@@ -674,6 +745,7 @@ def clearKnownGroups():
     knownGroups.clear()
 
 
+
 def getAllDeviceInfo(frame):
     devices = []
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
@@ -694,14 +766,19 @@ def getAllDeviceInfo(frame):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
-            if api_response and api_response.results:
+            if api_response and hasattr(api_response, "results") and api_response.results:
                 devices += api_response.results
+            elif type(api_response) is dict and "results" in api_response:
+                devices += api_response["results"]
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList
         )
         if api_response:
-            devices += api_response.results
+            if api_response and hasattr(api_response, "results") and api_response.results:
+                devices += api_response.results
+            elif type(api_response) is dict and "results" in api_response:
+                devices += api_response["results"]
             getAllDevicesFromOffsets(api_response, devices)
         else:
             postEventToFrame(
@@ -742,11 +819,18 @@ def getAllDeviceInfo(frame):
 
 def getAllDevicesFromOffsets(api_response, devices=[]):
     threads = []
-    count = api_response.count
-    if api_response.next:
-        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+    count = None
+    apiNext = None
+    if hasattr(api_response, "count"):
+        count = api_response.count
+        apiNext = api_response.next
+    elif type(api_response) is dict:
+        count = api_response["count"]
+        apiNext = api_response["next"]
+    if apiNext:
+        respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
-        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+        respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
             thread = wxThread.GUIThread(
                 Globals.frame,
@@ -759,7 +843,10 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
         joinThreadList(threads)
     for thread in threads:
         if thread and thread.result:
-            devices += thread.result.results
+            if hasattr(thread.result, "results"):
+                devices += thread.result.results
+            elif type(thread.result) is dict:
+                devices += thread.result["results"]
     return devices
 
 

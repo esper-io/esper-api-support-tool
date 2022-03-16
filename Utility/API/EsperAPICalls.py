@@ -263,25 +263,38 @@ def setKiosk(frame, device, deviceInfo):
     if not appSelection or "pkgName" not in appSelection:
         return {}
     appToUse = appSelection["pkgName"]
+
+    deviceName = None
+    deviceId = None
+    aliasName = None
+    if hasattr(device, "device_name"):
+        aliasName = device.alias_name
+        deviceName = device.device_name
+        deviceId = device.id
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
+        aliasName = device["alias_name"]
+
     logString = (
-        str("--->" + str(device.device_name) + " " + str(device.alias_name))
+        str("--->" + str(deviceName) + " " + str(aliasName))
         + " -> Kiosk ->"
         + str(appToUse)
     )
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
-        stateStatus = setAppState(device.id, appToUse, state="SHOW")
+        stateStatus = setAppState(deviceId, appToUse, state="SHOW")
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
-    status = toggleKioskMode(frame, device.id, appToUse, True, timeout)
+    status = toggleKioskMode(frame, deviceId, appToUse, True, timeout)
     if status:
         if "Success" in str(status):
             logString = logString + " <success>"
         elif "Queued" in str(status):
             logString = (
                 logString
-                + " <warning, check back on the device (%s)>" % device.device_name
+                + " <warning, check back on the device (%s)>" % deviceName
             )
             warning = True
         else:
@@ -296,8 +309,8 @@ def setKiosk(frame, device, deviceInfo):
             postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
         if status and hasattr(status, "state"):
             entry = {
-                "Esper Name": device.device_name,
-                "Device Id": device.id,
+                "Esper Name": deviceName,
+                "Device Id": deviceId,
             }
             if hasattr(status, "id"):
                 entry["Command Id"] = status.id
@@ -307,37 +320,49 @@ def setKiosk(frame, device, deviceInfo):
             return entry
         elif status:
             return {
-                "Esper Name": device.device_name,
-                "Device Id": device.id,
+                "Esper Name": deviceName,
+                "Device Id": deviceId,
                 "Status": status,
             }
         else:
             return {
-                "Esper Name": device.device_name,
-                "Device Id": device.id,
+                "Esper Name": deviceName,
+                "Device Id": deviceId,
                 "Status": "Already Kiosk mode",
             }
+
 
 
 @api_tool_decorator()
 def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
+    deviceName = None
+    deviceId = None
+    aliasName = None
+    if hasattr(device, "device_name"):
+        aliasName = device.alias_name
+        deviceName = device.device_name
+        deviceId = device.id
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
+        aliasName = device["alias_name"]
     logString = (
-        str("--->" + str(device.device_name) + " " + str(device.alias_name))
+        str("--->" + str(deviceName) + " " + str(aliasName))
         + " -> Multi ->"
     )
     failed = False
     warning = False
     status = None
     if deviceInfo["Mode"] == "Kiosk":
-        status = toggleKioskMode(frame, device.id, {}, False)
+        status = toggleKioskMode(frame, deviceId, {}, False)
         if status:
             if "Success" in str(status):
                 logString = logString + " <success>"
             elif "Queued" in str(status):
                 logString = (
                     logString
-                    + " <warning, check back on the device (%s)>" % device.device_name
+                    + " <warning, check back on the device (%s)>" % deviceName
                 )
                 warning = True
             else:
@@ -354,8 +379,8 @@ def setMulti(frame, device, deviceInfo):
         postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
     if status and hasattr(status, "state"):
         entry = {
-            "Esper Name": device.device_name,
-            "Device Id": device.id,
+            "Esper Name": deviceName,
+            "Device Id": deviceId,
         }
         if hasattr(status, "id"):
             entry["Command Id"] = status.id
@@ -365,16 +390,17 @@ def setMulti(frame, device, deviceInfo):
         return entry
     elif status:
         return {
-            "Esper Name": device.device_name,
-            "Device Id": device.id,
+            "Esper Name": deviceName,
+            "Device Id": deviceId,
             "Status": status,
         }
     else:
         return {
-            "Esper Name": device.device_name,
-            "Device Id": device.id,
+            "Esper Name": deviceName,
+            "Device Id": deviceId,
             "Status": "Already Multi mode",
         }
+
 
 
 @api_tool_decorator()
@@ -573,6 +599,14 @@ def setAppState(
 @api_tool_decorator()
 def clearAppData(frame, device):
     json_resp = None
+    deviceName = None
+    deviceId = None
+    if hasattr(device, "device_name"):
+        deviceName = device.device_name
+        deviceId = device.id
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
     try:
         appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
         cmdArgs = {"package_name": appToUse}
@@ -581,7 +615,7 @@ def clearAppData(frame, device):
             reqData = {
                 "command_type": "DEVICE",
                 "command_args": cmdArgs,
-                "devices": [device.id],
+                "devices": [deviceId],
                 "groups": [],
                 "device_type": Globals.CMD_DEVICE_TYPE,
                 "command": "CLEAR_APP_DATA",
@@ -593,20 +627,20 @@ def clearAppData(frame, device):
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
-                    % (appToUse, device.device_name)
+                    % (appToUse, deviceName)
                 )
         else:
             frame.Logging(
                 "ERROR: Failed to send Clear %s App Data Command to %s"
                 % (
                     frame.sidePanel.selectedAppEntry["name"],
-                    device.device_name,
+                    deviceName,
                 )
             )
     except Exception as e:
         ApiToolLog().LogError(e)
         frame.Logging(
-            "ERROR: Failed to send Clear App Data Command to %s" % (device.device_name)
+            "ERROR: Failed to send Clear App Data Command to %s" % (deviceName)
         )
         postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
     return json_resp

@@ -1604,14 +1604,26 @@ class NewFrameLayout(wx.Frame):
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
-            name = "%s %s %s %s" % (
-                device.hardware_info["manufacturer"],
-                device.hardware_info["model"],
-                device.device_name,
-                device.alias_name if device.alias_name else "",
-            )
+            name = ""
+            if hasattr(device, "hardware_info"):
+                name = "%s %s %s %s" % (
+                    device.hardware_info["manufacturer"],
+                    device.hardware_info["model"],
+                    device.device_name,
+                    device.alias_name if device.alias_name else "",
+                )
+            else:
+                name = "%s %s %s %s" % (
+                    device["hardwareInfo"]["manufacturer"],
+                    device["hardwareInfo"]["model"],
+                    device["device_name"],
+                    device["alias_name"] if device["alias_name"] else "",
+                )
             if name and name not in self.sidePanel.devices:
-                self.sidePanel.devices[name] = device.id
+                if hasattr(device, "id"):
+                    self.sidePanel.devices[name] = device.id
+                else:
+                    self.sidePanel.devices[name] = device["id"]
 
     @api_tool_decorator()
     def PopulateApps(self):
@@ -2127,6 +2139,12 @@ class NewFrameLayout(wx.Frame):
             device = entry[0]
             deviceInfo = entry[1]
 
+            deviceId = None
+            if hasattr(device, "id"):
+                deviceId = device.id
+            else:
+                deviceId = device["id"]
+
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
@@ -2197,7 +2215,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "DISABLE"),
+                    (deviceId, appToUse, appVersion, "DISABLE"),
                     name="SetAppDisable",
                 )
                 thread.start()
@@ -2208,7 +2226,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "HIDE"),
+                    (deviceId, appToUse, appVersion, "HIDE"),
                     name="SetAppHide",
                 )
                 thread.start()
@@ -2219,7 +2237,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "SHOW"),
+                    (deviceId, appToUse, appVersion, "SHOW"),
                     name="SetAppShow",
                 )
                 thread.start()
@@ -2228,7 +2246,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     removeNonWhitelisted,
-                    (device.id, deviceInfo),
+                    (deviceId, deviceInfo),
                     name="removeNonWhitelisted",
                 )
                 thread.start()
@@ -2237,7 +2255,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     installAppOnDevices,
-                    (appToUse, appVersion, device.id),
+                    (appToUse, appVersion, deviceId),
                     name="installAppOnDevices",
                 )
                 thread.start()
@@ -2246,7 +2264,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     uninstallAppOnDevice,
-                    (appToUse, device.id),
+                    (appToUse, deviceId),
                     name="uninstallAppOnDevice",
                 )
                 thread.start()

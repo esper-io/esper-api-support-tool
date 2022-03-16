@@ -220,7 +220,7 @@ def joinThreadList(threads):
 
 
 @api_tool_decorator(locks=[])
-def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeout=10):
+def limitActiveThreads(threads, max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2), timeout=-1, breakEnabled=True):
     if threads:
         numAlive = 0
         for thread in threads:
@@ -230,7 +230,10 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeo
             for thread in threads:
                 if thread.is_alive():
                     thread.join()
-                    break
+                    if breakEnabled:
+                        if timeout > -1:
+                            time.sleep(timeout)
+                        break
 
 
 def ipv6Tomac(ipv6):

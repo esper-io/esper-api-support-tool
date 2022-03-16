@@ -8,10 +8,11 @@ from Common.decorator import api_tool_decorator
 from Utility import EventUtility, wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
-from Utility.Resource import joinThreadList, limitActiveThreads, postEventToFrame
+from Utility.Resource import getHeader, joinThreadList, limitActiveThreads, postEventToFrame
 
 from esperclient.rest import ApiException
 
+from Utility.Web.WebRequests import performGetRequestWithRetry
 
 @api_tool_decorator()
 def getDeviceDetail(deviceId):
@@ -34,6 +35,7 @@ def setdevicetags(deviceid, tags):
     if json_resp and "tags" in json_resp:
         tags = json_resp["tags"]
     return tags
+
 
 
 @api_tool_decorator()
@@ -66,37 +68,18 @@ def getAllDevices(
 def get_all_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                group=groupToUse,
-                limit=limit,
-                offset=offset,
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getAllDevices",
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
-                raise e
-            if hasattr(e, "status") and e.status == 504:
-                limit = int(int(limit) / 4)
-                Globals.limit = limit
-                postEventToFrame(
-                    EventUtility.myEVT_LOG,
-                    "---> Encountered a 504 error, retrying with lower limit: %s"
-                    % limit,
-                )
-            time.sleep(Globals.RETRY_SLEEP)
-    if type(responses) == list:
-        responses.append(api_response)
+    url = (
+        Globals.BASE_REQUEST_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+        )
+        + "device/?limit=%s&offset=%s" % (limit, offset)
+    )
+    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+    if api_response.status_code < 300:
+        api_response = api_response.json()
+        if type(responses) == list:
+            responses.append(api_response)
     return api_response
 
 
@@ -106,9 +89,15 @@ def get_all_devices(
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
         devices = getAllDevicesFromOffsets(response, groupToUse, maxAttempt)
-        response.results = response.results + devices
-        response.next = None
-        response.prev = None
+        if hasattr(response, "results"):
+            response.results = response.results + devices
+            response.next = None
+            response.prev = None
+        elif type(response) is dict and "results" in response:
+            response["results"] = response["results"] + devices
+            response["next"] = None
+            response["prev"] = None
+            print(len(response["results"]))
     return response
 
 
@@ -126,14 +115,16 @@ def fetchDevicesFromGroup(
         )
         thread.start()
         threads.append(thread)
-        limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT / 4))
+        limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
     joinThreadList(threads)
 
     for thread in threads:
         if api_response is None:
             api_response = thread.result
-        else:
+        elif hasattr(thread.result, "results"):
             api_response.results += thread.result.results
+        else:
+            api_response["results"] += thread.result["results"]
 
     return api_response
 
@@ -160,11 +151,20 @@ def getAllDevicesFromOffsets(
 ):
     threads = []
     responses = []
-    count = api_response.count
-    if api_response.next:
-        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+    count = None
+    if hasattr(api_response, "count"):
+        count = api_response.count
+    elif type(api_response) is dict and "count" in api_response:
+        count = api_response["count"]
+    apiNext = None
+    if hasattr(api_response, "next"):
+        apiNext = api_response.next
+    elif type(api_response) is dict and "next" in api_response:
+        apiNext = api_response["next"]
+    if apiNext:
+        respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
-        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+        respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
             thread = threading.Thread(
                 target=get_all_devices_helper,
@@ -173,8 +173,10 @@ def getAllDevicesFromOffsets(
             threads.append(thread)
             thread.start()
             respOffsetInt += int(respLimit)
-            limitActiveThreads(threads)
-        remainder = count % int(respLimit)
+            limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
+        joinThreadList(threads)
+        obtained = sum(len(v["results"]) for v in responses) + int(respOffset)
+        remainder = count - obtained
         if remainder > 0:
             respOffsetInt -= int(respLimit)
             respOffsetInt += 1
@@ -187,8 +189,10 @@ def getAllDevicesFromOffsets(
             limitActiveThreads(threads)
     joinThreadList(threads)
     for resp in responses:
-        if resp and resp.results:
+        if resp and hasattr(resp, "results") and resp.results:
             devices += resp.results
+        elif type(resp) is dict and "results" in resp and resp["results"]:
+            devices += resp["results"]
     return devices
 
 

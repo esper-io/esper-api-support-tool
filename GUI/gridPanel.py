@@ -877,10 +877,11 @@ class GridPanel(wx.Panel):
         """ Apply a Text or Bg Color to a Grid Row """
         acquireLocks([Globals.grid1_lock])
         statusIndex = self.grid1HeaderLabels.index("Status")
+        deviceName = device.device_name if hasattr(device, "device_name") else device["device_name"]
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
-                if (device and esperName == device.device_name) or applyAll:
+                if (device and esperName == deviceName) or applyAll:
                     for colNum in range(self.grid_1.GetNumberCols()):
                         if (
                             colNum < self.grid_1.GetNumberCols()
@@ -1337,7 +1338,7 @@ class GridPanel(wx.Panel):
             deviceListing = list(
                 filter(
                     lambda x: (
-                        x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
+                        x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name if hasattr(device, "device_name") else device["device_name"]
                     ),
                     self.grid_1_contents,
                 )
@@ -1508,7 +1509,7 @@ class GridPanel(wx.Panel):
             for app in apps["results"]:
                 if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
                     info = {
-                        "Esper Name": device.device_name,
+                        "Esper Name": device.device_name if hasattr(device, "device_name") else device["device_name"],
                         "Group": deviceInfo["groups"],
                         "Application Name": app["app_name"],
                         "Application Type": app["app_type"],
@@ -1547,7 +1548,7 @@ class GridPanel(wx.Panel):
         for app in apps["results"]:
             if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
                 info = {
-                    "Esper Name": device.device_name,
+                    "Esper Name": device.device_name if hasattr(device, "device_name") else device["device_name"],
                     "Group": deviceInfo["groups"],
                     "Application Name": app["app_name"],
                     "Application Type": app["app_type"],
