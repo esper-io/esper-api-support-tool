@@ -792,7 +792,7 @@ def getAllDeviceInfo(frame):
     threads = []
     if devices:
         number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
+        maxThread = int(Globals.MAX_THREAD_COUNT)
         splitResults = splitListIntoChunks(devices, maxThread=maxThread)
 
         for chunk in splitResults:
