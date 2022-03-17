@@ -37,7 +37,6 @@ def setdevicetags(deviceid, tags):
     return tags
 
 
-
 @api_tool_decorator()
 def getAllDevices(
     groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY
