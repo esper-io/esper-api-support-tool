@@ -128,7 +128,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
     number_of_devices = 0
-    maxThread = int(Globals.MAX_THREAD_COUNT)
+    maxThread = int(Globals.MAX_THREAD_COUNT / 2)
 
     getApps = (
         action == GeneralActions.GENERATE_APP_REPORT.value
@@ -791,7 +791,7 @@ def getAllDeviceInfo(frame):
     threads = []
     if devices:
         number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT)
+        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
         splitResults = splitListIntoChunks(devices, maxThread=maxThread)
 
         for chunk in splitResults:
