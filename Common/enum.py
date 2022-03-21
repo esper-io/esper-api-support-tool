@@ -6,7 +6,13 @@ from enum import Enum
 
 
 class GeneralActions(Enum):
+    # REPORTS
     SHOW_ALL_AND_GENERATE_REPORT = 1
+    GENERATE_DEVICE_REPORT = 14
+    GENERATE_APP_REPORT = 12
+    GENERATE_INFO_REPORT = 13
+
+    # Actions
     SET_DEVICE_MODE = 1.5
     SET_KIOSK = 2
     SET_MULTI = 3
@@ -16,9 +22,6 @@ class GeneralActions(Enum):
     MOVE_GROUP = 9
     INSTALL_APP = 10
     UNINSTALL_APP = 11
-    GENERATE_APP_REPORT = 12
-    GENERATE_INFO_REPORT = 13
-    GENERATE_DEVICE_REPORT = 14
 
 
 class GridActions(Enum):

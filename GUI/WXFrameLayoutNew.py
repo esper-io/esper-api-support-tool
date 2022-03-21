@@ -3288,3 +3288,6 @@ class NewFrameLayout(wx.Frame):
     def onGeofence(self, event):
         with GeofenceDialog() as dlg:
             dlg.ShowModal()
+
+    def onCloneBP(self, event):
+        pass
