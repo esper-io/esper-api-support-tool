@@ -217,8 +217,9 @@ class GridPanel(wx.Panel):
             numRows = self.grid_1.GetNumberRows()
             indx = self.grid1HeaderLabels.index("Applications")
             for row in range(numRows):
-                data = self.grid_1_contents[row]
-                self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
+                if self.grid_1.GetNumberRows() > row:
+                    data = self.grid_1_contents[row]
+                    self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
 
     @api_tool_decorator()
     def fillNetworkGridHeaders(self):

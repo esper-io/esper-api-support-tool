@@ -320,7 +320,7 @@ def fillInDeviceInfoDict(chunk, number_of_devices):
 
 @api_tool_decorator()
 def processDevices(
-    chunk, number_of_devices, action, getApps=True, getLatestEvents=True
+    chunk, number_of_devices, action, getApps=True, getLatestEvents=True,
 ):
     """ Try to obtain more device info for a given device """
     deviceList = {}
@@ -767,7 +767,6 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
 
 def clearKnownGroups():
     Globals.knownGroups.clear()
-
 
 def getAllDeviceInfo(frame):
     devices = []
