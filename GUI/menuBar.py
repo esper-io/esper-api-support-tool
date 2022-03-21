@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled
 from Utility.EastUtility import processCollectionDevices
 from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
@@ -96,10 +97,22 @@ class ToolMenuBar(wx.MenuBar):
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
         runMenu.Append(wx.ID_SEPARATOR)
+
         cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = runMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
+        cloneBlueprint = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
+        self.cloneBP = runMenu.Append(cloneBlueprint)
+        self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
+        self.cloneBP.Hide()
+        if hasattr(self.clone, "Hide"):
+            self.clone.Show()
+            self.cloneBP.Hide()
+        else:
+            self.clone.Enable(True)
+            self.cloneBP.Enable(False)
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.appSubMenu = wx.Menu()
         self.uploadApp = self.appSubMenu.Append(wx.ID_ANY, "Upload App (APK)")
         self.uploadApp.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/upload.png")))
@@ -251,6 +264,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
@@ -444,6 +458,16 @@ class ToolMenuBar(wx.MenuBar):
                 self.collectionSubMenu.Hide()
             else:
                 self.collectionSubMenu.Enable(False)
+
+    @api_tool_decorator()
+    def checkBlueprintsEnabled(self):
+        if not checkBlueprintsIsEnabled():
+            if hasattr(self.clone, "Hide"):
+                self.clone.Hide()
+                self.cloneBP.Show()
+            else:
+                self.clone.Enable(False)
+                self.cloneBP.Enable(True)
 
     @api_tool_decorator()
     def AddUser(self, event):
