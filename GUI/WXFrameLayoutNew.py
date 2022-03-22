@@ -2115,7 +2115,6 @@ class NewFrameLayout(wx.Frame):
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
         threads = []
-        limitThreads = []
         appToUse = None
         appVersion = None
         if self.sidePanel.selectedAppEntry:
