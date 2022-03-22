@@ -19,6 +19,7 @@ from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
+from ratelimit import limits, sleep_and_retry
 
 
 def resourcePath(relative_path):
@@ -401,3 +402,9 @@ def getHeader():
         }
     else:
         return {}
+
+
+@sleep_and_retry
+@limits(calls=10, period=1)
+def enforceRateLimit():
+    pass
