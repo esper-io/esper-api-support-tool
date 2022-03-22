@@ -407,4 +407,6 @@ def getHeader():
 @sleep_and_retry
 @limits(calls=10, period=1)
 def enforceRateLimit():
+    """ Decorator only works for a particular function.
+     To apply rate limiting more globally, we make them call this function."""
     pass
