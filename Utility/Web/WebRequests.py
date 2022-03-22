@@ -18,10 +18,15 @@ def performGetRequestWithRetry(
             )
             if resp.status_code < 300:
                 break
+            if resp.status_code == 429:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
     return resp
 
 
@@ -38,10 +43,15 @@ def performPatchRequestWithRetry(
             )
             if resp.status_code < 300:
                 break
+            if resp.status_code == 429:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
     return resp
 
 
@@ -58,10 +68,15 @@ def performPutRequestWithRetry(
             )
             if resp.status_code < 300:
                 break
+            if resp.status_code == 429:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
     return resp
 
 
@@ -78,10 +93,15 @@ def performDeleteRequestWithRetry(
             )
             if resp.status_code < 300:
                 break
+            if resp.status_code == 429:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
     return resp
 
 
@@ -100,8 +120,13 @@ def performPostRequestWithRetry(
             )
             if resp.status_code < 300:
                 break
+            if resp.status_code == 429:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
     return resp
