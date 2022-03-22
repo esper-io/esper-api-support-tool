@@ -2,7 +2,7 @@
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from Utility.EastUtility import processCollectionDevices
-from Utility.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
@@ -14,7 +14,7 @@ import Common.Globals as Globals
 import platform
 
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 from Utility.Resource import (
     downloadFileFromUrl,
@@ -53,21 +53,20 @@ class ToolMenuBar(wx.MenuBar):
         self.fileOpenConfig = fileMenu.Append(foc)
 
         fileMenu.Append(wx.ID_SEPARATOR)
-        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save Device and Network Info \tCtrl+S")
+        fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save All Reports\tCtrl+S")
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
+        saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
+        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
+        self.fileSaveApps = fileMenu.Append(saveApps)
+
+        fileMenu.Append(wx.ID_SEPARATOR)
         fas = wx.MenuItem(
             fileMenu, wx.ID_SAVEAS, "&Fetch Selected and Save Device Info\tCtrl+Alt+S"
         )
         fas.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
         self.fileSaveAs = fileMenu.Append(fas)
-
-        saveApps = wx.MenuItem(
-            fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S"
-        )
-        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
-        self.fileSaveApps = fileMenu.Append(saveApps)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fi = wx.MenuItem(fileMenu, wx.ID_EXIT, "&Quit\tCtrl+Q")
@@ -149,15 +148,22 @@ class ToolMenuBar(wx.MenuBar):
         self.collectionSubMenu.SetBitmap(
             wx.Bitmap(resourcePath("Images/Menu/collections.png"))
         )
+        runMenu.Append(wx.ID_SEPARATOR)
 
         bulkReset = wx.MenuItem(runMenu, wx.ID_ANY, "&Bulk Factory Reset\t")
         self.bulkFactoryReset = runMenu.Append(bulkReset)
         runMenu.Append(wx.ID_SEPARATOR)
 
+        geo = wx.MenuItem(runMenu, wx.ID_RETRY, "&Create Geofence")
+        self.geoMenu = runMenu.Append(geo)
+        runMenu.Append(wx.ID_SEPARATOR)
+
         # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "&Toggle Grid Column Visibility\tCtrl+Shift+V")
+            wx.MenuItem(
+                viewMenu, wx.ID_ANY, "&Toggle Grid Column Visibility\tCtrl+Shift+V"
+            )
         )
         self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         # self.networkColumns = viewMenu.Append(
@@ -182,6 +188,7 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
         self.clearGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clear.png")))
+        viewMenu.Append(wx.ID_SEPARATOR)
 
         # Help Menu
         helpMenu = wx.Menu()
@@ -252,7 +259,9 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
         self.Bind(
-            wx.EVT_MENU, self.parentFrame.gridPanel.onColumnVisibility, self.deviceColumns
+            wx.EVT_MENU,
+            self.parentFrame.gridPanel.onColumnVisibility,
+            self.deviceColumns,
         )
         # self.Bind(
         #     wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
@@ -266,7 +275,10 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
         self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset)
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset
+        )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -388,7 +400,12 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="eqlIterateThroughDeviceList")
+                    thread = wxThread.GUIThread(
+                        self,
+                        processCollectionDevices,
+                        deviceListResp,
+                        name="eqlIterateThroughDeviceList",
+                    )
                     thread.start()
             else:
                 self.parentFrame.setCursorDefault()
@@ -409,7 +426,12 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(self, processCollectionDevices, deviceListResp, name="collectionIterateThroughDeviceList")
+                    thread = wxThread.GUIThread(
+                        self,
+                        processCollectionDevices,
+                        deviceListResp,
+                        name="collectionIterateThroughDeviceList",
+                    )
                     thread.start()
             else:
                 self.parentFrame.setCursorDefault()
@@ -418,8 +440,10 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def checkCollectionEnabled(self):
         if not checkCollectionIsEnabled():
-            self.collection.Hide()
-            self.eqlQuery.Hide()
+            if hasattr(self.collectionSubMenu, "Hide"):
+                self.collectionSubMenu.Hide()
+            else:
+                self.collectionSubMenu.Enable(False)
 
     @api_tool_decorator()
     def AddUser(self, event):

@@ -19,6 +19,7 @@ build/*
 
 # Log files
 *.log
+*.json
 
 # Package files
 *.jar
@@ -45,6 +46,7 @@ Thumbs.db
 *.war
 *.pdf
 *.zip
+*.7z
 
 # Large media files
 *.mp4
@@ -56,6 +58,7 @@ Thumbs.db
 
 # Excel
 *.csv
+*.xlsx
 
 # VS Code Settings
 .vscode/settings.json

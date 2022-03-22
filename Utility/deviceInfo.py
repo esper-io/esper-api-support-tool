@@ -29,6 +29,7 @@ def getSecurityPatch(device, deviceInfo=None):
                 patch_ver = device["securityPatchLevel"]
     return patch_ver
 
+
 def getWifiStatus(deviceInfo):
     wifi_event = None
     if "network_event" in deviceInfo:
@@ -133,6 +134,7 @@ def constructNetworkInfo(device, deviceInfo):
                 networkInfo[key] = ""
 
     return networkInfo
+
 
 def getDeviceName(device):
     device_name = " "

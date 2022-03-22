@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from Common.enum import Color, GeneralActions, GridActions
+from Common.enum import GeneralActions, GridActions
 from Common.decorator import api_tool_decorator
 import csv
 import wx
@@ -380,7 +380,7 @@ class SidePanel(wx.Panel):
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
-                or self.parentFrame.preferences["enableDevice"] == True
+                or self.parentFrame.preferences["enableDevice"] is True
             ):
                 self.parentFrame.setCursorBusy()
                 self.devices = {}

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import copy
-from Utility.EsperAPICalls import getAllDevices, getAllGroups
+from Utility.API.DeviceUtility import getAllDevices
+from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
@@ -153,6 +154,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
         self.checkPageButton()
 
+        self.Fit()
+
     @api_tool_decorator()
     def onClose(self, event):
         if self.IsModal():
@@ -209,7 +212,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.selected.remove(selectionStr)
         else:
             checked.append(selection)
-            if not selectionStr in self.selected:
+            if selectionStr not in self.selected:
                 self.selected.append(selectionStr)
         self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
@@ -228,7 +231,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         selectionStr = self.check_list_box_1.GetString(selection)
         if selectionStr in self.selected:
             self.selected.remove(selectionStr)
-        elif not selectionStr in self.selected:
+        elif selectionStr not in self.selected:
             self.selected.append(selectionStr)
 
         if "All devices" in self.selected:
@@ -254,7 +257,9 @@ class MultiSelectSearchDlg(wx.Dialog):
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             elif "device" in self.label.lower():
-                wxThread.GUIThread(self, self.selectAllDevices, None, name="selectAllDevices").start()
+                wxThread.GUIThread(
+                    self, self.selectAllDevices, None, name="selectAllDevices"
+                ).start()
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -402,14 +407,26 @@ class MultiSelectSearchDlg(wx.Dialog):
     def processDevices(self, chunk):
         nameList = []
         for device in chunk:
-            name = "%s %s %s %s" % (
-                device.hardware_info["manufacturer"],
-                device.hardware_info["model"],
-                device.device_name,
-                device.alias_name if device.alias_name else "",
-            )
-            if name and not name in self.Parent.sidePanel.devicesExtended:
-                self.Parent.sidePanel.devicesExtended[name] = device.id
+            name = ""
+            if hasattr(device, "hardware_info"):
+                name = "%s %s %s %s" % (
+                    device.hardware_info["manufacturer"],
+                    device.hardware_info["model"],
+                    device.device_name,
+                    device.alias_name if device.alias_name else "",
+                )
+            else:
+                name = "%s %s %s %s" % (
+                    device["hardwareInfo"]["manufacturer"],
+                    device["hardwareInfo"]["model"],
+                    device["device_name"],
+                    device["alias_name"] if device["alias_name"] else "",
+                )
+            if name and name not in self.Parent.sidePanel.devicesExtended:
+                if hasattr(device, "id"):
+                    self.Parent.sidePanel.devicesExtended[name] = device.id
+                else:
+                    self.Parent.sidePanel.devicesExtended[name] = device["id"]
             if name not in nameList:
                 nameList.append(name)
         return nameList
@@ -425,10 +442,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if self.resp.count > len(self.originalChoices[0]):
             resp = getAllDevices(
-                self.group,
-                limit=len(self.resp.results),
-                offset=0,
-                fetchAll=True
+                self.group, limit=len(self.resp.results), offset=0, fetchAll=True
             )
             if resp:
                 self.check_list_box_1.Clear()

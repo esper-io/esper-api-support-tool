@@ -15,7 +15,7 @@ import wx
 def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     joinThreadList(threads)
-    
+
     initPercent = 0
     if Globals.frame.gauge:
         initPercent = Globals.frame.gauge.GetValue()

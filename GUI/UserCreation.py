@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+
 import json
-from requests.api import head
-from wx.core import YES
-from Utility.EsperAPICalls import createNewUser, deleteUser, modifyUser
 import os
-from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
+import csv
+import wx
+import wx.grid
+
+from Common.decorator import api_tool_decorator
+
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+
+from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 from Utility.Resource import (
     createNewFile,
     displayMessageBox,
     postEventToFrame,
 )
-import csv
-import wx
-import wx.grid
 
 
 class UserCreation(wx.Frame):

@@ -1,32 +1,30 @@
 #!/usr/bin/env python
 
-import requests
 import esperclient
 import os
 import wx
-import time
+from Utility.API.AppUtilities import (
+    getAllAppVersionsForHost,
+    getAllApplicationsForHost,
+    uploadApplicationForHost,
+)
+from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 
 import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 import Common.Globals as Globals
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     download,
     deleteFile,
     joinThreadList,
+)
+from Utility.Resource import postEventToFrame
+from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
-)
-from Utility.Resource import postEventToFrame
-
-from Utility.EsperAPICalls import (
-    getAllAppVersionsForHost,
-    getAllApplicationsForHost,
-    createDeviceGroupForHost,
-    getDeviceGroupsForHost,
-    uploadApplicationForHost,
 )
 
 from datetime import datetime
@@ -300,7 +298,7 @@ class EsperTemplateUtil:
                 apps = getAllApplicationsForHost(
                     self.getEsperConfig(self.toApi, self.toKey), self.toEntId
                 ).results
-            newTemplate["application"]["apps"] = []
+            # newTemplate["application"]["apps"] = []
             self.processApplications(template, newTemplate, apps)
         if (
             not newTemplate["application"]["startOnBoot"]
@@ -350,19 +348,49 @@ class EsperTemplateUtil:
             else:
                 found = False
                 for toApp in apps:
-                    if (
-                        toApp.application_name == app["applicationName"]
-                        or toApp.package_name == app["packageName"]
-                    ):
-                        found = True
-                if not found:
-                    upload = wxThread.GUIThread(
-                        self.parent,
-                        self.uploadMissingApk,
-                        (app, template, newTemplate, config, entId),
-                    )
-                    missingAppThreads.append(upload)
-                    upload.start()
+                    if toApp.package_name == app["packageName"]:
+                        appVersions = getAllAppVersionsForHost(
+                            self.getEsperConfig(self.toApi, self.toKey),
+                            self.toEntId,
+                            toApp.id,
+                        )
+                        if appVersions and hasattr(appVersions, "results"):
+                            for version in appVersions.results:
+                                if version.version_code == app[
+                                    "versionName"
+                                ] and version.build_number == str(app["versionCode"]):
+                                    found = True
+                                    newTemplate = self.addAppVersionToTemplate(
+                                        app, newTemplate, toApp, version.id
+                                    )
+                                    break
+                        if not found:
+                            upload = wxThread.GUIThread(
+                                self.parent,
+                                self.uploadMissingApk,
+                                (app, template, newTemplate, config, entId),
+                            )
+                            missingAppThreads.append(upload)
+                            upload.start()
+
+    def addAppVersionToTemplate(self, app, template, toApp, appVersion):
+        if (
+            ("isGPlay" not in app)
+            or ("isGPlay" in app and not app["isGPlay"])
+            or ("is_g_play" not in app)
+            or ("is_g_play" in app and not app["is_g_play"])
+        ):
+            template["application"]["apps"].append(
+                {
+                    "is_g_play": False,
+                    "id": toApp.id,
+                    "app_version": appVersion,
+                    "appVersionId": appVersion,
+                    "package_name": app["packageName"],
+                    "installationRule": app["installationRule"],
+                }
+            )
+        return template
 
     def processApplications(self, template, newTemplate, apps):
         for app in template["template"]["application"]["apps"]:
@@ -401,13 +429,20 @@ class EsperTemplateUtil:
                     )
             else:
                 for toApp in apps:
-                    if (
-                        toApp.application_name == app["applicationName"]
-                        or toApp.package_name == app["packageName"]
-                    ):
+                    if toApp.package_name == app["packageName"]:
+                        appMatch = list(
+                            filter(
+                                lambda x: x["package_name"] == app["packageName"],
+                                newTemplate["application"]["apps"],
+                            )
+                        )
+                        if appMatch:
+                            continue
+
                         versionId = list(
                             filter(
-                                lambda x: x.version_code == app["versionName"],
+                                lambda x: x.version_code == app["versionName"]
+                                and x.build_number == app["versionCode"],
                                 toApp.versions,
                             )
                         )
@@ -555,7 +590,7 @@ class EsperTemplateUtil:
             raise e
 
     @api_tool_decorator()
-    def createTemplate(self, link, key, enterprise_id, template):
+    def createTemplate(self, link, key, enterprise_id, template, level=0):
         try:
             headers = {
                 "Authorization": f"Bearer {key}",
@@ -565,7 +600,7 @@ class EsperTemplateUtil:
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
             if hasattr(resp, "status_code"):
-                if resp.status_code > 299:
+                if resp.status_code > 299 and level > 0:
                     postEventToFrame(
                         eventUtil.myEVT_MESSAGE_BOX,
                         (str(json_resp), wx.ICON_ERROR),

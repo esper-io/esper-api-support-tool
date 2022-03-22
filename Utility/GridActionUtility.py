@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
-from Utility.AppUtilities import installAppOnDevices, uninstallAppOnDevice
+from Utility.API.AppUtilities import (
+    installAppOnDevices,
+    uninstallAppOnDevice,
+)
 import time
 
 import esperclient
-from Common import Globals
+import Common.Globals as Globals
 
-from Utility.ApiToolLogging import ApiToolLog
+import Utility.API.EsperAPICalls as apiCalls
+import Utility.EventUtility as eventUtil
+
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
     isApiKey,
     joinThreadList,
@@ -15,13 +22,12 @@ from Utility.Resource import (
     splitListIntoChunks,
 )
 from Utility import wxThread
-from Utility.GroupUtility import moveGroup
-import Utility.EsperAPICalls as apiCalls
+from Utility.API.GroupUtility import getAllGroups, moveGroup
 
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
-import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
+
+
 
 
 @api_tool_decorator()
@@ -43,6 +49,8 @@ def iterateThroughGridRows(frame, action):
         installApp(frame)
     if action == GridActions.UNINSTALL_APP.value:
         uninstallApp(frame)
+    if action == GridActions.SET_DEVICE_DISABLED.value:
+        setDevicesDisabled()
 
 
 @api_tool_decorator()
@@ -70,65 +78,20 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     devices = []
     for row in rowTaglist.keys():
         entry = rowTaglist[row]
+        identifier = entry
 
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
-        api_response = None
-        identifier = None
-        for attempt in range(maxAttempt):
-            try:
-                if "esperName" in entry.keys():
-                    identifier = entry["esperName"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        name=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "sn" in entry.keys():
-                    identifier = entry["sn"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        serial=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "csn" in entry.keys():
-                    identifier = entry["csn"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        search=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "imei1" in entry.keys():
-                    identifier = entry["imei1"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                elif "imei2" in entry.keys():
-                    identifier = entry["imei2"]
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        imei=identifier,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllDevices",
-                    api_instance.get_all_devices,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
-                    raise e
-                time.sleep(Globals.RETRY_SLEEP)
+        if "esperName" in entry.keys():
+            identifier = entry["esperName"]
+        elif "sn" in entry.keys():
+            identifier = entry["sn"]
+        elif "csn" in entry.keys():
+            identifier = entry["csn"]
+        elif "imei1" in entry.keys():
+            identifier = entry["imei1"]
+        elif "imei2" in entry.keys():
+            identifier = entry["imei2"]
+
+        api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
             devices += api_response.results
             api_response = None
@@ -235,47 +198,61 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     succeeded = 0
     logString = ""
     status = None
+    deviceName = None
+    deviceId = None
+    aliasName = None
+    hardware = None
+    if hasattr(device, "device_name"):
+        aliasName = device.alias_name
+        deviceName = device.device_name
+        deviceId = device.id
+        hardware = device.hardware_info
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
+        aliasName = device["alias_name"]
+        hardware = device["hardwareInfo"]
     # Alias modification
     if (
-        device.device_name in aliasDic.keys()
+        deviceName in aliasDic.keys()
         or (
-            "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in aliasDic.keys()
+            "serialNumber" in hardware
+            and hardware["serialNumber"] in aliasDic.keys()
         )
         or (
-            "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in aliasDic.keys()
+            "customSerialNumber" in hardware
+            and hardware["customSerialNumber"] in aliasDic.keys()
         )
     ):
         newName = None
-        if device.device_name in aliasDic:
-            newName = aliasDic[device.device_name]
+        if deviceName in aliasDic:
+            newName = aliasDic[deviceName]
         elif (
-            "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in aliasDic
+            "serialNumber" in hardware
+            and hardware["serialNumber"] in aliasDic
         ):
-            newName = aliasDic[device.hardware_info["serialNumber"]]
+            newName = aliasDic[hardware["serialNumber"]]
         elif (
-            "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in aliasDic
+            "customSerialNumber" in hardware
+            and hardware["customSerialNumber"] in aliasDic
         ):
-            newName = aliasDic[device.hardware_info["customSerialNumber"]]
+            newName = aliasDic[hardware["customSerialNumber"]]
         logString = str(
-            "--->" + str(device.device_name) + " : " + str(newName) + "--->"
+            "--->" + str(deviceName) + " : " + str(newName) + "--->"
         )
-        if not newName and not device.alias_name:
+        if not newName and not aliasName:
             status = {
-                "Device Name": device.device_name,
-                "Device Id": device.id,
+                "Device Name": deviceName,
+                "Device Id": deviceId,
                 "Alias Status": "No alias to set",
             }
             return (numNewName, succeeded, status)
-        if newName != str(device.alias_name):
+        if newName != str(aliasName):
             numNewName += 1
             status = ""
             try:
                 ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-                status = apiCalls.setdevicename(frame, device.id, newName, ignoreQueued)
+                status = apiCalls.setdevicename(frame, deviceId, newName, ignoreQueued)
             except Exception as e:
                 ApiToolLog().LogError(e)
             if "Success" in str(status):
@@ -293,8 +270,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
         else:
             logString = logString + " (Alias Name already set)"
             status = {
-                "Device Name": device.device_name,
-                "Device Id": device.id,
+                "Device Name": deviceName,
+                "Device Id": deviceId,
                 "Alias Status": "Alias Name already set",
             }
         if "Success" in logString or "Queued" in logString:
@@ -306,8 +283,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
         postEventToFrame(eventUtil.myEVT_LOG, logString)
     if type(status) != dict:
         status = {
-            "Device Name": device.device_name,
-            "Device Id": device.id,
+            "Device Name": deviceName,
+            "Device Id": deviceId,
             "Alias Status": status if status else "No alias to set",
         }
     return (numNewName, succeeded, status)
@@ -317,54 +294,65 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
 def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
+    deviceName = None
+    deviceId = None
+    hardware = None
+    if hasattr(device, "device_name"):
+        deviceName = device.device_name
+        deviceId = device.id
+        hardware = device.hardware_info
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
+        hardware = device["hardwareInfo"]
     if (
-        device.device_name in tagsFromGrid.keys()
+        deviceName in tagsFromGrid.keys()
         or (
-            "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in tagsFromGrid.keys()
+            "serialNumber" in hardware
+            and hardware["serialNumber"] in tagsFromGrid.keys()
         )
         or (
-            "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in tagsFromGrid.keys()
+            "customSerialNumber" in hardware
+            and hardware["customSerialNumber"] in tagsFromGrid.keys()
         )
     ):
         tagsFromCell = None
         key = None
-        if device.device_name in tagsFromGrid:
-            key = device.device_name
+        if deviceName in tagsFromGrid:
+            key = deviceName
         elif (
-            "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in tagsFromGrid
+            "serialNumber" in hardware
+            and hardware["serialNumber"] in tagsFromGrid
         ):
-            key = device.hardware_info["serialNumber"]
+            key = hardware["serialNumber"]
         elif (
-            "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in tagsFromGrid
+            "customSerialNumber" in hardware
+            and hardware["customSerialNumber"] in tagsFromGrid
         ):
-            key = device.hardware_info["customSerialNumber"]
+            key = hardware["customSerialNumber"]
         tagsFromCell = tagsFromGrid[key]
         try:
-            tags = apiCalls.setdevicetags(device.id, tagsFromCell)
+            tags = setdevicetags(deviceId, tagsFromCell)
         except Exception as e:
             ApiToolLog().LogError(e)
         if tags == tagsFromGrid[key]:
             changeSucceeded += 1
         postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
-        postEventToFrame(eventUtil.myEVT_UPDATE_TAG_CELL, (device.device_name, tags))
+        postEventToFrame(eventUtil.myEVT_UPDATE_TAG_CELL, (deviceName, tags))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
             int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         status = {
-            "Device Name": device.device_name,
-            "Device Id": device.id,
+            "Device Name": deviceName,
+            "Device Id": deviceId,
             "Tags": tags,
         }
     return changeSucceeded, status
 
 
 @api_tool_decorator()
-def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
+def setAppStateForAllAppsListed(state):
     deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
     if devices:
@@ -391,46 +379,54 @@ def setAppStateForAllAppsListed(state, maxAttempt=Globals.MAX_RETRY):
 @api_tool_decorator()
 def setAllAppsState(frame, device, state):
     stateStatuses = []
-    _, resp = apiCalls.getdeviceapps(device.id, False, Globals.USE_ENTERPRISE_APP)
+    deviceName = None
+    deviceId = None
+    if hasattr(device, "device_name"):
+        deviceName = device.device_name
+        deviceId = device.id
+    else:
+        deviceName = device["device_name"]
+        deviceId = device["id"]
+    _, resp = apiCalls.getdeviceapps(deviceId, False, Globals.USE_ENTERPRISE_APP)
     for app in resp["results"]:
         stateStatus = None
         package_name = None
-        app_version = None
+        # app_version = None
         if "application" in app:
             package_name = app["application"]["package_name"]
-            app_version = app["application"]["version"]["version_code"]
+            # app_version = app["application"]["version"]["version_code"]
             if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                 continue
         else:
             package_name = app["package_name"]
-            app_version = app["version_code"]
+            # app_version = app["version_code"]
             if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                 continue
         if state == "DISABLE":
             stateStatus = apiCalls.setAppState(
-                device.id,
+                deviceId,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="DISABLE",
             )
         if state == "HIDE":
             stateStatus = apiCalls.setAppState(
-                device.id,
+                deviceId,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="HIDE",
             )
         if state == "SHOW":
             stateStatus = apiCalls.setAppState(
-                device.id,
+                deviceId,
                 package_name,
-                appVer=app_version,
+                # appVer=app_version,
                 state="SHOW",
             )
         if stateStatus and hasattr(stateStatus, "state"):
             entry = {
-                "Device Name": device.device_name,
-                "Device id": device.id,
+                "Device Name": deviceName,
+                "Device id": deviceId,
                 "State Status": stateStatus.state,
             }
             if hasattr(stateStatus, "reason"):
@@ -439,8 +435,8 @@ def setAllAppsState(frame, device, state):
         else:
             stateStatuses.append(
                 {
-                    "Device Name": device.device_name,
-                    "Device id": device.id,
+                    "Device Name": deviceName,
+                    "Device id": deviceId,
                     "State Status": stateStatus,
                 }
             )
@@ -448,7 +444,7 @@ def setAllAppsState(frame, device, state):
 
 
 @api_tool_decorator()
-def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
+def setAppStateForSpecificAppListed(action):
     api_response = getDevicesFromGrid()
     state = None
     if action == 50:
@@ -458,16 +454,27 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
     if api_response:
         tempRes = []
         for device in api_response.results:
+            deviceName = None
+            deviceId = None
+            hardware = None
+            if hasattr(device, "device_name"):
+                deviceName = device.device_name
+                deviceId = device.id
+                hardware = device.hardware_info
+            else:
+                deviceName = device["device_name"]
+                deviceId = device["id"]
+                hardware = device["hardwareInfo"]
             for deviceIds in appList.keys():
                 if (
-                    device.device_name in deviceIds
+                    deviceName in deviceIds
                     or (
-                        "serialNumber" in device.hardware_info
-                        and device.hardware_info["serialNumber"] in deviceIds
+                        "serialNumber" in hardware
+                        and hardware["serialNumber"] in deviceIds
                     )
                     or (
-                        "customSerialNumber" in device.hardware_info
-                        and device.hardware_info["customSerialNumber"] in deviceIds
+                        "customSerialNumber" in hardware
+                        and hardware["customSerialNumber"] in deviceIds
                     )
                 ):
                     tempRes.append(device)
@@ -476,29 +483,29 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
         threads = []
         for device in api_response.results:
             if (
-                device.device_name in appList.keys()
+                deviceName in appList.keys()
                 or (
-                    "serialNumber" in device.hardware_info
-                    and device.hardware_info["serialNumber"] in appList.keys()
+                    "serialNumber" in hardware
+                    and hardware["serialNumber"] in appList.keys()
                 )
                 or (
-                    "customSerialNumber" in device.hardware_info
-                    and device.hardware_info["customSerialNumber"] in appList.keys()
+                    "customSerialNumber" in hardware
+                    and hardware["customSerialNumber"] in appList.keys()
                 )
             ):
                 package_names = None
-                if device.device_name in appList.keys():
-                    package_names = appList[device.device_name]
+                if deviceName in appList.keys():
+                    package_names = appList[deviceName]
                 elif (
-                    "serialNumber" in device.hardware_info
-                    and device.hardware_info["serialNumber"] in appList.keys()
+                    "serialNumber" in hardware
+                    and hardware["serialNumber"] in appList.keys()
                 ):
-                    package_names = appList[device.hardware_info["serialNumber"]]
+                    package_names = appList[hardware["serialNumber"]]
                 elif (
-                    "customSerialNumber" in device.hardware_info
-                    and device.hardware_info["customSerialNumber"] in appList.keys()
+                    "customSerialNumber" in hardware
+                    and hardware["customSerialNumber"] in appList.keys()
                 ):
-                    package_names = appList[device.hardware_info["customSerialNumber"]]
+                    package_names = appList[hardware["customSerialNumber"]]
                 package_names = package_names.split(",")
                 if package_names:
                     for package_name in package_names:
@@ -507,7 +514,7 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
                                 Globals.frame,
                                 apiCalls.setAppState,
                                 args=(
-                                    device.id,
+                                    deviceId,
                                     package_name.strip(),
                                     state,
                                 ),
@@ -526,19 +533,37 @@ def setAppStateForSpecificAppListed(action, maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
+def getDevicesFromGrid(deviceIdentifers=None):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = []
-    for entry in deviceIdentifers:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    splitResults = splitListIntoChunks(deviceIdentifers)
+    threads = []
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            getDevicesFromGridHelper,
+            args=(chunk, api_instance, devices),
+            name="getDevicesFromGridHelper",
         )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+    joinThreadList(threads)
+    return devices
+
+
+
+def getDevicesFromGridHelper(
+    deviceIdentifers, api_instance, devices, maxAttempt=Globals.MAX_RETRY
+):
+    for entry in deviceIdentifers:
         api_response = None
         identifier = None
         for attempt in range(maxAttempt):
             try:
-                if type(entry) == tuple or  type(entry) == list:
+                if type(entry) == tuple or type(entry) == list:
                     if entry[0]:
                         identifier = entry[0]
                         api_response = api_instance.get_all_devices(
@@ -605,11 +630,10 @@ def getDevicesFromGrid(deviceIdentifers=None, maxAttempt=Globals.MAX_RETRY):
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to find device with identifer: %s" % identifier,
             )
-    return devices
 
 
 @api_tool_decorator()
-def relocateDeviceToNewGroup(frame, maxAttempt=Globals.MAX_RETRY):
+def relocateDeviceToNewGroup(frame):
     devices = getDevicesFromGrid()
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
@@ -643,65 +667,80 @@ def processDeviceGroupMove(deviceChunk, groupList):
     groupListKeys = groupList.keys()
     for device in deviceChunk:
         groupName = None
-        if device.device_name in groupListKeys:
-            groupName = groupList[device.device_name]
+        deviceName = None
+        deviceId = None
+        hardware = None
+        network = None
+        if hasattr(device, "device_name"):
+            deviceName = device.device_name
+            deviceId = device.id
+            hardware = device.hardware_info
+            network = device.network_info
+        else:
+            deviceName = device["device_name"]
+            deviceId = device["id"]
+            hardware = device["hardwareInfo"]
+        if deviceName in groupListKeys:
+            groupName = groupList[deviceName]
         elif (
-            "serialNumber" in device.hardware_info
-            and device.hardware_info["serialNumber"] in groupListKeys
+            "serialNumber" in hardware
+            and hardware["serialNumber"] in groupListKeys
         ):
-            groupName = groupList[device.hardware_info["serialNumber"]]
+            groupName = groupList[hardware["serialNumber"]]
         elif (
-            "customSerialNumber" in device.hardware_info
-            and device.hardware_info["customSerialNumber"] in groupListKeys
+            "customSerialNumber" in hardware
+            and hardware["customSerialNumber"] in groupListKeys
         ):
-            groupName = groupList[device.hardware_info["customSerialNumber"]]
+            groupName = groupList[hardware["customSerialNumber"]]
         elif (
-                hasattr(device, "network_info")
-                and "imei1" in device.network_info and device.network_info["imei1"] in groupListKeys
-            ):
-            groupName = groupList[device.network_info["imei1"]]
+            hasattr(device, "network_info")
+            and "imei1" in network
+            and network["imei1"] in groupListKeys
+        ):
+            groupName = groupList[network["imei1"]]
         elif (
-                hasattr(device, "network_info")
-                and "imei2" in device.network_info and device.network_info["imei2"] in groupListKeys
-            ):
-            groupName = groupList[device.network_info["imei1"]]
+            hasattr(device, "network_info")
+            and "imei2" in network
+            and network["imei2"] in groupListKeys
+        ):
+            groupName = groupList[network["imei1"]]
         if groupName:
             if isApiKey(groupName):
-                resp = moveGroup(groupName, device.id)
+                resp = moveGroup(groupName, deviceId)
                 respText = resp.text if hasattr(resp, "text") else str(resp)
-                results[device.device_name] = {
-                    "Device Name": device.device_name,
-                    "Device Id": device.id,
+                results[deviceName] = {
+                    "Device Name": deviceName,
+                    "Device Id": deviceId,
                     "Status Code": resp.status_code
                     if hasattr(resp, "status_code")
                     else None,
                     "Response": resp.json() if hasattr(resp, "json") else respText,
                 }
             else:
-                groups = apiCalls.getAllGroups(name=groupName).results
+                groups = getAllGroups(name=groupName).results
                 if groups:
                     groupId = groups[0].id
-                    resp = moveGroup(groupId, device.id)
+                    resp = moveGroup(groupId, deviceId)
                     respText = resp.text if hasattr(resp, "text") else str(resp)
-                    results[device.device_name] = {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                    results[deviceName] = {
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Status Code": resp.status_code
                         if hasattr(resp, "status_code")
                         else None,
                         "Response": resp.json() if hasattr(resp, "json") else respText,
                     }
                 else:
-                    results[device.device_name] = {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                    results[deviceName] = {
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Error": "Invalid Group Name given, no matches found, '%s'"
                         % groupName,
                     }
         else:
-            results[device.device_name] = {
-                "Device Name": device.device_name,
-                "Device Id": device.id,
+            results[deviceName] = {
+                "Device Name": deviceName,
+                "Device Id": deviceId,
                 "Error": "Invalid Group Name given, '%s'" % groupName,
             }
 
@@ -743,30 +782,41 @@ def installListedLatestApp(frame):
 def processInstallLatestAppChunk(devices, appList, appChoice=False):
     status = []
     for device in devices:
+        deviceName = None
+        deviceId = None
+        hardware = None
+        if hasattr(device, "device_name"):
+            deviceName = device.device_name
+            deviceId = device.id
+            hardware = device.hardware_info
+        else:
+            deviceName = device["device_name"]
+            deviceId = device["id"]
+            hardware = device["hardwareInfo"]
         if not appChoice:
             package_name = None
-            if device.id in appList.keys():
-                package_name = appList[device.id]
-            elif device.device_name in appList.keys():
-                package_name = appList[device.device_name]
+            if deviceId in appList.keys():
+                package_name = appList[deviceId]
+            elif deviceName in appList.keys():
+                package_name = appList[deviceName]
             elif (
-                "serialNumber" in device.hardware_info
-                and device.hardware_info["serialNumber"] in appList.keys()
+                "serialNumber" in hardware
+                and hardware["serialNumber"] in appList.keys()
             ):
-                package_name = appList[device.hardware_info["serialNumber"]]
+                package_name = appList[hardware["serialNumber"]]
             elif (
-                "customSerialNumber" in device.hardware_info
-                and device.hardware_info["customSerialNumber"] in appList.keys()
+                "customSerialNumber" in hardware
+                and hardware["customSerialNumber"] in appList.keys()
             ):
-                package_name = appList[device.hardware_info["customSerialNumber"]]
+                package_name = appList[hardware["customSerialNumber"]]
             if package_name:
                 for package in package_name:
-                    resp = installAppOnDevices(package, devices=[device.id])
+                    resp = installAppOnDevices(package, devices=[deviceId])
                     if type(resp) == dict and "Error" in resp.keys():
                         status.append(
                             {
-                                "Device Name": device.device_name,
-                                "Device Id": device.id,
+                                "Device Name": deviceName,
+                                "Device Id": deviceId,
                                 "Error": resp["Error"],
                             }
                         )
@@ -775,8 +825,8 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
             else:
                 status.append(
                     {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Error": "No packages found to install",
                     }
                 )
@@ -789,13 +839,13 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
                 pkgName = appList["pkgName"]
             if pkgName:
                 resp = installAppOnDevices(
-                    pkgName, version=version, devices=[device.id]
+                    pkgName, version=version, devices=[deviceId]
                 )
                 if type(resp) == dict and "Error" in resp.keys():
                     status.append(
                         {
-                            "Device Name": device.device_name,
-                            "Device Id": device.id,
+                            "Device Name": deviceName,
+                            "Device Id": deviceId,
                             "Error": resp["Error"],
                         }
                     )
@@ -804,8 +854,8 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
             else:
                 status.append(
                     {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Error": "Failed to get package name for %s"
                         % appList["app_name"],
                     }
@@ -846,31 +896,42 @@ def uninstallListedApp(frame):
 def processUninstallAppChunk(devices, appList, appChoice=False):
     status = []
     for device in devices:
+        deviceName = None
+        deviceId = None
+        hardware = None
+        if hasattr(device, "device_name"):
+            deviceName = device.device_name
+            deviceId = device.id
+            hardware = device.hardware_info
+        else:
+            deviceName = device["device_name"]
+            deviceId = device["id"]
+            hardware = device["hardwareInfo"]
         if not appChoice:
             package_name = None
-            if device.id in appList.keys():
-                package_name = appList[device.id]
-            elif device.device_name in appList.keys():
-                package_name = appList[device.device_name]
+            if deviceId in appList.keys():
+                package_name = appList[deviceId]
+            elif deviceName in appList.keys():
+                package_name = appList[deviceName]
             elif (
-                "serialNumber" in device.hardware_info
-                and device.hardware_info["serialNumber"] in appList.keys()
+                "serialNumber" in hardware
+                and hardware["serialNumber"] in appList.keys()
             ):
-                package_name = appList[device.hardware_info["serialNumber"]]
+                package_name = appList[hardware["serialNumber"]]
             elif (
-                "customSerialNumber" in device.hardware_info
-                and device.hardware_info["customSerialNumber"] in appList.keys()
+                "customSerialNumber" in hardware
+                and hardware["customSerialNumber"] in appList.keys()
             ):
-                package_name = appList[device.hardware_info["customSerialNumber"]]
+                package_name = appList[hardware["customSerialNumber"]]
             if package_name:
                 for package in package_name:
-                    resp = uninstallAppOnDevice(package, device=[device.id])
+                    resp = uninstallAppOnDevice(package, device=[deviceId])
                     status += resp
             else:
                 status.append(
                     {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Error": "No packages found to install",
                     }
                 )
@@ -879,13 +940,13 @@ def processUninstallAppChunk(devices, appList, appChoice=False):
             if "pkgName" in appList:
                 pkgName = appList["pkgName"]
             if pkgName:
-                resp = uninstallAppOnDevice(pkgName, device=[device.id])
+                resp = uninstallAppOnDevice(pkgName, device=[deviceId])
                 status += resp
             else:
                 status.append(
                     {
-                        "Device Name": device.device_name,
-                        "Device Id": device.id,
+                        "Device Name": deviceName,
+                        "Device Id": deviceId,
                         "Error": "Failed to get package name for %s"
                         % appList["app_name"],
                     }
@@ -945,11 +1006,17 @@ def uninstallApp(frame):
     )
     t.start()
 
+
 def processBulkFactoryReset(devices, numDevices, processed):
     status = []
     for device in devices:
-        if device and hasattr(device, "id"):
-            resp = apiCalls.factoryResetDevice(device.id)
+        deviceId = None
+        if hasattr(device, "device_name"):
+            deviceId = deviceId
+        else:
+            deviceId = device["id"]
+        if deviceId:
+            resp = apiCalls.factoryResetDevice(deviceId)
             status.append(resp)
             processed.append(device)
         value = int(len(processed) / numDevices * 100)
@@ -958,6 +1025,7 @@ def processBulkFactoryReset(devices, numDevices, processed):
             value,
         )
     return status
+
 
 def bulkFactoryReset(identifers):
     devices = getDevicesFromGrid(deviceIdentifers=identifers)
@@ -973,6 +1041,54 @@ def bulkFactoryReset(identifers):
             processBulkFactoryReset,
             args=(chunk, numDevices, processed),
             name="processDeviceGroupMove",
+        )
+        threads.append(t)
+        t.start()
+        limitActiveThreads(threads)
+
+    t = wxThread.GUIThread(
+        Globals.frame,
+        wxThread.waitTillThreadsFinish,
+        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        name="waitTillThreadsFinish",
+    )
+    t.start()
+
+
+def processSetDeviceDisabled(devices, numDevices, processed):
+    status = []
+    for device in devices:
+        deviceId = None
+        if hasattr(device, "device_name"):
+            deviceId = deviceId
+        else:
+            deviceId = device["id"]
+        if deviceId:
+            resp = setDeviceDisabled(deviceId)
+            status.append(resp)
+            processed.append(device)
+        value = int(len(processed) / numDevices * 100)
+        postEventToFrame(
+            eventUtil.myEVT_UPDATE_GAUGE,
+            value,
+        )
+    return status
+
+
+def setDevicesDisabled():
+    devices = getDevicesFromGrid()
+
+    splitResults = splitListIntoChunks(devices)
+    threads = []
+    numDevices = len(devices)
+    processed = []
+
+    for chunk in splitResults:
+        t = wxThread.GUIThread(
+            Globals.frame,
+            processSetDeviceDisabled,
+            args=(chunk, numDevices, processed),
+            name="processSetDeviceDisabled",
         )
         threads.append(t)
         t.start()

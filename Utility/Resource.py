@@ -17,7 +17,7 @@ import Common.Globals as Globals
 
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
 
 
@@ -92,19 +92,22 @@ def checkEsperInternetConnection():
 
 def checkForInternetAccess(frame):
     while not frame.kill:
-        if (
-            not checkEsperInternetConnection()
-            and not checkInternetConnection(Globals.UPDATE_LINK)
-            and frame.IsShownOnScreen()
-            and frame.IsActive()
-        ):
-            displayMessageBox(
-                (
-                    "ERROR: An internet connection is required when using the tool!",
-                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
+        if frame.IsShownOnScreen() and frame.IsActive():
+            if not checkEsperInternetConnection() and not checkInternetConnection(
+                Globals.UPDATE_LINK
+            ):
+                displayMessageBox(
+                    (
+                        "ERROR: An internet connection is required when using the tool!",
+                        wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                    )
                 )
-            )
-        time.sleep(15)
+                Globals.HAS_INTERNET = False
+            else:
+                if Globals.HAS_INTERNET is None and Globals.frame:
+                    Globals.frame.loadPref()
+                Globals.HAS_INTERNET = True
+        time.sleep(15 if Globals.HAS_INTERNET else 30)
 
 
 def checkForUpdate():
@@ -217,7 +220,7 @@ def joinThreadList(threads):
 
 
 @api_tool_decorator(locks=[])
-def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeout=10):
+def limitActiveThreads(threads, max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2), timeout=-1, breakEnabled=True):
     if threads:
         numAlive = 0
         for thread in threads:
@@ -225,7 +228,12 @@ def limitActiveThreads(threads, max_alive=Globals.MAX_ACTIVE_THREAD_COUNT, timeo
                 numAlive += 1
         if numAlive >= max_alive:
             for thread in threads:
-                thread.join()
+                if thread.is_alive():
+                    thread.join()
+                    if breakEnabled:
+                        if timeout > -1:
+                            time.sleep(timeout)
+                        break
 
 
 def ipv6Tomac(ipv6):
@@ -314,103 +322,6 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
 
-def performGetRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.get(url, headers=headers, json=json, data=data)
-            ApiToolLog().LogApiRequestOccurrence(
-                performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPatchRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.patch(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPutRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.put(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performDeleteRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.delete(url, headers=headers, data=data, json=json)
-            ApiToolLog().LogApiRequestOccurrence(
-                performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
-def performPostRequestWithRetry(
-    url, headers=None, json=None, data=None, files=None, maxRetry=Globals.MAX_RETRY
-):
-    resp = None
-    for attempt in range(maxRetry):
-        try:
-            resp = requests.post(
-                url, headers=headers, data=data, json=json, files=files
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                performPostRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300:
-                break
-        except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
-            time.sleep(Globals.RETRY_SLEEP)
-    return resp
-
-
 def openWebLinkInBrowser(link):
     if hasattr(link, "GetLinkInfo"):
         link = link.GetLinkInfo().GetHref()
@@ -454,8 +365,10 @@ def isApiKey(key):
         return False
     return len(key) == 36 and "-" in key
 
+
 def utc_to_local(utc_dt):
     return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
 
 def acquireLocks(locks, timeout=5):
     if type(locks) == list:
@@ -465,6 +378,7 @@ def acquireLocks(locks, timeout=5):
     elif type(locks) == threading.Lock:
         locks.acquire(timeout=5)
 
+
 def releaseLocks(locks):
     if type(locks) == list:
         for lock in locks:
@@ -472,3 +386,18 @@ def releaseLocks(locks):
                 lock.release()
     elif type(locks) == threading.Lock and locks.locked():
         locks.release()
+
+
+@api_tool_decorator()
+def getHeader():
+    if (
+        Globals.configuration
+        and Globals.configuration.api_key
+        and "Authorization" in Globals.configuration.api_key
+    ):
+        return {
+            "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
+            "Content-Type": "application/json",
+        }
+    else:
+        return {}

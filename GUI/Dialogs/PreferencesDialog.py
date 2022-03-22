@@ -50,7 +50,9 @@ class PreferencesDialog(wx.Dialog):
             "groupFetchAll",
             "loadXDevices",
             "replaceSerial",
-            "showDisabledDevices"
+            "showDisabledDevices",
+            "lastSeenAsDate",
+            "appsInDeviceGrid",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -167,7 +169,9 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
         )
-        self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED)
+        self.checkbox_18.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -229,7 +233,7 @@ class PreferencesDialog(wx.Dialog):
         self.grid.Hide()
         sizer_5.Add(self.grid, 1, wx.EXPAND, 0)
 
-        sizer_16 = wx.FlexGridSizer(6, 1, 0, 0)
+        sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
 
         # (_, _, self.checkbox_3,) = self.addPrefToPanel(
         #     self.grid,
@@ -293,6 +297,22 @@ class PreferencesDialog(wx.Dialog):
             "Replace Serial Number with Custom",
             wx.CheckBox,
             "Replaces Serial Number entry with Custom Serial Number, if available.",
+        )
+
+        (_, _, self.checkbox_19,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Last Seen As Date",
+            wx.CheckBox,
+            'Display Last Seen Value as a Date instead of "<period od time> ago"',
+        )
+
+        (_, _, self.checkbox_20,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Show Apps In Device Grid",
+            wx.CheckBox,
+            "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
         )
 
         # App Preferences
@@ -395,6 +415,8 @@ class PreferencesDialog(wx.Dialog):
 
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
+
+        self.Fit()
 
         if prefDict and not prefDict["enableDevice"]:
             self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
@@ -669,7 +691,7 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
             Globals.GROUP_FETCH_ALL = True
-        
+
         if prefDict and "replaceSerial" in prefDict:
             if (
                 isinstance(prefDict["replaceSerial"], str)
@@ -691,6 +713,41 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_DISABLED_DEVICES = False
+
+        if prefDict and "lastSeenAsDate" in prefDict:
+            if (
+                isinstance(prefDict["lastSeenAsDate"], str)
+                and prefDict["lastSeenAsDate"].lower() == "true"
+            ) or prefDict["lastSeenAsDate"] == True:
+                self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
+                Globals.LAST_SEEN_AS_DATE = True
+            else:
+                self.checkbox_19.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.LAST_SEEN_AS_DATE = False
+        else:
+            self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
+            Globals.LAST_SEEN_AS_DATE = True
+
+        if prefDict and "appsInDeviceGrid" in prefDict:
+            if (
+                isinstance(prefDict["appsInDeviceGrid"], str)
+                and prefDict["appsInDeviceGrid"].lower() == "true"
+            ) or prefDict["appsInDeviceGrid"] == True:
+                self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
+                Globals.APPS_IN_DEVICE_GRID = True
+                Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+            else:
+                self.checkbox_20.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.APPS_IN_DEVICE_GRID = False
+                Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
+                self.parent.gridPanel.deleteAppColInDeviceGrid()
+        else:
+            self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
+            Globals.APPS_IN_DEVICE_GRID = True
+            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        self.parent.gridPanel.fillDeviceGridHeaders()
+        self.parent.gridPanel.repopulateApplicationField()
 
     @api_tool_decorator()
     def showMatchingPanel(self, event):
@@ -767,6 +824,8 @@ class PreferencesDialog(wx.Dialog):
             "loadXDevices": self.spin_ctrl_11.GetValue(),
             "replaceSerial": self.checkbox_17.IsChecked(),
             "showDisabledDevices": self.checkbox_18.IsChecked(),
+            "lastSeenAsDate": self.checkbox_19.IsChecked(),
+            "appsInDeviceGrid": self.checkbox_20.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -794,6 +853,17 @@ class PreferencesDialog(wx.Dialog):
         Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
         Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
         Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
+        Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
+        Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
+
+        if Globals.APPS_IN_DEVICE_GRID:
+            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+        else:
+            Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
+            self.parent.gridPanel.deleteAppColInDeviceGrid()
+        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        self.parent.gridPanel.fillDeviceGridHeaders()
+        self.parent.gridPanel.repopulateApplicationField()
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -1075,6 +1145,40 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_DISABLED_DEVICES = False
+        if "lastSeenAsDate" in self.prefs:
+            if (
+                isinstance(self.prefs["lastSeenAsDate"], str)
+                and self.prefs["lastSeenAsDate"].lower() == "true"
+            ) or self.prefs["lastSeenAsDate"] == True:
+                self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
+                Globals.LAST_SEEN_AS_DATE = True
+            else:
+                self.checkbox_19.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.LAST_SEEN_AS_DATE = False
+        else:
+            self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
+            Globals.LAST_SEEN_AS_DATE = True
+
+        if "appsInDeviceGrid" in self.prefs:
+            if (
+                isinstance(self.prefs["appsInDeviceGrid"], str)
+                and self.prefs["appsInDeviceGrid"].lower() == "true"
+            ) or self.prefs["appsInDeviceGrid"] == True:
+                self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
+                Globals.APPS_IN_DEVICE_GRID = True
+                Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+            else:
+                self.checkbox_20.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.APPS_IN_DEVICE_GRID = False
+                Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
+                self.parent.gridPanel.deleteAppColInDeviceGrid()
+        else:
+            self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
+            Globals.APPS_IN_DEVICE_GRID = True
+            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        self.parent.gridPanel.fillDeviceGridHeaders()
+        self.parent.gridPanel.repopulateApplicationField()
 
     @api_tool_decorator()
     def GetPrefs(self):
@@ -1109,6 +1213,8 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
         self.prefs["replaceSerial"] = Globals.REPLACE_SERIAL
         self.prefs["showDisabledDevices"] = Globals.SHOW_DISABLED_DEVICES
+        self.prefs["lastSeenAsDate"] = Globals.LAST_SEEN_AS_DATE
+        self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
 
         return self.prefs
 
@@ -1174,6 +1280,10 @@ class PreferencesDialog(wx.Dialog):
             return Globals.REPLACE_SERIAL
         elif key == "showDisabledDevices":
             return Globals.SHOW_DISABLED_DEVICES
+        elif key == "lastSeenAsDate":
+            return Globals.LAST_SEEN_AS_DATE
+        elif key == "appsInDeviceGrid":
+            return Globals.APPS_IN_DEVICE_GRID
         else:
             return None
 

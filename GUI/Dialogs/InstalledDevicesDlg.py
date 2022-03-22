@@ -2,10 +2,10 @@
 
 import wx
 import Common.Globals as Globals
+from Utility.API.AppUtilities import getAppVersions
 
 from Utility.Resource import getStrRatioSimilarity
 from Common.decorator import api_tool_decorator
-from Utility.EsperAPICalls import getAppVersions
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -19,20 +19,26 @@ class InstalledDevicesDlg(wx.Dialog):
         self.appNameList = []
         self.apps = apps
         for app in self.apps:
-            if Globals.SHOW_PKG_NAME:
-                for key, value in app.items():
-                    if (
-                        key != "app_name"
-                        and key != "app_state"
-                        and (
-                            (Globals.SHOW_PKG_NAME and " (" in key)
-                            or (not Globals.SHOW_PKG_NAME and " (" not in key)
-                        )
-                    ):
-                        self.appNameList.append(key)
-                        break
-            else:
-                self.appNameList.append(app["app_name"])
+            # if Globals.SHOW_PKG_NAME:
+            #     if "appPkgName" in app:
+            #         self.appNameList.append(app["appPkgName"])
+            #     else:
+            #         for key in app.keys():
+            #             if (
+            #                 key != "app_name"
+            #                 and key != "app_state"
+            #                 and (
+            #                     (Globals.SHOW_PKG_NAME and " (" in key)
+            #                     or (not Globals.SHOW_PKG_NAME and " (" not in key)
+            #                 )
+            #             ):
+            #                 self.appNameList.append(key)
+            #                 break
+            # else:
+            # if app["app_name"] not in self.appNameList:
+            #     self.appNameList.append(app["app_name"])
+            # elif "appPkgName" in app:
+            self.appNameList.append(app["appPkgName"])
         self.versions = []
 
         self.SetMinSize((400, 300))
@@ -43,7 +49,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
+        grid_sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
 
         grid_sizer_3 = wx.FlexGridSizer(3, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
@@ -120,12 +126,18 @@ class InstalledDevicesDlg(wx.Dialog):
         grid_sizer_3.AddGrowableRow(2)
         grid_sizer_3.AddGrowableCol(0)
 
+        grid_sizer_1.AddGrowableRow(0)
+        grid_sizer_1.AddGrowableCol(0)
+        grid_sizer_1.AddGrowableCol(1)
         self.panel_1.SetSizer(grid_sizer_1)
 
         self.SetSizer(sizer_1)
 
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
+
+        size = wx.DisplaySize()
+        self.SetMaxSize(wx.Size(int(size[0] * 0.75), int(size[1] * 0.75)))
 
         self.Layout()
         self.Fit()

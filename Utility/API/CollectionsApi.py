@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 from Utility.Resource import (
+    getHeader,
     logBadResponse,
+)
+from Common.decorator import api_tool_decorator
+import Common.Globals as Globals
+from Utility.Web.WebRequests import (
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
-    # performPutRequestWithRetry,
 )
-from Common.decorator import api_tool_decorator
-import Common.Globals as Globals
-
-from Utility.EsperAPICalls import getHeader
 
 
 @api_tool_decorator()
@@ -62,14 +62,15 @@ def fetchCollectionList(returnResp=False):
     )
 
     resp = performGetRequestWithRetry(url, headers=headers)
-    jsonResp = resp.json()
+    jsonResp = resp.json() if resp else None
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
     if returnResp:
         return resp
 
     res = []
-    [res.append(x["name"]) for x in jsonResp["results"] if x["name"] not in res]
+    if jsonResp:
+        [res.append(x["name"]) for x in jsonResp["results"] if x["name"] not in res]
     return jsonResp, res
 
 

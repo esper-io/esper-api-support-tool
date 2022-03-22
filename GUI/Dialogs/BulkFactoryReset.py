@@ -7,6 +7,7 @@ from Common.decorator import api_tool_decorator
 
 import Utility.wxThread as wxThread
 
+
 class BulkFactoryReset(wx.Dialog):
     def __init__(self):
         super(BulkFactoryReset, self).__init__(
@@ -27,14 +28,33 @@ class BulkFactoryReset(wx.Dialog):
         sizer_1.Add(grid_sizer_4, 0, wx.EXPAND, 0)
 
         label_4 = wx.StaticText(self, wx.ID_ANY, "Bulk Factory Reset")
-        label_4.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_4.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_4.Add(label_4, 0, wx.ALL, 5)
 
-        label_3 = wx.StaticText(self, wx.ID_ANY, "Upload a CSV containing device idenifers that you wish to Factory Reset:", style=wx.ST_ELLIPSIZE_END)
+        label_3 = wx.StaticText(
+            self,
+            wx.ID_ANY,
+            "Upload a CSV containing device idenifers that you wish to Factory Reset:",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_3.Wrap(1)
         grid_sizer_4.Add(label_3, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
 
-        label_5 = wx.StaticText(self, wx.ID_ANY, "Device idenifers include: Serial Number, Custom Serial Number, IMEI, Device Name, Device Id", style=wx.ST_ELLIPSIZE_END)
+        label_5 = wx.StaticText(
+            self,
+            wx.ID_ANY,
+            "Device idenifers include: Serial Number, Custom Serial Number, IMEI, Device Name, Device Id",
+            style=wx.ST_ELLIPSIZE_END,
+        )
         label_5.Wrap(1)
         grid_sizer_4.Add(label_5, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
 
@@ -87,6 +107,8 @@ class BulkFactoryReset(wx.Dialog):
         self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_OK.Bind(wx.EVT_BUTTON, self.onReset)
+
+        self.Fit()
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -160,7 +182,7 @@ class BulkFactoryReset(wx.Dialog):
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                 )
                 data = list(reader)
-        except UnicodeDecodeError as e:
+        except:
             with open(filePath, "r") as csvFile:
                 reader = csv.reader(
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
@@ -175,7 +197,9 @@ class BulkFactoryReset(wx.Dialog):
                     break
                 else:
                     self.grid_1.AppendRows(1)
-                    self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, colNum, col)
+                    self.grid_1.SetCellValue(
+                        self.grid_1.GetNumberRows() - 1, colNum, col
+                    )
                     self.identifers.append(col)
                 colNum += 1
         self.grid_1.AutoSizeColumns()

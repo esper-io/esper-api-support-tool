@@ -2,15 +2,22 @@
 
 
 from datetime import datetime
-from re import search
 import esperclient
 from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
+from Utility.API.AppUtilities import uploadApplication
+from Utility.API.DeviceUtility import (
+    getAllDevices,
+    getDeviceById,
+    getDeviceDetail,
+    getLatestEvent,
+)
+from Utility.API.GroupUtility import fetchGroupName
 import Utility.wxThread as wxThread
 import threading
 import wx
 import platform
-import Utility.EsperAPICalls as apiCalls
+import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
 import math
 import pytz
@@ -18,9 +25,9 @@ import pytz
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
 
-from Utility.CommandUtility import executeCommandOnDevice
+from Utility.API.CommandUtility import executeCommandOnDevice
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
@@ -35,7 +42,7 @@ from esperclient.rest import ApiException
 
 knownGroups = {}
 
-####Perform Actions. Set Kiosk Mode, Multi App Mode, Tags, or Alias####
+
 @api_tool_decorator()
 def TakeAction(frame, input, action, isDevice=False):
     """Calls API To Perform Action And Logs Result To UI"""
@@ -57,8 +64,8 @@ def TakeAction(frame, input, action, isDevice=False):
         frame.Logging("---> Starting Execution " + actionName)
 
     if (
-        action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value 
-        or action == GeneralActions.GENERATE_APP_REPORT.value 
+        action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        or action == GeneralActions.GENERATE_APP_REPORT.value
         or action == GeneralActions.GENERATE_INFO_REPORT.value
     ):
         frame.gridPanel.button_2.Enable(False)
@@ -77,13 +84,13 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        api_response = apiCalls.getDeviceById(input)
+        api_response = getDeviceById(input)
         iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
         # Iterate Through Each Device in Group VIA Api Request
         try:
             frame.Logging("---> Making API Request")
-            api_response = apiCalls.getAllDevices(input)
+            api_response = getAllDevices(input)
             iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -91,13 +98,16 @@ def TakeAction(frame, input, action, isDevice=False):
 
 
 @api_tool_decorator()
-def iterateThroughDeviceList(
-    frame, action, api_response, entId
-):
+def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
     if api_response:
         if hasattr(api_response, "next"):
             if api_response.next:
+                frame.gridArrowState["next"] = True
+            else:
+                frame.gridArrowState["next"] = False
+        elif type(api_response) is dict and "next" in api_response:
+            if api_response["next"]:
                 frame.gridArrowState["next"] = True
             else:
                 frame.gridArrowState["next"] = False
@@ -108,33 +118,37 @@ def iterateThroughDeviceList(
                 frame.gridArrowState["prev"] = True
             else:
                 frame.gridArrowState["prev"] = False
+        elif type(api_response) is dict and "previous" in api_response:
+            if api_response["previous"]:
+                frame.gridArrowState["prev"] = True
+            else:
+                frame.gridArrowState["prev"] = False
         else:
             frame.gridArrowState["prev"] = False
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
+    number_of_devices = 0
+    maxThread = int(Globals.MAX_THREAD_COUNT / 2)
+
+    getApps = (
+        action == GeneralActions.GENERATE_APP_REPORT.value
+        or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
+    )
+    getLatestEvents = (
+        action == GeneralActions.GENERATE_INFO_REPORT.value
+        or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+    )
 
     if hasattr(api_response, "results") and len(api_response.results):
-        number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT / 2)
-        splitResults = splitListIntoChunks(
-            api_response.results, maxThread=maxThread
-        )
-
-        getApps = action == GeneralActions.GENERATE_APP_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-        getLatestEvents = action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        splitResults = splitListIntoChunks(api_response.results, maxThread=maxThread)
 
         threads = []
         for chunk in splitResults:
             t = wxThread.GUIThread(
                 frame,
                 processDevices,
-                args=(
-                    chunk,
-                    number_of_devices,
-                    action,
-                    getApps,
-                    getLatestEvents
-                ),
+                args=(chunk, number_of_devices, action, getApps, getLatestEvents),
                 name="processDevices",
             )
             threads.append(t)
@@ -151,6 +165,49 @@ def iterateThroughDeviceList(
                 1,
                 None,
                 len(api_response.results) * 3,
+            ),
+            name="waitTillThreadsFinish_1",
+            eventType=eventUtil.myEVT_FETCH,
+        )
+        t.start()
+    elif type(api_response) is dict and "results" in api_response and api_response["results"]:
+        # splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
+
+        # threads = []
+        # for chunk in splitResults:
+        #     t = wxThread.GUIThread(
+        #         frame,
+        #         processDevices,
+        #         args=(chunk, number_of_devices, action, getApps, getLatestEvents),
+        #         name="processDevices",
+        #     )
+        #     threads.append(t)
+        #     t.start()
+        #     number_of_devices += len(chunk)
+
+        threads = []
+        for device in api_response["results"]:
+            t = wxThread.GUIThread(
+                frame,
+                processDevices,
+                args=([device], number_of_devices, action, getApps, getLatestEvents),
+                name="processDevices",
+            )
+            threads.append(t)
+            t.start()
+            limitActiveThreads(threads)
+            number_of_devices += 1
+
+        t = wxThread.GUIThread(
+            frame,
+            wxThread.waitTillThreadsFinish,
+            args=(
+                tuple(threads),
+                action,
+                entId,
+                1,
+                None,
+                len(api_response["results"]) * 3,
             ),
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
@@ -186,7 +243,7 @@ def processInstallDevices(deviceList):
 def processInstallDevicesHelper(chunk, newDeviceList):
     for device in chunk:
         id = device["id"]
-        deviceListing = apiCalls.getDeviceById(id)
+        deviceListing = getDeviceById(id)
         newDeviceList.append(deviceListing)
 
 
@@ -252,7 +309,9 @@ def fillInDeviceInfoDict(chunk, number_of_devices):
 
 
 @api_tool_decorator()
-def processDevices(chunk, number_of_devices, action, getApps=True, getLatestEvents=True):
+def processDevices(
+    chunk, number_of_devices, action, getApps=True, getLatestEvents=True
+):
     """ Try to obtain more device info for a given device """
     deviceList = {}
 
@@ -261,7 +320,9 @@ def processDevices(chunk, number_of_devices, action, getApps=True, getLatestEven
             if threading.current_thread().isStopped():
                 return
         deviceInfo = {}
-        deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps, getLatestEvents)
+        deviceInfo = populateDeviceInfoDictionary(
+            device, deviceInfo, getApps, getLatestEvents
+        )
         if deviceInfo:
             number_of_devices = number_of_devices + 1
             deviceInfo.update({"num": number_of_devices})
@@ -286,8 +347,11 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
+
 @api_tool_decorator()
-def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEvents=True):
+def populateDeviceInfoDictionary(
+    device, deviceInfo, getApps=True, getLatestEvents=True
+):
     """Populates Device Info Dictionary"""
     deviceId = None
     deviceName = None
@@ -299,13 +363,16 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
     # Handle response from Collections API
     if type(device) == dict:
         deviceId = device["id"]
-        deviceName = device["name"]
-        deviceGroups = device["group"]
-        deviceAlias = device["alias"]
+        deviceName = device["device_name"]
+        deviceGroups = device["groups"]
+        deviceAlias = device["alias_name"]
         deviceStatus = device["status"]
-        if not Globals.SHOW_DISABLED_DEVICES and "disable" in deviceStatus.lower():
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
             return
-        deviceHardware = device["hardware"]
+        deviceHardware = device["hardwareInfo"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
@@ -316,7 +383,10 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
         deviceAlias = device.alias_name
         deviceStatus = device.status
         # Device is disabled return
-        if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
             return
         deviceHardware = device.hardware_info
         deviceTags = device.tags
@@ -329,18 +399,22 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
     )
     if getApps:
         appThread.start()
+    if getApps:
+        appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     eventThread = wxThread.GUIThread(
         Globals.frame,
-        apiCalls.getLatestEvent,
+        getLatestEvent,
         (deviceId),
     )
     if getLatestEvents:
         eventThread.start()
+    # if getLatestEvents:
+    #     eventThread = getLatestEvent(deviceId)
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
-    detailInfo = apiCalls.getDeviceDetail(deviceId)
-    unpackageDict(deviceInfo, detailInfo)
+    # detailInfo = getDeviceDetail(deviceId)
+    # unpackageDict(deviceInfo, detailInfo)
     deviceInfo.update({"id": deviceId})
 
     if deviceGroups:
@@ -354,7 +428,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
                     if type(groupName) == list and len(groupName) == 1:
                         groupName = groupName[0]
                 else:
-                    groupName = apiCalls.fetchGroupName(groupURL)
+                    groupName = fetchGroupName(groupURL)
                 if groupName:
                     groupNames.append(groupName)
                 if groupURL not in knownGroups:
@@ -396,7 +470,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
                     if type(groupName) == list and len(groupName) == 1:
                         groupName = groupName[0]
                 else:
-                    groupName = apiCalls.fetchGroupName(url)
+                    groupName = fetchGroupName(url)
                 if groupName:
                     deviceInfo["subgroups"].append(groupName)
                 if url not in knownGroups:
@@ -423,7 +497,10 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
         else:
             deviceInfo.update({"Status": "Unknown"})
     else:
-        if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
             return
 
         if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
@@ -432,7 +509,10 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
             deviceInfo.update({"Status": "Online"})
         elif deviceStatus == DeviceState.DISABLED.value:
             deviceInfo.update({"Status": "Disabled"})
-        elif deviceStatus >= DeviceState.PROVISIONING_BEGIN.value and deviceStatus < DeviceState.INACTIVE.value:
+        elif (
+            deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
+            and deviceStatus < DeviceState.INACTIVE.value
+        ):
             deviceInfo.update({"Status": "Provisioning"})
         elif deviceStatus == DeviceState.INACTIVE.value:
             deviceInfo.update({"Status": "Offline"})
@@ -441,11 +521,13 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
         else:
             deviceInfo.update({"Status": "Unknown"})
 
-    kioskMode = deviceInfo["current_app_mode"]
-    if kioskMode == 0:
-        deviceInfo.update({"Mode": "Kiosk"})
-    else:
-        deviceInfo.update({"Mode": "Multi"})
+    kioskMode = None
+    if "current_app_mode" in deviceInfo:
+        kioskMode = deviceInfo["current_app_mode"]
+        if kioskMode == 0:
+            deviceInfo.update({"Mode": "Kiosk"})
+        else:
+            deviceInfo.update({"Mode": "Multi"})
 
     hdwareKey = None
     if "serial_number" in deviceHardware:
@@ -488,26 +570,36 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
 
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
+        elif "tags" in device and device["tags"] is None:
+            device["tags"] = []
 
-    if appThread.is_alive():
+    if hasattr(appThread, "is_alive") and appThread.is_alive():
         appThread.join()
     apps = ""
     json = {}
-    if appThread.result:
+    if hasattr(appThread, "result") and appThread.result:
         apps, json = appThread.result
+    else:
+        apps, json = appThread
     deviceInfo.update({"Apps": str(apps)})
     deviceInfo.update({"appObj": json})
 
-    if eventThread.is_alive():
+    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
         eventThread.join()
     if kioskMode == 0:
-        latestEvent = eventThread.result
+        if hasattr(eventThread, "result"):
+            latestEvent = eventThread.result
+        else:
+            latestEvent = eventThread
         kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
         deviceInfo.update({"KioskApp": str(kioskModeApp)})
     else:
         deviceInfo.update({"KioskApp": ""})
 
-    latestEvent = eventThread.result
+    if hasattr(eventThread, "result"):
+        latestEvent = eventThread.result
+    else:
+        latestEvent = eventThread
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
@@ -525,7 +617,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
             for ip in deviceInfo[ipKey]:
                 if ":" not in ip:
                     deviceInfo["ipv4Address"].append(ip)
-                elif ip.endswith("/64"):
+                else:
                     deviceInfo["ipv6Address"].append(ip)
                     deviceInfo["macAddress"].append(ipv6Tomac(ip))
 
@@ -578,29 +670,45 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
                 deviceInfo[event["eventType"]] = event["countInMb"]
 
     if network_info and "createTime" in network_info:
-        dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-        utc_date_time = dt.astimezone(pytz.utc)
-        updatedOnDate = utc_to_local(utc_date_time)
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
 
-        time_delta = (utc_to_local(datetime.now()) - updatedOnDate)
-        total_seconds = time_delta.total_seconds()
-        minutes = total_seconds / 60
-        if minutes < 0:
-            deviceInfo["last_seen"] = "Less than 1 minute ago"
-        elif minutes > 0 and minutes < 60:
-            deviceInfo["last_seen"] = "%s minute ago" % minutes
-        elif minutes > 60 and minutes < 1440:
-            hours = int(math.ceil(minutes / 60))
-            deviceInfo["last_seen"] = "%s hours ago" % hours
-        elif  minutes > 1440:
-            days = int(math.ceil(minutes / 1440))
-            deviceInfo["last_seen"] = "%s days ago" % days
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
     else:
-        deviceInfo["last_seen"] =  "No data available"
+        deviceInfo["last_seen"] = "No data available"
 
     if device and hasattr(device, "provisioned_on") and device.provisioned_on:
         provisionedOnDate = utc_to_local(device.provisioned_on)
         deviceInfo["provisioned_on"] = str(provisionedOnDate)
+
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
 
     return deviceInfo
 
@@ -616,7 +724,7 @@ def getValueFromLatestEvent(respData, eventName):
 def removeNonWhitelisted(deviceId, deviceInfo=None):
     detailInfo = None
     if not deviceInfo:
-        detailInfo = apiCalls.getDeviceDetail(deviceId)
+        detailInfo = getDeviceDetail(deviceId)
     else:
         detailInfo = deviceInfo
     wifiAP = detailInfo["wifi_access_points"]
@@ -636,6 +744,7 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
 def clearKnownGroups():
     global knownGroups
     knownGroups.clear()
+
 
 
 def getAllDeviceInfo(frame):
@@ -658,14 +767,19 @@ def getAllDeviceInfo(frame):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
-            if api_response and api_response.results:
+            if api_response and hasattr(api_response, "results") and api_response.results:
                 devices += api_response.results
+            elif type(api_response) is dict and "results" in api_response:
+                devices += api_response["results"]
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        api_response = apiCalls.getAllDevices(
+        api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList
         )
         if api_response:
-            devices += api_response.results
+            if api_response and hasattr(api_response, "results") and api_response.results:
+                devices += api_response.results
+            elif type(api_response) is dict and "results" in api_response:
+                devices += api_response["results"]
             getAllDevicesFromOffsets(api_response, devices)
         else:
             postEventToFrame(
@@ -679,21 +793,13 @@ def getAllDeviceInfo(frame):
     if devices:
         number_of_devices = 0
         maxThread = int(Globals.MAX_THREAD_COUNT / 2)
-        splitResults = splitListIntoChunks(
-            devices, maxThread=maxThread
-        )
+        splitResults = splitListIntoChunks(devices, maxThread=maxThread)
 
         for chunk in splitResults:
             t = wxThread.GUIThread(
                 frame,
                 processDevices,
-                args=(
-                    chunk,
-                    number_of_devices,
-                    -1,
-                    True,
-                    True
-                ),
+                args=(chunk, number_of_devices, -1, True, True),
                 name="processDevices",
             )
             threads.append(t)
@@ -714,26 +820,40 @@ def getAllDeviceInfo(frame):
 
 def getAllDevicesFromOffsets(api_response, devices=[]):
     threads = []
-    count = api_response.count
-    if api_response.next:
-        respOffset = api_response.next.split("offset=")[-1].split("&")[0]
+    count = None
+    apiNext = None
+    if hasattr(api_response, "count"):
+        count = api_response.count
+        apiNext = api_response.next
+    elif type(api_response) is dict:
+        count = api_response["count"]
+        apiNext = api_response["next"]
+    if apiNext:
+        respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
-        respLimit = api_response.next.split("limit=")[-1].split("&")[0]
+        respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = wxThread.GUIThread(Globals.frame, apiCalls.getAllDevices, (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset))
+            thread = wxThread.GUIThread(
+                Globals.frame,
+                getAllDevices,
+                (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
+            )
             threads.append(thread)
             thread.start()
             respOffsetInt += int(respLimit)
         joinThreadList(threads)
     for thread in threads:
         if thread and thread.result:
-            devices += thread.result.results
+            if hasattr(thread.result, "results"):
+                devices += thread.result.results
+            elif type(thread.result) is dict:
+                devices += thread.result["results"]
     return devices
 
 
 def uploadAppToEndpoint(path):
     postEventToFrame(eventUtil.myEVT_LOG, "Attempting to upload app...")
-    resp = apiCalls.uploadApplication(path)
+    resp = uploadApplication(path)
     if resp:
         postEventToFrame(eventUtil.myEVT_LOG, "App upload succeed!")
         displayMessageBox(("Application has been uploaded", wx.ICON_INFORMATION))

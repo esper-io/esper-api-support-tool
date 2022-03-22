@@ -9,30 +9,35 @@ from Common.enum import GridActions, GeneralActions
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
+IS_DEBUG = True
+
 """ Constants """
-VERSION = "v0.191"
+VERSION = "v0.1926"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
-MAX_LIMIT = 500000
-MAX_UPDATE_COUNT = 500
+MAX_LIMIT = 500
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
+IS_TOKEN_VALID = False
 
 MAX_ERROR_TIME_DIFF = 2
-MAX_ACTIVE_THREAD_COUNT = 32
-MAX_THREAD_COUNT = 16
+MAX_ACTIVE_THREAD_COUNT = 24
+# MAX_DEVICES_PROCESS = 15
+MAX_THREAD_COUNT = 8
 MAX_RETRY = 5
-RETRY_SLEEP = 1.5
+RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 PRINT_API_LOGS = False
 
-DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor 
+DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
+
+HAS_INTERNET = None
 
 """ Locks """
 lock = threading.Lock()
@@ -45,14 +50,22 @@ grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
+token_lock = threading.Lock()
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "General Actions " + "* " * NUM_STARS: -1,
-    "Generate Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "Generate Report "
+    + "* " * NUM_STARS: -1,
+    "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "General Actions "
+    + "* " * NUM_STARS: -1,
     "Action -> Set Device Mode": 1.5,
     "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
     "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
@@ -63,12 +76,16 @@ GENERAL_ACTIONS = {
 }
 
 GRID_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "Grid Actions " + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "")
+    + "* " * NUM_STARS
+    + "Grid Actions "
+    + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,
     "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
+    # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
     # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
@@ -140,6 +157,8 @@ CSV_TAG_ATTR_NAME = {
     "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
+    "EEA Version": "eeaVersion",
+    "Is EMM": "is_emm",
     "Template": "template_name",
     "Policy": "policy_name",
     "Mode": "Mode",
@@ -149,7 +168,7 @@ CSV_TAG_ATTR_NAME = {
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
     "Tags": "Tags",
-    # "Applications": "Apps",
+    "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
     "Device Type": "device_type",
@@ -159,7 +178,7 @@ CSV_TAG_ATTR_NAME = {
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
     "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
-    "Available Internal Storage (MB)" : "AVAILABLE_INTERNAL_STORAGE_MEASURED",
+    "Available Internal Storage (MB)": "AVAILABLE_INTERNAL_STORAGE_MEASURED",
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
@@ -242,8 +261,8 @@ csv_auth_path = ""
 SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
-GRID_UPDATE_RATE = 60
-MAX_GRID_UPDATE_RATE = 3600
+# GRID_UPDATE_RATE = 60
+# MAX_GRID_UPDATE_RATE = 3600
 ENABLE_GRID_UPDATE = False
 USE_ENTERPRISE_APP = True
 SHOW_PKG_NAME = False
@@ -264,5 +283,7 @@ GROUP_FETCH_ALL = True
 MAX_GRID_LOAD = 100
 REPLACE_SERIAL = True
 SHOW_DISABLED_DEVICES = False
+LAST_SEEN_AS_DATE = True
+APPS_IN_DEVICE_GRID = True
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

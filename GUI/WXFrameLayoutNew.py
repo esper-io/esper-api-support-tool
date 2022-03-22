@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from wx.core import TextEntryDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+
 import sys
 import threading
 import wx
@@ -16,6 +19,10 @@ import platform
 import json
 import tempfile
 import ast
+
+import pandas as pd
+
+# import gc
 import wx.adv as wxadv
 import Utility.EventUtility as eventUtil
 
@@ -24,7 +31,7 @@ import Common.ApiTracker as ApiTracker
 import GUI.EnhancedStatusBar as ESB
 
 import Utility.wxThread as wxThread
-import Utility.EsperTemplateUtil as templateUtil
+import Utility.API.EsperTemplateUtil as templateUtil
 
 from functools import partial
 
@@ -50,21 +57,16 @@ from Common.decorator import api_tool_decorator
 
 from pathlib import Path
 
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
-from Utility.EsperAPICalls import (
-    getAppDictEntry,
-    getInstallDevices,
+from Utility.API.EsperAPICalls import (
+    clearAppData,
+    getdeviceapps,
     setAppState,
     setKiosk,
     setMulti,
-    getdeviceapps,
-    getAllDevices,
-    getAllGroups,
-    getAllApplications,
     validateConfiguration,
     getTokenInfo,
-    clearAppData,
 )
 from Utility.EastUtility import (
     TakeAction,
@@ -75,6 +77,7 @@ from Utility.EastUtility import (
     uploadAppToEndpoint,
 )
 from Utility.Resource import (
+    checkEsperInternetConnection,
     checkForInternetAccess,
     limitActiveThreads,
     postEventToFrame,
@@ -85,20 +88,25 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
-from Utility.CommandUtility import createCommand
-from Utility.AppUtilities import (
+from Utility.API.CommandUtility import createCommand
+from Utility.API.AppUtilities import (
+    getAllInstallableApps,
+    getAppDictEntry,
+    getInstallDevices,
     installAppOnDevices,
     uninstallAppOnDevice,
     installAppOnGroups,
     uninstallAppOnGroup,
 )
-from Utility.GroupUtility import moveGroup
+from Utility.API.GroupUtility import getAllGroups, moveGroup
 
 
 class NewFrameLayout(wx.Frame):
     def __init__(self):
         self.prefPath = ""
         self.authPath = ""
+
+        pd.options.display.max_rows = 9999
 
         self.consoleWin = None
         self.refresh = None
@@ -414,7 +422,7 @@ class NewFrameLayout(wx.Frame):
                     )
                 )
             if (
-                not self.auth_data or not csvRow in self.auth_data
+                not self.auth_data or csvRow not in self.auth_data
             ) and not matchingConfig:
                 with open(self.authPath, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
@@ -494,26 +502,36 @@ class NewFrameLayout(wx.Frame):
         if self.gridPanel.grid_1.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
-                message="Save Device and Network Info CSV as...",
+                message="Save Reports as...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
             result = dlg.ShowModal()
             inFile = dlg.GetPath()
-            dlg.DestroyLater()
 
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
                 self.gridPanel.disableGridProperties()
-                thread = wxThread.GUIThread(self, self.saveFile, (inFile), name="saveFile")
+                thread = wxThread.GUIThread(
+                    self, self.saveFile, (inFile), name="saveFile"
+                )
                 thread.start()
+                if inFile.endswith(".csv"):
+                    newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
+                    inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
+                    thread = wxThread.GUIThread(
+                        self, self.saveAppInfo, (inFile), name="saveAppFile"
+                    )
+                    thread.start()
+                dlg.DestroyLater()
                 return True
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
+                dlg.DestroyLater()
                 return False
 
     @api_tool_decorator()
@@ -521,9 +539,9 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             dlg = wx.FileDialog(
                 self,
-                message="Save Device and Network Info CSV as...",
+                message="Save Reports as...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -558,7 +576,6 @@ class NewFrameLayout(wx.Frame):
         networkHeaders = Globals.CSV_NETWORK_ATTR_NAME.keys()
         headers.extend(deviceHeaders)
         headers.extend(networkHeaders)
-        headers.remove("Device Name")
         headersNoDup = []
         [headersNoDup.append(x) for x in headers if x not in headersNoDup]
         headers = headersNoDup
@@ -634,15 +651,6 @@ class NewFrameLayout(wx.Frame):
     def saveFile(self, inFile):
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
-        threads = []
-        num = 1
-        for device in self.gridPanel.grid_1_contents:
-            self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
-            val = (num / (len(gridDeviceData) * 2)) * 100
-            if val <= 50:
-                self.setGaugeValue(int(val))
-            num += 1
-        joinThreadList(threads)
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
@@ -654,70 +662,145 @@ class NewFrameLayout(wx.Frame):
     def mergeDeviceAndNetworkInfo(self, device, gridDeviceData):
         tempDict = {}
         tempDict.update(device)
-        deviceListing = list(
-            filter(
-                lambda x: (
-                    x["Device Name"]
-                    == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]
-                ),
-                self.gridPanel.grid_2_contents,
-            )
-        )
-        if deviceListing:
-            tempDict.update(deviceListing[0])
+        for entry in self.gridPanel.grid_2_contents:
+            if entry["Device Name"] == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]:
+                # if deviceListing:
+                tempDict.update(entry)
+                break
         gridDeviceData.append(tempDict)
-
 
     @api_tool_decorator()
     def saveGridData(
         self, inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
     ):
-        gridData = []
-        gridData.append(headers)
+        if inFile.endswith(".csv"):
+            threads = []
+            num = 1
+            for device in self.gridPanel.grid_1_contents:
+                self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
+                val = (num / (len(gridDeviceData) * 2)) * 100
+                if val <= 50:
+                    self.setGaugeValue(int(val))
+                num += 1
+            joinThreadList(threads)
 
-        createNewFile(inFile)
+            gridData = []
+            gridData.append(headers)
 
-        num = len(gridDeviceData)
-        for deviceData in gridDeviceData:
-            rowValues = []
-            for header in headers:
-                value = ""
-                if header in deviceData:
-                    value = deviceData[header]
-                else:
-                    if header in deviceHeaders:
-                        if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
-                            value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
-                    if header in networkHeaders:
-                        if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
-                            value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
-                rowValues.append(value)
-            gridData.append(rowValues)
-            val = (num / (len(gridDeviceData) * 2)) * 100
-            if val <= 95:
-                self.setGaugeValue(int(val))
-            num += 1
+            createNewFile(inFile)
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+            num = len(gridDeviceData)
+            for deviceData in gridDeviceData:
+                rowValues = []
+                for header in headers:
+                    value = ""
+                    if header in deviceData:
+                        value = deviceData[header]
+                    else:
+                        if header in deviceHeaders:
+                            if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
+                                value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
+                        if header in networkHeaders:
+                            if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
+                                value = deviceData[Globals.CSV_NETWORK_ATTR_NAME[header]]
+                    rowValues.append(value)
+                gridData.append(rowValues)
+                val = (num / (len(gridDeviceData) * 2)) * 100
+                if val <= 95:
+                    self.setGaugeValue(int(val))
+                num += 1
 
-        self.Logging("---> Info saved to csv file - " + inFile)
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(gridData)
+        elif inFile.endswith(".xlsx"):
+            deviceGridData = []
+            networkGridData = []
+            appGridData = []
+            threads = []
+
+            deviceThread = wxThread.GUIThread(
+                None,
+                self.getGridDataToSave,
+                (gridDeviceData if gridDeviceData else self.gridPanel.grid_1_contents, deviceHeaders, Globals.CSV_TAG_ATTR_NAME, deviceGridData)
+            )
+            deviceThread.start()
+            threads.append(deviceThread)
+
+            networkThread = wxThread.GUIThread(
+                None,
+                self.getGridDataToSave,
+                (gridDeviceData if gridDeviceData else self.gridPanel.grid_2_contents, networkHeaders, Globals.CSV_NETWORK_ATTR_NAME, networkGridData)
+            )
+            networkThread.start()
+            threads.append(networkThread)
+
+            for entry in self.gridPanel.grid_3_contents:
+                appGridData.append(list(entry.values()))
+
+            joinThreadList(threads)
+            networkGridData = networkThread.result
+            deviceGridData = deviceThread.result
+
+            df_1 = pd.DataFrame(deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys())
+            df_2 = pd.DataFrame(networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys())
+            if self.gridPanel.grid_3_contents:
+                df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
+
+            with pd.ExcelWriter(inFile) as writer1:
+                df_1.to_excel(writer1, sheet_name='Device', index=False)
+                for column in df_1:
+                    column_width = max(df_1[column].astype(str).map(len).max(), len(column))
+                    col_idx = df_1.columns.get_loc(column)
+                    writer1.sheets['Device'].set_column(col_idx, col_idx, column_width)
+                df_2.to_excel(writer1, sheet_name='Network', index=False)
+                for column in df_2:
+                    column_width = max(df_2[column].astype(str).map(len).max(), len(column))
+                    col_idx = df_2.columns.get_loc(column)
+                    writer1.sheets['Network'].set_column(col_idx, col_idx, column_width)
+                if self.gridPanel.grid_3_contents:
+                    df_3.to_excel(writer1, sheet_name='Application', index=False)
+                    for column in df_3:
+                        column_width = max(df_3[column].astype(str).map(len).max(), len(column))
+                        col_idx = df_3.columns.get_loc(column)
+                        writer1.sheets['Application'].set_column(col_idx, col_idx, column_width)
+
+        self.Logging("---> Info saved to file: " + inFile)
         self.setGaugeValue(100)
         self.gridPanel.enableGridProperties()
 
         displayMessageBox(
-            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+            ("Info saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
         )
+
+    def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
+        for entry in contents:
+            rowValues = []
+            for header in headers:
+                value = ""
+                if header in entry:
+                    value = entry[header]
+                elif headerKeys[header] in entry:
+                    value = entry[headerKeys[header]]
+                rowValues.append(value)
+            deviceGridData.append(rowValues)
+        return deviceGridData
 
     @api_tool_decorator()
     def saveAppInfo(self, event):
+        if type(event) is str:
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (event))
+            thread.start()
+            return True
         if self.gridPanel.grid_3.GetNumberRows() > 0:
             dlg = wx.FileDialog(
                 self,
                 message="Save App Info CSV...",
                 defaultFile="",
-                wildcard="*.csv",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             )
@@ -782,8 +865,8 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         with wx.FileDialog(
             self,
-            "Open Device CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open Device Spreedsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.defaultDir),
         ) as fileDialog:
@@ -810,24 +893,32 @@ class NewFrameLayout(wx.Frame):
                     name="waitForThreadsThenSetCursorDefault_2",
                 ).start()
             elif result == wx.ID_CANCEL:
+                self.setCursorDefault()
                 return  # the user changed their mind
 
     def openDeviceCSV(self, csv_auth_path):
         self.isUploading = True
-        try:
-            with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-                self.processDeviceCSVUpload(data)
-        except UnicodeDecodeError as e:
-            with open(csv_auth_path, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-                self.processDeviceCSVUpload(data)
+        if csv_auth_path.endswith(".csv"):
+            try:
+                with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    data = list(reader)
+                    self.processDeviceCSVUpload(data)
+            except:
+                with open(csv_auth_path, "r") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                    )
+                    data = list(reader)
+                    self.processDeviceCSVUpload(data)
+        elif csv_auth_path.endswith(".xlsx"):
+            try:
+                dfs = pd.read_excel(csv_auth_path, sheet_name=None, keep_default_na=False)
+                self.processXlsxUpload(dfs)
+            except:
+                pass
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
             eventUtil.myEVT_DISPLAY_NOTIFICATION,
@@ -835,6 +926,34 @@ class NewFrameLayout(wx.Frame):
         )
         self.setCursorDefault()
         self.isUploading = False
+
+    def processXlsxUpload(self, data):
+        self.CSVUploaded = True
+        self.toggleEnabledState(False)
+        self.sidePanel.groupChoice.Enable(False)
+        self.sidePanel.deviceChoice.Enable(False)
+        self.gridPanel.disableGridProperties()
+        self.gridPanel.grid_1.Freeze()
+        self.gridPanel.grid_2.Freeze()
+        dataList = []
+        if "Device" in data:
+            dataList.append(data["Device"].columns.values.tolist())
+            dataList += data["Device"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_1,
+                dataList,
+                Globals.CSV_TAG_ATTR_NAME,
+                Globals.grid1_lock,
+            )
+        if "Network" in data:
+            dataList.append(data["Network"].columns.values.tolist())
+            dataList += data["Network"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_2,
+                dataList,
+                Globals.CSV_NETWORK_ATTR_NAME,
+                Globals.grid2_lock,
+            )
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
@@ -879,7 +998,7 @@ class NewFrameLayout(wx.Frame):
                     fileCol = 0
                     for colValue in row:
                         colName = (
-                            header[fileCol].replace(" ", "").lower()
+                            str(header[fileCol]).replace(" ", "").lower()
                             if len(header) > fileCol
                             else ""
                         )
@@ -892,7 +1011,7 @@ class NewFrameLayout(wx.Frame):
                             colName = "Tags"
                             header[fileCol] = "Tags"
                         if (
-                            expectedCol == "Device Name"
+                            (expectedCol == "Device Name" or expectedCol == "Esper Name")
                             and colName == "espername"
                             and grid == self.gridPanel.grid_2
                         ):
@@ -902,11 +1021,11 @@ class NewFrameLayout(wx.Frame):
                             expectedCol = "devicename"
                         if (
                             fileCol < len(header)
-                            and header[fileCol].strip()
+                            and str(header[fileCol]).strip()
                             in Globals.CSV_DEPRECATED_HEADER_LABEL
                         ) or (
                             fileCol < len(header)
-                            and header[fileCol].strip() not in headers.keys()
+                            and str(header[fileCol]).strip() not in headers.keys()
                             and colName != "devicename"
                         ):
                             fileCol += 1
@@ -1025,7 +1144,10 @@ class NewFrameLayout(wx.Frame):
             )
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (wx.CallLater, (3000, self.setGaugeValue, 0)),
+        )
         return returnItem
 
     @api_tool_decorator()
@@ -1051,6 +1173,11 @@ class NewFrameLayout(wx.Frame):
         self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
         self.onClearGrids(None)
         clearKnownGroups()
+        try:
+            if self.groupManage:
+                self.groupManage.Destroy()
+        except:
+            pass
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.clearSelections(clearApp=True)
@@ -1120,6 +1247,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.configList.AppendText("API Prefix = " + prefix + "\n")
             self.sidePanel.configList.AppendText("Enterprise = " + entId)
             self.sidePanel.configList.ShowPosition(0)
+            Globals.IS_TOKEN_VALID = False
 
             if "https" in str(host):
                 Globals.configuration.host = host.strip()
@@ -1127,25 +1255,21 @@ class NewFrameLayout(wx.Frame):
                 Globals.configuration.api_key_prefix["Authorization"] = prefix.strip()
                 Globals.enterprise_id = entId.strip()
 
-                res = getTokenInfo()
-                if res and hasattr(res, "expires_on"):
-                    if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
-                        self.promptForNewToken()
-                elif (
-                    res
-                    and hasattr(res, "body")
-                    and "Authentication credentials were not provided" in res.body
-                ):
-                    self.promptForNewToken()
-
-                if res and hasattr(res, "scope"):
-                    if "write" not in res.scope:
-                        self.menubar.fileAddUser.Enable(False)
+                wxThread.GUIThread(
+                    self,
+                    self.validateToken,
+                    None,
+                    name="validateToken",
+                ).start()
 
                 self.setGaugeValue(50)
-                groupThread = self.PopulateGroups()
-                appThread = self.PopulateApps()
-                threads = [groupThread, appThread]
+                threads = []
+                if Globals.HAS_INTERNET is None:
+                    Globals.HAS_INTERNET = checkEsperInternetConnection()
+                if Globals.HAS_INTERNET:
+                    groupThread = self.PopulateGroups()
+                    appThread = self.PopulateApps()
+                    threads = [groupThread, appThread]
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -1156,6 +1280,36 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(("Invalid Configuration", wx.ICON_ERROR))
             return False
+
+    @api_tool_decorator(locks=[Globals.token_lock])
+    def validateToken(self):
+        Globals.token_lock.acquire()
+        res = getTokenInfo()
+        if res and hasattr(res, "expires_on"):
+            Globals.IS_TOKEN_VALID = True
+            if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+                Globals.IS_TOKEN_VALID = False
+                # self.promptForNewToken()
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.promptForNewToken),
+                )
+        elif (
+            res
+            and hasattr(res, "body")
+            and "Authentication credentials were not provided" in res.body
+        ):
+            Globals.IS_TOKEN_VALID = False
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.promptForNewToken),
+            )
+
+        if res and hasattr(res, "scope"):
+            if "write" not in res.scope:
+                self.menubar.fileAddUser.Enable(False)
+        if Globals.token_lock.locked():
+            Globals.token_lock.release()
 
     def promptForNewToken(self):
         newToken = ""
@@ -1237,9 +1391,9 @@ class NewFrameLayout(wx.Frame):
                     for thread in newThreads:
                         thread.join()
                         num += 1
-                        if (
-                            not self.preferences
-                            or self.preferences["enableDevice"] == True
+                        if not self.preferences or (
+                            "enableDevice" in self.preferences
+                            and self.preferences["enableDevice"]
                         ):
                             self.setGaugeValue(
                                 int(float(num / len(newThreads) / 2) * 100)
@@ -1250,7 +1404,11 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.enableConfigMenu()
                 self.menubar.setSaveMenuOptionsEnableState(True)
             if (
-                not self.preferences or self.preferences["enableDevice"] == True
+                not self.preferences
+                or (
+                    "enableDevice" in self.preferences
+                    and self.preferences["enableDevice"]
+                )
             ) and self.sidePanel.devices:
                 self.sidePanel.deviceChoice.Enable(True)
             else:
@@ -1260,8 +1418,9 @@ class NewFrameLayout(wx.Frame):
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
-            self.sidePanel.actionChoice.SetSelection(indx)
-            #TODO: FIX
+            if self.sidePanel.actionChoice.GetSelection() < indx:
+                self.sidePanel.actionChoice.SetSelection(indx)
+            # TODO: FIX
             if self.WINDOWS:
                 if self.gridPanel.grid_1.IsFrozen():
                     self.gridPanel.grid_1.Thaw()
@@ -1275,15 +1434,33 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.deviceChoice.Enable(True)
             else:
                 if self.gridPanel.grid_1.IsFrozen():
-                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_1.Thaw)
+                    postEventToFrame(
+                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_1.Thaw
+                    )
                 if self.gridPanel.grid_2.IsFrozen():
-                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_2.Thaw)
+                    postEventToFrame(
+                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_2.Thaw
+                    )
                 if self.gridPanel.grid_3.IsFrozen():
-                    postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_3.Thaw)
-                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.enableGridProperties)
-                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.enableGridProperties)
-                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, (self.sidePanel.groupChoice.Enable, True))
-                postEventToFrame(eventUtil.myEVT_PROCESS_FUNCTION, (self.sidePanel.deviceChoice.Enable, True))
+                    postEventToFrame(
+                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_3.Thaw
+                    )
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    self.gridPanel.enableGridProperties,
+                )
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    self.gridPanel.enableGridProperties,
+                )
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.groupChoice.Enable, True),
+                )
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.deviceChoice.Enable, True),
+                )
         if source == 3:
             cmdResults = []
             if (
@@ -1292,9 +1469,9 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SET_APP_STATE.value
                 or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
-                or action == GridActions.SET_APP_STATE.value
                 or action == GeneralActions.INSTALL_APP.value
                 or action == GeneralActions.UNINSTALL_APP.value
+                or action == GridActions.SET_APP_STATE.value
                 or action == GridActions.MOVE_GROUP.value
                 or action == GridActions.FACTORY_RESET.value
             ):
@@ -1325,23 +1502,33 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
-        thread = wxThread.GUIThread(self, getAllGroups, None, eventType=eventUtil.myEVT_GROUP, name="PopulateGroupsGetAll")
+        thread = wxThread.GUIThread(
+            self,
+            getAllGroups,
+            None,
+            eventType=eventUtil.myEVT_GROUP,
+            name="PopulateGroupsGetAll",
+        )
         thread.start()
         return thread
 
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
         """ Populate Group Choice """
-        results = event.GetValue().results
+        results = (
+            event.GetValue().results
+            if hasattr(event.GetValue(), "results")
+            else event.GetValue()
+        )
         num = 1
         self.groups = results
         self.sidePanel.groupsResp = event.GetValue()
-        self.groupManage = GroupManagement(self.groups)
-        results = sorted(
-            results,
-            key=lambda i: i.name.lower(),
-        )
-        if len(results):
+        if results:
+            results = sorted(
+                results,
+                key=lambda i: i.name.lower(),
+            )
+        if results and len(results):
             for group in results:
                 if group.name not in self.sidePanel.groups:
                     self.sidePanel.groups[group.name] = group.id
@@ -1359,7 +1546,9 @@ class NewFrameLayout(wx.Frame):
         self.SetFocus()
         self.Logging("--->Attempting to populate devices of selected group(s)")
         self.setCursorBusy()
-        if not self.preferences or self.preferences["enableDevice"] == True:
+        if not self.preferences or (
+            "enableDevice" in self.preferences and self.preferences["enableDevice"]
+        ):
             self.sidePanel.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
@@ -1372,7 +1561,12 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
         threads = []
         for clientData in self.sidePanel.selectedGroupsList:
-            thread = wxThread.GUIThread(self, self.addDevicesToDeviceChoice, clientData, name="AddDevicesToDeviceChoice")
+            thread = wxThread.GUIThread(
+                self,
+                self.addDevicesToDeviceChoice,
+                clientData,
+                name="AddDevicesToDeviceChoice",
+            )
             thread.start()
             threads.append(thread)
         wxThread.GUIThread(
@@ -1385,7 +1579,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, groupId):
         """ Populate Device Choice """
-        api_response = getAllDevices(groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL)
+        api_response = getAllDevices(
+            groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL
+        )
         self.sidePanel.deviceResp = api_response
         if hasattr(api_response, "results") and len(api_response.results):
             self.Logging("---> Processing fetched devices...")
@@ -1408,27 +1604,49 @@ class NewFrameLayout(wx.Frame):
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
-            name = "%s %s %s %s" % (
-                device.hardware_info["manufacturer"],
-                device.hardware_info["model"],
-                device.device_name,
-                device.alias_name if device.alias_name else "",
-            )
-            if name and not name in self.sidePanel.devices:
-                self.sidePanel.devices[name] = device.id
+            name = ""
+            if hasattr(device, "hardware_info"):
+                name = "%s %s %s %s" % (
+                    device.hardware_info["manufacturer"],
+                    device.hardware_info["model"],
+                    device.device_name,
+                    device.alias_name if device.alias_name else "",
+                )
+            else:
+                name = "%s %s %s %s" % (
+                    device["hardwareInfo"]["manufacturer"],
+                    device["hardwareInfo"]["model"],
+                    device["device_name"],
+                    device["alias_name"] if device["alias_name"] else "",
+                )
+            if name and name not in self.sidePanel.devices:
+                if hasattr(device, "id"):
+                    self.sidePanel.devices[name] = device.id
+                else:
+                    self.sidePanel.devices[name] = device["id"]
 
     @api_tool_decorator()
     def PopulateApps(self):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
         self.setCursorBusy()
-        thread = wxThread.GUIThread(self, self.fetchAllApps, None, name="PopulateApps")
+        thread = wxThread.GUIThread(
+            self, self.fetchAllInstallableApps, None, name="PopulateApps"
+        )
         thread.start()
         return thread
 
-    def fetchAllApps(self):
-        resp = getAllApplications()
-        self.addAppsToAppChoice(resp)
+    # def fetchAllApps(self):
+    #     resp = getAllApplications()
+    #     self.addAppsToAppChoice(resp)
+
+    @api_tool_decorator(locks=[Globals.token_lock])
+    def fetchAllInstallableApps(self):
+        Globals.token_lock.acquire()
+        Globals.token_lock.release()
+        if Globals.IS_TOKEN_VALID:
+            resp = getAllInstallableApps()
+            self.addAppsToAppChoice(resp)
 
     def addAppstoAppChoiceThread(self, event):
         api_response = None
@@ -1506,6 +1724,15 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
+        if not Globals.HAS_INTERNET:
+            displayMessageBox(
+                (
+                    "ERROR: An internet connection is required when using the tool!",
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                )
+            )
+            return
+
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
         self.start_time = time.time()
@@ -1523,7 +1750,13 @@ class NewFrameLayout(wx.Frame):
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
-        allDevicesSelected = True if hasattr(self.sidePanel.deviceResp, "count") and len(self.sidePanel.selectedDevicesList) == self.sidePanel.deviceResp.count else False
+        allDevicesSelected = (
+            True
+            if hasattr(self.sidePanel.deviceResp, "count")
+            and len(self.sidePanel.selectedDevicesList)
+            == self.sidePanel.deviceResp.count
+            else False
+        )
 
         appLabel = (
             self.sidePanel.selectedAppEntry["name"]
@@ -1590,7 +1823,11 @@ class NewFrameLayout(wx.Frame):
                         actionClientData = GeneralActions.SET_MULTI.value
                     else:
                         actionClientData = GeneralActions.SET_KIOSK.value
-
+            if not res or res == wx.ID_CANCEL:
+                self.isRunning = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
+                return
         if (
             self.sidePanel.selectedGroupsList
             and (not self.sidePanel.selectedDevicesList or allDevicesSelected)
@@ -1659,12 +1896,7 @@ class NewFrameLayout(wx.Frame):
             wxThread.GUIThread(
                 self,
                 TakeAction,
-                (
-                    self,
-                    self.sidePanel.selectedDevicesList,
-                    actionClientData,
-                    True
-                ),
+                (self, self.sidePanel.selectedDevicesList, actionClientData, True),
                 name="TakeActionOnDevices",
             ).start()
         elif actionClientData >= GridActions.MODIFY_ALIAS_AND_TAGS.value:
@@ -1793,6 +2025,8 @@ class NewFrameLayout(wx.Frame):
                                 schArgs,
                                 schType,
                             ) = cmdDialog.GetValue()
+                            if cmdArgs is not None:
+                                createCommand(self, cmdArgs, commandType, schArgs, schType)
                         except Exception as e:
                             displayMessageBox(
                                 (
@@ -1802,8 +2036,6 @@ class NewFrameLayout(wx.Frame):
                             )
                             ApiToolLog().LogError(e)
                     cmdDialog.DestroyLater()
-                if cmdArgs != None:
-                    createCommand(self, cmdArgs, commandType, schArgs, schType)
             else:
                 displayMessageBox(
                     ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
@@ -1847,7 +2079,11 @@ class NewFrameLayout(wx.Frame):
                 result,
             ) as dialog:
                 res = dialog.ShowModal()
-        wx.CallLater(3000, self.setGaugeValue, 0)
+        # wx.CallLater(3000, self.setGaugeValue, 0)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (wx.CallLater, (3000, self.setGaugeValue, 0)),
+        )
 
     @api_tool_decorator()
     def setStatus(self, status, orgingalMsg, isError=False):
@@ -1884,10 +2120,14 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedAppEntry:
             appToUse = self.sidePanel.selectedAppEntry["pkgName"]
             appVersion = self.sidePanel.selectedAppEntry["version"]
-        if (action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value or action == GeneralActions.GENERATE_APP_REPORT.value
-            or action == GeneralActions.GENERATE_INFO_REPORT.value):
+        if (
+            action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            or action == GeneralActions.GENERATE_APP_REPORT.value
+            or action == GeneralActions.GENERATE_INFO_REPORT.value
+        ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
+        print("Fetch Execution time: %s" % (time.time() - self.start_time))
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -1898,20 +2138,35 @@ class NewFrameLayout(wx.Frame):
                     break
             device = entry[0]
             deviceInfo = entry[1]
-            
+
+            deviceId = None
+            if hasattr(device, "id"):
+                deviceId = device.id
+            else:
+                deviceId = device["id"]
+
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
-                            self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                            self,
+                            self.gridPanel.addDeviceToDeviceGrid,
+                            (deviceInfo),
+                            name="addDeviceToDeviceGrid",
                         )
                         deviceThread.start()
                         networkThread = wxThread.GUIThread(
-                            self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                            self,
+                            self.gridPanel.addDeviceToNetworkGrid,
+                            (device, deviceInfo),
+                            name="addDeviceToNetworkGrid",
                         )
                         networkThread.start()
                         appThread = wxThread.GUIThread(
-                            self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                            self,
+                            self.gridPanel.populateAppGrid,
+                            (device, deviceInfo, deviceInfo["appObj"]),
+                            name="populateAppGrid",
                         )
                         appThread.start()
                         threads.append(deviceThread)
@@ -1920,12 +2175,18 @@ class NewFrameLayout(wx.Frame):
                     else:
                         self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                         self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
-                        self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"])
+                        self.gridPanel.populateAppGrid, (
+                            device,
+                            deviceInfo,
+                            deviceInfo["appObj"],
+                        )
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-                    self.gridPanel.constructAppGridContent(device, deviceInfo, deviceInfo["appObj"])
+                    self.gridPanel.constructAppGridContent(
+                        device, deviceInfo, deviceInfo["appObj"]
+                    )
             elif action == GeneralActions.SET_KIOSK.value:
                 thread = wxThread.GUIThread(
                     self, setKiosk, (self, device, deviceInfo), name="SetKiosk"
@@ -1954,7 +2215,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "DISABLE"),
+                    (deviceId, appToUse, appVersion, "DISABLE"),
                     name="SetAppDisable",
                 )
                 thread.start()
@@ -1965,7 +2226,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "HIDE"),
+                    (deviceId, appToUse, appVersion, "HIDE"),
                     name="SetAppHide",
                 )
                 thread.start()
@@ -1976,7 +2237,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (device.id, appToUse, appVersion, "SHOW"),
+                    (deviceId, appToUse, appVersion, "SHOW"),
                     name="SetAppShow",
                 )
                 thread.start()
@@ -1985,7 +2246,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     removeNonWhitelisted,
-                    (device.id, deviceInfo),
+                    (deviceId, deviceInfo),
                     name="removeNonWhitelisted",
                 )
                 thread.start()
@@ -1994,7 +2255,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     installAppOnDevices,
-                    (appToUse, appVersion, device.id),
+                    (appToUse, appVersion, deviceId),
                     name="installAppOnDevices",
                 )
                 thread.start()
@@ -2003,7 +2264,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     uninstallAppOnDevice,
-                    (appToUse, device.id),
+                    (appToUse, deviceId),
                     name="uninstallAppOnDevice",
                 )
                 thread.start()
@@ -2012,34 +2273,48 @@ class NewFrameLayout(wx.Frame):
                 if len(self.gridPanel.grid_3_contents) < Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         appThread = wxThread.GUIThread(
-                            self, self.gridPanel.populateAppGrid, (device, deviceInfo, deviceInfo["appObj"]), name="populateAppGrid"
+                            self,
+                            self.gridPanel.populateAppGrid,
+                            (device, deviceInfo, deviceInfo["appObj"]),
+                            name="populateAppGrid",
                         )
                         appThread.start()
                         threads.append(appThread)
                     else:
-                        self.gridPanel.populateAppGrid(device, deviceInfo, deviceInfo["appObj"])
+                        self.gridPanel.populateAppGrid(
+                            device, deviceInfo, deviceInfo["appObj"]
+                        )
                 else:
-                    self.gridPanel.constructAppGridContent(device, deviceInfo, deviceInfo["appObj"])
+                    self.gridPanel.constructAppGridContent(
+                        device, deviceInfo, deviceInfo["appObj"]
+                    )
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
-                            self, self.gridPanel.addDeviceToDeviceGrid, (deviceInfo), name="addDeviceToDeviceGrid"
+                            self,
+                            self.gridPanel.addDeviceToDeviceGrid,
+                            (deviceInfo),
+                            name="addDeviceToDeviceGrid",
                         )
                         deviceThread.start()
                         networkThread = wxThread.GUIThread(
-                            self, self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo), name="addDeviceToNetworkGrid"
+                            self,
+                            self.gridPanel.addDeviceToNetworkGrid,
+                            (device, deviceInfo),
+                            name="addDeviceToNetworkGrid",
                         )
                         networkThread.start()
                         threads.append(deviceThread)
                         threads.append(networkThread)
                     else:
                         self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                        self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
+                        self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
+
             joinThreadList(threads)
 
             value = int(num / maxGauge * 100)
@@ -2191,18 +2466,26 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
-        if action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+        if (
+            action == GeneralActions.GENERATE_INFO_REPORT.value
+            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        ):
             self.gridPanel.notebook_2.SetSelection(0)
         elif action == GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.notebook_2.SetSelection(2)
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
-            wx.CallLater(3000, self.setGaugeValue, 0)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (wx.CallLater, (3000, self.setGaugeValue, 0)),
+            )
+            # wx.CallLater(3000, self.setGaugeValue, 0)
         if cmdResults:
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
+        # gc.collect()
         if hasattr(self, "start_time"):
             print("Run Execution time: %s" % (time.time() - self.start_time))
 
@@ -2486,21 +2769,25 @@ class NewFrameLayout(wx.Frame):
             self.preferences["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
 
     @api_tool_decorator()
-    def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False):
-        templateFound = util.processDeviceGroup(templateFound)
-        templateFound = util.processWallpapers(templateFound)
+    def createClone(self, util, templateFound, toApi, toKey, toEntId, update=False, level=0):
+        if level == 0:
+            templateFound = util.processDeviceGroup(templateFound)
+            templateFound = util.processWallpapers(templateFound)
         self.Logging("Attempting to copy template...")
         res = None
         if update:
             res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
         else:
-            res = util.createTemplate(toApi, toKey, toEntId, templateFound)
+            res = util.createTemplate(toApi, toKey, toEntId, templateFound, level + 1)
         if "errors" not in res:
-            action = "created" if not update else "updated."
+            action = "created" if not update else "updated"
             self.Logging("Template sucessfully %s." % action)
             displayMessageBox(
                 ("Template sucessfully %s." % action, wx.OK | wx.ICON_INFORMATION)
             )
+        elif "errors" in res and res["errors"] and "EMM" in res["errors"][0] and level < 2:
+            del templateFound["template"]["application"]["managed_google_play_disabled"]
+            self.createClone(util, templateFound, toApi, toKey, toEntId, update, level + 1)
         else:
             action = "recreate" if not update else "update"
             self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
@@ -2548,6 +2835,7 @@ class NewFrameLayout(wx.Frame):
 
         self.setCursorBusy()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
+        self.gridPanel.disableGridProperties()
         if (
             hasattr(event, "EventType")
             and (
@@ -2563,8 +2851,10 @@ class NewFrameLayout(wx.Frame):
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
+            self.applySearchColor(queryString, Color.white.value, True)
         self.setCursorDefault()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+        self.gridPanel.enableGridProperties()
 
     def applySearchColor(self, queryString, color, applyAll=False):
         self.gridPanel.applyTextColorMatchingGridRow(
@@ -2643,7 +2933,9 @@ class NewFrameLayout(wx.Frame):
                                     wx.ICON_INFORMATION,
                                 )
                             )
-                            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+                            postEventToFrame(
+                                eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0)
+                            )
                             self.setCursorDefault()
                             self.toggleEnabledState(True)
                     else:
@@ -2891,3 +3183,7 @@ class NewFrameLayout(wx.Frame):
                 self.gauge.Pulse()
                 ids = dlg.getIdentifiers()
                 bulkFactoryReset(ids)
+
+    def onGeofence(self, event):
+        with GeofenceDialog() as dlg:
+            dlg.ShowModal()

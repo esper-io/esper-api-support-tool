@@ -28,6 +28,8 @@ class CommandDialog(wx.Dialog):
         else:
             self.createSplitWindowView(title, value)
 
+        self.Fit()
+
     def createJsonWindowView(self, title, value):
         self.SetSize((500, 400))
         self.SetTitle(title)

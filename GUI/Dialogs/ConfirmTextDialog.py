@@ -92,6 +92,8 @@ class ConfirmTextDialog(wx.Dialog):
         self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
+
+        self.Fit()
         # end wxGlade
 
     @api_tool_decorator()

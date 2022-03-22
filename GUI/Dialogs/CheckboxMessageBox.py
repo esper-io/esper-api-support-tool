@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from Common.decorator import api_tool_decorator
-import Common.Globals as Globals
 import wx
 
 
@@ -27,6 +26,8 @@ class CheckboxMessageBox(wx.Dialog):
         self.__set_properties(title)
         self.__do_layout(caption)
 
+        self.Fit()
+
     @api_tool_decorator()
     def __set_properties(self, title):
         self.SetTitle(title)
@@ -46,7 +47,7 @@ class CheckboxMessageBox(wx.Dialog):
         sizer_3.Add(title, 0, wx.ALL | wx.EXPAND, 5)
         self.panel_2.SetSizer(sizer_3)
         grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
-        sizer_4.Add(self.checkbox_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
+        sizer_4.Add(self.checkbox_1, 0, wx.ALL, 5)
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Do not show again")
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)

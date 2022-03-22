@@ -2,6 +2,7 @@
 
 import wx
 
+
 class TabPanel(wx.Panel):
     def __init__(self, parent, id, name):
         """"""

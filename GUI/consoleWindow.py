@@ -6,7 +6,6 @@ import wx
 import wx.html as wxHtml
 import Common.Globals as Globals
 import platform
-import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 
 from Common.enum import Color

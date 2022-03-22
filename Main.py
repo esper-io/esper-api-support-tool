@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
-from Utility.ApiToolLogging import ApiToolLog
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 import Common.Globals as Globals
 import sys
@@ -13,18 +13,22 @@ from Common.decorator import api_tool_decorator
 
 class MyApp(wx.App):
     def OnInit(self):
-        self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
-        locale.setlocale(locale.LC_ALL, 'en_US')
-        self.name = "EAST-%s" % wx.GetUserId()
-        self.instance = wx.SingleInstanceChecker(self.name)
+        try:
+            self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
+            locale.setlocale(locale.LC_ALL, "en_US")
+            self.name = "EAST-%s" % wx.GetUserId()
+            self.instance = wx.SingleInstanceChecker(self.name)
 
-        if self.instance.IsAnotherRunning():
-            wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
-            return False
+            if self.instance.IsAnotherRunning():
+                wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
+                return False
 
-        Globals.frame = FrameLayout()
-        self.SetTopWindow(Globals.frame)
-        Globals.frame.Show()
+            Globals.frame = FrameLayout()
+            self.SetTopWindow(Globals.frame)
+            Globals.frame.Show()
+        except Exception as e:
+            ApiToolLog().LogError(e)
+            raise e
         return True
 
     def MacPrintFile(self, file_path):
