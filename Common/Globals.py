@@ -24,8 +24,7 @@ IS_TOKEN_VALID = False
 
 MAX_ERROR_TIME_DIFF = 2
 MAX_ACTIVE_THREAD_COUNT = 24
-# MAX_DEVICES_PROCESS = 15
-MAX_THREAD_COUNT = 8
+MAX_THREAD_COUNT = 12
 MAX_RETRY = 5
 RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
@@ -51,6 +50,7 @@ grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
+rate_limiter = threading.Lock()
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
@@ -261,8 +261,6 @@ csv_auth_path = ""
 SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
-# GRID_UPDATE_RATE = 60
-# MAX_GRID_UPDATE_RATE = 3600
 ENABLE_GRID_UPDATE = False
 USE_ENTERPRISE_APP = True
 SHOW_PKG_NAME = False
