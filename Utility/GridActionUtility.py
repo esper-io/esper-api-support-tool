@@ -29,8 +29,6 @@ from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
 
 
-
-
 @api_tool_decorator()
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
@@ -553,7 +551,6 @@ def getDevicesFromGrid(deviceIdentifers=None):
         limitActiveThreads(threads)
     joinThreadList(threads)
     return devices
-
 
 
 def getDevicesFromGridHelper(

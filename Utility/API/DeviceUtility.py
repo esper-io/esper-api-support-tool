@@ -14,6 +14,7 @@ from esperclient.rest import ApiException
 
 from Utility.Web.WebRequests import performGetRequestWithRetry
 
+
 @api_tool_decorator()
 def getDeviceDetail(deviceId):
     return getInfo("?format=json&show_policy=true", deviceId)
