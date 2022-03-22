@@ -15,6 +15,7 @@ import Utility.EventUtility as eventUtil
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
+    enforceRateLimit,
     isApiKey,
     joinThreadList,
     limitActiveThreads,
@@ -563,6 +564,7 @@ def getDevicesFromGridHelper(
         identifier = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 if type(entry) == tuple or type(entry) == list:
                     if entry[0]:
                         identifier = entry[0]
