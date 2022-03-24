@@ -2,7 +2,6 @@
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
-    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,

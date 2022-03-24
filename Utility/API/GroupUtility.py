@@ -11,7 +11,6 @@ import esperclient
 import Common.Globals as Globals
 
 from Utility.Resource import (
-    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,

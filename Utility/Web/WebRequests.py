@@ -1,9 +1,8 @@
-from ast import Global
 import requests
 import time
 import Common.Globals as Globals
+
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit, isRateLimited, setRateLimit
 
 
 def performGetRequestWithRetry(

@@ -9,7 +9,6 @@ from Utility import EventUtility, wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import (
-    enforceRateLimit,
     getHeader,
     joinThreadList,
     limitActiveThreads,

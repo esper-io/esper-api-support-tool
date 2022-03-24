@@ -19,7 +19,6 @@ from Utility.API.CommandUtility import (
     waitForCommandToFinish,
 )
 from Utility.Resource import (
-    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,

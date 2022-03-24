@@ -15,7 +15,6 @@ import Utility.EventUtility as eventUtil
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
-    enforceRateLimit,
     isApiKey,
     joinThreadList,
     limitActiveThreads,
