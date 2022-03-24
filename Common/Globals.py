@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from multiprocessing import Condition
 import esperclient
 import threading
 import platform

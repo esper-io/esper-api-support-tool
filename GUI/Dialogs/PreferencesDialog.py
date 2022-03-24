@@ -894,7 +894,7 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.USE_ENTERPRISE_APP = True
 
-        if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        if Globals.ENABLE_GRID_UPDATE and self.parent is not None:
             self.parent.startUpdateThread()
 
         if self.parent:
