@@ -214,10 +214,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     # Alias modification
     if (
         deviceName in aliasDic.keys()
-        or (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in aliasDic.keys()
-        )
+        or ("serialNumber" in hardware and hardware["serialNumber"] in aliasDic.keys())
         or (
             "customSerialNumber" in hardware
             and hardware["customSerialNumber"] in aliasDic.keys()
@@ -226,19 +223,14 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
         newName = None
         if deviceName in aliasDic:
             newName = aliasDic[deviceName]
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in aliasDic
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in aliasDic:
             newName = aliasDic[hardware["serialNumber"]]
         elif (
             "customSerialNumber" in hardware
             and hardware["customSerialNumber"] in aliasDic
         ):
             newName = aliasDic[hardware["customSerialNumber"]]
-        logString = str(
-            "--->" + str(deviceName) + " : " + str(newName) + "--->"
-        )
+        logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
         if not newName and not aliasName:
             status = {
                 "Device Name": deviceName,
@@ -319,10 +311,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         key = None
         if deviceName in tagsFromGrid:
             key = deviceName
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in tagsFromGrid
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in tagsFromGrid:
             key = hardware["serialNumber"]
         elif (
             "customSerialNumber" in hardware
@@ -561,7 +550,6 @@ def getDevicesFromGridHelper(
         identifier = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
                 if type(entry) == tuple or type(entry) == list:
                     if entry[0]:
                         identifier = entry[0]
@@ -681,10 +669,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
             hardware = device["hardwareInfo"]
         if deviceName in groupListKeys:
             groupName = groupList[deviceName]
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in groupListKeys
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in groupListKeys:
             groupName = groupList[hardware["serialNumber"]]
         elif (
             "customSerialNumber" in hardware
@@ -837,9 +822,7 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
             if "pkgName" in appList:
                 pkgName = appList["pkgName"]
             if pkgName:
-                resp = installAppOnDevices(
-                    pkgName, version=version, devices=[deviceId]
-                )
+                resp = installAppOnDevices(pkgName, version=version, devices=[deviceId])
                 if type(resp) == dict and "Error" in resp.keys():
                     status.append(
                         {

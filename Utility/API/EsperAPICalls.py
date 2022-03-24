@@ -110,7 +110,6 @@ def toggleKioskMode(
     api_response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -129,7 +128,6 @@ def toggleKioskMode(
     response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -194,7 +192,7 @@ def setdevicename(
     api_response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
+
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "setdevicename", api_instance.create_command, Globals.PRINT_API_LOGS
@@ -211,7 +209,7 @@ def setdevicename(
     response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
+
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -241,7 +239,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
+
                 api_response = api_instance.get_token_info()
                 ApiToolLog().LogApiRequestOccurrence(
                     "getTokenInfo", api_instance.get_token_info, Globals.PRINT_API_LOGS
@@ -299,8 +297,7 @@ def setKiosk(frame, device, deviceInfo):
             logString = logString + " <success>"
         elif "Queued" in str(status):
             logString = (
-                logString
-                + " <warning, check back on the device (%s)>" % deviceName
+                logString + " <warning, check back on the device (%s)>" % deviceName
             )
             warning = True
         else:
@@ -352,10 +349,7 @@ def setMulti(frame, device, deviceInfo):
         deviceName = device["device_name"]
         deviceId = device["id"]
         aliasName = device["alias_name"]
-    logString = (
-        str("--->" + str(deviceName) + " " + str(aliasName))
-        + " -> Multi ->"
-    )
+    logString = str("--->" + str(deviceName) + " " + str(aliasName)) + " -> Multi ->"
     failed = False
     warning = False
     status = None
@@ -366,8 +360,7 @@ def setMulti(frame, device, deviceInfo):
                 logString = logString + " <success>"
             elif "Queued" in str(status):
                 logString = (
-                    logString
-                    + " <warning, check back on the device (%s)>" % deviceName
+                    logString + " <warning, check back on the device (%s)>" % deviceName
                 )
                 warning = True
             else:
@@ -423,7 +416,7 @@ def validateConfiguration(
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
+
                 api_response = api_instance.get_enterprise(enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "validateConfiguration",
@@ -461,7 +454,7 @@ def factoryResetDevice(
     api_response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
+
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -582,7 +575,7 @@ def setAppState(
         api_instance = getCommandsApiInstance()
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
+
                 api_response = api_instance.create_command(
                     Globals.enterprise_id, request
                 )
@@ -658,7 +651,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
+
             if type(entry) is dict and "esperName" in entry.keys():
                 identifier = entry["esperName"]
                 api_response = api_instance.get_all_devices(

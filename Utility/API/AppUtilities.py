@@ -219,7 +219,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
+
                 api_response = api_instance.upload(enterprise_id, file)
                 break
             except Exception as e:
@@ -246,7 +246,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
             api_response = None
             for attempt in range(maxAttempt):
                 try:
-                    enforceRateLimit()
+
                     api_response = api_instance.get_all_applications(
                         Globals.enterprise_id,
                         limit=Globals.limit,
@@ -359,7 +359,7 @@ def getApplication(application_id):
     enterprise_id = Globals.enterprise_id
     try:
         # Get application information
-        enforceRateLimit()
+
         api_response = api_instance.get_application(application_id, enterprise_id)
         ApiToolLog().LogApiRequestOccurrence(
             "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
@@ -383,7 +383,7 @@ def getAppVersions(
         enterprise_id = Globals.enterprise_id
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
+
                 api_response = api_instance.get_app_versions(
                     application_id,
                     enterprise_id,
@@ -448,7 +448,7 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             # List install devices
-            enforceRateLimit()
+
             api_response = api_instance.get_install_devices(
                 version_id,
                 application_id,

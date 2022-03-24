@@ -8,7 +8,13 @@ from Common.decorator import api_tool_decorator
 from Utility import EventUtility, wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
-from Utility.Resource import enforceRateLimit, getHeader, joinThreadList, limitActiveThreads, postEventToFrame
+from Utility.Resource import (
+    enforceRateLimit,
+    getHeader,
+    joinThreadList,
+    limitActiveThreads,
+    postEventToFrame,
+)
 
 from esperclient.rest import ApiException
 
@@ -252,7 +258,7 @@ def getDeviceByIdHelper(
 ):
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
+
             api_response = api_instance.get_device_by_id(
                 Globals.enterprise_id, device_id=device
             )

@@ -8,6 +8,7 @@ from Common.decorator import api_tool_decorator
 from Utility import wxThread
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
+
 # from Utility.API.EsperAPICalls import searchForMatchingDevices
 
 from Utility.Resource import displayMessageBox, getHeader
@@ -30,7 +31,7 @@ class GeofenceDialog(wx.Dialog):
         self.gridHeaderLabels = [
             "Given Group Identifer",
             "Calculated Group Path",
-            "Group Id"
+            "Group Id",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -39,7 +40,16 @@ class GeofenceDialog(wx.Dialog):
         sizer_1.Add(grid_sizer_4, 1, wx.EXPAND, 0)
 
         label_7 = wx.StaticText(self, wx.ID_ANY, "Create Geofence")
-        label_7.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_7.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_4.Add(label_7, 0, wx.ALL, 5)
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
@@ -83,7 +93,9 @@ class GeofenceDialog(wx.Dialog):
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Radius (Meters):")
         grid_sizer_8.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.spin_ctrl_1 = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "100", min=100, max=10000)
+        self.spin_ctrl_1 = wx.SpinCtrl(
+            self.panel_1, wx.ID_ANY, "100", min=100, max=10000
+        )
         grid_sizer_8.Add(self.spin_ctrl_1, 0, wx.EXPAND, 0)
 
         grid_sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)
@@ -104,7 +116,9 @@ class GeofenceDialog(wx.Dialog):
         label_6 = wx.StaticText(self.panel_1, wx.ID_ANY, "Description:")
         grid_sizer_10.Add(label_6, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.text_ctrl_4 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP)
+        self.text_ctrl_4 = wx.TextCtrl(
+            self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP
+        )
         grid_sizer_10.Add(self.text_ctrl_4, 0, wx.EXPAND | wx.LEFT, 10)
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
@@ -246,7 +260,9 @@ class GeofenceDialog(wx.Dialog):
                     groups = getAllGroups(name=entry[0])
                     if groups:
                         for groupRes in groups.results:
-                            if groupRes.name == str(entry[0]) or groupRes.path == str(entry[0]):
+                            if groupRes.name == str(entry[0]) or groupRes.path == str(
+                                entry[0]
+                            ):
                                 group = groupRes
                                 break
                     if group:
@@ -299,25 +315,47 @@ class GeofenceDialog(wx.Dialog):
         if name and latitude and description and longitude and radius and actionsList:
             dialog = displayMessageBox(
                 (
-                    'Found group ids for %s out of %s uploaded entries. Would you like to proceed?' % (len(properGroupIdList), len(self.groups)),
+                    "Found group ids for %s out of %s uploaded entries. Would you like to proceed?"
+                    % (len(properGroupIdList), len(self.groups)),
                     wx.ICON_INFORMATION | wx.YES_NO,
                 )
             )
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
                 self.setCursorBusy()
-                thread = wxThread.GUIThread(None, self.processCreateGeoFenceRequest, (properGroupIdList, name, description, latitude, longitude, radius, actionsList))
+                thread = wxThread.GUIThread(
+                    None,
+                    self.processCreateGeoFenceRequest,
+                    (
+                        properGroupIdList,
+                        name,
+                        description,
+                        latitude,
+                        longitude,
+                        radius,
+                        actionsList,
+                    ),
+                )
                 thread.start()
         else:
             displayMessageBox(
                 (
-                    'You are missing some required input!',
+                    "You are missing some required input!",
                     wx.ICON_ERROR | wx.OK,
                 )
             )
 
     @api_tool_decorator()
-    def processCreateGeoFenceRequest(self, properGroupIdList, name, description, latitude, longitude, radius, actionsList):
+    def processCreateGeoFenceRequest(
+        self,
+        properGroupIdList,
+        name,
+        description,
+        latitude,
+        longitude,
+        radius,
+        actionsList,
+    ):
         deviceList = []
         for groupId in properGroupIdList:
             devices = get_all_devices(groupId, Globals.limit, 0)
@@ -332,28 +370,44 @@ class GeofenceDialog(wx.Dialog):
                 deviceList,
             )
         )
-        deviceIdList = [device.id if hasattr(device, "id") else device["id"] for device in deviceList]
+        deviceIdList = [
+            device.id if hasattr(device, "id") else device["id"]
+            for device in deviceList
+        ]
         if not deviceIdList:
             displayMessageBox(
                 (
-                    'No devices found for the uploaded groups',
+                    "No devices found for the uploaded groups",
                     wx.ICON_ERROR | wx.OK,
                 )
             )
         else:
-            resp = self.createApplyGeofence(name, description, latitude, longitude, radius, deviceIdList, actions=actionsList)
+            resp = self.createApplyGeofence(
+                name,
+                description,
+                latitude,
+                longitude,
+                radius,
+                deviceIdList,
+                actions=actionsList,
+            )
             # You can choose to do something with the response, e.g. showcase the user the results of the API
-            if resp and hasattr(resp, "status_code") and resp.status_code < 300 and resp.status_code >= 200:
+            if (
+                resp
+                and hasattr(resp, "status_code")
+                and resp.status_code < 300
+                and resp.status_code >= 200
+            ):
                 displayMessageBox(
                     (
-                        'Successfully created Geofence.',
+                        "Successfully created Geofence.",
                         wx.ICON_INFORMATION | wx.OK,
                     )
                 )
             else:
                 displayMessageBox(
                     (
-                        'Failed to create geofence!\n%s' % resp.text,
+                        "Failed to create geofence!\n%s" % resp.text,
                         wx.ICON_ERROR | wx.OK,
                     )
                 )
@@ -361,13 +415,22 @@ class GeofenceDialog(wx.Dialog):
         self.setCursorDefault()
 
     @api_tool_decorator()
-    def createApplyGeofence(self, name, description, lat, long, radius, devices, radiusUnit="METERS", actions=["lock_down", "beep"]):
+    def createApplyGeofence(
+        self,
+        name,
+        description,
+        lat,
+        long,
+        radius,
+        devices,
+        radiusUnit="METERS",
+        actions=["lock_down", "beep"],
+    ):
         tenant = Globals.configuration.host.replace("https://", "").replace(
             "-api.esper.cloud/api", ""
         )
         url = "https://{endpoint}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/create-apply-geo-fence/".format(
-            endpoint=tenant,
-            enterprise_id=Globals.enterprise_id
+            endpoint=tenant, enterprise_id=Globals.enterprise_id
         )
         body = {
             "name": name,
@@ -377,7 +440,7 @@ class GeofenceDialog(wx.Dialog):
             "radius": radius,
             "radius_unit": radiusUnit,
             "device_actions": actions,
-            "devices": devices if type(devices) == list else [devices]
+            "devices": devices if type(devices) == list else [devices],
         }
         resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
 

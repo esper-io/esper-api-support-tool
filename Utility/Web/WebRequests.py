@@ -1,8 +1,9 @@
+from ast import Global
 import requests
 import time
 import Common.Globals as Globals
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit
+from Utility.Resource import enforceRateLimit, isRateLimited, setRateLimit
 
 
 def performGetRequestWithRetry(
@@ -11,7 +12,6 @@ def performGetRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
             resp = requests.get(url, headers=headers, json=json, data=data)
             ApiToolLog().LogApiRequestOccurrence(
                 performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -19,14 +19,18 @@ def performGetRequestWithRetry(
             if resp.status_code < 300:
                 break
             if resp.status_code == 429:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
             if "429" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
     return resp
 
 
@@ -36,7 +40,6 @@ def performPatchRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
             resp = requests.patch(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -44,14 +47,18 @@ def performPatchRequestWithRetry(
             if resp.status_code < 300:
                 break
             if resp.status_code == 429:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
             if "429" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
     return resp
 
 
@@ -61,7 +68,6 @@ def performPutRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
             resp = requests.put(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -69,14 +75,18 @@ def performPutRequestWithRetry(
             if resp.status_code < 300:
                 break
             if resp.status_code == 429:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
             if "429" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
     return resp
 
 
@@ -86,7 +96,6 @@ def performDeleteRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
             resp = requests.delete(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -94,14 +103,18 @@ def performDeleteRequestWithRetry(
             if resp.status_code < 300:
                 break
             if resp.status_code == 429:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
             if "429" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
     return resp
 
 
@@ -111,7 +124,6 @@ def performPostRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
             resp = requests.post(
                 url, headers=headers, data=data, json=json, files=files
             )
@@ -121,12 +133,16 @@ def performPostRequestWithRetry(
             if resp.status_code < 300:
                 break
             if resp.status_code == 429:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
             if "429" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
-                time.sleep(Globals.RETRY_SLEEP * 20)  # Sleep for a minute
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * attempt
+                )  # Sleep for a minute * retry number
     return resp

@@ -19,7 +19,6 @@ from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
-from ratelimit import limits, sleep_and_retry
 
 
 def resourcePath(relative_path):
@@ -221,7 +220,12 @@ def joinThreadList(threads):
 
 
 @api_tool_decorator(locks=[])
-def limitActiveThreads(threads, max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2), timeout=-1, breakEnabled=True):
+def limitActiveThreads(
+    threads,
+    max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2),
+    timeout=-1,
+    breakEnabled=True,
+):
     if threads:
         numAlive = 0
         for thread in threads:
@@ -402,11 +406,3 @@ def getHeader():
         }
     else:
         return {}
-
-
-@sleep_and_retry
-@limits(calls=10, period=1)
-def enforceRateLimit():
-    """ Decorator only works for a particular function.
-     To apply rate limiting more globally, we make them call this function."""
-    pass

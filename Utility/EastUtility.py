@@ -168,7 +168,11 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             eventType=eventUtil.myEVT_FETCH,
         )
         t.start()
-    elif type(api_response) is dict and "results" in api_response and api_response["results"]:
+    elif (
+        type(api_response) is dict
+        and "results" in api_response
+        and api_response["results"]
+    ):
         # splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
 
         # threads = []
@@ -454,7 +458,10 @@ def populateDeviceInfoDictionary(
                 groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
                 if not urlFormat:
                     urlFormat = deviceGroups[0].replace(groupId, "{id}")
-                if Globals.knownGroups[group] and Globals.knownGroups[group].lower() != "all devices":
+                if (
+                    Globals.knownGroups[group]
+                    and Globals.knownGroups[group].lower() != "all devices"
+                ):
                     subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
                 else:
                     subgroupsIds += ["<All Device Groups>"]
@@ -765,16 +772,22 @@ def getAllDeviceInfo(frame):
                 limit=Globals.limit,
                 offset=Globals.offset,
             )
-            if api_response and hasattr(api_response, "results") and api_response.results:
+            if (
+                api_response
+                and hasattr(api_response, "results")
+                and api_response.results
+            ):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        api_response = getAllDevices(
-            Globals.frame.sidePanel.selectedGroupsList
-        )
+        api_response = getAllDevices(Globals.frame.sidePanel.selectedGroupsList)
         if api_response:
-            if api_response and hasattr(api_response, "results") and api_response.results:
+            if (
+                api_response
+                and hasattr(api_response, "results")
+                and api_response.results
+            ):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]

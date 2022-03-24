@@ -51,7 +51,6 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
                 api_response = api_instance.create_group(Globals.enterprise_id, data)
                 ApiToolLog().LogApiRequestOccurrence(
                     "create_group", api_instance.create_group, Globals.PRINT_API_LOGS
@@ -76,7 +75,6 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
                 api_instance.delete_group(group_id, Globals.enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
@@ -142,7 +140,6 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
                 api_response = api_instance.get_all_groups(
                     Globals.enterprise_id,
                     name=name,
@@ -180,7 +177,6 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
                 api_response = api_instance.get_group_by_id(
                     Globals.enterprise_id,
                     group_id=group_id,
