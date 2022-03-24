@@ -88,7 +88,8 @@ if __name__ == "__main__":
             + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
             "--add-data",
             curDirPath
-            + "/Utility/Logging/token.json%s." % (";" if platform.system() == "Windows" else ":"),
+            + "/Utility/Logging/token.json%s."
+            % (";" if platform.system() == "Windows" else ":"),
             curDirPath + "/Main.py",
         ]
     else:
@@ -112,7 +113,8 @@ if __name__ == "__main__":
             + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
             "--add-data",
             curDirPath
-            + "/Utility/Logging/token.json%s." % (";" if platform.system() == "Windows" else ":"),
+            + "/Utility/Logging/token.json%s."
+            % (";" if platform.system() == "Windows" else ":"),
             curDirPath + "/Main.py",
         ]
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
