@@ -287,5 +287,6 @@ REPLACE_SERIAL = True
 SHOW_DISABLED_DEVICES = False
 LAST_SEEN_AS_DATE = True
 APPS_IN_DEVICE_GRID = True
+INHIBIT_SLEEP = False
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
