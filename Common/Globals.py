@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from multiprocessing import Condition
 import esperclient
 import threading
 import platform
@@ -51,6 +52,9 @@ grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
 rate_limiter = threading.Lock()
+
+# Known Group Var
+knownGroups = {}
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3

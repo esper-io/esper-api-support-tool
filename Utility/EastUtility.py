@@ -40,8 +40,6 @@ from Utility.Resource import (
 
 from esperclient.rest import ApiException
 
-knownGroups = {}
-
 
 @api_tool_decorator()
 def TakeAction(frame, input, action, isDevice=False):
@@ -347,7 +345,6 @@ def unpackageDict(deviceInfo, deviceDict):
     return deviceInfo
 
 
-
 @api_tool_decorator()
 def populateDeviceInfoDictionary(
     device, deviceInfo, getApps=True, getLatestEvents=True
@@ -413,26 +410,28 @@ def populateDeviceInfoDictionary(
     latestEvent = None
     deviceInfo.update({"EsperName": deviceName})
 
-    # detailInfo = getDeviceDetail(deviceId)
-    # unpackageDict(deviceInfo, detailInfo)
     deviceInfo.update({"id": deviceId})
 
     if deviceGroups:
         groupNames = []
-        global knownGroups
         if type(deviceGroups) == list:
             for groupURL in deviceGroups:
                 groupName = None
-                if groupURL in knownGroups:
-                    groupName = knownGroups[groupURL]
-                    if type(groupName) == list and len(groupName) == 1:
-                        groupName = groupName[0]
+                groupId = groupURL.split("/")[-2]
+                if groupURL in Globals.knownGroups:
+                    groupName = Globals.knownGroups[groupURL]
+                elif groupId in Globals.knownGroups:
+                    groupName = Globals.knownGroups[groupId]
                 else:
                     groupName = fetchGroupName(groupURL)
+
+                if type(groupName) == list and len(groupName) == 1:
+                    groupName = groupName[0]
+
                 if groupName:
                     groupNames.append(groupName)
-                if groupURL not in knownGroups:
-                    knownGroups[groupURL] = groupName
+                if groupURL not in Globals.knownGroups:
+                    Globals.knownGroups[groupURL] = groupName
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
@@ -445,6 +444,7 @@ def populateDeviceInfoDictionary(
         else:
             deviceInfo["groups"] = groupNames
 
+    # Get Subgroups
     if Globals.frame and deviceGroups:
         subgroupsIds = []
         urlFormat = None
@@ -454,7 +454,7 @@ def populateDeviceInfoDictionary(
                 groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
                 if not urlFormat:
                     urlFormat = deviceGroups[0].replace(groupId, "{id}")
-                if knownGroups[group] and knownGroups[group].lower() != "all devices":
+                if Globals.knownGroups[group] and Globals.knownGroups[group].lower() != "all devices":
                     subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
                 else:
                     subgroupsIds += ["<All Device Groups>"]
@@ -465,16 +465,16 @@ def populateDeviceInfoDictionary(
             else:
                 url = urlFormat.format(id=id)
                 groupName = None
-                if url in knownGroups:
-                    groupName = knownGroups[url]
+                if url in Globals.knownGroups:
+                    groupName = Globals.knownGroups[url]
                     if type(groupName) == list and len(groupName) == 1:
                         groupName = groupName[0]
                 else:
                     groupName = fetchGroupName(url)
                 if groupName:
                     deviceInfo["subgroups"].append(groupName)
-                if url not in knownGroups:
-                    knownGroups[url] = groupName
+                if url not in Globals.knownGroups:
+                    Globals.knownGroups[url] = groupName
 
     if bool(deviceAlias):
         deviceInfo.update({"Alias": deviceAlias})
@@ -573,6 +573,67 @@ def populateDeviceInfoDictionary(
         elif "tags" in device and device["tags"] is None:
             device["tags"] = []
 
+    deviceInfo["macAddress"] = []
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+    if ipKey:
+        deviceInfo["ipv4Address"] = []
+        deviceInfo["ipv6Address"] = []
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                else:
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "lockdown_state" in deviceInfo:
+        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+            elif "ringerMode" in audio:
+                if audio["ringerMode"] == 0:
+                    deviceInfo["ringerMode"] = "Silent"
+                elif audio["ringerMode"] == 1:
+                    deviceInfo["ringerMode"] = "Vibrate"
+                elif audio["ringerMode"] == 2:
+                    deviceInfo["ringerMode"] = "Normal"
+
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
+    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
+        provisionedOnDate = utc_to_local(device.provisioned_on)
+        deviceInfo["provisioned_on"] = str(provisionedOnDate)
+
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
+
     if hasattr(appThread, "is_alive") and appThread.is_alive():
         appThread.join()
     apps = ""
@@ -604,23 +665,6 @@ def populateDeviceInfoDictionary(
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
 
-    deviceInfo["macAddress"] = []
-    ipKey = None
-    if "ipAddress" in deviceInfo:
-        ipKey = "ipAddress"
-    elif "ip_address" in deviceInfo:
-        ipKey = "ip_address"
-    if ipKey:
-        deviceInfo["ipv4Address"] = []
-        deviceInfo["ipv6Address"] = []
-        if ipKey in deviceInfo and deviceInfo[ipKey]:
-            for ip in deviceInfo[ipKey]:
-                if ":" not in ip:
-                    deviceInfo["ipv4Address"].append(ip)
-                else:
-                    deviceInfo["ipv6Address"].append(ip)
-                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
-
     if location_info:
         if (
             "n/a" not in location_info["locationAlts"].lower()
@@ -639,35 +683,6 @@ def populateDeviceInfoDictionary(
 
     deviceInfo.update({"location_info": location_info})
     deviceInfo.update({"network_event": network_info})
-
-    if "bluetooth_state" in deviceInfo:
-        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
-    if "paired_devices" in deviceInfo:
-        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
-    if "connected_devices" in deviceInfo:
-        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
-    if "mac_address" in deviceInfo:
-        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
-
-    if "lockdown_state" in deviceInfo:
-        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
-
-    if "audioSettings" in deviceInfo:
-        for audio in deviceInfo["audioSettings"]:
-            if "audioStream" in audio and "volumeLevel" in audio:
-                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
-            elif "ringerMode" in audio:
-                if audio["ringerMode"] == 0:
-                    deviceInfo["ringerMode"] = "Silent"
-                elif audio["ringerMode"] == 1:
-                    deviceInfo["ringerMode"] = "Vibrate"
-                elif audio["ringerMode"] == 2:
-                    deviceInfo["ringerMode"] = "Normal"
-
-    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
-        for event in deviceInfo["memoryEvents"]:
-            if "eventType" in event and "countInMb" in event:
-                deviceInfo[event["eventType"]] = event["countInMb"]
 
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:
@@ -694,21 +709,6 @@ def populateDeviceInfoDictionary(
                 deviceInfo["last_seen"] = "%s days ago" % days
     else:
         deviceInfo["last_seen"] = "No data available"
-
-    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
-        provisionedOnDate = utc_to_local(device.provisioned_on)
-        deviceInfo["provisioned_on"] = str(provisionedOnDate)
-
-    if "eeaVersion" not in deviceInfo:
-        deviceInfo["eeaVersion"] = "NON EEA"
-
-    if "emm_device" not in deviceInfo:
-        deviceInfo["emm_device"] = None
-
-    deviceInfo["is_emm"] = False
-    if "user" in deviceInfo:
-        if deviceInfo["user"]:
-            deviceInfo["is_emm"] = True
 
     return deviceInfo
 
@@ -742,9 +742,7 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
 
 
 def clearKnownGroups():
-    global knownGroups
-    knownGroups.clear()
-
+    Globals.knownGroups.clear()
 
 
 def getAllDeviceInfo(frame):
