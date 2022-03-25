@@ -193,19 +193,6 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             t.start()
             number_of_devices += len(chunk)
 
-        # threads = []
-        # for device in api_response["results"]:
-        #     t = wxThread.GUIThread(
-        #         frame,
-        #         processDevices,
-        #         args=([device], number_of_devices, action, getApps, getLatestEvents),
-        #         name="processDevices_%s" % number_of_devices,
-        #     )
-        #     threads.append(t)
-        #     t.start()
-        #     limitActiveThreads(threads)
-        #     number_of_devices += 1
-
         t = wxThread.GUIThread(
             frame,
             wxThread.waitTillThreadsFinish,
