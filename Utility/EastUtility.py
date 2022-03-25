@@ -1,19 +1,8 @@
 #!/usr/bin/env python
 
 
-from datetime import datetime
 import esperclient
-from esperclient.models.v0_command_args import V0CommandArgs
 import Common.Globals as Globals
-from Utility.API.AppUtilities import uploadApplication
-from Utility.API.DeviceUtility import (
-    getAllDevices,
-    getDeviceById,
-    getDeviceDetail,
-    getLatestEvent,
-)
-from Utility.API.GroupUtility import fetchGroupName
-from Utility.deviceInfo import constructNetworkInfo
 import Utility.wxThread as wxThread
 import threading
 import wx
@@ -26,13 +15,25 @@ import pytz
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
 
+from datetime import datetime
+
+from esperclient.models.v0_command_args import V0CommandArgs
+
+from Utility.API.AppUtilities import uploadApplication
+from Utility.API.DeviceUtility import (
+    getAllDevices,
+    getDeviceById,
+    getDeviceDetail,
+    getLatestEvent,
+)
+from Utility.API.GroupUtility import fetchGroupName
 from Utility.API.CommandUtility import executeCommandOnDevice
+from Utility.deviceInfo import constructNetworkInfo
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
-    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -140,6 +141,8 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
     )
 
     if hasattr(api_response, "results") and len(api_response.results):
+        if not Globals.SHOW_DISABLED_DEVICES:
+            api_response.results = list(filter(filterDeviceList, api_response.results))
         splitResults = splitListIntoChunks(api_response.results, maxThread=maxThread)
 
         threads = []
@@ -174,32 +177,34 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         and "results" in api_response
         and api_response["results"]
     ):
-        # splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
-
-        # threads = []
-        # for chunk in splitResults:
-        #     t = wxThread.GUIThread(
-        #         frame,
-        #         processDevices,
-        #         args=(chunk, number_of_devices, action, getApps, getLatestEvents),
-        #         name="processDevices",
-        #     )
-        #     threads.append(t)
-        #     t.start()
-        #     number_of_devices += len(chunk)
+        if not Globals.SHOW_DISABLED_DEVICES:
+            api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+        splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
 
         threads = []
-        for device in api_response["results"]:
+        for chunk in splitResults:
             t = wxThread.GUIThread(
                 frame,
                 processDevices,
-                args=([device], number_of_devices, action, getApps, getLatestEvents),
+                args=(chunk, number_of_devices, action, getApps, getLatestEvents),
                 name="processDevices",
             )
             threads.append(t)
             t.start()
-            limitActiveThreads(threads)
-            number_of_devices += 1
+            number_of_devices += len(chunk)
+
+        # threads = []
+        # for device in api_response["results"]:
+        #     t = wxThread.GUIThread(
+        #         frame,
+        #         processDevices,
+        #         args=([device], number_of_devices, action, getApps, getLatestEvents),
+        #         name="processDevices_%s" % number_of_devices,
+        #     )
+        #     threads.append(t)
+        #     t.start()
+        #     limitActiveThreads(threads)
+        #     number_of_devices += 1
 
         t = wxThread.GUIThread(
             frame,
@@ -224,6 +229,20 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
+
+
+def filterDeviceList(device):
+    deviceStatus = DeviceState.DISABLED.value
+    if hasattr(device, "status"):
+        deviceStatus = device.status
+    else:
+        deviceStatus = device["status"]
+    if (
+        not Globals.SHOW_DISABLED_DEVICES
+        and deviceStatus == DeviceState.DISABLED.value
+    ):
+        return False
+    return True
 
 
 def processInstallDevices(deviceList):
