@@ -24,7 +24,7 @@ def performGetRequestWithRetry(
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            if "429" not in str(e):
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
@@ -52,7 +52,7 @@ def performPatchRequestWithRetry(
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            if "429" not in str(e):
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
@@ -80,7 +80,7 @@ def performPutRequestWithRetry(
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            if "429" not in str(e):
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
@@ -108,7 +108,7 @@ def performDeleteRequestWithRetry(
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            if "429" not in str(e):
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
@@ -138,7 +138,7 @@ def performPostRequestWithRetry(
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
-            if "429" not in str(e):
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(

@@ -248,7 +248,12 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * attempt
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
@@ -427,7 +432,12 @@ def validateConfiguration(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * attempt
+                    )  # Sleep for a minute * retry number
         if hasattr(api_response, "id"):
             return True
     except ApiException as e:

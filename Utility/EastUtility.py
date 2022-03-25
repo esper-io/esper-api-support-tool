@@ -13,6 +13,7 @@ from Utility.API.DeviceUtility import (
     getLatestEvent,
 )
 from Utility.API.GroupUtility import fetchGroupName
+from Utility.deviceInfo import constructNetworkInfo
 import Utility.wxThread as wxThread
 import threading
 import wx
@@ -327,7 +328,7 @@ def processDevices(
         )
         if deviceInfo:
             number_of_devices = number_of_devices + 1
-            deviceInfo.update({"num": number_of_devices})
+            deviceInfo["num"] = number_of_devices
             deviceList[number_of_devices] = [device, deviceInfo]
 
     return (action, deviceList)
@@ -338,15 +339,22 @@ def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     if not deviceDict:
         return deviceInfo
-    for key in deviceDict.keys():
-        if type(deviceDict[key]) is dict:
-            unpackageDict(deviceInfo, deviceDict[key])
-        else:
-            if key.startswith("_"):
-                deviceInfo[key[1 : len(key)]] = deviceDict[key]
-            else:
-                deviceInfo[key] = deviceDict[key]
+    flatDict = flatten_dict(deviceDict)
+    for k, v in flatDict.items():
+        deviceInfo[k] = v
     return deviceInfo
+
+
+def flatten_dict(d: dict):
+    return dict(_flatten_dict_gen(d))
+
+
+def _flatten_dict_gen(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            yield from flatten_dict(v).items()
+        else:
+            yield k, v
 
 
 @api_tool_decorator()
@@ -412,9 +420,9 @@ def populateDeviceInfoDictionary(
     # if getLatestEvents:
     #     eventThread = getLatestEvent(deviceId)
     latestEvent = None
-    deviceInfo.update({"EsperName": deviceName})
+    deviceInfo["EsperName"] = deviceName
 
-    deviceInfo.update({"id": deviceId})
+    deviceInfo["id"] = deviceId
 
     if deviceGroups:
         groupNames = []
@@ -484,25 +492,25 @@ def populateDeviceInfoDictionary(
                     Globals.knownGroups[url] = groupName
 
     if bool(deviceAlias):
-        deviceInfo.update({"Alias": deviceAlias})
+        deviceInfo["Alias"] = deviceAlias
     else:
-        deviceInfo.update({"Alias": ""})
+        deviceInfo["Alias"] = ""
 
     if isinstance(deviceStatus, str):
         if deviceStatus.lower() == "online":
-            deviceInfo.update({"Status": "Online"})
+            deviceInfo["Status"] = "Online"
         elif "unspecified" in deviceStatus.lower():
-            deviceInfo.update({"Status": "Unspecified"})
+            deviceInfo["Status"] = "Unspecified"
         elif "provisioning" in deviceStatus.lower():
-            deviceInfo.update({"Status": "Provisioning"})
+            deviceInfo["Status"] = "Provisioning"
         elif deviceStatus.lower() == "offline":
-            deviceInfo.update({"Status": "Offline"})
+            deviceInfo["Status"] = "Offline"
         elif "wipe" in deviceStatus.lower():
-            deviceInfo.update({"Status": "Wipe In-Progress"})
+            deviceInfo["Status"] = "Wipe In-Progress"
         elif deviceStatus.lower() == "disabled":
-            deviceInfo.update({"Status": "Disabled"})
+            deviceInfo["Status"] = "Disabled"
         else:
-            deviceInfo.update({"Status": "Unknown"})
+            deviceInfo["Status"] = "Unknown"
     else:
         if (
             not Globals.SHOW_DISABLED_DEVICES
@@ -511,30 +519,30 @@ def populateDeviceInfoDictionary(
             return
 
         if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
-            deviceInfo.update({"Status": "Unspecified"})
+            deviceInfo["Status"] = "Unspecified"
         elif deviceStatus == DeviceState.ACTIVE.value:
-            deviceInfo.update({"Status": "Online"})
+            deviceInfo["Status"] = "Online"
         elif deviceStatus == DeviceState.DISABLED.value:
-            deviceInfo.update({"Status": "Disabled"})
+            deviceInfo["Status"] = "Disabled"
         elif (
             deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
             and deviceStatus < DeviceState.INACTIVE.value
         ):
-            deviceInfo.update({"Status": "Provisioning"})
+            deviceInfo["Status"] = "Provisioning"
         elif deviceStatus == DeviceState.INACTIVE.value:
-            deviceInfo.update({"Status": "Offline"})
+            deviceInfo["Status"] = "Offline"
         elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
-            deviceInfo.update({"Status": "Wipe In-Progress"})
+            deviceInfo["Status"] = "Wipe In-Progress"
         else:
-            deviceInfo.update({"Status": "Unknown"})
+            deviceInfo["Status"] = "Unknown"
 
     kioskMode = None
     if "current_app_mode" in deviceInfo:
         kioskMode = deviceInfo["current_app_mode"]
         if kioskMode == 0:
-            deviceInfo.update({"Mode": "Kiosk"})
+            deviceInfo["Mode"] = "Kiosk"
         else:
-            deviceInfo.update({"Mode": "Multi"})
+            deviceInfo["Mode"] = "Multi"
 
     hdwareKey = None
     if "serial_number" in deviceHardware:
@@ -550,30 +558,30 @@ def populateDeviceInfoDictionary(
 
     if Globals.REPLACE_SERIAL:
         if custHdwareKey and bool(deviceHardware[custHdwareKey]):
-            deviceInfo.update({"Serial": str(deviceHardware[custHdwareKey])})
+            deviceInfo["Serial"] = str(deviceHardware[custHdwareKey])
         elif hdwareKey and bool(deviceHardware[hdwareKey]):
-            deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
+            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
         else:
-            deviceInfo.update({"Serial": ""})
+            deviceInfo["Serial"] = ""
     else:
         if hdwareKey and bool(deviceHardware[hdwareKey]):
-            deviceInfo.update({"Serial": str(deviceHardware[hdwareKey])})
+            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
         else:
-            deviceInfo.update({"Serial": ""})
+            deviceInfo["Serial"] = ""
 
     if Globals.REPLACE_SERIAL:
-        deviceInfo.update({"Custom Serial": ""})
+        deviceInfo["Custom Serial"] = ""
     else:
         if custHdwareKey and bool(deviceHardware[custHdwareKey]):
-            deviceInfo.update({"Custom Serial": str(deviceHardware[custHdwareKey])})
+            deviceInfo["Custom Serial"] = str(deviceHardware[custHdwareKey])
         else:
-            deviceInfo.update({"Custom Serial": ""})
+            deviceInfo["Custom Serial"] = ""
 
     if bool(deviceTags):
         # Add Functionality For Modifying Multiple Tags
-        deviceInfo.update({"Tags": deviceTags})
+        deviceInfo["Tags"] = deviceTags
     else:
-        deviceInfo.update({"Tags": ""})
+        deviceInfo["Tags"] = ""
 
         if hasattr(device, "tags") and device.tags is None:
             device.tags = []
@@ -649,8 +657,8 @@ def populateDeviceInfoDictionary(
         apps, json = appThread.result
     else:
         apps, json = appThread
-    deviceInfo.update({"Apps": str(apps)})
-    deviceInfo.update({"appObj": json})
+    deviceInfo["Apps"] = str(apps)
+    deviceInfo["appObj"] = json
 
     if hasattr(eventThread, "is_alive") and eventThread.is_alive():
         eventThread.join()
@@ -660,9 +668,9 @@ def populateDeviceInfoDictionary(
         else:
             latestEvent = eventThread
         kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
-        deviceInfo.update({"KioskApp": str(kioskModeApp)})
+        deviceInfo["KioskApp"] = str(kioskModeApp)
     else:
-        deviceInfo.update({"KioskApp": ""})
+        deviceInfo["KioskApp"] = ""
 
     if hasattr(eventThread, "result"):
         latestEvent = eventThread.result
@@ -688,8 +696,10 @@ def populateDeviceInfoDictionary(
     else:
         location_info = "Unknown"
 
-    deviceInfo.update({"location_info": location_info})
-    deviceInfo.update({"network_event": network_info})
+    deviceInfo["location_info"] = location_info
+    deviceInfo["network_event"] = network_info
+
+    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
 
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:

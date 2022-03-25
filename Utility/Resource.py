@@ -406,3 +406,53 @@ def getHeader():
         }
     else:
         return {}
+
+
+def getAllFromOffsets(
+    func, group, api_response, maxAttempt=Globals.MAX_RETRY, results=[]
+):
+    threads = []
+    responses = []
+    count = None
+    if hasattr(api_response, "count"):
+        count = api_response.count
+    elif type(api_response) is dict and "count" in api_response:
+        count = api_response["count"]
+    apiNext = None
+    if hasattr(api_response, "next"):
+        apiNext = api_response.next
+    elif type(api_response) is dict and "next" in api_response:
+        apiNext = api_response["next"]
+    if apiNext:
+        respOffset = apiNext.split("offset=")[-1].split("&")[0]
+        respOffsetInt = int(respOffset)
+        respLimit = apiNext.split("limit=")[-1].split("&")[0]
+        while int(respOffsetInt) < count and int(respLimit) < count:
+            thread = threading.Thread(
+                target=func,
+                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
+            )
+            threads.append(thread)
+            thread.start()
+            respOffsetInt += int(respLimit)
+            limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
+        joinThreadList(threads)
+        obtained = sum(len(v["results"]) for v in responses) + int(respOffset)
+        remainder = count - obtained
+        if remainder > 0:
+            respOffsetInt -= int(respLimit)
+            respOffsetInt += 1
+            thread = threading.Thread(
+                target=func,
+                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
+            )
+            threads.append(thread)
+            thread.start()
+            limitActiveThreads(threads)
+    joinThreadList(threads)
+    for resp in responses:
+        if resp and hasattr(resp, "results") and resp.results:
+            results += resp.results
+        elif type(resp) is dict and "results" in resp and resp["results"]:
+            results += resp["results"]
+    return results

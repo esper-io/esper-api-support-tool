@@ -9,6 +9,7 @@ from Utility import EventUtility, wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import (
+    getAllFromOffsets,
     getHeader,
     joinThreadList,
     limitActiveThreads,
@@ -93,7 +94,7 @@ def get_all_devices(
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
-        devices = getAllDevicesFromOffsets(response, groupToUse, maxAttempt)
+        devices = getAllFromOffsets(get_all_devices_helper, groupToUse, response, maxAttempt)
         if hasattr(response, "results"):
             response.results = response.results + devices
             response.next = None
@@ -102,7 +103,6 @@ def get_all_devices(
             response["results"] = response["results"] + devices
             response["next"] = None
             response["prev"] = None
-            print(len(response["results"]))
     return response
 
 
@@ -149,56 +149,6 @@ def fetchDevicesFromGroupHelper(
             api_response = response
         break
     return api_response
-
-
-def getAllDevicesFromOffsets(
-    api_response, group, maxAttempt=Globals.MAX_RETRY, devices=[]
-):
-    threads = []
-    responses = []
-    count = None
-    if hasattr(api_response, "count"):
-        count = api_response.count
-    elif type(api_response) is dict and "count" in api_response:
-        count = api_response["count"]
-    apiNext = None
-    if hasattr(api_response, "next"):
-        apiNext = api_response.next
-    elif type(api_response) is dict and "next" in api_response:
-        apiNext = api_response["next"]
-    if apiNext:
-        respOffset = apiNext.split("offset=")[-1].split("&")[0]
-        respOffsetInt = int(respOffset)
-        respLimit = apiNext.split("limit=")[-1].split("&")[0]
-        while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = threading.Thread(
-                target=get_all_devices_helper,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            respOffsetInt += int(respLimit)
-            limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
-        joinThreadList(threads)
-        obtained = sum(len(v["results"]) for v in responses) + int(respOffset)
-        remainder = count - obtained
-        if remainder > 0:
-            respOffsetInt -= int(respLimit)
-            respOffsetInt += 1
-            thread = threading.Thread(
-                target=get_all_devices_helper,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            limitActiveThreads(threads)
-    joinThreadList(threads)
-    for resp in responses:
-        if resp and hasattr(resp, "results") and resp.results:
-            devices += resp.results
-        elif type(resp) is dict and "results" in resp and resp["results"]:
-            devices += resp["results"]
-    return devices
 
 
 @api_tool_decorator()
