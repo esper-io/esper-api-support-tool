@@ -109,27 +109,16 @@ def get_all_devices(
 def fetchDevicesFromGroup(
     groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
 ):
-    threads = []
     api_response = None
     for group in groupToUse:
-        thread = wxThread.GUIThread(
-            None,
-            fetchDevicesFromGroupHelper,
-            (group, limit, offset, fetchAll, maxAttempt),
-            name="fetchDevicesFromGroupHelper",
-        )
-        thread.start()
-        threads.append(thread)
-        limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
-    joinThreadList(threads)
+        resp = fetchDevicesFromGroupHelper(group, limit, offset, fetchAll, maxAttempt)
 
-    for thread in threads:
-        if api_response is None:
-            api_response = thread.result
-        elif hasattr(thread.result, "results"):
-            api_response.results += thread.result.results
+        if not api_response:
+            api_response = resp
+        elif hasattr(api_response.result, "results"):
+            api_response.results += resp.results
         else:
-            api_response["results"] += thread.result["results"]
+            api_response["results"] += resp["results"]
 
     return api_response
 
