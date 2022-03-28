@@ -1,8 +1,10 @@
 import requests
 import time
 import Common.Globals as Globals
+from Utility import EventUtility
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Resource import postEventToFrame
 
 
 def performGetRequestWithRetry(
@@ -15,9 +17,13 @@ def performGetRequestWithRetry(
             ApiToolLog().LogApiRequestOccurrence(
                 performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
             )
-            if resp.status_code < 300:
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
+                if attempt == 0:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                else:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * attempt
                 )  # Sleep for a minute * retry number
@@ -43,9 +49,13 @@ def performPatchRequestWithRetry(
             ApiToolLog().LogApiRequestOccurrence(
                 performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
             )
-            if resp.status_code < 300:
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
+                if attempt == 0:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                else:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * attempt
                 )  # Sleep for a minute * retry number
@@ -71,12 +81,18 @@ def performPutRequestWithRetry(
             ApiToolLog().LogApiRequestOccurrence(
                 performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
             )
-            if resp.status_code < 300:
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
+                if attempt == 0:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                else:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * attempt
                 )  # Sleep for a minute * retry number
+            if resp.status_code == 500 and attempt >= 2:
+                break
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
@@ -99,12 +115,18 @@ def performDeleteRequestWithRetry(
             ApiToolLog().LogApiRequestOccurrence(
                 performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
             )
-            if resp.status_code < 300:
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
+                if attempt == 0:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                else:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * attempt
                 )  # Sleep for a minute * retry number
+            if resp.status_code == 500 and attempt >= 2:
+                break
         except Exception as e:
             if attempt == maxRetry - 1:
                 ApiToolLog().LogError(e)
@@ -129,9 +151,13 @@ def performPostRequestWithRetry(
             ApiToolLog().LogApiRequestOccurrence(
                 performPostRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
             )
-            if resp.status_code < 300:
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
+                if attempt == 0:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                else:
+                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * attempt
                 )  # Sleep for a minute * retry number
