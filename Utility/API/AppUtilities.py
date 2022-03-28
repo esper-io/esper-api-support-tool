@@ -207,7 +207,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
@@ -238,7 +238,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
@@ -277,7 +277,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                         time.sleep(Globals.RETRY_SLEEP)
                     else:
                         time.sleep(
-                            Globals.RETRY_SLEEP * 20 * attempt
+                            Globals.RETRY_SLEEP * 20 * (attempt + 1)
                         )  # Sleep for a minute * retry number
             postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
             return api_response
@@ -325,7 +325,7 @@ def getAllApplicationsForHost(
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except Exception as e:
@@ -368,7 +368,7 @@ def getAllAppVersionsForHost(
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except Exception as e:
@@ -435,7 +435,7 @@ def getAppVersions(
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
     else:
         return getAppVersionsEnterpriseAndPlayStore(application_id)
@@ -504,7 +504,7 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
 
 

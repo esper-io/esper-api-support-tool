@@ -25,7 +25,7 @@ def performGetRequestWithRetry(
                 else:
                     postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
@@ -34,7 +34,7 @@ def performGetRequestWithRetry(
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
     return resp
 
@@ -57,7 +57,7 @@ def performPatchRequestWithRetry(
                 else:
                     postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
@@ -66,7 +66,7 @@ def performPatchRequestWithRetry(
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
     return resp
 
@@ -89,7 +89,7 @@ def performPutRequestWithRetry(
                 else:
                     postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
             if resp.status_code == 500 and attempt >= 2:
                 break
@@ -100,7 +100,7 @@ def performPutRequestWithRetry(
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
     return resp
 
@@ -123,7 +123,7 @@ def performDeleteRequestWithRetry(
                 else:
                     postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
             if resp.status_code == 500 and attempt >= 2:
                 break
@@ -134,7 +134,7 @@ def performDeleteRequestWithRetry(
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
     return resp
 
@@ -159,7 +159,7 @@ def performPostRequestWithRetry(
                 else:
                     postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
@@ -168,6 +168,6 @@ def performPostRequestWithRetry(
                 time.sleep(Globals.RETRY_SLEEP)
             else:
                 time.sleep(
-                    Globals.RETRY_SLEEP * 20 * attempt
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
     return resp

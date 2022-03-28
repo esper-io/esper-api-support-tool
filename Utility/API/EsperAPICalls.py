@@ -252,7 +252,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
@@ -436,7 +436,7 @@ def validateConfiguration(
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         if hasattr(api_response, "id"):
             return True

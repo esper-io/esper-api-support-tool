@@ -64,7 +64,7 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
@@ -93,7 +93,7 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
@@ -172,7 +172,7 @@ def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
         return api_response
@@ -231,7 +231,7 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
                     time.sleep(Globals.RETRY_SLEEP)
                 else:
                     time.sleep(
-                        Globals.RETRY_SLEEP * 20 * attempt
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
         return api_response
