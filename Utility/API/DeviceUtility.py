@@ -210,7 +210,12 @@ def getDeviceByIdHelper(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     if api_response:
         api_response_list.append(api_response)
 

@@ -123,7 +123,12 @@ def toggleKioskMode(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
@@ -135,7 +140,12 @@ def toggleKioskMode(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     status = response.results[0].state
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     status = waitForCommandToFinish(
@@ -204,7 +214,12 @@ def setdevicename(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
@@ -222,7 +237,12 @@ def setdevicename(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     if response.results:
         status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
@@ -478,7 +498,12 @@ def factoryResetDevice(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
@@ -490,7 +515,12 @@ def factoryResetDevice(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     status = response.results[0].state
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     status = waitForCommandToFinish(
@@ -600,7 +630,12 @@ def setAppState(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
         return waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
 
@@ -718,5 +753,10 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     return api_response
