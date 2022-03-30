@@ -72,6 +72,7 @@ from Utility.API.EsperAPICalls import (
 from Utility.EastUtility import (
     TakeAction,
     clearKnownGroups,
+    filterDeviceList,
     getAllDeviceInfo,
     processInstallDevices,
     removeNonWhitelisted,
@@ -1624,11 +1625,33 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceResp = api_response
         if hasattr(api_response, "results") and len(api_response.results):
             self.Logging("---> Processing fetched devices...")
+            if not Globals.SHOW_DISABLED_DEVICES:
+                api_response.results = list(filter(filterDeviceList, api_response.results))
             api_response.results = sorted(
                 api_response.results,
                 key=lambda i: i.device_name.lower(),
             )
             splitResults = splitListIntoChunks(api_response.results)
+            threads = []
+            for chunk in splitResults:
+                t = wxThread.GUIThread(
+                    self,
+                    self.processAddDeviceToChoice,
+                    args=(chunk),
+                    name="addDeviceToDeviceChoice",
+                )
+                threads.append(t)
+                t.start()
+            joinThreadList(threads)
+        elif type(api_response) is dict and len(api_response["results"]):
+            self.Logging("---> Processing fetched devices...")
+            if not Globals.SHOW_DISABLED_DEVICES:
+                api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+            api_response["results"] = sorted(
+                api_response["results"],
+                key=lambda i: i["device_name"].lower(),
+            )
+            splitResults = splitListIntoChunks(api_response["results"])
             threads = []
             for chunk in splitResults:
                 t = wxThread.GUIThread(
