@@ -115,7 +115,7 @@ def fetchDevicesFromGroup(
 
         if not api_response:
             api_response = resp
-        elif hasattr(api_response.result, "results"):
+        elif hasattr(api_response, "result") and hasattr(api_response.result, "results"):
             api_response.results += resp.results
         else:
             api_response["results"] += resp["results"]
