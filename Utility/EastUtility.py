@@ -797,7 +797,7 @@ def getAllDeviceInfo(frame):
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+            api_response.results = list(filter(filterDeviceList, api_response.results))
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(Globals.frame.sidePanel.selectedGroupsList)
         if api_response:
@@ -816,7 +816,7 @@ def getAllDeviceInfo(frame):
                 "---> ERROR: Failed to get devices",
             )
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(filter(filterDeviceList, api_response.results))
+            api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
