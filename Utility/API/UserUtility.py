@@ -26,9 +26,12 @@ def getUserBody(user):
         if "username" in userKeys
         else (body["first_name"] + body["last_name"])
     )
-    body["password"] = user["password"]
+    if user["password"]:
+        body["password"] = user["password"]
     body["profile"] = {}
     body["email"] = user["email"]
+    body["is_active"] = True
+    body["is_endpoint_creator"] = False
     if "role" in userKeys:
         body["profile"]["role"] = user["role"]
     else:
@@ -47,6 +50,7 @@ def getUserBody(user):
                     groups.append(gp.id)
     body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
+    body["profile"]["is_customer"] = True
     return body
 
 

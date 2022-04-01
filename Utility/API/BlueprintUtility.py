@@ -1,16 +1,7 @@
-import threading
-import time
 import Common.Globals as Globals
-import esperclient
-
 
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility, wxThread
-from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.API.EsperAPICalls import getInfo, patchInfo
-from Utility.Resource import getHeader, joinThreadList, limitActiveThreads, postEventToFrame
-
-from esperclient.rest import ApiException
+from Utility.Resource import getHeader
 
 from Utility.Web.WebRequests import performGetRequestWithRetry
 

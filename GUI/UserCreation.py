@@ -334,7 +334,7 @@ class UserCreation(wx.Frame):
                                 "firstname" not in headers and "lastname" not in headers
                             )
                         )
-                        and "password" not in headers
+                        # and "password" not in headers
                         and "role" not in headers
                         and "email" not in headers
                         and self.choice_1.GetStringSelection() != "Delete"
@@ -367,12 +367,12 @@ class UserCreation(wx.Frame):
                                 )
                             )
                             or (
+                                # (
+                                #     "password" in headers
+                                #     and len(entry) > headers.index("password")
+                                #     and not entry[headers.index("password")]
+                                # )
                                 (
-                                    "password" in headers
-                                    and len(entry) > headers.index("password")
-                                    and not entry[headers.index("password")]
-                                )
-                                or (
                                     "role" in headers
                                     and len(entry) > headers.index("role")
                                     and not entry[headers.index("role")]
