@@ -18,6 +18,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     download,
     deleteFile,
+    getEsperConfig,
     joinThreadList,
 )
 from Utility.Resource import postEventToFrame
@@ -67,7 +68,7 @@ class EsperTemplateUtil:
             dest if dest else self.getTemplates(self.toApi, self.toKey, self.toEntId)
         )
         toApps = getAllApplicationsForHost(
-            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+            getEsperConfig(self.toApi, self.toKey), self.toEntId
         )
 
         templateFound = None
@@ -82,7 +83,7 @@ class EsperTemplateUtil:
             templateFound = self.checkTemplate(
                 templateFound,
                 toApps.results,
-                self.getEsperConfig(self.toApi, self.toKey),
+                getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
             )
 
@@ -120,7 +121,7 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
-            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+            getEsperConfig(self.toApi, self.toKey), self.toEntId
         )
         allDeviceGroupId = None
         found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
@@ -129,13 +130,13 @@ class EsperTemplateUtil:
         if not found:
             postEventToFrame(eventUtil.myEVT_LOG, "Creating new device group...")
             res = createDeviceGroupForHost(
-                self.getEsperConfig(self.toApi, self.toKey),
+                getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
                 templateFound["template"]["device_group"]["name"],
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                    getEsperConfig(self.toApi, self.toKey), self.toEntId
                 )
                 _, templateFound, _ = self.checkDeviceGroup(
                     templateFound, toDeviceGroups, allDeviceGroupId
@@ -172,13 +173,6 @@ class EsperTemplateUtil:
                         bgList.append(newBg)
                 templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
-
-    def getEsperConfig(self, host, apiKey, auth="Bearer"):
-        configuration = esperclient.Configuration()
-        configuration.host = host.replace("/v0/enterprise/", "")
-        configuration.api_key["Authorization"] = apiKey
-        configuration.api_key_prefix["Authorization"] = auth
-        return configuration
 
     @api_tool_decorator()
     def uploadWallpaper(self, link, key, enterprise_id, bg):
@@ -296,7 +290,7 @@ class EsperTemplateUtil:
 
             if missingAppThreads:
                 apps = getAllApplicationsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                    getEsperConfig(self.toApi, self.toKey), self.toEntId
                 ).results
             # newTemplate["application"]["apps"] = []
             self.processApplications(template, newTemplate, apps)
@@ -350,7 +344,7 @@ class EsperTemplateUtil:
                 for toApp in apps:
                     if toApp.package_name == app["packageName"]:
                         appVersions = getAllAppVersionsForHost(
-                            self.getEsperConfig(self.toApi, self.toKey),
+                            getEsperConfig(self.toApi, self.toKey),
                             self.toEntId,
                             toApp.id,
                         )
@@ -398,7 +392,7 @@ class EsperTemplateUtil:
                 "is_g_play" in app and app["is_g_play"]
             ):
                 matchingApps = getAllApplicationsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey),
+                    getEsperConfig(self.toApi, self.toKey),
                     self.toEntId,
                     package_name=app["packageName"],
                 )
@@ -407,7 +401,7 @@ class EsperTemplateUtil:
                     for match in matchingApps.results:
                         appId = match["id"]
                         versions = getAllAppVersionsForHost(
-                            self.getEsperConfig(self.toApi, self.toKey),
+                            getEsperConfig(self.toApi, self.toKey),
                             self.toEntId,
                             appId,
                         )

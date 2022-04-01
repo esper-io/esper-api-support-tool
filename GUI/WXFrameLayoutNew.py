@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from Common.SleepInhibitor import SleepInhibitor
+from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
 from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled
@@ -3298,7 +3299,12 @@ class NewFrameLayout(wx.Frame):
             dlg.ShowModal()
 
     def onCloneBP(self, event):
-        pass
+        with BlueprintsDialog(self.sidePanel.configChoice) as dlg:
+            result = dlg.ShowModal()
+            if result == wx.ID_OK:
+                # self.prepareClone(self.tmpDialog)
+                pass
+            dlg.DestroyLater()
 
     def loadConfigCheckBlueprint(self):
         Globals.token_lock.acquire()

@@ -104,7 +104,7 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
 
-        cloneBlueprint = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Blueprint\tCtrl+Shift+B")
+        cloneBlueprint = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Blueprint Across Endpoints\tCtrl+Shift+B")
         self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         self.toggleCloneMenuOptions(False)

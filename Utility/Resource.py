@@ -14,6 +14,7 @@ import subprocess
 import wx
 import webbrowser
 import Common.Globals as Globals
+import esperclient
 
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
@@ -463,3 +464,11 @@ def getAllFromOffsets(
 @limits(calls=10, period=1)
 def enforceRateLimit():
     pass
+
+
+def getEsperConfig(host, apiKey, auth="Bearer"):
+    configuration = esperclient.Configuration()
+    configuration.host = host.replace("/v0/enterprise/", "")
+    configuration.api_key["Authorization"] = apiKey
+    configuration.api_key_prefix["Authorization"] = auth
+    return configuration
