@@ -53,6 +53,8 @@ class PreferencesDialog(wx.Dialog):
             "showDisabledDevices",
             "lastSeenAsDate",
             "appsInDeviceGrid",
+            "inhibitSleep",
+            "appVersionNameInsteadOfCode"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -324,6 +326,14 @@ class PreferencesDialog(wx.Dialog):
             "Show Apps In Device Grid",
             wx.CheckBox,
             "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
+        )
+
+        (_, _, self.checkbox_22,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Display Version Name Instead of Code",
+            wx.CheckBox,
+            "Displays the App Version Name instead of the Version Code",
         )
 
         # App Preferences
@@ -767,6 +777,21 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
             Globals.APPS_IN_DEVICE_GRID = True
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+
+        if prefDict and "appVersionNameInsteadOfCode" in prefDict:
+            if (
+                isinstance(prefDict["appVersionNameInsteadOfCode"], str)
+                and prefDict["appVersionNameInsteadOfCode"].lower() == "true"
+            ) or prefDict["appVersionNameInsteadOfCode"] is True:
+                self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+            else:
+                self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = False
+        else:
+            self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+            Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -849,6 +874,7 @@ class PreferencesDialog(wx.Dialog):
             "lastSeenAsDate": self.checkbox_19.IsChecked(),
             "appsInDeviceGrid": self.checkbox_20.IsChecked(),
             "inhibitSleep": self.checkbox_21.IsChecked(),
+            "appVersionNameInsteadOfCode": self.checkbox_22.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -879,6 +905,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
+        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -1209,6 +1236,19 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_21.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.INHIBIT_SLEEP = False
+        if "appVersionNameInsteadOfCode" in self.prefs:
+            if (
+                isinstance(self.prefs["appVersionNameInsteadOfCode"], str)
+                and self.prefs["appVersionNameInsteadOfCode"].lower() == "true"
+            ) or self.prefs["appVersionNameInsteadOfCode"] is True:
+                self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+            else:
+                self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = False
+        else:
+            self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+            Globals.VERSON_NAME_INSTEAD_OF_CODE = True
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1249,6 +1289,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["lastSeenAsDate"] = Globals.LAST_SEEN_AS_DATE
         self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
         self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
+        self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
 
         return self.prefs
 
@@ -1320,6 +1361,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.APPS_IN_DEVICE_GRID
         elif key == "inhibitSleep":
             return Globals.INHIBIT_SLEEP
+        elif key == "appVersionNameInsteadOfCode":
+            return Globals.VERSON_NAME_INSTEAD_OF_CODE
         else:
             return None
 

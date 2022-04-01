@@ -522,7 +522,7 @@ class NewFrameLayout(wx.Frame):
                     self, self.saveFile, (inFile), name="saveFile"
                 )
                 thread.start()
-                if inFile.endswith(".csv"):
+                if inFile.endswith(".csv") and self.gridPanel.grid_3_contents:
                     newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
                     inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
                     thread = wxThread.GUIThread(
@@ -2390,7 +2390,22 @@ class NewFrameLayout(wx.Frame):
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-
+            elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                    if self.WINDOWS:
+                        deviceThread = wxThread.GUIThread(
+                            self,
+                            self.gridPanel.addDeviceToDeviceGrid,
+                            (deviceInfo),
+                            name="addDeviceToDeviceGrid",
+                        )
+                        deviceThread.start()
+                        threads.append(deviceThread)
+                    else:
+                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                else:
+                    # construct and add info to grid contents
+                    self.gridPanel.constructDeviceGridContent(deviceInfo)
             joinThreadList(threads)
 
             value = int(num / maxGauge * 100)

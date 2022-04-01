@@ -562,18 +562,32 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                version = (
-                    app["application"]["version"]["version_code"][
-                        1 : len(app["application"]["version"]["version_code"])
-                    ]
-                    if (
-                        app["application"]["version"]["version_code"]
-                        and app["application"]["version"]["version_code"].startswith(
-                            "v"
+                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                    version = (
+                        app["application"]["version"]["version_name"][
+                            1 : len(app["application"]["version"]["version_name"])
+                        ]
+                        if (
+                            app["application"]["version"]["version_name"]
+                            and app["application"]["version"]["version_name"].startswith(
+                                "v"
+                            )
                         )
+                        else app["application"]["version"]["version_name"]
                     )
-                    else app["application"]["version"]["version_code"]
-                )
+                else:
+                    version = (
+                        app["application"]["version"]["version_code"][
+                            1 : len(app["application"]["version"]["version_code"])
+                        ]
+                        if (
+                            app["application"]["version"]["version_code"]
+                            and app["application"]["version"]["version_code"].startswith(
+                                "v"
+                            )
+                        )
+                        else app["application"]["version"]["version_code"]
+                    )
 
                 appName = app["application"]["application_name"]
                 pkgName = app["application"]["package_name"]
@@ -582,11 +596,19 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                version = (
-                    app["version_code"][1 : len(app["version_code"])]
-                    if app["version_code"].startswith("v")
-                    else app["version_code"]
-                )
+                version = None
+                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                    version = (
+                        app["version_name"][1 : len(app["version_name"])]
+                        if app["version_name"].startswith("v")
+                        else app["version_name"]
+                    )
+                else:
+                    version = (
+                        app["version_code"][1 : len(app["version_code"])]
+                        if app["version_code"].startswith("v")
+                        else app["version_code"]
+                    )
                 applist.append(
                     constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )

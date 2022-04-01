@@ -67,6 +67,7 @@ def TakeAction(frame, input, action, isDevice=False):
         action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         or action == GeneralActions.GENERATE_APP_REPORT.value
         or action == GeneralActions.GENERATE_INFO_REPORT.value
+        or action == GeneralActions.GENERATE_DEVICE_REPORT.value
     ):
         frame.gridPanel.button_2.Enable(False)
         frame.gridPanel.button_1.Enable(False)
@@ -133,7 +134,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
     getApps = (
         action == GeneralActions.GENERATE_APP_REPORT.value
         or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-        or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
+        # or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
     )
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value
@@ -414,8 +415,8 @@ def populateDeviceInfoDictionary(
     )
     if getApps:
         appThread.start()
-    if getApps:
-        appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+    # if getApps:
+    #     appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     eventThread = wxThread.GUIThread(
         Globals.frame,
         getLatestEvent,
@@ -661,7 +662,7 @@ def populateDeviceInfoDictionary(
     json = {}
     if hasattr(appThread, "result") and appThread.result:
         apps, json = appThread.result
-    else:
+    elif appThread and type(appThread) is tuple:
         apps, json = appThread
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json

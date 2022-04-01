@@ -63,6 +63,7 @@ GENERAL_ACTIONS = {
     + "Generate Report "
     + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+    # "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     ("\t" if platform.system() == "Windows" else "")
@@ -287,5 +288,7 @@ SHOW_DISABLED_DEVICES = False
 LAST_SEEN_AS_DATE = True
 APPS_IN_DEVICE_GRID = True
 INHIBIT_SLEEP = False
+VERSON_NAME_INSTEAD_OF_CODE = False
+
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

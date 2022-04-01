@@ -779,9 +779,10 @@ class GridPanel(wx.Panel):
             if "Esper Name" == attribute:
                 esperName = value
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+        esperNameAccessor = Globals.CSV_TAG_ATTR_NAME["Esper Name"]
         deviceListing = list(
             filter(
-                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
+                lambda x: (x[esperNameAccessor] == esperName),
                 self.grid_1_contents,
             )
         )
