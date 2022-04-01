@@ -17,6 +17,7 @@ from Utility.API.CommandUtility import (
 )
 from Utility.Resource import (
     displayMessageBox,
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -192,6 +193,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.upload(enterprise_id, file)
                 ApiToolLog().LogApiRequestOccurrence(
                     "uploadApplicationForHost",
@@ -224,7 +226,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-
+                enforceRateLimit()
                 api_response = api_instance.upload(enterprise_id, file)
                 break
             except Exception as e:
@@ -256,7 +258,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
             api_response = None
             for attempt in range(maxAttempt):
                 try:
-
+                    enforceRateLimit()
                     api_response = api_instance.get_all_applications(
                         Globals.enterprise_id,
                         limit=Globals.limit,
@@ -303,6 +305,7 @@ def getAllApplicationsForHost(
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_all_applications(
                     enterprise_id,
                     limit=Globals.limit,
@@ -347,6 +350,7 @@ def getAllAppVersionsForHost(
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_app_versions(
                     app_id,
                     enterprise_id,
@@ -408,7 +412,7 @@ def getAppVersions(
         enterprise_id = Globals.enterprise_id
         for attempt in range(maxAttempt):
             try:
-
+                enforceRateLimit()
                 api_response = api_instance.get_app_versions(
                     application_id,
                     enterprise_id,
@@ -478,7 +482,7 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             # List install devices
-
+            enforceRateLimit()
             api_response = api_instance.get_install_devices(
                 version_id,
                 application_id,

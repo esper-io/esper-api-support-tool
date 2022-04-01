@@ -10,3 +10,4 @@ pandas
 openpyxl
 xlsxwriter
 xlrd
+ratelimit

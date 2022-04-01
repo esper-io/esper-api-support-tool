@@ -2,6 +2,7 @@
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -233,7 +234,7 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, request)
             ApiToolLog().LogApiRequestOccurrence(
                 "executeCommandAndWait",
@@ -273,7 +274,7 @@ def waitForCommandToFinish(
     response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, request_id
             )
@@ -324,7 +325,7 @@ def waitForCommandToFinish(
                 break
             for attempt in range(maxAttempt):
                 try:
-
+                    enforceRateLimit()
                     response = api_instance.get_command_request_status(
                         Globals.enterprise_id, request_id
                     )

@@ -19,6 +19,7 @@ from Utility.API.CommandUtility import (
     waitForCommandToFinish,
 )
 from Utility.Resource import (
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -109,6 +110,7 @@ def toggleKioskMode(
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -132,6 +134,7 @@ def toggleKioskMode(
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -201,7 +204,7 @@ def setdevicename(
     api_response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "setdevicename", api_instance.create_command, Globals.PRINT_API_LOGS
@@ -223,7 +226,7 @@ def setdevicename(
     response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -258,7 +261,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
-
+                enforceRateLimit()
                 api_response = api_instance.get_token_info()
                 ApiToolLog().LogApiRequestOccurrence(
                     "getTokenInfo", api_instance.get_token_info, Globals.PRINT_API_LOGS
@@ -440,7 +443,7 @@ def validateConfiguration(
         api_response = None
         for attempt in range(maxAttempt):
             try:
-
+                enforceRateLimit()
                 api_response = api_instance.get_enterprise(enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "validateConfiguration",
@@ -483,7 +486,7 @@ def factoryResetDevice(
     api_response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -507,6 +510,7 @@ def factoryResetDevice(
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -614,7 +618,7 @@ def setAppState(
         api_instance = getCommandsApiInstance()
         for attempt in range(maxAttempt):
             try:
-
+                enforceRateLimit()
                 api_response = api_instance.create_command(
                     Globals.enterprise_id, request
                 )
@@ -695,7 +699,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             if type(entry) is dict and "esperName" in entry.keys():
                 identifier = entry["esperName"]
                 api_response = api_instance.get_all_devices(

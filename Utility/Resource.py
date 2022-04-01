@@ -19,6 +19,7 @@ from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
+from ratelimit import sleep_and_retry, limits
 
 
 def resourcePath(relative_path):
@@ -456,3 +457,9 @@ def getAllFromOffsets(
         elif type(resp) is dict and "results" in resp and resp["results"]:
             results += resp["results"]
     return results
+
+
+@sleep_and_retry
+@limits(calls=200, period=1)
+def enforceRateLimit():
+    pass

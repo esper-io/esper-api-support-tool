@@ -196,7 +196,7 @@ def getDeviceByIdHelper(
 ):
     for attempt in range(maxAttempt):
         try:
-
+            enforceRateLimit()
             api_response = api_instance.get_device_by_id(
                 Globals.enterprise_id, device_id=device
             )

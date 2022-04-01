@@ -4,7 +4,7 @@ import Common.Globals as Globals
 from Utility import EventUtility
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import postEventToFrame
+from Utility.Resource import enforceRateLimit, postEventToFrame
 
 
 def performGetRequestWithRetry(
@@ -13,6 +13,7 @@ def performGetRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
+            enforceRateLimit()
             resp = requests.get(url, headers=headers, json=json, data=data)
             ApiToolLog().LogApiRequestOccurrence(
                 performGetRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -45,6 +46,7 @@ def performPatchRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
+            enforceRateLimit()
             resp = requests.patch(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performPatchRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -77,6 +79,7 @@ def performPutRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
+            enforceRateLimit()
             resp = requests.put(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performPutRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -111,6 +114,7 @@ def performDeleteRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
+            enforceRateLimit()
             resp = requests.delete(url, headers=headers, data=data, json=json)
             ApiToolLog().LogApiRequestOccurrence(
                 performDeleteRequestWithRetry.__name__, url, Globals.PRINT_API_LOGS
@@ -145,6 +149,7 @@ def performPostRequestWithRetry(
     resp = None
     for attempt in range(maxRetry):
         try:
+            enforceRateLimit()
             resp = requests.post(
                 url, headers=headers, data=data, json=json, files=files
             )
