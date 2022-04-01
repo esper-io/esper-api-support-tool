@@ -176,13 +176,16 @@ class BlueprintsDialog(wx.Dialog):
         if match:
             match = match[0]
         config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
-        revision = getBlueprintRevisionFromHost(config["apiHost"], config["apiKey"], config["enterprise"], match["group"])
-        formattedRes = ""
-        try:
-            formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
-        except:
-            formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
-        self.text_ctrl_1.SetValue(formattedRes)
+        if match["group"]:
+            revision = getBlueprintRevisionFromHost(config["apiHost"], config["apiKey"], config["enterprise"], match["group"])
+            formattedRes = ""
+            try:
+                formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
+            except:
+                formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
+            self.text_ctrl_1.SetValue(formattedRes)
+        else:
+            self.text_ctrl_1.SetValue("No preview available")
         self.checkInputs()
 
     @api_tool_decorator()
