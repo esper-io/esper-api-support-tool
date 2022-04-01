@@ -3,6 +3,7 @@
 from Common.SleepInhibitor import SleepInhibitor
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -130,6 +131,7 @@ class NewFrameLayout(wx.Frame):
         self.groupManage = None
         self.AppState = None
         self.searchThreads = []
+        self.blueprintsEnabled = False
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -1302,12 +1304,15 @@ class NewFrameLayout(wx.Frame):
 
                 self.setGaugeValue(50)
                 threads = []
+                self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 if Globals.HAS_INTERNET:
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
-                    threads = [groupThread, appThread]
+                    blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, None, name="loadConfigCheckBlueprint")
+                    blueprints.start()
+                    threads = [groupThread, appThread, blueprints]
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -2995,7 +3000,10 @@ class NewFrameLayout(wx.Frame):
         self.menubar.eqlQuery.Enable(state)
         self.menubar.run.Enable(state)
         self.menubar.installedDevices.Enable(state)
-        self.menubar.clone.Enable(state)
+        if not self.blueprintsEnabled:
+            self.menubar.clone.Enable(state)
+        else:
+            self.menubar.cloneBP.Enable(state)
         self.menubar.command.Enable(state)
         self.menubar.collectionSubMenu.Enable(state)
         self.menubar.groupSubMenu.Enable(state)
@@ -3291,3 +3299,12 @@ class NewFrameLayout(wx.Frame):
 
     def onCloneBP(self, event):
         pass
+
+    def loadConfigCheckBlueprint(self):
+        Globals.token_lock.acquire()
+        Globals.token_lock.release()
+        self.blueprintsEnabled = checkBlueprintsIsEnabled()
+        if self.blueprintsEnabled:
+            self.menubar.toggleCloneMenuOptions(True)
+        else:
+            self.menubar.toggleCloneMenuOptions(False)

@@ -98,19 +98,21 @@ class ToolMenuBar(wx.MenuBar):
         self.command = runMenu.Append(commandItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
-        cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
-        self.clone = runMenu.Append(cloneItem)
+        self.cloneSubMenu = wx.Menu()
+
+        cloneItem = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
+        self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
-        cloneBlueprint = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
-        self.cloneBP = runMenu.Append(cloneBlueprint)
+
+        cloneBlueprint = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Blueprint\tCtrl+Shift+B")
+        self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
-        self.cloneBP.Hide()
-        if hasattr(self.clone, "Hide"):
-            self.clone.Show()
-            self.cloneBP.Hide()
-        else:
-            self.clone.Enable(True)
-            self.cloneBP.Enable(False)
+        self.toggleCloneMenuOptions(False)
+
+        self.cloneSubMenu = runMenu.Append(
+            wx.ID_ANY, "&Clone", self.cloneSubMenu
+        )
+
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.appSubMenu = wx.Menu()
@@ -237,7 +239,6 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def __set_properties(self):
         self.run.Enable(False)
-        self.clone.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
         self.collection.Enable(False)
@@ -458,6 +459,11 @@ class ToolMenuBar(wx.MenuBar):
                 self.collectionSubMenu.Hide()
             else:
                 self.collectionSubMenu.Enable(False)
+        else:
+            if hasattr(self.collectionSubMenu, "Show"):
+                self.collectionSubMenu.Show()
+            else:
+                self.collectionSubMenu.Enable(True)
 
     @api_tool_decorator()
     def checkBlueprintsEnabled(self):
@@ -513,3 +519,11 @@ class ToolMenuBar(wx.MenuBar):
         self.fileSave.Enable(state)
         self.fileSaveAs.Enable(state)
         # self.fileSaveApps.Enable(state)
+
+    def toggleCloneMenuOptions(self, showBlueprint, toggleBothSameState=False):
+        if toggleBothSameState:
+            self.clone.Enable(enable=showBlueprint)
+            self.cloneBP.Enable(enable=showBlueprint)
+        else:
+            self.clone.Enable(enable=bool(not showBlueprint))
+            self.cloneBP.Enable(enable=showBlueprint)
