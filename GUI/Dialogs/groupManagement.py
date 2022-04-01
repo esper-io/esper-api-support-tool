@@ -39,6 +39,7 @@ class GroupManagement(wx.Dialog):
             "New Group Name",
         ]
         self.rootId = None
+        self.root = None
 
         super(GroupManagement, self).__init__(
             None,
