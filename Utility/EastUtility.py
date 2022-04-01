@@ -134,8 +134,8 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
     getApps = (
         action == GeneralActions.GENERATE_APP_REPORT.value
         or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-        # or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
-    )
+        or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
+    )  and action != GeneralActions.GENERATE_DEVICE_REPORT.value
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value
         or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
