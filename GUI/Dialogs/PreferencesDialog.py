@@ -328,14 +328,6 @@ class PreferencesDialog(wx.Dialog):
             "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
         )
 
-        (_, _, self.checkbox_22,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Display Version Name Instead of Code",
-            wx.CheckBox,
-            "Displays the App Version Name instead of the Version Code",
-        )
-
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
@@ -373,6 +365,14 @@ class PreferencesDialog(wx.Dialog):
             "Set App State To SHOW before Set Kiosk",
             wx.CheckBox,
             "Set App State to SHOW before setting the application as a Kiosk app on device.",
+        )
+
+        (_, _, self.checkbox_22,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Display Version Name Instead of Code",
+            wx.CheckBox,
+            "Displays the App Version Name instead of the Version Code",
         )
 
         # Prompts Preferences
