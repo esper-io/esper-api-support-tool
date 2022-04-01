@@ -57,9 +57,9 @@ class ToolMenuBar(wx.MenuBar):
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
 
-        saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
-        # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
-        self.fileSaveApps = fileMenu.Append(saveApps)
+        # saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
+        # # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
+        # self.fileSaveApps = fileMenu.Append(saveApps)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fas = wx.MenuItem(
@@ -233,7 +233,7 @@ class ToolMenuBar(wx.MenuBar):
         self.groupSubMenu.Enable(False)
         self.fileSave.Enable(False)
         self.fileSaveAs.Enable(False)
-        self.fileSaveApps.Enable(False)
+        # self.fileSaveApps.Enable(False)
 
         self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
@@ -247,7 +247,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBothAll, self.fileSaveAs)
-        self.Bind(wx.EVT_MENU, self.parentFrame.saveAppInfo, self.fileSaveApps)
+        # self.Bind(wx.EVT_MENU, self.parentFrame.saveAppInfo, self.fileSaveApps)
         self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
@@ -488,4 +488,4 @@ class ToolMenuBar(wx.MenuBar):
     def setSaveMenuOptionsEnableState(self, state):
         self.fileSave.Enable(state)
         self.fileSaveAs.Enable(state)
-        self.fileSaveApps.Enable(state)
+        # self.fileSaveApps.Enable(state)
