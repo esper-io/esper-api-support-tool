@@ -3,7 +3,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Resource import getHeader
 
-from Utility.Web.WebRequests import performGetRequestWithRetry
+from Utility.Web.WebRequests import performGetRequestWithRetry, performPostRequestWithRetry
 
 
 def checkBlueprintsIsEnabled():
@@ -98,7 +98,7 @@ def getBlueprintRevision(groupId):
 
 
 @api_tool_decorator()
-def getBlueprintRevisionFromHost(host, key, enterprise, groupId):
+def getGroupBlueprint(host, key, enterprise, groupId):
     url = "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
         baseUrl=host,
         enterprise_id=enterprise,
@@ -108,4 +108,33 @@ def getBlueprintRevisionFromHost(host, key, enterprise, groupId):
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     })
+    return resp
+
+
+@api_tool_decorator()
+def getGroupBlueprintDetail(host, key, enterprise, groupId, blueprintId):
+    url = "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/{blueprint_id}".format(
+        baseUrl=host,
+        enterprise_id=enterprise,
+        group_id=groupId,
+        blueprint_id=blueprintId
+    )
+    resp = performGetRequestWithRetry(url, headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    })
+    return resp
+
+
+@api_tool_decorator()
+def createBlueprintForHost(host, key, enterprise, groupId, body):
+    url = "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
+        baseUrl=host,
+        enterprise_id=enterprise,
+        group_id=groupId
+    )
+    resp = performPostRequestWithRetry(url, headers={
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }, json=body)
     return resp

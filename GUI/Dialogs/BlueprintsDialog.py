@@ -6,7 +6,7 @@ import wx.html as wxHtml
 
 from Common.decorator import api_tool_decorator
 from GUI.PromptingComboBox import PromptingComboBox
-from Utility.API.BlueprintUtility import getAllBlueprintsFromHost, getBlueprintRevisionFromHost
+from Utility.API.BlueprintUtility import getAllBlueprintsFromHost, getGroupBlueprintDetail
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import getEsperConfig, openWebLinkInBrowser
 
@@ -177,7 +177,7 @@ class BlueprintsDialog(wx.Dialog):
             match = match[0]
         config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
         if match["group"]:
-            revision = getBlueprintRevisionFromHost(config["apiHost"], config["apiKey"], config["enterprise"], match["group"])
+            revision = getGroupBlueprintDetail(config["apiHost"], config["apiKey"], config["enterprise"], match["group"], event.ClientData)
             formattedRes = ""
             try:
                 formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
