@@ -460,6 +460,6 @@ def getAllFromOffsets(
 
 
 @sleep_and_retry
-@limits(calls=200, period=1)
+@limits(calls=10, period=1)
 def enforceRateLimit():
     pass
