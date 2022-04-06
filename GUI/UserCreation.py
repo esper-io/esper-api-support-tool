@@ -344,7 +344,7 @@ class UserCreation(wx.Frame):
                     ):
                         displayMessageBox(
                             (
-                                "Failed to add Users. Please make sure that Username (or First and Last Name), Email, Password, and Role columns exist and are filled out for each User.",
+                                "Failed to add Users. Please make sure that Username (or First and Last Name), Email, and Role columns exist and are filled out for each User.",
                                 wx.ICON_ERROR,
                             )
                         )
