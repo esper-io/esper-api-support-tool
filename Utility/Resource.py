@@ -64,7 +64,7 @@ def postEventToFrame(eventType, eventValue=None):
             raise e
 
 
-def download(url, file_name, overwrite=True):
+def download(url, file_name, overwrite=True, raiseError=True):
     try:
         if os.path.exists(file_name) and overwrite:
             os.remove(file_name)
@@ -72,11 +72,18 @@ def download(url, file_name, overwrite=True):
         print(e)
         ApiToolLog().LogError(e)
     # open in binary mode
-    with open(file_name, "wb") as file:
-        # get request
-        response = requests.get(url)
-        # write to file
-        file.write(response.content)
+    try:
+        with open(file_name, "wb") as file:
+            # get request
+            response = requests.get(url)
+            # write to file
+            file.write(response.content)
+    except Exception as e:
+        ApiToolLog().LogError(e)
+        if raiseError:
+            raise e
+        else:
+            print(e)
 
 
 def checkInternetConnection(url):

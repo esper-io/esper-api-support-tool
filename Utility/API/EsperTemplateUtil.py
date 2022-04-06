@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import esperclient
 import os
 import wx
 from Utility.API.AppUtilities import (

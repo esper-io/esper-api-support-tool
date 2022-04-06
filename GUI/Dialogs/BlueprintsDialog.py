@@ -26,6 +26,10 @@ class BlueprintsDialog(wx.Dialog):
 
         self.configMenuOpt = configMenuOpt
         self.blueprints = None
+        self.toConfig = None
+        self.fromConfig = None
+        self.blueprint = None
+        self.group = None
         choices = list(self.configMenuOpt.keys())
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -142,8 +146,9 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroups(self, event):
-        print("Loading Dest Groups")
+        self.changeCursorToWait()
         config = self.configMenuOpt[event.String]
+        self.toConfig = config
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]), config["enterprise"]
         )
@@ -154,8 +159,8 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadBlueprints(self, event):
         self.changeCursorToWait()
-        print("Loading Src BP")
         config = self.configMenuOpt[event.String]
+        self.fromConfig = config
         bps = getAllBlueprintsFromHost(config["apiHost"], config["apiKey"], config["enterprise"])
         if bps:
             self.blueprints = bps.json()
@@ -168,7 +173,7 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadBlueprintPreview(self, event):
-        print("Loading Src BP Preview")
+        self.changeCursorToWait()
         match = list(filter(
             lambda x: x["id"] == event.ClientData,
             self.blueprints["results"],
@@ -178,6 +183,7 @@ class BlueprintsDialog(wx.Dialog):
         config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
         if match["group"]:
             revision = getGroupBlueprintDetail(config["apiHost"], config["apiKey"], config["enterprise"], match["group"], event.ClientData)
+            self.blueprint = revision
             formattedRes = ""
             try:
                 formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
@@ -200,6 +206,8 @@ class BlueprintsDialog(wx.Dialog):
             self.button_OK.Enable(True)
         else:
             self.button_OK.Enable(False)
+        if self.combo_box_2.GetSelection() > -1:
+            self.group = self.combo_box_2.GetClientData(self.combo_box_2.GetSelection())
         self.changeCursorToDefault()
 
     @api_tool_decorator()
@@ -208,3 +216,9 @@ class BlueprintsDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
+
+    def getBlueprint(self):
+        return self.blueprint.json()
+
+    def getDestinationGroup(self):
+        return self.group

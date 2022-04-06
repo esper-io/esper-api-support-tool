@@ -4,7 +4,7 @@ from Common.SleepInhibitor import SleepInhibitor
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled
+from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled, prepareBlueprintClone
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -783,13 +783,14 @@ class NewFrameLayout(wx.Frame):
                     )
                     col_idx = df_1.columns.get_loc(column)
                     writer1.sheets["Device"].set_column(col_idx, col_idx, column_width)
-                df_2.to_excel(writer1, sheet_name="Network", index=False)
-                for column in df_2:
-                    column_width = max(
-                        df_2[column].astype(str).map(len).max(), len(column)
-                    )
-                    col_idx = df_2.columns.get_loc(column)
-                    writer1.sheets["Network"].set_column(col_idx, col_idx, column_width)
+                if self.gridPanel.grid_2_contents:
+                    df_2.to_excel(writer1, sheet_name="Network", index=False)
+                    for column in df_2:
+                        column_width = max(
+                            df_2[column].astype(str).map(len).max(), len(column)
+                        )
+                        col_idx = df_2.columns.get_loc(column)
+                        writer1.sheets["Network"].set_column(col_idx, col_idx, column_width)
                 if self.gridPanel.grid_3_contents:
                     df_3.to_excel(writer1, sheet_name="Application", index=False)
                     for column in df_3:
@@ -2228,7 +2229,7 @@ class NewFrameLayout(wx.Frame):
                 deviceId = device["id"]
 
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
@@ -2352,7 +2353,7 @@ class NewFrameLayout(wx.Frame):
                 thread.start()
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
-                if len(self.gridPanel.grid_3_contents) < Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_3_contents) > Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         appThread = wxThread.GUIThread(
                             self,
@@ -2371,7 +2372,7 @@ class NewFrameLayout(wx.Frame):
                         device, deviceInfo, deviceInfo["appObj"]
                     )
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
@@ -2397,7 +2398,7 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
             elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
@@ -3302,7 +3303,7 @@ class NewFrameLayout(wx.Frame):
         with BlueprintsDialog(self.sidePanel.configChoice) as dlg:
             result = dlg.ShowModal()
             if result == wx.ID_OK:
-                # self.prepareClone(self.tmpDialog)
+                prepareBlueprintClone(dlg.getBlueprint(), dlg.toConfig, dlg.fromConfig, dlg.getDestinationGroup())
                 pass
             dlg.DestroyLater()
 
