@@ -12,6 +12,7 @@ from Utility.Web.WebRequests import performGetRequestWithRetry, performPostReque
 
 from esperclient import InlineResponse201
 
+
 def checkBlueprintsIsEnabled():
     enabled = False
     resp = getAllBlueprints()
@@ -159,7 +160,9 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     blueprint["latest_revision"].pop("created_on", None)
     blueprint["latest_revision"].pop("comments", None)
 
-    blueprint["latest_revision"]["security"]["minimum_password_length"] = 4 if blueprint["latest_revision"]["security"]["password_quality"] == "PASSWORD_QUALITY_UNSPECIFIED" else blueprint["latest_revision"]["security"]["minimum_password_length"]
+    blueprint["latest_revision"]["security"]["minimum_password_length"] = (4
+                                                                           if blueprint["latest_revision"]["security"]["password_quality"] == "PASSWORD_QUALITY_UNSPECIFIED"
+                                                                           else blueprint["latest_revision"]["security"]["minimum_password_length"])
 
     blueprint, missingApps, downloadLinks = checkFromMissingApps(blueprint, toConfig, fromConfig)
 
