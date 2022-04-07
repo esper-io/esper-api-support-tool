@@ -364,14 +364,14 @@ class EsperTemplateUtil:
                                         app, newTemplate, toApp, version.id
                                     )
                                     break
-                        if not found:
-                            upload = wxThread.GUIThread(
-                                self.parent,
-                                self.uploadMissingApk,
-                                (app, template, newTemplate, config, entId),
-                            )
-                            missingAppThreads.append(upload)
-                            upload.start()
+                if not found:
+                    upload = wxThread.GUIThread(
+                        self.parent,
+                        self.uploadMissingApk,
+                        (app, template, newTemplate, config, entId),
+                    )
+                    missingAppThreads.append(upload)
+                    upload.start()
 
     def addAppVersionToTemplate(self, app, template, toApp, appVersion):
         if (
