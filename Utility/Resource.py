@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import threading
-from Utility.EventUtility import CustomEvent
+
+import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 import json
 import os
@@ -18,6 +19,7 @@ import esperclient
 
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
+from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
 from ratelimit import sleep_and_retry, limits

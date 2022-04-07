@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser, resourcePath
+from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
 from Common.decorator import api_tool_decorator
 import wx
 import wx.html as wxHtml
@@ -94,9 +94,7 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def onClose(self, event):
-        evt = eventUtil.CustomEvent(eventUtil.myEVT_UNCHECK_CONSOLE, -1, None)
-        if Globals.frame:
-            wx.PostEvent(Globals.frame, evt)
+        postEventToFrame(eventUtil.myEVT_UNCHECK_CONSOLE, None)
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
         self.DestroyLater()

@@ -33,7 +33,7 @@ class PreferencesDialog(wx.Dialog):
             "getAllApps",
             "showPkg",
             "reachQueueStateOnly",
-            "getAppsForEachDevice",
+            # "getAppsForEachDevice",
             "gridDialog",
             "templateDialog",
             "templateUpdate",
@@ -351,13 +351,13 @@ class PreferencesDialog(wx.Dialog):
             "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
 
-        (_, _, self.checkbox_6,) = self.addPrefToPanel(
-            self.app,
-            sizer_9,
-            "Get Applications For Each Device",
-            wx.CheckBox,
-            "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
-        )
+        # (_, _, self.checkbox_6,) = self.addPrefToPanel(
+        #     self.app,
+        #     sizer_9,
+        #     "Get Applications For Each Device",
+        #     wx.CheckBox,
+        #     "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
+        # )
 
         (_, _, self.checkbox_11,) = self.addPrefToPanel(
             self.app,
@@ -485,19 +485,19 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_PKG_NAME = False
 
-        if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
-            self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.GET_APP_EACH_DEVICE = False
-        elif prefDict and prefDict["getAppsForEachDevice"]:
-            if (
-                isinstance(self.prefs["getAppsForEachDevice"], str)
-                and prefDict["getAppsForEachDevice"].lower() == "true"
-            ) or prefDict["getAppsForEachDevice"] is True:
-                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
-                Globals.GET_APP_EACH_DEVICE = True
-            else:
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.GET_APP_EACH_DEVICE = False
+        # if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
+        #     self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.GET_APP_EACH_DEVICE = False
+        # elif prefDict and prefDict["getAppsForEachDevice"]:
+        #     if (
+        #         isinstance(self.prefs["getAppsForEachDevice"], str)
+        #         and prefDict["getAppsForEachDevice"].lower() == "true"
+        #     ) or prefDict["getAppsForEachDevice"] is True:
+        #         self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+        #         Globals.GET_APP_EACH_DEVICE = True
+        #     else:
+        #         self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+        #         Globals.GET_APP_EACH_DEVICE = False
 
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
@@ -855,7 +855,7 @@ class PreferencesDialog(wx.Dialog):
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
             "reachQueueStateOnly": self.checkbox_5.IsChecked(),
-            "getAppsForEachDevice": self.checkbox_6.IsChecked(),
+            # "getAppsForEachDevice": self.checkbox_6.IsChecked(),
             "colSize": self.checkbox_10.IsChecked(),
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
@@ -884,7 +884,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
         Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
-        Globals.GET_APP_EACH_DEVICE = self.prefs["getAppsForEachDevice"]
+        # Globals.GET_APP_EACH_DEVICE = self.prefs["getAppsForEachDevice"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]
@@ -1008,16 +1008,16 @@ class PreferencesDialog(wx.Dialog):
                     if not self.parent.IsMaximized():
                         pos = tuple(self.prefs["windowPosition"])
                         self.parent.SetPosition(wx.Point(pos[0], pos[1]))
-        if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
-            if (
-                isinstance(self.prefs["getAppsForEachDevice"], str)
-                and self.prefs["getAppsForEachDevice"].lower()
-            ) == "true" or self.prefs["getAppsForEachDevice"]:
-                Globals.GET_APP_EACH_DEVICE = True
-                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
-            else:
-                Globals.GET_APP_EACH_DEVICE = False
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+        # if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
+        #     if (
+        #         isinstance(self.prefs["getAppsForEachDevice"], str)
+        #         and self.prefs["getAppsForEachDevice"].lower()
+        #     ) == "true" or self.prefs["getAppsForEachDevice"]:
+        #         Globals.GET_APP_EACH_DEVICE = True
+        #         self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+        #     else:
+        #         Globals.GET_APP_EACH_DEVICE = False
+        #         self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
         if "getAllApps" in self.prefs:
             if (
                 isinstance(self.prefs["getAllApps"], str)
@@ -1262,7 +1262,7 @@ class PreferencesDialog(wx.Dialog):
                 self.prefs[key] = self.getDefaultKeyValue(key)
 
         self.prefs["reachQueueStateOnly"] = Globals.REACH_QUEUED_ONLY
-        self.prefs["getAppsForEachDevice"] = Globals.GET_APP_EACH_DEVICE
+        # self.prefs["getAppsForEachDevice"] = Globals.GET_APP_EACH_DEVICE
         self.prefs["getAllApps"] = Globals.USE_ENTERPRISE_APP
         self.prefs["showPkg"] = Globals.SHOW_PKG_NAME
         self.prefs["useJsonForCmd"] = Globals.COMMAND_JSON_INPUT
@@ -1323,8 +1323,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":
             return Globals.SHOW_PKG_NAME
-        elif key == "getAppsForEachDevice":
-            return Globals.GET_APP_EACH_DEVICE
+        # elif key == "getAppsForEachDevice":
+        #     return Globals.GET_APP_EACH_DEVICE
         elif key == "reachQueueStateOnly":
             return Globals.REACH_QUEUED_ONLY
         elif key == "colSize":

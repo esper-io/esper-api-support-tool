@@ -4,9 +4,10 @@ import wx
 
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from Utility import EventUtility
 from Utility.API.AppUtilities import getAllAppVersionsForHost, getAllApplicationsForHost, uploadApplicationForHost
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import deleteFile, displayMessageBox, download, getEsperConfig, getHeader
+from Utility.Resource import deleteFile, displayMessageBox, download, getEsperConfig, getHeader, postEventToFrame
 
 from Utility.Web.WebRequests import performGetRequestWithRetry, performPostRequestWithRetry
 
@@ -194,6 +195,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
 
         cloneResult = "Success" if resp and hasattr(resp, "status_code") else "FAILED Reason: %s" % str(resp)
         progress.Update(100, "Cloning Attempt Done. Result: %s" % cloneResult)
+        postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: %s" % cloneResult)
         displayMessageBox(
             (
                 "Cloning Attempt Done. Result: %s" % cloneResult,
@@ -211,6 +213,7 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
         deleteFile(file)
         try:
             progress.Update(int((num / numTotal) * 50), "Attempting to download: %s" % detail["name"])
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Downloading %s" % detail["name"])
             download(link, file)
             ApiToolLog().LogApiRequestOccurrence(
                 "download", link, Globals.PRINT_API_LOGS
@@ -221,9 +224,11 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
             print(e)
         num += 1
         if os.path.exists(file):
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Uploading %s" % detail["name"])
             res = uploadApplicationForHost(getEsperConfig(toConfig["apiHost"], toConfig["apiKey"]), toConfig["enterprise"], file)
-            progress.Update(int((num / numTotal) * 50), "Failed uploading %s" % detail["name"])
             if type(res) != InlineResponse201:
+                progress.Update(int((num / numTotal) * 50), "Failed uploading %s" % detail["name"])
+                postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Failed Uploading %s" % detail["name"])
                 deleteFile(file)
                 raise Exception("Upload failed!")
             blueprint["latest_revision"]["application"]["apps"].append({
@@ -237,10 +242,12 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
         num += 1
         deleteFile(file)
     progress.Update(50, "Finished uploading missing applications.")
+    postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Apps")
     return blueprint
 
 
 def checkFromMissingApps(blueprint, toConfig, fromConfig):
+    postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Applications")
     toApps = getAllApplicationsForHost(
         getEsperConfig(toConfig["apiHost"], toConfig["apiKey"]),
         toConfig["enterprise"]
@@ -290,6 +297,7 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                         })
                         appAdded = True
         if not appAdded:
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Missing %s" % app["application_name"])
             missingApps += "%s, " % app["application_name"]
             if "download_url" in app:
                 downloadLink.append({

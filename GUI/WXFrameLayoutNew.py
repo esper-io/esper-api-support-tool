@@ -64,7 +64,6 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.crypto import crypto
 from Utility.API.EsperAPICalls import (
     clearAppData,
-    getdeviceapps,
     setAppState,
     setKiosk,
     setMulti,
@@ -83,7 +82,6 @@ from Utility.EastUtility import (
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
-    limitActiveThreads,
     postEventToFrame,
     resourcePath,
     createNewFile,
@@ -1413,36 +1411,36 @@ class NewFrameLayout(wx.Frame):
                 self.Logging("---> No Devices found")
             else:
                 self.sidePanel.deviceChoice.Enable(True)
-                if (
-                    self.preferences
-                    and "getAppsForEachDevice" in self.preferences
-                    and self.preferences["getAppsForEachDevice"]
-                ) or Globals.GET_APP_EACH_DEVICE:
-                    newThreads = []
-                    self.Logging("---> Attempting to populate Application list")
-                    self.gauge.Pulse()
-                    for deviceId in self.sidePanel.devices.values():
-                        thread = wxThread.GUIThread(
-                            self,
-                            getdeviceapps,
-                            (deviceId, True, Globals.USE_ENTERPRISE_APP),
-                            eventType=eventUtil.myEVT_APPS,
-                            name="GetDeviceAppsToPopulateApps",
-                        )
-                        thread.start()
-                        newThreads.append(thread)
-                        limitActiveThreads(newThreads)
-                    num = 0
-                    for thread in newThreads:
-                        thread.join()
-                        num += 1
-                        if not self.preferences or (
-                            "enableDevice" in self.preferences
-                            and self.preferences["enableDevice"]
-                        ):
-                            self.setGaugeValue(
-                                int(float(num / len(newThreads) / 2) * 100)
-                            )
+                # if (
+                #     self.preferences
+                #     and "getAppsForEachDevice" in self.preferences
+                #     and self.preferences["getAppsForEachDevice"]
+                # ) or Globals.GET_APP_EACH_DEVICE:
+                #     newThreads = []
+                #     self.Logging("---> Attempting to populate Application list")
+                #     self.gauge.Pulse()
+                #     for deviceId in self.sidePanel.devices.values():
+                #         thread = wxThread.GUIThread(
+                #             self,
+                #             getdeviceapps,
+                #             (deviceId, True, Globals.USE_ENTERPRISE_APP),
+                #             eventType=eventUtil.myEVT_APPS,
+                #             name="GetDeviceAppsToPopulateApps",
+                #         )
+                #         thread.start()
+                #         newThreads.append(thread)
+                #         limitActiveThreads(newThreads)
+                #     num = 0
+                #     for thread in newThreads:
+                #         thread.join()
+                #         num += 1
+                #         if not self.preferences or (
+                #             "enableDevice" in self.preferences
+                #             and self.preferences["enableDevice"]
+                #         ):
+                #             self.setGaugeValue(
+                #                 int(float(num / len(newThreads) / 2) * 100)
+                #             )
                 self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
                 if not self.isRunning:
@@ -2426,52 +2424,52 @@ class NewFrameLayout(wx.Frame):
             name="waitForThreadsThenSetCursorDefault_3",
         ).start()
 
-    @api_tool_decorator()
-    def onDeviceSelections(self, event):
-        """ When the user selects a device showcase apps related to that device """
-        self.menubar.setSaveMenuOptionsEnableState(False)
-        self.SetFocus()
-        self.gauge.Pulse()
-        self.setCursorBusy()
-        if len(self.sidePanel.selectedDevicesList) > 0 and Globals.GET_APP_EACH_DEVICE:
-            self.sidePanel.runBtn.Enable(False)
-            wxThread.GUIThread(
-                self,
-                self.addDevicesApps,
-                args=None,
-                eventType=eventUtil.myEVT_COMPLETE,
-                eventArg=(not self.isRunning and not self.isSavingPrefs),
-                sendEventArgInsteadOfResult=True,
-                name="addDeviceApps",
-            ).start()
-        else:
-            evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
-            wx.PostEvent(self, evt)
+    # @api_tool_decorator()
+    # def onDeviceSelections(self, event):
+    #     """ When the user selects a device showcase apps related to that device """
+    #     self.menubar.setSaveMenuOptionsEnableState(False)
+    #     self.SetFocus()
+    #     self.gauge.Pulse()
+    #     self.setCursorBusy()
+    #     if len(self.sidePanel.selectedDevicesList) > 0 and Globals.GET_APP_EACH_DEVICE:
+    #         self.sidePanel.runBtn.Enable(False)
+    #         wxThread.GUIThread(
+    #             self,
+    #             self.addDevicesApps,
+    #             args=None,
+    #             eventType=eventUtil.myEVT_COMPLETE,
+    #             eventArg=(not self.isRunning and not self.isSavingPrefs),
+    #             sendEventArgInsteadOfResult=True,
+    #             name="addDeviceApps",
+    #         ).start()
+    #     else:
+    #         evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
+    #         wx.PostEvent(self, evt)
 
-    @api_tool_decorator()
-    def addDevicesApps(self):
-        num = 1
-        appAdded = False
-        self.sidePanel.selectedDeviceApps = []
-        if not Globals.USE_ENTERPRISE_APP:
-            self.sidePanel.apps = self.sidePanel.enterpriseApps
-        else:
-            self.sidePanel.apps = (
-                self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
-            )
-        for deviceId in self.sidePanel.selectedDevicesList:
-            _, _ = getdeviceapps(
-                deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
-            )
-            if len(self.sidePanel.selectedDevicesList) > 0:
-                self.setGaugeValue(
-                    int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
-                )
-            num += 1
-        if not appAdded:
-            self.sidePanel.selectedApp.Append("No available app(s) on this device")
-            self.sidePanel.selectedApp.SetSelection(0)
-        self.menubar.setSaveMenuOptionsEnableState(True)
+    # @api_tool_decorator()
+    # def addDevicesApps(self):
+    #     num = 1
+    #     appAdded = False
+    #     self.sidePanel.selectedDeviceApps = []
+    #     if not Globals.USE_ENTERPRISE_APP:
+    #         self.sidePanel.apps = self.sidePanel.enterpriseApps
+    #     else:
+    #         self.sidePanel.apps = (
+    #             self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
+    #         )
+    #     for deviceId in self.sidePanel.selectedDevicesList:
+    #         _, _ = getdeviceapps(
+    #             deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
+    #         )
+    #         if len(self.sidePanel.selectedDevicesList) > 0:
+    #             self.setGaugeValue(
+    #                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
+    #             )
+    #         num += 1
+    #     if not appAdded:
+    #         self.sidePanel.selectedApp.Append("No available app(s) on this device")
+    #         self.sidePanel.selectedApp.SetSelection(0)
+    #     self.menubar.setSaveMenuOptionsEnableState(True)
 
     @api_tool_decorator()
     def MacReopenApp(self, event):
@@ -2691,8 +2689,7 @@ class NewFrameLayout(wx.Frame):
         self.preferences = dialog.GetPrefs()
         with open(self.prefPath, "w") as outfile:
             json.dump(self.preferences, outfile)
-        evt = eventUtil.CustomEvent(eventUtil.myEVT_LOG, -1, "---> Preferences' Saved")
-        wx.PostEvent(self, evt)
+        postEventToFrame(eventUtil.myEVT_LOG, "---> Preferences' Saved")
 
     @api_tool_decorator()
     def onPref(self, event):
@@ -2714,7 +2711,7 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateDevices(None)
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
-                self.onDeviceSelections(None)
+                # self.onDeviceSelections(None)
             self.setFontSizeForLabels()
         if self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
@@ -2906,8 +2903,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
         self.isRunning = False
-        evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, None)
-        wx.PostEvent(self, evt)
+        postEventToFrame(eventUtil.myEVT_COMPLETE, True)
 
     @api_tool_decorator()
     def onSearch(self, event=None):
@@ -3103,8 +3099,7 @@ class NewFrameLayout(wx.Frame):
                         displayMessageBox(str(resp))
                 else:
                     displayMessageBox("No Group found with the name: %s" % selction)
-                evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
-                wx.PostEvent(self, evt)
+                postEventToFrame(eventUtil.myEVT_COMPLETE, True)
                 return
             else:
                 self.isRunning = False
