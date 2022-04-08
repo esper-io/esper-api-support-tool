@@ -502,40 +502,39 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
-        if self.gridPanel.grid_1.GetNumberRows() > 0:
-            dlg = wx.FileDialog(
-                self,
-                message="Save Reports as...",
-                defaultFile="",
-                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
-                defaultDir=str(self.defaultDir),
-                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-            )
-            result = dlg.ShowModal()
-            inFile = dlg.GetPath()
+        dlg = wx.FileDialog(
+            self,
+            message="Save Reports as...",
+            defaultFile="",
+            wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
+            defaultDir=str(self.defaultDir),
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        )
+        result = dlg.ShowModal()
+        inFile = dlg.GetPath()
 
-            if result == wx.ID_OK:  # Save button was pressed
-                self.setCursorBusy()
-                self.toggleEnabledState(False)
-                self.gridPanel.disableGridProperties()
+        if result == wx.ID_OK:  # Save button was pressed
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            thread = wxThread.GUIThread(
+                self, self.saveFile, (inFile), name="saveFile"
+            )
+            thread.startWithRetry()
+            if inFile.endswith(".csv") and self.gridPanel.grid_3_contents:
+                newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
+                inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
                 thread = wxThread.GUIThread(
-                    self, self.saveFile, (inFile), name="saveFile"
+                    self, self.saveAppInfo, (inFile), name="saveAppFile"
                 )
                 thread.startWithRetry()
-                if inFile.endswith(".csv") and self.gridPanel.grid_3_contents:
-                    newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
-                    inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
-                    thread = wxThread.GUIThread(
-                        self, self.saveAppInfo, (inFile), name="saveAppFile"
-                    )
-                    thread.startWithRetry()
-                dlg.DestroyLater()
-                return True
-            elif (
-                result == wx.ID_CANCEL
-            ):  # Either the cancel button was pressed or the window was closed
-                dlg.DestroyLater()
-                return False
+            dlg.DestroyLater()
+            return True
+        elif (
+            result == wx.ID_CANCEL
+        ):  # Either the cancel button was pressed or the window was closed
+            dlg.DestroyLater()
+            return False
 
     @api_tool_decorator()
     def onSaveBothAll(self, event):
