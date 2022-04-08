@@ -371,7 +371,7 @@ class EsperTemplateUtil:
                         (app, template, newTemplate, config, entId),
                     )
                     missingAppThreads.append(upload)
-                    upload.start()
+                    upload.startWithRetry()
 
     def addAppVersionToTemplate(self, app, template, toApp, appVersion):
         if (

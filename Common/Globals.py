@@ -63,7 +63,7 @@ GENERAL_ACTIONS = {
     + "Generate Report "
     + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-    # "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
+    "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     ("\t" if platform.system() == "Windows" else "")
@@ -249,7 +249,10 @@ CSV_APP_ATTR_NAME = [
     "Can Clear Data",
     "Can Uninstall",
 ]
-BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+BLACKLIST_PACKAGE_NAME = [
+    "io.shoonya.shoonyadpc",
+    "io.esper.remoteviewer",
+]
 WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]

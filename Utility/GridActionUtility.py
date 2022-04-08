@@ -62,7 +62,7 @@ def modifyDevice(frame):
         eventType=None,
         name="executeDeviceModification",
     )
-    t.start()
+    t.startWithRetry()
     return t
 
 
@@ -111,7 +111,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
             name="processDeviceModificationForList",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -120,7 +120,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
         args=(tuple(threads), -1, -1, 2),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -140,14 +140,14 @@ def processDeviceModificationForList(
             args=(device, tagsFromGrid, frame, maxGaugeAction),
             name="changeTagsForDevice",
         )
-        t.start()
+        t.startWithRetry()
         t2 = wxThread.GUIThread(
             frame,
             changeAliasForDevice,
             args=(device, aliasDic, frame, maxGaugeAction),
             name="changeAliasForDevice",
         )
-        t2.start()
+        t2.startWithRetry()
         joinThreadList([t, t2])
         if t.result:
             changeSucceeded += t.result[0]
@@ -353,7 +353,7 @@ def setAppStateForAllAppsListed(state):
                 name="setAllAppsState",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
@@ -361,7 +361,7 @@ def setAppStateForAllAppsListed(state):
             args=(tuple(threads), state, -1, 4),
             name="waitTillThreadsFinish%s" % state,
         )
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -509,7 +509,7 @@ def setAppStateForSpecificAppListed(action):
                                 name="setAllAppsState",
                             )
                             threads.append(t)
-                            t.start()
+                            t.startWithRetry()
                         limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
@@ -517,7 +517,7 @@ def setAppStateForSpecificAppListed(action):
             args=(tuple(threads), state, -1, 4),
             name="waitTillThreadsFinish%s" % state,
         )
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -536,7 +536,7 @@ def getDevicesFromGrid(deviceIdentifers=None):
             name="getDevicesFromGridHelper",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
     joinThreadList(threads)
     return devices
@@ -641,7 +641,7 @@ def relocateDeviceToNewGroup(frame):
             name="processDeviceGroupMove",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -650,7 +650,7 @@ def relocateDeviceToNewGroup(frame):
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -756,7 +756,7 @@ def installListedLatestApp(frame):
             name="processInstallLatestAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -765,7 +765,7 @@ def installListedLatestApp(frame):
         args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -868,7 +868,7 @@ def uninstallListedApp(frame):
             name="processUninstallAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -877,7 +877,7 @@ def uninstallListedApp(frame):
         args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -956,7 +956,7 @@ def installApp(frame):
             name="processInstallLatestAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -965,7 +965,7 @@ def installApp(frame):
         args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def uninstallApp(frame):
@@ -983,7 +983,7 @@ def uninstallApp(frame):
             name="processUninstallAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -992,7 +992,7 @@ def uninstallApp(frame):
         args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def processBulkFactoryReset(devices, numDevices, processed):
@@ -1031,7 +1031,7 @@ def bulkFactoryReset(identifers):
             name="processDeviceGroupMove",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -1040,7 +1040,7 @@ def bulkFactoryReset(identifers):
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def processSetDeviceDisabled(devices, numDevices, processed):
@@ -1079,7 +1079,7 @@ def setDevicesDisabled():
             name="processSetDeviceDisabled",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -1088,4 +1088,4 @@ def setDevicesDisabled():
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()

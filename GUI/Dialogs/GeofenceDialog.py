@@ -223,7 +223,7 @@ class GeofenceDialog(wx.Dialog):
                 filePath = fileDialog.GetPath()
                 # Clear grid on previous content
                 thread = wxThread.GUIThread(None, self.processUpload, (filePath,))
-                thread.start()
+                thread.startWithRetry()
 
     @api_tool_decorator()
     def processUpload(self, filePath):
@@ -336,7 +336,7 @@ class GeofenceDialog(wx.Dialog):
                         actionsList,
                     ),
                 )
-                thread.start()
+                thread.startWithRetry()
         else:
             displayMessageBox(
                 (

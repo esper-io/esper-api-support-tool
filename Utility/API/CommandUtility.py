@@ -53,7 +53,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
     if t:
         frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()

@@ -3,6 +3,7 @@
 
 from datetime import datetime, timedelta
 import esperclient
+import string
 import time
 import json
 
@@ -542,6 +543,10 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         if useEnterprise
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
+    hasFormat = [tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None]
+    if hasFormat:
+        if "limit" in hasFormat:
+            extention = extention.format(limit=Globals.limit)
     json_resp = getInfo(extention, deviceid)
     if (
         json_resp
@@ -549,6 +554,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         and len(json_resp["results"])
         and createAppList
     ):
+        print("Len: %s Count: %s" % (len(json_resp["results"]), json_resp["count"]))
         for app in json_resp["results"]:
             if (
                 "install_state" in app and "uninstall" in app["install_state"].lower()

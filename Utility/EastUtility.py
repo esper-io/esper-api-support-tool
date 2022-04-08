@@ -155,7 +155,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
         t = wxThread.GUIThread(
@@ -172,7 +172,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
         )
-        t.start()
+        t.startWithRetry()
     elif (
         type(api_response) is dict
         and "results" in api_response
@@ -191,7 +191,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
         t = wxThread.GUIThread(
@@ -208,7 +208,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
         )
-        t.start()
+        t.startWithRetry()
     else:
         if hasattr(threading.current_thread(), "isStopped"):
             if threading.current_thread().isStopped():
@@ -245,7 +245,7 @@ def processInstallDevices(deviceList):
             name="processInstallDevicesHelper",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
     joinThreadList(threads)
     processCollectionDevices({"results": newDeviceList})
 
@@ -272,7 +272,7 @@ def processCollectionDevices(collectionList):
                     name="fillInDeviceInfoDict",
                 )
                 threads.append(t)
-                t.start()
+                t.startWithRetry()
                 number_of_devices += len(chunk)
 
             t = wxThread.GUIThread(
@@ -287,7 +287,7 @@ def processCollectionDevices(collectionList):
                 eventType=eventUtil.myEVT_FETCH,
                 name="waitTillThreadsFinish3",
             )
-            t.start()
+            t.startWithRetry()
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
@@ -414,7 +414,7 @@ def populateDeviceInfoDictionary(
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
     if getApps:
-        appThread.start()
+        appThread.startWithRetry()
     # if getApps:
     #     appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     eventThread = wxThread.GUIThread(
@@ -423,7 +423,7 @@ def populateDeviceInfoDictionary(
         (deviceId),
     )
     if getLatestEvents:
-        eventThread.start()
+        eventThread.startWithRetry()
     # if getLatestEvents:
     #     eventThread = getLatestEvent(deviceId)
     latestEvent = None
@@ -835,7 +835,7 @@ def getAllDeviceInfo(frame):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
     joinThreadList(threads)
@@ -871,7 +871,7 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
                 (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
             )
             threads.append(thread)
-            thread.start()
+            thread.startWithRetry()
             respOffsetInt += int(respLimit)
         joinThreadList(threads)
     for thread in threads:
