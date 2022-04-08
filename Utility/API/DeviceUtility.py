@@ -101,9 +101,12 @@ def get_all_devices(
             response.next = None
             response.prev = None
         elif type(response) is dict and "results" in response:
-            response["results"] = response["results"] + devices
+            # response["results"] = response["results"] + devices
             response["next"] = None
             response["prev"] = None
+            for device in devices:
+                if device not in response["results"]:
+                    response["results"].append(device)
     return response
 
 
@@ -119,7 +122,10 @@ def fetchDevicesFromGroup(
         elif hasattr(api_response, "result") and hasattr(api_response.result, "results"):
             api_response.results += resp.results
         else:
-            api_response["results"] += resp["results"]
+            # api_response["results"] += resp["results"]
+            for device in resp["results"]:
+                if device not in api_response["results"]:
+                    api_response["results"].append(device)
 
     return api_response
 
