@@ -1547,8 +1547,8 @@ class GridPanel(wx.Panel):
                 isEditable = False
             self.grid_3.SetReadOnly(self.grid_3.GetNumberRows() - 1, num, isEditable)
             num += 1
-            if info and info not in self.grid_3_contents:
-                self.grid_3_contents.append(info)
+        if info and info not in self.grid_3_contents:
+            self.grid_3_contents.append(info)
 
     def constructAppGridContent(self, device, deviceInfo, apps):
         info = {}
