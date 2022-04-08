@@ -410,11 +410,13 @@ def getHeader():
 
 
 def getAllFromOffsets(
-    func, group, api_response, maxAttempt=Globals.MAX_RETRY, results=[]
+    func, group, api_response, maxAttempt=Globals.MAX_RETRY, results=None
 ):
     threads = []
     responses = []
     count = None
+    if not results:
+        results = []
     if hasattr(api_response, "count"):
         count = api_response.count
     elif type(api_response) is dict and "count" in api_response:
