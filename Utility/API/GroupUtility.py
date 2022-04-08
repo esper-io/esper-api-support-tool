@@ -199,7 +199,6 @@ def get_all_groups(
         response["results"] = response["results"] + groups
         response["next"] = None
         response["prev"] = None
-        print(len(response["results"]))
     return response
 
 
