@@ -3,6 +3,7 @@
 
 from datetime import datetime, timedelta
 import esperclient
+import string
 import time
 import json
 
@@ -19,6 +20,7 @@ from Utility.API.CommandUtility import (
     waitForCommandToFinish,
 )
 from Utility.Resource import (
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -109,6 +111,7 @@ def toggleKioskMode(
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -123,10 +126,16 @@ def toggleKioskMode(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -135,7 +144,12 @@ def toggleKioskMode(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     status = response.results[0].state
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     status = waitForCommandToFinish(
@@ -191,6 +205,7 @@ def setdevicename(
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "setdevicename", api_instance.create_command, Globals.PRINT_API_LOGS
@@ -203,10 +218,16 @@ def setdevicename(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -220,7 +241,12 @@ def setdevicename(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     if response.results:
         status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
@@ -236,6 +262,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_token_info()
                 ApiToolLog().LogApiRequestOccurrence(
                     "getTokenInfo", api_instance.get_token_info, Globals.PRINT_API_LOGS
@@ -245,7 +272,12 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
@@ -293,8 +325,7 @@ def setKiosk(frame, device, deviceInfo):
             logString = logString + " <success>"
         elif "Queued" in str(status):
             logString = (
-                logString
-                + " <warning, check back on the device (%s)>" % deviceName
+                logString + " <warning, check back on the device (%s)>" % deviceName
             )
             warning = True
         else:
@@ -332,7 +363,6 @@ def setKiosk(frame, device, deviceInfo):
             }
 
 
-
 @api_tool_decorator()
 def setMulti(frame, device, deviceInfo):
     """Toggles Multi App Mode"""
@@ -347,10 +377,7 @@ def setMulti(frame, device, deviceInfo):
         deviceName = device["device_name"]
         deviceId = device["id"]
         aliasName = device["alias_name"]
-    logString = (
-        str("--->" + str(deviceName) + " " + str(aliasName))
-        + " -> Multi ->"
-    )
+    logString = str("--->" + str(deviceName) + " " + str(aliasName)) + " -> Multi ->"
     failed = False
     warning = False
     status = None
@@ -361,8 +388,7 @@ def setMulti(frame, device, deviceInfo):
                 logString = logString + " <success>"
             elif "Queued" in str(status):
                 logString = (
-                    logString
-                    + " <warning, check back on the device (%s)>" % deviceName
+                    logString + " <warning, check back on the device (%s)>" % deviceName
                 )
                 warning = True
             else:
@@ -402,7 +428,6 @@ def setMulti(frame, device, deviceInfo):
         }
 
 
-
 @api_tool_decorator()
 def validateConfiguration(
     host, entId, key, prefix="Bearer", maxAttempt=Globals.MAX_RETRY
@@ -419,6 +444,7 @@ def validateConfiguration(
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_enterprise(enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "validateConfiguration",
@@ -430,7 +456,12 @@ def validateConfiguration(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         if hasattr(api_response, "id"):
             return True
     except ApiException as e:
@@ -456,6 +487,7 @@ def factoryResetDevice(
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, command)
             ApiToolLog().LogApiRequestOccurrence(
                 "toggleKioskMode",
@@ -470,10 +502,16 @@ def factoryResetDevice(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, api_response.id
             )
@@ -482,7 +520,12 @@ def factoryResetDevice(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     status = response.results[0].state
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     status = waitForCommandToFinish(
@@ -500,6 +543,10 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         if useEnterprise
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
+    hasFormat = [tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None]
+    if hasFormat:
+        if "limit" in hasFormat:
+            extention = extention.format(limit=Globals.limit)
     json_resp = getInfo(extention, deviceid)
     if (
         json_resp
@@ -520,18 +567,32 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                version = (
-                    app["application"]["version"]["version_code"][
-                        1 : len(app["application"]["version"]["version_code"])
-                    ]
-                    if (
-                        app["application"]["version"]["version_code"]
-                        and app["application"]["version"]["version_code"].startswith(
-                            "v"
+                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                    version = (
+                        app["application"]["version"]["version_name"][
+                            1 : len(app["application"]["version"]["version_name"])
+                        ]
+                        if (
+                            app["application"]["version"]["version_name"]
+                            and app["application"]["version"]["version_name"].startswith(
+                                "v"
+                            )
                         )
+                        else app["application"]["version"]["version_name"]
                     )
-                    else app["application"]["version"]["version_code"]
-                )
+                else:
+                    version = (
+                        app["application"]["version"]["version_code"][
+                            1 : len(app["application"]["version"]["version_code"])
+                        ]
+                        if (
+                            app["application"]["version"]["version_code"]
+                            and app["application"]["version"]["version_code"].startswith(
+                                "v"
+                            )
+                        )
+                        else app["application"]["version"]["version_code"]
+                    )
 
                 appName = app["application"]["application_name"]
                 pkgName = app["application"]["package_name"]
@@ -540,11 +601,19 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
                 entry = getAppDictEntry(app, False)
-                version = (
-                    app["version_code"][1 : len(app["version_code"])]
-                    if app["version_code"].startswith("v")
-                    else app["version_code"]
-                )
+                version = None
+                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                    version = (
+                        app["version_name"][1 : len(app["version_name"])]
+                        if app["version_name"].startswith("v")
+                        else app["version_name"]
+                    )
+                else:
+                    version = (
+                        app["version_code"][1 : len(app["version_code"])]
+                        if app["version_code"].startswith("v")
+                        else app["version_code"]
+                    )
                 applist.append(
                     constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )
@@ -576,6 +645,7 @@ def setAppState(
         api_instance = getCommandsApiInstance()
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.create_command(
                     Globals.enterprise_id, request
                 )
@@ -591,7 +661,12 @@ def setAppState(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
         return waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
 
@@ -651,6 +726,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             if type(entry) is dict and "esperName" in entry.keys():
                 identifier = entry["esperName"]
                 api_response = api_instance.get_all_devices(
@@ -708,5 +784,10 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     return api_response

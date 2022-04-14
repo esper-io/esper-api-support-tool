@@ -15,6 +15,7 @@ import Utility.EventUtility as eventUtil
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.Resource import (
+    enforceRateLimit,
     isApiKey,
     joinThreadList,
     limitActiveThreads,
@@ -26,8 +27,6 @@ from Utility.API.GroupUtility import getAllGroups, moveGroup
 
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
-
-
 
 
 @api_tool_decorator()
@@ -63,7 +62,7 @@ def modifyDevice(frame):
         eventType=None,
         name="executeDeviceModification",
     )
-    t.start()
+    t.startWithRetry()
     return t
 
 
@@ -112,7 +111,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
             name="processDeviceModificationForList",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -121,7 +120,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
         args=(tuple(threads), -1, -1, 2),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -141,14 +140,14 @@ def processDeviceModificationForList(
             args=(device, tagsFromGrid, frame, maxGaugeAction),
             name="changeTagsForDevice",
         )
-        t.start()
+        t.startWithRetry()
         t2 = wxThread.GUIThread(
             frame,
             changeAliasForDevice,
             args=(device, aliasDic, frame, maxGaugeAction),
             name="changeAliasForDevice",
         )
-        t2.start()
+        t2.startWithRetry()
         joinThreadList([t, t2])
         if t.result:
             changeSucceeded += t.result[0]
@@ -215,10 +214,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
     # Alias modification
     if (
         deviceName in aliasDic.keys()
-        or (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in aliasDic.keys()
-        )
+        or ("serialNumber" in hardware and hardware["serialNumber"] in aliasDic.keys())
         or (
             "customSerialNumber" in hardware
             and hardware["customSerialNumber"] in aliasDic.keys()
@@ -227,19 +223,14 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
         newName = None
         if deviceName in aliasDic:
             newName = aliasDic[deviceName]
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in aliasDic
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in aliasDic:
             newName = aliasDic[hardware["serialNumber"]]
         elif (
             "customSerialNumber" in hardware
             and hardware["customSerialNumber"] in aliasDic
         ):
             newName = aliasDic[hardware["customSerialNumber"]]
-        logString = str(
-            "--->" + str(deviceName) + " : " + str(newName) + "--->"
-        )
+        logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
         if not newName and not aliasName:
             status = {
                 "Device Name": deviceName,
@@ -320,10 +311,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         key = None
         if deviceName in tagsFromGrid:
             key = deviceName
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in tagsFromGrid
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in tagsFromGrid:
             key = hardware["serialNumber"]
         elif (
             "customSerialNumber" in hardware
@@ -365,7 +353,7 @@ def setAppStateForAllAppsListed(state):
                 name="setAllAppsState",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
@@ -373,7 +361,7 @@ def setAppStateForAllAppsListed(state):
             args=(tuple(threads), state, -1, 4),
             name="waitTillThreadsFinish%s" % state,
         )
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -521,7 +509,7 @@ def setAppStateForSpecificAppListed(action):
                                 name="setAllAppsState",
                             )
                             threads.append(t)
-                            t.start()
+                            t.startWithRetry()
                         limitActiveThreads(threads)
         t = wxThread.GUIThread(
             Globals.frame,
@@ -529,7 +517,7 @@ def setAppStateForSpecificAppListed(action):
             args=(tuple(threads), state, -1, 4),
             name="waitTillThreadsFinish%s" % state,
         )
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -548,11 +536,10 @@ def getDevicesFromGrid(deviceIdentifers=None):
             name="getDevicesFromGridHelper",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
     joinThreadList(threads)
     return devices
-
 
 
 def getDevicesFromGridHelper(
@@ -563,6 +550,7 @@ def getDevicesFromGridHelper(
         identifier = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 if type(entry) == tuple or type(entry) == list:
                     if entry[0]:
                         identifier = entry[0]
@@ -621,7 +609,12 @@ def getDevicesFromGridHelper(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         if api_response:
             devices += api_response.results
             api_response = None
@@ -648,7 +641,7 @@ def relocateDeviceToNewGroup(frame):
             name="processDeviceGroupMove",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -657,7 +650,7 @@ def relocateDeviceToNewGroup(frame):
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -682,10 +675,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
             hardware = device["hardwareInfo"]
         if deviceName in groupListKeys:
             groupName = groupList[deviceName]
-        elif (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in groupListKeys
-        ):
+        elif "serialNumber" in hardware and hardware["serialNumber"] in groupListKeys:
             groupName = groupList[hardware["serialNumber"]]
         elif (
             "customSerialNumber" in hardware
@@ -766,7 +756,7 @@ def installListedLatestApp(frame):
             name="processInstallLatestAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -775,7 +765,7 @@ def installListedLatestApp(frame):
         args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -838,9 +828,7 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
             if "pkgName" in appList:
                 pkgName = appList["pkgName"]
             if pkgName:
-                resp = installAppOnDevices(
-                    pkgName, version=version, devices=[deviceId]
-                )
+                resp = installAppOnDevices(pkgName, version=version, devices=[deviceId])
                 if type(resp) == dict and "Error" in resp.keys():
                     status.append(
                         {
@@ -880,7 +868,7 @@ def uninstallListedApp(frame):
             name="processUninstallAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -889,7 +877,7 @@ def uninstallListedApp(frame):
         args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -968,7 +956,7 @@ def installApp(frame):
             name="processInstallLatestAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -977,7 +965,7 @@ def installApp(frame):
         args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def uninstallApp(frame):
@@ -995,7 +983,7 @@ def uninstallApp(frame):
             name="processUninstallAppChunk",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -1004,7 +992,7 @@ def uninstallApp(frame):
         args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def processBulkFactoryReset(devices, numDevices, processed):
@@ -1043,7 +1031,7 @@ def bulkFactoryReset(identifers):
             name="processDeviceGroupMove",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -1052,7 +1040,7 @@ def bulkFactoryReset(identifers):
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()
 
 
 def processSetDeviceDisabled(devices, numDevices, processed):
@@ -1091,7 +1079,7 @@ def setDevicesDisabled():
             name="processSetDeviceDisabled",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
         limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
@@ -1100,4 +1088,4 @@ def setDevicesDisabled():
         args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
-    t.start()
+    t.startWithRetry()

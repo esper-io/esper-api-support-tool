@@ -141,4 +141,6 @@ def getDeviceName(device):
     if hasattr(device, "device_name"):
         if device.device_name is not None:
             device_name = device.device_name
+    elif type(device) is dict and "device_name" in device:
+        device_name = device["device_name"]
     return device_name

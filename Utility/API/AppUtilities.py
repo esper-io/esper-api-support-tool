@@ -17,6 +17,7 @@ from Utility.API.CommandUtility import (
 )
 from Utility.Resource import (
     displayMessageBox,
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -192,6 +193,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.upload(enterprise_id, file)
                 ApiToolLog().LogApiRequestOccurrence(
                     "uploadApplicationForHost",
@@ -203,7 +205,12 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
@@ -219,6 +226,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.upload(enterprise_id, file)
                 break
             except Exception as e:
@@ -228,7 +236,12 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                 ):
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
@@ -245,6 +258,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
             api_response = None
             for attempt in range(maxAttempt):
                 try:
+                    enforceRateLimit()
                     api_response = api_instance.get_all_applications(
                         Globals.enterprise_id,
                         limit=Globals.limit,
@@ -261,7 +275,12 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     if attempt == maxAttempt - 1:
                         ApiToolLog().LogError(e)
                         raise e
-                    time.sleep(Globals.RETRY_SLEEP)
+                    if "429" not in str(e) and "Too Many Requests" not in str(e):
+                        time.sleep(Globals.RETRY_SLEEP)
+                    else:
+                        time.sleep(
+                            Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                        )  # Sleep for a minute * retry number
             postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
             return api_response
         except ApiException as e:
@@ -286,6 +305,7 @@ def getAllApplicationsForHost(
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_all_applications(
                     enterprise_id,
                     limit=Globals.limit,
@@ -304,7 +324,12 @@ def getAllApplicationsForHost(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except Exception as e:
         raise Exception(
@@ -325,6 +350,7 @@ def getAllAppVersionsForHost(
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_app_versions(
                     app_id,
                     enterprise_id,
@@ -342,7 +368,12 @@ def getAllAppVersionsForHost(
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except Exception as e:
         raise Exception(
@@ -357,6 +388,7 @@ def getApplication(application_id):
     enterprise_id = Globals.enterprise_id
     try:
         # Get application information
+
         api_response = api_instance.get_application(application_id, enterprise_id)
         ApiToolLog().LogApiRequestOccurrence(
             "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
@@ -380,6 +412,7 @@ def getAppVersions(
         enterprise_id = Globals.enterprise_id
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_app_versions(
                     application_id,
                     enterprise_id,
@@ -402,7 +435,12 @@ def getAppVersions(
                         % e
                     )
                     raise e
-                time.sleep(1)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
     else:
         return getAppVersionsEnterpriseAndPlayStore(application_id)
 
@@ -444,6 +482,7 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             # List install devices
+            enforceRateLimit()
             api_response = api_instance.get_install_devices(
                 version_id,
                 application_id,
@@ -465,7 +504,12 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
                     % e
                 )
                 raise e
-            time.sleep(1)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
 
 
 def getAppDictEntry(app, update=True):

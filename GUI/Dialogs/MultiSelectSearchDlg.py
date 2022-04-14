@@ -259,7 +259,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             elif "device" in self.label.lower():
                 wxThread.GUIThread(
                     self, self.selectAllDevices, None, name="selectAllDevices"
-                ).start()
+                ).startWithRetry()
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -318,7 +318,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
-        wxThread.GUIThread(self, self.processNext, None, name="processNext").start()
+        wxThread.GUIThread(self, self.processNext, None, name="processNext").startWithRetry()
 
     def processNext(self):
         self.button_1.Enable(False)
@@ -339,7 +339,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
-        wxThread.GUIThread(self, self.processPrev, None, name="processPrev").start()
+        wxThread.GUIThread(self, self.processPrev, None, name="processPrev").startWithRetry()
 
     def processPrev(self):
         self.checkbox_1.Enable(False)

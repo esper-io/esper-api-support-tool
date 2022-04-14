@@ -11,6 +11,8 @@ import esperclient
 import Common.Globals as Globals
 
 from Utility.Resource import (
+    enforceRateLimit,
+    getAllFromOffsets,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -50,6 +52,7 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.create_group(Globals.enterprise_id, data)
                 ApiToolLog().LogApiRequestOccurrence(
                     "create_group", api_instance.create_group, Globals.PRINT_API_LOGS
@@ -59,7 +62,12 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     return json.loads(e.body)
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
@@ -74,6 +82,7 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_instance.delete_group(group_id, Globals.enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
@@ -83,7 +92,12 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     return json.loads(e.body)
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
@@ -124,6 +138,10 @@ def fetchGroupName(groupURL, returnJson=False):
 @api_tool_decorator(locks=[Globals.token_lock])
 def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get all Groups belonging to the Enterprise """
+    return get_all_groups(name, limit, offset, maxAttempt)
+
+
+def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     Globals.token_lock.acquire()
     Globals.token_lock.release()
     if not Globals.IS_TOKEN_VALID:
@@ -139,6 +157,7 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_all_groups(
                     Globals.enterprise_id,
                     name=name,
@@ -153,13 +172,34 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
         return api_response
     except ApiException as e:
         raise Exception(
             "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
         )
+
+
+def get_all_groups(
+    name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY
+):
+    response = getAllGroupsHelper(name, limit, offset, maxAttempt)
+    groups = getAllFromOffsets(getAllGroupsHelper, name, response, maxAttempt)
+    if hasattr(response, "results"):
+        response.results = response.results + groups
+        response.next = None
+        response.prev = None
+    elif type(response) is dict and "results" in response:
+        response["results"] = response["results"] + groups
+        response["next"] = None
+        response["prev"] = None
+    return response
 
 
 @api_tool_decorator()
@@ -176,6 +216,7 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
         api_response = None
         for attempt in range(maxAttempt):
             try:
+                enforceRateLimit()
                 api_response = api_instance.get_group_by_id(
                     Globals.enterprise_id,
                     group_id=group_id,
@@ -190,7 +231,12 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
                 if attempt == maxAttempt - 1:
                     ApiToolLog().LogError(e)
                     raise e
-                time.sleep(Globals.RETRY_SLEEP)
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
         return api_response
     except ApiException as e:

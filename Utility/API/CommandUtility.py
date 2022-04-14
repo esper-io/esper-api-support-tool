@@ -2,6 +2,7 @@
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
+    enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
@@ -52,7 +53,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
     if t:
         frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
-        t.start()
+        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -233,6 +234,7 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
     api_response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             api_response = api_instance.create_command(Globals.enterprise_id, request)
             ApiToolLog().LogApiRequestOccurrence(
                 "executeCommandAndWait",
@@ -249,7 +251,12 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     last_status = waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
     return last_status
@@ -267,6 +274,7 @@ def waitForCommandToFinish(
     response = None
     for attempt in range(maxAttempt):
         try:
+            enforceRateLimit()
             response = api_instance.get_command_request_status(
                 Globals.enterprise_id, request_id
             )
@@ -280,7 +288,12 @@ def waitForCommandToFinish(
             if attempt == maxAttempt - 1:
                 ApiToolLog().LogError(e)
                 raise e
-            time.sleep(Globals.RETRY_SLEEP)
+            if "429" not in str(e) and "Too Many Requests" not in str(e):
+                time.sleep(Globals.RETRY_SLEEP)
+            else:
+                time.sleep(
+                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                )  # Sleep for a minute * retry number
     if response and response.results:
         status = response.results[0]
         postEventToFrame(
@@ -312,6 +325,7 @@ def waitForCommandToFinish(
                 break
             for attempt in range(maxAttempt):
                 try:
+                    enforceRateLimit()
                     response = api_instance.get_command_request_status(
                         Globals.enterprise_id, request_id
                     )
@@ -325,7 +339,12 @@ def waitForCommandToFinish(
                     if attempt == maxAttempt - 1:
                         ApiToolLog().LogError(e)
                         raise e
-                    time.sleep(Globals.RETRY_SLEEP)
+                    if "429" not in str(e) and "Too Many Requests" not in str(e):
+                        time.sleep(Globals.RETRY_SLEEP)
+                    else:
+                        time.sleep(
+                            Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                        )  # Sleep for a minute * retry number
             if response and response.results:
                 status = response.results[0]
             postEventToFrame(

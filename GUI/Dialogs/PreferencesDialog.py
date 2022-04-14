@@ -53,6 +53,8 @@ class PreferencesDialog(wx.Dialog):
             "showDisabledDevices",
             "lastSeenAsDate",
             "appsInDeviceGrid",
+            "inhibitSleep",
+            "appVersionNameInsteadOfCode"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -171,6 +173,17 @@ class PreferencesDialog(wx.Dialog):
         )
         self.checkbox_18.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
+
+        (_, _, self.checkbox_21,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Inhibit Sleep When Running",
+            wx.CheckBox,
+            "Try to prevent the device from Sleeping while running a job.",
+        )
+        self.checkbox_21.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
         )
 
         # Command Preferences
@@ -354,6 +367,14 @@ class PreferencesDialog(wx.Dialog):
             "Set App State to SHOW before setting the application as a Kiosk app on device.",
         )
 
+        (_, _, self.checkbox_22,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Display Version Name Instead of Code",
+            wx.CheckBox,
+            "Displays the App Version Name instead of the Version Code",
+        )
+
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.prompts.Hide()
@@ -444,7 +465,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["getAllApps"], str)
                 and prefDict["getAllApps"].lower() == "true"
-            ) or prefDict["getAllApps"] == True:
+            ) or prefDict["getAllApps"] is True:
                 self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
                 Globals.USE_ENTERPRISE_APP = False
             else:
@@ -457,7 +478,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["showPkg"], str)
                 and prefDict["showPkg"].lower() == "true"
-            ) or prefDict["showPkg"] == True:
+            ) or prefDict["showPkg"] is True:
                 self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_PKG_NAME = False
             else:
@@ -471,7 +492,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["getAppsForEachDevice"], str)
                 and prefDict["getAppsForEachDevice"].lower() == "true"
-            ) or prefDict["getAppsForEachDevice"] == True:
+            ) or prefDict["getAppsForEachDevice"] is True:
                 self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
                 Globals.GET_APP_EACH_DEVICE = True
             else:
@@ -485,7 +506,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
                 and prefDict["reachQueueStateOnly"].lower() == "true"
-            ) or prefDict["reachQueueStateOnly"] == True:
+            ) or prefDict["reachQueueStateOnly"] is True:
                 self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
                 Globals.REACH_QUEUED_ONLY = True
             else:
@@ -499,7 +520,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["syncGridScroll"], str)
                 and prefDict["syncGridScroll"].lower() == "true"
-            ) or prefDict["syncGridScroll"] == True:
+            ) or prefDict["syncGridScroll"] is True:
                 self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
                 Globals.MATCH_SCROLL_POS = True
             else:
@@ -513,7 +534,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["immediateChild"], str)
                 and prefDict["immediateChild"].lower() == "true"
-            ) or prefDict["immediateChild"] == True:
+            ) or prefDict["immediateChild"] is True:
                 self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
                 Globals.GET_IMMEDIATE_SUBGROUPS = True
             else:
@@ -551,7 +572,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["templateDialog"], str)
                 and prefDict["templateDialog"].lower() == "true"
-            ) or prefDict["templateDialog"] == True:
+            ) or prefDict["templateDialog"] is True:
                 self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_TEMPLATE_DIALOG = True
                 Globals.SHOW_TEMPLATE_UPDATE = True
@@ -563,7 +584,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["templateUpdate"], str)
                 and prefDict["templateUpdate"].lower() == "true"
-            ) or prefDict["templateUpdate"] == True:
+            ) or prefDict["templateUpdate"] is True:
                 self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_TEMPLATE_DIALOG = True
                 Globals.SHOW_TEMPLATE_UPDATE = True
@@ -584,7 +605,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["gridDialog"], str)
                 and prefDict["gridDialog"].lower() == "true"
-            ) or prefDict["gridDialog"] == True:
+            ) or prefDict["gridDialog"] is True:
                 self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_GRID_DIALOG = True
             else:
@@ -604,7 +625,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["colSize"], str)
                 and prefDict["colSize"].lower() == "true"
-            ) or prefDict["colSize"] == True:
+            ) or prefDict["colSize"] is True:
                 self.checkbox_10.Set3StateValue(wx.CHK_CHECKED)
                 if self.parent:
                     self.parent.gridPanel.enableGridProperties(True, True, False)
@@ -620,7 +641,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["setStateShow"], str)
                 and prefDict["setStateShow"].lower() == "true"
-            ) or prefDict["setStateShow"] == True:
+            ) or prefDict["setStateShow"] is True:
                 self.checkbox_11.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SET_APP_STATE_AS_SHOW = True
             else:
@@ -634,7 +655,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["useJsonForCmd"], str)
                 and prefDict["useJsonForCmd"].lower() == "true"
-            ) or prefDict["useJsonForCmd"] == True:
+            ) or prefDict["useJsonForCmd"] is True:
                 self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
                 Globals.COMMAND_JSON_INPUT = True
             else:
@@ -668,7 +689,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["saveColVisibility"], str)
                 and prefDict["saveColVisibility"].lower() == "true"
-            ) or prefDict["saveColVisibility"] == True:
+            ) or prefDict["saveColVisibility"] is True:
                 self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SAVE_VISIBILITY = True
             else:
@@ -682,7 +703,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["groupFetchAll"], str)
                 and prefDict["groupFetchAll"].lower() == "true"
-            ) or prefDict["groupFetchAll"] == True:
+            ) or prefDict["groupFetchAll"] is True:
                 self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
                 Globals.GROUP_FETCH_ALL = True
             else:
@@ -696,7 +717,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(prefDict["replaceSerial"], str)
                 and prefDict["replaceSerial"].lower() == "true"
-            ) or prefDict["replaceSerial"] == True:
+            ) or prefDict["replaceSerial"] is True:
                 self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
                 Globals.REPLACE_SERIAL = True
             else:
@@ -707,18 +728,29 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(prefDict["showDisabledDevices"], str)
                 and prefDict["showDisabledDevices"].lower() == "true"
-            ) or prefDict["showDisabledDevices"] == True:
+            ) or prefDict["showDisabledDevices"] is True:
                 self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_DISABLED_DEVICES = True
             else:
                 self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_DISABLED_DEVICES = False
 
+        if prefDict and "inhibitSleep" in prefDict:
+            if (
+                isinstance(prefDict["inhibitSleep"], str)
+                and prefDict["inhibitSleep"].lower() == "true"
+            ) or prefDict["inhibitSleep"] is True:
+                self.checkbox_21.Set3StateValue(wx.CHK_CHECKED)
+                Globals.INHIBIT_SLEEP = True
+            else:
+                self.checkbox_21.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.INHIBIT_SLEEP = False
+
         if prefDict and "lastSeenAsDate" in prefDict:
             if (
                 isinstance(prefDict["lastSeenAsDate"], str)
                 and prefDict["lastSeenAsDate"].lower() == "true"
-            ) or prefDict["lastSeenAsDate"] == True:
+            ) or prefDict["lastSeenAsDate"] is True:
                 self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
                 Globals.LAST_SEEN_AS_DATE = True
             else:
@@ -732,7 +764,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(prefDict["appsInDeviceGrid"], str)
                 and prefDict["appsInDeviceGrid"].lower() == "true"
-            ) or prefDict["appsInDeviceGrid"] == True:
+            ) or prefDict["appsInDeviceGrid"] is True:
                 self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
                 Globals.APPS_IN_DEVICE_GRID = True
                 Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -745,6 +777,21 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
             Globals.APPS_IN_DEVICE_GRID = True
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+
+        if prefDict and "appVersionNameInsteadOfCode" in prefDict:
+            if (
+                isinstance(prefDict["appVersionNameInsteadOfCode"], str)
+                and prefDict["appVersionNameInsteadOfCode"].lower() == "true"
+            ) or prefDict["appVersionNameInsteadOfCode"] is True:
+                self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+            else:
+                self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = False
+        else:
+            self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+            Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -826,6 +873,8 @@ class PreferencesDialog(wx.Dialog):
             "showDisabledDevices": self.checkbox_18.IsChecked(),
             "lastSeenAsDate": self.checkbox_19.IsChecked(),
             "appsInDeviceGrid": self.checkbox_20.IsChecked(),
+            "inhibitSleep": self.checkbox_21.IsChecked(),
+            "appVersionNameInsteadOfCode": self.checkbox_22.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -855,6 +904,8 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
+        Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
+        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -870,7 +921,7 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.USE_ENTERPRISE_APP = True
 
-        if Globals.ENABLE_GRID_UPDATE and self.parent != None:
+        if Globals.ENABLE_GRID_UPDATE and self.parent is not None:
             self.parent.startUpdateThread()
 
         if self.parent:
@@ -1053,7 +1104,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["reachQueueStateOnly"], str)
                 and self.prefs["reachQueueStateOnly"].lower() == "true"
-            ) or self.prefs["reachQueueStateOnly"] == True:
+            ) or self.prefs["reachQueueStateOnly"] is True:
                 self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
                 Globals.REACH_QUEUED_ONLY = True
             else:
@@ -1063,7 +1114,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["syncGridScroll"], str)
                 and self.prefs["syncGridScroll"].lower() == "true"
-            ) or self.prefs["syncGridScroll"] == True:
+            ) or self.prefs["syncGridScroll"] is True:
                 self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
                 Globals.MATCH_SCROLL_POS = True
             else:
@@ -1073,7 +1124,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["immediateChild"], str)
                 and self.prefs["immediateChild"].lower() == "true"
-            ) or self.prefs["immediateChild"] == True:
+            ) or self.prefs["immediateChild"] is True:
                 self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
                 Globals.GET_IMMEDIATE_SUBGROUPS = True
             else:
@@ -1109,7 +1160,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["saveColVisibility"], str)
                 and self.prefs["saveColVisibility"].lower() == "true"
-            ) or self.prefs["saveColVisibility"] == True:
+            ) or self.prefs["saveColVisibility"] is True:
                 self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SAVE_VISIBILITY = True
             else:
@@ -1119,7 +1170,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["groupFetchAll"], str)
                 and self.prefs["groupFetchAll"].lower() == "true"
-            ) or self.prefs["groupFetchAll"] == True:
+            ) or self.prefs["groupFetchAll"] is True:
                 self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
                 Globals.GROUP_FETCH_ALL = True
             else:
@@ -1129,7 +1180,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["replaceSerial"], str)
                 and self.prefs["replaceSerial"].lower() == "true"
-            ) or self.prefs["replaceSerial"] == True:
+            ) or self.prefs["replaceSerial"] is True:
                 self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
                 Globals.REPLACE_SERIAL = True
             else:
@@ -1139,7 +1190,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["showDisabledDevices"], str)
                 and self.prefs["showDisabledDevices"].lower() == "true"
-            ) or self.prefs["showDisabledDevices"] == True:
+            ) or self.prefs["showDisabledDevices"] is True:
                 self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
                 Globals.SHOW_DISABLED_DEVICES = True
             else:
@@ -1149,7 +1200,7 @@ class PreferencesDialog(wx.Dialog):
             if (
                 isinstance(self.prefs["lastSeenAsDate"], str)
                 and self.prefs["lastSeenAsDate"].lower() == "true"
-            ) or self.prefs["lastSeenAsDate"] == True:
+            ) or self.prefs["lastSeenAsDate"] is True:
                 self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
                 Globals.LAST_SEEN_AS_DATE = True
             else:
@@ -1158,12 +1209,11 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
             Globals.LAST_SEEN_AS_DATE = True
-
         if "appsInDeviceGrid" in self.prefs:
             if (
                 isinstance(self.prefs["appsInDeviceGrid"], str)
                 and self.prefs["appsInDeviceGrid"].lower() == "true"
-            ) or self.prefs["appsInDeviceGrid"] == True:
+            ) or self.prefs["appsInDeviceGrid"] is True:
                 self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
                 Globals.APPS_IN_DEVICE_GRID = True
                 Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -1176,6 +1226,29 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
             Globals.APPS_IN_DEVICE_GRID = True
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
+        if "inhibitSleep" in self.prefs:
+            if (
+                isinstance(self.prefs["inhibitSleep"], str)
+                and self.prefs["inhibitSleep"].lower() == "true"
+            ) or self.prefs["inhibitSleep"] is True:
+                self.checkbox_21.Set3StateValue(wx.CHK_CHECKED)
+                Globals.INHIBIT_SLEEP = True
+            else:
+                self.checkbox_21.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.INHIBIT_SLEEP = False
+        if "appVersionNameInsteadOfCode" in self.prefs:
+            if (
+                isinstance(self.prefs["appVersionNameInsteadOfCode"], str)
+                and self.prefs["appVersionNameInsteadOfCode"].lower() == "true"
+            ) or self.prefs["appVersionNameInsteadOfCode"] is True:
+                self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+            else:
+                self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.VERSON_NAME_INSTEAD_OF_CODE = False
+        else:
+            self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
+            Globals.VERSON_NAME_INSTEAD_OF_CODE = True
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1215,6 +1288,8 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["showDisabledDevices"] = Globals.SHOW_DISABLED_DEVICES
         self.prefs["lastSeenAsDate"] = Globals.LAST_SEEN_AS_DATE
         self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
+        self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
+        self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
 
         return self.prefs
 
@@ -1284,6 +1359,10 @@ class PreferencesDialog(wx.Dialog):
             return Globals.LAST_SEEN_AS_DATE
         elif key == "appsInDeviceGrid":
             return Globals.APPS_IN_DEVICE_GRID
+        elif key == "inhibitSleep":
+            return Globals.INHIBIT_SLEEP
+        elif key == "appVersionNameInsteadOfCode":
+            return Globals.VERSON_NAME_INSTEAD_OF_CODE
         else:
             return None
 
