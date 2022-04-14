@@ -147,6 +147,7 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadGroups(self, event):
         self.changeCursorToWait()
+        self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
         destinationGroups = getDeviceGroupsForHost(
@@ -159,6 +160,7 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadBlueprints(self, event):
         self.changeCursorToWait()
+        self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
         bps = getAllBlueprintsFromHost(config["apiHost"], config["apiKey"], config["enterprise"])
