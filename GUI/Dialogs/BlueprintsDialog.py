@@ -30,7 +30,7 @@ class BlueprintsDialog(wx.Dialog):
         self.fromConfig = None
         self.blueprint = None
         self.group = None
-        choices = list(self.configMenuOpt.keys())
+        choices = list(filter(lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x] and self.configMenuOpt[x]["isBlueprintsEnabled"], self.configMenuOpt.keys()))
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

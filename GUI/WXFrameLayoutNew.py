@@ -4,7 +4,7 @@ from Common.SleepInhibitor import SleepInhibitor
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled, prepareBlueprintClone
+from Utility.API.BlueprintUtility import checkBlueprintsIsEnabledForTenant, prepareBlueprintClone
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -82,6 +82,7 @@ from Utility.EastUtility import (
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
+    limitActiveThreads,
     postEventToFrame,
     resourcePath,
     createNewFile,
@@ -419,9 +420,15 @@ class NewFrameLayout(wx.Frame):
         if isValid:
             matchingConfig = []
             if self.auth_data:
+                # matchingConfig = list(
+                #     filter(
+                #         lambda x: x[2] == entId or x[0] == name,
+                #         self.auth_data,
+                #     )
+                # )
                 matchingConfig = list(
                     filter(
-                        lambda x: x[2] == entId or x[0] == name,
+                        lambda x: x["enterprise"] == entId or x["name"] == name,
                         self.auth_data,
                     )
                 )
@@ -436,7 +443,7 @@ class NewFrameLayout(wx.Frame):
                 displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
                 self.auth_data = [
-                    csvRow if x == matchingConfig[0] else x for x in self.auth_data
+                    csvRow if x == matchingConfig["name"] else x for x in self.auth_data
                 ]
                 tmp = []
                 for auth in self.auth_data:
@@ -1131,9 +1138,44 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         returnItem = None
         if os.path.isfile(configfile):
-            with open(configfile, newline="") as csvfile:
-                auth_csv_reader = csv.DictReader(csvfile)
-                auth_csv_reader = list(auth_csv_reader)
+            # with open(configfile, newline="") as csvfile:
+            #     auth_csv_reader = csv.DictReader(csvfile)
+            #     auth_csv_reader = list(auth_csv_reader)
+            #     maxRow = len(auth_csv_reader)
+            #     num = 1
+
+            #     # Handle empty File
+            #     if maxRow == 0:
+            #         self.Logging("--->ERROR: Empty Auth File, please add an Endpoint!")
+            #         self.AddEndpoint(None)
+            #         return
+
+            #     for row in auth_csv_reader:
+            #         self.setGaugeValue(int(float(num / maxRow) * 25))
+            #         num += 1
+            #         if "name" in row:
+            #             self.sidePanel.configChoice[row["name"]] = row
+            #             item = self.menubar.configMenu.Append(
+            #                 wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_CHECK
+            #             )
+            #             self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
+            #             self.menubar.configMenuOptions.append(item)
+            #             if str(getItemForName) == row["name"]:
+            #                 returnItem = item
+            #         else:
+            #             self.Logging(
+            #                 "--->ERROR: Please check that the Auth CSV is set up correctly!"
+            #             )
+            #             defaultConfigVal = self.menubar.configMenu.Append(
+            #                 wx.ID_NONE,
+            #                 "No Loaded Configurations",
+            #                 "No Loaded Configurations",
+            #             )
+            #             self.menubar.configMenuOptions.append(defaultConfigVal)
+            #             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
+            #             return
+            if self.auth_data:
+                auth_csv_reader = self.auth_data
                 maxRow = len(auth_csv_reader)
                 num = 1
 
@@ -1310,9 +1352,10 @@ class NewFrameLayout(wx.Frame):
                 if Globals.HAS_INTERNET:
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
-                    blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, None, name="loadConfigCheckBlueprint")
-                    blueprints.start()
-                    threads = [groupThread, appThread, blueprints]
+                    # blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, config, name="loadConfigCheckBlueprint")
+                    # blueprints.start()
+                    threads = [groupThread, appThread]
+                    self.loadConfigCheckBlueprint(config)
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -2630,10 +2673,29 @@ class NewFrameLayout(wx.Frame):
             if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
                 crypto().decrypt(Globals.csv_auth_path, self.key, True)
             with open(Globals.csv_auth_path, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                self.auth_data = list(reader)
+                # reader = csv.reader(
+                #     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                # )
+                auth_csv_reader = csv.DictReader(csvFile)
+                self.auth_data = list(auth_csv_reader)
+                # self.auth_data = list(reader)
+            new_auth = []
+            threads = []
+            for data in self.auth_data:
+                thread = wxThread.GUIThread(self, target=self.checkBlueprint, args=(data, new_auth), name="checkBlueprint")
+                thread.start()
+                threads.append(thread)
+                limitActiveThreads(threads)
+            joinThreadList(threads)
+            self.auth_data = new_auth
+
+    def checkBlueprint(self, data, new_auth):
+        isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(data["apiHost"], {
+            "Authorization": "Bearer %s" % data["apiKey"],
+            "Content-Type": "application/json",
+        })
+        data["isBlueprintsEnabled"] = isBlueprintEnabled
+        new_auth.append(data)
 
     @api_tool_decorator()
     def loadPref(self):
@@ -3302,10 +3364,10 @@ class NewFrameLayout(wx.Frame):
                 pass
             dlg.DestroyLater()
 
-    def loadConfigCheckBlueprint(self):
+    def loadConfigCheckBlueprint(self, config):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
-        self.blueprintsEnabled = checkBlueprintsIsEnabled()
+        self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
         else:

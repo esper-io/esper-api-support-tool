@@ -6,6 +6,7 @@ from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
 from Utility.API.AppUtilities import getAllAppVersionsForHost, getAllApplicationsForHost, uploadApplicationForHost
+from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import deleteFile, displayMessageBox, download, getEsperConfig, getHeader, postEventToFrame
 
@@ -16,9 +17,21 @@ from esperclient import InlineResponse201
 
 def checkBlueprintsIsEnabled():
     enabled = False
-    resp = getAllBlueprints()
+    resp = getFeatureFlags()
     if hasattr(resp, "status_code") and resp.status_code < 300:
-        enabled = True
+        jsonResp = resp.json()
+        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"]:
+            return True
+    return enabled
+
+
+def checkBlueprintsIsEnabledForTenant(host, header):
+    enabled = False
+    resp = getFeatureFlagsForTenant(host, header)
+    if hasattr(resp, "status_code") and resp.status_code < 300:
+        jsonResp = resp.json()
+        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"]:
+            return True
     return enabled
 
 
