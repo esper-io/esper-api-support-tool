@@ -402,9 +402,11 @@ def uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromCon
                 postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Failed Uploading %s" % detail["name"])
                 deleteFile(file)
                 raise Exception("Upload failed!")
+            else:
+                res = res.json()
             blueprint["latest_revision"]["content"]["files"].append({
                 "file": res["id"],
-                "destination_path": file["destination_path"]
+                "destination_path": detail["path"],
             })
         num += 1
         deleteFile(file)
