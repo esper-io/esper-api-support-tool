@@ -34,6 +34,5 @@ def uploadContentToHost(host, enterprise, key, file):
     )
     resp = performPostRequestWithRetry(url, headers={
         "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json",
     }, files={"key": open(file, "rb")})
     return resp
