@@ -6,9 +6,10 @@ from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
 from Utility.API.AppUtilities import getAllAppVersionsForHost, getAllApplicationsForHost, uploadApplicationForHost
+from Utility.API.ContentUtility import getAllContentFromHost, uploadContentToHost
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import deleteFile, displayMessageBox, download, getEsperConfig, getHeader, postEventToFrame
+from Utility.Resource import deleteFile, displayMessageBox, download, getAllFromOffsets, getEsperConfig, getHeader, postEventToFrame
 
 from Utility.Web.WebRequests import performGetRequestWithRetry, performPostRequestWithRetry
 
@@ -47,9 +48,27 @@ def getAllBlueprints():
 
 @api_tool_decorator()
 def getAllBlueprintsFromHost(host, key, enterprise):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/".format(
+    response = getAllBlueprintsFromHostHelper(host, key, enterprise, Globals.limit, 0)
+    blueprints = getAllFromOffsets(getAllBlueprintsFromHostHelper, None, response)
+    if hasattr(response, "results"):
+        response.results = response.results + blueprints
+        response.next = None
+        response.prev = None
+    elif type(response) is dict and "results" in response:
+        response["results"] = response["results"] + blueprints
+        response["next"] = None
+        response["prev"] = None
+        print(len(response["results"]))
+    return response
+
+
+@api_tool_decorator()
+def getAllBlueprintsFromHostHelper(host, key, enterprise, limit=Globals.limit, offset=0):
+    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/?limit={limit}&offset={offset}".format(
         baseUrl=host,
-        enterprise_id=enterprise
+        enterprise_id=enterprise,
+        limit=limit,
+        offset=offset
     )
     resp = performGetRequestWithRetry(url, headers={
         "Authorization": f"Bearer {key}",
@@ -179,12 +198,13 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                                                                            else blueprint["latest_revision"]["security"]["minimum_password_length"])
 
     blueprint, missingApps, downloadLinks = checkFromMissingApps(blueprint, toConfig, fromConfig)
+    blueprint, missingContent, downloadContentLinks = checkFromMissingContent(blueprint, toConfig, fromConfig)
 
     if Globals.SHOW_TEMPLATE_DIALOG:
         result = CheckboxMessageBox(
             "Confirmation",
-            "The %s will attempt to clone to template.\nThe following apps are missing: %s\n\nContinue?"
-            % (Globals.TITLE, missingApps if missingApps else None),
+            "The %s will attempt to clone to template.\nThe following apps are missing: %s\nThe following Content is missing: %s\n\nContinue?"
+            % (Globals.TITLE, missingApps if missingApps else None, missingContent if missingContent else None),
         )
         res = result.ShowModal()
 
@@ -204,6 +224,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             | wx.PD_ESTIMATED_TIME,
         )
         blueprint = uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig, progress)
+        blueprint = uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromConfig, progress)
         resp = createBlueprintForHost(toConfig["apiHost"], toConfig["apiKey"], toConfig["enterprise"], group, blueprint)
 
         cloneResult = "Success" if resp and hasattr(resp, "status_code") else "FAILED Reason: %s" % str(resp)
@@ -225,7 +246,7 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
         file = "%s.apk" % detail["version"]
         deleteFile(file)
         try:
-            progress.Update(int((num / numTotal) * 50), "Attempting to download: %s" % detail["name"])
+            progress.Update(int((num / numTotal) * 33), "Attempting to download: %s" % detail["name"])
             postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Downloading %s" % detail["name"])
             download(link, file)
             ApiToolLog().LogApiRequestOccurrence(
@@ -240,7 +261,7 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
             postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Uploading %s" % detail["name"])
             res = uploadApplicationForHost(getEsperConfig(toConfig["apiHost"], toConfig["apiKey"]), toConfig["enterprise"], file)
             if type(res) != InlineResponse201:
-                progress.Update(int((num / numTotal) * 50), "Failed uploading %s" % detail["name"])
+                progress.Update(int((num / numTotal) * 33), "Failed uploading %s" % detail["name"])
                 postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Failed Uploading %s" % detail["name"])
                 deleteFile(file)
                 raise Exception("Upload failed!")
@@ -254,7 +275,7 @@ def uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig
             })
         num += 1
         deleteFile(file)
-    progress.Update(50, "Finished uploading missing applications.")
+    progress.Update(33, "Finished uploading missing applications.")
     postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Apps")
     return blueprint
 
@@ -322,3 +343,70 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                 })
     blueprint["latest_revision"]["application"]["apps"] = appsToAdd
     return blueprint, missingApps, downloadLink
+
+
+def checkFromMissingContent(blueprint, toConfig, fromConfig):
+    postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Content")
+    toContent = getAllContentFromHost(toConfig["apiHost"], toConfig["enterprise"], toConfig["apiKey"])
+    if toContent and hasattr(toContent, "status_code") and toContent.status_code < 300:
+        toContent = toContent.json()
+    contentToAdd = []
+    missingContent = ""
+    downloadContentLink = []
+    for file in blueprint["latest_revision"]["content"]["files"]:
+        match = list(filter(
+            lambda x: x["hash"] == file["hash"],
+            toContent["results"],
+        ))
+        if match:
+            contentToAdd.append({
+                "file": match[0]["id"],
+                "destination_path": file["destination_path"]
+            })
+        else:
+            missingContent += "%s, " % file["file"]
+            if "url" in downloadContentLink:
+                downloadContentLink.append({
+                    "name": file["file"],
+                    "link": file["url"],
+                    "path": file["destination_path"]
+                })
+    blueprint["latest_revision"]["content"]["files"] = contentToAdd
+    return blueprint, missingContent, downloadContentLink
+
+
+def uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromConfig, progress):
+    numTotal = len(downloadContentLinks) * 2
+    num = 1
+    for detail in downloadContentLinks:
+        link = detail["link"]
+        try:
+            file = None
+            progress.Update(int((num / numTotal) * 66), "Attempting to download: %s" % detail["name"])
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Downloading %s" % detail["name"])
+            download(link, file)
+            ApiToolLog().LogApiRequestOccurrence(
+                "download", link, Globals.PRINT_API_LOGS
+            )
+        except Exception as e:
+            # TODO: download link might have expired reobtain and try again?
+            ApiToolLog().LogError(e)
+            print(e)
+        num += 1
+        if os.path.exists(file):
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Uploading %s" % detail["name"])
+            res = uploadContentToHost(toConfig["apiHost"], toConfig["enterprise"], toConfig["apiKey"], file)
+            if res and hasattr(res, "status_code") and res.status_code > 300:
+                progress.Update(int((num / numTotal) * 66), "Failed uploading %s" % detail["name"])
+                postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Failed Uploading %s" % detail["name"])
+                deleteFile(file)
+                raise Exception("Upload failed!")
+            blueprint["latest_revision"]["content"]["files"].append({
+                "file": res["id"],
+                "destination_path": file["destination_path"]
+            })
+        num += 1
+        deleteFile(file)
+    progress.Update(66, "Finished uploading missing applications.")
+    postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Content")
+    return blueprint

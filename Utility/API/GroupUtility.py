@@ -249,12 +249,35 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
 @api_tool_decorator()
 def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
     try:
+        api_response = getDeviceGroupsForHostHelper(config, enterprise_id)
+        if api_response and hasattr(api_response, "next") and api_response.next:
+            offset = Globals.limit
+            while offset < api_response.count:
+                resp = getDeviceGroupsForHostHelper(config, enterprise_id, Globals.limit, offset, maxAttempt)
+                if resp and hasattr(resp, "next") and resp.next:
+                    api_response.results += resp.results
+                offset += Globals.limit
+            obtained = sum(len(v["results"]) for v in api_response.results) + int(offset)
+            remainder = api_response.count - obtained
+            if remainder > 0:
+                offset -= int(Globals.limit)
+                offset += 1
+                resp = getDeviceGroupsForHostHelper(config, enterprise_id, Globals.limit, offset, maxAttempt)
+                if resp and hasattr(resp, "next") and resp.next:
+                    api_response.results += resp.results
+        return api_response
+    except Exception as e:
+        raise e
+
+
+def getDeviceGroupsForHostHelper(config, enterprise_id, limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY):
+    try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
         api_response = None
         for attempt in range(maxAttempt):
             try:
                 api_response = api_instance.get_all_groups(
-                    enterprise_id, limit=Globals.limit, offset=Globals.offset
+                    enterprise_id, limit=limit, offset=offset
                 )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getDeviceGroupsForHost",
