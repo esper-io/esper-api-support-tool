@@ -4,7 +4,7 @@ from Common.SleepInhibitor import SleepInhibitor
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import prepareBlueprintClone
+from Utility.API.BlueprintUtility import checkBlueprintEnabled, prepareBlueprintClone
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -3356,7 +3356,7 @@ class NewFrameLayout(wx.Frame):
         if "isBlueprintsEnabled" in config:
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         else:
-            self.checkBlueprint(config)
+            checkBlueprintEnabled(config)
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
