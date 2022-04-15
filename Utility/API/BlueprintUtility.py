@@ -365,7 +365,7 @@ def checkFromMissingContent(blueprint, toConfig, fromConfig):
             })
         else:
             missingContent += "%s, " % file["file"]
-            if "url" in downloadContentLink:
+            if "url" in file:
                 downloadContentLink.append({
                     "name": file["file"],
                     "link": file["url"],
@@ -407,6 +407,6 @@ def uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromCon
             })
         num += 1
         deleteFile(file)
-    progress.Update(66, "Finished uploading missing applications.")
+    progress.Update(66, "Finished uploading missing content.")
     postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Content")
     return blueprint
