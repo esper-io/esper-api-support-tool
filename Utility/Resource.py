@@ -453,7 +453,7 @@ def getAllFromOffsets(
             respOffsetInt += 1
             thread = threading.Thread(
                 target=func,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
+                args=(group, respLimit, str(respOffsetInt), maxAttempt),
             )
             threads.append(thread)
             thread.start()
