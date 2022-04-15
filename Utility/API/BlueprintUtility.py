@@ -26,6 +26,14 @@ def checkBlueprintsIsEnabled():
     return enabled
 
 
+def checkBlueprintEnabled(data):
+    isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(data["apiHost"], {
+        "Authorization": "Bearer %s" % data["apiKey"],
+        "Content-Type": "application/json",
+    })
+    data["isBlueprintsEnabled"] = isBlueprintEnabled
+
+
 def checkBlueprintsIsEnabledForTenant(host, header):
     enabled = False
     resp = getFeatureFlagsForTenant(host, header)

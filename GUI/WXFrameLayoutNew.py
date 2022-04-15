@@ -4,7 +4,7 @@ from Common.SleepInhibitor import SleepInhibitor
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import checkBlueprintsIsEnabledForTenant, prepareBlueprintClone
+from Utility.API.BlueprintUtility import prepareBlueprintClone
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
@@ -82,7 +82,6 @@ from Utility.EastUtility import (
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
-    limitActiveThreads,
     postEventToFrame,
     resourcePath,
     createNewFile,
@@ -2683,14 +2682,6 @@ class NewFrameLayout(wx.Frame):
                 self.auth_data,
                 key=lambda i: list(map(str, i["name"].lower())),
             )
-
-    def checkBlueprint(self, data):
-        isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(data["apiHost"], {
-            "Authorization": "Bearer %s" % data["apiKey"],
-            "Content-Type": "application/json",
-        })
-        data["isBlueprintsEnabled"] = isBlueprintEnabled
-        # new_auth.append(data)
 
     @api_tool_decorator()
     def loadPref(self):

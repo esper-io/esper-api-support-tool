@@ -4,12 +4,13 @@ import json
 import wx
 import wx.html as wxHtml
 import threading
+import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 from GUI.PromptingComboBox import PromptingComboBox
-from Utility.API.BlueprintUtility import getAllBlueprintsFromHost, getGroupBlueprintDetail
+from Utility.API.BlueprintUtility import checkBlueprintEnabled, getAllBlueprintsFromHost, getGroupBlueprintDetail
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import getEsperConfig, openWebLinkInBrowser
+from Utility.Resource import getEsperConfig, joinThreadList, limitActiveThreads, openWebLinkInBrowser
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -138,6 +139,30 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_2.Bind(wx.EVT_COMBOBOX, self.checkInputs)
         self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadBlueprints)
         self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadBlueprintPreview)
+
+        self.changeCursorToWait()
+        self.combo_box_3.Enable(False)
+        self.combo_box_2.Enable(False)
+        threading.Thread(target=self.getBlueprintEnabledEndpoints, name="getBlueprintEnabledEndpoints").start()
+
+    def getBlueprintEnabledEndpoints(self):
+        self.combo_box_3.Clear()
+        self.combo_box_2.Clear()
+        threads = []
+        for config in self.configMenuOpt.values():
+            if "isBlueprintsEnabled" not in config:
+                thread = threading.Thread(target=checkBlueprintEnabled, args=(config,), name="getBlueprintEnabledEndpoints")
+                thread.start()
+                threads.append(thread)
+                limitActiveThreads(threads)
+        joinThreadList(threads)
+        choices = list(filter(lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x] and self.configMenuOpt[x]["isBlueprintsEnabled"], self.configMenuOpt.keys()))
+        for choice in choices:
+            self.combo_box_3.Append(choice)
+            self.combo_box_2.Append(choice)
+        self.combo_box_3.Enable(True)
+        self.combo_box_2.Enable(True)
+        self.checkInputs()
 
     def changeCursorToWait(self):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
