@@ -1352,10 +1352,10 @@ class NewFrameLayout(wx.Frame):
                 if Globals.HAS_INTERNET:
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
-                    # blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, config, name="loadConfigCheckBlueprint")
-                    # blueprints.start()
-                    threads = [groupThread, appThread]
-                    self.loadConfigCheckBlueprint(config)
+                    blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, config, name="loadConfigCheckBlueprint")
+                    blueprints.start()
+                    threads = [groupThread, appThread, blueprints]
+                    # self.loadConfigCheckBlueprint(config)
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -2679,26 +2679,18 @@ class NewFrameLayout(wx.Frame):
                 auth_csv_reader = csv.DictReader(csvFile)
                 self.auth_data = list(auth_csv_reader)
                 # self.auth_data = list(reader)
-            new_auth = []
-            threads = []
-            for data in self.auth_data:
-                thread = wxThread.GUIThread(self, target=self.checkBlueprint, args=(data, new_auth), name="checkBlueprint")
-                thread.start()
-                threads.append(thread)
-                limitActiveThreads(threads)
-            joinThreadList(threads)
             self.auth_data = sorted(
-                new_auth,
+                self.auth_data,
                 key=lambda i: list(map(str, i["name"].lower())),
             )
 
-    def checkBlueprint(self, data, new_auth):
+    def checkBlueprint(self, data):
         isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(data["apiHost"], {
             "Authorization": "Bearer %s" % data["apiKey"],
             "Content-Type": "application/json",
         })
         data["isBlueprintsEnabled"] = isBlueprintEnabled
-        new_auth.append(data)
+        # new_auth.append(data)
 
     @api_tool_decorator()
     def loadPref(self):
@@ -3370,7 +3362,11 @@ class NewFrameLayout(wx.Frame):
     def loadConfigCheckBlueprint(self, config):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
-        self.blueprintsEnabled = config["isBlueprintsEnabled"]
+        if "isBlueprintsEnabled" in config:
+            self.blueprintsEnabled = config["isBlueprintsEnabled"]
+        else:
+            self.checkBlueprint(config)
+            self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
         else:
