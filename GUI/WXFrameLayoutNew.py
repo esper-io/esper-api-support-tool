@@ -827,39 +827,39 @@ class NewFrameLayout(wx.Frame):
             deviceGridData.append(rowValues)
         return deviceGridData
 
-    # @api_tool_decorator()
-    # def saveAppInfo(self, event):
-    #     if type(event) is str:
-    #         self.setCursorBusy()
-    #         self.toggleEnabledState(False)
-    #         self.gridPanel.disableGridProperties()
-    #         thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (event))
-    #         thread.start()
-    #         return True
-    #     if self.gridPanel.grid_3.GetNumberRows() > 0:
-    #         dlg = wx.FileDialog(
-    #             self,
-    #             message="Save App Info CSV...",
-    #             defaultFile="",
-    #             wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
-    #             defaultDir=str(self.defaultDir),
-    #             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-    #         )
-    #         result = dlg.ShowModal()
-    #         inFile = dlg.GetPath()
-    #         dlg.DestroyLater()
+    @api_tool_decorator()
+    def saveAppInfo(self, event):
+        if type(event) is str:
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (event))
+            thread.start()
+            return True
+        if self.gridPanel.grid_3.GetNumberRows() > 0:
+            dlg = wx.FileDialog(
+                self,
+                message="Save App Info CSV...",
+                defaultFile="",
+                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
+                defaultDir=str(self.defaultDir),
+                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+            )
+            result = dlg.ShowModal()
+            inFile = dlg.GetPath()
+            dlg.DestroyLater()
 
-    #         if result == wx.ID_OK:  # Save button was pressed
-    #             self.setCursorBusy()
-    #             self.toggleEnabledState(False)
-    #             self.gridPanel.disableGridProperties()
-    #             thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (inFile))
-    #             thread.start()
-    #             return True
-    #         elif (
-    #             result == wx.ID_CANCEL
-    #         ):  # Either the cancel button was pressed or the window was closed
-    #             return False
+            if result == wx.ID_OK:  # Save button was pressed
+                self.setCursorBusy()
+                self.toggleEnabledState(False)
+                self.gridPanel.disableGridProperties()
+                thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (inFile))
+                thread.start()
+                return True
+            elif (
+                result == wx.ID_CANCEL
+            ):  # Either the cancel button was pressed or the window was closed
+                return False
 
     def saveAppInfoAsFile(self, inFile):
         gridData = []
@@ -2338,7 +2338,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (deviceId, appToUse, appVersion, "DISABLE"),
+                    (deviceId, appToUse, "DISABLE"),
                     name="SetAppDisable",
                 )
                 thread.start()
@@ -2349,7 +2349,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (deviceId, appToUse, appVersion, "HIDE"),
+                    (deviceId, appToUse, "HIDE"),
                     name="SetAppHide",
                 )
                 thread.start()
@@ -2360,7 +2360,7 @@ class NewFrameLayout(wx.Frame):
                 thread = wxThread.GUIThread(
                     self,
                     setAppState,
-                    (deviceId, appToUse, appVersion, "SHOW"),
+                    (deviceId, appToUse, "SHOW"),
                     name="SetAppShow",
                 )
                 thread.start()

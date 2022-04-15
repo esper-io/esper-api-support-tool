@@ -621,7 +621,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
 
 @api_tool_decorator()
 def setAppState(
-    device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
+    device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY
 ):
     pkgName = pkg_name
     if pkgName:

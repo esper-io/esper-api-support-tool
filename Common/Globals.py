@@ -50,7 +50,6 @@ grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
-rate_limiter = threading.Lock()
 
 # Known Group Var
 knownGroups = {}

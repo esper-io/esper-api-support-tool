@@ -466,16 +466,6 @@ class ToolMenuBar(wx.MenuBar):
                 self.collectionSubMenu.Enable(True)
 
     @api_tool_decorator()
-    def checkBlueprintsEnabled(self):
-        if not checkBlueprintsIsEnabled():
-            if hasattr(self.clone, "Hide"):
-                self.clone.Hide()
-                self.cloneBP.Show()
-            else:
-                self.clone.Enable(False)
-                self.cloneBP.Enable(True)
-
-    @api_tool_decorator()
     def AddUser(self, event):
         if not self.uc:
             self.uc = UserCreation(self)
