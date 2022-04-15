@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 import threading
-
-import Utility.EventUtility as eventUtil
-from Common.decorator import api_tool_decorator
 import json
 import os
 import platform
@@ -17,6 +14,7 @@ import webbrowser
 import Common.Globals as Globals
 import esperclient
 
+from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
 from Utility.EventUtility import CustomEvent
