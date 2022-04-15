@@ -349,7 +349,7 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
         if not appAdded:
             postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Missing %s" % app["application_name"])
             missingApps += "%s, " % app["application_name"]
-            if "download_url" in app:
+            if "download_url" in app and app["download_url"]:
                 downloadLink.append({
                     "name": app["application_name"],
                     "version": app["app_version"],
@@ -381,7 +381,7 @@ def checkFromMissingContent(blueprint, toConfig, fromConfig):
             })
         else:
             missingContent += "%s, " % file["file"]
-            if "url" in file:
+            if "url" in file and file["url"]:
                 downloadContentLink.append({
                     "name": file["file"],
                     "link": file["url"],
