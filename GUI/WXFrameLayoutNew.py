@@ -2687,7 +2687,10 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
                 limitActiveThreads(threads)
             joinThreadList(threads)
-            self.auth_data = new_auth
+            self.auth_data = sorted(
+                new_auth,
+                key=lambda i: list(map(str, i["name"].lower())),
+            )
 
     def checkBlueprint(self, data, new_auth):
         isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(data["apiHost"], {
