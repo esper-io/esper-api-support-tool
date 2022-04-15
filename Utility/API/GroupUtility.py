@@ -5,7 +5,7 @@ import time
 
 from esperclient.rest import ApiException
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility
+from Utility import EventUtility, wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 import esperclient
 import Common.Globals as Globals
@@ -14,6 +14,8 @@ from Utility.Resource import (
     enforceRateLimit,
     getAllFromOffsets,
     getHeader,
+    joinThreadList,
+    limitActiveThreads,
     logBadResponse,
     postEventToFrame,
 )
@@ -252,12 +254,19 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
         api_response = getDeviceGroupsForHostHelper(config, enterprise_id)
         if api_response and hasattr(api_response, "next") and api_response.next:
             offset = Globals.limit
+            threads = []
             while offset < api_response.count:
-                resp = getDeviceGroupsForHostHelper(config, enterprise_id, Globals.limit, offset, maxAttempt)
+                thread = wxThread.GUIThread(None, getDeviceGroupsForHostHelper, (config, enterprise_id, Globals.limit, offset, maxAttempt), name="getDeviceGroupsForHostHelper")
+                thread.start()
+                threads.append(thread)
+                limitActiveThreads(threads)
+                offset += Globals.limit
+            joinThreadList(threads)
+            for thread in threads:
+                resp = thread.result
                 if resp and hasattr(resp, "next") and resp.next:
                     api_response.results += resp.results
-                offset += Globals.limit
-            obtained = sum(len(v["results"]) for v in api_response.results) + int(offset)
+            obtained = len(api_response.results)
             remainder = api_response.count - obtained
             if remainder > 0:
                 offset -= int(Globals.limit)
