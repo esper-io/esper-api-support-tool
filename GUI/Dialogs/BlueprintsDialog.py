@@ -142,12 +142,12 @@ class BlueprintsDialog(wx.Dialog):
 
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
-        self.combo_box_2.Enable(False)
+        self.combo_box_1.Enable(False)
         threading.Thread(target=self.getBlueprintEnabledEndpoints, name="getBlueprintEnabledEndpoints").start()
 
     def getBlueprintEnabledEndpoints(self):
         self.combo_box_3.Clear()
-        self.combo_box_2.Clear()
+        self.combo_box_1.Clear()
         threads = []
         for config in self.configMenuOpt.values():
             if "isBlueprintsEnabled" not in config:
@@ -159,9 +159,11 @@ class BlueprintsDialog(wx.Dialog):
         choices = list(filter(lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x] and self.configMenuOpt[x]["isBlueprintsEnabled"], self.configMenuOpt.keys()))
         for choice in choices:
             self.combo_box_3.Append(choice)
-            self.combo_box_2.Append(choice)
+            self.combo_box_1.Append(choice)
         self.combo_box_3.Enable(True)
-        self.combo_box_2.Enable(True)
+        self.combo_box_1.Enable(True)
+        self.combo_box_3.SetSelection(-1)
+        self.combo_box_1.SetSelection(-1)
         self.checkInputs()
 
     def changeCursorToWait(self):
@@ -252,6 +254,7 @@ class BlueprintsDialog(wx.Dialog):
             and self.combo_box_3.GetValue()
             and self.combo_box_4.GetValue()
             and self.combo_box_1.GetValue() != self.combo_box_3.GetValue()
+            and self.blueprint
         ):
             self.button_OK.Enable(True)
         else:
@@ -268,7 +271,8 @@ class BlueprintsDialog(wx.Dialog):
             self.Close()
 
     def getBlueprint(self):
-        return self.blueprint.json()
+        if self.blueprint:
+            return self.blueprint.json()
 
     def getDestinationGroup(self):
         return self.group
