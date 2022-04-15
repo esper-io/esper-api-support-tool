@@ -154,7 +154,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
-        thread = threading.Thread(target=self.loadGroupHelper, args=(config,))
+        thread = threading.Thread(target=self.loadGroupHelper, args=(config,), name="loadGroupHelper")
         thread.start()
 
     @api_tool_decorator()
@@ -174,7 +174,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
-        thread = threading.Thread(target=self.loadBlueprintsHelper, args=(config,))
+        thread = threading.Thread(target=self.loadBlueprintsHelper, args=(config,), name="loadBlueprintsHelper")
         thread.start()
 
     @api_tool_decorator()
@@ -201,7 +201,7 @@ class BlueprintsDialog(wx.Dialog):
             match = match[0]
         config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
         if match["group"]:
-            thread = threading.Thread(target=self.loadBlueprintHelper, args=(event, match, config))
+            thread = threading.Thread(target=self.loadBlueprintHelper, args=(event, match, config), name="loadBlueprintHelper")
             thread.start()
         else:
             self.text_ctrl_1.SetValue("No preview available")
