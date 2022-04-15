@@ -3,6 +3,7 @@
 import json
 import wx
 import wx.html as wxHtml
+import threading
 
 from Common.decorator import api_tool_decorator
 from GUI.PromptingComboBox import PromptingComboBox
@@ -150,6 +151,11 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
+        thread = threading.Thread(target=self.loadGroupHelper, args=(config,))
+        thread.start()
+
+    @api_tool_decorator()
+    def loadGroupHelper(self, config):
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]), config["enterprise"]
         )
@@ -163,6 +169,11 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
+        thread = threading.Thread(target=self.loadBlueprintsHelper, args=(config,))
+        thread.start()
+
+    @api_tool_decorator()
+    def loadBlueprintsHelper(self, config):
         bps = getAllBlueprintsFromHost(config["apiHost"], config["apiKey"], config["enterprise"])
         if bps:
             self.blueprints = bps.json()
@@ -184,16 +195,22 @@ class BlueprintsDialog(wx.Dialog):
             match = match[0]
         config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
         if match["group"]:
-            revision = getGroupBlueprintDetail(config["apiHost"], config["apiKey"], config["enterprise"], match["group"], event.ClientData)
-            self.blueprint = revision
-            formattedRes = ""
-            try:
-                formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
-            except:
-                formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
-            self.text_ctrl_1.SetValue(formattedRes)
+            thread = threading.Thread(target=self.loadBlueprintHelper, args=(event, match, config))
+            thread.start()
         else:
             self.text_ctrl_1.SetValue("No preview available")
+        self.checkInputs()
+
+    @api_tool_decorator()
+    def loadBlueprintHelper(self, event, match, config):
+        revision = getGroupBlueprintDetail(config["apiHost"], config["apiKey"], config["enterprise"], match["group"], event.ClientData)
+        self.blueprint = revision
+        formattedRes = ""
+        try:
+            formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
+        except:
+            formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
+        self.text_ctrl_1.SetValue(formattedRes)
         self.checkInputs()
 
     @api_tool_decorator()
