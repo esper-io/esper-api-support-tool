@@ -63,6 +63,7 @@ class BlueprintsDialog(wx.Dialog):
 
         # self.combo_box_4 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_4 = PromptingComboBox(self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_4.Enable(False)
         sizer_6.Add(self.combo_box_4, 0, wx.EXPAND, 0)
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
@@ -95,6 +96,7 @@ class BlueprintsDialog(wx.Dialog):
 
         # self.combo_box_2 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_2 = PromptingComboBox(self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_2.Enable(False)
         sizer_4.Add(self.combo_box_2, 0, wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -148,6 +150,7 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadGroups(self, event):
         self.changeCursorToWait()
+        self.combo_box_2.Enable(False)
         self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
@@ -161,11 +164,13 @@ class BlueprintsDialog(wx.Dialog):
         )
         for group in destinationGroups.results:
             self.combo_box_2.Append(group.path, group.id)
+        self.combo_box_2.Enable(True)
         self.checkInputs()
 
     @api_tool_decorator()
     def loadBlueprints(self, event):
         self.changeCursorToWait()
+        self.combo_box_4.Enable(False)
         self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
@@ -183,6 +188,7 @@ class BlueprintsDialog(wx.Dialog):
                 else:
                     self.combo_box_4.Append("Blueprint %s" % blueprint["id"], blueprint["id"])
             self.checkInputs()
+        self.combo_box_4.Enable(True)
 
     @api_tool_decorator()
     def loadBlueprintPreview(self, event):
