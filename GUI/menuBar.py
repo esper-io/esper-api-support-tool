@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.API.BlueprintUtility import checkBlueprintsIsEnabled
 from Utility.EastUtility import processCollectionDevices
 from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
