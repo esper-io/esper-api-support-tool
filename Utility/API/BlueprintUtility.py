@@ -381,7 +381,8 @@ def uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromCon
     for detail in downloadContentLinks:
         link = detail["link"]
         try:
-            file = None
+            fileExtension = link.split("?")[0].split("/")[-1].split(".")[-1]
+            file = "%s.%s" % (detail["name"], fileExtension)
             progress.Update(int((num / numTotal) * 66), "Attempting to download: %s" % detail["name"])
             postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Downloading %s" % detail["name"])
             download(link, file)
