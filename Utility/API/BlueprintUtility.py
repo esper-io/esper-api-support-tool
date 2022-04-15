@@ -224,10 +224,18 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             | wx.PD_ESTIMATED_TIME,
         )
         blueprint = uploadingMissingBlueprintApps(blueprint, downloadLinks, toConfig, fromConfig, progress)
+        progress.Update(80, "Beinging Cloning Attempt...")
+        postEventToFrame(EventUtility.myEVT_LOG, "Beinging Cloning Attempt...")
         blueprint = uploadMissingContentFiles(blueprint, downloadContentLinks, toConfig, fromConfig, progress)
         resp = createBlueprintForHost(toConfig["apiHost"], toConfig["apiKey"], toConfig["enterprise"], group, blueprint)
+        respJson = resp.json()
+        if "message" in respJson and "Enterprise not enrolled into EMM." in respJson["message"]:
+            if "managed_google_play_disabled" in blueprint["latest_revision"]["google_services"]:
+                del blueprint["latest_revision"]["google_services"]["managed_google_play_disabled"]
+            resp = createBlueprintForHost(toConfig["apiHost"], toConfig["apiKey"], toConfig["enterprise"], group, blueprint)
+            respJson = resp.json()
 
-        cloneResult = "Success" if resp and hasattr(resp, "status_code") else "FAILED Reason: %s" % str(resp)
+        cloneResult = "Success" if resp and hasattr(resp, "status_code") else "FAILED Reason: %s" % str(respJson)
         progress.Update(100, "Cloning Attempt Done. Result: %s" % cloneResult)
         postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: %s" % cloneResult)
         displayMessageBox(
