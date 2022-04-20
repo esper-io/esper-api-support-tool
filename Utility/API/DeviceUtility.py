@@ -14,6 +14,7 @@ from esperclient.rest import ApiException
 
 from Utility.Web.WebRequests import performGetRequestWithRetry
 
+
 @api_tool_decorator()
 def getDeviceDetail(deviceId):
     return getInfo("?format=json&show_policy=true", deviceId)
@@ -67,12 +68,15 @@ def getAllDevices(
 def get_all_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
+    extention = "device/?limit=%s&offset=%s" % (limit, offset)
+    if groupToUse:
+        extention = "device/?group=%s&limit=%s&offset=%s" % (groupToUse, limit, offset)
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
             enterprise_id=Globals.enterprise_id,
         )
-        + "device/?limit=%s&offset=%s" % (limit, offset)
+        + extention
     )
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
