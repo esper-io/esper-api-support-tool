@@ -141,7 +141,7 @@ class GUIThread(threading.Thread):
 
     def run(self):
         """Overrides Thread.run. Don't call this directly its called internally
-        when you call Thread.start().
+        when you call Thread.startWithRetry().
         """
         if self._target:
             if self._optArgs:
@@ -179,7 +179,7 @@ class GUIThread(threading.Thread):
             if self._parent:
                 wx.PostEvent(self._parent, evt)
 
-    def start(self):
+    def startWithRetry(self):
         for attempt in range(Globals.MAX_RETRY):
             try:
                 return super().start()

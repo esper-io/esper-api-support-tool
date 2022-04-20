@@ -241,7 +241,7 @@ class TemplateDialog(wx.Dialog):
             (event.String if event.String else False),
             name="populateSourceTempaltes",
         )
-        self.choice1thread.start()
+        self.choice1thread.startWithRetry()
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
@@ -260,7 +260,7 @@ class TemplateDialog(wx.Dialog):
             (event.String if event.String else False),
             name="fetchDestTempaltes",
         )
-        self.choice2thread.start()
+        self.choice2thread.startWithRetry()
 
     @api_tool_decorator()
     def getTemplates(self, dataSrc):
