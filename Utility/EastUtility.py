@@ -595,67 +595,6 @@ def populateDeviceInfoDictionary(
         elif "tags" in device and device["tags"] is None:
             device["tags"] = []
 
-    deviceInfo["macAddress"] = []
-    ipKey = None
-    if "ipAddress" in deviceInfo:
-        ipKey = "ipAddress"
-    elif "ip_address" in deviceInfo:
-        ipKey = "ip_address"
-    if ipKey:
-        deviceInfo["ipv4Address"] = []
-        deviceInfo["ipv6Address"] = []
-        if ipKey in deviceInfo and deviceInfo[ipKey]:
-            for ip in deviceInfo[ipKey]:
-                if ":" not in ip:
-                    deviceInfo["ipv4Address"].append(ip)
-                else:
-                    deviceInfo["ipv6Address"].append(ip)
-                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
-
-    if "bluetooth_state" in deviceInfo:
-        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
-    if "paired_devices" in deviceInfo:
-        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
-    if "connected_devices" in deviceInfo:
-        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
-    if "mac_address" in deviceInfo:
-        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
-
-    if "lockdown_state" in deviceInfo:
-        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
-
-    if "audioSettings" in deviceInfo:
-        for audio in deviceInfo["audioSettings"]:
-            if "audioStream" in audio and "volumeLevel" in audio:
-                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
-            elif "ringerMode" in audio:
-                if audio["ringerMode"] == 0:
-                    deviceInfo["ringerMode"] = "Silent"
-                elif audio["ringerMode"] == 1:
-                    deviceInfo["ringerMode"] = "Vibrate"
-                elif audio["ringerMode"] == 2:
-                    deviceInfo["ringerMode"] = "Normal"
-
-    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
-        for event in deviceInfo["memoryEvents"]:
-            if "eventType" in event and "countInMb" in event:
-                deviceInfo[event["eventType"]] = event["countInMb"]
-
-    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
-        provisionedOnDate = utc_to_local(device.provisioned_on)
-        deviceInfo["provisioned_on"] = str(provisionedOnDate)
-
-    if "eeaVersion" not in deviceInfo:
-        deviceInfo["eeaVersion"] = "NON EEA"
-
-    if "emm_device" not in deviceInfo:
-        deviceInfo["emm_device"] = None
-
-    deviceInfo["is_emm"] = False
-    if "user" in deviceInfo:
-        if deviceInfo["user"]:
-            deviceInfo["is_emm"] = True
-
     if hasattr(appThread, "is_alive") and appThread.is_alive():
         appThread.join()
     apps = ""
@@ -733,6 +672,67 @@ def populateDeviceInfoDictionary(
                 deviceInfo["last_seen"] = "%s days ago" % days
     else:
         deviceInfo["last_seen"] = "No data available"
+
+    deviceInfo["macAddress"] = []
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+    if ipKey:
+        deviceInfo["ipv4Address"] = []
+        deviceInfo["ipv6Address"] = []
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                else:
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "lockdown_state" in deviceInfo:
+        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+            elif "ringerMode" in audio:
+                if audio["ringerMode"] == 0:
+                    deviceInfo["ringerMode"] = "Silent"
+                elif audio["ringerMode"] == 1:
+                    deviceInfo["ringerMode"] = "Vibrate"
+                elif audio["ringerMode"] == 2:
+                    deviceInfo["ringerMode"] = "Normal"
+
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
+    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
+        provisionedOnDate = utc_to_local(device.provisioned_on)
+        deviceInfo["provisioned_on"] = str(provisionedOnDate)
+
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
 
     return deviceInfo
 
