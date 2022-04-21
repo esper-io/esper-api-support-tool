@@ -432,7 +432,7 @@ class EsperTemplateUtil:
                     if toApp.package_name == app["packageName"]:
                         appMatch = list(
                             filter(
-                                lambda x: x["package_name"] == app["packageName"],
+                                lambda x: x["package_name"] if type(x) is dict else x.package_name == app["packageName"],
                                 newTemplate["application"]["apps"],
                             )
                         )
