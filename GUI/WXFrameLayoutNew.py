@@ -762,12 +762,26 @@ class NewFrameLayout(wx.Frame):
             networkGridData = networkThread.result
             deviceGridData = deviceThread.result
 
-            df_1 = pd.DataFrame(
-                deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys()
-            )
-            df_2 = pd.DataFrame(
-                networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys()
-            )
+            df_1 = None
+            if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+                df_devices = pd.DataFrame(
+                    deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys()
+                )
+                df_network = pd.DataFrame(
+                    networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys()
+                )
+                columns = list(Globals.CSV_TAG_ATTR_NAME.keys()) + list(Globals.CSV_NETWORK_ATTR_NAME.keys())[2:]
+                df_1 = pd.concat([df_devices, df_network.drop(columns=["Esper Name", "Group"])], axis=1)
+                df_1.set_axis(columns, axis=1, inplace=True)
+            else:
+                df_1 = pd.DataFrame(
+                    deviceGridData, columns=Globals.CSV_TAG_ATTR_NAME.keys()
+                )
+            df_2 = None
+            if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+                df_2 = pd.DataFrame(
+                    networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys()
+                )
             df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
 
             with pd.ExcelWriter(inFile) as writer1:
@@ -779,7 +793,7 @@ class NewFrameLayout(wx.Frame):
                         )
                         col_idx = df_1.columns.get_loc(column)
                         writer1.sheets["Device"].set_column(col_idx, col_idx, column_width)
-                if self.gridPanel.grid_2_contents:
+                if self.gridPanel.grid_2_contents and df_2 is not None:
                     df_2.to_excel(writer1, sheet_name="Network", index=False)
                     for column in df_2:
                         column_width = max(

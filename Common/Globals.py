@@ -292,6 +292,7 @@ LAST_SEEN_AS_DATE = True
 APPS_IN_DEVICE_GRID = True
 INHIBIT_SLEEP = False
 VERSON_NAME_INSTEAD_OF_CODE = False
+COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

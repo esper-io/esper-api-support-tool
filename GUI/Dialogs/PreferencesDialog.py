@@ -54,7 +54,8 @@ class PreferencesDialog(wx.Dialog):
             "lastSeenAsDate",
             "appsInDeviceGrid",
             "inhibitSleep",
-            "appVersionNameInsteadOfCode"
+            "appVersionNameInsteadOfCode",
+            "combineDeviceAndNetworkSheets"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -181,6 +182,17 @@ class PreferencesDialog(wx.Dialog):
             "Inhibit Sleep When Running",
             wx.CheckBox,
             "Try to prevent the device from Sleeping while running a job.",
+        )
+        self.checkbox_21.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
+        )
+
+        (_, _, self.checkbox_23,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Combine Device & Network Sheets",
+            wx.CheckBox,
+            "When saving a xlxs file combine the device and network sheets.",
         )
         self.checkbox_21.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
@@ -792,6 +804,20 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
             Globals.VERSON_NAME_INSTEAD_OF_CODE = True
 
+        if prefDict and "combineDeviceAndNetworkSheets" in prefDict:
+            if (
+                isinstance(prefDict["combineDeviceAndNetworkSheets"], str)
+                and prefDict["combineDeviceAndNetworkSheets"].lower() == "true"
+            ) or prefDict["combineDeviceAndNetworkSheets"] is True:
+                self.checkbox_23.Set3StateValue(wx.CHK_CHECKED)
+                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
+            else:
+                self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+        else:
+            self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -875,6 +901,7 @@ class PreferencesDialog(wx.Dialog):
             "appsInDeviceGrid": self.checkbox_20.IsChecked(),
             "inhibitSleep": self.checkbox_21.IsChecked(),
             "appVersionNameInsteadOfCode": self.checkbox_22.IsChecked(),
+            "combineDeviceAndNetworkSheets": self.checkbox_23.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -906,6 +933,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
         Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
+        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs["combineDeviceAndNetworkSheets"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -1249,6 +1277,19 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
             Globals.VERSON_NAME_INSTEAD_OF_CODE = True
+        if "combineDeviceAndNetworkSheets" in self.prefs:
+            if (
+                isinstance(self.prefs["combineDeviceAndNetworkSheets"], str)
+                and self.prefs["combineDeviceAndNetworkSheets"].lower() == "true"
+            ) or self.prefs["combineDeviceAndNetworkSheets"] is True:
+                self.checkbox_23.Set3StateValue(wx.CHK_CHECKED)
+                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
+            else:
+                self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+        else:
+            self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1290,6 +1331,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
         self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
         self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
+        self.prefs["combineDeviceAndNetworkSheets"] = Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
 
         return self.prefs
 
@@ -1363,6 +1405,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.INHIBIT_SLEEP
         elif key == "appVersionNameInsteadOfCode":
             return Globals.VERSON_NAME_INSTEAD_OF_CODE
+        elif key == "combineDeviceAndNetworkSheets":
+            return Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
         else:
             return None
 
