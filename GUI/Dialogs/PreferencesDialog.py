@@ -190,7 +190,7 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_23,) = self.addPrefToPanel(
             self.general,
             sizer_6,
-            "Combine Device & Network Sheets",
+            "Combine Device And Network Sheets",
             wx.CheckBox,
             "When saving a xlxs file combine the device and network sheets.",
         )
