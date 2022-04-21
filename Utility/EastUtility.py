@@ -645,8 +645,6 @@ def populateDeviceInfoDictionary(
     deviceInfo["location_info"] = location_info
     deviceInfo["network_event"] = network_info
 
-    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
-
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:
             deviceInfo["last_seen"] = str(
@@ -733,6 +731,8 @@ def populateDeviceInfoDictionary(
     if "user" in deviceInfo:
         if deviceInfo["user"]:
             deviceInfo["is_emm"] = True
+
+    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
 
     return deviceInfo
 
