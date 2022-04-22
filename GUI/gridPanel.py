@@ -876,11 +876,13 @@ class GridPanel(wx.Panel):
         """ Apply a Text or Bg Color to a Grid Row """
         acquireLocks([Globals.grid1_lock])
         statusIndex = self.grid1HeaderLabels.index("Status")
-        deviceName = (
-            device.device_name
-            if hasattr(device, "device_name")
-            else device["device_name"]
-        )
+        deviceName = ""
+        if device:
+            deviceName = (
+                device.device_name
+                if hasattr(device, "device_name")
+                else device["device_name"]
+            )
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
