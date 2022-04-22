@@ -318,7 +318,7 @@ class ToolMenuBar(wx.MenuBar):
             update = wxThread.GUIThread(
                 self, self.updateCheck, showDlg, name="UpdateCheck"
             )
-            update.start()
+            update.startWithRetry()
             self.isCheckingForUpdates = True
 
     @api_tool_decorator()
@@ -420,7 +420,7 @@ class ToolMenuBar(wx.MenuBar):
                         deviceListResp,
                         name="eqlIterateThroughDeviceList",
                     )
-                    thread.start()
+                    thread.startWithRetry()
             else:
                 self.parentFrame.setCursorDefault()
 
@@ -446,7 +446,7 @@ class ToolMenuBar(wx.MenuBar):
                         deviceListResp,
                         name="collectionIterateThroughDeviceList",
                     )
-                    thread.start()
+                    thread.startWithRetry()
             else:
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()

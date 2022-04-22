@@ -139,7 +139,7 @@ class BulkFactoryReset(wx.Dialog):
             self.setCursorBusy()
             self.button_OK.Enable(False)
             thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
-            thread.start()
+            thread.startWithRetry()
 
     def saveGroupCSV(self, inFile):
         gridData = []

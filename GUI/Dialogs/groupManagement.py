@@ -374,7 +374,7 @@ class GroupManagement(wx.Dialog):
         if not self.isBusy:
             self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
-            thread.start()
+            thread.startWithRetry()
 
     def deleteGroupHelper(self):
         self.isBusy = True
@@ -476,7 +476,7 @@ class GroupManagement(wx.Dialog):
         if not self.isBusy:
             self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
-            thread.start()
+            thread.startWithRetry()
 
     def addSubGroupHelper(self):
         self.isBusy = True
@@ -692,7 +692,7 @@ class GroupManagement(wx.Dialog):
         if not self.isBusy:
             self.setActionButtonState(False)
             thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
-            thread.start()
+            thread.startWithRetry()
 
     def renameGroupHelper(self):
         self.isBusy = True
@@ -936,7 +936,7 @@ class GroupManagement(wx.Dialog):
             self.setCursorBusy()
             self.button_7.Enable(False)
             thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
-            thread.start()
+            thread.startWithRetry()
 
     def saveGroupCSV(self, inFile):
         gridData = []

@@ -12,11 +12,11 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.1928"
+VERSION = "v0.19281"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
-MAX_LIMIT = 500
+MAX_LIMIT = 250
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
@@ -50,6 +50,10 @@ grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
+rate_limiter = threading.Lock()
+
+# Known Group Var
+knownGroups = {}
 
 # Known Group Var
 knownGroups = {}
@@ -62,7 +66,7 @@ GENERAL_ACTIONS = {
     + "Generate Report "
     + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-    # "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
+    "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     ("\t" if platform.system() == "Windows" else "")
@@ -143,8 +147,8 @@ BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "status?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app?app_type=ENTERPRISE"
-DEVICE_APP_LIST_REQUEST_EXTENSION = "app?&format=json"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&app_type=ENTERPRISE"
+DEVICE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
@@ -248,7 +252,10 @@ CSV_APP_ATTR_NAME = [
     "Can Clear Data",
     "Can Uninstall",
 ]
-BLACKLIST_PACKAGE_NAME = ["io.shoonya.shoonyadpc"]
+BLACKLIST_PACKAGE_NAME = [
+    "io.shoonya.shoonyadpc",
+    "io.esper.remoteviewer",
+]
 WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
@@ -288,6 +295,7 @@ LAST_SEEN_AS_DATE = True
 APPS_IN_DEVICE_GRID = True
 INHIBIT_SLEEP = False
 VERSON_NAME_INSTEAD_OF_CODE = False
+COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

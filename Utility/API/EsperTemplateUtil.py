@@ -357,14 +357,14 @@ class EsperTemplateUtil:
                                         app, newTemplate, toApp, version.id
                                     )
                                     break
-                        if not found:
-                            upload = wxThread.GUIThread(
-                                self.parent,
-                                self.uploadMissingApk,
-                                (app, template, newTemplate, config, entId),
-                            )
-                            missingAppThreads.append(upload)
-                            upload.start()
+                if not found:
+                    upload = wxThread.GUIThread(
+                        self.parent,
+                        self.uploadMissingApk,
+                        (app, template, newTemplate, config, entId),
+                    )
+                    missingAppThreads.append(upload)
+                    upload.startWithRetry()
 
     def addAppVersionToTemplate(self, app, template, toApp, appVersion):
         if (
@@ -425,7 +425,7 @@ class EsperTemplateUtil:
                     if toApp.package_name == app["packageName"]:
                         appMatch = list(
                             filter(
-                                lambda x: x["package_name"] == app["packageName"],
+                                lambda x: x["package_name"] if type(x) is dict else x.package_name == app["packageName"],
                                 newTemplate["application"]["apps"],
                             )
                         )

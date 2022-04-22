@@ -75,12 +75,15 @@ def getAllDevices(
 def get_all_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
+    extention = "device/?limit=%s&offset=%s" % (limit, offset)
+    if groupToUse:
+        extention = "device/?group=%s&limit=%s&offset=%s" % (groupToUse, limit, offset)
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
             enterprise_id=Globals.enterprise_id,
         )
-        + "device/?limit=%s&offset=%s" % (limit, offset)
+        + extention
     )
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
@@ -101,9 +104,12 @@ def get_all_devices(
             response.next = None
             response.prev = None
         elif type(response) is dict and "results" in response:
-            response["results"] = response["results"] + devices
+            # response["results"] = response["results"] + devices
             response["next"] = None
             response["prev"] = None
+            for device in devices:
+                if device not in response["results"]:
+                    response["results"].append(device)
     return response
 
 
@@ -119,7 +125,10 @@ def fetchDevicesFromGroup(
         elif hasattr(api_response, "result") and hasattr(api_response.result, "results"):
             api_response.results += resp.results
         else:
-            api_response["results"] += resp["results"]
+            # api_response["results"] += resp["results"]
+            for device in resp["results"]:
+                if device not in api_response["results"]:
+                    api_response["results"].append(device)
 
     return api_response
 

@@ -155,7 +155,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
         t = wxThread.GUIThread(
@@ -172,7 +172,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
         )
-        t.start()
+        t.startWithRetry()
     elif (
         type(api_response) is dict
         and "results" in api_response
@@ -191,7 +191,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
         t = wxThread.GUIThread(
@@ -208,7 +208,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             name="waitTillThreadsFinish_1",
             eventType=eventUtil.myEVT_FETCH,
         )
-        t.start()
+        t.startWithRetry()
     else:
         if hasattr(threading.current_thread(), "isStopped"):
             if threading.current_thread().isStopped():
@@ -245,7 +245,7 @@ def processInstallDevices(deviceList):
             name="processInstallDevicesHelper",
         )
         threads.append(t)
-        t.start()
+        t.startWithRetry()
     joinThreadList(threads)
     processCollectionDevices({"results": newDeviceList})
 
@@ -272,7 +272,7 @@ def processCollectionDevices(collectionList):
                     name="fillInDeviceInfoDict",
                 )
                 threads.append(t)
-                t.start()
+                t.startWithRetry()
                 number_of_devices += len(chunk)
 
             t = wxThread.GUIThread(
@@ -287,7 +287,7 @@ def processCollectionDevices(collectionList):
                 eventType=eventUtil.myEVT_FETCH,
                 name="waitTillThreadsFinish3",
             )
-            t.start()
+            t.startWithRetry()
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
@@ -414,7 +414,7 @@ def populateDeviceInfoDictionary(
         (deviceId, True, Globals.USE_ENTERPRISE_APP),
     )
     if getApps:
-        appThread.start()
+        appThread.startWithRetry()
     # if getApps:
     #     appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
     eventThread = wxThread.GUIThread(
@@ -423,7 +423,7 @@ def populateDeviceInfoDictionary(
         (deviceId),
     )
     if getLatestEvents:
-        eventThread.start()
+        eventThread.startWithRetry()
     # if getLatestEvents:
     #     eventThread = getLatestEvent(deviceId)
     latestEvent = None
@@ -595,6 +595,82 @@ def populateDeviceInfoDictionary(
         elif "tags" in device and device["tags"] is None:
             device["tags"] = []
 
+    if hasattr(appThread, "is_alive") and appThread.is_alive():
+        appThread.join()
+    apps = ""
+    json = {}
+    if hasattr(appThread, "result") and appThread.result:
+        apps, json = appThread.result
+    elif appThread and type(appThread) is tuple:
+        apps, json = appThread
+    deviceInfo["Apps"] = str(apps)
+    deviceInfo["appObj"] = json
+
+    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
+        eventThread.join()
+    if kioskMode == 0:
+        if hasattr(eventThread, "result"):
+            latestEvent = eventThread.result
+        else:
+            latestEvent = eventThread
+        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
+        deviceInfo["KioskApp"] = str(kioskModeApp)
+    else:
+        deviceInfo["KioskApp"] = ""
+
+    if hasattr(eventThread, "result"):
+        latestEvent = eventThread.result
+    else:
+        latestEvent = eventThread
+    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
+    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
+    unpackageDict(deviceInfo, latestEvent)
+
+    if location_info:
+        if (
+            "n/a" not in location_info["locationAlts"].lower()
+            and "n/a" not in location_info["locationLats"].lower()
+            and "n/a" not in location_info["locationLongs"].lower()
+        ):
+            location_info = "%s, %s, %s" % (
+                location_info["locationAlts"],
+                location_info["locationLats"],
+                location_info["locationLongs"],
+            )
+        else:
+            location_info = "Unknown"
+    else:
+        location_info = "Unknown"
+
+    deviceInfo["location_info"] = location_info
+    deviceInfo["network_event"] = network_info
+
+    if network_info and "createTime" in network_info:
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
+
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
+    else:
+        deviceInfo["last_seen"] = "No data available"
+
     deviceInfo["macAddress"] = []
     ipKey = None
     if "ipAddress" in deviceInfo:
@@ -656,83 +732,7 @@ def populateDeviceInfoDictionary(
         if deviceInfo["user"]:
             deviceInfo["is_emm"] = True
 
-    if hasattr(appThread, "is_alive") and appThread.is_alive():
-        appThread.join()
-    apps = ""
-    json = {}
-    if hasattr(appThread, "result") and appThread.result:
-        apps, json = appThread.result
-    elif appThread and type(appThread) is tuple:
-        apps, json = appThread
-    deviceInfo["Apps"] = str(apps)
-    deviceInfo["appObj"] = json
-
-    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
-        eventThread.join()
-    if kioskMode == 0:
-        if hasattr(eventThread, "result"):
-            latestEvent = eventThread.result
-        else:
-            latestEvent = eventThread
-        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
-        deviceInfo["KioskApp"] = str(kioskModeApp)
-    else:
-        deviceInfo["KioskApp"] = ""
-
-    if hasattr(eventThread, "result"):
-        latestEvent = eventThread.result
-    else:
-        latestEvent = eventThread
-    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
-    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
-    unpackageDict(deviceInfo, latestEvent)
-
-    if location_info:
-        if (
-            "n/a" not in location_info["locationAlts"].lower()
-            and "n/a" not in location_info["locationLats"].lower()
-            and "n/a" not in location_info["locationLongs"].lower()
-        ):
-            location_info = "%s, %s, %s" % (
-                location_info["locationAlts"],
-                location_info["locationLats"],
-                location_info["locationLongs"],
-            )
-        else:
-            location_info = "Unknown"
-    else:
-        location_info = "Unknown"
-
-    deviceInfo["location_info"] = location_info
-    deviceInfo["network_event"] = network_info
-
     deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
-
-    if network_info and "createTime" in network_info:
-        if Globals.LAST_SEEN_AS_DATE:
-            deviceInfo["last_seen"] = str(
-                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            )
-        else:
-            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            utc_date_time = dt.astimezone(pytz.utc)
-            updatedOnDate = utc_to_local(utc_date_time)
-
-            time_delta = utc_to_local(datetime.now()) - updatedOnDate
-            total_seconds = time_delta.total_seconds()
-            minutes = total_seconds / 60
-            if minutes < 0:
-                deviceInfo["last_seen"] = "Less than 1 minute ago"
-            elif minutes > 0 and minutes < 60:
-                deviceInfo["last_seen"] = "%s minute ago" % minutes
-            elif minutes > 60 and minutes < 1440:
-                hours = int(math.ceil(minutes / 60))
-                deviceInfo["last_seen"] = "%s hours ago" % hours
-            elif minutes > 1440:
-                days = int(math.ceil(minutes / 1440))
-                deviceInfo["last_seen"] = "%s days ago" % days
-    else:
-        deviceInfo["last_seen"] = "No data available"
 
     return deviceInfo
 
@@ -835,7 +835,7 @@ def getAllDeviceInfo(frame):
                 name="processDevices",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             number_of_devices += len(chunk)
 
     joinThreadList(threads)
@@ -871,7 +871,7 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
                 (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
             )
             threads.append(thread)
-            thread.start()
+            thread.startWithRetry()
             respOffsetInt += int(respLimit)
         joinThreadList(threads)
     for thread in threads:

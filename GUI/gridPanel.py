@@ -428,7 +428,7 @@ class GridPanel(wx.Panel):
             thread = wxThread.GUIThread(
                 self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
             )
-            thread.start()
+            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_1_contents, col)
 
@@ -484,7 +484,7 @@ class GridPanel(wx.Panel):
                 self.repopulateGrid,
                 (self.grid_2_contents, col, "Network"),
             )
-            thread.start()
+            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_2_contents, col, "Network")
 
@@ -540,7 +540,7 @@ class GridPanel(wx.Panel):
                 self.repopulateGrid,
                 (self.grid_3_contents, col, "App"),
             )
-            thread.start()
+            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_3_contents, col, "App"),
 
@@ -877,11 +877,13 @@ class GridPanel(wx.Panel):
         """ Apply a Text or Bg Color to a Grid Row """
         acquireLocks([Globals.grid1_lock])
         statusIndex = self.grid1HeaderLabels.index("Status")
-        deviceName = (
-            device.device_name
-            if hasattr(device, "device_name")
-            else device["device_name"]
-        )
+        deviceName = ""
+        if device:
+            deviceName = (
+                device.device_name
+                if hasattr(device, "device_name")
+                else device["device_name"]
+            )
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
@@ -1273,7 +1275,7 @@ class GridPanel(wx.Panel):
                 name="getDeviceIdentifiersHelper",
             )
             threads.append(t)
-            t.start()
+            t.startWithRetry()
             num += numRowsPerChunk
             limitActiveThreads(threads)
 
@@ -1548,8 +1550,8 @@ class GridPanel(wx.Panel):
                 isEditable = False
             self.grid_3.SetReadOnly(self.grid_3.GetNumberRows() - 1, num, isEditable)
             num += 1
-            if info and info not in self.grid_3_contents:
-                self.grid_3_contents.append(info)
+        if info and info not in self.grid_3_contents:
+            self.grid_3_contents.append(info)
 
     def constructAppGridContent(self, device, deviceInfo, apps):
         info = {}
@@ -1570,8 +1572,8 @@ class GridPanel(wx.Panel):
                     "Can Clear Data": app["is_data_clearable"],
                     "Can Uninstall": app["is_uninstallable"],
                 }
-        if info and info not in self.grid_3_contents:
-            self.grid_3_contents.append(info)
+            if info and info not in self.grid_3_contents:
+                self.grid_3_contents.append(info)
 
     def onScroll(self, event):
         scrollPosPercentage = self.getScrollpercentage(self.grid_1)
