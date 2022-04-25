@@ -505,19 +505,19 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_PKG_NAME = False
 
-        if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
-            self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.GET_APP_EACH_DEVICE = False
-        elif prefDict and prefDict["getAppsForEachDevice"]:
-            if (
-                isinstance(self.prefs["getAppsForEachDevice"], str)
-                and prefDict["getAppsForEachDevice"].lower() == "true"
-            ) or prefDict["getAppsForEachDevice"] is True:
-                self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
-                Globals.GET_APP_EACH_DEVICE = True
-            else:
-                self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.GET_APP_EACH_DEVICE = False
+        # if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
+        #     self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.GET_APP_EACH_DEVICE = False
+        # elif prefDict and prefDict["getAppsForEachDevice"]:
+        #     if (
+        #         isinstance(self.prefs["getAppsForEachDevice"], str)
+        #         and prefDict["getAppsForEachDevice"].lower() == "true"
+        #     ) or prefDict["getAppsForEachDevice"] is True:
+        #         self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
+        #         Globals.GET_APP_EACH_DEVICE = True
+        #     else:
+        #         self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
+        #         Globals.GET_APP_EACH_DEVICE = False
 
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
