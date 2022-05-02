@@ -71,7 +71,7 @@ def getAllBlueprintsFromHost(host, key, enterprise):
 
 
 @api_tool_decorator()
-def getAllBlueprintsFromHostHelper(host, key, enterprise, limit=Globals.limit, offset=0):
+def getAllBlueprintsFromHostHelper(host, key, enterprise, limit=Globals.limit, offset=0, responses=None):
     url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/?limit={limit}&offset={offset}".format(
         baseUrl=host,
         enterprise_id=enterprise,
@@ -82,6 +82,9 @@ def getAllBlueprintsFromHostHelper(host, key, enterprise, limit=Globals.limit, o
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     })
+    if resp.status_code < 300 and responses is not None:
+        api_response = resp.json()
+        responses.append(api_response)
     return resp
 
 

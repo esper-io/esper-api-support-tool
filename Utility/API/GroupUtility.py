@@ -143,7 +143,7 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
     return get_all_groups(name, limit, offset, maxAttempt)
 
 
-def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
+def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, responses=None):
     Globals.token_lock.acquire()
     Globals.token_lock.release()
     if not Globals.IS_TOKEN_VALID:
@@ -181,6 +181,8 @@ def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
+        if api_response and responses is not None:
+            responses.append(api_response)
         return api_response
     except ApiException as e:
         raise Exception(

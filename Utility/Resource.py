@@ -441,7 +441,7 @@ def getAllFromOffsets(
         while int(respOffsetInt) < count and int(respLimit) < count:
             thread = threading.Thread(
                 target=func,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt),
+                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
             )
             threads.append(thread)
             thread.start()
@@ -455,7 +455,7 @@ def getAllFromOffsets(
             respOffsetInt += 1
             thread = threading.Thread(
                 target=func,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt),
+                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
             )
             threads.append(thread)
             thread.start()

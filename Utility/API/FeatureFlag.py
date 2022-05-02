@@ -23,7 +23,7 @@ def getFeatureFlagsForTenant(host, header, returnJson=False):
     url = "{baseUrl}/feature-flags".format(
         baseUrl=host
     )
-    resp = performGetRequestWithRetry(url, headers=header)
+    resp = performGetRequestWithRetry(url, headers=header, maxRetry=2)
 
     if returnJson:
         return resp.json()
