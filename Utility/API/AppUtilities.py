@@ -475,6 +475,20 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
 
 
 def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+    if type(version_id) is list:
+        api_response = None
+        for version in version_id:
+            resp = get_installed_devices(version, application_id, maxAttempt)
+            if api_response is None:
+                api_response = resp
+            else:
+                api_response.results += resp.results
+        return api_response
+    else:
+        return get_installed_devices(version_id, application_id, maxAttempt)
+
+
+def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.ApplicationApi(
         esperclient.ApiClient(Globals.configuration)
     )

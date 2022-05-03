@@ -651,7 +651,8 @@ class NewFrameLayout(wx.Frame):
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
-        print("Execution time: %s" % (time.time() - self.start_time))
+        if hasattr(self, "start_time"):
+            print("Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def fetchAllGridData(self, chunk, gridDeviceData):
@@ -2283,7 +2284,8 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
-        print("Fetch Execution time: %s" % (time.time() - self.start_time))
+        if hasattr(self, "start_time"):
+            print("Fetch Execution time: %s" % (time.time() - self.start_time))
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -2302,7 +2304,7 @@ class NewFrameLayout(wx.Frame):
                 deviceId = device["id"]
 
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
@@ -2426,7 +2428,7 @@ class NewFrameLayout(wx.Frame):
                 thread.startWithRetry()
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
-                if len(self.gridPanel.grid_3_contents) > Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         appThread = wxThread.GUIThread(
                             self,
@@ -2471,7 +2473,7 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
             elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
@@ -3117,7 +3119,7 @@ class NewFrameLayout(wx.Frame):
                         else:
                             displayMessageBox(
                                 (
-                                    "No device with that app version found",
+                                    "No devices with the selected app version(s) found",
                                     wx.ICON_INFORMATION,
                                 )
                             )

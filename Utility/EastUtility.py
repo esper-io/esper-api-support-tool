@@ -34,6 +34,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     joinThreadList,
+    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -246,6 +247,7 @@ def processInstallDevices(deviceList):
         )
         threads.append(t)
         t.startWithRetry()
+        limitActiveThreads(threads)
     joinThreadList(threads)
     processCollectionDevices({"results": newDeviceList})
 
@@ -260,7 +262,8 @@ def processInstallDevicesHelper(chunk, newDeviceList):
 @api_tool_decorator()
 def processCollectionDevices(collectionList):
     if collectionList["results"]:
-        splitResults = splitListIntoChunks(collectionList["results"])
+        maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
+        splitResults = splitListIntoChunks(collectionList["results"], maxThread=maxThread)
         if splitResults:
             threads = []
             number_of_devices = 0
