@@ -164,7 +164,7 @@ CSV_TAG_ATTR_NAME = {
     "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
-    "EEA Version": "eeaVersion",
+    "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
     "Template": "template_name",
     "Policy": "policy_name",
