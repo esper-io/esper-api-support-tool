@@ -675,9 +675,8 @@ class GroupManagement(wx.Dialog):
     def getChildIds(self, children, childIds):
         for childDict in children:
             childIds += list(childDict.keys())
-            if not Globals.GET_IMMEDIATE_SUBGROUPS:
-                for c in childDict.values():
-                    self.getChildIds(c, childIds)
+            for c in childDict.values():
+                self.getChildIds(c, childIds)
 
     def getGroupIdFromURL(self, url):
         return url.split("/")[-2] if url else None
