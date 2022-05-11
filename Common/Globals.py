@@ -12,7 +12,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.193"
+VERSION = "v0.1931"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -157,7 +157,6 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
-    "Subgroups": "subgroups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
@@ -285,7 +284,7 @@ ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
-GET_IMMEDIATE_SUBGROUPS = False
+# GET_IMMEDIATE_SUBGROUPS = False
 SAVE_VISIBILITY = False
 GROUP_FETCH_ALL = True
 MAX_GRID_LOAD = 100
@@ -296,6 +295,7 @@ APPS_IN_DEVICE_GRID = True
 INHIBIT_SLEEP = False
 VERSON_NAME_INSTEAD_OF_CODE = False
 COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+SHOW_GROUP_PATH = False
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

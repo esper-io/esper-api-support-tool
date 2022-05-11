@@ -1634,7 +1634,7 @@ class NewFrameLayout(wx.Frame):
                 else:
                     self.sidePanel.groups[group.path] = group.id
                 if group.id not in Globals.knownGroups:
-                    Globals.knownGroups[group.id] = group.name
+                    Globals.knownGroups[group.id] = group
                 self.setGaugeValue(50 + int(float(num / len(results)) * 25))
                 num += 1
         self.sidePanel.groupChoice.Enable(True)

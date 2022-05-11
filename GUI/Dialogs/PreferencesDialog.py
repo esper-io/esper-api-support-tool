@@ -55,7 +55,8 @@ class PreferencesDialog(wx.Dialog):
             "appsInDeviceGrid",
             "inhibitSleep",
             "appVersionNameInsteadOfCode",
-            "combineDeviceAndNetworkSheets"
+            "combineDeviceAndNetworkSheets",
+            "showGroupPath"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -297,13 +298,13 @@ class PreferencesDialog(wx.Dialog):
             "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
-        (_, _, self.checkbox_14,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Only Show Immediate Subgroups",
-            wx.CheckBox,
-            "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
-        )
+        # (_, _, self.checkbox_14,) = self.addPrefToPanel(
+        #     self.grid,
+        #     sizer_16,
+        #     "Only Show Immediate Subgroups",
+        #     wx.CheckBox,
+        #     "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
+        # )
 
         (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
             self.grid,
@@ -338,6 +339,14 @@ class PreferencesDialog(wx.Dialog):
             "Show Apps In Device Grid",
             wx.CheckBox,
             "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
+        )
+
+        (_, _, self.checkbox_24,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Show Group Path Instead of Name",
+            wx.CheckBox,
+            "Show the entire Group Path instead of just a name in the Group column.",
         )
 
         # App Preferences
@@ -547,19 +556,19 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
 
-        if not prefDict or (prefDict and not prefDict["immediateChild"]):
-            self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.GET_IMMEDIATE_SUBGROUPS = False
-        elif prefDict and "immediateChild" in prefDict:
-            if (
-                isinstance(self.prefs["immediateChild"], str)
-                and prefDict["immediateChild"].lower() == "true"
-            ) or prefDict["immediateChild"] is True:
-                self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
-                Globals.GET_IMMEDIATE_SUBGROUPS = True
-            else:
-                self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.GET_IMMEDIATE_SUBGROUPS = False
+        # if not prefDict or (prefDict and not prefDict["immediateChild"]):
+        #     self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+        #     Globals.GET_IMMEDIATE_SUBGROUPS = False
+        # elif prefDict and "immediateChild" in prefDict:
+        #     if (
+        #         isinstance(self.prefs["immediateChild"], str)
+        #         and prefDict["immediateChild"].lower() == "true"
+        #     ) or prefDict["immediateChild"] is True:
+        #         self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
+        #         Globals.GET_IMMEDIATE_SUBGROUPS = True
+        #     else:
+        #         self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+        #         Globals.GET_IMMEDIATE_SUBGROUPS = False
 
         if prefDict and "aliasDayDelta" in prefDict:
             Globals.ALIAS_DAY_DELTA = int(prefDict["aliasDayDelta"])
@@ -826,6 +835,20 @@ class PreferencesDialog(wx.Dialog):
             self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
 
+        if prefDict and "showGroupPath" in prefDict:
+            if (
+                isinstance(prefDict["showGroupPath"], str)
+                and prefDict["showGroupPath"].lower() == "true"
+            ) or prefDict["showGroupPath"] is True:
+                self.checkbox_24.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_GROUP_PATH = True
+            else:
+                self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_GROUP_PATH = False
+        else:
+            self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SHOW_GROUP_PATH = True
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -896,7 +919,7 @@ class PreferencesDialog(wx.Dialog):
             "runCommandOn": self.combobox_1.GetValue(),
             "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
-            "immediateChild": self.checkbox_14.IsChecked(),
+            # "immediateChild": self.checkbox_14.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
@@ -910,6 +933,7 @@ class PreferencesDialog(wx.Dialog):
             "inhibitSleep": self.checkbox_21.IsChecked(),
             "appVersionNameInsteadOfCode": self.checkbox_22.IsChecked(),
             "combineDeviceAndNetworkSheets": self.checkbox_23.IsChecked(),
+            "showGroupPath": self.checkbox_24.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -942,6 +966,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
         Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
         Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs["combineDeviceAndNetworkSheets"]
+        Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -1156,16 +1181,16 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
-        if "immediateChild" in self.prefs:
-            if (
-                isinstance(self.prefs["immediateChild"], str)
-                and self.prefs["immediateChild"].lower() == "true"
-            ) or self.prefs["immediateChild"] is True:
-                self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
-                Globals.GET_IMMEDIATE_SUBGROUPS = True
-            else:
-                self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.GET_IMMEDIATE_SUBGROUPS = False
+        # if "immediateChild" in self.prefs:
+        #     if (
+        #         isinstance(self.prefs["immediateChild"], str)
+        #         and self.prefs["immediateChild"].lower() == "true"
+        #     ) or self.prefs["immediateChild"] is True:
+        #         self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
+        #         Globals.GET_IMMEDIATE_SUBGROUPS = True
+        #     else:
+        #         self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
+        #         Globals.GET_IMMEDIATE_SUBGROUPS = False
         if "aliasDayDelta" in self.prefs:
             Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
             if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
@@ -1296,8 +1321,22 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
         else:
-            self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
+            self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+        if "showGroupPath" in self.prefs:
+            if (
+                isinstance(self.prefs["showGroupPath"], str)
+                and self.prefs["showGroupPath"].lower() == "true"
+            ) or self.prefs["showGroupPath"] is True:
+                self.checkbox_24.Set3StateValue(wx.CHK_CHECKED)
+                Globals.SHOW_GROUP_PATH = True
+            else:
+                self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.SHOW_GROUP_PATH = False
+        else:
+            self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.SHOW_GROUP_PATH = False
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1340,6 +1379,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
         self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
         self.prefs["combineDeviceAndNetworkSheets"] = Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+        self.prefs["showGroupPath"] = Globals.SHOW_GROUP_PATH
 
         return self.prefs
 
@@ -1415,6 +1455,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.VERSON_NAME_INSTEAD_OF_CODE
         elif key == "combineDeviceAndNetworkSheets":
             return Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+        elif key == "showGroupPath":
+            return Globals.SHOW_GROUP_PATH
         else:
             return None
 

@@ -438,22 +438,27 @@ def populateDeviceInfoDictionary(
         groupNames = []
         if type(deviceGroups) == list:
             for groupURL in deviceGroups:
+                group = None
                 groupName = None
                 groupId = groupURL.split("/")[-2]
-                if groupURL in Globals.knownGroups:
-                    groupName = Globals.knownGroups[groupURL]
-                elif groupId in Globals.knownGroups:
-                    groupName = Globals.knownGroups[groupId]
+                if groupId in Globals.knownGroups:
+                    group = Globals.knownGroups[groupId]
                 else:
                     groupName = fetchGroupName(groupURL)
 
-                if type(groupName) == list and len(groupName) == 1:
-                    groupName = groupName[0]
+                if type(group) == list and len(group) == 1:
+                    groupName = group[0]
+                elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
+                    groupName = group.path
+                elif hasattr(group, "name"):
+                    groupName = group.name
+                else:
+                    print("no name!")
 
                 if groupName:
                     groupNames.append(groupName)
-                if groupURL not in Globals.knownGroups:
-                    Globals.knownGroups[groupURL] = groupName
+                if groupId not in Globals.knownGroups:
+                    Globals.knownGroups[groupId] = groupName
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
@@ -467,39 +472,41 @@ def populateDeviceInfoDictionary(
             deviceInfo["groups"] = groupNames
 
     # Get Subgroups
-    if Globals.frame and deviceGroups:
-        subgroupsIds = []
-        urlFormat = None
-        if Globals.frame.groupManage:
-            for group in deviceGroups:
-                # none type error from groupManage
-                groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
-                if not urlFormat:
-                    urlFormat = deviceGroups[0].replace(groupId, "{id}")
-                if (
-                    Globals.knownGroups[group]
-                    and Globals.knownGroups[group].lower() != "all devices"
-                ):
-                    subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
-                else:
-                    subgroupsIds += ["<All Device Groups>"]
-        deviceInfo["subgroups"] = []
-        for id in subgroupsIds:
-            if id == "<All Device Groups>":
-                deviceInfo["subgroups"].append(id)
-            else:
-                url = urlFormat.format(id=id)
-                groupName = None
-                if url in Globals.knownGroups:
-                    groupName = Globals.knownGroups[url]
-                    if type(groupName) == list and len(groupName) == 1:
-                        groupName = groupName[0]
-                else:
-                    groupName = fetchGroupName(url)
-                if groupName:
-                    deviceInfo["subgroups"].append(groupName)
-                if url not in Globals.knownGroups:
-                    Globals.knownGroups[url] = groupName
+    # if Globals.frame and deviceGroups:
+    #     subgroupsIds = []
+    #     urlFormat = None
+    #     if Globals.frame.groupManage:
+    #         for group in deviceGroups:
+    #             # none type error from groupManage
+    #             groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
+    #             if not urlFormat:
+    #                 urlFormat = deviceGroups[0].replace(groupId, "{id}")
+    #             if (
+    #                 Globals.knownGroups[group]
+    #                 and Globals.knownGroups[group].lower() != "all devices"
+    #             ):
+    #                 subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
+    #             else:
+    #                 subgroupsIds += ["<All Device Groups>"]
+    #     deviceInfo["subgroups"] = []
+    #     for id in subgroupsIds:
+    #         if id == "<All Device Groups>":
+    #             deviceInfo["subgroups"].append(id)
+    #         else:
+    #             groupName = None
+    #             url = urlFormat.format(id=id)
+    #             if id in Globals.knownGroups:
+    #                 groupName = Globals.knownGroups[id].name
+    #             elif url in Globals.knownGroups:
+    #                 groupName = Globals.knownGroups[url]
+    #                 if type(groupName) == list and len(groupName) == 1:
+    #                     groupName = groupName[0]
+    #             else:
+    #                 groupName = fetchGroupName(url)
+    #             if groupName:
+    #                 deviceInfo["subgroups"].append(groupName)
+    #             if id not in Globals.knownGroups:
+    #                 Globals.knownGroups[id] = groupName
 
     if bool(deviceAlias):
         deviceInfo["Alias"] = deviceAlias
