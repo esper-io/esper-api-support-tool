@@ -954,7 +954,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
-        Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
+        # Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
@@ -1366,7 +1366,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
         self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
         self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
-        self.prefs["immediateChild"] = Globals.GET_IMMEDIATE_SUBGROUPS
+        # self.prefs["immediateChild"] = Globals.GET_IMMEDIATE_SUBGROUPS
         self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
         self.prefs["fontSize"] = Globals.FONT_SIZE
         self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
@@ -1429,8 +1429,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.MAX_THREAD_COUNT
         elif key == "syncGridScroll":
             return Globals.MATCH_SCROLL_POS
-        elif key == "immediateChild":
-            return Globals.GET_IMMEDIATE_SUBGROUPS
+        # elif key == "immediateChild":
+        #     return Globals.GET_IMMEDIATE_SUBGROUPS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
