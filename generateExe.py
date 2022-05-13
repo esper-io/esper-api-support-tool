@@ -52,14 +52,14 @@ if __name__ == "__main__":
     dispath = curDirPath + "/output"
     system = platform.system()
     bit = platform.machine()
-    if bit.endswith("x86"):
-        bit = "x86"
-    elif bit.endswith("64"):
-        bit = "x64"
-    elif bit.endswith("i686"):
+    if bit.endswith("i686") or bit == "arm64":
         bit = "arm64"
     elif bit.endswith("x86_64"):
         bit = "x86_64"
+    elif bit.endswith("x86"):
+        bit = "x86"
+    elif bit.endswith("64"):
+        bit = "x64"
 
     app_name = "%s_%s_%s_EsperApiSupportTool.%s" % (
         system[0:3].lower() if system == "Windows" else "mac",
