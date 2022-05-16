@@ -193,7 +193,7 @@ class ApiToolLog:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
 
-        if Globals.IS_DEBUG:
+        if Globals.IS_DEBUG or "Invalid token" in str(excpt):
             return
 
         self.tracker_lock.acquire()
