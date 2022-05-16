@@ -448,7 +448,7 @@ def getAllFromOffsets(
             respOffsetInt += int(respLimit)
             limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
         joinThreadList(threads)
-        obtained = sum(len(v["results"]) for v in responses) + int(respOffset)
+        obtained = sum(len(v["results"]) if not hasattr(v, "results") else len(v.results) for v in responses) + int(respOffset)
         remainder = count - obtained
         if remainder > 0:
             respOffsetInt -= int(respLimit)
