@@ -72,4 +72,5 @@ API_FUNCTIONS = {
     "get_subscription": "/subscription",
     "get_token_info": "/token",
     "renew_token": "/token",
+    "feature_flags": "/feature-flags",
 }
