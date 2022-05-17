@@ -440,9 +440,12 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
 
-        if self.resp.count > len(self.originalChoices[0]):
+        count = self.resp["count"] if not hasattr(self.resp, "count") else self.resp.count
+        resultLimit = len(self.resp["results"]) if not hasattr(self.resp, "results") else len(self.resp.results)
+
+        if count > len(self.originalChoices[0]):
             resp = getAllDevices(
-                self.group, limit=len(self.resp.results), offset=0, fetchAll=True
+                self.group, limit=resultLimit, offset=0, fetchAll=True
             )
             if resp:
                 self.check_list_box_1.Clear()
