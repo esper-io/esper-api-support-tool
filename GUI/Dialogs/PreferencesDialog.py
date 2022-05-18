@@ -396,14 +396,6 @@ class PreferencesDialog(wx.Dialog):
             "Displays the App Version Name instead of the Version Code",
         )
 
-        (_, _, self.checkbox_22,) = self.addPrefToPanel(
-            self.app,
-            sizer_9,
-            "Display Version Name Instead of Code",
-            wx.CheckBox,
-            "Displays the App Version Name instead of the Version Code",
-        )
-
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.prompts.Hide()
