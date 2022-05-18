@@ -452,8 +452,6 @@ def populateDeviceInfoDictionary(
                     groupName = group.path
                 elif hasattr(group, "name"):
                     groupName = group.name
-                else:
-                    print("no name!")
 
                 if groupName:
                     groupNames.append(groupName)
