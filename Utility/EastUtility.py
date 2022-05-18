@@ -469,43 +469,6 @@ def populateDeviceInfoDictionary(
         else:
             deviceInfo["groups"] = groupNames
 
-    # Get Subgroups
-    # if Globals.frame and deviceGroups:
-    #     subgroupsIds = []
-    #     urlFormat = None
-    #     if Globals.frame.groupManage:
-    #         for group in deviceGroups:
-    #             # none type error from groupManage
-    #             groupId = Globals.frame.groupManage.getGroupIdFromURL(group)
-    #             if not urlFormat:
-    #                 urlFormat = deviceGroups[0].replace(groupId, "{id}")
-    #             if (
-    #                 Globals.knownGroups[group]
-    #                 and Globals.knownGroups[group].lower() != "all devices"
-    #             ):
-    #                 subgroupsIds += Globals.frame.groupManage.getSubGroups(groupId)
-    #             else:
-    #                 subgroupsIds += ["<All Device Groups>"]
-    #     deviceInfo["subgroups"] = []
-    #     for id in subgroupsIds:
-    #         if id == "<All Device Groups>":
-    #             deviceInfo["subgroups"].append(id)
-    #         else:
-    #             groupName = None
-    #             url = urlFormat.format(id=id)
-    #             if id in Globals.knownGroups:
-    #                 groupName = Globals.knownGroups[id].name
-    #             elif url in Globals.knownGroups:
-    #                 groupName = Globals.knownGroups[url]
-    #                 if type(groupName) == list and len(groupName) == 1:
-    #                     groupName = groupName[0]
-    #             else:
-    #                 groupName = fetchGroupName(url)
-    #             if groupName:
-    #                 deviceInfo["subgroups"].append(groupName)
-    #             if id not in Globals.knownGroups:
-    #                 Globals.knownGroups[id] = groupName
-
     if bool(deviceAlias):
         deviceInfo["Alias"] = deviceAlias
     else:
