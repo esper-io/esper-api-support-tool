@@ -22,9 +22,15 @@ def performGetRequestWithRetry(
                 break
             if resp.status_code == 429:
                 if attempt == 0:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
                 else:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
@@ -55,9 +61,15 @@ def performPatchRequestWithRetry(
                 break
             if resp.status_code == 429:
                 if attempt == 0:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
                 else:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
@@ -88,9 +100,15 @@ def performPutRequestWithRetry(
                 break
             if resp.status_code == 429:
                 if attempt == 0:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
                 else:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
@@ -123,9 +141,15 @@ def performDeleteRequestWithRetry(
                 break
             if resp.status_code == 429:
                 if attempt == 0:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
                 else:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
@@ -160,9 +184,15 @@ def performPostRequestWithRetry(
                 break
             if resp.status_code == 429:
                 if attempt == 0:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in 1 minute")
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
                 else:
-                    postEventToFrame(EventUtility.myEVT_LOG, "Rate Limit Encountered retrying in %s minutes" % attempt + 1)
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number

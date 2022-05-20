@@ -95,18 +95,22 @@ class ToolMenuBar(wx.MenuBar):
 
         self.cloneSubMenu = wx.Menu()
 
-        cloneItem = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
+        cloneItem = wx.MenuItem(
+            self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T"
+        )
         self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
 
-        cloneBlueprint = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Blueprint Across Endpoints\tCtrl+Shift+B")
+        cloneBlueprint = wx.MenuItem(
+            self.cloneSubMenu,
+            wx.ID_ANY,
+            "&Clone Blueprint Across Endpoints\tCtrl+Shift+B",
+        )
         self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
         self.toggleCloneMenuOptions(False)
 
-        self.cloneSubMenu = runMenu.Append(
-            wx.ID_ANY, "&Clone", self.cloneSubMenu
-        )
+        self.cloneSubMenu = runMenu.Append(wx.ID_ANY, "&Clone", self.cloneSubMenu)
 
         runMenu.Append(wx.ID_SEPARATOR)
 
@@ -173,7 +177,9 @@ class ToolMenuBar(wx.MenuBar):
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = self.userSubMenu.Append(fou)
 
-        userReport = wx.MenuItem(self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U")
+        userReport = wx.MenuItem(
+            self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
+        )
         self.userReportItem = self.userSubMenu.Append(userReport)
 
         # View Menu
@@ -184,10 +190,6 @@ class ToolMenuBar(wx.MenuBar):
             )
         )
         self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
-        # self.networkColumns = viewMenu.Append(
-        #     wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
-        # )
-        # self.networkColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(

@@ -180,7 +180,9 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         and api_response["results"]
     ):
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+            api_response["results"] = list(
+                filter(filterDeviceList, api_response["results"])
+            )
         splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
 
         threads = []
@@ -226,10 +228,7 @@ def filterDeviceList(device):
         deviceStatus = device.status
     else:
         deviceStatus = device["status"]
-    if (
-        not Globals.SHOW_DISABLED_DEVICES
-        and deviceStatus == DeviceState.DISABLED.value
-    ):
+    if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
         return False
     return True
 
@@ -263,7 +262,9 @@ def processInstallDevicesHelper(chunk, newDeviceList):
 def processCollectionDevices(collectionList):
     if collectionList["results"]:
         maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
-        splitResults = splitListIntoChunks(collectionList["results"], maxThread=maxThread)
+        splitResults = splitListIntoChunks(
+            collectionList["results"], maxThread=maxThread
+        )
         if splitResults:
             threads = []
             number_of_devices = 0
@@ -323,7 +324,11 @@ def fillInDeviceInfoDict(chunk, number_of_devices):
 
 @api_tool_decorator()
 def processDevices(
-    chunk, number_of_devices, action, getApps=True, getLatestEvents=True,
+    chunk,
+    number_of_devices,
+    action,
+    getApps=True,
+    getLatestEvents=True,
 ):
     """ Try to obtain more device info for a given device """
     deviceList = {}
@@ -788,7 +793,9 @@ def getAllDeviceInfo(frame):
                 "---> ERROR: Failed to get devices",
             )
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+            api_response["results"] = list(
+                filter(filterDeviceList, api_response["results"])
+            )
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")

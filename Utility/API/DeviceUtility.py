@@ -98,7 +98,9 @@ def get_all_devices(
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
-        devices = getAllFromOffsets(get_all_devices_helper, groupToUse, response, maxAttempt)
+        devices = getAllFromOffsets(
+            get_all_devices_helper, groupToUse, response, maxAttempt
+        )
         if hasattr(response, "results"):
             response.results = response.results + devices
             response.next = None
@@ -122,7 +124,9 @@ def fetchDevicesFromGroup(
 
         if not api_response:
             api_response = resp
-        elif hasattr(api_response, "result") and hasattr(api_response.result, "results"):
+        elif hasattr(api_response, "result") and hasattr(
+            api_response.result, "results"
+        ):
             api_response.results += resp.results
         else:
             # api_response["results"] += resp["results"]

@@ -800,7 +800,11 @@ class GridPanel(wx.Panel):
                 else ""
             )
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-        networkInfo = device_info["network_info"] if "network_info" in device_info else constructNetworkInfo(device, device_info)
+        networkInfo = (
+            device_info["network_info"]
+            if "network_info" in device_info
+            else constructNetworkInfo(device, device_info)
+        )
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
@@ -868,7 +872,11 @@ class GridPanel(wx.Panel):
             self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
-        networkInfo = deviceInfo["network_info"] if "network_info" in deviceInfo else constructNetworkInfo(device, deviceInfo)
+        networkInfo = (
+            deviceInfo["network_info"]
+            if "network_info" in deviceInfo
+            else constructNetworkInfo(device, deviceInfo)
+        )
         if networkInfo not in self.grid_2_contents:
             self.grid_2_contents.append(networkInfo)
 

@@ -60,7 +60,12 @@ class InstalledDevicesDlg(wx.Dialog):
             self.search, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
 
-        self.list_box_1 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=self.appNameList, style=wx.LB_HSCROLL | wx.LB_NEEDED_SB)
+        self.list_box_1 = wx.ListBox(
+            self.panel_1,
+            wx.ID_ANY,
+            choices=self.appNameList,
+            style=wx.LB_HSCROLL | wx.LB_NEEDED_SB,
+        )
         grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
         self.list_box_2 = None

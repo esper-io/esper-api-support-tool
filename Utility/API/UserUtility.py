@@ -106,7 +106,13 @@ def deleteUser(user):
     return resp
 
 
-def getUsers(userId=None, limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY, responses=[]):
+def getUsers(
+    userId=None,
+    limit=Globals.limit,
+    offset=0,
+    maxAttempt=Globals.MAX_RETRY,
+    responses=[],
+):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )

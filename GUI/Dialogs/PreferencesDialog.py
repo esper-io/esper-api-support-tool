@@ -56,7 +56,7 @@ class PreferencesDialog(wx.Dialog):
             "inhibitSleep",
             "appVersionNameInsteadOfCode",
             "combineDeviceAndNetworkSheets",
-            "showGroupPath"
+            "showGroupPath",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -917,7 +917,9 @@ class PreferencesDialog(wx.Dialog):
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
         Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
-        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs["combineDeviceAndNetworkSheets"]
+        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs[
+            "combineDeviceAndNetworkSheets"
+        ]
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
 
         if Globals.APPS_IN_DEVICE_GRID:
@@ -1330,7 +1332,9 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
         self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
         self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
-        self.prefs["combineDeviceAndNetworkSheets"] = Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+        self.prefs[
+            "combineDeviceAndNetworkSheets"
+        ] = Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
         self.prefs["showGroupPath"] = Globals.SHOW_GROUP_PATH
 
         return self.prefs

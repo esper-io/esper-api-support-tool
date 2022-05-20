@@ -1,9 +1,17 @@
 import wx
 
 
-class PromptingComboBox(wx.ComboBox) :
+class PromptingComboBox(wx.ComboBox):
     def __init__(self, parent, value, choices=[], style=0, **par):
-        wx.ComboBox.__init__(self, parent, wx.ID_ANY, value, style=style | wx.CB_DROPDOWN, choices=choices, **par)
+        wx.ComboBox.__init__(
+            self,
+            parent,
+            wx.ID_ANY,
+            value,
+            style=style | wx.CB_DROPDOWN,
+            choices=choices,
+            **par
+        )
         self.choices = choices
         self.Bind(wx.EVT_TEXT, self.EvtText)
         self.Bind(wx.EVT_CHAR, self.EvtChar)
@@ -25,7 +33,7 @@ class PromptingComboBox(wx.ComboBox) :
             return
         currentText = event.GetString()
         found = False
-        for choice in self.choices :
+        for choice in self.choices:
             if choice.startswith(currentText):
                 self.ignoreEvtText = True
                 self.SetValue(choice)

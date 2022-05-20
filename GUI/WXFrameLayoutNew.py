@@ -525,9 +525,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
-            thread = wxThread.GUIThread(
-                self, self.saveFile, (inFile), name="saveFile"
-            )
+            thread = wxThread.GUIThread(self, self.saveFile, (inFile), name="saveFile")
             thread.startWithRetry()
             if inFile.endswith(".csv") and self.gridPanel.grid_3_contents:
                 newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
@@ -779,8 +777,14 @@ class NewFrameLayout(wx.Frame):
                 df_network = pd.DataFrame(
                     networkGridData, columns=Globals.CSV_NETWORK_ATTR_NAME.keys()
                 )
-                columns = list(Globals.CSV_TAG_ATTR_NAME.keys()) + list(Globals.CSV_NETWORK_ATTR_NAME.keys())[2:]
-                df_1 = pd.concat([df_devices, df_network.drop(columns=["Esper Name", "Group"])], axis=1)
+                columns = (
+                    list(Globals.CSV_TAG_ATTR_NAME.keys())
+                    + list(Globals.CSV_NETWORK_ATTR_NAME.keys())[2:]
+                )
+                df_1 = pd.concat(
+                    [df_devices, df_network.drop(columns=["Esper Name", "Group"])],
+                    axis=1,
+                )
                 df_1.set_axis(columns, axis=1, inplace=True)
             else:
                 df_1 = pd.DataFrame(
@@ -794,7 +798,11 @@ class NewFrameLayout(wx.Frame):
             df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
 
             with pd.ExcelWriter(inFile) as writer1:
-                sheetOneName = "Device and Network" if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS else "Device"
+                sheetOneName = (
+                    "Device and Network"
+                    if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+                    else "Device"
+                )
                 if deviceGridData:
                     df_1.to_excel(writer1, sheet_name=sheetOneName, index=False)
                     for column in df_1:
@@ -802,7 +810,9 @@ class NewFrameLayout(wx.Frame):
                             df_1[column].astype(str).map(len).max(), len(column)
                         )
                         col_idx = df_1.columns.get_loc(column)
-                        writer1.sheets[sheetOneName].set_column(col_idx, col_idx, column_width)
+                        writer1.sheets[sheetOneName].set_column(
+                            col_idx, col_idx, column_width
+                        )
                 if networkGridData and df_2 is not None:
                     df_2.to_excel(writer1, sheet_name="Network", index=False)
                     for column in df_2:
@@ -810,7 +820,9 @@ class NewFrameLayout(wx.Frame):
                             df_2[column].astype(str).map(len).max(), len(column)
                         )
                         col_idx = df_2.columns.get_loc(column)
-                        writer1.sheets["Network"].set_column(col_idx, col_idx, column_width)
+                        writer1.sheets["Network"].set_column(
+                            col_idx, col_idx, column_width
+                        )
                 if appGridData:
                     df_3.to_excel(writer1, sheet_name="Application", index=False)
                     for column in df_3:
@@ -1367,7 +1379,12 @@ class NewFrameLayout(wx.Frame):
                 if Globals.HAS_INTERNET:
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
-                    blueprints = wxThread.GUIThread(self, self.loadConfigCheckBlueprint, config, name="loadConfigCheckBlueprint")
+                    blueprints = wxThread.GUIThread(
+                        self,
+                        self.loadConfigCheckBlueprint,
+                        config,
+                        name="loadConfigCheckBlueprint",
+                    )
                     blueprints.start()
                     threads = [groupThread, appThread, blueprints]
                     # self.loadConfigCheckBlueprint(config)
@@ -1627,7 +1644,11 @@ class NewFrameLayout(wx.Frame):
         if results:
             results = sorted(
                 results,
-                key=lambda i: i.name.lower() if hasattr(i, "name") else i["name"].lower() if type(i) is dict else i,
+                key=lambda i: i.name.lower()
+                if hasattr(i, "name")
+                else i["name"].lower()
+                if type(i) is dict
+                else i,
             )
         if results and len(results):
             for group in results:
@@ -1689,7 +1710,9 @@ class NewFrameLayout(wx.Frame):
         if hasattr(api_response, "results") and len(api_response.results):
             self.Logging("---> Processing fetched devices...")
             if not Globals.SHOW_DISABLED_DEVICES:
-                api_response.results = list(filter(filterDeviceList, api_response.results))
+                api_response.results = list(
+                    filter(filterDeviceList, api_response.results)
+                )
             api_response.results = sorted(
                 api_response.results,
                 key=lambda i: i.device_name.lower(),
@@ -1709,7 +1732,9 @@ class NewFrameLayout(wx.Frame):
         elif type(api_response) is dict and len(api_response["results"]):
             self.Logging("---> Processing fetched devices...")
             if not Globals.SHOW_DISABLED_DEVICES:
-                api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+                api_response["results"] = list(
+                    filter(filterDeviceList, api_response["results"])
+                )
             api_response["results"] = sorted(
                 api_response["results"],
                 key=lambda i: i["device_name"].lower(),
@@ -1729,7 +1754,9 @@ class NewFrameLayout(wx.Frame):
         elif type(api_response) is dict and len(api_response["results"]):
             self.Logging("---> Processing fetched devices...")
             if not Globals.SHOW_DISABLED_DEVICES:
-                api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
+                api_response["results"] = list(
+                    filter(filterDeviceList, api_response["results"])
+                )
             api_response["results"] = sorted(
                 api_response["results"],
                 key=lambda i: i["device_name"].lower(),
@@ -3392,7 +3419,12 @@ class NewFrameLayout(wx.Frame):
         with BlueprintsDialog(self.sidePanel.configChoice) as dlg:
             result = dlg.ShowModal()
             if result == wx.ID_OK:
-                prepareBlueprintClone(dlg.getBlueprint(), dlg.toConfig, dlg.fromConfig, dlg.getDestinationGroup())
+                prepareBlueprintClone(
+                    dlg.getBlueprint(),
+                    dlg.toConfig,
+                    dlg.fromConfig,
+                    dlg.getDestinationGroup(),
+                )
                 pass
             dlg.DestroyLater()
 

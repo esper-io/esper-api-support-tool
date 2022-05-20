@@ -67,9 +67,7 @@ if __name__ == "__main__":
         Globals.VERSION.replace(".", "-"),
         "exe" if system == "Windows" else "app",
     )
-    old_app_name = "EsperApiSupportTool.%s" % (
-        "exe" if system == "Windows" else "app",
-    )
+    old_app_name = "EsperApiSupportTool.%s" % ("exe" if system == "Windows" else "app",)
 
     if not isModuleInstalled("pyinstaller"):
         installRequiredModules()

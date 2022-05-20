@@ -143,7 +143,9 @@ def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY)
     return get_all_groups(name, limit, offset, maxAttempt)
 
 
-def getAllGroupsHelper(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, responses=None):
+def getAllGroupsHelper(
+    name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, responses=None
+):
     Globals.token_lock.acquire()
     Globals.token_lock.release()
     if not Globals.IS_TOKEN_VALID:
@@ -257,7 +259,12 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
             offset = Globals.limit
             threads = []
             while offset < api_response.count:
-                thread = wxThread.GUIThread(None, getDeviceGroupsForHostHelper, (config, enterprise_id, Globals.limit, offset, maxAttempt), name="getDeviceGroupsForHostHelper")
+                thread = wxThread.GUIThread(
+                    None,
+                    getDeviceGroupsForHostHelper,
+                    (config, enterprise_id, Globals.limit, offset, maxAttempt),
+                    name="getDeviceGroupsForHostHelper",
+                )
                 thread.start()
                 threads.append(thread)
                 limitActiveThreads(threads)
@@ -272,7 +279,9 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
             if remainder > 0:
                 offset -= int(Globals.limit)
                 offset += 1
-                resp = getDeviceGroupsForHostHelper(config, enterprise_id, Globals.limit, offset, maxAttempt)
+                resp = getDeviceGroupsForHostHelper(
+                    config, enterprise_id, Globals.limit, offset, maxAttempt
+                )
                 if resp and hasattr(resp, "next") and resp.next:
                     api_response.results += resp.results
         return api_response
@@ -280,7 +289,13 @@ def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
         raise e
 
 
-def getDeviceGroupsForHostHelper(config, enterprise_id, limit=Globals.limit, offset=Globals.offset, maxAttempt=Globals.MAX_RETRY):
+def getDeviceGroupsForHostHelper(
+    config,
+    enterprise_id,
+    limit=Globals.limit,
+    offset=Globals.offset,
+    maxAttempt=Globals.MAX_RETRY,
+):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
         api_response = None

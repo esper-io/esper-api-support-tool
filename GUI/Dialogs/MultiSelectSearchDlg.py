@@ -318,7 +318,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
-        wxThread.GUIThread(self, self.processNext, None, name="processNext").startWithRetry()
+        wxThread.GUIThread(
+            self, self.processNext, None, name="processNext"
+        ).startWithRetry()
 
     def processNext(self):
         self.button_1.Enable(False)
@@ -339,7 +341,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
-        wxThread.GUIThread(self, self.processPrev, None, name="processPrev").startWithRetry()
+        wxThread.GUIThread(
+            self, self.processPrev, None, name="processPrev"
+        ).startWithRetry()
 
     def processPrev(self):
         self.checkbox_1.Enable(False)
@@ -440,13 +444,17 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
 
-        count = self.resp["count"] if not hasattr(self.resp, "count") else self.resp.count
-        resultLimit = len(self.resp["results"]) if not hasattr(self.resp, "results") else len(self.resp.results)
+        count = (
+            self.resp["count"] if not hasattr(self.resp, "count") else self.resp.count
+        )
+        resultLimit = (
+            len(self.resp["results"])
+            if not hasattr(self.resp, "results")
+            else len(self.resp.results)
+        )
 
         if count > len(self.originalChoices[0]):
-            resp = getAllDevices(
-                self.group, limit=resultLimit, offset=0, fetchAll=True
-            )
+            resp = getAllDevices(self.group, limit=resultLimit, offset=0, fetchAll=True)
             if resp:
                 self.check_list_box_1.Clear()
                 self.originalChoices[0] = self.processDevices(resp.results)

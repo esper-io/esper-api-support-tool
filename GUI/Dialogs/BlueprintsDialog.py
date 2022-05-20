@@ -7,9 +7,18 @@ import threading
 
 from Common.decorator import api_tool_decorator
 from GUI.PromptingComboBox import PromptingComboBox
-from Utility.API.BlueprintUtility import checkBlueprintEnabled, getAllBlueprintsFromHost, getGroupBlueprintDetail
+from Utility.API.BlueprintUtility import (
+    checkBlueprintEnabled,
+    getAllBlueprintsFromHost,
+    getGroupBlueprintDetail,
+)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import getEsperConfig, joinThreadList, limitActiveThreads, openWebLinkInBrowser
+from Utility.Resource import (
+    getEsperConfig,
+    joinThreadList,
+    limitActiveThreads,
+    openWebLinkInBrowser,
+)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -19,7 +28,11 @@ class BlueprintsDialog(wx.Dialog):
             None,
             wx.ID_ANY,
             size=sizeTuple,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
+            style=wx.DEFAULT_DIALOG_STYLE
+            | wx.MAXIMIZE_BOX
+            | wx.MINIMIZE_BOX
+            | wx.RESIZE_BORDER
+            | wx.STAY_ON_TOP,
         )
         self.SetSize(sizeTuple)
         self.SetMinSize(sizeTuple)
@@ -31,7 +44,13 @@ class BlueprintsDialog(wx.Dialog):
         self.fromConfig = None
         self.blueprint = None
         self.group = None
-        choices = list(filter(lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x] and self.configMenuOpt[x]["isBlueprintsEnabled"], self.configMenuOpt.keys()))
+        choices = list(
+            filter(
+                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
+                and self.configMenuOpt[x]["isBlueprintsEnabled"],
+                self.configMenuOpt.keys(),
+            )
+        )
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -44,11 +63,22 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_5, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Endpoint:")
-        label_3.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_3.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_5.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         # self.combo_box_3 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
-        self.combo_box_3 = PromptingComboBox(self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_3 = PromptingComboBox(
+            self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT
+        )
         sizer_5.Add(self.combo_box_3, 0, wx.EXPAND, 0)
 
         grid_sizer_1 = wx.FlexGridSizer(2, 1, 0, 0)
@@ -58,11 +88,22 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_1.Add(sizer_6, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_5 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Blueprint:")
-        label_5.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_5.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_6.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         # self.combo_box_4 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
-        self.combo_box_4 = PromptingComboBox(self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_4 = PromptingComboBox(
+            self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
+        )
         self.combo_box_4.Enable(False)
         sizer_6.Add(self.combo_box_4, 0, wx.EXPAND, 0)
 
@@ -70,32 +111,72 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_1.Add(grid_sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Blueprint Preview:")
-        label_4.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_4.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_3.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.text_ctrl_1 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.HSCROLL | wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP)
+        self.text_ctrl_1 = wx.TextCtrl(
+            self.panel_1,
+            wx.ID_ANY,
+            "",
+            style=wx.HSCROLL
+            | wx.TE_AUTO_URL
+            | wx.TE_MULTILINE
+            | wx.TE_READONLY
+            | wx.TE_WORDWRAP,
+        )
         grid_sizer_3.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
         sizer_3 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_2.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Endpoint:")
-        label_1.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_1.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         # self.combo_box_1 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
-        self.combo_box_1 = PromptingComboBox(self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_1 = PromptingComboBox(
+            self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT
+        )
         sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
 
         sizer_4 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
 
         label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Group:")
-        label_2.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_2.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         # self.combo_box_2 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
-        self.combo_box_2 = PromptingComboBox(self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT)
+        self.combo_box_2 = PromptingComboBox(
+            self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
+        )
         self.combo_box_2.Enable(False)
         sizer_4.Add(self.combo_box_2, 0, wx.EXPAND, 0)
 
@@ -142,7 +223,10 @@ class BlueprintsDialog(wx.Dialog):
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
         self.combo_box_1.Enable(False)
-        threading.Thread(target=self.getBlueprintEnabledEndpoints, name="getBlueprintEnabledEndpoints").start()
+        threading.Thread(
+            target=self.getBlueprintEnabledEndpoints,
+            name="getBlueprintEnabledEndpoints",
+        ).start()
 
     def getBlueprintEnabledEndpoints(self):
         self.combo_box_3.Clear()
@@ -150,12 +234,22 @@ class BlueprintsDialog(wx.Dialog):
         threads = []
         for config in self.configMenuOpt.values():
             if "isBlueprintsEnabled" not in config:
-                thread = threading.Thread(target=checkBlueprintEnabled, args=(config,), name="getBlueprintEnabledEndpoints")
+                thread = threading.Thread(
+                    target=checkBlueprintEnabled,
+                    args=(config,),
+                    name="getBlueprintEnabledEndpoints",
+                )
                 thread.start()
                 threads.append(thread)
                 limitActiveThreads(threads)
         joinThreadList(threads)
-        choices = list(filter(lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x] and self.configMenuOpt[x]["isBlueprintsEnabled"], self.configMenuOpt.keys()))
+        choices = list(
+            filter(
+                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
+                and self.configMenuOpt[x]["isBlueprintsEnabled"],
+                self.configMenuOpt.keys(),
+            )
+        )
         for choice in choices:
             self.combo_box_3.Append(choice)
             self.combo_box_1.Append(choice)
@@ -180,7 +274,9 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
-        thread = threading.Thread(target=self.loadGroupHelper, args=(config,), name="loadGroupHelper")
+        thread = threading.Thread(
+            target=self.loadGroupHelper, args=(config,), name="loadGroupHelper"
+        )
         thread.start()
 
     @api_tool_decorator()
@@ -200,34 +296,50 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
-        thread = threading.Thread(target=self.loadBlueprintsHelper, args=(config,), name="loadBlueprintsHelper")
+        thread = threading.Thread(
+            target=self.loadBlueprintsHelper,
+            args=(config,),
+            name="loadBlueprintsHelper",
+        )
         thread.start()
 
     @api_tool_decorator()
     def loadBlueprintsHelper(self, config):
-        bps = getAllBlueprintsFromHost(config["apiHost"], config["apiKey"], config["enterprise"])
+        bps = getAllBlueprintsFromHost(
+            config["apiHost"], config["apiKey"], config["enterprise"]
+        )
         if bps:
             self.blueprints = bps.json()
             for blueprint in self.blueprints["results"]:
                 if blueprint["name"]:
                     self.combo_box_4.Append(blueprint["name"], blueprint["id"])
                 else:
-                    self.combo_box_4.Append("Blueprint %s" % blueprint["id"], blueprint["id"])
+                    self.combo_box_4.Append(
+                        "Blueprint %s" % blueprint["id"], blueprint["id"]
+                    )
             self.checkInputs()
         self.combo_box_4.Enable(True)
 
     @api_tool_decorator()
     def loadBlueprintPreview(self, event):
         self.changeCursorToWait()
-        match = list(filter(
-            lambda x: x["id"] == event.ClientData,
-            self.blueprints["results"],
-        ))
+        match = list(
+            filter(
+                lambda x: x["id"] == event.ClientData,
+                self.blueprints["results"],
+            )
+        )
         if match:
             match = match[0]
-        config = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
+        config = self.configMenuOpt[
+            self.combo_box_3.GetString(self.combo_box_3.GetSelection())
+        ]
         if match["group"]:
-            thread = threading.Thread(target=self.loadBlueprintHelper, args=(event, match, config), name="loadBlueprintHelper")
+            thread = threading.Thread(
+                target=self.loadBlueprintHelper,
+                args=(event, match, config),
+                name="loadBlueprintHelper",
+            )
             thread.start()
         else:
             self.text_ctrl_1.SetValue("No preview available")
@@ -235,13 +347,21 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadBlueprintHelper(self, event, match, config):
-        revision = getGroupBlueprintDetail(config["apiHost"], config["apiKey"], config["enterprise"], match["group"], event.ClientData)
+        revision = getGroupBlueprintDetail(
+            config["apiHost"],
+            config["apiKey"],
+            config["enterprise"],
+            match["group"],
+            event.ClientData,
+        )
         self.blueprint = revision
         formattedRes = ""
         try:
             formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
         except:
-            formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
+            formattedRes = json.dumps(str(revision.json()), indent=2).replace(
+                "\\n", "\n"
+            )
         self.text_ctrl_1.SetValue(formattedRes)
         self.checkInputs()
 
