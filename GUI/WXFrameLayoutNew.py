@@ -6,6 +6,7 @@ from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
 from Utility.API.BlueprintUtility import checkBlueprintEnabled, prepareBlueprintClone
 from Utility.API.DeviceUtility import getAllDevices
+from Utility.API.UserUtility import getAllUsers
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
 from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
@@ -1136,7 +1137,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, event=None, getItemForName=None):
         """Populates Configuration From CSV"""
-        self.Logging("--->Loading Configurations from %s" % Globals.csv_auth_path)
+        self.Logging("--->Loading Endpoints from %s" % Globals.csv_auth_path)
         if auth:
             if Globals.csv_auth_path != auth:
                 Globals.csv_auth_path = auth
@@ -1182,8 +1183,8 @@ class NewFrameLayout(wx.Frame):
             #             )
             #             defaultConfigVal = self.menubar.configMenu.Append(
             #                 wx.ID_NONE,
-            #                 "No Loaded Configurations",
-            #                 "No Loaded Configurations",
+            #                 "No Loaded Endpoints",
+            #                 "No Loaded Endpoints",
             #             )
             #             self.menubar.configMenuOptions.append(defaultConfigVal)
             #             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
@@ -1217,8 +1218,8 @@ class NewFrameLayout(wx.Frame):
                         )
                         defaultConfigVal = self.menubar.configMenu.Append(
                             wx.ID_NONE,
-                            "No Loaded Configurations",
-                            "No Loaded Configurations",
+                            "No Loaded Endpoints",
+                            "No Loaded Endpoints",
                         )
                         self.menubar.configMenuOptions.append(defaultConfigVal)
                         self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
@@ -1236,7 +1237,7 @@ class NewFrameLayout(wx.Frame):
                 + " not found - PLEASE Quit and create configuration file"
             )
             defaultConfigVal = self.menubar.configMenu.Append(
-                wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
+                wx.ID_NONE, "No Loaded Endpoints", "No Loaded Endpoints"
             )
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
@@ -3284,6 +3285,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
 
+    @api_tool_decorator()
     def callSetGaugeLater(self, event):
         delayMs = 3000
         value = 0
@@ -3294,6 +3296,7 @@ class NewFrameLayout(wx.Frame):
                 value = val[1]
         wx.CallLater(delayMs, self.setGaugeValue, value)
 
+    @api_tool_decorator()
     def displayNotificationEvent(self, event):
         title = msg = ""
         if event and hasattr(event, "GetValue"):
@@ -3303,6 +3306,7 @@ class NewFrameLayout(wx.Frame):
                 msg = val[1]
         self.displayNotification(title, msg)
 
+    @api_tool_decorator()
     def displayNotification(self, title, msg, displayActive=False):
         if not self.IsActive() or displayActive:
             self.notification = wxadv.NotificationMessage(title, msg, self)
@@ -3314,6 +3318,7 @@ class NewFrameLayout(wx.Frame):
                         pass
                 self.notification.Show()
 
+    @api_tool_decorator()
     def onSuspend(self, event):
         if (
             self.isRunning
@@ -3325,6 +3330,7 @@ class NewFrameLayout(wx.Frame):
         ):
             event.Veto()
 
+    @api_tool_decorator()
     def displayAppStateChoiceDlg(self):
         res = None
         with wx.SingleChoiceDialog(
@@ -3336,6 +3342,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.AppState = None
 
+    @api_tool_decorator()
     def uploadApplication(self, event=None, title="", joinThread=False):
         with wx.FileDialog(
             self,
@@ -3365,6 +3372,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 fun[0](fun[1])
 
+    @api_tool_decorator()
     def onBulkFactoryReset(self, event):
         with BulkFactoryReset() as dlg:
             res = dlg.ShowModal()
@@ -3374,10 +3382,12 @@ class NewFrameLayout(wx.Frame):
                 ids = dlg.getIdentifiers()
                 bulkFactoryReset(ids)
 
+    @api_tool_decorator()
     def onGeofence(self, event):
         with GeofenceDialog() as dlg:
             dlg.ShowModal()
 
+    @api_tool_decorator()
     def onCloneBP(self, event):
         with BlueprintsDialog(self.sidePanel.configChoice) as dlg:
             result = dlg.ShowModal()
@@ -3386,6 +3396,7 @@ class NewFrameLayout(wx.Frame):
                 pass
             dlg.DestroyLater()
 
+    @api_tool_decorator()
     def loadConfigCheckBlueprint(self, config):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
@@ -3398,3 +3409,73 @@ class NewFrameLayout(wx.Frame):
             self.menubar.toggleCloneMenuOptions(True)
         else:
             self.menubar.toggleCloneMenuOptions(False)
+
+    @api_tool_decorator()
+    def onUserReport(self, event):
+        dlg = wx.FileDialog(
+            self,
+            message="Save User Report as...",
+            defaultFile="",
+            wildcard="CSV files (*.csv)|*.csv",
+            defaultDir=str(self.defaultDir),
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        )
+        result = dlg.ShowModal()
+        inFile = dlg.GetPath()
+
+        if result == wx.ID_OK:  # Save button was pressed
+            self.gauge.Pulse()
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            users = getAllUsers()
+            self.setGaugeValue(50)
+            data = [
+                [
+                    "User Id",
+                    "Username",
+                    "Email",
+                    "First Name",
+                    "Last Name",
+                    "Full Name",
+                    "Is Active",
+                    "Role",
+                    "Groups",
+                    "Created On",
+                    "Updated On",
+                    "Last Login",
+                ]
+            ]
+            num = 1
+            for user in users["results"]:
+                entry = []
+                entry.append(user["id"])
+                entry.append(user["username"])
+                entry.append(user["email"])
+                entry.append(user["first_name"])
+                entry.append(user["last_name"])
+                entry.append(user["full_name"])
+                entry.append(user["is_active"])
+                entry.append(user["profile"]["role"])
+                entry.append(user["profile"]["groups"])
+                entry.append(user["profile"]["created_on"])
+                entry.append(user["profile"]["updated_on"])
+                entry.append(user["last_login"])
+                data.append(entry)
+                self.setGaugeValue(int(num / len(users["results"]) * 90))
+                num += 1
+            createNewFile(inFile)
+
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(data)
+
+            self.Logging("---> User Report saved to file: " + inFile)
+            self.setCursorDefault()
+            self.setGaugeValue(100)
+            self.toggleEnabledState(True)
+            self.gridPanel.enableGridProperties()
+
+            displayMessageBox(
+                ("User Report saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
+            )

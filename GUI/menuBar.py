@@ -43,10 +43,6 @@ class ToolMenuBar(wx.MenuBar):
         foa.SetBitmap(addPng)
         self.fileOpenAuth = fileMenu.Append(foa)
 
-        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
-        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
-        self.fileAddUser = fileMenu.Append(fou)
-
         fileMenu.Append(wx.ID_SEPARATOR)
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
         foc.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/open.png")))
@@ -76,7 +72,7 @@ class ToolMenuBar(wx.MenuBar):
         # Endpoint Menu
         self.configMenu = wx.Menu()
         self.defaultConfigVal = self.configMenu.Append(
-            wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
+            wx.ID_NONE, "No Loaded Endpoints", "No Loaded Endpoints"
         )
         self.configMenuOptions.append(self.defaultConfigVal)
 
@@ -172,6 +168,14 @@ class ToolMenuBar(wx.MenuBar):
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
+        self.userSubMenu = wx.Menu()
+        fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
+        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
+        self.fileAddUser = self.userSubMenu.Append(fou)
+
+        userReport = wx.MenuItem(self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U")
+        self.userReportItem = self.userSubMenu.Append(userReport)
+
         # View Menu
         viewMenu = wx.Menu()
         self.deviceColumns = viewMenu.Append(
@@ -229,7 +233,8 @@ class ToolMenuBar(wx.MenuBar):
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")
-        self.Append(self.configMenu, "&Configurations")
+        self.Append(self.userSubMenu, "&Users")
+        self.Append(self.configMenu, "&Endpoints")
         self.Append(runMenu, "&Run")
         self.Append(helpMenu, "&Help")
 
@@ -293,6 +298,7 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
 
     @api_tool_decorator()
     def onAbout(self, event):

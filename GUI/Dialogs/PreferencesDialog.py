@@ -465,18 +465,6 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
 
-        # if prefDict and not prefDict["enableGridUpdate"]:
-        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-        #     Globals.ENABLE_GRID_UPDATE = False
-        # elif prefDict and prefDict["enableGridUpdate"]:
-        #     self.checkbox_3.Set3StateValue(wx.CHK_CHECKED)
-        #     Globals.ENABLE_GRID_UPDATE = True
-        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-        #         self.parent.startUpdateThread()
-        # else:
-        #     self.checkbox_3.Set3StateValue(wx.CHK_UNCHECKED)
-        #     Globals.ENABLE_GRID_UPDATE = False
-
         if not prefDict or (prefDict and not prefDict["getAllApps"]):
             self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.USE_ENTERPRISE_APP = True
@@ -506,20 +494,6 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.SHOW_PKG_NAME = False
 
-        # if not prefDict or (prefDict and not prefDict["getAppsForEachDevice"]):
-        #     self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-        #     Globals.GET_APP_EACH_DEVICE = False
-        # elif prefDict and prefDict["getAppsForEachDevice"]:
-        #     if (
-        #         isinstance(self.prefs["getAppsForEachDevice"], str)
-        #         and prefDict["getAppsForEachDevice"].lower() == "true"
-        #     ) or prefDict["getAppsForEachDevice"] is True:
-        #         self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
-        #         Globals.GET_APP_EACH_DEVICE = True
-        #     else:
-        #         self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
-        #         Globals.GET_APP_EACH_DEVICE = False
-
         if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
             self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
             Globals.REACH_QUEUED_ONLY = True
@@ -547,20 +521,6 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
-
-        # if not prefDict or (prefDict and not prefDict["immediateChild"]):
-        #     self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-        #     Globals.GET_IMMEDIATE_SUBGROUPS = False
-        # elif prefDict and "immediateChild" in prefDict:
-        #     if (
-        #         isinstance(self.prefs["immediateChild"], str)
-        #         and prefDict["immediateChild"].lower() == "true"
-        #     ) or prefDict["immediateChild"] is True:
-        #         self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
-        #         Globals.GET_IMMEDIATE_SUBGROUPS = True
-        #     else:
-        #         self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-        #         Globals.GET_IMMEDIATE_SUBGROUPS = False
 
         if prefDict and "aliasDayDelta" in prefDict:
             Globals.ALIAS_DAY_DELTA = int(prefDict["aliasDayDelta"])

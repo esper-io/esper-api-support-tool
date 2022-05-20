@@ -4,6 +4,7 @@ import Common.Globals as Globals
 from Utility.API.GroupUtility import getAllGroups
 
 from Utility.Resource import (
+    getAllFromOffsets,
     getHeader,
     isApiKey,
 )
@@ -103,3 +104,35 @@ def deleteUser(user):
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
+
+
+def getUsers(userId=None, limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY, responses=[]):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}".format(
+        tenant=tenant,
+        limit=limit,
+        offset=offset,
+    )
+    usersResp = performGetRequestWithRetry(url, headers=getHeader())
+    resp = None
+    if usersResp.status_code < 300:
+        resp = usersResp.json()
+    if resp and responses is not None:
+        responses.append(resp)
+    return resp
+
+
+def getAllUsers():
+    userResp = getUsers()
+    users = getAllFromOffsets(getUsers, None, userResp)
+    if hasattr(userResp, "results"):
+        userResp.results = userResp.results + users
+        userResp.next = None
+        userResp.prev = None
+    elif type(userResp) is dict and "results" in userResp:
+        userResp["results"] = userResp["results"] + users
+        userResp["next"] = None
+        userResp["prev"] = None
+    return userResp
