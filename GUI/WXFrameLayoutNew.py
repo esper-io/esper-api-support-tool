@@ -250,7 +250,7 @@ class NewFrameLayout(wx.Frame):
         if self.kill:
             return
 
-        self.prefDialog = PreferencesDialog(self.preferences, parent=self)
+        self.prefDialog = PreferencesDialog(parent=self)
 
         self.loadPref()
         self.__set_properties()
@@ -1486,36 +1486,6 @@ class NewFrameLayout(wx.Frame):
                 self.Logging("---> No Devices found")
             else:
                 self.sidePanel.deviceChoice.Enable(True)
-                # if (
-                #     self.preferences
-                #     and "getAppsForEachDevice" in self.preferences
-                #     and self.preferences["getAppsForEachDevice"]
-                # ) or Globals.GET_APP_EACH_DEVICE:
-                #     newThreads = []
-                #     self.Logging("---> Attempting to populate Application list")
-                #     self.gauge.Pulse()
-                #     for deviceId in self.sidePanel.devices.values():
-                #         thread = wxThread.GUIThread(
-                #             self,
-                #             getdeviceapps,
-                #             (deviceId, True, Globals.USE_ENTERPRISE_APP),
-                #             eventType=eventUtil.myEVT_APPS,
-                #             name="GetDeviceAppsToPopulateApps",
-                #         )
-                #         thread.start()
-                #         newThreads.append(thread)
-                #         limitActiveThreads(newThreads)
-                #     num = 0
-                #     for thread in newThreads:
-                #         thread.join()
-                #         num += 1
-                #         if not self.preferences or (
-                #             "enableDevice" in self.preferences
-                #             and self.preferences["enableDevice"]
-                #         ):
-                #             self.setGaugeValue(
-                #                 int(float(num / len(newThreads) / 2) * 100)
-                #             )
                 self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
                 if not self.isRunning:

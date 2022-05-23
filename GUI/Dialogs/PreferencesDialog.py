@@ -6,7 +6,7 @@ import wx
 
 
 class PreferencesDialog(wx.Dialog):
-    def __init__(self, prefDict, parent=None):
+    def __init__(self, parent=None):
         super(PreferencesDialog, self).__init__(
             None,
             wx.ID_ANY,
@@ -19,7 +19,7 @@ class PreferencesDialog(wx.Dialog):
         self.SetMinSize(self.size)
 
         self.parent = parent
-        self.prefs = prefDict if prefDict else {}
+        self.prefs = {}
         self.prefKeys = [
             "enableDevice",
             "limit",
@@ -261,27 +261,6 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
 
-        # (_, _, self.checkbox_3,) = self.addPrefToPanel(
-        #     self.grid,
-        #     sizer_16,
-        #     "Enable Grid Refresh",
-        #     wx.CheckBox,
-        #     "Allows the Grids to update cell data.\nOnly runs for datasets of %s or less.\nMay lock or prevent operations when updating."
-        #     % Globals.MAX_UPDATE_COUNT,
-        # )
-
-        # (_, _, self.spin_ctrl_7,) = self.addPrefToPanel(
-        #     self.grid,
-        #     sizer_16,
-        #     "Grid Refresh Rate (seconds)",
-        #     wx.SpinCtrl,
-        #     "How often the Grid should update its cell data. Min: %s Max: %s"
-        #     % (Globals.GRID_UPDATE_RATE, Globals.MAX_GRID_UPDATE_RATE),
-        # )
-        # self.spin_ctrl_7.SetMin(Globals.GRID_UPDATE_RATE)
-        # self.spin_ctrl_7.SetMax(Globals.MAX_GRID_UPDATE_RATE)
-        # self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
-
         (_, _, self.checkbox_10,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
@@ -297,14 +276,6 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
-
-        # (_, _, self.checkbox_14,) = self.addPrefToPanel(
-        #     self.grid,
-        #     sizer_16,
-        #     "Only Show Immediate Subgroups",
-        #     wx.CheckBox,
-        #     "Only show the immediate subgroups for a particular group. If not enabled it will show all subgroups levels in the grid.",
-        # )
 
         (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
             self.grid,
@@ -371,14 +342,6 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
-
-        # (_, _, self.checkbox_6,) = self.addPrefToPanel(
-        #     self.app,
-        #     sizer_9,
-        #     "Get Applications For Each Device",
-        #     wx.CheckBox,
-        #     "Fetch all applications for every device within a group.\nPerformance may be slower if enabled.",
-        # )
 
         (_, _, self.checkbox_11,) = self.addPrefToPanel(
             self.app,
@@ -457,353 +420,26 @@ class PreferencesDialog(wx.Dialog):
 
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
 
         self.Fit()
-
-        if prefDict and not prefDict["enableDevice"]:
-            self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
-        else:
-            self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
-
-        if not prefDict or (prefDict and not prefDict["getAllApps"]):
-            self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.USE_ENTERPRISE_APP = True
-        elif prefDict and prefDict["getAllApps"]:
-            self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
-            Globals.USE_ENTERPRISE_APP = False
-            if (
-                isinstance(self.prefs["getAllApps"], str)
-                and prefDict["getAllApps"].lower() == "true"
-            ) or prefDict["getAllApps"] is True:
-                self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
-                Globals.USE_ENTERPRISE_APP = False
-            else:
-                self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
-
-        if not prefDict or (prefDict and not prefDict["showPkg"]):
-            self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SHOW_PKG_NAME = False
-        elif prefDict and prefDict["showPkg"]:
-            if (
-                isinstance(self.prefs["showPkg"], str)
-                and prefDict["showPkg"].lower() == "true"
-            ) or prefDict["showPkg"] is True:
-                self.checkbox_4.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_PKG_NAME = False
-            else:
-                self.checkbox_4.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_PKG_NAME = False
-
-        if not prefDict or (prefDict and not prefDict["reachQueueStateOnly"]):
-            self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
-            Globals.REACH_QUEUED_ONLY = True
-        elif prefDict and "reachQueueStateOnly" in prefDict:
-            if (
-                isinstance(self.prefs["reachQueueStateOnly"], str)
-                and prefDict["reachQueueStateOnly"].lower() == "true"
-            ) or prefDict["reachQueueStateOnly"] is True:
-                self.checkbox_5.Set3StateValue(wx.CHK_CHECKED)
-                Globals.REACH_QUEUED_ONLY = True
-            else:
-                self.checkbox_5.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.REACH_QUEUED_ONLY = False
-
-        if not prefDict or (prefDict and not prefDict["syncGridScroll"]):
-            self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
-            Globals.MATCH_SCROLL_POS = True
-        elif prefDict and "syncGridScroll" in prefDict:
-            if (
-                isinstance(self.prefs["syncGridScroll"], str)
-                and prefDict["syncGridScroll"].lower() == "true"
-            ) or prefDict["syncGridScroll"] is True:
-                self.checkbox_13.Set3StateValue(wx.CHK_CHECKED)
-                Globals.MATCH_SCROLL_POS = True
-            else:
-                self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.MATCH_SCROLL_POS = False
-
-        if prefDict and "aliasDayDelta" in prefDict:
-            Globals.ALIAS_DAY_DELTA = int(prefDict["aliasDayDelta"])
-            if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
-                Globals.ALIAS_DAY_DELTA = Globals.ALIAS_MAX_DAY_DELTA
-            if Globals.ALIAS_DAY_DELTA < 0:
-                Globals.ALIAS_DAY_DELTA = 0
-            self.spin_ctrl_9.SetValue(Globals.ALIAS_DAY_DELTA)
-
-        if prefDict and "fontSize" in prefDict:
-            Globals.FONT_SIZE = int(prefDict["fontSize"])
-            Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
-            self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
-
-        if prefDict and "loadXDevices" in prefDict:
-            Globals.MAX_GRID_LOAD = int(prefDict["loadXDevices"])
-            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
-                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
-            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
-        if not prefDict or (
-            prefDict
-            and not prefDict["templateDialog"]
-            and not prefDict["templateUpdate"]
-        ):
-            self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
-            Globals.SHOW_TEMPLATE_DIALOG = True
-            Globals.SHOW_TEMPLATE_UPDATE = True
-        elif prefDict and prefDict["templateDialog"]:
-            if (
-                isinstance(self.prefs["templateDialog"], str)
-                and prefDict["templateDialog"].lower() == "true"
-            ) or prefDict["templateDialog"] is True:
-                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_TEMPLATE_DIALOG = True
-                Globals.SHOW_TEMPLATE_UPDATE = True
-            else:
-                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_TEMPLATE_DIALOG = False
-                Globals.SHOW_TEMPLATE_UPDATE = False
-        elif prefDict and prefDict["templateUpdate"]:
-            if (
-                isinstance(self.prefs["templateUpdate"], str)
-                and prefDict["templateUpdate"].lower() == "true"
-            ) or prefDict["templateUpdate"] is True:
-                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_TEMPLATE_DIALOG = True
-                Globals.SHOW_TEMPLATE_UPDATE = True
-            else:
-                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_TEMPLATE_DIALOG = False
-                Globals.SHOW_TEMPLATE_UPDATE = False
-        else:
-            if Globals.SHOW_TEMPLATE_DIALOG and Globals.SHOW_TEMPLATE_UPDATE:
-                self.checkbox_7.Set3StateValue(wx.CHK_CHECKED)
-            else:
-                self.checkbox_7.Set3StateValue(wx.CHK_UNCHECKED)
-
-        if not prefDict or (prefDict and not prefDict["gridDialog"]):
-            self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
-            Globals.SHOW_GRID_DIALOG = True
-        elif prefDict and prefDict["gridDialog"]:
-            if (
-                isinstance(self.prefs["gridDialog"], str)
-                and prefDict["gridDialog"].lower() == "true"
-            ) or prefDict["gridDialog"] is True:
-                self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_GRID_DIALOG = True
-            else:
-                self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_GRID_DIALOG = False
-        else:
-            if Globals.SHOW_GRID_DIALOG:
-                self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
-            else:
-                self.checkbox_8.Set3StateValue(wx.CHK_UNCHECKED)
-
-        if not prefDict or (prefDict and not prefDict["colSize"]):
-            self.checkbox_10.Set3StateValue(wx.CHK_CHECKED)
-            if self.parent:
-                self.parent.gridPanel.enableGridProperties(True, True, False)
-        elif prefDict and prefDict["colSize"]:
-            if (
-                isinstance(self.prefs["colSize"], str)
-                and prefDict["colSize"].lower() == "true"
-            ) or prefDict["colSize"] is True:
-                self.checkbox_10.Set3StateValue(wx.CHK_CHECKED)
-                if self.parent:
-                    self.parent.gridPanel.enableGridProperties(True, True, False)
-            else:
-                self.checkbox_10.Set3StateValue(wx.CHK_UNCHECKED)
-                if self.parent:
-                    self.parent.gridPanel.disableGridProperties(False, False, True)
-
-        if not prefDict or (prefDict and not prefDict["setStateShow"]):
-            self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SET_APP_STATE_AS_SHOW = False
-        elif prefDict and prefDict["setStateShow"]:
-            if (
-                isinstance(self.prefs["setStateShow"], str)
-                and prefDict["setStateShow"].lower() == "true"
-            ) or prefDict["setStateShow"] is True:
-                self.checkbox_11.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SET_APP_STATE_AS_SHOW = True
-            else:
-                self.checkbox_11.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SET_APP_STATE_AS_SHOW = False
-
-        if not prefDict or (prefDict and not prefDict["useJsonForCmd"]):
-            self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
-            Globals.COMMAND_JSON_INPUT = True
-        elif prefDict and prefDict["useJsonForCmd"]:
-            if (
-                isinstance(self.prefs["useJsonForCmd"], str)
-                and prefDict["useJsonForCmd"].lower() == "true"
-            ) or prefDict["useJsonForCmd"] is True:
-                self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
-                Globals.COMMAND_JSON_INPUT = True
-            else:
-                self.checkbox_12.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.COMMAND_JSON_INPUT = False
-
-        if not prefDict or (prefDict and not prefDict["runCommandOn"]):
-            self.combobox_1.SetSelection(0)
-        elif prefDict and prefDict["runCommandOn"]:
-            if isinstance(self.prefs["runCommandOn"], str):
-                indx = self.combobox_1.GetItems().index(self.prefs["runCommandOn"])
-                self.combobox_1.SetSelection(indx)
-            else:
-                self.combobox_1.SetSelection(self.prefs["runCommandOn"])
-        Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
-
-        if not prefDict or (prefDict and not prefDict["colVisibility"]):
-            self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
-        elif prefDict and prefDict["colVisibility"]:
-            if self.prefs["colVisibility"]:
-                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
-                    0
-                ]
-            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
-                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
-                    1
-                ]
-            self.parent.gridPanel.setColVisibility()
-
-        if prefDict and "saveColVisibility" in prefDict:
-            if (
-                isinstance(self.prefs["saveColVisibility"], str)
-                and prefDict["saveColVisibility"].lower() == "true"
-            ) or prefDict["saveColVisibility"] is True:
-                self.checkbox_15.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SAVE_VISIBILITY = True
-            else:
-                self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SAVE_VISIBILITY = False
-        else:
-            self.checkbox_15.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SAVE_VISIBILITY = False
-
-        if prefDict and "groupFetchAll" in prefDict:
-            if (
-                isinstance(self.prefs["groupFetchAll"], str)
-                and prefDict["groupFetchAll"].lower() == "true"
-            ) or prefDict["groupFetchAll"] is True:
-                self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
-                Globals.GROUP_FETCH_ALL = True
-            else:
-                self.checkbox_16.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.GROUP_FETCH_ALL = False
-        else:
-            self.checkbox_16.Set3StateValue(wx.CHK_CHECKED)
-            Globals.GROUP_FETCH_ALL = True
-
-        if prefDict and "replaceSerial" in prefDict:
-            if (
-                isinstance(prefDict["replaceSerial"], str)
-                and prefDict["replaceSerial"].lower() == "true"
-            ) or prefDict["replaceSerial"] is True:
-                self.checkbox_17.Set3StateValue(wx.CHK_CHECKED)
-                Globals.REPLACE_SERIAL = True
-            else:
-                self.checkbox_17.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.REPLACE_SERIAL = False
-
-        if prefDict and "showDisabledDevices" in prefDict:
-            if (
-                isinstance(prefDict["showDisabledDevices"], str)
-                and prefDict["showDisabledDevices"].lower() == "true"
-            ) or prefDict["showDisabledDevices"] is True:
-                self.checkbox_18.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_DISABLED_DEVICES = True
-            else:
-                self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_DISABLED_DEVICES = False
-
-        if prefDict and "inhibitSleep" in prefDict:
-            if (
-                isinstance(prefDict["inhibitSleep"], str)
-                and prefDict["inhibitSleep"].lower() == "true"
-            ) or prefDict["inhibitSleep"] is True:
-                self.checkbox_21.Set3StateValue(wx.CHK_CHECKED)
-                Globals.INHIBIT_SLEEP = True
-            else:
-                self.checkbox_21.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.INHIBIT_SLEEP = False
-
-        if prefDict and "lastSeenAsDate" in prefDict:
-            if (
-                isinstance(prefDict["lastSeenAsDate"], str)
-                and prefDict["lastSeenAsDate"].lower() == "true"
-            ) or prefDict["lastSeenAsDate"] is True:
-                self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
-                Globals.LAST_SEEN_AS_DATE = True
-            else:
-                self.checkbox_19.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.LAST_SEEN_AS_DATE = False
-        else:
-            self.checkbox_19.Set3StateValue(wx.CHK_CHECKED)
-            Globals.LAST_SEEN_AS_DATE = True
-
-        if prefDict and "appsInDeviceGrid" in prefDict:
-            if (
-                isinstance(prefDict["appsInDeviceGrid"], str)
-                and prefDict["appsInDeviceGrid"].lower() == "true"
-            ) or prefDict["appsInDeviceGrid"] is True:
-                self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
-                Globals.APPS_IN_DEVICE_GRID = True
-                Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
-            else:
-                self.checkbox_20.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.APPS_IN_DEVICE_GRID = False
-                Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
-                self.parent.gridPanel.deleteAppColInDeviceGrid()
-        else:
-            self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
-            Globals.APPS_IN_DEVICE_GRID = True
-            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
-
-        if prefDict and "appVersionNameInsteadOfCode" in prefDict:
-            if (
-                isinstance(prefDict["appVersionNameInsteadOfCode"], str)
-                and prefDict["appVersionNameInsteadOfCode"].lower() == "true"
-            ) or prefDict["appVersionNameInsteadOfCode"] is True:
-                self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
-                Globals.VERSON_NAME_INSTEAD_OF_CODE = True
-            else:
-                self.checkbox_22.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.VERSON_NAME_INSTEAD_OF_CODE = False
-        else:
-            self.checkbox_22.Set3StateValue(wx.CHK_CHECKED)
-            Globals.VERSON_NAME_INSTEAD_OF_CODE = True
-
-        if prefDict and "combineDeviceAndNetworkSheets" in prefDict:
-            if (
-                isinstance(prefDict["combineDeviceAndNetworkSheets"], str)
-                and prefDict["combineDeviceAndNetworkSheets"].lower() == "true"
-            ) or prefDict["combineDeviceAndNetworkSheets"] is True:
-                self.checkbox_23.Set3StateValue(wx.CHK_CHECKED)
-                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
-            else:
-                self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
-        else:
-            self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
-
-        if prefDict and "showGroupPath" in prefDict:
-            if (
-                isinstance(prefDict["showGroupPath"], str)
-                and prefDict["showGroupPath"].lower() == "true"
-            ) or prefDict["showGroupPath"] is True:
-                self.checkbox_24.Set3StateValue(wx.CHK_CHECKED)
-                Globals.SHOW_GROUP_PATH = True
-            else:
-                self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
-                Globals.SHOW_GROUP_PATH = False
-        else:
-            self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
-            Globals.SHOW_GROUP_PATH = True
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_ESCAPE:
+            self.onClose(event)
+        event.Skip()
+
+    @api_tool_decorator()
+    def onClose(self, event):
+        if event.EventType != wx.EVT_CLOSE.typeId:
+            self.Close()
+        self.DestroyLater()
 
     @api_tool_decorator()
     def showMatchingPanel(self, event):
@@ -854,8 +490,6 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            # "updateRate": self.spin_ctrl_7.GetValue(),
-            # "enableGridUpdate": self.checkbox_3.IsChecked(),
             "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
             if self.parent
@@ -864,14 +498,12 @@ class PreferencesDialog(wx.Dialog):
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
             "reachQueueStateOnly": self.checkbox_5.IsChecked(),
-            # "getAppsForEachDevice": self.checkbox_6.IsChecked(),
             "colSize": self.checkbox_10.IsChecked(),
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
             "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
-            # "immediateChild": self.checkbox_14.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
@@ -895,18 +527,14 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateDialog"]
         Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateUpdate"]
         Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
-        # Globals.GET_APP_EACH_DEVICE = self.prefs["getAppsForEachDevice"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
         Globals.limit = self.prefs["limit"]
         Globals.offset = self.prefs["offset"]
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
-        # Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-        # Globals.ENABLE_GRID_UPDATE = self.checkbox_3.IsChecked()
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
-        # Globals.GET_IMMEDIATE_SUBGROUPS = self.prefs["immediateChild"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
@@ -993,14 +621,6 @@ class PreferencesDialog(wx.Dialog):
         if "commandTimeout" in self.prefs and self.prefs["commandTimeout"]:
             Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
             self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
-        # if "updateRate" in self.prefs and self.prefs["updateRate"]:
-        #     Globals.GRID_UPDATE_RATE = int(self.prefs["updateRate"])
-        #     self.spin_ctrl_7.SetValue(Globals.GRID_UPDATE_RATE)
-        # if "enableGridUpdate" in self.prefs and self.prefs["enableGridUpdate"]:
-        #     self.checkbox_3.SetValue(self.prefs["enableGridUpdate"])
-        #     Globals.ENABLE_GRID_UPDATE = self.checkbox_2.IsChecked()
-        #     if Globals.ENABLE_GRID_UPDATE and self.parent != None:
-        #         self.parent.startUpdateThread()
         if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
                 size = tuple(
@@ -1023,16 +643,6 @@ class PreferencesDialog(wx.Dialog):
                     if not self.parent.IsMaximized():
                         pos = tuple(self.prefs["windowPosition"])
                         self.parent.SetPosition(wx.Point(pos[0], pos[1]))
-        # if "getAppsForEachDevice" in self.prefs and self.prefs["getAppsForEachDevice"]:
-        #     if (
-        #         isinstance(self.prefs["getAppsForEachDevice"], str)
-        #         and self.prefs["getAppsForEachDevice"].lower()
-        #     ) == "true" or self.prefs["getAppsForEachDevice"]:
-        #         Globals.GET_APP_EACH_DEVICE = True
-        #         self.checkbox_6.Set3StateValue(wx.CHK_CHECKED)
-        #     else:
-        #         Globals.GET_APP_EACH_DEVICE = False
-        #         self.checkbox_6.Set3StateValue(wx.CHK_UNCHECKED)
         if "getAllApps" in self.prefs:
             if (
                 isinstance(self.prefs["getAllApps"], str)
@@ -1135,16 +745,6 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.checkbox_13.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.MATCH_SCROLL_POS = False
-        # if "immediateChild" in self.prefs:
-        #     if (
-        #         isinstance(self.prefs["immediateChild"], str)
-        #         and self.prefs["immediateChild"].lower() == "true"
-        #     ) or self.prefs["immediateChild"] is True:
-        #         self.checkbox_14.Set3StateValue(wx.CHK_CHECKED)
-        #         Globals.GET_IMMEDIATE_SUBGROUPS = True
-        #     else:
-        #         self.checkbox_14.Set3StateValue(wx.CHK_UNCHECKED)
-        #         Globals.GET_IMMEDIATE_SUBGROUPS = False
         if "aliasDayDelta" in self.prefs:
             Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
             if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
@@ -1299,43 +899,10 @@ class PreferencesDialog(wx.Dialog):
     def GetPrefs(self):
         if not self.prefs:
             self.prefs = {}
+
         for key in self.prefKeys:
             if key not in self.prefs.keys():
                 self.prefs[key] = self.getDefaultKeyValue(key)
-
-        self.prefs["reachQueueStateOnly"] = Globals.REACH_QUEUED_ONLY
-        # self.prefs["getAppsForEachDevice"] = Globals.GET_APP_EACH_DEVICE
-        self.prefs["getAllApps"] = Globals.USE_ENTERPRISE_APP
-        self.prefs["showPkg"] = Globals.SHOW_PKG_NAME
-        self.prefs["useJsonForCmd"] = Globals.COMMAND_JSON_INPUT
-        self.prefs[
-            "gridDialog"
-        ] = Globals.SHOW_GRID_DIALOG  # update pref value to match global value
-        self.prefs["windowSize"] = (
-            str(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE
-        )
-        self.prefs["isMaximized"] = self.parent.IsMaximized() if self.parent else False
-        self.prefs["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
-        self.prefs["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
-        self.prefs["runCommandOn"] = Globals.CMD_DEVICE_TYPE
-        self.prefs["maxThread"] = Globals.MAX_THREAD_COUNT
-        self.prefs["syncGridScroll"] = Globals.MATCH_SCROLL_POS
-        # self.prefs["immediateChild"] = Globals.GET_IMMEDIATE_SUBGROUPS
-        self.prefs["aliasDayDelta"] = Globals.ALIAS_DAY_DELTA
-        self.prefs["fontSize"] = Globals.FONT_SIZE
-        self.prefs["colVisibility"] = self.parent.gridPanel.getColVisibility()
-        self.prefs["saveColVisibility"] = Globals.SAVE_VISIBILITY
-        self.prefs["groupFetchAll"] = Globals.GROUP_FETCH_ALL
-        self.prefs["replaceSerial"] = Globals.REPLACE_SERIAL
-        self.prefs["showDisabledDevices"] = Globals.SHOW_DISABLED_DEVICES
-        self.prefs["lastSeenAsDate"] = Globals.LAST_SEEN_AS_DATE
-        self.prefs["appsInDeviceGrid"] = Globals.APPS_IN_DEVICE_GRID
-        self.prefs["inhibitSleep"] = Globals.INHIBIT_SLEEP
-        self.prefs["appVersionNameInsteadOfCode"] = Globals.VERSON_NAME_INSTEAD_OF_CODE
-        self.prefs[
-            "combineDeviceAndNetworkSheets"
-        ] = Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
-        self.prefs["showGroupPath"] = Globals.SHOW_GROUP_PATH
 
         return self.prefs
 
@@ -1355,8 +922,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHOW_TEMPLATE_UPDATE
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
-        # elif key == "updateRate":
-        #     return Globals.GRID_UPDATE_RATE
         elif key == "enableGridUpdate":
             return Globals.ENABLE_GRID_UPDATE
         elif key == "windowSize":
@@ -1369,8 +934,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":
             return Globals.SHOW_PKG_NAME
-        # elif key == "getAppsForEachDevice":
-        #     return Globals.GET_APP_EACH_DEVICE
         elif key == "reachQueueStateOnly":
             return Globals.REACH_QUEUED_ONLY
         elif key == "colSize":
@@ -1385,8 +948,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.MAX_THREAD_COUNT
         elif key == "syncGridScroll":
             return Globals.MATCH_SCROLL_POS
-        # elif key == "immediateChild":
-        #     return Globals.GET_IMMEDIATE_SUBGROUPS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
