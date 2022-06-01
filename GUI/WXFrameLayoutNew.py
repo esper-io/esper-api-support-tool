@@ -420,12 +420,6 @@ class NewFrameLayout(wx.Frame):
         if isValid:
             matchingConfig = []
             if self.auth_data:
-                # matchingConfig = list(
-                #     filter(
-                #         lambda x: x[2] == entId or x[0] == name,
-                #         self.auth_data,
-                #     )
-                # )
                 matchingConfig = list(
                     filter(
                         lambda x: x["enterprise"] == entId or x["name"] == name,
@@ -1165,42 +1159,6 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(0)
         returnItem = None
         if os.path.isfile(configfile):
-            # with open(configfile, newline="") as csvfile:
-            #     auth_csv_reader = csv.DictReader(csvfile)
-            #     auth_csv_reader = list(auth_csv_reader)
-            #     maxRow = len(auth_csv_reader)
-            #     num = 1
-
-            #     # Handle empty File
-            #     if maxRow == 0:
-            #         self.Logging("--->ERROR: Empty Auth File, please add an Endpoint!")
-            #         self.AddEndpoint(None)
-            #         return
-
-            #     for row in auth_csv_reader:
-            #         self.setGaugeValue(int(float(num / maxRow) * 25))
-            #         num += 1
-            #         if "name" in row:
-            #             self.sidePanel.configChoice[row["name"]] = row
-            #             item = self.menubar.configMenu.Append(
-            #                 wx.ID_ANY, row["name"], row["name"], kind=wx.ITEM_CHECK
-            #             )
-            #             self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
-            #             self.menubar.configMenuOptions.append(item)
-            #             if str(getItemForName) == row["name"]:
-            #                 returnItem = item
-            #         else:
-            #             self.Logging(
-            #                 "--->ERROR: Please check that the Auth CSV is set up correctly!"
-            #             )
-            #             defaultConfigVal = self.menubar.configMenu.Append(
-            #                 wx.ID_NONE,
-            #                 "No Loaded Endpoints",
-            #                 "No Loaded Endpoints",
-            #             )
-            #             self.menubar.configMenuOptions.append(defaultConfigVal)
-            #             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
-            #             return
             if self.auth_data:
                 auth_csv_reader = self.auth_data
                 maxRow = len(auth_csv_reader)
@@ -1239,7 +1197,8 @@ class NewFrameLayout(wx.Frame):
             self.Logging(
                 "---> Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
             )
-            defaultConfigItem = self.menubar.configMenuOptions[0]
+            indx = Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
+            defaultConfigItem = self.menubar.configMenuOptions[indx]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
         else:
@@ -1312,11 +1271,17 @@ class NewFrameLayout(wx.Frame):
                 self.configMenuItem.GetItemLabelText()
             ]
 
+            indx = 0
+            found = False
             for item in self.configMenuItem.Menu.MenuItems:
                 if item != self.configMenuItem:
                     item.Check(False)
                 else:
                     item.Check(True)
+                    found = True
+                if not found:
+                    indx += 1
+            Globals.LAST_OPENED_ENDPOINT = indx
 
             filledIn = False
             for _ in range(Globals.MAX_RETRY):
@@ -2737,7 +2702,6 @@ class NewFrameLayout(wx.Frame):
                     ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
                 )
             self.AddEndpoint(None)
-        self.PopulateConfig()
 
         if self.kill:
             return
@@ -2764,6 +2728,7 @@ class NewFrameLayout(wx.Frame):
         else:
             createNewFile(self.prefPath)
             self.savePrefs(self.prefDialog)
+        self.PopulateConfig()
 
     @api_tool_decorator()
     def savePrefs(self, dialog):

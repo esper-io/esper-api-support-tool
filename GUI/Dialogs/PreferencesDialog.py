@@ -25,15 +25,12 @@ class PreferencesDialog(wx.Dialog):
             "limit",
             "offset",
             "gridDialog",
-            # "updateRate",
-            # "enableGridUpdate",
             "windowSize",
             "windowPosition",
             "isMaximized",
             "getAllApps",
             "showPkg",
             "reachQueueStateOnly",
-            # "getAppsForEachDevice",
             "gridDialog",
             "templateDialog",
             "templateUpdate",
@@ -43,7 +40,6 @@ class PreferencesDialog(wx.Dialog):
             "runCommandOn",
             "maxThread",
             "syncGridScroll",
-            "immediateChild",
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
@@ -57,6 +53,7 @@ class PreferencesDialog(wx.Dialog):
             "appVersionNameInsteadOfCode",
             "combineDeviceAndNetworkSheets",
             "showGroupPath",
+            "last_endpoint",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -890,6 +887,10 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_24.Set3StateValue(wx.CHK_UNCHECKED)
             Globals.SHOW_GROUP_PATH = False
+        if "last_endpoint" in self.prefs and self.prefs["last_endpoint"]:
+            Globals.LAST_OPENED_ENDPOINT = self.prefs["last_endpoint"]
+        else:
+            Globals.LAST_OPENED_ENDPOINT = 0
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
@@ -901,7 +902,7 @@ class PreferencesDialog(wx.Dialog):
             self.prefs = {}
 
         for key in self.prefKeys:
-            if key not in self.prefs.keys():
+            if key not in self.prefs.keys() or self.prefs[key] is None:
                 self.prefs[key] = self.getDefaultKeyValue(key)
 
         return self.prefs
@@ -974,6 +975,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
         elif key == "showGroupPath":
             return Globals.SHOW_GROUP_PATH
+        elif key == "last_endpoint":
+            return Globals.LAST_OPENED_ENDPOINT
         else:
             return None
 

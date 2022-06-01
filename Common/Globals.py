@@ -267,6 +267,7 @@ app = None
 csv_auth_path = ""
 
 """ Preferences """
+LAST_OPENED_ENDPOINT = -1
 SET_APP_STATE_AS_SHOW = False
 COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
