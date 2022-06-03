@@ -62,7 +62,7 @@ class BlueprintsDialog(wx.Dialog):
         sizer_5 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_2.Add(sizer_5, 1, wx.BOTTOM | wx.EXPAND, 5)
 
-        label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Endpoint:")
+        label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Tenant:")
         label_3.SetFont(
             wx.Font(
                 12,
@@ -138,7 +138,7 @@ class BlueprintsDialog(wx.Dialog):
         sizer_3 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_2.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Endpoint:")
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Tenant:")
         label_1.SetFont(
             wx.Font(
                 12,

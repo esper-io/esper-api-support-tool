@@ -44,7 +44,7 @@ class TemplateDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Endpoint:")
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Tenant:")
         sizer_5.Add(label_1, 0, 0, 0)
 
         self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)
@@ -53,7 +53,7 @@ class TemplateDialog(wx.Dialog):
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_6, 1, wx.EXPAND | wx.LEFT, 5)
 
-        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Endpoint:")
+        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Tenant:")
         sizer_6.Add(label_2, 0, 0, 0)
 
         self.choice_2 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)

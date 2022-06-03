@@ -468,7 +468,7 @@ class EsperTemplateUtil:
         try:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "Attempting to download %s to upload to endpoint" % app["packageName"],
+                "Attempting to download %s to upload to tenant" % app["packageName"],
             )
             file = "%s.apk" % app["applicationName"].replace("<", "").replace(">", "")
             deleteFile(file)

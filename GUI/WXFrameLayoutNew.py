@@ -402,7 +402,7 @@ class NewFrameLayout(wx.Frame):
                     except:
                         displayMessageBox(
                             (
-                                "ERROR: An error occured when attempting to add the endpoint. Check inputs values and your internet connection.",
+                                "ERROR: An error occured when attempting to add the tenant. Check inputs values and your internet connection.",
                                 wx.ICON_ERROR,
                             )
                         )
@@ -434,7 +434,7 @@ class NewFrameLayout(wx.Frame):
                     writer.writerow(csvRow)
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
-                displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
+                displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
                 self.auth_data = [
                     csvRow if x == matchingConfig["name"] else x for x in self.auth_data
@@ -449,7 +449,7 @@ class NewFrameLayout(wx.Frame):
                     writer.writerows(self.auth_data)
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
-                displayMessageBox(("Endpoint has been added", wx.ICON_INFORMATION))
+                displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
             else:
                 displayMessageBox(
                     (
@@ -1143,7 +1143,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, event=None, getItemForName=None):
         """Populates Configuration From CSV"""
-        self.Logging("--->Loading Endpoints from %s" % Globals.csv_auth_path)
+        self.Logging("--->Loading Tenants from %s" % Globals.csv_auth_path)
         if auth:
             if Globals.csv_auth_path != auth:
                 Globals.csv_auth_path = auth
@@ -1166,7 +1166,7 @@ class NewFrameLayout(wx.Frame):
 
                 # Handle empty File
                 if maxRow == 0:
-                    self.Logging("--->ERROR: Empty Auth File, please add an Endpoint!")
+                    self.Logging("--->ERROR: Empty Auth File, please add an Tenant!")
                     self.AddEndpoint(None)
                     return
 
@@ -1188,14 +1188,14 @@ class NewFrameLayout(wx.Frame):
                         )
                         defaultConfigVal = self.menubar.configMenu.Append(
                             wx.ID_NONE,
-                            "No Loaded Endpoints",
-                            "No Loaded Endpoints",
+                            "No Loaded Tenants",
+                            "No Loaded Tenants",
                         )
                         self.menubar.configMenuOptions.append(defaultConfigVal)
                         self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
                         return
             self.Logging(
-                "---> Please Select an Endpoint From the Configuartion Menu (defaulting to first Config)"
+                "---> Please Select an Tenant From the Configuartion Menu (defaulting to first Config)"
             )
             indx = Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
             defaultConfigItem = self.menubar.configMenuOptions[indx]
@@ -1208,7 +1208,7 @@ class NewFrameLayout(wx.Frame):
                 + " not found - PLEASE Quit and create configuration file"
             )
             defaultConfigVal = self.menubar.configMenu.Append(
-                wx.ID_NONE, "No Loaded Endpoints", "No Loaded Endpoints"
+                wx.ID_NONE, "No Loaded Tenants", "No Loaded Tenants"
             )
             self.menubar.configMenuOptions.append(defaultConfigVal)
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
@@ -2888,7 +2888,7 @@ class NewFrameLayout(wx.Frame):
         if Globals.SHOW_TEMPLATE_UPDATE:
             result = CheckboxMessageBox(
                 "Confirmation",
-                "The Template already exists on the destination endpoint.\nThe following apps are missing: %s\n\nWould you like to update th template?"
+                "The Template already exists on the destination tenant.\nThe following apps are missing: %s\n\nWould you like to update th template?"
                 % (missingApps if missingApps else None),
             )
             res = result.ShowModal()

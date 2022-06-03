@@ -735,7 +735,7 @@ def processDeviceGroupMove(deviceChunk, groupList):
             }
 
     if not results:
-        results["error"] = {"Error": "Failed to find devices to move, check endpoint."}
+        results["error"] = {"Error": "Failed to find devices to move, check tenant."}
     return results
 
 

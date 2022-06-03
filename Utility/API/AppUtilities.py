@@ -79,7 +79,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
     else:
         displayMessageBox(
             (
-                "Failed to find application! Please upload application (%s) to the endpoint."
+                "Failed to find application! Please upload application (%s) to the tenant."
                 % packageName,
                 wx.ICON_ERROR,
             )
@@ -122,7 +122,7 @@ def installAppOnGroups(packageName, version=None, groups=None):
     else:
         displayMessageBox(
             (
-                "Failed to find application! Please upload application (%s) to the endpoint."
+                "Failed to find application! Please upload application (%s) to the tenant."
                 % packageName,
                 wx.ICON_ERROR,
             )

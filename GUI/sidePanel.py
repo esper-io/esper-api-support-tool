@@ -44,7 +44,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Endpoint:")
+        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Tenant:")
         label_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,

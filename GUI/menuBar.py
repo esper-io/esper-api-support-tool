@@ -38,7 +38,7 @@ class ToolMenuBar(wx.MenuBar):
 
         # File Menu
         fileMenu = wx.Menu()
-        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
+        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Tenant\tCtrl+A")
         addPng = wx.Bitmap(resourcePath("Images/Menu/add.png"))
         foa.SetBitmap(addPng)
         self.fileOpenAuth = fileMenu.Append(foa)
@@ -69,10 +69,10 @@ class ToolMenuBar(wx.MenuBar):
         fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
         self.fileItem = fileMenu.Append(fi)
 
-        # Endpoint Menu
+        # Tenant Menu
         self.configMenu = wx.Menu()
         self.defaultConfigVal = self.configMenu.Append(
-            wx.ID_NONE, "No Loaded Endpoints", "No Loaded Endpoints"
+            wx.ID_NONE, "No Loaded Tenants", "No Loaded Tenants"
         )
         self.configMenuOptions.append(self.defaultConfigVal)
 
@@ -104,7 +104,7 @@ class ToolMenuBar(wx.MenuBar):
         cloneBlueprint = wx.MenuItem(
             self.cloneSubMenu,
             wx.ID_ANY,
-            "&Clone Blueprint Across Endpoints\tCtrl+Shift+B",
+            "&Clone Blueprint Across Tenants\tCtrl+Shift+B",
         )
         self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
@@ -236,7 +236,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")
         self.Append(self.userSubMenu, "&Users")
-        self.Append(self.configMenu, "&Endpoints")
+        self.Append(self.configMenu, "&Tenants")
         self.Append(runMenu, "&Run")
         self.Append(helpMenu, "&Help")
 
