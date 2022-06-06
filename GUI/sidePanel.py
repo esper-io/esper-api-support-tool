@@ -419,7 +419,6 @@ class SidePanel(wx.Panel):
                         self.selectedDevices.Append(deviceName)
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
-            # self.parentFrame.onDeviceSelections(None)
 
     def clearStoredApps(self):
         self.apps = []

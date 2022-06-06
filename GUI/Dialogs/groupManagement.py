@@ -969,6 +969,3 @@ class GroupManagement(wx.Dialog):
             for child in children:
                 self.getGroupCSV(child, id, gridData)
 
-    # def ShowModal(self):
-    #     self.createTreeLayout()
-    #     return wx.Dialog.ShowModal(self)

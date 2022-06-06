@@ -106,7 +106,6 @@ def get_all_devices(
             response.next = None
             response.prev = None
         elif type(response) is dict and "results" in response:
-            # response["results"] = response["results"] + devices
             response["next"] = None
             response["prev"] = None
             for device in devices:
@@ -129,7 +128,6 @@ def fetchDevicesFromGroup(
         ):
             api_response.results += resp.results
         else:
-            # api_response["results"] += resp["results"]
             for device in resp["results"]:
                 if device not in api_response["results"]:
                     api_response["results"].append(device)

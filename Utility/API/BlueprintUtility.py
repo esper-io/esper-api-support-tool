@@ -352,6 +352,9 @@ def uploadingMissingBlueprintApps(
             # TODO: download link might have expired reobtain and try again?
             ApiToolLog().LogError(e)
             print(e)
+            # toApps = getAllApplicationsForHost(
+            #     getEsperConfig(toConfig["apiHost"], toConfig["apiKey"]), toConfig["enterprise"]
+            # )
         num += 1
         if os.path.exists(file):
             postEventToFrame(

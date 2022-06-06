@@ -24,8 +24,6 @@ from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from Utility.deviceInfo import constructNetworkInfo
 
-# from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
-
 
 class GridPanel(wx.Panel):
     def __init__(self, parentFrame, *args, **kw):
@@ -600,7 +598,6 @@ class GridPanel(wx.Panel):
         ]
 
         grid_win = self.grid_1.GetTargetWindow()
-        # grid_win2 = self.grid_2.GetTargetWindow()
 
         x, y = self.grid_1.CalcUnscrolledPosition(event.GetX(), event.GetY())
         coords = self.grid_1.XYToCell(x, y)
@@ -675,7 +672,6 @@ class GridPanel(wx.Panel):
             if res == wx.ID_APPLY:
                 selected = dialog.getSelected()
                 for page in pageGridDict.keys():
-                    # checkbox = dialog.getCheckBox(page)
                     for label, isChecked in selected[page].items():
                         if page == "Device":
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
@@ -693,7 +689,6 @@ class GridPanel(wx.Panel):
                                 indx, showState=isChecked
                             )
                             self.grid2ColVisibility[label] = isChecked
-                # self.parentFrame.savePrefs(self.parentFrame.prefDialog)
 
         self.parentFrame.prefDialog.colVisibilty = (
             self.grid1ColVisibility,

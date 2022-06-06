@@ -8,9 +8,6 @@ from Common.decorator import api_tool_decorator
 from Utility import wxThread
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
-
-# from Utility.API.EsperAPICalls import searchForMatchingDevices
-
 from Utility.Resource import displayMessageBox, getHeader
 from Utility.Web.WebRequests import performPostRequestWithRetry
 

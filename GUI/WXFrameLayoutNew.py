@@ -849,40 +849,6 @@ class NewFrameLayout(wx.Frame):
             deviceGridData.append(rowValues)
         return deviceGridData
 
-    # @api_tool_decorator()
-    # def saveAppInfo(self, event):
-    #     if type(event) is str:
-    #         self.setCursorBusy()
-    #         self.toggleEnabledState(False)
-    #         self.gridPanel.disableGridProperties()
-    #         thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (event))
-    #         thread.startWithRetry()
-    #         return True
-    #     if self.gridPanel.grid_3.GetNumberRows() > 0:
-    #         dlg = wx.FileDialog(
-    #             self,
-    #             message="Save App Info CSV...",
-    #             defaultFile="",
-    #             wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
-    #             defaultDir=str(self.defaultDir),
-    #             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-    #         )
-    #         result = dlg.ShowModal()
-    #         inFile = dlg.GetPath()
-    #         dlg.DestroyLater()
-
-    #         if result == wx.ID_OK:  # Save button was pressed
-    #             self.setCursorBusy()
-    #             self.toggleEnabledState(False)
-    #             self.gridPanel.disableGridProperties()
-    #             thread = wxThread.GUIThread(self, self.saveAppInfoAsFile, (inFile))
-    #             thread.startWithRetry()
-    #             return True
-    #         elif (
-    #             result == wx.ID_CANCEL
-    #         ):  # Either the cancel button was pressed or the window was closed
-    #             return False
-
     def saveAppInfoAsFile(self, inFile):
         gridData = []
         gridData.append(Globals.CSV_APP_ATTR_NAME)
@@ -1352,7 +1318,6 @@ class NewFrameLayout(wx.Frame):
                     )
                     blueprints.start()
                     threads = [groupThread, appThread, blueprints]
-                    # self.loadConfigCheckBlueprint(config)
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
@@ -1372,7 +1337,6 @@ class NewFrameLayout(wx.Frame):
             Globals.IS_TOKEN_VALID = True
             if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
                 Globals.IS_TOKEN_VALID = False
-                # self.promptForNewToken()
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
                     (self.promptForNewToken),
@@ -1473,7 +1437,6 @@ class NewFrameLayout(wx.Frame):
             )
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
-            # TODO: FIX
             if self.WINDOWS:
                 if self.gridPanel.grid_1.IsFrozen():
                     self.gridPanel.grid_1.Thaw()
@@ -1742,10 +1705,6 @@ class NewFrameLayout(wx.Frame):
         )
         thread.startWithRetry()
         return thread
-
-    # def fetchAllApps(self):
-    #     resp = getAllApplications()
-    #     self.addAppsToAppChoice(resp)
 
     @api_tool_decorator(locks=[Globals.token_lock])
     def fetchAllInstallableApps(self):
@@ -2200,7 +2159,6 @@ class NewFrameLayout(wx.Frame):
                 result,
             ) as dialog:
                 res = dialog.ShowModal()
-        # wx.CallLater(3000, self.setGaugeValue, 0)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
             (wx.CallLater, (3000, self.setGaugeValue, 0)),
@@ -2465,53 +2423,6 @@ class NewFrameLayout(wx.Frame):
             name="waitForThreadsThenSetCursorDefault_3",
         ).startWithRetry()
 
-    # @api_tool_decorator()
-    # def onDeviceSelections(self, event):
-    #     """ When the user selects a device showcase apps related to that device """
-    #     self.menubar.setSaveMenuOptionsEnableState(False)
-    #     self.SetFocus()
-    #     self.gauge.Pulse()
-    #     self.setCursorBusy()
-    #     if len(self.sidePanel.selectedDevicesList) > 0 and Globals.GET_APP_EACH_DEVICE:
-    #         self.sidePanel.runBtn.Enable(False)
-    #         wxThread.GUIThread(
-    #             self,
-    #             self.addDevicesApps,
-    #             args=None,
-    #             eventType=eventUtil.myEVT_COMPLETE,
-    #             eventArg=(not self.isRunning and not self.isSavingPrefs),
-    #             sendEventArgInsteadOfResult=True,
-    #             name="addDeviceApps",
-    #         ).start()
-    #     else:
-    #         evt = eventUtil.CustomEvent(eventUtil.myEVT_COMPLETE, -1, True)
-    #         wx.PostEvent(self, evt)
-
-    # @api_tool_decorator()
-    # def addDevicesApps(self):
-    #     num = 1
-    #     appAdded = False
-    #     self.sidePanel.selectedDeviceApps = []
-    #     if not Globals.USE_ENTERPRISE_APP:
-    #         self.sidePanel.apps = self.sidePanel.enterpriseApps
-    #     else:
-    #         self.sidePanel.apps = (
-    #             self.sidePanel.selectedDeviceApps + self.sidePanel.enterpriseApps
-    #         )
-    #     for deviceId in self.sidePanel.selectedDevicesList:
-    #         _, _ = getdeviceapps(
-    #             deviceId, createAppList=True, useEnterprise=Globals.USE_ENTERPRISE_APP
-    #         )
-    #         if len(self.sidePanel.selectedDevicesList) > 0:
-    #             self.setGaugeValue(
-    #                 int(float(num / len(self.sidePanel.selectedDevicesList)) * 100)
-    #             )
-    #         num += 1
-    #     if not appAdded:
-    #         self.sidePanel.selectedApp.Append("No available app(s) on this device")
-    #         self.sidePanel.selectedApp.SetSelection(0)
-    #     self.menubar.setSaveMenuOptionsEnableState(True)
-
     @api_tool_decorator()
     def MacReopenApp(self, event):
         """Called when the doc icon is clicked, and ???"""
@@ -2616,13 +2527,11 @@ class NewFrameLayout(wx.Frame):
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (wx.CallLater, (3000, self.setGaugeValue, 0)),
             )
-            # wx.CallLater(3000, self.setGaugeValue, 0)
         if cmdResults:
             self.onCommandDone(cmdResults)
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
-        # gc.collect()
         self.sleepInhibitor.uninhibit()
         if hasattr(self, "start_time"):
             print("Run Execution time: %s" % (time.time() - self.start_time))
@@ -2671,12 +2580,8 @@ class NewFrameLayout(wx.Frame):
             if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
                 crypto().decrypt(Globals.csv_auth_path, self.key, True)
             with open(Globals.csv_auth_path, "r") as csvFile:
-                # reader = csv.reader(
-                #     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                # )
                 auth_csv_reader = csv.DictReader(csvFile)
                 self.auth_data = list(auth_csv_reader)
-                # self.auth_data = list(reader)
             self.auth_data = sorted(
                 self.auth_data,
                 key=lambda i: list(map(str, i["name"].lower())),

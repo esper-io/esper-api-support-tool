@@ -9,7 +9,6 @@ from Utility.Resource import getStrRatioSimilarity
 
 class ColumnVisibility(wx.Dialog):
     def __init__(self, parent, pageGridDict={}, colLabelException={}):
-        # begin wxGlade: ColumnVisibility.__init__
         super(ColumnVisibility, self).__init__(
             parent,
             wx.ID_ANY,

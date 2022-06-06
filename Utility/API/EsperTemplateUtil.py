@@ -291,7 +291,6 @@ class EsperTemplateUtil:
                 apps = getAllApplicationsForHost(
                     getEsperConfig(self.toApi, self.toKey), self.toEntId
                 ).results
-            # newTemplate["application"]["apps"] = []
             self.processApplications(template, newTemplate, apps)
         if (
             not newTemplate["application"]["startOnBoot"]
@@ -337,7 +336,6 @@ class EsperTemplateUtil:
             if ("isGPlay" in app and app["isGPlay"]) or (
                 "is_g_play" in app and app["is_g_play"]
             ):
-                # newTemplate["application"]["apps"].append(app)
                 pass
             else:
                 found = False

@@ -75,7 +75,6 @@ class BlueprintsDialog(wx.Dialog):
         )
         sizer_5.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        # self.combo_box_3 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_3 = PromptingComboBox(
             self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT
         )
@@ -100,7 +99,6 @@ class BlueprintsDialog(wx.Dialog):
         )
         sizer_6.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        # self.combo_box_4 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_4 = PromptingComboBox(
             self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
         )
@@ -151,7 +149,6 @@ class BlueprintsDialog(wx.Dialog):
         )
         sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        # self.combo_box_1 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_1 = PromptingComboBox(
             self.panel_1, "", choices=choices, style=wx.CB_DROPDOWN | wx.CB_SORT
         )
@@ -173,7 +170,6 @@ class BlueprintsDialog(wx.Dialog):
         )
         sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        # self.combo_box_2 = wx.ComboBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY | wx.CB_SORT)
         self.combo_box_2 = PromptingComboBox(
             self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
         )

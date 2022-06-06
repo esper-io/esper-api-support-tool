@@ -356,7 +356,6 @@ def getAllAppVersionsForHost(
                     enterprise_id,
                     limit=Globals.limit,
                     offset=0,
-                    # is_hidden=False,
                 )
                 ApiToolLog().LogApiRequestOccurrence(
                     "getAllAppVersionsForHost",
@@ -590,30 +589,6 @@ def getAppDictEntry(app, update=True):
             and "device" not in app
         ):
             entry["isValid"] = True
-            # if (
-            #     "latest_version" in app
-            #     and app["latest_version"]
-            #     and "icon_url" in app["latest_version"]
-            #     and
-            #     ((
-            #         app["latest_version"]["icon_url"]
-            #         and (
-            #             "amazonaws" in app["latest_version"]["icon_url"]
-            #             or "googleusercontent" in app["latest_version"]["icon_url"]
-            #         )
-            #     ) or "hash_string" in app["latest_version"])
-            # ) or (
-            #     "versions" in app
-            #     and app["versions"]
-            #     and "icon_url" in app["versions"]
-            #     and app["versions"]["icon_url"]
-            #     and "amazonaws" in app["versions"]["icon_url"]
-            # ):
-            #     entry["isValid"] = True
-            # else:
-            #     validApp = getApplication(entry["id"])
-            #     if hasattr(validApp, "results"):
-            #         validApp = validApp.results[0] if validApp.results else validApp
 
     if (
         hasattr(validApp, "id")
