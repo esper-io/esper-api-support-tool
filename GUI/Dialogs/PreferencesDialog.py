@@ -435,8 +435,10 @@ class PreferencesDialog(wx.Dialog):
     @api_tool_decorator()
     def onClose(self, event):
         if event.EventType != wx.EVT_CLOSE.typeId:
-            self.Close()
-        self.DestroyLater()
+            if self.IsModal():
+                self.EndModal(event.EventObject.Id)
+            elif self.IsShown():
+                self.Close()
 
     @api_tool_decorator()
     def showMatchingPanel(self, event):
