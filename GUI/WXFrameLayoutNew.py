@@ -2369,7 +2369,7 @@ class NewFrameLayout(wx.Frame):
                         device, deviceInfo, deviceInfo["appObj"]
                     )
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) > Globals.MAX_GRID_LOAD + 1:
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
                     if self.WINDOWS:
                         deviceThread = wxThread.GUIThread(
                             self,
