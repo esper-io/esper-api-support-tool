@@ -1163,7 +1163,9 @@ class NewFrameLayout(wx.Frame):
             self.Logging(
                 "---> Please Select an Tenant From the Configuartion Menu (defaulting to first Config)"
             )
-            indx = Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
+            indx = (
+                Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
+            )
             defaultConfigItem = self.menubar.configMenuOptions[indx]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -1248,6 +1250,8 @@ class NewFrameLayout(wx.Frame):
                 if not found:
                     indx += 1
             Globals.LAST_OPENED_ENDPOINT = indx
+            if self.prefDialog:
+                self.prefDialog.SetPref("last_endpoint", Globals.LAST_OPENED_ENDPOINT)
 
             filledIn = False
             for _ in range(Globals.MAX_RETRY):

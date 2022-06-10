@@ -910,6 +910,10 @@ class PreferencesDialog(wx.Dialog):
         return self.prefs
 
     @api_tool_decorator()
+    def SetPref(self, pref, value):
+        self.prefs[pref] = value
+
+    @api_tool_decorator()
     def getDefaultKeyValue(self, key):
         if key == "enableDevice":
             return True
