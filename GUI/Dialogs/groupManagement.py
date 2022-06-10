@@ -968,4 +968,3 @@ class GroupManagement(wx.Dialog):
                     gridData.append(data)
             for child in children:
                 self.getGroupCSV(child, id, gridData)
-

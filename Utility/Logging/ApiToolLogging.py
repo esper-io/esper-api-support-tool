@@ -193,7 +193,11 @@ class ApiToolLog:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
 
-        if Globals.IS_DEBUG or "Invalid token" in str(excpt):
+        if (
+            Globals.IS_DEBUG
+            or "Invalid token" in str(excpt)
+            or "ConnectionError" in str(excpt)
+        ):
             return
 
         self.tracker_lock.acquire()
@@ -204,7 +208,13 @@ class ApiToolLog:
             content.insert(0, str(excpt))
         content.append("EAST Version:\t%s" % Globals.VERSION)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        body = "\n".join(str(entry).replace(os.getcwd(), "<user_path>").replace(dir_path, "<user_path>").replace(os.path.expanduser('~'), "<user_path>") for entry in content)
+        body = "\n".join(
+            str(entry)
+            .replace(os.getcwd(), "<user_path>")
+            .replace(dir_path, "<user_path>")
+            .replace(os.path.expanduser("~"), "<user_path>")
+            for entry in content
+        )
 
         if isinstance(excpt, Exception):
             title = repr(excpt)
