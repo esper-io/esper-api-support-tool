@@ -619,7 +619,18 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
         if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
-                size = tuple(int(num) for num in self.prefs["windowSize"])
+                size = Globals.MIN_SIZE
+                try:
+                    size = tuple(
+                        int(num)
+                        for num in self.prefs["windowSize"]
+                        .replace("(", "")
+                        .replace(")", "")
+                        .replace("...", "")
+                        .split(", ")
+                    )
+                except:
+                    size = tuple(int(num) for num in self.prefs["windowSize"])
                 self.parent.SetSize(size)
         if "isMaximized" in self.prefs and self.prefs["isMaximized"] and onBoot:
             if self.parent:
