@@ -9,7 +9,7 @@ class GeneralActions(Enum):
     # REPORTS
     SHOW_ALL_AND_GENERATE_REPORT = 1
     GENERATE_DEVICE_REPORT = 2
-    GENERATE_APP_REPORT = 2
+    GENERATE_APP_REPORT = 3
     GENERATE_INFO_REPORT = 4
 
     # Actions
