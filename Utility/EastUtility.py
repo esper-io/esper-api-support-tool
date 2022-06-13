@@ -566,9 +566,9 @@ def populateDeviceInfoDictionary(
     else:
         deviceInfo["Tags"] = ""
 
-        if hasattr(device, "tags") and device.tags is None:
+        if hasattr(device, "tags") and (device.tags is None or (type(device.tags) is list and not device.tags)):
             device.tags = []
-        elif device and "tags" in device and device["tags"] is None:
+        elif device and hasattr(device, "__iter__") and "tags" in device and (device["tags"] is None or (type(device["tags"]) is list and not device["tags"])):
             device["tags"] = []
 
     if hasattr(appThread, "is_alive") and appThread.is_alive():
