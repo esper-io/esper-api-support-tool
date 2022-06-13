@@ -537,7 +537,7 @@ class NewFrameLayout(wx.Frame):
                 newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
                 inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
                 thread = wxThread.GUIThread(
-                    self, self.saveAppInfo, (inFile), name="saveAppFile"
+                    self, self.saveAppInfoAsFile, (inFile), name="saveAppFile"
                 )
                 thread.startWithRetry()
             dlg.DestroyLater()
