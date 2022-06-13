@@ -1175,12 +1175,21 @@ class NewFrameLayout(wx.Frame):
             self.Logging(
                 "---> Please Select an Tenant From the Configuartion Menu (defaulting to first Config)"
             )
-            indx = (
-                Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
-            )
-            if indx > len(self.menubar.configMenuOptions):
-                indx = len(self.menubar.configMenuOptions) - 1
-                Globals.LAST_OPENED_ENDPOINT = indx
+            indx = 0
+            if type(Globals.LAST_OPENED_ENDPOINT) is str:
+                found = False
+                for item in self.menubar.configMenuOptions:
+                    if item.GetItemLabelText() == Globals.LAST_OPENED_ENDPOINT:
+                        found = True
+                        break
+                    indx += 1
+                if not found:
+                    indx = 0
+            else:
+                indx = Globals.LAST_OPENED_ENDPOINT
+                if indx > len(self.menubar.configMenuOptions):
+                    indx = len(self.menubar.configMenuOptions) - 1
+                    Globals.LAST_OPENED_ENDPOINT = indx
             defaultConfigItem = self.menubar.configMenuOptions[indx]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
@@ -1256,15 +1265,17 @@ class NewFrameLayout(wx.Frame):
 
             indx = 0
             found = False
+            foundItem = None
             for item in self.configMenuItem.Menu.MenuItems:
                 if item != self.configMenuItem:
                     item.Check(False)
                 else:
                     item.Check(True)
                     found = True
+                    foundItem = item
                 if not found:
                     indx += 1
-            Globals.LAST_OPENED_ENDPOINT = indx
+            Globals.LAST_OPENED_ENDPOINT = foundItem.GetItemLabelText()
             if self.prefDialog:
                 self.prefDialog.SetPref("last_endpoint", Globals.LAST_OPENED_ENDPOINT)
 

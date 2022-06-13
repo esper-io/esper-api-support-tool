@@ -489,7 +489,7 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            "windowSize": self.parent.GetSize() if self.parent else Globals.MIN_SIZE,
+            "windowSize": tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
             if self.parent
             else str(wx.CENTRE),
@@ -563,9 +563,6 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.USE_ENTERPRISE_APP = True
 
-        if Globals.ENABLE_GRID_UPDATE and self.parent is not None:
-            self.parent.startUpdateThread()
-
         if self.parent:
             if self.checkbox_10.IsChecked():
                 self.parent.gridPanel.enableGridProperties(True, True, False)
@@ -622,14 +619,7 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
         if "windowSize" in self.prefs and self.prefs["windowSize"] and onBoot:
             if self.parent:
-                size = tuple(
-                    int(num)
-                    for num in self.prefs["windowSize"]
-                    .replace("(", "")
-                    .replace(")", "")
-                    .replace("...", "")
-                    .split(", ")
-                )
+                size = tuple(int(num) for num in self.prefs["windowSize"])
                 self.parent.SetSize(size)
         if "isMaximized" in self.prefs and self.prefs["isMaximized"] and onBoot:
             if self.parent:
@@ -911,7 +901,8 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def SetPref(self, pref, value):
-        self.prefs[pref] = value
+        if self.prefs:
+            self.prefs[pref] = value
 
     @api_tool_decorator()
     def getDefaultKeyValue(self, key):
@@ -929,8 +920,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHOW_TEMPLATE_UPDATE
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
-        elif key == "enableGridUpdate":
-            return Globals.ENABLE_GRID_UPDATE
         elif key == "windowSize":
             return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":
