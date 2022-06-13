@@ -426,6 +426,8 @@ class NewFrameLayout(wx.Frame):
                         self.auth_data,
                     )
                 )
+                if matchingConfig:
+                    matchingConfig = matchingConfig[0]
             if (
                 not self.auth_data or csvRow not in self.auth_data
             ) and not matchingConfig:
@@ -439,14 +441,24 @@ class NewFrameLayout(wx.Frame):
                 self.auth_data = [
                     csvRow if x == matchingConfig["name"] else x for x in self.auth_data
                 ]
-                tmp = []
+                tmp = [
+                    [
+                        "name",
+                        "apiHost",
+                        "enterprise",
+                        "apiKey",
+                        "apiPrefix"
+                    ]
+                ]
                 for auth in self.auth_data:
-                    if auth not in tmp:
-                        tmp.append(auth)
-                self.auth_data = tmp
+                    authEntry = []
+                    for val in auth.values():
+                        authEntry.append(val)
+                    if authEntry not in tmp:
+                        tmp.append(authEntry)
                 with open(self.authPath, "w", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerows(self.auth_data)
+                    writer.writerows(tmp)
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
@@ -1146,7 +1158,7 @@ class NewFrameLayout(wx.Frame):
                         )
                         self.Bind(wx.EVT_MENU, self.loadConfiguartion, item)
                         self.menubar.configMenuOptions.append(item)
-                        if str(getItemForName) == row["name"]:
+                        if str(getItemForName) == row["name"] or str(getItemForName).lower() == row["name"].lower():
                             returnItem = item
                     else:
                         self.Logging(
@@ -1166,6 +1178,9 @@ class NewFrameLayout(wx.Frame):
             indx = (
                 Globals.LAST_OPENED_ENDPOINT if Globals.LAST_OPENED_ENDPOINT >= 0 else 0
             )
+            if indx > len(self.menubar.configMenuOptions):
+                indx = len(self.menubar.configMenuOptions) - 1
+                Globals.LAST_OPENED_ENDPOINT = indx
             defaultConfigItem = self.menubar.configMenuOptions[indx]
             defaultConfigItem.Check(True)
             self.loadConfiguartion(defaultConfigItem)
