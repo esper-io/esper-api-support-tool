@@ -300,7 +300,7 @@ class SidePanel(wx.Panel):
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")[3].replace("Enterprise = ", "")
-            result = list(filter(lambda x: value in x, self.parentFrame.auth_data))
+            result = list(filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data))
             if result:
                 result = result[0]
             if value:
@@ -310,7 +310,23 @@ class SidePanel(wx.Panel):
                     style=wx.YES_NO | wx.ICON_WARNING,
                 )
                 if res == wx.YES:
-                    self.parentFrame.auth_data.remove(result)
+                    if result in self.parentFrame.auth_data:
+                        self.parentFrame.auth_data.remove(result)
+                    data = [
+                        [
+                            "name",
+                            "apiHost",
+                            "enterprise",
+                            "apiKey",
+                            "apiPrefix"
+                        ]
+                    ]
+                    for entry in self.parentFrame.auth_data:
+                        authEntry = []
+                        for auth in entry.values():
+                            authEntry.append(auth)
+                        if authEntry not in data:
+                            data.append(authEntry)
                     with open(self.parentFrame.authPath, "w", newline="") as csvfile:
                         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                         writer.writerows(self.parentFrame.auth_data)
