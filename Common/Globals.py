@@ -254,6 +254,7 @@ CSV_APP_ATTR_NAME = [
 BLACKLIST_PACKAGE_NAME = [
     "io.shoonya.shoonyadpc",
     "io.esper.remoteviewer",
+    "io.shoonya.helper"
 ]
 WHITELIST_AP = []
 
