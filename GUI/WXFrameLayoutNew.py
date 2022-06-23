@@ -1247,6 +1247,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.search.SetValue("")
         self.sidePanel.clearStoredApps()
         self.toggleEnabledState(False)
+        self.sidePanel.notebook_1.SetSelection(0)
         self.setCursorBusy()
 
         for thread in threading.enumerate():
@@ -1580,12 +1581,20 @@ class NewFrameLayout(wx.Frame):
             )
         if results and len(results):
             for group in results:
-                if group.name not in self.sidePanel.groups:
-                    self.sidePanel.groups[group.name] = group.id
-                else:
-                    self.sidePanel.groups[group.path] = group.id
-                if group.id not in Globals.knownGroups:
-                    Globals.knownGroups[group.id] = group
+                if hasattr(group, "name"):
+                    if group.name not in self.sidePanel.groups:
+                        self.sidePanel.groups[group.name] = group.id
+                    else:
+                        self.sidePanel.groups[group.path] = group.id
+                    if group.id not in Globals.knownGroups:
+                        Globals.knownGroups[group.id] = group
+                elif type(group) is dict:
+                    if group["name"] not in self.sidePanel.groups:
+                        self.sidePanel.groups[group["name"]] = group["id"]
+                    else:
+                        self.sidePanel.groups[group["path"]] = group["id"]
+                    if group["id"] not in Globals.knownGroups:
+                        Globals.knownGroups[group["id"]] = group
                 self.setGaugeValue(50 + int(float(num / len(results)) * 25))
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
@@ -1597,6 +1606,7 @@ class NewFrameLayout(wx.Frame):
         self.menubar.setSaveMenuOptionsEnableState(False)
         self.SetFocus()
         self.Logging("--->Attempting to populate devices of selected group(s)")
+        self.sidePanel.deviceChoice.Enable(False)
         self.setCursorBusy()
         if not self.preferences or (
             "enableDevice" in self.preferences and self.preferences["enableDevice"]
@@ -1729,6 +1739,7 @@ class NewFrameLayout(wx.Frame):
     def PopulateApps(self):
         """ Populate App Choice """
         self.Logging("--->Attempting to populate apps...")
+        self.sidePanel.appChoice.Enable(False)
         self.setCursorBusy()
         thread = wxThread.GUIThread(
             self, self.fetchAllInstallableApps, None, name="PopulateApps"
@@ -1743,6 +1754,7 @@ class NewFrameLayout(wx.Frame):
         if Globals.IS_TOKEN_VALID:
             resp = getAllInstallableApps()
             self.addAppsToAppChoice(resp)
+            self.sidePanel.appChoice.Enable(True)
 
     def addAppstoAppChoiceThread(self, event):
         api_response = None

@@ -197,6 +197,8 @@ class ApiToolLog:
             Globals.IS_DEBUG
             or "Invalid token" in str(excpt)
             or "ConnectionError" in str(excpt)
+            or "HTTP Response" in str(excpt)
+            or "Bad Gateway" in str(excpt)
         ):
             return
 

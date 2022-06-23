@@ -648,14 +648,14 @@ class PreferencesDialog(wx.Dialog):
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower() == "false"
             ) or not self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = False
-                self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
+                Globals.USE_ENTERPRISE_APP = True
+                self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
             elif (
                 isinstance(self.prefs["getAllApps"], str)
                 and self.prefs["getAllApps"].lower()
             ) == "true" or self.prefs["getAllApps"]:
-                Globals.USE_ENTERPRISE_APP = True
-                self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.USE_ENTERPRISE_APP = False
+                self.checkbox_2.Set3StateValue(wx.CHK_CHECKED)
             else:
                 Globals.USE_ENTERPRISE_APP = True
                 self.checkbox_2.Set3StateValue(wx.CHK_UNCHECKED)
