@@ -1302,10 +1302,6 @@ def getAllDeviceInfo(frame):
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
-    if not Globals.SHOW_DISABLED_DEVICES:
-        api_response["results"] = list(
-            filter(filterDeviceList, api_response["results"])
-        )
     for device in api_response["results"]:
         Globals.THREAD_POOL.enqueue(perform_web_requests, (
             getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
