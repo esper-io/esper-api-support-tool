@@ -1301,31 +1301,43 @@ def getAllDeviceInfo(frame):
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
-    threads = []
-    if devices:
-        number_of_devices = 0
-        maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
-        splitResults = splitListIntoChunks(devices, maxThread=maxThread)
 
-        for chunk in splitResults:
-            t = wxThread.GUIThread(
-                frame,
-                processDevices,
-                args=(chunk, number_of_devices, -1, True, True),
-                name="processDevices",
-            )
-            threads.append(t)
-            t.startWithRetry()
-            number_of_devices += len(chunk)
+    if not Globals.SHOW_DISABLED_DEVICES:
+        api_response["results"] = list(
+            filter(filterDeviceList, api_response["results"])
+        )
+    for device in api_response["results"]:
+        Globals.THREAD_POOL.enqueue(perform_web_requests, (
+            getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
+            getHeader(),
+            "GET",
+            None
+        ))
+    Globals.THREAD_POOL.join()
+    appResp = Globals.THREAD_POOL.results()
 
-    joinThreadList(threads)
+    for device in api_response["results"]:
+        Globals.THREAD_POOL.enqueue(perform_web_requests, (
+            getLatestEventApiUrl(device["id"]),
+            getHeader(),
+            "GET",
+            None
+        ))
+    Globals.THREAD_POOL.join()
+    latestResp = Globals.THREAD_POOL.results()
 
     deviceList = {}
-    for thread in threads:
-        if type(thread.result) == tuple:
-            deviceList = {**deviceList, **thread.result[1]}
-            val = (len(thread.result[1]) / len(devices)) * 50
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, val)
+    indx = 0
+    for device in api_response["results"]:
+        deviceInfo = {}
+        appData = appResp[indx] if len(appResp) > indx else None
+        latestData = latestResp[indx] if len(latestResp) > indx else None
+        if latestData and "results" in latestData and latestData["results"]:
+            latestData = latestData["results"][0]["data"]
+        populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+        deviceInfo["num"] = indx
+        deviceList[indx] = [device, deviceInfo]
+        indx += 1
 
     return deviceList
 
