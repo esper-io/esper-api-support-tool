@@ -24,6 +24,7 @@ from Utility.Resource import (
 )
 
 from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
     performGetRequestWithRetry,
     performPostRequestWithRetry,
 )
@@ -74,7 +75,8 @@ def getAllBlueprints():
 @api_tool_decorator()
 def getAllBlueprintsFromHost(host, key, enterprise):
     response = getAllBlueprintsFromHostHelper(host, key, enterprise, Globals.limit, 0)
-    blueprints = getAllFromOffsets(getAllBlueprintsFromHostHelper, None, response)
+    # blueprints = getAllFromOffsets(getAllBlueprintsFromHostHelper, None, response)
+    blueprints = getAllFromOffsetsRequests(response)
     if hasattr(response, "results"):
         response.results = response.results + blueprints
         response.next = None

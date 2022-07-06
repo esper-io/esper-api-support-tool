@@ -19,12 +19,23 @@ from Utility.Resource import (
 
 from esperclient.rest import ApiException
 
-from Utility.Web.WebRequests import performGetRequestWithRetry
+from Utility.Web.WebRequests import getAllFromOffsetsRequests, performGetRequestWithRetry
 
 
 @api_tool_decorator()
 def getDeviceDetail(deviceId):
     return getInfo("?format=json&show_policy=true", deviceId)
+
+
+def getLatestEventApiUrl(deviceId):
+    return (
+        Globals.BASE_DEVICE_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            device_id=deviceId,
+        )
+        + Globals.DEVICE_STATUS_REQUEST_EXTENSION
+    )
 
 
 @api_tool_decorator()
@@ -98,9 +109,10 @@ def get_all_devices(
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
-        devices = getAllFromOffsets(
-            get_all_devices_helper, groupToUse, response, maxAttempt
-        )
+        # devices = getAllFromOffsets(
+        #     get_all_devices_helper, groupToUse, response, maxAttempt
+        # )
+        devices = getAllFromOffsetsRequests(response)
         if hasattr(response, "results"):
             response.results = response.results + devices
             response.next = None

@@ -9,7 +9,7 @@ from Utility.API.AppUtilities import (
 )
 from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 import Common.Globals as Globals
 

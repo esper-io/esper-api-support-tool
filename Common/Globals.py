@@ -6,13 +6,15 @@ import platform
 
 from Common.enum import GridActions, GeneralActions
 
+from Utility.Threading.ThreadPoolQueue import Pool
+
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.194"
+VERSION = "v0.1941"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -31,6 +33,9 @@ MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 PRINT_API_LOGS = False
+
+THREAD_POOL = Pool(MAX_THREAD_COUNT)
+THREAD_POOL.run()
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently

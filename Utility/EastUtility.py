@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 
+# import multiprocessing
 import esperclient
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+# from Utility.Web.WebRequests import perform_web_requests
+import Utility.Threading.wxThread as wxThread
 import threading
 import wx
 import platform
@@ -19,20 +21,23 @@ from datetime import datetime
 
 from esperclient.models.v0_command_args import V0CommandArgs
 
-from Utility.API.AppUtilities import uploadApplication
+from Utility.API.AppUtilities import getDeviceAppsApiUrl, uploadApplication
 from Utility.API.DeviceUtility import (
     getAllDevices,
     getDeviceById,
     getDeviceDetail,
     getLatestEvent,
+    getLatestEventApiUrl,
 )
 from Utility.API.GroupUtility import fetchGroupName
 from Utility.API.CommandUtility import executeCommandOnDevice
+from Utility.Web.WebRequests import perform_web_requests
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
+    getHeader,
     joinThreadList,
     limitActiveThreads,
     postEventToFrame,
@@ -129,8 +134,6 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             frame.gridArrowState["prev"] = False
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
-    number_of_devices = 0
-    maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
 
     getApps = (
         action == GeneralActions.GENERATE_APP_REPORT.value
@@ -144,36 +147,48 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
     if hasattr(api_response, "results") and len(api_response.results):
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(filter(filterDeviceList, api_response.results))
-        splitResults = splitListIntoChunks(api_response.results, maxThread=maxThread)
-
-        threads = []
-        for chunk in splitResults:
-            t = wxThread.GUIThread(
-                frame,
-                processDevices,
-                args=(chunk, number_of_devices, action, getApps, getLatestEvents),
-                name="processDevices",
+            api_response.results = list(
+                filter(filterDeviceList, api_response.results)
             )
-            threads.append(t)
-            t.startWithRetry()
-            number_of_devices += len(chunk)
+        for device in api_response.results:
+            if getApps:
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (
+                    getDeviceAppsApiUrl(device.id, Globals.USE_ENTERPRISE_APP),
+                    getHeader(),
+                    "GET",
+                    None
+                ))
+        Globals.THREAD_POOL.join()
+        appResp = Globals.THREAD_POOL.results()
 
-        t = wxThread.GUIThread(
-            frame,
-            wxThread.waitTillThreadsFinish,
-            args=(
-                tuple(threads),
-                action,
-                entId,
-                1,
-                None,
-                len(api_response.results) * 3,
-            ),
-            name="waitTillThreadsFinish_1",
-            eventType=eventUtil.myEVT_FETCH,
+        for device in api_response["results"]:
+            if getLatestEvents:
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (
+                    getLatestEventApiUrl(device.id),
+                    getHeader(),
+                    "GET",
+                    None
+                ))
+        Globals.THREAD_POOL.join()
+        latestResp = Globals.THREAD_POOL.results()
+
+        deviceList = {}
+        indx = 0
+        for device in api_response.results:
+            deviceInfo = {}
+            appData = appResp[indx] if len(appResp) > indx else None
+            latestData = latestResp[indx] if len(latestResp) > indx else None
+            if latestData and "results" in latestData and latestData["results"]:
+                latestData = latestData["results"][0]["data"]
+            populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+            deviceInfo["num"] = indx
+            deviceList[indx] = [device, deviceInfo]
+            indx += 1
+
+        postEventToFrame(
+            eventUtil.myEVT_FETCH,
+            (action, entId, deviceList),
         )
-        t.startWithRetry()
     elif (
         type(api_response) is dict
         and "results" in api_response
@@ -183,35 +198,45 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             api_response["results"] = list(
                 filter(filterDeviceList, api_response["results"])
             )
-        splitResults = splitListIntoChunks(api_response["results"], maxThread=maxThread)
+        for device in api_response["results"]:
+            if getApps:
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (
+                    getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
+                    getHeader(),
+                    "GET",
+                    None
+                ))
+        Globals.THREAD_POOL.join()
+        appResp = Globals.THREAD_POOL.results()
 
-        threads = []
-        for chunk in splitResults:
-            t = wxThread.GUIThread(
-                frame,
-                processDevices,
-                args=(chunk, number_of_devices, action, getApps, getLatestEvents),
-                name="processDevices",
-            )
-            threads.append(t)
-            t.startWithRetry()
-            number_of_devices += len(chunk)
+        for device in api_response["results"]:
+            if getLatestEvents:
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (
+                    getLatestEventApiUrl(device["id"]),
+                    getHeader(),
+                    "GET",
+                    None
+                ))
+        Globals.THREAD_POOL.join()
+        latestResp = Globals.THREAD_POOL.results()
 
-        t = wxThread.GUIThread(
-            frame,
-            wxThread.waitTillThreadsFinish,
-            args=(
-                tuple(threads),
-                action,
-                entId,
-                1,
-                None,
-                len(api_response["results"]) * 3,
-            ),
-            name="waitTillThreadsFinish_1",
-            eventType=eventUtil.myEVT_FETCH,
+        deviceList = {}
+        indx = 0
+        for device in api_response["results"]:
+            deviceInfo = {}
+            appData = appResp[indx] if len(appResp) > indx else None
+            latestData = latestResp[indx] if len(latestResp) > indx else None
+            if latestData and "results" in latestData and latestData["results"]:
+                latestData = latestData["results"][0]["data"]
+            populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+            deviceInfo["num"] = indx
+            deviceList[indx] = [device, deviceInfo]
+            indx += 1
+
+        postEventToFrame(
+            eventUtil.myEVT_FETCH,
+            (action, entId, deviceList),
         )
-        t.startWithRetry()
     else:
         if hasattr(threading.current_thread(), "isStopped"):
             if threading.current_thread().isStopped():
@@ -339,8 +364,12 @@ def processDevices(
                 return
         deviceInfo = {}
         deviceInfo = populateDeviceInfoDictionary(
-            device, deviceInfo, getApps, getLatestEvents
+            device, deviceInfo, getApps, getLatestEvents, action
         )
+        # if getApps:
+        #     obtainAndProcessAppData(deviceInfo["id"], deviceInfo)
+        # if getLatestEvents:
+        #     obtainAndProcessLatestEvent(deviceInfo["id"], device, deviceInfo, deviceInfo["current_app_mode"])
         if deviceInfo:
             number_of_devices = number_of_devices + 1
             deviceInfo["num"] = number_of_devices
@@ -365,16 +394,325 @@ def flatten_dict(d: dict):
 
 
 def _flatten_dict_gen(d):
-    for k, v in d.items():
-        if isinstance(v, dict):
-            yield from flatten_dict(v).items()
+    if type(d) is dict:
+        for k, v in d.items():
+            if isinstance(v, dict):
+                yield from flatten_dict(v).items()
+            else:
+                yield k, v
+
+
+@api_tool_decorator()
+def populateDeviceInfoDictionaryComplieData(
+    device, deviceInfo, appData, latestEventData
+):
+    """Populates Device Info Dictionary"""
+    deviceId = None
+    deviceName = None
+    deviceGroups = None
+    deviceAlias = None
+    deviceStatus = None
+    deviceHardware = None
+    deviceTags = None
+    # Handle response from Collections API
+    if type(device) == dict:
+        deviceId = device["id"]
+        deviceName = device["device_name"]
+        deviceGroups = device["groups"]
+        deviceAlias = device["alias_name"]
+        deviceStatus = device["status"]
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
+            return
+        deviceHardware = device["hardwareInfo"]
+        deviceTags = device["tags"]
+        unpackageDict(deviceInfo, device)
+    else:
+        # Handles response from Python API
+        deviceId = device.id
+        deviceName = device.device_name
+        deviceGroups = device.groups
+        deviceAlias = device.alias_name
+        deviceStatus = device.status
+        # Device is disabled return
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
+            return
+        deviceHardware = device.hardware_info
+        deviceTags = device.tags
+        deviceDict = device.__dict__
+        unpackageDict(deviceInfo, deviceDict)
+    latestEvent = None
+    deviceInfo["EsperName"] = deviceName
+
+    deviceInfo["id"] = deviceId
+
+    if deviceGroups:
+        groupNames = []
+        if type(deviceGroups) == list:
+            for groupURL in deviceGroups:
+                group = None
+                groupName = None
+                groupId = groupURL.split("/")[-2]
+                if groupId in Globals.knownGroups:
+                    group = Globals.knownGroups[groupId]
+                else:
+                    groupName = fetchGroupName(groupURL)
+
+                if type(group) == list and len(group) == 1:
+                    groupName = group[0]
+                elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
+                    groupName = group.path
+                elif hasattr(group, "name"):
+                    groupName = group.name
+
+                if groupName:
+                    groupNames.append(groupName)
+                if groupId not in Globals.knownGroups:
+                    Globals.knownGroups[groupId] = groupName
+        elif type(deviceGroups) == dict and "name" in deviceGroups:
+            groupNames.append(deviceGroups["name"])
+        if len(groupNames) == 1:
+            if type(groupNames[0]) == list:
+                deviceInfo["groups"] = groupNames[0][0]
+            else:
+                deviceInfo["groups"] = groupNames[0]
+        elif len(groupNames) == 0:
+            deviceInfo["groups"] = ""
         else:
-            yield k, v
+            deviceInfo["groups"] = groupNames
+
+    if bool(deviceAlias):
+        deviceInfo["Alias"] = deviceAlias
+    else:
+        deviceInfo["Alias"] = ""
+
+    if isinstance(deviceStatus, str):
+        if deviceStatus.lower() == "online":
+            deviceInfo["Status"] = "Online"
+        elif "unspecified" in deviceStatus.lower():
+            deviceInfo["Status"] = "Unspecified"
+        elif "provisioning" in deviceStatus.lower():
+            deviceInfo["Status"] = "Provisioning"
+        elif deviceStatus.lower() == "offline":
+            deviceInfo["Status"] = "Offline"
+        elif "wipe" in deviceStatus.lower():
+            deviceInfo["Status"] = "Wipe In-Progress"
+        elif deviceStatus.lower() == "disabled":
+            deviceInfo["Status"] = "Disabled"
+        else:
+            deviceInfo["Status"] = "Unknown"
+    else:
+        if (
+            not Globals.SHOW_DISABLED_DEVICES
+            and deviceStatus == DeviceState.DISABLED.value
+        ):
+            return
+
+        if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
+            deviceInfo["Status"] = "Unspecified"
+        elif deviceStatus == DeviceState.ACTIVE.value:
+            deviceInfo["Status"] = "Online"
+        elif deviceStatus == DeviceState.DISABLED.value:
+            deviceInfo["Status"] = "Disabled"
+        elif (
+            deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
+            and deviceStatus < DeviceState.INACTIVE.value
+        ):
+            deviceInfo["Status"] = "Provisioning"
+        elif deviceStatus == DeviceState.INACTIVE.value:
+            deviceInfo["Status"] = "Offline"
+        elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
+            deviceInfo["Status"] = "Wipe In-Progress"
+        else:
+            deviceInfo["Status"] = "Unknown"
+
+    kioskMode = None
+    if "current_app_mode" in deviceInfo:
+        kioskMode = deviceInfo["current_app_mode"]
+        if kioskMode == 0:
+            deviceInfo["Mode"] = "Kiosk"
+        else:
+            deviceInfo["Mode"] = "Multi"
+
+    hdwareKey = None
+    if "serial_number" in deviceHardware:
+        hdwareKey = "serial_number"
+    elif "serialNumber" in deviceHardware:
+        hdwareKey = "serialNumber"
+
+    custHdwareKey = None
+    if "custom_serial_number" in deviceHardware:
+        custHdwareKey = "custom_serial_number"
+    elif "customSerialNumber" in deviceHardware:
+        custHdwareKey = "customSerialNumber"
+
+    if Globals.REPLACE_SERIAL:
+        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
+            deviceInfo["Serial"] = str(deviceHardware[custHdwareKey])
+        elif hdwareKey and bool(deviceHardware[hdwareKey]):
+            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
+        else:
+            deviceInfo["Serial"] = ""
+    else:
+        if hdwareKey and bool(deviceHardware[hdwareKey]):
+            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
+        else:
+            deviceInfo["Serial"] = ""
+
+    if Globals.REPLACE_SERIAL:
+        deviceInfo["Custom Serial"] = ""
+    else:
+        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
+            deviceInfo["Custom Serial"] = str(deviceHardware[custHdwareKey])
+        else:
+            deviceInfo["Custom Serial"] = ""
+
+    if bool(deviceTags):
+        # Add Functionality For Modifying Multiple Tags
+        deviceInfo["Tags"] = deviceTags
+    else:
+        deviceInfo["Tags"] = ""
+
+        if hasattr(device, "tags") and (device.tags is None or (type(device.tags) is list and not device.tags)):
+            device.tags = []
+        elif device and hasattr(device, "__iter__") and "tags" in device and (device["tags"] is None or (type(device["tags"]) is list and not device["tags"])):
+            device["tags"] = []
+
+    apps = apiCalls.createAppList(appData)
+    json = appData
+    deviceInfo["Apps"] = str(apps)
+    deviceInfo["appObj"] = json
+
+    latestEvent = latestEventData
+    if kioskMode == 0:
+        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
+        deviceInfo["KioskApp"] = str(kioskModeApp)
+    else:
+        deviceInfo["KioskApp"] = ""
+
+    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
+    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
+    unpackageDict(deviceInfo, latestEvent)
+
+    if location_info:
+        if (
+            "n/a" not in location_info["locationAlts"].lower()
+            and "n/a" not in location_info["locationLats"].lower()
+            and "n/a" not in location_info["locationLongs"].lower()
+        ):
+            location_info = "%s, %s, %s" % (
+                location_info["locationAlts"],
+                location_info["locationLats"],
+                location_info["locationLongs"],
+            )
+        else:
+            location_info = "Unknown"
+    else:
+        location_info = "Unknown"
+
+    deviceInfo["location_info"] = location_info
+    deviceInfo["network_event"] = network_info
+
+    if network_info and "createTime" in network_info:
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
+
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
+    else:
+        deviceInfo["last_seen"] = "No data available"
+
+    deviceInfo["macAddress"] = []
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+    if ipKey:
+        deviceInfo["ipv4Address"] = []
+        deviceInfo["ipv6Address"] = []
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                else:
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "lockdown_state" in deviceInfo:
+        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+            elif "ringerMode" in audio:
+                if audio["ringerMode"] == 0:
+                    deviceInfo["ringerMode"] = "Silent"
+                elif audio["ringerMode"] == 1:
+                    deviceInfo["ringerMode"] = "Vibrate"
+                elif audio["ringerMode"] == 2:
+                    deviceInfo["ringerMode"] = "Normal"
+
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
+    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
+        provisionedOnDate = utc_to_local(device.provisioned_on)
+        deviceInfo["provisioned_on"] = str(provisionedOnDate)
+
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
+
+    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
+
+    return deviceInfo
 
 
 @api_tool_decorator()
 def populateDeviceInfoDictionary(
-    device, deviceInfo, getApps=True, getLatestEvents=True
+    device, deviceInfo, getApps=True, getLatestEvents=True, action=None
 ):
     """Populates Device Info Dictionary"""
     deviceId = None
@@ -473,6 +811,9 @@ def populateDeviceInfoDictionary(
             deviceInfo["groups"] = ""
         else:
             deviceInfo["groups"] = groupNames
+
+    if action == GeneralActions.GENERATE_APP_REPORT.value:
+        return deviceInfo
 
     if bool(deviceAlias):
         deviceInfo["Alias"] = deviceAlias
@@ -711,6 +1052,167 @@ def populateDeviceInfoDictionary(
     deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
 
     return deviceInfo
+
+
+@api_tool_decorator()
+def obtainAndProcessLatestEvent(deviceId, device, deviceInfo, kioskMode):
+    eventThread = wxThread.GUIThread(
+        Globals.frame,
+        getLatestEvent,
+        (deviceId),
+    )
+    eventThread.startWithRetry()
+    # if getLatestEvents:
+    #     eventThread = getLatestEvent(deviceId)
+    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
+        eventThread.join()
+    if kioskMode == 0:
+        if hasattr(eventThread, "result"):
+            latestEvent = eventThread.result
+        else:
+            latestEvent = eventThread
+        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
+        deviceInfo["KioskApp"] = str(kioskModeApp)
+    else:
+        deviceInfo["KioskApp"] = ""
+
+    if hasattr(eventThread, "result"):
+        latestEvent = eventThread.result
+    else:
+        latestEvent = eventThread
+    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
+    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
+    unpackageDict(deviceInfo, latestEvent)
+
+    if location_info:
+        if (
+            "n/a" not in location_info["locationAlts"].lower()
+            and "n/a" not in location_info["locationLats"].lower()
+            and "n/a" not in location_info["locationLongs"].lower()
+        ):
+            location_info = "%s, %s, %s" % (
+                location_info["locationAlts"],
+                location_info["locationLats"],
+                location_info["locationLongs"],
+            )
+        else:
+            location_info = "Unknown"
+    else:
+        location_info = "Unknown"
+
+    deviceInfo["location_info"] = location_info
+    deviceInfo["network_event"] = network_info
+
+    if network_info and "createTime" in network_info:
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
+
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
+    else:
+        deviceInfo["last_seen"] = "No data available"
+
+    deviceInfo["macAddress"] = []
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+    if ipKey:
+        deviceInfo["ipv4Address"] = []
+        deviceInfo["ipv6Address"] = []
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                else:
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "lockdown_state" in deviceInfo:
+        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+            elif "ringerMode" in audio:
+                if audio["ringerMode"] == 0:
+                    deviceInfo["ringerMode"] = "Silent"
+                elif audio["ringerMode"] == 1:
+                    deviceInfo["ringerMode"] = "Vibrate"
+                elif audio["ringerMode"] == 2:
+                    deviceInfo["ringerMode"] = "Normal"
+
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
+    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
+        provisionedOnDate = utc_to_local(device.provisioned_on)
+        deviceInfo["provisioned_on"] = str(provisionedOnDate)
+
+    if "eeaVersion" not in deviceInfo:
+        deviceInfo["eeaVersion"] = "NON EEA"
+
+    if "emm_device" not in deviceInfo:
+        deviceInfo["emm_device"] = None
+
+    deviceInfo["is_emm"] = False
+    if "user" in deviceInfo:
+        if deviceInfo["user"]:
+            deviceInfo["is_emm"] = True
+
+    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
+
+
+@api_tool_decorator()
+def obtainAndProcessAppData(deviceId, deviceInfo):
+    appThread = wxThread.GUIThread(
+        Globals.frame,
+        apiCalls.getdeviceapps,
+        (deviceId, True, Globals.USE_ENTERPRISE_APP),
+    )
+    appThread.startWithRetry()
+    # if getApps:
+    #     appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+    if hasattr(appThread, "is_alive") and appThread.is_alive():
+        appThread.join()
+    apps = ""
+    json = {}
+    if hasattr(appThread, "result") and appThread.result:
+        apps, json = appThread.result
+    elif appThread and type(appThread) is tuple:
+        apps, json = appThread
+    deviceInfo["Apps"] = str(apps)
+    deviceInfo["appObj"] = json
 
 
 @api_tool_decorator()

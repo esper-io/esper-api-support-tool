@@ -16,7 +16,7 @@ from Utility.API.GroupUtility import (
 import wx
 import wx.grid as gridlib
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 
 from Common.enum import Color
 

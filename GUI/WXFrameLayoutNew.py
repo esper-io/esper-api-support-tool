@@ -34,7 +34,7 @@ import Common.Globals as Globals
 import Common.ApiTracker as ApiTracker
 import GUI.EnhancedStatusBar as ESB
 
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 import Utility.API.EsperTemplateUtil as templateUtil
 
 from functools import partial
@@ -2219,6 +2219,8 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onFetch(self, event):
+        if hasattr(self, "start_time"):
+            print("Fetch Execution time: %s" % (time.time() - self.start_time))
         evtValue = event.GetValue()
         if evtValue:
             action = evtValue[0]
@@ -2248,8 +2250,6 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
-        if hasattr(self, "start_time"):
-            print("Fetch Execution time: %s" % (time.time() - self.start_time))
         for entry in deviceList.values():
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
@@ -2269,39 +2269,13 @@ class NewFrameLayout(wx.Frame):
 
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    if self.WINDOWS:
-                        deviceThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.addDeviceToDeviceGrid,
-                            (deviceInfo),
-                            name="addDeviceToDeviceGrid",
-                        )
-                        deviceThread.startWithRetry()
-                        networkThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.addDeviceToNetworkGrid,
-                            (device, deviceInfo),
-                            name="addDeviceToNetworkGrid",
-                        )
-                        networkThread.startWithRetry()
-                        appThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.populateAppGrid,
-                            (device, deviceInfo, deviceInfo["appObj"]),
-                            name="populateAppGrid",
-                        )
-                        appThread.startWithRetry()
-                        threads.append(deviceThread)
-                        threads.append(networkThread)
-                        threads.append(appThread)
-                    else:
-                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                        self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
-                        self.gridPanel.populateAppGrid, (
-                            device,
-                            deviceInfo,
-                            deviceInfo["appObj"],
-                        )
+                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
+                    self.gridPanel.populateAppGrid, (
+                        device,
+                        deviceInfo,
+                        deviceInfo["appObj"],
+                    )
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
@@ -2393,62 +2367,24 @@ class NewFrameLayout(wx.Frame):
                 threads.append(thread)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
                 if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    if self.WINDOWS:
-                        appThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.populateAppGrid,
-                            (device, deviceInfo, deviceInfo["appObj"]),
-                            name="populateAppGrid",
-                        )
-                        appThread.startWithRetry()
-                        threads.append(appThread)
-                    else:
-                        self.gridPanel.populateAppGrid(
-                            device, deviceInfo, deviceInfo["appObj"]
-                        )
+                    self.gridPanel.populateAppGrid(
+                        device, deviceInfo, deviceInfo["appObj"]
+                    )
                 else:
                     self.gridPanel.constructAppGridContent(
                         device, deviceInfo, deviceInfo["appObj"]
                     )
             elif action == GeneralActions.GENERATE_INFO_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    if self.WINDOWS:
-                        deviceThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.addDeviceToDeviceGrid,
-                            (deviceInfo),
-                            name="addDeviceToDeviceGrid",
-                        )
-                        deviceThread.startWithRetry()
-                        networkThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.addDeviceToNetworkGrid,
-                            (device, deviceInfo),
-                            name="addDeviceToNetworkGrid",
-                        )
-                        networkThread.startWithRetry()
-                        threads.append(deviceThread)
-                        threads.append(networkThread)
-                    else:
-                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                        self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
                     self.gridPanel.constructNetworkGridContent(device, deviceInfo)
             elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    if self.WINDOWS:
-                        deviceThread = wxThread.GUIThread(
-                            self,
-                            self.gridPanel.addDeviceToDeviceGrid,
-                            (deviceInfo),
-                            name="addDeviceToDeviceGrid",
-                        )
-                        deviceThread.startWithRetry()
-                        threads.append(deviceThread)
-                    else:
-                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)

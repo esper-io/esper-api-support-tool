@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import string
 import esperclient
 import time
 import wx
@@ -642,3 +643,26 @@ def getAppDictEntry(app, update=True):
                 Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
 
     return entry
+
+
+def getDeviceAppsApiUrl(deviceid, useEnterprise=False):
+    extention = (
+        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
+        if useEnterprise
+        else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
+    )
+    hasFormat = [
+        tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
+    ]
+    if hasFormat:
+        if "limit" in hasFormat:
+            extention = extention.format(limit=Globals.limit)
+    url = (
+        Globals.BASE_DEVICE_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            device_id=deviceid,
+        )
+        + extention
+    )
+    return url

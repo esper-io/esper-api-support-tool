@@ -1,14 +1,15 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 import time
 import Utility.EventUtility as eventUtil
-from Common.decorator import api_tool_decorator
-from Utility.Resource import joinThreadList, postEventToFrame
 import math
-from Common.enum import GridActions
 import Common.Globals as Globals
 import threading
 import wx
+
+from Common.decorator import api_tool_decorator
+from Common.enum import GridActions
+from Utility.Resource import joinThreadList, postEventToFrame
 
 
 @api_tool_decorator()

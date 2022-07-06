@@ -7,7 +7,7 @@ from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 

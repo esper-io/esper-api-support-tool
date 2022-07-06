@@ -5,7 +5,7 @@ import time
 
 from esperclient.rest import ApiException
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility, wxThread
+from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 import esperclient
 import Common.Globals as Globals
@@ -19,8 +19,10 @@ from Utility.Resource import (
     logBadResponse,
     postEventToFrame,
 )
+from Utility.Threading import wxThread
 
 from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
 )
@@ -196,7 +198,8 @@ def get_all_groups(
     name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY
 ):
     response = getAllGroupsHelper(name, limit, offset, maxAttempt)
-    groups = getAllFromOffsets(getAllGroupsHelper, name, response, maxAttempt)
+    # groups = getAllFromOffsets(getAllGroupsHelper, name, response, maxAttempt)
+    groups = getAllFromOffsetsRequests(response)
     if hasattr(response, "results"):
         response.results = response.results + groups
         response.next = None

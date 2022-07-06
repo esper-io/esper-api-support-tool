@@ -22,7 +22,7 @@ from Utility.Resource import (
     postEventToFrame,
     splitListIntoChunks,
 )
-from Utility import wxThread
+from Utility.Threading import wxThread
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 
 from Common.decorator import api_tool_decorator

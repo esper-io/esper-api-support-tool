@@ -17,7 +17,7 @@ import re
 import threading
 import wx
 import wx.grid as gridlib
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator

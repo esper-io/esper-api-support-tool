@@ -544,9 +544,8 @@ def factoryResetDevice(
 
 
 @api_tool_decorator()
-def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
+def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
-    applist = []
     extention = (
         Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
         if useEnterprise
@@ -559,11 +558,16 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
         if "limit" in hasFormat:
             extention = extention.format(limit=Globals.limit)
     json_resp = getInfo(extention, deviceid)
+    applist = createAppList(json_resp) if createAppListArg else []
+    return applist, json_resp
+
+
+def createAppList(json_resp):
+    applist = []
     if (
         json_resp
         and "results" in json_resp
         and len(json_resp["results"])
-        and createAppList
     ):
         for app in json_resp["results"]:
             if (
@@ -632,7 +636,7 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 "isValid" in entry and entry["isValid"]
             ):
                 Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-    return applist, json_resp
+    return applist
 
 
 @api_tool_decorator()

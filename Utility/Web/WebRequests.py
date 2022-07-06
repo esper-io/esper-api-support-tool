@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+
 import requests
 import time
 import Common.Globals as Globals
 from Utility import EventUtility
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit, postEventToFrame
+from Utility.Resource import enforceRateLimit, getHeader, postEventToFrame
 
 
 def performGetRequestWithRetry(
@@ -205,4 +207,67 @@ def performPostRequestWithRetry(
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+    return resp
+
+
+def getAllFromOffsetsRequests(
+    api_response, results=None
+):
+    count = None
+    # addresses = []
+    if not results:
+        results = []
+    if hasattr(api_response, "count"):
+        count = api_response.count
+    elif type(api_response) is dict and "count" in api_response:
+        count = api_response["count"]
+    apiNext = None
+    if hasattr(api_response, "next"):
+        apiNext = api_response.next
+    elif type(api_response) is dict and "next" in api_response:
+        apiNext = api_response["next"]
+    if apiNext:
+        respOffset = apiNext.split("offset=")[-1].split("&")[0]
+        respOffsetInt = int(respOffset)
+        respLimit = apiNext.split("limit=")[-1].split("&")[0]
+        while int(respOffsetInt) < count and int(respLimit) < count:
+            url = apiNext.replace(respOffset, str(respOffsetInt))
+            Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
+            respOffsetInt += int(respLimit)
+        if respOffsetInt > count:
+            respOffsetInt -= int(respLimit)
+            respOffsetInt += 1
+            url = apiNext.replace(respOffset, str(respOffsetInt))
+            Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
+
+    Globals.THREAD_POOL.join()
+    resultList = Globals.THREAD_POOL.results()
+    for resp in resultList:
+        if resp and hasattr(resp, "results") and resp.results:
+            results += resp.results
+        elif type(resp) is dict and "results" in resp and resp["results"]:
+            results += resp["results"]
+    return results
+
+
+def perform_web_requests(content):
+    url = content[0].strip()
+    header = content[1]
+    method = content[2]
+    json = content[3] if len(content) > 2 else None
+    resp = None
+
+    if method == "GET":
+        resp = performGetRequestWithRetry(url, header, json)
+    elif method == "POST":
+        resp = performPostRequestWithRetry(url, header, json)
+    elif method == "DELETE":
+        resp = performDeleteRequestWithRetry(url, header, json)
+    elif method == "PATCH":
+        resp = performPatchRequestWithRetry(url, header, json)
+    elif method == "PUT":
+        resp = performPutRequestWithRetry(url, header, json)
+
+    if resp:
+        resp = resp.json()
     return resp

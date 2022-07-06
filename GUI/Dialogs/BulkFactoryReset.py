@@ -5,7 +5,7 @@ import wx
 import wx.grid
 from Common.decorator import api_tool_decorator
 
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 
 
 class BulkFactoryReset(wx.Dialog):
