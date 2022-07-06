@@ -380,9 +380,9 @@ def uploadingMissingBlueprintApps(
                 raise Exception("Upload failed!")
             blueprint["latest_revision"]["application"]["apps"].append(
                 {
-                    "app_version": res["application"]["versions"][0]["id"],
-                    "package_name": res["application"]["package_name"],
-                    "application_name": res["application"]["application_name"],
+                    "app_version": res.application.versions[0].id,
+                    "package_name": res.application.package_name,
+                    "application_name": res.application.application_name,
                     "is_g_play": False,
                     "installation_rule": detail["rule"],
                     "state": detail["state"],
