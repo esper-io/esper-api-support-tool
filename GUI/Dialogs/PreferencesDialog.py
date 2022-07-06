@@ -932,7 +932,7 @@ class PreferencesDialog(wx.Dialog):
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
         elif key == "windowSize":
-            return self.parent.GetSize() if self.parent else Globals.MIN_SIZE
+            return tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":
             return self.parent.IsMaximized() if self.parent else False
         elif key == "windowPosition":
