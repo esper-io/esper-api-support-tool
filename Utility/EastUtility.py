@@ -161,7 +161,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         Globals.THREAD_POOL.join()
         appResp = Globals.THREAD_POOL.results()
 
-        for device in api_response["results"]:
+        for device in api_response.results:
             if getLatestEvents:
                 Globals.THREAD_POOL.enqueue(perform_web_requests, (
                     getLatestEventApiUrl(device.id),
