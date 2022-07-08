@@ -413,13 +413,7 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(
-                        self,
-                        processCollectionDevices,
-                        deviceListResp,
-                        name="eqlIterateThroughDeviceList",
-                    )
-                    thread.startWithRetry()
+                    Globals.THREAD_POOL.enqueue(processCollectionDevices, deviceListResp)
             else:
                 self.parentFrame.setCursorDefault()
 
@@ -439,13 +433,7 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(
-                        self,
-                        processCollectionDevices,
-                        deviceListResp,
-                        name="collectionIterateThroughDeviceList",
-                    )
-                    thread.startWithRetry()
+                    Globals.THREAD_POOL.enqueue(processCollectionDevices, deviceListResp)
             else:
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()
