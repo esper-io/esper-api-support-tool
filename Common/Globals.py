@@ -59,9 +59,6 @@ token_lock = threading.Lock()
 # Known Group Var
 knownGroups = {}
 
-# Known Group Var
-knownGroups = {}
-
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
