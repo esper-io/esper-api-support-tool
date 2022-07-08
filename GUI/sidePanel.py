@@ -506,7 +506,7 @@ class SidePanel(wx.Panel):
         if self.selectedDevicesList and hideVersion and self.selectedDeviceApps:
             apps = self.selectedDeviceApps
         with InstalledDevicesDlg(
-            apps, hide_version=hideVersion, title="Select Application"
+            apps, hide_version=hideVersion, title="Select Application", showAllVersionsOption=False
         ) as dlg:
             res = dlg.ShowModal()
             if res == wx.ID_OK:

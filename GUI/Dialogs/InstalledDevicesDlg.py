@@ -9,7 +9,7 @@ from Common.decorator import api_tool_decorator
 
 
 class InstalledDevicesDlg(wx.Dialog):
-    def __init__(self, apps, hide_version=False, title="Get Installed Devices"):
+    def __init__(self, apps, hide_version=False, title="Get Installed Devices", showAllVersionsOption=True):
         super(InstalledDevicesDlg, self).__init__(
             None,
             wx.ID_ANY,
@@ -21,6 +21,7 @@ class InstalledDevicesDlg(wx.Dialog):
         for app in self.apps:
             self.appNameList.append(app["appPkgName"])
         self.versions = []
+        self.showAllVersionsOption = showAllVersionsOption
 
         self.SetMinSize((400, 300))
         self.SetTitle(title)
@@ -156,7 +157,8 @@ class InstalledDevicesDlg(wx.Dialog):
             )
         )
         self.list_box_2.Clear()
-        self.list_box_2.Append("All Enterprise Versions", -1)
+        if self.showAllVersionsOption:
+            self.list_box_2.Append("All Enterprise Versions", -1)
         for match in matches:
             if "id" in match:
                 id = match["id"]

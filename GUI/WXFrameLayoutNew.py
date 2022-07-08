@@ -899,18 +899,14 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
-                thread = None
                 if self.WINDOWS:
-                    thread = wxThread.GUIThread(
-                        self, self.openDeviceCSV, (csv_auth_path), name="openDeviceCSV"
-                    )
-                    thread.startWithRetry()
+                    Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
                 else:
                     self.openDeviceCSV(csv_auth_path)
                 wxThread.GUIThread(
                     self,
                     self.waitForThreadsThenSetCursorDefault,
-                    ([thread], 2),
+                    (Globals.THREAD_POOL.threads, 2),
                     name="waitForThreadsThenSetCursorDefault_2",
                 ).startWithRetry()
             elif result == wx.ID_CANCEL:
@@ -2193,7 +2189,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
-        threads = []
+        # threads = []
         appToUse = None
         appVersion = None
         if self.sidePanel.selectedAppEntry:
@@ -2240,87 +2236,21 @@ class NewFrameLayout(wx.Frame):
                         device, deviceInfo, deviceInfo["appObj"]
                     )
             elif action == GeneralActions.SET_KIOSK.value:
-                thread = wxThread.GUIThread(
-                    self, setKiosk, (self, device, deviceInfo), name="SetKiosk"
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(setKiosk, self, device, deviceInfo)
             elif action == GeneralActions.SET_MULTI.value:
-                thread = wxThread.GUIThread(
-                    self, setMulti, (self, device, deviceInfo), name="SetMulti"
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(setMulti, self, device, deviceInfo)
             elif action == GeneralActions.CLEAR_APP_DATA.value:
-                thread = wxThread.GUIThread(
-                    self,
-                    clearAppData,
-                    (self, device),
-                    name="clearAppData",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(clearAppData, self, device)
             elif (
                 action == GeneralActions.SET_APP_STATE.value
-                and self.AppState == "DISABLE"
             ):
-                thread = wxThread.GUIThread(
-                    self,
-                    setAppState,
-                    (deviceId, appToUse, "DISABLE"),
-                    name="SetAppDisable",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
-            elif (
-                action == GeneralActions.SET_APP_STATE.value and self.AppState == "HIDE"
-            ):
-                thread = wxThread.GUIThread(
-                    self,
-                    setAppState,
-                    (deviceId, appToUse, "HIDE"),
-                    name="SetAppHide",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
-            elif (
-                action == GeneralActions.SET_APP_STATE.value and self.AppState == "SHOW"
-            ):
-                thread = wxThread.GUIThread(
-                    self,
-                    setAppState,
-                    (deviceId, appToUse, "SHOW"),
-                    name="SetAppShow",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(clearAppData, deviceId, appToUse, self.AppState)
             elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
-                thread = wxThread.GUIThread(
-                    self,
-                    removeNonWhitelisted,
-                    (deviceId, deviceInfo),
-                    name="removeNonWhitelisted",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceId, deviceInfo)
             elif action == GeneralActions.INSTALL_APP.value:
-                thread = wxThread.GUIThread(
-                    self,
-                    installAppOnDevices,
-                    (appToUse, appVersion, deviceId),
-                    name="installAppOnDevices",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(installAppOnDevices, appToUse, appVersion, deviceId)
             elif action == GeneralActions.UNINSTALL_APP.value:
-                thread = wxThread.GUIThread(
-                    self,
-                    uninstallAppOnDevice,
-                    (appToUse, deviceId),
-                    name="uninstallAppOnDevice",
-                )
-                thread.startWithRetry()
-                threads.append(thread)
+                Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceId)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
                 if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
                     self.gridPanel.populateAppGrid(
@@ -2344,7 +2274,6 @@ class NewFrameLayout(wx.Frame):
                 else:
                     # construct and add info to grid contents
                     self.gridPanel.constructDeviceGridContent(deviceInfo)
-            joinThreadList(threads)
 
             value = int(num / maxGauge * 100)
             if updateGauge and value <= 99:
@@ -2353,7 +2282,7 @@ class NewFrameLayout(wx.Frame):
         wxThread.GUIThread(
             self,
             self.waitForThreadsThenSetCursorDefault,
-            (threads, 3, action),
+            (Globals.THREAD_POOL.threads, 3, action),
             name="waitForThreadsThenSetCursorDefault_3",
         ).startWithRetry()
 
@@ -2996,7 +2925,7 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = version = pkg = None
             with InstalledDevicesDlg(
-                self.sidePanel.enterpriseApps, title="Install Application"
+                self.sidePanel.enterpriseApps, title="Install Application", showAllVersionsOption=False
             ) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
@@ -3034,7 +2963,7 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = pkg = None
             with InstalledDevicesDlg(
-                self.sidePanel.apps, hide_version=True, title="Uninstall Application"
+                self.sidePanel.apps, hide_version=True, title="Uninstall Application", showAllVersionsOption=False
             ) as dlg:
                 res = dlg.ShowModal()
             if res == wx.ID_OK:
