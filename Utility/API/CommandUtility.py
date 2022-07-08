@@ -35,25 +35,12 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         schType = esperclient.V0CommandScheduleEnum.RECURRING
     t = None
     if result and isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnGroup,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=eventUtil.myEVT_COMMAND,
-            name="executeCommandOnGroup",
-        )
+        Globals.THREAD_POOL.enqueue(executeCommandOnGroup, frame, command_args, schedule, schType, commandType)
     elif result and not isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnDevice,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=eventUtil.myEVT_COMMAND,
-            name="executeCommandOnDevice",
-        )
+        Globals.THREAD_POOL.enqueue(executeCommandOnDevice, frame, command_args, schedule, schType, commandType)
     if t:
         frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
-        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -157,6 +144,9 @@ def executeCommandOnGroup(
                 entry["Command Id"] = last_status.id
             entry["Status"] = last_status
             statusList.append(entry)
+    postEventToFrame(
+        eventUtil.myEVT_COMMAND, statusList
+    )
     return statusList
 
 
@@ -226,6 +216,9 @@ def executeCommandOnDevice(
                 entry["Device Id"] = deviceToUse
             entry["Status"] = last_status
             statusList.append(entry)
+    postEventToFrame(
+        eventUtil.myEVT_COMMAND, statusList
+    )
     return statusList
 
 
