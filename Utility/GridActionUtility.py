@@ -521,18 +521,9 @@ def getDevicesFromGrid(deviceIdentifers=None):
     devices = []
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     splitResults = splitListIntoChunks(deviceIdentifers)
-    threads = []
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            Globals.frame,
-            getDevicesFromGridHelper,
-            args=(chunk, api_instance, devices),
-            name="getDevicesFromGridHelper",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
-    joinThreadList(threads)
+        Globals.THREAD_POOL.enqueue(getDevicesFromGridHelper, chunk, api_instance, devices)
+    Globals.THREAD_POOL.join()
     return devices
 
 
@@ -625,23 +616,29 @@ def relocateDeviceToNewGroup(frame):
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame,
-            processDeviceGroupMove,
-            args=(chunk, newGroupList),
-            name="processDeviceGroupMove",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processDeviceGroupMove, chunk, newGroupList)
+        # t = wxThread.GUIThread(
+        #     frame,
+        #     processDeviceGroupMove,
+        #     args=(chunk, newGroupList),
+        #     name="processDeviceGroupMove",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        args=(
+            Globals.THREAD_POOL.threads,  # tuple(threads),
+            GridActions.MOVE_GROUP.value,
+            -1,
+            5
+        ),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -740,23 +737,24 @@ def installListedLatestApp(frame):
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame,
-            processInstallLatestAppChunk,
-            args=(chunk, gridAppList),
-            name="processInstallLatestAppChunk",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processInstallLatestAppChunk, chunk, gridAppList)
+        # t = wxThread.GUIThread(
+        #     frame,
+        #     processInstallLatestAppChunk,
+        #     args=(chunk, gridAppList),
+        #     name="processInstallLatestAppChunk",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -855,20 +853,21 @@ def uninstallListedApp(frame):
     threads = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame,
-            processUninstallAppChunk,
-            args=(chunk, gridAppList),
-            name="processUninstallAppChunk",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processUninstallAppChunk, chunk, gridAppList)
+        # t = wxThread.GUIThread(
+        #     frame,
+        #     processUninstallAppChunk,
+        #     args=(chunk, gridAppList),
+        #     name="processUninstallAppChunk",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -940,23 +939,24 @@ def installApp(frame):
     deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame,
-            processInstallLatestAppChunk,
-            args=(chunk, frame.sidePanel.selectedAppEntry, True),
-            name="processInstallLatestAppChunk",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processInstallLatestAppChunk, chunk, frame.sidePanel.selectedAppEntry, True)
+        # t = wxThread.GUIThread(
+        #     frame,
+        #     processInstallLatestAppChunk,
+        #     args=(chunk, frame.sidePanel.selectedAppEntry, True),
+        #     name="processInstallLatestAppChunk",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.INSTALL_LATEST_APP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.INSTALL_LATEST_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -967,23 +967,24 @@ def uninstallApp(frame):
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            frame,
-            processUninstallAppChunk,
-            args=(chunk, frame.sidePanel.selectedAppEntry, True),
-            name="processUninstallAppChunk",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processUninstallAppChunk, chunk, frame.sidePanel.selectedAppEntry, True)
+        # t = wxThread.GUIThread(
+        #     frame,
+        #     processUninstallAppChunk,
+        #     args=(chunk, frame.sidePanel.selectedAppEntry, True),
+        #     name="processUninstallAppChunk",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.UNINSTALL_LISTED_APP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -1013,25 +1014,26 @@ def bulkFactoryReset(identifers):
     devices = getDevicesFromGrid(deviceIdentifers=identifers)
 
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
     numDevices = len(devices)
     processed = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            Globals.frame,
-            processBulkFactoryReset,
-            args=(chunk, numDevices, processed),
-            name="processDeviceGroupMove",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processBulkFactoryReset, chunk, numDevices, processed)
+        # t = wxThread.GUIThread(
+        #     Globals.frame,
+        #     processBulkFactoryReset,
+        #     args=(chunk, numDevices, processed),
+        #     name="processDeviceGroupMove",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         Globals.frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
@@ -1061,25 +1063,26 @@ def setDevicesDisabled():
     devices = getDevicesFromGrid()
 
     splitResults = splitListIntoChunks(devices)
-    threads = []
+    # threads = []
     numDevices = len(devices)
     processed = []
 
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            Globals.frame,
-            processSetDeviceDisabled,
-            args=(chunk, numDevices, processed),
-            name="processSetDeviceDisabled",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
+        Globals.THREAD_POOL.enqueue(processSetDeviceDisabled, chunk, numDevices, processed)
+        # t = wxThread.GUIThread(
+        #     Globals.frame,
+        #     processSetDeviceDisabled,
+        #     args=(chunk, numDevices, processed),
+        #     name="processSetDeviceDisabled",
+        # )
+        # threads.append(t)
+        # t.startWithRetry()
+        # limitActiveThreads(threads)
 
     t = wxThread.GUIThread(
         Globals.frame,
         wxThread.waitTillThreadsFinish,
-        args=(tuple(threads), GridActions.MOVE_GROUP.value, -1, 5),
+        args=(Globals.THREAD_POOL.threads, GridActions.MOVE_GROUP.value, -1, 5),
         name="waitTillThreadsFinish",
     )
     t.startWithRetry()
