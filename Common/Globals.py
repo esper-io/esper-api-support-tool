@@ -14,7 +14,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.19402"
+VERSION = "v0.19403"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -259,7 +259,7 @@ CSV_APP_ATTR_NAME = [
 BLACKLIST_PACKAGE_NAME = [
     "io.shoonya.shoonyadpc",
     "io.esper.remoteviewer",
-    "io.shoonya.helper"
+    "io.shoonya.helper",
 ]
 WHITELIST_AP = []
 
