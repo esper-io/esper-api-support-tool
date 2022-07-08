@@ -2244,7 +2244,7 @@ class NewFrameLayout(wx.Frame):
             elif (
                 action == GeneralActions.SET_APP_STATE.value
             ):
-                Globals.THREAD_POOL.enqueue(clearAppData, deviceId, appToUse, self.AppState)
+                Globals.THREAD_POOL.enqueue(setAppState, deviceId, appToUse, self.AppState)
             elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
                 Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceId, deviceInfo)
             elif action == GeneralActions.INSTALL_APP.value:

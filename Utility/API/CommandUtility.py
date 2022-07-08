@@ -15,7 +15,6 @@ import wx
 
 import Common.Globals as Globals
 from Utility.Web.WebRequests import performPostRequestWithRetry
-import Utility.Threading.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator

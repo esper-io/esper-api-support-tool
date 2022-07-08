@@ -7,7 +7,6 @@ from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from Utility.Resource import openWebLinkInBrowser, resourcePath
 from Common.decorator import api_tool_decorator
 from GUI.UserCreation import UserCreation
-import Utility.Threading.wxThread as wxThread
 import wx
 import wx.adv as adv
 import Common.Globals as Globals
