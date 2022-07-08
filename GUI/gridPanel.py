@@ -5,8 +5,8 @@ import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import (
     acquireLocks,
-    joinThreadList,
-    limitActiveThreads,
+    # joinThreadList,
+    # limitActiveThreads,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -423,10 +423,7 @@ class GridPanel(wx.Panel):
         self.emptyDeviceGrid(emptyContents=False)
         self.grid_1.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
-            )
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.repopulateGrid, self.grid_1_contents, col)
         else:
             self.repopulateGrid(self.grid_1_contents, col)
 
@@ -477,12 +474,9 @@ class GridPanel(wx.Panel):
         self.emptyNetworkGrid(emptyContents=False)
         self.grid_2.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame,
-                self.repopulateGrid,
-                (self.grid_2_contents, col, "Network"),
+            Globals.THREAD_POOL.enqueue(
+                self.repopulateGrid, self.grid_2_contents, col, "Network"
             )
-            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_2_contents, col, "Network")
 
@@ -533,12 +527,9 @@ class GridPanel(wx.Panel):
         self.emptyAppGrid(emptyContents=False)
         self.grid_3.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame,
-                self.repopulateGrid,
-                (self.grid_3_contents, col, "App"),
+            Globals.THREAD_POOL.enqueue(
+                self.repopulateGrid, self.grid_3_contents, col, "App"
             )
-            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_3_contents, col, "App"),
 
@@ -1268,21 +1259,14 @@ class GridPanel(wx.Panel):
             if numRows > Globals.MAX_ACTIVE_THREAD_COUNT
             else numRows
         )
-        threads = []
         num = 0
         while num < numRows:
-            t = wxThread.GUIThread(
-                Globals.frame,
-                self.getDeviceIdentifiersHelper,
-                args=(num, numRowsPerChunk, identifers),
-                name="getDeviceIdentifiersHelper",
+            Globals.THREAD_POOL.enqueue(
+                self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
             )
-            threads.append(t)
-            t.startWithRetry()
             num += numRowsPerChunk
-            limitActiveThreads(threads)
-
-        joinThreadList(threads)
+        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.results()
 
         releaseLocks([Globals.grid1_lock])
         return identifers

@@ -4,6 +4,7 @@
 # import multiprocessing
 import esperclient
 import Common.Globals as Globals
+
 # from Utility.Web.WebRequests import perform_web_requests
 import Utility.Threading.wxThread as wxThread
 import threading
@@ -146,28 +147,27 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
     if hasattr(api_response, "results") and len(api_response.results):
         if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(
-                filter(filterDeviceList, api_response.results)
-            )
+            api_response.results = list(filter(filterDeviceList, api_response.results))
         for device in api_response.results:
             if getApps:
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (
-                    getDeviceAppsApiUrl(device.id, Globals.USE_ENTERPRISE_APP),
-                    getHeader(),
-                    "GET",
-                    None
-                ))
+                Globals.THREAD_POOL.enqueue(
+                    perform_web_requests,
+                    (
+                        getDeviceAppsApiUrl(device.id, Globals.USE_ENTERPRISE_APP),
+                        getHeader(),
+                        "GET",
+                        None,
+                    ),
+                )
         Globals.THREAD_POOL.join()
         appResp = Globals.THREAD_POOL.results()
 
         for device in api_response.results:
             if getLatestEvents:
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (
-                    getLatestEventApiUrl(device.id),
-                    getHeader(),
-                    "GET",
-                    None
-                ))
+                Globals.THREAD_POOL.enqueue(
+                    perform_web_requests,
+                    (getLatestEventApiUrl(device.id), getHeader(), "GET", None),
+                )
         Globals.THREAD_POOL.join()
         latestResp = Globals.THREAD_POOL.results()
 
@@ -179,7 +179,9 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             latestData = latestResp[indx] if len(latestResp) > indx else None
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
-            populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+            populateDeviceInfoDictionaryComplieData(
+                device, deviceInfo, appData, latestData
+            )
             deviceInfo["num"] = indx
             deviceList[indx] = [device, deviceInfo]
             indx += 1
@@ -199,23 +201,24 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             )
         for device in api_response["results"]:
             if getApps:
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (
-                    getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
-                    getHeader(),
-                    "GET",
-                    None
-                ))
+                Globals.THREAD_POOL.enqueue(
+                    perform_web_requests,
+                    (
+                        getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
+                        getHeader(),
+                        "GET",
+                        None,
+                    ),
+                )
         Globals.THREAD_POOL.join()
         appResp = Globals.THREAD_POOL.results()
 
         for device in api_response["results"]:
             if getLatestEvents:
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (
-                    getLatestEventApiUrl(device["id"]),
-                    getHeader(),
-                    "GET",
-                    None
-                ))
+                Globals.THREAD_POOL.enqueue(
+                    perform_web_requests,
+                    (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
+                )
         Globals.THREAD_POOL.join()
         latestResp = Globals.THREAD_POOL.results()
 
@@ -227,7 +230,9 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             latestData = latestResp[indx] if len(latestResp) > indx else None
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
-            populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+            populateDeviceInfoDictionaryComplieData(
+                device, deviceInfo, appData, latestData
+            )
             deviceInfo["num"] = indx
             deviceList[indx] = [device, deviceInfo]
             indx += 1
@@ -283,7 +288,9 @@ def processCollectionDevices(collectionList):
         if splitResults:
             number_of_devices = 0
             for chunk in splitResults:
-                Globals.THREAD_POOL.enqueue(fillInDeviceInfoDict, chunk, number_of_devices)
+                Globals.THREAD_POOL.enqueue(
+                    fillInDeviceInfoDict, chunk, number_of_devices
+                )
                 number_of_devices += len(chunk)
 
             t = wxThread.GUIThread(
@@ -319,7 +326,9 @@ def fillInDeviceInfoDict(chunk, number_of_devices, getApps=True, getLatestEvent=
                 return
         try:
             deviceInfo = {}
-            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps, getLatestEvent)
+            deviceInfo = populateDeviceInfoDictionary(
+                device, deviceInfo, getApps, getLatestEvent
+            )
             if deviceInfo:
                 deviceList[number_of_devices] = [device, deviceInfo]
                 number_of_devices += 1
@@ -560,9 +569,19 @@ def populateDeviceInfoDictionaryComplieData(
     else:
         deviceInfo["Tags"] = ""
 
-        if hasattr(device, "tags") and (device.tags is None or (type(device.tags) is list and not device.tags)):
+        if hasattr(device, "tags") and (
+            device.tags is None or (type(device.tags) is list and not device.tags)
+        ):
             device.tags = []
-        elif device and hasattr(device, "__iter__") and "tags" in device and (device["tags"] is None or (type(device["tags"]) is list and not device["tags"])):
+        elif (
+            device
+            and hasattr(device, "__iter__")
+            and "tags" in device
+            and (
+                device["tags"] is None
+                or (type(device["tags"]) is list and not device["tags"])
+            )
+        ):
             device["tags"] = []
 
     apps = apiCalls.createAppList(appData) if appData else []
@@ -907,9 +926,19 @@ def populateDeviceInfoDictionary(
     else:
         deviceInfo["Tags"] = ""
 
-        if hasattr(device, "tags") and (device.tags is None or (type(device.tags) is list and not device.tags)):
+        if hasattr(device, "tags") and (
+            device.tags is None or (type(device.tags) is list and not device.tags)
+        ):
             device.tags = []
-        elif device and hasattr(device, "__iter__") and "tags" in device and (device["tags"] is None or (type(device["tags"]) is list and not device["tags"])):
+        elif (
+            device
+            and hasattr(device, "__iter__")
+            and "tags" in device
+            and (
+                device["tags"] is None
+                or (type(device["tags"]) is list and not device["tags"])
+            )
+        ):
             device["tags"] = []
 
     if hasattr(appThread, "is_alive") and appThread.is_alive():
@@ -1313,12 +1342,10 @@ def getAllDeviceInfo(frame):
     # appResp = Globals.THREAD_POOL.results()
 
     for device in api_response["results"]:
-        Globals.THREAD_POOL.enqueue(perform_web_requests, (
-            getLatestEventApiUrl(device["id"]),
-            getHeader(),
-            "GET",
-            None
-        ))
+        Globals.THREAD_POOL.enqueue(
+            perform_web_requests,
+            (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
+        )
     Globals.THREAD_POOL.join()
     latestResp = Globals.THREAD_POOL.results()
 

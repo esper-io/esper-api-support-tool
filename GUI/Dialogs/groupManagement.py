@@ -934,8 +934,7 @@ class GroupManagement(wx.Dialog):
         if result == wx.ID_OK:
             self.setCursorBusy()
             self.button_7.Enable(False)
-            thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.saveGroupCSV, inFile)
 
     def saveGroupCSV(self, inFile):
         gridData = []
