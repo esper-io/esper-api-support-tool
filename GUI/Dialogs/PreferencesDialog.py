@@ -489,7 +489,9 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            "windowSize": tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE,
+            "windowSize": tuple(self.parent.GetSize())
+            if self.parent
+            else Globals.MIN_SIZE,
             "windowPosition": tuple(self.parent.GetPosition())
             if self.parent
             else str(wx.CENTRE),
