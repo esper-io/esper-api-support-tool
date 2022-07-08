@@ -12,7 +12,6 @@ import Common.Globals as Globals
 
 from Utility.Resource import (
     enforceRateLimit,
-    getAllFromOffsets,
     getHeader,
     joinThreadList,
     limitActiveThreads,

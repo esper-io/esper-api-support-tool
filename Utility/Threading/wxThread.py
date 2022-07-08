@@ -15,7 +15,10 @@ from Utility.Resource import joinThreadList, postEventToFrame
 @api_tool_decorator()
 def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
     """ Wait till all threads have finished then send a signal back to the Main thread """
-    joinThreadList(threads)
+    if threads == Globals.THREAD_POOL.threads:
+        Globals.THREAD_POOL.join()
+    else:
+        joinThreadList(threads)
 
     initPercent = 0
     if Globals.frame.gauge:
@@ -25,15 +28,27 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
         deviceList = {}
         if maxGauge:
             initVal = math.ceil((initPercent / 100) * maxGauge)
-        for thread in threads:
-            if type(thread.result) == tuple:
-                deviceList = {**deviceList, **thread.result[1]}
-                if maxGauge:
-                    val = int((initVal + len(deviceList)) / maxGauge * 100)
-                    postEventToFrame(
-                        eventUtil.myEVT_UPDATE_GAUGE,
-                        val,
-                    )
+        if threads == Globals.THREAD_POOL.threads:
+            resp = Globals.THREAD_POOL.results()
+            for thread in resp:
+                if type(thread) == tuple:
+                    deviceList = {**deviceList, **thread[1]}
+                    if maxGauge:
+                        val = int((initVal + len(deviceList)) / maxGauge * 100)
+                        postEventToFrame(
+                            eventUtil.myEVT_UPDATE_GAUGE,
+                            val,
+                        )
+        else:
+            for thread in threads:
+                if type(thread.result) == tuple:
+                    deviceList = {**deviceList, **thread.result[1]}
+                    if maxGauge:
+                        val = int((initVal + len(deviceList)) / maxGauge * 100)
+                        postEventToFrame(
+                            eventUtil.myEVT_UPDATE_GAUGE,
+                            val,
+                        )
         postEventToFrame(event, action)
         return (action, entId, deviceList, True, len(deviceList) * 3)
     if source == 2:
@@ -41,13 +56,23 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
         changeSucceeded = succeeded = numNewName = 0
         statuses = []
         devices = []
-        for thread in threads:
-            if type(thread.result) == tuple:
-                changeSucceeded += thread.result[0]
-                succeeded += thread.result[1]
-                numNewName += thread.result[2]
-                devices += thread._args[1]
-                statuses += thread.result[4]
+        if threads == Globals.THREAD_POOL.threads:
+            resp = Globals.THREAD_POOL.results()
+            for thread in resp:
+                if type(thread) == tuple:
+                    changeSucceeded += thread[0]
+                    succeeded += thread[1]
+                    numNewName += thread[2]
+                    # devices += thread._args[1] TODO
+                    statuses += thread[4]
+        else:
+            for thread in threads:
+                if type(thread.result) == tuple:
+                    changeSucceeded += thread.result[0]
+                    succeeded += thread.result[1]
+                    numNewName += thread.result[2]
+                    devices += thread._args[1]
+                    statuses += thread.result[4]
         msg = (
             "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
             % (changeSucceeded, len(devices), succeeded, numNewName, Globals.MAX_TAGS)
@@ -56,15 +81,27 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
     if source == 3:
         deviceList = {}
-        for thread in threads:
-            if type(thread.result) == dict:
-                deviceList = {**deviceList, **thread.result}
-                if maxGauge:
-                    val = int((initVal + len(deviceList)) / maxGauge * 100)
-                    postEventToFrame(
-                        eventUtil.myEVT_UPDATE_GAUGE,
-                        val,
-                    )
+        if threads == Globals.THREAD_POOL.threads:
+            resp = Globals.THREAD_POOL.results()
+            for thread in resp:
+                if type(thread) == dict:
+                    deviceList = {**deviceList, **thread}
+                    if maxGauge:
+                        val = int((initVal + len(deviceList)) / maxGauge * 100)
+                        postEventToFrame(
+                            eventUtil.myEVT_UPDATE_GAUGE,
+                            val,
+                        )
+        else:
+            for thread in threads:
+                if type(thread.result) == dict:
+                    deviceList = {**deviceList, **thread.result}
+                    if maxGauge:
+                        val = int((initVal + len(deviceList)) / maxGauge * 100)
+                        postEventToFrame(
+                            eventUtil.myEVT_UPDATE_GAUGE,
+                            val,
+                        )
         return (
             action,
             Globals.enterprise_id,
@@ -85,13 +122,23 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
         if action == GridActions.FACTORY_RESET.value:
             msg = "Results of Factory Reset."
         statuses = []
-        for t in threads:
-            if t.result and type(t.result) == dict:
-                for val in t.result.values():
-                    statuses.append(val)
-            elif t.result and type(t.result) == list:
-                for val in t.result:
-                    statuses.append(val)
+        if threads == Globals.THREAD_POOL.threads:
+            resp = Globals.THREAD_POOL.results()
+            for t in resp:
+                if t and type(t) == dict:
+                    for val in t.values():
+                        statuses.append(val)
+                elif t and type(t) == list:
+                    for val in t:
+                        statuses.append(val)
+        else:
+            for t in threads:
+                if t.result and type(t.result) == dict:
+                    for val in t.result.values():
+                        statuses.append(val)
+                elif t.result and type(t.result) == list:
+                    for val in t.result:
+                        statuses.append(val)
         postEventToFrame(eventUtil.myEVT_COMPLETE, None)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
 

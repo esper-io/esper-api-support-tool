@@ -567,7 +567,7 @@ class NewFrameLayout(wx.Frame):
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
                 self.gridPanel.disableGridProperties()
-                self.Logging("Attempting to save CSV at %s" % inFile)
+                self.Logging("Attempting to save file at %s" % inFile)
                 self.gauge.Pulse()
                 thread = wxThread.GUIThread(
                     self, self.saveAllFile, (inFile), name="saveAllFile"
@@ -636,17 +636,9 @@ class NewFrameLayout(wx.Frame):
         gridDeviceData = []
 
         splitResults = splitListIntoChunks(list(deviceList.values()))
-        threads = []
         for chunk in splitResults:
-            t = wxThread.GUIThread(
-                self,
-                self.fetchAllGridData,
-                args=(chunk, gridDeviceData),
-                name="fetchAllGridData",
-            )
-            threads.append(t)
-            t.startWithRetry()
-        joinThreadList(threads)
+            Globals.THREAD_POOL.enqueue(self.fetchAllGridData, chunk, gridDeviceData)
+        Globals.THREAD_POOL.join()
 
         self.Logging("Finished compiling device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
@@ -1279,6 +1271,7 @@ class NewFrameLayout(wx.Frame):
             Globals.LAST_OPENED_ENDPOINT = foundItem.GetItemLabelText()
             if self.prefDialog:
                 self.prefDialog.SetPref("last_endpoint", Globals.LAST_OPENED_ENDPOINT)
+                Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
 
             filledIn = False
             for _ in range(Globals.MAX_RETRY):
@@ -1645,6 +1638,7 @@ class NewFrameLayout(wx.Frame):
             groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL
         )
         self.sidePanel.deviceResp = api_response
+        splitResults = None
         if hasattr(api_response, "results") and len(api_response.results):
             self.Logging("---> Processing fetched devices...")
             if not Globals.SHOW_DISABLED_DEVICES:
@@ -1656,17 +1650,6 @@ class NewFrameLayout(wx.Frame):
                 key=lambda i: i.device_name.lower(),
             )
             splitResults = splitListIntoChunks(api_response.results)
-            threads = []
-            for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    self,
-                    self.processAddDeviceToChoice,
-                    args=(chunk),
-                    name="addDeviceToDeviceChoice",
-                )
-                threads.append(t)
-                t.startWithRetry()
-            joinThreadList(threads)
         elif type(api_response) is dict and len(api_response["results"]):
             self.Logging("---> Processing fetched devices...")
             if not Globals.SHOW_DISABLED_DEVICES:
@@ -1678,39 +1661,11 @@ class NewFrameLayout(wx.Frame):
                 key=lambda i: i["device_name"].lower(),
             )
             splitResults = splitListIntoChunks(api_response["results"])
-            threads = []
+
+        if splitResults:
             for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    self,
-                    self.processAddDeviceToChoice,
-                    args=(chunk),
-                    name="addDeviceToDeviceChoice",
-                )
-                threads.append(t)
-                t.startWithRetry()
-            joinThreadList(threads)
-        elif type(api_response) is dict and len(api_response["results"]):
-            self.Logging("---> Processing fetched devices...")
-            if not Globals.SHOW_DISABLED_DEVICES:
-                api_response["results"] = list(
-                    filter(filterDeviceList, api_response["results"])
-                )
-            api_response["results"] = sorted(
-                api_response["results"],
-                key=lambda i: i["device_name"].lower(),
-            )
-            splitResults = splitListIntoChunks(api_response["results"])
-            threads = []
-            for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    self,
-                    self.processAddDeviceToChoice,
-                    args=(chunk),
-                    name="addDeviceToDeviceChoice",
-                )
-                threads.append(t)
-                t.start()
-            joinThreadList(threads)
+                Globals.THREAD_POOL.enqueue(self.processAddDeviceToChoice, chunk)
+            Globals.THREAD_POOL.join()
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
@@ -2270,7 +2225,7 @@ class NewFrameLayout(wx.Frame):
             if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
                     self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    self.gridPanel.addDeviceToNetworkGrid, (device, deviceInfo)
+                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
                     self.gridPanel.populateAppGrid, (
                         device,
                         deviceInfo,

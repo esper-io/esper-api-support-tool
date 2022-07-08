@@ -39,7 +39,6 @@ from Utility.Resource import (
     displayMessageBox,
     getHeader,
     joinThreadList,
-    limitActiveThreads,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -261,18 +260,20 @@ def filterDeviceList(device):
 def processInstallDevices(deviceList):
     newDeviceList = []
     splitResults = splitListIntoChunks(deviceList)
-    threads = []
+    # threads = []
     for chunk in splitResults:
-        t = wxThread.GUIThread(
-            Globals.frame,
-            processInstallDevicesHelper,
-            args=(chunk, newDeviceList),
-            name="processInstallDevicesHelper",
-        )
-        threads.append(t)
-        t.startWithRetry()
-        limitActiveThreads(threads)
-    joinThreadList(threads)
+        Globals.THREAD_POOL.enqueue(processInstallDevicesHelper, chunk, newDeviceList)
+    #     t = wxThread.GUIThread(
+    #         Globals.frame,
+    #         processInstallDevicesHelper,
+    #         args=(chunk, newDeviceList),
+    #         name="processInstallDevicesHelper",
+    #     )
+    #     threads.append(t)
+    #     t.startWithRetry()
+    #     limitActiveThreads(threads)
+    # joinThreadList(threads)
+    Globals.THREAD_POOL.join()
     processCollectionDevices({"results": newDeviceList})
 
 
@@ -291,24 +292,26 @@ def processCollectionDevices(collectionList):
             collectionList["results"], maxThread=maxThread
         )
         if splitResults:
-            threads = []
+            # threads = []
             number_of_devices = 0
             for chunk in splitResults:
-                t = wxThread.GUIThread(
-                    Globals.frame,
-                    fillInDeviceInfoDict,
-                    args=(chunk, number_of_devices),
-                    name="fillInDeviceInfoDict",
-                )
-                threads.append(t)
-                t.startWithRetry()
+                Globals.THREAD_POOL.enqueue(fillInDeviceInfoDict, chunk, number_of_devices)
+                # t = wxThread.GUIThread(
+                #     Globals.frame,
+                #     fillInDeviceInfoDict,
+                #     args=(chunk, number_of_devices),
+                #     name="fillInDeviceInfoDict",
+                # )
+                # threads.append(t)
+                # t.startWithRetry()
                 number_of_devices += len(chunk)
 
             t = wxThread.GUIThread(
                 Globals.frame,
                 wxThread.waitTillThreadsFinish,
                 args=(
-                    tuple(threads),
+                    # tuple(threads),
+                    Globals.THREAD_POOL.threads,
                     GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
                     Globals.enterprise_id,
                     3,
@@ -329,7 +332,7 @@ def processCollectionDevices(collectionList):
 
 
 @api_tool_decorator()
-def fillInDeviceInfoDict(chunk, number_of_devices):
+def fillInDeviceInfoDict(chunk, number_of_devices, getApps=True, getLatestEvent=True):
     deviceList = {}
     for device in chunk:
         if hasattr(threading.current_thread(), "isStopped"):
@@ -337,7 +340,7 @@ def fillInDeviceInfoDict(chunk, number_of_devices):
                 return
         try:
             deviceInfo = {}
-            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo)
+            deviceInfo = populateDeviceInfoDictionary(device, deviceInfo, getApps, getLatestEvent)
             if deviceInfo:
                 deviceList[number_of_devices] = [device, deviceInfo]
                 number_of_devices += 1
@@ -583,8 +586,8 @@ def populateDeviceInfoDictionaryComplieData(
         elif device and hasattr(device, "__iter__") and "tags" in device and (device["tags"] is None or (type(device["tags"]) is list and not device["tags"])):
             device["tags"] = []
 
-    apps = apiCalls.createAppList(appData)
-    json = appData
+    apps = apiCalls.createAppList(appData) if appData else []
+    json = appData if appData else ""
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json
 
@@ -725,16 +728,32 @@ def populateDeviceInfoDictionary(
     # Handle response from Collections API
     if type(device) == dict:
         deviceId = device["id"]
-        deviceName = device["device_name"]
-        deviceGroups = device["groups"]
-        deviceAlias = device["alias_name"]
+        deviceName = ""
+        if "device_name" in device:
+            deviceName = device["device_name"]
+        elif "name" in device:
+            deviceName = device["name"]
+        deviceGroups = ""
+        if "groups" in device:
+            deviceGroups = device["groups"]
+        elif "group" in device:
+            deviceGroups = device["group"]
+        deviceAlias = ""
+        if "alias_name" in device:
+            deviceAlias = device["alias_name"]
+        elif "alias" in device:
+            deviceAlias = device["alias"]
         deviceStatus = device["status"]
         if (
             not Globals.SHOW_DISABLED_DEVICES
             and deviceStatus == DeviceState.DISABLED.value
         ):
             return
-        deviceHardware = device["hardwareInfo"]
+        deviceHardware = ""
+        if "hardwareInfo" in device:
+            deviceHardware = device["hardwareInfo"]
+        elif "hardware" in device:
+            deviceHardware = device["hardware"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     else:
@@ -754,24 +773,26 @@ def populateDeviceInfoDictionary(
         deviceTags = device.tags
         deviceDict = device.__dict__
         unpackageDict(deviceInfo, deviceDict)
-    appThread = wxThread.GUIThread(
-        Globals.frame,
-        apiCalls.getdeviceapps,
-        (deviceId, True, Globals.USE_ENTERPRISE_APP),
-    )
-    if getApps:
-        appThread.startWithRetry()
+    # appThread = wxThread.GUIThread(
+    #     Globals.frame,
+    #     apiCalls.getdeviceapps,
+    #     (deviceId, True, Globals.USE_ENTERPRISE_APP),
+    # )
     # if getApps:
-    #     appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
-    eventThread = wxThread.GUIThread(
-        Globals.frame,
-        getLatestEvent,
-        (deviceId),
-    )
-    if getLatestEvents:
-        eventThread.startWithRetry()
+    #     appThread.startWithRetry()
+    appThread = None
+    if getApps:
+        appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+    # eventThread = wxThread.GUIThread(
+    #     Globals.frame,
+    #     getLatestEvent,
+    #     (deviceId),
+    # )
     # if getLatestEvents:
-    #     eventThread = getLatestEvent(deviceId)
+    #     eventThread.startWithRetry()
+    eventThread = None
+    if getLatestEvents:
+        eventThread = getLatestEvent(deviceId)
     latestEvent = None
     deviceInfo["EsperName"] = deviceName
 
@@ -1302,15 +1323,15 @@ def getAllDeviceInfo(frame):
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
-    for device in api_response["results"]:
-        Globals.THREAD_POOL.enqueue(perform_web_requests, (
-            getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
-            getHeader(),
-            "GET",
-            None
-        ))
-    Globals.THREAD_POOL.join()
-    appResp = Globals.THREAD_POOL.results()
+    # for device in api_response["results"]:
+    #     Globals.THREAD_POOL.enqueue(perform_web_requests, (
+    #         getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
+    #         getHeader(),
+    #         "GET",
+    #         None
+    #     ))
+    # Globals.THREAD_POOL.join()
+    # appResp = Globals.THREAD_POOL.results()
 
     for device in api_response["results"]:
         Globals.THREAD_POOL.enqueue(perform_web_requests, (
@@ -1326,11 +1347,10 @@ def getAllDeviceInfo(frame):
     indx = 0
     for device in api_response["results"]:
         deviceInfo = {}
-        appData = appResp[indx] if len(appResp) > indx else None
         latestData = latestResp[indx] if len(latestResp) > indx else None
         if latestData and "results" in latestData and latestData["results"]:
             latestData = latestData["results"][0]["data"]
-        populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
+        populateDeviceInfoDictionaryComplieData(device, deviceInfo, None, latestData)
         deviceInfo["num"] = indx
         deviceList[indx] = [device, deviceInfo]
         indx += 1
