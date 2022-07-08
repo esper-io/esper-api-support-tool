@@ -19,7 +19,10 @@ from Utility.Resource import (
 
 from esperclient.rest import ApiException
 
-from Utility.Web.WebRequests import getAllFromOffsetsRequests, performGetRequestWithRetry
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    performGetRequestWithRetry,
+)
 
 
 @api_tool_decorator()

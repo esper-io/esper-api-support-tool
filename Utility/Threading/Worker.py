@@ -7,8 +7,8 @@ from threading import Thread
 
 # class for workers
 class Worker(Thread):
-    """Thread executing tasks from a given tasks queue"""
     def __init__(self, name, queue, results, abort, idle, setLoop=False):
+        """Thread executing tasks from a given tasks queue"""
         Thread.__init__(self)
         self.name = name
         self.queue = queue
@@ -19,8 +19,8 @@ class Worker(Thread):
         self.setLoop = setLoop
         self.start()
 
-    """Thread work loop calling the function with the params"""
     def run(self):
+        """Thread work loop calling the function with the params"""
         # keep running until told to abort
         if self.setLoop:
             loop = asyncio.new_event_loop()
@@ -38,7 +38,7 @@ class Worker(Thread):
             try:
                 # the function may raise
                 result = func(*args, **kwargs)
-                if (result is not None):
+                if result is not None:
                     self.results.put(result)
             except Exception as e:
                 # so we move on and handle it in whatever way the caller wanted

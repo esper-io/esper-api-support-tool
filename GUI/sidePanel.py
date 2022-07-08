@@ -300,7 +300,9 @@ class SidePanel(wx.Panel):
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")[3].replace("Enterprise = ", "")
-            result = list(filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data))
+            result = list(
+                filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data)
+            )
             if result:
                 result = result[0]
             if value:
@@ -312,15 +314,7 @@ class SidePanel(wx.Panel):
                 if res == wx.YES:
                     if result in self.parentFrame.auth_data:
                         self.parentFrame.auth_data.remove(result)
-                    data = [
-                        [
-                            "name",
-                            "apiHost",
-                            "enterprise",
-                            "apiKey",
-                            "apiPrefix"
-                        ]
-                    ]
+                    data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
                     for entry in self.parentFrame.auth_data:
                         authEntry = []
                         for auth in entry.values():

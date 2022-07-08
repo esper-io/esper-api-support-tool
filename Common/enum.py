@@ -7,10 +7,10 @@ from enum import Enum
 
 class GeneralActions(Enum):
     # REPORTS
-    SHOW_ALL_AND_GENERATE_REPORT = 1    # All
-    GENERATE_INFO_REPORT = 2            # Device & Network
-    GENERATE_DEVICE_REPORT = 3          # Device
-    GENERATE_APP_REPORT = 4             # App
+    SHOW_ALL_AND_GENERATE_REPORT = 1  # All
+    GENERATE_INFO_REPORT = 2  # Device & Network
+    GENERATE_DEVICE_REPORT = 3  # Device
+    GENERATE_APP_REPORT = 4  # App
 
     # Actions
     SET_DEVICE_MODE = 50

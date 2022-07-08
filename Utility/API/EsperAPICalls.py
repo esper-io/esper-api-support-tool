@@ -564,11 +564,7 @@ def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
 
 def createAppList(json_resp):
     applist = []
-    if (
-        json_resp
-        and "results" in json_resp
-        and len(json_resp["results"])
-    ):
+    if json_resp and "results" in json_resp and len(json_resp["results"]):
         for app in json_resp["results"]:
             if (
                 "install_state" in app and "uninstall" in app["install_state"].lower()

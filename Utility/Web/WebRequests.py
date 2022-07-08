@@ -210,9 +210,7 @@ def performPostRequestWithRetry(
     return resp
 
 
-def getAllFromOffsetsRequests(
-    api_response, results=None
-):
+def getAllFromOffsetsRequests(api_response, results=None):
     count = None
     # addresses = []
     if not results:
@@ -232,13 +230,17 @@ def getAllFromOffsetsRequests(
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
             url = apiNext.replace(respOffset, str(respOffsetInt))
-            Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
+            Globals.THREAD_POOL.enqueue(
+                perform_web_requests, (url, getHeader(), "GET", None)
+            )
             respOffsetInt += int(respLimit)
         if respOffsetInt > count:
             respOffsetInt -= int(respLimit)
             respOffsetInt += 1
             url = apiNext.replace(respOffset, str(respOffsetInt))
-            Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
+            Globals.THREAD_POOL.enqueue(
+                perform_web_requests, (url, getHeader(), "GET", None)
+            )
 
     Globals.THREAD_POOL.join()
     resultList = Globals.THREAD_POOL.results()
