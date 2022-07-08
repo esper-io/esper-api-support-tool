@@ -314,10 +314,7 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def onUpdateCheck(self, event=None, showDlg=True):
         if not self.isCheckingForUpdates:
-            update = wxThread.GUIThread(
-                self, self.updateCheck, showDlg, name="UpdateCheck"
-            )
-            update.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.updateCheck, showDlg)
             self.isCheckingForUpdates = True
 
     @api_tool_decorator()
