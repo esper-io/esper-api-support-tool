@@ -260,19 +260,8 @@ def filterDeviceList(device):
 def processInstallDevices(deviceList):
     newDeviceList = []
     splitResults = splitListIntoChunks(deviceList)
-    # threads = []
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(processInstallDevicesHelper, chunk, newDeviceList)
-    #     t = wxThread.GUIThread(
-    #         Globals.frame,
-    #         processInstallDevicesHelper,
-    #         args=(chunk, newDeviceList),
-    #         name="processInstallDevicesHelper",
-    #     )
-    #     threads.append(t)
-    #     t.startWithRetry()
-    #     limitActiveThreads(threads)
-    # joinThreadList(threads)
     Globals.THREAD_POOL.join()
     processCollectionDevices({"results": newDeviceList})
 
@@ -292,25 +281,15 @@ def processCollectionDevices(collectionList):
             collectionList["results"], maxThread=maxThread
         )
         if splitResults:
-            # threads = []
             number_of_devices = 0
             for chunk in splitResults:
                 Globals.THREAD_POOL.enqueue(fillInDeviceInfoDict, chunk, number_of_devices)
-                # t = wxThread.GUIThread(
-                #     Globals.frame,
-                #     fillInDeviceInfoDict,
-                #     args=(chunk, number_of_devices),
-                #     name="fillInDeviceInfoDict",
-                # )
-                # threads.append(t)
-                # t.startWithRetry()
                 number_of_devices += len(chunk)
 
             t = wxThread.GUIThread(
                 Globals.frame,
                 wxThread.waitTillThreadsFinish,
                 args=(
-                    # tuple(threads),
                     Globals.THREAD_POOL.threads,
                     GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
                     Globals.enterprise_id,
