@@ -826,7 +826,7 @@ class NewFrameLayout(wx.Frame):
             ("Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile, wx.YES_NO | wx.ICON_INFORMATION)
         )
         if res == wx.YES:
-            parentDirectory = Path(inFile).parent.absolute( )
+            parentDirectory = Path(inFile).parent.absolute()
             openWebLinkInBrowser(parentDirectory)
 
     def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
