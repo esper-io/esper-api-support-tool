@@ -9,7 +9,13 @@ from Common.decorator import api_tool_decorator
 
 
 class InstalledDevicesDlg(wx.Dialog):
-    def __init__(self, apps, hide_version=False, title="Get Installed Devices", showAllVersionsOption=True):
+    def __init__(
+        self,
+        apps,
+        hide_version=False,
+        title="Get Installed Devices",
+        showAllVersionsOption=True,
+    ):
         super(InstalledDevicesDlg, self).__init__(
             None,
             wx.ID_ANY,

@@ -139,7 +139,9 @@ def fetchGroupName(groupURL, returnJson=False):
 
 
 @api_tool_decorator(locks=[Globals.token_lock])
-def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0):
+def getAllGroups(
+    name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0
+):
     """ Make a API call to get all Groups belonging to the Enterprise """
     return get_all_groups(name, limit, offset, maxAttempt, tolerance=tolerance)
 

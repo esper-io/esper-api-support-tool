@@ -409,7 +409,9 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    Globals.THREAD_POOL.enqueue(processCollectionDevices, deviceListResp)
+                    Globals.THREAD_POOL.enqueue(
+                        processCollectionDevices, deviceListResp
+                    )
             else:
                 self.parentFrame.setCursorDefault()
 
@@ -429,7 +431,9 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging(
                         "---> Finsihed Performing EQL Query, processing results..."
                     )
-                    Globals.THREAD_POOL.enqueue(processCollectionDevices, deviceListResp)
+                    Globals.THREAD_POOL.enqueue(
+                        processCollectionDevices, deviceListResp
+                    )
             else:
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()

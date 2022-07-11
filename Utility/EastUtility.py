@@ -1128,7 +1128,9 @@ def getAllDeviceInfo(frame):
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response.results = list(filter(filterDeviceList, api_response.results))
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        api_response = getAllDevices(Globals.frame.sidePanel.selectedGroupsList, tolarance=1)
+        api_response = getAllDevices(
+            Globals.frame.sidePanel.selectedGroupsList, tolarance=1
+        )
         if api_response:
             if (
                 api_response

@@ -900,7 +900,12 @@ class NewFrameLayout(wx.Frame):
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
                 else:
                     self.openDeviceCSV(csv_auth_path)
-                Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 2, tolerance=1)
+                Globals.THREAD_POOL.enqueue(
+                    self.waitForThreadsThenSetCursorDefault,
+                    Globals.THREAD_POOL.threads,
+                    2,
+                    tolerance=1,
+                )
             elif result == wx.ID_CANCEL:
                 self.setCursorDefault()
                 return  # the user changed their mind
@@ -1306,9 +1311,9 @@ class NewFrameLayout(wx.Frame):
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 if Globals.HAS_INTERNET:
-                    # groupThread = 
+                    # groupThread =
                     self.PopulateGroups()
-                    # appThread = 
+                    # appThread =
                     self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
@@ -1318,7 +1323,12 @@ class NewFrameLayout(wx.Frame):
                     )
                     blueprints.start()
                     # threads = [groupThread, appThread, blueprints]
-                Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 0, tolerance=1)
+                Globals.THREAD_POOL.enqueue(
+                    self.waitForThreadsThenSetCursorDefault,
+                    Globals.THREAD_POOL.threads,
+                    0,
+                    tolerance=1,
+                )
                 return True
         else:
             displayMessageBox(("Invalid Configuration", wx.ICON_ERROR))
@@ -1386,7 +1396,9 @@ class NewFrameLayout(wx.Frame):
                     newToken = ""
 
     @api_tool_decorator()
-    def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
+    def waitForThreadsThenSetCursorDefault(
+        self, threads, source=None, action=None, tolerance=0
+    ):
         if hasattr(threads, "GetValue"):
             evtVal = threads.GetValue()
             threads = evtVal[0]
@@ -1610,14 +1622,24 @@ class NewFrameLayout(wx.Frame):
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
         for clientData in self.sidePanel.selectedGroupsList:
-            Globals.THREAD_POOL.enqueue(self.addDevicesToDeviceChoice, clientData, tolerance=2)
-        Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 1, tolerance=1)
+            Globals.THREAD_POOL.enqueue(
+                self.addDevicesToDeviceChoice, clientData, tolerance=2
+            )
+        Globals.THREAD_POOL.enqueue(
+            self.waitForThreadsThenSetCursorDefault,
+            Globals.THREAD_POOL.threads,
+            1,
+            tolerance=1,
+        )
 
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, groupId, tolerance=0):
         """ Populate Device Choice """
         api_response = getAllDevices(
-            groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL, tolarance=tolerance
+            groupId,
+            limit=Globals.limit,
+            fetchAll=Globals.GROUP_FETCH_ALL,
+            tolarance=tolerance,
         )
         self.sidePanel.deviceResp = api_response
         splitResults = None
@@ -2217,14 +2239,16 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(setMulti, self, device, deviceInfo)
             elif action == GeneralActions.CLEAR_APP_DATA.value:
                 Globals.THREAD_POOL.enqueue(clearAppData, self, device)
-            elif (
-                action == GeneralActions.SET_APP_STATE.value
-            ):
-                Globals.THREAD_POOL.enqueue(setAppState, deviceId, appToUse, self.AppState)
+            elif action == GeneralActions.SET_APP_STATE.value:
+                Globals.THREAD_POOL.enqueue(
+                    setAppState, deviceId, appToUse, self.AppState
+                )
             elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
                 Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceId, deviceInfo)
             elif action == GeneralActions.INSTALL_APP.value:
-                Globals.THREAD_POOL.enqueue(installAppOnDevices, appToUse, appVersion, deviceId)
+                Globals.THREAD_POOL.enqueue(
+                    installAppOnDevices, appToUse, appVersion, deviceId
+                )
             elif action == GeneralActions.UNINSTALL_APP.value:
                 Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceId)
             elif action == GeneralActions.GENERATE_APP_REPORT.value:
@@ -2255,7 +2279,13 @@ class NewFrameLayout(wx.Frame):
             if updateGauge and value <= 99:
                 num += 1
                 self.setGaugeValue(value)
-        Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 3, action, tolerance=1)
+        Globals.THREAD_POOL.enqueue(
+            self.waitForThreadsThenSetCursorDefault,
+            Globals.THREAD_POOL.threads,
+            3,
+            action,
+            tolerance=1,
+        )
 
     @api_tool_decorator()
     def MacReopenApp(self, event):
@@ -2891,7 +2921,9 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = version = pkg = None
             with InstalledDevicesDlg(
-                self.sidePanel.enterpriseApps, title="Install Application", showAllVersionsOption=False
+                self.sidePanel.enterpriseApps,
+                title="Install Application",
+                showAllVersionsOption=False,
             ) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
@@ -2929,7 +2961,10 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = pkg = None
             with InstalledDevicesDlg(
-                self.sidePanel.apps, hide_version=True, title="Uninstall Application", showAllVersionsOption=False
+                self.sidePanel.apps,
+                hide_version=True,
+                title="Uninstall Application",
+                showAllVersionsOption=False,
             ) as dlg:
                 res = dlg.ShowModal()
             if res == wx.ID_OK:

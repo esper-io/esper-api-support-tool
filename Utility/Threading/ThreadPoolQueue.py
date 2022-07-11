@@ -68,7 +68,9 @@ class Pool:
         else:
             startTime = time.perf_counter()
             while True:
-                if (timeout > 0 and time.perf_counter() - startTime >= timeout) or self.isDone(queueTolerance=tolerance):
+                if (
+                    timeout > 0 and time.perf_counter() - startTime >= timeout
+                ) or self.isDone(queueTolerance=tolerance):
                     break
                 time.sleep(0.01)
 

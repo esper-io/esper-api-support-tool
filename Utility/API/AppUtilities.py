@@ -78,7 +78,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
             },
             command_type="INSTALL",
             deviceIds=devices,
-            postStatus=False
+            postStatus=False,
         )
     else:
         displayMessageBox(
@@ -122,7 +122,7 @@ def installAppOnGroups(packageName, version=None, groups=None):
             },
             command_type="INSTALL",
             groupIds=groups,
-            postStatus=False
+            postStatus=False,
         )
     else:
         displayMessageBox(

@@ -13,7 +13,9 @@ from Utility.Resource import joinThreadList, postEventToFrame
 
 
 @api_tool_decorator()
-def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1, tolerance=0):
+def waitTillThreadsFinish(
+    threads, action, entId, source, event=None, maxGauge=1, tolerance=0
+):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     if threads == Globals.THREAD_POOL.threads:
         Globals.THREAD_POOL.join(tolerance)

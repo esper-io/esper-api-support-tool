@@ -34,9 +34,13 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         schType = esperclient.V0CommandScheduleEnum.RECURRING
     t = None
     if result and isGroup:
-        Globals.THREAD_POOL.enqueue(executeCommandOnGroup, frame, command_args, schedule, schType, commandType)
+        Globals.THREAD_POOL.enqueue(
+            executeCommandOnGroup, frame, command_args, schedule, schType, commandType
+        )
     elif result and not isGroup:
-        Globals.THREAD_POOL.enqueue(executeCommandOnDevice, frame, command_args, schedule, schType, commandType)
+        Globals.THREAD_POOL.enqueue(
+            executeCommandOnDevice, frame, command_args, schedule, schType, commandType
+        )
     if t:
         frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
@@ -94,7 +98,7 @@ def executeCommandOnGroup(
     command_type="UPDATE_DEVICE_CONFIG",
     groupIds=None,
     maxAttempt=Globals.MAX_RETRY,
-    postStatus=True
+    postStatus=True,
 ):
     """ Execute a Command on a Group of Devices """
     statusList = []
@@ -145,9 +149,7 @@ def executeCommandOnGroup(
             entry["Status"] = last_status
             statusList.append(entry)
     if postStatus:
-        postEventToFrame(
-            eventUtil.myEVT_COMMAND, statusList
-        )
+        postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
 
 
@@ -160,7 +162,7 @@ def executeCommandOnDevice(
     command_type="UPDATE_DEVICE_CONFIG",
     deviceIds=None,
     maxAttempt=Globals.MAX_RETRY,
-    postStatus=True
+    postStatus=True,
 ):
     """ Execute a Command on a Device """
     statusList = []
@@ -219,9 +221,7 @@ def executeCommandOnDevice(
             entry["Status"] = last_status
             statusList.append(entry)
     if postStatus:
-        postEventToFrame(
-            eventUtil.myEVT_COMMAND, statusList
-        )
+        postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
 
 

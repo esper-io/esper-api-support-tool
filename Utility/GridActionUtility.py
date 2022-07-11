@@ -93,9 +93,23 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(processDeviceModificationForList, frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction)
+        Globals.THREAD_POOL.enqueue(
+            processDeviceModificationForList,
+            frame,
+            chunk,
+            tagsFromGrid,
+            aliasDic,
+            maxGaugeAction,
+        )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, -1, -1, 2, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        -1,
+        -1,
+        2,
+        tolerance=1,
+    )
 
 
 @api_tool_decorator()
@@ -310,7 +324,14 @@ def setAppStateForAllAppsListed(state):
                 setAllAppsState, Globals.frame, device, Globals.frame.AppState
             )
 
-        Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, state, -1, 4, tolerance=1)
+        Globals.THREAD_POOL.enqueue(
+            wxThread.waitTillThreadsFinish,
+            Globals.THREAD_POOL.threads,
+            state,
+            -1,
+            4,
+            tolerance=1,
+        )
 
 
 @api_tool_decorator()
@@ -447,7 +468,14 @@ def setAppStateForSpecificAppListed(action):
                                 state,
                             )
 
-        Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, state, -1, 4, tolerance=1)
+        Globals.THREAD_POOL.enqueue(
+            wxThread.waitTillThreadsFinish,
+            Globals.THREAD_POOL.threads,
+            state,
+            -1,
+            4,
+            tolerance=1,
+        )
 
 
 @api_tool_decorator()
@@ -557,9 +585,18 @@ def relocateDeviceToNewGroup(frame):
     # threads = []
 
     for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(processDeviceGroupMove, chunk, newGroupList, tolerance=2)
+        Globals.THREAD_POOL.enqueue(
+            processDeviceGroupMove, chunk, newGroupList, tolerance=2
+        )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.MOVE_GROUP.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.MOVE_GROUP.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 @api_tool_decorator()
@@ -660,7 +697,14 @@ def installListedLatestApp(frame):
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(processInstallLatestAppChunk, chunk, gridAppList)
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.INSTALL_LATEST_APP.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.INSTALL_LATEST_APP.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 @api_tool_decorator()
@@ -757,7 +801,14 @@ def uninstallListedApp(frame):
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(processUninstallAppChunk, chunk, gridAppList)
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.UNINSTALL_LISTED_APP.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.UNINSTALL_LISTED_APP.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 @api_tool_decorator()
@@ -832,7 +883,14 @@ def installApp(frame):
             processInstallLatestAppChunk, chunk, frame.sidePanel.selectedAppEntry, True
         )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.INSTALL_LATEST_APP.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.INSTALL_LATEST_APP.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 def uninstallApp(frame):
@@ -846,7 +904,14 @@ def uninstallApp(frame):
             processUninstallAppChunk, chunk, frame.sidePanel.selectedAppEntry, True
         )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.UNINSTALL_LISTED_APP.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.UNINSTALL_LISTED_APP.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 def processBulkFactoryReset(devices, numDevices, processed):
@@ -881,7 +946,14 @@ def bulkFactoryReset(identifers):
             processBulkFactoryReset, chunk, numDevices, processed
         )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.FACTORY_RESET.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.FACTORY_RESET.value,
+        -1,
+        5,
+        tolerance=1,
+    )
 
 
 def processSetDeviceDisabled(devices, numDevices, processed):
@@ -916,4 +988,11 @@ def setDevicesDisabled():
             processSetDeviceDisabled, chunk, numDevices, processed
         )
 
-    Globals.THREAD_POOL.enqueue(wxThread.waitTillThreadsFinish, Globals.THREAD_POOL.threads, GridActions.SET_DEVICE_DISABLED.value, -1, 5, tolerance=1)
+    Globals.THREAD_POOL.enqueue(
+        wxThread.waitTillThreadsFinish,
+        Globals.THREAD_POOL.threads,
+        GridActions.SET_DEVICE_DISABLED.value,
+        -1,
+        5,
+        tolerance=1,
+    )

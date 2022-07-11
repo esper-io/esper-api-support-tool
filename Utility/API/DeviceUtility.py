@@ -60,7 +60,12 @@ def setdevicetags(deviceid, tags):
 
 @api_tool_decorator()
 def getAllDevices(
-    groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
+    groupToUse,
+    limit=None,
+    offset=None,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
 ):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not limit:
@@ -133,7 +138,9 @@ def fetchDevicesFromGroup(
 ):
     api_response = None
     for group in groupToUse:
-        resp = fetchDevicesFromGroupHelper(group, limit, offset, fetchAll, maxAttempt, tolarance)
+        resp = fetchDevicesFromGroupHelper(
+            group, limit, offset, fetchAll, maxAttempt, tolarance
+        )
 
         if not api_response:
             api_response = resp
@@ -154,7 +161,9 @@ def fetchDevicesFromGroupHelper(
 ):
     api_response = None
     for _ in range(maxAttempt):
-        response = get_all_devices(group, limit, offset, fetchAll, maxAttempt, tolarance)
+        response = get_all_devices(
+            group, limit, offset, fetchAll, maxAttempt, tolarance
+        )
         if api_response:
             for device in response.results:
                 if device not in api_response.results:
