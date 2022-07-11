@@ -83,6 +83,7 @@ from Utility.EastUtility import (
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
+    openWebLinkInBrowser,
     postEventToFrame,
     resourcePath,
     createNewFile,
@@ -821,9 +822,12 @@ class NewFrameLayout(wx.Frame):
         self.setGaugeValue(100)
         self.gridPanel.enableGridProperties()
 
-        displayMessageBox(
-            ("Info saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
+        res = displayMessageBox(
+            ("Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile, wx.YES_NO | wx.ICON_INFORMATION)
         )
+        if res == wx.YES:
+            parentDirectory = Path(inFile).parent.absolute( )
+            openWebLinkInBrowser(parentDirectory)
 
     def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
         for entry in contents:
