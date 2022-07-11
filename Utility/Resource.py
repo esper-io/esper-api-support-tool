@@ -484,3 +484,15 @@ def getEsperConfig(host, apiKey, auth="Bearer"):
     configuration.api_key["Authorization"] = apiKey
     configuration.api_key_prefix["Authorization"] = auth
     return configuration
+
+
+def processFunc(event):
+    """ Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
+    fun = event.GetValue()
+    if callable(fun):
+        fun()
+    elif type(fun) == tuple and callable(fun[0]):
+        if type(fun[1]) == tuple:
+            fun[0](*fun[1])
+        else:
+            fun[0](fun[1])

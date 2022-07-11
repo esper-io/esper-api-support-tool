@@ -89,6 +89,7 @@ from Utility.Resource import (
     displayMessageBox,
     splitListIntoChunks,
     updateErrorTracker,
+    processFunc,
 )
 from Utility.API.CommandUtility import createCommand
 from Utility.API.AppUtilities import (
@@ -239,7 +240,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
         self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
-        self.Bind(eventUtil.EVT_PROCESS_FUNCTION, self.processFunc)
+        self.Bind(eventUtil.EVT_PROCESS_FUNCTION, processFunc)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
@@ -3074,17 +3075,6 @@ class NewFrameLayout(wx.Frame):
                     Globals.THREAD_POOL.join()
         if event:
             event.Skip()
-
-    def processFunc(self, event):
-        """ Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
-        fun = event.GetValue()
-        if callable(fun):
-            fun()
-        elif type(fun) == tuple and callable(fun[0]):
-            if type(fun[1]) == tuple:
-                fun[0](*fun[1])
-            else:
-                fun[0](fun[1])
 
     @api_tool_decorator()
     def onBulkFactoryReset(self, event):
