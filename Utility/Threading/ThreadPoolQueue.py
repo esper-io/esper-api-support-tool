@@ -70,7 +70,7 @@ class Pool:
             while True:
                 if (
                     timeout > 0 and time.perf_counter() - startTime >= timeout
-                ) or self.isDone(queueTolerance=tolerance):
+                ) or self.isDoneWithinTolerance(queueTolerance=tolerance):
                     break
                 time.sleep(0.01)
 
@@ -99,8 +99,7 @@ class Pool:
         """Returns True if not tasks are left to be completed"""
         return self.queue.empty()
 
-    def isDone(self, queueTolerance=0):
-        """Returns True if not tasks are left to be completed"""
+    def isDoneWithinTolerance(self, queueTolerance=0):
         return self.idle(queueTolerance)
 
     def results(self, wait=0):
