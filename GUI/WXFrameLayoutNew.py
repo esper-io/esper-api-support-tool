@@ -110,7 +110,7 @@ class NewFrameLayout(wx.Frame):
         self.prefPath = ""
         self.authPath = ""
 
-        pd.options.display.max_rows = 9999
+        pd.options.display.max_rows = 9999999
 
         self.consoleWin = None
         self.refresh = None
