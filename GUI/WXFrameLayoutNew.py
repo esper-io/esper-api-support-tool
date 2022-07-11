@@ -823,7 +823,11 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.enableGridProperties()
 
         res = displayMessageBox(
-            ("Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile, wx.YES_NO | wx.ICON_INFORMATION)
+            (
+                "Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                % inFile,
+                wx.YES_NO | wx.ICON_INFORMATION,
+            )
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
