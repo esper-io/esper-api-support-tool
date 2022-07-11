@@ -29,27 +29,27 @@ from Utility.Web.WebRequests import (
 )
 
 
-def uninstallAppOnDevice(packageName, device=None):
+def uninstallAppOnDevice(packageName, device=None, postStatus=False):
     return executeCommandOnDevice(
         Globals.frame,
         {"package_name": packageName},
         command_type="UNINSTALL",
         deviceIds=device,
-        postStatus=False,
+        postStatus=postStatus,
     )
 
 
-def uninstallAppOnGroup(packageName, groups=None):
+def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
     return executeCommandOnGroup(
         Globals.frame,
         {"package_name": packageName},
         command_type="UNINSTALL",
         groupIds=groups,
-        postStatus=False,
+        postStatus=postStatus,
     )
 
 
-def installAppOnDevices(packageName, version=None, devices=None):
+def installAppOnDevices(packageName, version=None, devices=None, postStatus=False):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -78,7 +78,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
             },
             command_type="INSTALL",
             deviceIds=devices,
-            postStatus=False,
+            postStatus=postStatus,
         )
     else:
         displayMessageBox(
@@ -94,7 +94,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
         }
 
 
-def installAppOnGroups(packageName, version=None, groups=None):
+def installAppOnGroups(packageName, version=None, groups=None, postStatus=False):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -122,7 +122,7 @@ def installAppOnGroups(packageName, version=None, groups=None):
             },
             command_type="INSTALL",
             groupIds=groups,
-            postStatus=False,
+            postStatus=postStatus,
         )
     else:
         displayMessageBox(

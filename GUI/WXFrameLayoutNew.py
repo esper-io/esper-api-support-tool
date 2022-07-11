@@ -2935,27 +2935,10 @@ class NewFrameLayout(wx.Frame):
                 if res == wx.ID_OK:
                     _, version, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
-                # t = None
                 if self.sidePanel.selectedDevicesList:
-                    # t = wxThread.GUIThread(
-                    #     self,
-                    #     installAppOnDevices,
-                    #     args=(pkg, version),
-                    #     eventType=eventUtil.myEVT_COMMAND,
-                    #     name="installAppOnDevices",
-                    # )
-                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version)
+                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version, postStatus=True)
                 elif self.sidePanel.selectedGroupsList:
-                    # t = wxThread.GUIThread(
-                    #     self,
-                    #     installAppOnGroups,
-                    #     args=(pkg, version),
-                    #     eventType=eventUtil.myEVT_COMMAND,
-                    #     name="installAppOnGroups",
-                    # )
-                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version)
-                # if t:
-                #     t.startWithRetry()
+                    Globals.THREAD_POOL.enqueue(installAppOnGroups, pkg, version, postStatus=True)
         else:
             displayMessageBox(
                 (
@@ -2978,25 +2961,10 @@ class NewFrameLayout(wx.Frame):
             if res == wx.ID_OK:
                 _, _, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
-                t = None
                 if self.sidePanel.selectedDevicesList:
-                    t = wxThread.GUIThread(
-                        self,
-                        uninstallAppOnDevice,
-                        args=(pkg),
-                        eventType=eventUtil.myEVT_COMMAND,
-                        name="uninstallAppOnDevice",
-                    )
+                    Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, pkg, postStatus=True)
                 elif self.sidePanel.selectedGroupsList:
-                    t = wxThread.GUIThread(
-                        self,
-                        uninstallAppOnGroup,
-                        args=(pkg),
-                        eventType=eventUtil.myEVT_COMMAND,
-                        name="uninstallAppOnGroup",
-                    )
-                if t:
-                    t.startWithRetry()
+                    Globals.THREAD_POOL.enqueue(uninstallAppOnGroup, pkg, postStatus=True)
         else:
             displayMessageBox(
                 (
