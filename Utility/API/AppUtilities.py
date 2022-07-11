@@ -35,6 +35,7 @@ def uninstallAppOnDevice(packageName, device=None):
         {"package_name": packageName},
         command_type="UNINSTALL",
         deviceIds=device,
+        postStatus=False,
     )
 
 
@@ -44,6 +45,7 @@ def uninstallAppOnGroup(packageName, groups=None):
         {"package_name": packageName},
         command_type="UNINSTALL",
         groupIds=groups,
+        postStatus=False,
     )
 
 
@@ -76,6 +78,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
             },
             command_type="INSTALL",
             deviceIds=devices,
+            postStatus=False
         )
     else:
         displayMessageBox(
@@ -119,6 +122,7 @@ def installAppOnGroups(packageName, version=None, groups=None):
             },
             command_type="INSTALL",
             groupIds=groups,
+            postStatus=False
         )
     else:
         displayMessageBox(

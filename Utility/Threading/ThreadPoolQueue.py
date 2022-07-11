@@ -3,7 +3,7 @@
 import time
 
 from queue import Queue
-from threading import Event
+from threading import Event, current_thread
 
 from Utility.Threading.Worker import Worker
 
@@ -61,9 +61,16 @@ class Pool:
         """Add a task to the queue"""
         self.queue.put((func, args, kargs))
 
-    def join(self):
+    def join(self, tolerance=0, timeout=-1):
         """Wait for completion of all the tasks in the queue"""
-        self.queue.join()
+        if current_thread() not in self.threads:
+            self.queue.join()
+        else:
+            startTime = time.perf_counter()
+            while True:
+                if (timeout > 0 and time.perf_counter() - startTime >= timeout) or self.isDone(queueTolerance=tolerance):
+                    break
+                time.sleep(0.01)
 
     def abort(self, block=False):
         """Tell each worker that its done working"""
@@ -81,13 +88,18 @@ class Pool:
         """Returns True if any threads are currently running"""
         return True in [t.is_alive() for t in self.threads]
 
-    def idle(self):
+    def idle(self, tolarance=0):
         """Returns True if all threads are waiting for work"""
-        return False not in [i.is_set() for i in self.idles]
+        numActive = [i.is_set() for i in self.idles].count(False)
+        return numActive <= tolarance
 
     def done(self):
         """Returns True if not tasks are left to be completed"""
         return self.queue.empty()
+
+    def isDone(self, queueTolerance=0):
+        """Returns True if not tasks are left to be completed"""
+        return self.idle(queueTolerance)
 
     def results(self, wait=0):
         """Get the set of results that have been processed, repeatedly call until done"""

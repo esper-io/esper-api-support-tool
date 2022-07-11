@@ -210,7 +210,7 @@ def performPostRequestWithRetry(
     return resp
 
 
-def getAllFromOffsetsRequests(api_response, results=None):
+def getAllFromOffsetsRequests(api_response, results=None, tolarance=0):
     count = None
     # addresses = []
     if not results:
@@ -242,7 +242,7 @@ def getAllFromOffsetsRequests(api_response, results=None):
                 perform_web_requests, (url, getHeader(), "GET", None)
             )
 
-    Globals.THREAD_POOL.join()
+    Globals.THREAD_POOL.join(tolarance)
     resultList = Globals.THREAD_POOL.results()
     for resp in resultList:
         if resp and hasattr(resp, "results") and resp.results:

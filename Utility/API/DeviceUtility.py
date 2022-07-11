@@ -10,7 +10,6 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import (
     enforceRateLimit,
-    getAllFromOffsets,
     getHeader,
     joinThreadList,
     limitActiveThreads,
@@ -61,7 +60,7 @@ def setdevicetags(deviceid, tags):
 
 @api_tool_decorator()
 def getAllDevices(
-    groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY
+    groupToUse, limit=None, offset=None, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
 ):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not limit:
@@ -74,11 +73,11 @@ def getAllDevices(
         api_response = None
         if type(groupToUse) == list:
             api_response = fetchDevicesFromGroup(
-                groupToUse, limit, offset, fetchAll, maxAttempt
+                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance
             )
         else:
             api_response = get_all_devices(
-                groupToUse, limit, offset, fetchAll, maxAttempt
+                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance
             )
         postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
@@ -108,14 +107,14 @@ def get_all_devices_helper(
 
 
 def get_all_devices(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
+    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
         # devices = getAllFromOffsets(
         #     get_all_devices_helper, groupToUse, response, maxAttempt
         # )
-        devices = getAllFromOffsetsRequests(response)
+        devices = getAllFromOffsetsRequests(response, None, tolarance)
         if hasattr(response, "results"):
             response.results = response.results + devices
             response.next = None
@@ -130,11 +129,11 @@ def get_all_devices(
 
 
 def fetchDevicesFromGroup(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
+    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
 ):
     api_response = None
     for group in groupToUse:
-        resp = fetchDevicesFromGroupHelper(group, limit, offset, fetchAll, maxAttempt)
+        resp = fetchDevicesFromGroupHelper(group, limit, offset, fetchAll, maxAttempt, tolarance)
 
         if not api_response:
             api_response = resp
@@ -151,11 +150,11 @@ def fetchDevicesFromGroup(
 
 
 def fetchDevicesFromGroupHelper(
-    group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY
+    group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
 ):
     api_response = None
     for _ in range(maxAttempt):
-        response = get_all_devices(group, limit, offset, fetchAll, maxAttempt)
+        response = get_all_devices(group, limit, offset, fetchAll, maxAttempt, tolarance)
         if api_response:
             for device in response.results:
                 if device not in api_response.results:

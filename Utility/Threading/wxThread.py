@@ -13,10 +13,10 @@ from Utility.Resource import joinThreadList, postEventToFrame
 
 
 @api_tool_decorator()
-def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1):
+def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1, tolerance=0):
     """ Wait till all threads have finished then send a signal back to the Main thread """
     if threads == Globals.THREAD_POOL.threads:
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance)
     else:
         joinThreadList(threads)
 
@@ -115,12 +115,14 @@ def waitTillThreadsFinish(threads, action, entId, source, event=None, maxGauge=1
         msg = ""
         if action == GridActions.MOVE_GROUP.value:
             msg = "Results of moving devices' groups."
-        if action == GridActions.INSTALL_LATEST_APP.value:
+        elif action == GridActions.INSTALL_LATEST_APP.value:
             msg = "Results of installing given app packages."
-        if action == GridActions.UNINSTALL_LISTED_APP.value:
+        elif action == GridActions.UNINSTALL_LISTED_APP.value:
             msg = "Results of uninstalling given app packages."
-        if action == GridActions.FACTORY_RESET.value:
+        elif action == GridActions.FACTORY_RESET.value:
             msg = "Results of Factory Reset."
+        else:
+            msg = "Results:"
         statuses = []
         if threads == Globals.THREAD_POOL.threads:
             resp = Globals.THREAD_POOL.results()

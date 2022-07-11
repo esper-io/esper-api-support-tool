@@ -94,6 +94,7 @@ def executeCommandOnGroup(
     command_type="UPDATE_DEVICE_CONFIG",
     groupIds=None,
     maxAttempt=Globals.MAX_RETRY,
+    postStatus=True
 ):
     """ Execute a Command on a Group of Devices """
     statusList = []
@@ -143,9 +144,10 @@ def executeCommandOnGroup(
                 entry["Command Id"] = last_status.id
             entry["Status"] = last_status
             statusList.append(entry)
-    postEventToFrame(
-        eventUtil.myEVT_COMMAND, statusList
-    )
+    if postStatus:
+        postEventToFrame(
+            eventUtil.myEVT_COMMAND, statusList
+        )
     return statusList
 
 
@@ -158,6 +160,7 @@ def executeCommandOnDevice(
     command_type="UPDATE_DEVICE_CONFIG",
     deviceIds=None,
     maxAttempt=Globals.MAX_RETRY,
+    postStatus=True
 ):
     """ Execute a Command on a Device """
     statusList = []
@@ -215,9 +218,10 @@ def executeCommandOnDevice(
                 entry["Device Id"] = deviceToUse
             entry["Status"] = last_status
             statusList.append(entry)
-    postEventToFrame(
-        eventUtil.myEVT_COMMAND, statusList
-    )
+    if postStatus:
+        postEventToFrame(
+            eventUtil.myEVT_COMMAND, statusList
+        )
     return statusList
 
 

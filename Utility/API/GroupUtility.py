@@ -139,9 +139,9 @@ def fetchGroupName(groupURL, returnJson=False):
 
 
 @api_tool_decorator(locks=[Globals.token_lock])
-def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
+def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0):
     """ Make a API call to get all Groups belonging to the Enterprise """
-    return get_all_groups(name, limit, offset, maxAttempt)
+    return get_all_groups(name, limit, offset, maxAttempt, tolerance=tolerance)
 
 
 def getAllGroupsHelper(
@@ -194,11 +194,11 @@ def getAllGroupsHelper(
 
 
 def get_all_groups(
-    name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY
+    name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY, tolerance=0
 ):
     response = getAllGroupsHelper(name, limit, offset, maxAttempt)
     # groups = getAllFromOffsets(getAllGroupsHelper, name, response, maxAttempt)
-    groups = getAllFromOffsetsRequests(response)
+    groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
     if hasattr(response, "results"):
         response.results = response.results + groups
         response.next = None

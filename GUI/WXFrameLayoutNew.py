@@ -557,10 +557,7 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.disableGridProperties()
                 self.Logging("Attempting to save file at %s" % inFile)
                 self.gauge.Pulse()
-                thread = wxThread.GUIThread(
-                    self, self.saveAllFile, (inFile), name="saveAllFile"
-                )
-                thread.startWithRetry()
+                Globals.THREAD_POOL.enqueue(self.saveAllFile, inFile)
                 return True
             elif (
                 result == wx.ID_CANCEL
@@ -626,7 +623,7 @@ class NewFrameLayout(wx.Frame):
         splitResults = splitListIntoChunks(list(deviceList.values()))
         for chunk in splitResults:
             Globals.THREAD_POOL.enqueue(self.fetchAllGridData, chunk, gridDeviceData)
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(1)
 
         self.Logging("Finished compiling device and network information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
@@ -903,12 +900,7 @@ class NewFrameLayout(wx.Frame):
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
                 else:
                     self.openDeviceCSV(csv_auth_path)
-                wxThread.GUIThread(
-                    self,
-                    self.waitForThreadsThenSetCursorDefault,
-                    (Globals.THREAD_POOL.threads, 2),
-                    name="waitForThreadsThenSetCursorDefault_2",
-                ).startWithRetry()
+                Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 2, tolerance=1)
             elif result == wx.ID_CANCEL:
                 self.setCursorDefault()
                 return  # the user changed their mind
@@ -1309,13 +1301,15 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(self.validateToken)
 
                 self.setGaugeValue(50)
-                threads = []
+                # threads = []
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 if Globals.HAS_INTERNET:
-                    groupThread = self.PopulateGroups()
-                    appThread = self.PopulateApps()
+                    # groupThread = 
+                    self.PopulateGroups()
+                    # appThread = 
+                    self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1323,13 +1317,8 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    threads = [groupThread, appThread, blueprints]
-                wxThread.GUIThread(
-                    self,
-                    self.waitForThreadsThenSetCursorDefault,
-                    (threads, 0),
-                    name="waitForThreadsThenSetCursorDefault_0",
-                ).startWithRetry()
+                    # threads = [groupThread, appThread, blueprints]
+                Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 0, tolerance=1)
                 return True
         else:
             displayMessageBox(("Invalid Configuration", wx.ICON_ERROR))
@@ -1397,7 +1386,7 @@ class NewFrameLayout(wx.Frame):
                     newToken = ""
 
     @api_tool_decorator()
-    def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None):
+    def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
         if hasattr(threads, "GetValue"):
             evtVal = threads.GetValue()
             threads = evtVal[0]
@@ -1406,7 +1395,7 @@ class NewFrameLayout(wx.Frame):
             if len(evtVal) > 2:
                 action = evtVal[2]
         if threads == Globals.THREAD_POOL.threads:
-            Globals.THREAD_POOL.join()
+            Globals.THREAD_POOL.join(tolerance=tolerance)
         else:
             joinThreadList(threads)
         if source == 0:
@@ -1620,28 +1609,15 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.runBtn.Enable(True)
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
-        threads = []
         for clientData in self.sidePanel.selectedGroupsList:
-            thread = wxThread.GUIThread(
-                self,
-                self.addDevicesToDeviceChoice,
-                clientData,
-                name="AddDevicesToDeviceChoice",
-            )
-            thread.startWithRetry()
-            threads.append(thread)
-        wxThread.GUIThread(
-            self,
-            self.waitForThreadsThenSetCursorDefault,
-            (threads, 1),
-            name="waitForThreadsThenSetCursorDefault_1",
-        ).startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.addDevicesToDeviceChoice, clientData, tolerance=2)
+        Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 1, tolerance=1)
 
     @api_tool_decorator()
-    def addDevicesToDeviceChoice(self, groupId):
+    def addDevicesToDeviceChoice(self, groupId, tolerance=0):
         """ Populate Device Choice """
         api_response = getAllDevices(
-            groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL
+            groupId, limit=Globals.limit, fetchAll=Globals.GROUP_FETCH_ALL, tolarance=tolerance
         )
         self.sidePanel.deviceResp = api_response
         splitResults = None
@@ -1671,7 +1647,7 @@ class NewFrameLayout(wx.Frame):
         if splitResults:
             for chunk in splitResults:
                 Globals.THREAD_POOL.enqueue(self.processAddDeviceToChoice, chunk)
-            Globals.THREAD_POOL.join()
+            Globals.THREAD_POOL.join(tolerance=tolerance)
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
@@ -2279,12 +2255,7 @@ class NewFrameLayout(wx.Frame):
             if updateGauge and value <= 99:
                 num += 1
                 self.setGaugeValue(value)
-        wxThread.GUIThread(
-            self,
-            self.waitForThreadsThenSetCursorDefault,
-            (Globals.THREAD_POOL.threads, 3, action),
-            name="waitForThreadsThenSetCursorDefault_3",
-        ).startWithRetry()
+        Globals.THREAD_POOL.enqueue(self.waitForThreadsThenSetCursorDefault, Globals.THREAD_POOL.threads, 3, action, tolerance=1)
 
     @api_tool_decorator()
     def MacReopenApp(self, event):
@@ -2823,12 +2794,7 @@ class NewFrameLayout(wx.Frame):
                             if r:
                                 res.append(r.to_dict())
                         if res:
-                            wxThread.GUIThread(
-                                self,
-                                processInstallDevices,
-                                res,
-                                name="iterateThroughDeviceList",
-                            ).startWithRetry()
+                            Globals.THREAD_POOL.enqueue(processInstallDevices, res)
                         else:
                             displayMessageBox(
                                 (

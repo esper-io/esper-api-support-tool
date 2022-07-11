@@ -767,23 +767,9 @@ def populateDeviceInfoDictionary(
         deviceTags = device.tags
         deviceDict = device.__dict__
         unpackageDict(deviceInfo, deviceDict)
-    # appThread = wxThread.GUIThread(
-    #     Globals.frame,
-    #     apiCalls.getdeviceapps,
-    #     (deviceId, True, Globals.USE_ENTERPRISE_APP),
-    # )
-    # if getApps:
-    #     appThread.startWithRetry()
     appThread = None
     if getApps:
         appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
-    # eventThread = wxThread.GUIThread(
-    #     Globals.frame,
-    #     getLatestEvent,
-    #     (deviceId),
-    # )
-    # if getLatestEvents:
-    #     eventThread.startWithRetry()
     eventThread = None
     if getLatestEvents:
         eventThread = getLatestEvent(deviceId)
@@ -1142,7 +1128,7 @@ def getAllDeviceInfo(frame):
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response.results = list(filter(filterDeviceList, api_response.results))
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        api_response = getAllDevices(Globals.frame.sidePanel.selectedGroupsList)
+        api_response = getAllDevices(Globals.frame.sidePanel.selectedGroupsList, tolarance=1)
         if api_response:
             if (
                 api_response
@@ -1181,7 +1167,7 @@ def getAllDeviceInfo(frame):
             perform_web_requests,
             (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
         )
-    Globals.THREAD_POOL.join()
+    Globals.THREAD_POOL.join(1)
     latestResp = Globals.THREAD_POOL.results()
 
     deviceList = {}
