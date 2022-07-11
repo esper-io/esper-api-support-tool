@@ -1316,9 +1316,10 @@ class NewFrameLayout(wx.Frame):
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
+                threads = []
                 if Globals.HAS_INTERNET:
-                    self.PopulateGroups()
-                    self.PopulateApps()
+                    groupThread = self.PopulateGroups()
+                    appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1326,10 +1327,10 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    # threads = [groupThread, appThread, blueprints]
+                    threads = [groupThread, appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
-                    Globals.THREAD_POOL.threads,
+                    threads,
                     0,
                     tolerance=1,
                 )
@@ -1545,7 +1546,8 @@ class NewFrameLayout(wx.Frame):
             postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
-        self.setGaugeValue(100)
+        # self.setGaugeValue(100)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
 
     @api_tool_decorator()
     def PopulateGroups(self):
@@ -1556,7 +1558,7 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.GUIThread(
             self,
             getAllGroups,
-            None,
+            ("", None, None, Globals.MAX_RETRY, 1,),
             eventType=eventUtil.myEVT_GROUP,
             name="PopulateGroupsGetAll",
         )

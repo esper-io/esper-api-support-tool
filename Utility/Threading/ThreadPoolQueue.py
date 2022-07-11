@@ -63,7 +63,7 @@ class Pool:
 
     def join(self, tolerance=0, timeout=-1):
         """Wait for completion of all the tasks in the queue"""
-        if current_thread() not in self.threads:
+        if current_thread() not in self.threads and tolerance == 0:
             self.queue.join()
         else:
             startTime = time.perf_counter()
