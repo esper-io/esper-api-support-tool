@@ -2935,25 +2935,27 @@ class NewFrameLayout(wx.Frame):
                 if res == wx.ID_OK:
                     _, version, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
-                t = None
+                # t = None
                 if self.sidePanel.selectedDevicesList:
-                    t = wxThread.GUIThread(
-                        self,
-                        installAppOnDevices,
-                        args=(pkg, version),
-                        eventType=eventUtil.myEVT_COMMAND,
-                        name="installAppOnDevices",
-                    )
+                    # t = wxThread.GUIThread(
+                    #     self,
+                    #     installAppOnDevices,
+                    #     args=(pkg, version),
+                    #     eventType=eventUtil.myEVT_COMMAND,
+                    #     name="installAppOnDevices",
+                    # )
+                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version)
                 elif self.sidePanel.selectedGroupsList:
-                    t = wxThread.GUIThread(
-                        self,
-                        installAppOnGroups,
-                        args=(pkg, version),
-                        eventType=eventUtil.myEVT_COMMAND,
-                        name="installAppOnGroups",
-                    )
-                if t:
-                    t.startWithRetry()
+                    # t = wxThread.GUIThread(
+                    #     self,
+                    #     installAppOnGroups,
+                    #     args=(pkg, version),
+                    #     eventType=eventUtil.myEVT_COMMAND,
+                    #     name="installAppOnGroups",
+                    # )
+                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version)
+                # if t:
+                #     t.startWithRetry()
         else:
             displayMessageBox(
                 (

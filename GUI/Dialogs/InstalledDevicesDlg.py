@@ -37,7 +37,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
+        grid_sizer_1 = wx.GridSizer(1, 2 if not hide_version else 1, 0, 0)
 
         grid_sizer_3 = wx.FlexGridSizer(3, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
