@@ -37,8 +37,6 @@ import GUI.EnhancedStatusBar as ESB
 import Utility.Threading.wxThread as wxThread
 import Utility.API.EsperTemplateUtil as templateUtil
 
-from functools import partial
-
 from Common.enum import Color, GeneralActions, GridActions
 
 from datetime import datetime
