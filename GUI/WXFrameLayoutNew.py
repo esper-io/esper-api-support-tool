@@ -1306,14 +1306,11 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(self.validateToken)
 
                 self.setGaugeValue(50)
-                # threads = []
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 if Globals.HAS_INTERNET:
-                    # groupThread =
                     self.PopulateGroups()
-                    # appThread =
                     self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
