@@ -209,7 +209,7 @@ class UserCreation(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
-        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Exectute")
+        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Execute")
         sizer_3.Add(self.button_6, 0, wx.RIGHT, 5)
 
         self.button_7 = wx.Button(self.panel_2, wx.ID_ANY, "Cancel")
