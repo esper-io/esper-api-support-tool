@@ -2641,7 +2641,7 @@ class NewFrameLayout(wx.Frame):
         if Globals.SHOW_TEMPLATE_UPDATE:
             result = CheckboxMessageBox(
                 "Confirmation",
-                "The Template already exists on the destination tenant.\nThe following apps are missing: %s\n\nWould you like to update th template?"
+                "The Template already exists on the destination tenant.\nThe following apps are missing: %s\n\nWould you like to update the template?"
                 % (missingApps if missingApps else None),
             )
             res = result.ShowModal()
