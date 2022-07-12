@@ -179,9 +179,6 @@ def fetchDevicesFromGroupHelper(
 def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
         api_response_list = []
         api_response = None
         threads = []
@@ -191,7 +188,6 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
                 if num == 0:
                     api_response, api_response_list = getDeviceByIdHelper(
                         device,
-                        api_instance,
                         api_response_list,
                         api_response,
                         maxAttempt,
@@ -201,7 +197,6 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
                         target=getDeviceByIdHelper,
                         args=(
                             device,
-                            api_instance,
                             api_response_list,
                             api_response,
                             maxAttempt,
@@ -212,13 +207,17 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
                     limitActiveThreads(threads)
         else:
             api_response, api_response_list = getDeviceByIdHelper(
-                deviceToUse, api_instance, api_response_list, api_response, maxAttempt
+                deviceToUse, api_response_list, api_response, maxAttempt
             )
         joinThreadList(threads)
-        if api_response and api_response_list:
+        if api_response and api_response_list and hasattr(api_response, "results"):
             api_response.results = api_response_list
-        elif api_response:
+        elif api_response and hasattr(api_response, "results"):
             api_response.results = [api_response]
+        elif api_response and api_response_list and type(api_response) == dict:
+            api_response["results"] = api_response_list
+        elif api_response and type(api_response) == dict:
+            api_response["results"] = [api_response]
         postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
@@ -227,19 +226,20 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
 
 
 def getDeviceByIdHelper(
-    device, api_instance, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY
+    device, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY
 ):
     for attempt in range(maxAttempt):
         try:
-            enforceRateLimit()
-            api_response = api_instance.get_device_by_id(
-                Globals.enterprise_id, device_id=device
+            url = (
+                Globals.BASE_DEVICE_URL.format(
+                    configuration_host=Globals.configuration.host,
+                    enterprise_id=Globals.enterprise_id,
+                    device_id=device
+                )
             )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getDeviceById",
-                api_instance.get_device_by_id,
-                Globals.PRINT_API_LOGS,
-            )
+            api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+            if api_response.status_code < 300:
+                api_response = api_response.json()
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
