@@ -2648,14 +2648,6 @@ class NewFrameLayout(wx.Frame):
         else:
             res = wx.ID_OK
         if res == wx.ID_OK:
-            # clone = wxThread.GUIThread(
-            #     self,
-            #     self.createClone,
-            #     (util, templateFound, toApi, toKey, toEntId, True),
-            #     eventType=None,
-            #     name="updateTemplate",
-            # )
-            # clone.startWithRetry()
             Globals.THREAD_POOL.enqueue(
                 self.createClone, util, templateFound, toApi, toKey, toEntId, True
             )

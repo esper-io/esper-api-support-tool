@@ -435,7 +435,19 @@ class EsperTemplateUtil:
                                 if (type(ver) == dict and "isGPlay" in ver and ver["isGPlay"]) or (
                                     type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]
                                 ):
-                                    newTemplate["application"]["apps"].append(ver)
+                                    isPlay = False
+                                    if (type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]):
+                                        isPlay = ver["is_g_play"]
+                                    else:
+                                        isPlay = ver["isGPlay"]
+                                    newTemplate["application"]["apps"].append({
+                                        "is_g_play": isPlay,
+                                        "id": appId,
+                                        "package_name": matchPkgName,
+                                        "installationRule": app["installationRule"],
+                                        "google_product": ver["id"],
+                                        "google_product_id": ver["id"],
+                                    })
                                     found = True
                                     break
                         if found:
