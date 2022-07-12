@@ -351,22 +351,21 @@ def getAllAppVersionsForHost(
 ):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
-        api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
-                api_response = api_instance.get_app_versions(
-                    app_id,
-                    enterprise_id,
-                    limit=Globals.limit,
-                    offset=0,
+                url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
+                    tenant=config.host,
+                    enterprise_id=enterprise_id,
+                    appId=app_id
                 )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllAppVersionsForHost",
-                    api_instance.get_app_versions,
-                    Globals.PRINT_API_LOGS,
-                )
+                header = {
+                    "Authorization": f"Bearer {config.api_key['Authorization']}",
+                    "Content-Type": "application/json",
+                }
+                api_response = performGetRequestWithRetry(url, header)
+                if api_response and api_response.status_code < 300:
+                    api_response = api_response.json()
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
