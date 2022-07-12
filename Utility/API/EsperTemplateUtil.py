@@ -356,6 +356,16 @@ class EsperTemplateUtil:
                                         app, newTemplate, toApp, version.id
                                     )
                                     break
+                        elif appVersions and type(appVersions) == dict:
+                            for version in appVersions["results"]:
+                                if version["version_code"] == app[
+                                    "versionName"
+                                ] and version["build_number"] == str(app["versionCode"]):
+                                    found = True
+                                    newTemplate = self.addAppVersionToTemplate(
+                                        app, newTemplate, toApp, version["id"]
+                                    )
+                                    break
                 if not found:
                     upload = wxThread.GUIThread(
                         self.parent,
@@ -397,7 +407,16 @@ class EsperTemplateUtil:
                 if matchingApps and hasattr(matchingApps, "results"):
                     found = False
                     for match in matchingApps.results:
-                        appId = match["id"]
+                        appId = None
+                        matchPkgName = None
+                        if type(match) is dict:
+                            appId = match["id"]
+                            matchPkgName = match["package_name"]
+                        elif hasattr(match, "id"):
+                            appId = match.id
+                            matchPkgName = match.package_name
+                        if matchPkgName != app["packageName"]:
+                            continue
                         versions = getAllAppVersionsForHost(
                             getEsperConfig(self.toApi, self.toKey),
                             self.toEntId,
@@ -405,8 +424,16 @@ class EsperTemplateUtil:
                         )
                         if versions and hasattr(versions, "results"):
                             for ver in versions.results:
-                                if ("isGPlay" in ver and ver["isGPlay"]) or (
-                                    "is_g_play" in ver and ver["is_g_play"]
+                                if (type(ver) == dict and "isGPlay" in ver and ver["isGPlay"]) or (
+                                    type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]
+                                ):
+                                    newTemplate["application"]["apps"].append(ver)
+                                    found = True
+                                    break
+                        elif versions and type(versions) == dict:
+                            for ver in versions["results"]:
+                                if (type(ver) == dict and "isGPlay" in ver and ver["isGPlay"]) or (
+                                    type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]
                                 ):
                                     newTemplate["application"]["apps"].append(ver)
                                     found = True
