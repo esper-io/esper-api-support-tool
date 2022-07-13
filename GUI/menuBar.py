@@ -328,7 +328,7 @@ class ToolMenuBar(wx.MenuBar):
             print(e)
             ApiToolLog().LogError(e)
         if json:
-            tagVersion = json["tag_name"].replace("v", "")
+            tagVersion = json["tag_name"].split("-")[0].replace("v", "")
             if float(tagVersion) > float(Globals.VERSION.replace("v", "")):
                 downloadURL = ""
                 name = ""

@@ -103,7 +103,7 @@ def checkForInternetAccess(frame):
     while not frame.kill:
         if frame.IsShownOnScreen() and frame.IsActive():
             if not checkEsperInternetConnection() and not checkInternetConnection(
-                Globals.UPDATE_LINK
+                Globals.LATEST_UPDATE_LINK
             ):
                 displayMessageBox(
                     (
@@ -121,9 +121,16 @@ def checkForInternetAccess(frame):
 
 def checkForUpdate():
     try:
-        response = requests.get(Globals.UPDATE_LINK)
-        json_resp = response.json()
-        return json_resp
+        response = None
+        if Globals.CHECK_PRERELEASES:
+            response = requests.get(Globals.UPDATE_LINK)
+        else:
+            response = requests.get(Globals.LATEST_UPDATE_LINK)
+        if response:
+            json_resp = response.json()
+            if Globals.CHECK_PRERELEASES:
+                json_resp = json_resp[0]
+            return json_resp
     except Exception as e:
         print(e)
 

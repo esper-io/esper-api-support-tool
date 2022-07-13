@@ -54,6 +54,7 @@ class PreferencesDialog(wx.Dialog):
             "combineDeviceAndNetworkSheets",
             "showGroupPath",
             "last_endpoint",
+            "prereleaseUpdate"
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -102,6 +103,14 @@ class PreferencesDialog(wx.Dialog):
         )
         self.checkbox_21.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
+        )
+
+        (_, _, self.checkbox_25,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Include Pre-release in Update Check",
+            wx.CheckBox,
+            "When checking for updates, include Pre-Releases.",
         )
 
         # Report Options
@@ -552,6 +561,7 @@ class PreferencesDialog(wx.Dialog):
             "appVersionNameInsteadOfCode": self.checkbox_22.IsChecked(),
             "combineDeviceAndNetworkSheets": self.checkbox_23.IsChecked(),
             "showGroupPath": self.checkbox_24.IsChecked(),
+            "prereleaseUpdate": self.checkbox_25.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -583,6 +593,7 @@ class PreferencesDialog(wx.Dialog):
             "combineDeviceAndNetworkSheets"
         ]
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
+        Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -929,6 +940,19 @@ class PreferencesDialog(wx.Dialog):
             Globals.LAST_OPENED_ENDPOINT = self.prefs["last_endpoint"]
         else:
             Globals.LAST_OPENED_ENDPOINT = 0
+        if "prereleaseUpdate" in self.prefs:
+            if (
+                isinstance(self.prefs["prereleaseUpdate"], str)
+                and self.prefs["prereleaseUpdate"].lower() == "true"
+            ) or self.prefs["prereleaseUpdate"] is True:
+                self.checkbox_25.Set3StateValue(wx.CHK_CHECKED)
+                Globals.CHECK_PRERELEASES = True
+            else:
+                self.checkbox_25.Set3StateValue(wx.CHK_UNCHECKED)
+                Globals.CHECK_PRERELEASES = False
+        else:
+            self.checkbox_25.Set3StateValue(wx.CHK_UNCHECKED)
+            Globals.CHECK_PRERELEASES = False
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()

@@ -141,8 +141,11 @@ JSON_COMMAND_TYPES = [
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit#heading=h.50j8ygvoempc"
-UPDATE_LINK = (
+LATEST_UPDATE_LINK = (
     "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+)
+UPDATE_LINK = (
+    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 )
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
@@ -273,11 +276,16 @@ csv_auth_path = ""
 LAST_OPENED_ENDPOINT = -1
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
+CHECK_PRERELEASES = False
+
+# Save Prefs
 SAVE_VISIBILITY = False
+COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+
+# Report Prefs
 GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
-COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 
 # Grid Prefs
 MAX_GRID_LOAD = 100
