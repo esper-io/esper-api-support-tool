@@ -133,7 +133,6 @@ def getUsers(
 
 def getAllUsers():
     userResp = getUsers()
-    # users = getAllFromOffsets(getUsers, None, userResp)
     users = getAllFromOffsetsRequests(userResp)
     if hasattr(userResp, "results"):
         userResp.results = userResp.results + users

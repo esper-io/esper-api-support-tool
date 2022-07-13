@@ -5,8 +5,6 @@ import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import (
     acquireLocks,
-    # joinThreadList,
-    # limitActiveThreads,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -419,7 +417,7 @@ class GridPanel(wx.Panel):
             "---> Sorting Device Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.deviceDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyDeviceGrid(emptyContents=False)
         self.grid_1.Freeze()
         if platform.system() == "Windows":
@@ -470,7 +468,7 @@ class GridPanel(wx.Panel):
             "---> Sorting Network Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.networkDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyNetworkGrid(emptyContents=False)
         self.grid_2.Freeze()
         if platform.system() == "Windows":
@@ -523,7 +521,7 @@ class GridPanel(wx.Panel):
             "---> Sorting App Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.networkDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyAppGrid(emptyContents=False)
         self.grid_3.Freeze()
         if platform.system() == "Windows":
@@ -538,20 +536,23 @@ class GridPanel(wx.Panel):
         for info in content:
             if action == "Device":
                 self.addDeviceToDeviceGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_1_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_1_contents) * 100),
                 )
                 num += 1
             elif action == "Network":
                 self.addToNetworkGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_2_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_2_contents) * 100),
                 )
                 num += 1
             elif action == "App":
                 self.addApptoAppGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_3_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_3_contents) * 100),
                 )
                 num += 1
         if action == "Device":

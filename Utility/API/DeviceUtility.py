@@ -116,9 +116,6 @@ def get_all_devices(
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
-        # devices = getAllFromOffsets(
-        #     get_all_devices_helper, groupToUse, response, maxAttempt
-        # )
         devices = getAllFromOffsetsRequests(response, None, tolarance)
         if hasattr(response, "results"):
             response.results = response.results + devices
@@ -230,14 +227,14 @@ def getDeviceByIdHelper(
 ):
     for attempt in range(maxAttempt):
         try:
-            url = (
-                Globals.BASE_DEVICE_URL.format(
-                    configuration_host=Globals.configuration.host,
-                    enterprise_id=Globals.enterprise_id,
-                    device_id=device
-                )
+            url = Globals.BASE_DEVICE_URL.format(
+                configuration_host=Globals.configuration.host,
+                enterprise_id=Globals.enterprise_id,
+                device_id=device,
             )
-            api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+            api_response = performGetRequestWithRetry(
+                url, getHeader(), maxRetry=maxAttempt
+            )
             if api_response.status_code < 300:
                 api_response = api_response.json()
             break

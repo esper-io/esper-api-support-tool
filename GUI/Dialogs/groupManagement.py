@@ -267,7 +267,9 @@ class GroupManagement(wx.Dialog):
         unsorted = []
         if self.groups:
             for group in self.groups:
-                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(group)
+                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(
+                    group
+                )
                 if groupName not in self.groupNameToId:
                     self.groupNameToId[groupName] = []
                 self.groupNameToId[groupName].append(groupId)
@@ -765,7 +767,9 @@ class GroupManagement(wx.Dialog):
         matchingGroups = getAllGroups(name=oldName)
         if hasattr(matchingGroups, "results") and matchingGroups.results:
             for group in matchingGroups.results:
-                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(group)
+                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(
+                    group
+                )
                 treeItem = None
                 if groupId in self.uploadTreeItems:
                     treeItem = self.uploadTreeItems[groupId]

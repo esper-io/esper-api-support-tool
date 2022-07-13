@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-
-# import multiprocessing
 import esperclient
 import Common.Globals as Globals
 
-# from Utility.Web.WebRequests import perform_web_requests
 import Utility.Threading.wxThread as wxThread
 import threading
 import wx
@@ -1153,16 +1150,6 @@ def getAllDeviceInfo(frame):
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
-
-    # for device in api_response["results"]:
-    #     Globals.THREAD_POOL.enqueue(perform_web_requests, (
-    #         getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
-    #         getHeader(),
-    #         "GET",
-    #         None
-    #     ))
-    # Globals.THREAD_POOL.join()
-    # appResp = Globals.THREAD_POOL.results()
 
     for device in api_response["results"]:
         Globals.THREAD_POOL.enqueue(

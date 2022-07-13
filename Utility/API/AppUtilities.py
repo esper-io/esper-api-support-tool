@@ -355,9 +355,7 @@ def getAllAppVersionsForHost(
         for attempt in range(maxAttempt):
             try:
                 url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
-                    tenant=config.host,
-                    enterprise_id=enterprise_id,
-                    appId=app_id
+                    tenant=config.host, enterprise_id=enterprise_id, appId=app_id
                 )
                 header = {
                     "Authorization": f"Bearer {config.api_key['Authorization']}",

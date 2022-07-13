@@ -199,7 +199,6 @@ def get_all_groups(
     name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY, tolerance=0
 ):
     response = getAllGroupsHelper(name, limit, offset, maxAttempt)
-    # groups = getAllFromOffsets(getAllGroupsHelper, name, response, maxAttempt)
     groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
     if hasattr(response, "results"):
         response.results = response.results + groups

@@ -360,7 +360,9 @@ class EsperTemplateUtil:
                             for version in appVersions["results"]:
                                 if version["version_code"] == app[
                                     "versionName"
-                                ] and version["build_number"] == str(app["versionCode"]):
+                                ] and version["build_number"] == str(
+                                    app["versionCode"]
+                                ):
                                     found = True
                                     newTemplate = self.addAppVersionToTemplate(
                                         app, newTemplate, toApp, version["id"]
@@ -424,30 +426,48 @@ class EsperTemplateUtil:
                         )
                         if versions and hasattr(versions, "results"):
                             for ver in versions.results:
-                                if (type(ver) == dict and "isGPlay" in ver and ver["isGPlay"]) or (
-                                    type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]
+                                if (
+                                    type(ver) == dict
+                                    and "isGPlay" in ver
+                                    and ver["isGPlay"]
+                                ) or (
+                                    type(ver) == dict
+                                    and "is_g_play" in ver
+                                    and ver["is_g_play"]
                                 ):
                                     newTemplate["application"]["apps"].append(ver)
                                     found = True
                                     break
                         elif versions and type(versions) == dict:
                             for ver in versions["results"]:
-                                if (type(ver) == dict and "isGPlay" in ver and ver["isGPlay"]) or (
-                                    type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]
+                                if (
+                                    type(ver) == dict
+                                    and "isGPlay" in ver
+                                    and ver["isGPlay"]
+                                ) or (
+                                    type(ver) == dict
+                                    and "is_g_play" in ver
+                                    and ver["is_g_play"]
                                 ):
                                     isPlay = False
-                                    if (type(ver) == dict and "is_g_play" in ver and ver["is_g_play"]):
+                                    if (
+                                        type(ver) == dict
+                                        and "is_g_play" in ver
+                                        and ver["is_g_play"]
+                                    ):
                                         isPlay = ver["is_g_play"]
                                     else:
                                         isPlay = ver["isGPlay"]
-                                    newTemplate["application"]["apps"].append({
-                                        "is_g_play": isPlay,
-                                        "id": appId,
-                                        "package_name": matchPkgName,
-                                        "installationRule": app["installationRule"],
-                                        "google_product": ver["id"],
-                                        "google_product_id": ver["id"],
-                                    })
+                                    newTemplate["application"]["apps"].append(
+                                        {
+                                            "is_g_play": isPlay,
+                                            "id": appId,
+                                            "package_name": matchPkgName,
+                                            "installationRule": app["installationRule"],
+                                            "google_product": ver["id"],
+                                            "google_product_id": ver["id"],
+                                        }
+                                    )
                                     found = True
                                     break
                         if found:

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from Utility import EventUtility
 from Utility.EastUtility import processCollectionDevices
 from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import openWebLinkInBrowser, resourcePath
+from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
 from Common.decorator import api_tool_decorator
 from GUI.UserCreation import UserCreation
 import wx
@@ -393,7 +394,7 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def onEqlQuery(self, event):
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with LargeTextEntryDialog(
@@ -417,7 +418,7 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def onCollection(self, event):
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:

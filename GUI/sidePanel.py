@@ -6,8 +6,9 @@ from Common.decorator import api_tool_decorator
 import csv
 import wx
 import Common.Globals as Globals
+from Utility import EventUtility
 
-from Utility.Resource import resourcePath, scale_bitmap
+from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 
 
@@ -452,7 +453,7 @@ class SidePanel(wx.Panel):
         if len(self.apps):
             percent = self.parentFrame.gauge.GetValue()
             val = percent + int(float(len(self.apps) / 2) * 25)
-            self.parentFrame.setGaugeValue(val)
+            postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, val)
 
     @api_tool_decorator()
     def onActionSelection(self, event):

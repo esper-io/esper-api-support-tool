@@ -674,7 +674,7 @@ class NewFrameLayout(wx.Frame):
                 self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
                 val = (num / (len(gridDeviceData) * 2)) * 100
                 if val <= 50:
-                    self.setGaugeValue(int(val))
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
                 num += 1
             joinThreadList(threads)
 
@@ -703,7 +703,7 @@ class NewFrameLayout(wx.Frame):
                 gridData.append(rowValues)
                 val = (num / (len(gridDeviceData) * 2)) * 100
                 if val <= 95:
-                    self.setGaugeValue(int(val))
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
                 num += 1
 
             with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
@@ -818,7 +818,7 @@ class NewFrameLayout(wx.Frame):
                         )
 
         self.Logging("---> Info saved to file: " + inFile)
-        self.setGaugeValue(100)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         self.gridPanel.enableGridProperties()
 
         res = displayMessageBox(
@@ -855,7 +855,7 @@ class NewFrameLayout(wx.Frame):
             gridData.append(list(entry.values()))
             val = (num / len(self.gridPanel.grid_3_contents)) * 100
             if val <= 95:
-                self.setGaugeValue(int(val))
+                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
             num += 1
 
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
@@ -863,7 +863,7 @@ class NewFrameLayout(wx.Frame):
             writer.writerows(gridData)
 
         self.Logging("---> Info saved to csv file - " + inFile)
-        self.setGaugeValue(100)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         self.toggleEnabledState(True)
         self.setCursorDefault()
         self.gridPanel.enableGridProperties()
@@ -887,7 +887,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.gridPanel.emptyDeviceGrid()
         self.gridPanel.emptyNetworkGrid()
-        self.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         with wx.FileDialog(
             self,
             "Open Device Spreedsheet File",
@@ -1008,7 +1008,9 @@ class NewFrameLayout(wx.Frame):
         rowCount = 1
         num = 0
         for row in data:
-            self.setGaugeValue(int(float((rowCount) / len_reader) * 100))
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
+            )
             rowCount += 1
             if not all("" == val or val.isspace() for val in row):
                 if num == 0:
@@ -1114,7 +1116,7 @@ class NewFrameLayout(wx.Frame):
                 pass
         self.menubar.configMenuOptions = []
 
-        self.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         returnItem = None
         if os.path.isfile(configfile):
             if self.auth_data:
@@ -1129,7 +1131,9 @@ class NewFrameLayout(wx.Frame):
                     return
 
                 for row in auth_csv_reader:
-                    self.setGaugeValue(int(float(num / maxRow) * 25))
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE, int(float(num / maxRow) * 25)
+                    )
                     num += 1
                     if "name" in row:
                         self.sidePanel.configChoice[row["name"]] = row
@@ -1312,7 +1316,7 @@ class NewFrameLayout(wx.Frame):
 
                 Globals.THREAD_POOL.enqueue(self.validateToken)
 
-                self.setGaugeValue(50)
+                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
@@ -1546,7 +1550,6 @@ class NewFrameLayout(wx.Frame):
             postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
-        # self.setGaugeValue(100)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
 
     @api_tool_decorator()
@@ -1558,7 +1561,13 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.GUIThread(
             self,
             getAllGroups,
-            ("", None, None, Globals.MAX_RETRY, 1,),
+            (
+                "",
+                None,
+                None,
+                Globals.MAX_RETRY,
+                1,
+            ),
             eventType=eventUtil.myEVT_GROUP,
             name="PopulateGroupsGetAll",
         )
@@ -1601,7 +1610,10 @@ class NewFrameLayout(wx.Frame):
                         self.sidePanel.groups[group["path"]] = group["id"]
                     if group["id"] not in Globals.knownGroups:
                         Globals.knownGroups[group["id"]] = group
-                self.setGaugeValue(50 + int(float(num / len(results)) * 25))
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    50 + int(float(num / len(results)) * 25),
+                )
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
@@ -1620,7 +1632,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.runBtn.Enable(False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
-            self.setGaugeValue(0)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.gauge.Pulse()
         else:
             if not self.isRunning or not self.isBusy:
@@ -1805,7 +1817,7 @@ class NewFrameLayout(wx.Frame):
         self.start_time = time.time()
         self.setCursorBusy()
         self.isRunning = True
-        self.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.toggleEnabledState(False)
         self.AppState = None
         self.sleepInhibitor.inhibit()
@@ -2086,7 +2098,7 @@ class NewFrameLayout(wx.Frame):
         """ When the user wants to run a command show the command dialog """
         if level < Globals.MAX_RETRY:
             self.setCursorBusy()
-            self.setGaugeValue(0)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
 
             if self.sidePanel.selectedGroupsList:
                 result = None
@@ -2137,7 +2149,7 @@ class NewFrameLayout(wx.Frame):
             msg = cmdResult[0]
             cmdResult = cmdResult[1]
         self.menubar.enableConfigMenu()
-        self.setGaugeValue(100)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         if cmdResult:
             result = ""
             for res in cmdResult:
@@ -2193,7 +2205,6 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
-        # threads = []
         appToUse = None
         appVersion = None
         if self.sidePanel.selectedAppEntry:
@@ -2284,7 +2295,7 @@ class NewFrameLayout(wx.Frame):
             value = int(num / maxGauge * 100)
             if updateGauge and value <= 99:
                 num += 1
-                self.setGaugeValue(value)
+                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
@@ -2352,7 +2363,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 enable = eventVal
         self.setCursorDefault()
-        self.setGaugeValue(100)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         title = "Action Completed"
         msg = ""
         if not self.IsActive() and not isError:
@@ -2505,7 +2516,6 @@ class NewFrameLayout(wx.Frame):
                 self.PopulateDevices(None)
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
-                # self.onDeviceSelections(None)
             self.setFontSizeForLabels()
         if self.preferences and self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
@@ -2587,14 +2597,6 @@ class NewFrameLayout(wx.Frame):
         self.isRunning = True
         self.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
-        # clone = wxThread.GUIThread(
-        #     self,
-        #     util.prepareTemplate,
-        #     (tmpDialog.destTemplate, tmpDialog.chosenTemplate),
-        #     eventType=None,
-        #     name="PrepTemplate",
-        # )
-        # clone.startWithRetry()
         Globals.THREAD_POOL.enqueue(
             util.prepareTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate
         )
@@ -2614,20 +2616,12 @@ class NewFrameLayout(wx.Frame):
         else:
             res = wx.ID_OK
         if res == wx.ID_OK:
-            # clone = wxThread.GUIThread(
-            #     self,
-            #     self.createClone,
-            #     (util, templateFound, toApi, toKey, toEntId, False),
-            #     eventType=None,
-            #     name="createTemplateClone",
-            # )
-            # clone.startWithRetry()
             Globals.THREAD_POOL.enqueue(
                 self.createClone, util, templateFound, toApi, toKey, toEntId, False
             )
         else:
             self.isRunning = False
-            self.setGaugeValue(0)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
@@ -2653,7 +2647,7 @@ class NewFrameLayout(wx.Frame):
             )
         else:
             self.isRunning = False
-            self.setGaugeValue(0)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.setCursorDefault()
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_UPDATE = False
@@ -2806,7 +2800,7 @@ class NewFrameLayout(wx.Frame):
     def onInstalledDevices(self, event):
         if self.sidePanel.apps:
             self.setCursorBusy()
-            self.setGaugeValue(0)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.toggleEnabledState(False)
             with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
                 res = dlg.ShowModal()
@@ -2928,9 +2922,13 @@ class NewFrameLayout(wx.Frame):
                     _, version, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
                 if self.sidePanel.selectedDevicesList:
-                    Globals.THREAD_POOL.enqueue(installAppOnDevices, pkg, version, postStatus=True)
+                    Globals.THREAD_POOL.enqueue(
+                        installAppOnDevices, pkg, version, postStatus=True
+                    )
                 elif self.sidePanel.selectedGroupsList:
-                    Globals.THREAD_POOL.enqueue(installAppOnGroups, pkg, version, postStatus=True)
+                    Globals.THREAD_POOL.enqueue(
+                        installAppOnGroups, pkg, version, postStatus=True
+                    )
         else:
             displayMessageBox(
                 (
@@ -2954,9 +2952,13 @@ class NewFrameLayout(wx.Frame):
                 _, _, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
                 if self.sidePanel.selectedDevicesList:
-                    Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, pkg, postStatus=True)
+                    Globals.THREAD_POOL.enqueue(
+                        uninstallAppOnDevice, pkg, postStatus=True
+                    )
                 elif self.sidePanel.selectedGroupsList:
-                    Globals.THREAD_POOL.enqueue(uninstallAppOnGroup, pkg, postStatus=True)
+                    Globals.THREAD_POOL.enqueue(
+                        uninstallAppOnGroup, pkg, postStatus=True
+                    )
         else:
             displayMessageBox(
                 (
@@ -3102,7 +3104,7 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
             users = getAllUsers()
-            self.setGaugeValue(50)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
             data = [
                 [
                     "User Id",
@@ -3135,7 +3137,9 @@ class NewFrameLayout(wx.Frame):
                 entry.append(user["profile"]["updated_on"])
                 entry.append(user["last_login"])
                 data.append(entry)
-                self.setGaugeValue(int(num / len(users["results"]) * 90))
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(users["results"]) * 90)
+                )
                 num += 1
             createNewFile(inFile)
 
@@ -3145,7 +3149,7 @@ class NewFrameLayout(wx.Frame):
 
             self.Logging("---> User Report saved to file: " + inFile)
             self.setCursorDefault()
-            self.setGaugeValue(100)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
             self.toggleEnabledState(True)
             self.gridPanel.enableGridProperties()
 

@@ -74,7 +74,7 @@ class PreferencesDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(
             self.window_1_pane_1,
             wx.ID_ANY,
-            choices=["General", "Grid", "Application", "Command", "Prompts"],
+            choices=[],  # ["General", "Grid", "Application", "Command", "Prompts"],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
@@ -93,87 +93,6 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_6 = wx.FlexGridSizer(6, 1, 0, 0)
 
-        (_, _, self.checkbox_1,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Enable Device Selection",
-            wx.CheckBox,
-            "Allow user to specify actions on a selections of devices within a group.",
-        )
-
-        (_, _, self.spin_ctrl_1,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "API Request Limit",
-            wx.SpinCtrl,
-            "Maximum amount of results that the API will return. Min: %s Max: %s"
-            % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
-        )
-        self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
-        self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_1.SetValue(Globals.limit)
-
-        (panel_9, _, self.spin_ctrl_2,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "API Request Offset",
-            wx.SpinCtrl,
-            "Page of results the API sends back (starts at 0). Min:0 Max: 100",
-        )
-        panel_9.Hide()
-        self.spin_ctrl_2.SetMin(0)
-        self.spin_ctrl_2.SetValue(Globals.offset)
-
-        (panel_43, _, self.spin_ctrl_8,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Max Threads",
-            wx.SpinCtrl,
-            "Maximum number of threads that will be created to perform an action. Min: 10 Max: 100",
-        )
-        panel_43.Hide()
-        self.spin_ctrl_8.SetMin(10)
-        self.spin_ctrl_8.SetMax(100)
-        self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
-
-        (_, _, self.spin_ctrl_10,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Font Size",
-            wx.SpinCtrl,
-            "Font size. Min: 10 Max: 72",
-        )
-        self.spin_ctrl_10.SetMin(10)
-        self.spin_ctrl_10.SetMax(72)
-        self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
-
-        (_, _, self.checkbox_15,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Save only visible columns",
-            wx.CheckBox,
-            "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
-        )
-
-        (_, _, self.checkbox_16,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Fetch all devices in one page",
-            wx.CheckBox,
-            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
-        )
-
-        (_, _, self.checkbox_18,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Show Disabled Devices",
-            wx.CheckBox,
-            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
-        )
-        self.checkbox_18.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
-        )
-
         (_, _, self.checkbox_21,) = self.addPrefToPanel(
             self.general,
             sizer_6,
@@ -185,14 +104,111 @@ class PreferencesDialog(wx.Dialog):
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
         )
 
+        # Report Options
+        self.report = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.report.Hide()
+        sizer_5.Add(self.report, 1, wx.EXPAND, 0)
+        sizer_10 = wx.FlexGridSizer(6, 1, 0, 0)
+
+        (_, _, self.checkbox_1,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Enable Device Selection",
+            wx.CheckBox,
+            "Allow user to specify actions on a selections of devices within a group.",
+        )
+
+        (_, _, self.spin_ctrl_1,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "API Request Limit",
+            wx.SpinCtrl,
+            "Maximum amount of results that the API will return. Min: %s Max: %s"
+            % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
+        )
+        self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
+        self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_1.SetValue(Globals.limit)
+
+        (panel_9, _, self.spin_ctrl_2,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "API Request Offset",
+            wx.SpinCtrl,
+            "Page of results the API sends back (starts at 0). Min:0 Max: 100",
+        )
+        panel_9.Hide()
+        self.spin_ctrl_2.SetMin(0)
+        self.spin_ctrl_2.SetValue(Globals.offset)
+
+        (panel_43, _, self.spin_ctrl_8,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Max Threads",
+            wx.SpinCtrl,
+            "Maximum number of threads that will be created to perform an action. Min: 10 Max: 100",
+        )
+        panel_43.Hide()
+        self.spin_ctrl_8.SetMin(10)
+        self.spin_ctrl_8.SetMax(100)
+        self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
+
+        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Fetch all devices in one page",
+            wx.CheckBox,
+            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
+        )
+
+        (_, _, self.checkbox_18,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Show Disabled Devices",
+            wx.CheckBox,
+            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
+        )
+        self.checkbox_18.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
+
+        # Display Options
+        self.display = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.display.Hide()
+        sizer_5.Add(self.display, 1, wx.EXPAND, 0)
+        sizer_11 = wx.FlexGridSizer(5, 1, 0, 0)
+        (_, _, self.spin_ctrl_10,) = self.addPrefToPanel(
+            self.display,
+            sizer_11,
+            "Font Size",
+            wx.SpinCtrl,
+            "Font size. Min: 10 Max: 72",
+        )
+        self.spin_ctrl_10.SetMin(10)
+        self.spin_ctrl_10.SetMax(72)
+        self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        # Save Options
+        self.save = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.save.Hide()
+        sizer_5.Add(self.save, 1, wx.EXPAND, 0)
+        sizer_12 = wx.FlexGridSizer(5, 1, 0, 0)
+        (_, _, self.checkbox_15,) = self.addPrefToPanel(
+            self.save,
+            sizer_12,
+            "Save only visible columns",
+            wx.CheckBox,
+            "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
+        )
+
         (_, _, self.checkbox_23,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
+            self.save,
+            sizer_12,
             "Combine Device And Network Sheets",
             wx.CheckBox,
             "When saving a xlxs file combine the device and network sheets.",
         )
-        self.checkbox_21.Set3StateValue(
+        self.checkbox_23.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
         )
 
@@ -201,7 +217,7 @@ class PreferencesDialog(wx.Dialog):
         self.command.Hide()
         sizer_5.Add(self.command, 1, wx.EXPAND, 0)
 
-        sizer_14 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_14 = wx.FlexGridSizer(7, 1, 0, 0)
 
         (_, _, self.spin_ctrl_6,) = self.addPrefToPanel(
             self.command,
@@ -221,14 +237,6 @@ class PreferencesDialog(wx.Dialog):
             "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes.",
         )
 
-        (_, __file__, self.checkbox_12,) = self.addPrefToPanel(
-            self.command,
-            sizer_14,
-            "Use Json Input for Commands",
-            wx.CheckBox,
-            "Use Json Input for Commands",
-        )
-
         (_, _, self.combobox_1,) = self.addPrefToPanel(
             self.command,
             sizer_14,
@@ -239,6 +247,32 @@ class PreferencesDialog(wx.Dialog):
         )
         self.combobox_1.SetSelection(0)
 
+        static_line_1 = wx.StaticLine(self.command, wx.ID_ANY)
+        sizer_14.Add(
+            static_line_1,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
+        # Command Dialog
+        (_, __file__, self.checkbox_12,) = self.addPrefToPanel(
+            self.command,
+            sizer_14,
+            "Use Json Input for Commands",
+            wx.CheckBox,
+            "Use Json Input for Commands",
+        )
+
+        static_line_2 = wx.StaticLine(self.command, wx.ID_ANY)
+        sizer_14.Add(
+            static_line_2,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
+        # Alias Command Option
         (_, _, self.spin_ctrl_9,) = self.addPrefToPanel(
             self.command,
             sizer_14,
@@ -258,6 +292,7 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
 
+        # Grid Display
         (_, _, self.checkbox_10,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
@@ -285,6 +320,7 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
+        # Grid Report Options
         (_, _, self.checkbox_17,) = self.addPrefToPanel(
             self.grid,
             sizer_16,
@@ -335,7 +371,7 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_4,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Show Application's Package Name",
+            "Show App's Package Name",
             wx.CheckBox,
             "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
@@ -403,6 +439,15 @@ class PreferencesDialog(wx.Dialog):
         sizer_6.AddGrowableCol(0)
         self.general.SetSizer(sizer_6)
 
+        sizer_10.AddGrowableCol(0)
+        self.report.SetSizer(sizer_10)
+
+        sizer_11.AddGrowableCol(0)
+        self.display.SetSizer(sizer_11)
+
+        sizer_12.AddGrowableCol(0)
+        self.save.SetSizer(sizer_12)
+
         self.window_1_pane_2.SetSizer(sizer_5)
 
         self.window_1_pane_1.SetSizer(sizer_4)
@@ -414,6 +459,19 @@ class PreferencesDialog(wx.Dialog):
         self.SetSizer(sizer_1)
 
         self.Layout()
+
+        self.sections = {
+            "General": self.general,
+            "Report": self.report,
+            "Display": self.display,
+            "Save": self.save,
+            "Grid": self.grid,
+            "Command": self.command,
+            "Application": self.app,
+            "Prompts": self.prompts,
+        }
+        for key in self.sections.keys():
+            self.list_box_1.Append(key)
 
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
@@ -443,36 +501,11 @@ class PreferencesDialog(wx.Dialog):
     @api_tool_decorator()
     def showMatchingPanel(self, event):
         event.Skip()
-        if event.GetString() == "Grid":
-            self.app.Hide()
-            self.general.Hide()
-            self.command.Hide()
-            self.prompts.Hide()
-            self.grid.Show()
-        elif event.GetString() == "Command":
-            self.app.Hide()
-            self.general.Hide()
-            self.grid.Hide()
-            self.prompts.Hide()
-            self.command.Show()
-        elif event.GetString() == "General":
-            self.app.Hide()
-            self.grid.Hide()
-            self.command.Hide()
-            self.prompts.Hide()
-            self.general.Show()
-        elif event.GetString() == "Application":
-            self.grid.Hide()
-            self.general.Hide()
-            self.command.Hide()
-            self.prompts.Hide()
-            self.app.Show()
-        elif event.GetString() == "Prompts":
-            self.app.Hide()
-            self.general.Hide()
-            self.command.Hide()
-            self.prompts.Show()
-            self.grid.Hide()
+        for key, value in self.sections.items():
+            if key == event.GetString():
+                value.Show()
+            else:
+                value.Hide()
         self.window_1_pane_2.GetSizer().Layout()
         self.Layout()
         if self.GetSize() == self.size:

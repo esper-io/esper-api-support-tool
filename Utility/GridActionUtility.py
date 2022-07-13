@@ -582,7 +582,6 @@ def relocateDeviceToNewGroup(frame):
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
     splitResults = splitListIntoChunks(devices)
-    # threads = []
 
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(
@@ -692,7 +691,6 @@ def installListedLatestApp(frame):
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
     splitResults = splitListIntoChunks(devices)
-    # threads = []
 
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(processInstallLatestAppChunk, chunk, gridAppList)

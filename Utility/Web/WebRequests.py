@@ -212,7 +212,6 @@ def performPostRequestWithRetry(
 
 def getAllFromOffsetsRequests(api_response, results=None, tolarance=0):
     count = None
-    # addresses = []
     if not results:
         results = []
     if hasattr(api_response, "count"):
