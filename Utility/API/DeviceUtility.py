@@ -1,7 +1,6 @@
 import threading
 import time
 import Common.Globals as Globals
-import esperclient
 
 
 from Common.decorator import api_tool_decorator
@@ -9,7 +8,6 @@ from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import (
-    enforceRateLimit,
     getHeader,
     joinThreadList,
     limitActiveThreads,

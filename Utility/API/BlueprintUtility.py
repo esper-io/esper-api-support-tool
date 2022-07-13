@@ -17,7 +17,6 @@ from Utility.Resource import (
     deleteFile,
     displayMessageBox,
     download,
-    getAllFromOffsets,
     getEsperConfig,
     getHeader,
     postEventToFrame,

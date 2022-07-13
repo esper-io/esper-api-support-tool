@@ -4,7 +4,6 @@ import Common.Globals as Globals
 from Utility.API.GroupUtility import getAllGroups
 
 from Utility.Resource import (
-    getAllFromOffsets,
     getHeader,
     isApiKey,
 )
