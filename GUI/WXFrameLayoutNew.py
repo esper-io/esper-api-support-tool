@@ -2662,22 +2662,26 @@ class NewFrameLayout(wx.Frame):
             templateFound = util.processWallpapers(templateFound)
         self.Logging("Attempting to copy template...")
         res = None
-        if update:
-            res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
-        else:
-            res = util.createTemplate(toApi, toKey, toEntId, templateFound, level + 1)
-        if "errors" not in res:
+        try:
+            if update:
+                res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
+            else:
+                res = util.createTemplate(toApi, toKey, toEntId, templateFound, level + 1)
+        except Exception as e:
+            res = e
+        if type(res) == dict and "errors" not in res:
             action = "created" if not update else "updated"
             self.Logging("Template sucessfully %s." % action)
             displayMessageBox(
                 ("Template sucessfully %s." % action, wx.OK | wx.ICON_INFORMATION)
             )
         elif (
-            "errors" in res
+            type(res) == dict
+            and "errors" in res
             and res["errors"]
             and "EMM" in res["errors"][0]
             and level < 2
-        ):
+        ) or (isinstance(res, Exception) and "EMM" in str(res)):
             del templateFound["template"]["application"]["managed_google_play_disabled"]
             self.createClone(
                 util, templateFound, toApi, toKey, toEntId, update, level + 1
