@@ -175,3 +175,7 @@ if __name__ == "__main__":
     if error:
         error = error.decode("utf-8")
         print(error)
+
+    for item in os.listdir():
+        if item.endswith(".spec"):
+            os.remove(item)
