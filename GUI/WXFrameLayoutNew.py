@@ -715,42 +715,30 @@ class NewFrameLayout(wx.Frame):
             appGridData = []
             threads = []
 
-            deviceThread = wxThread.GUIThread(
-                None,
+            Globals.THREAD_POOL.enqueue(
                 self.getGridDataToSave,
-                (
-                    gridDeviceData
-                    if gridDeviceData
-                    else self.gridPanel.grid_1_contents,
-                    deviceHeaders,
-                    Globals.CSV_TAG_ATTR_NAME,
-                    deviceGridData,
-                ),
+                gridDeviceData
+                if gridDeviceData
+                else self.gridPanel.grid_1_contents,
+                deviceHeaders,
+                Globals.CSV_TAG_ATTR_NAME,
+                deviceGridData,
             )
-            deviceThread.startWithRetry()
-            threads.append(deviceThread)
 
-            networkThread = wxThread.GUIThread(
-                None,
+            Globals.THREAD_POOL.enqueue(
                 self.getGridDataToSave,
-                (
-                    gridDeviceData
-                    if gridDeviceData
-                    else self.gridPanel.grid_2_contents,
-                    networkHeaders,
-                    Globals.CSV_NETWORK_ATTR_NAME,
-                    networkGridData,
-                ),
+                gridDeviceData
+                if gridDeviceData
+                else self.gridPanel.grid_2_contents,
+                networkHeaders,
+                Globals.CSV_NETWORK_ATTR_NAME,
+                networkGridData,
             )
-            networkThread.startWithRetry()
-            threads.append(networkThread)
 
             for entry in self.gridPanel.grid_3_contents:
                 appGridData.append(list(entry.values()))
 
-            joinThreadList(threads)
-            networkGridData = networkThread.result
-            deviceGridData = deviceThread.result
+            Globals.THREAD_POOL.join(tolerance=1)
 
             df_1 = None
             if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:

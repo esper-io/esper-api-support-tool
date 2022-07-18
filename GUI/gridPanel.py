@@ -1180,12 +1180,7 @@ class GridPanel(wx.Panel):
     def updateTagCell(self, name, tags=None):
         """ Update the Tag Column in the Device Grid """
         if platform.system() == "Windows":
-            wxThread.GUIThread(
-                self.parentFrame,
-                self.processUpdateTagCell,
-                (name, tags),
-                name="UpdateTagCell",
-            )
+            Globals.THREAD_POOL.enqueue(self.processUpdateTagCell, name, tags)
         else:
             self.processUpdateTagCell(name, tags)
 
