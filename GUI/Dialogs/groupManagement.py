@@ -16,7 +16,6 @@ from Utility.API.GroupUtility import (
 import wx
 import wx.grid as gridlib
 import Common.Globals as Globals
-import Utility.Threading.wxThread as wxThread
 
 from Common.enum import Color
 
@@ -111,7 +110,7 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1 = wx.TreeCtrl(
             self.notebook_1_pane_1,
             wx.ID_ANY,
-            style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS,
+            style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS | wx.TR_HIDE_ROOT,
         )
         grid_sizer_1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
 
@@ -176,8 +175,9 @@ class GroupManagement(wx.Dialog):
         self.button_5.SetMinSize((20, 20))
         sizer_4.Add(self.button_5, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
-        self.tree_ctrl_2 = wx.TreeCtrl(self.notebook_2_pane_1, wx.ID_ANY)
+        self.tree_ctrl_2 = wx.TreeCtrl(self.notebook_2_pane_1, wx.ID_ANY, style=wx.TR_HIDE_ROOT)
         sizer_4.Add(self.tree_ctrl_2, 1, wx.EXPAND, 0)
+        
 
         self.notebook_2_pane_2 = TabPanel(self.notebook_2, wx.ID_ANY, "Grid")
         self.notebook_2.AddPage(self.notebook_2_pane_2, "Grid Preview")
@@ -242,11 +242,20 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
         self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
+        self.createRootNodes()
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
         self.tree_ctrl_2.ExpandAll()
 
         self.Fit()
+
+    def createRootNodes(self):
+        self.root = self.tree_ctrl_1.AddRoot("", -1)
+        self.rootId = -1
+        self.tree[self.rootId] = self.root
+
+        root = self.tree_ctrl_2.AddRoot("", -1)
+        self.uploadTreeItems[self.rootId] = root
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
@@ -282,6 +291,17 @@ class GroupManagement(wx.Dialog):
                     root2 = self.tree_ctrl_2.AddRoot(groupName, data=groupId)
                     self.tree[groupId] = self.root
                     self.uploadTreeItems[groupId] = root2
+                    continue
+                elif not groupParent and self.root:
+                    self.groupTree[groupId] = []
+                    entry = self.tree_ctrl_1.AppendItem(
+                        self.tree[self.rootId], groupName, data=groupId
+                    )
+                    entry2 = self.tree_ctrl_2.AppendItem(
+                        self.uploadTreeItems[self.rootId], groupName, data=groupId
+                    )
+                    self.tree[groupId] = entry
+                    self.uploadTreeItems[groupId] = entry2
                     continue
                 if parentId in self.groupTree.keys():
                     self.groupTree[parentId].append({groupId: []})
@@ -347,6 +367,7 @@ class GroupManagement(wx.Dialog):
             self.tree = {}
             self.uploadTreeItems = {}
             self.uploadCSVTreeItems = []
+            self.createRootNodes()
             self.groups = getAllGroups().results
             self.createTreeLayout()
             self.tree_ctrl_1.ExpandAll()
@@ -379,8 +400,9 @@ class GroupManagement(wx.Dialog):
     def deleteGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
-            thread.startWithRetry()
+            # thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
+            # thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.deleteGroupHelper)
 
     def deleteGroupHelper(self):
         self.isBusy = True
@@ -482,8 +504,9 @@ class GroupManagement(wx.Dialog):
     def addSubGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
-            thread.startWithRetry()
+            # thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
+            # thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.addSubGroupHelper)
 
     def addSubGroupHelper(self):
         self.isBusy = True
@@ -698,8 +721,9 @@ class GroupManagement(wx.Dialog):
     def renameGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
-            thread.startWithRetry()
+            # thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
+            # thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.renameGroupHelper)
 
     def renameGroupHelper(self):
         self.isBusy = True
