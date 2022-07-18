@@ -199,6 +199,12 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
             api_response["results"] = api_response_list
         elif api_response and type(api_response) == dict:
             api_response["results"] = [api_response]
+        elif not api_response and api_response_list:
+            api_response = {
+                "results": api_response_list,
+                "next": None,
+                "previous": None,
+            }
         postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
