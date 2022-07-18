@@ -1186,13 +1186,6 @@ def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
-            # thread = wxThread.GUIThread(
-            #     Globals.frame,
-            #     getAllDevices,
-            #     (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
-            # )
-            # threads.append(thread)
-            # thread.startWithRetry()
             Globals.THREAD_POOL.enqueue(
                 getAllDevices,
                 Globals.frame.sidePanel.selectedGroupsList,
@@ -1201,13 +1194,6 @@ def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
             )
             respOffsetInt += int(respLimit)
         Globals.THREAD_POOL.join(tolerance=tolerance)
-        # joinThreadList(threads)
-    # for thread in threads:
-    #     if thread and thread.result:
-    #         if hasattr(thread.result, "results"):
-    #             devices += thread.result.results
-    #         elif type(thread.result) is dict:
-    #             devices += thread.result["results"]
     res = Globals.THREAD_POOL.results()
     for thread in res:
         if hasattr(thread, "results"):

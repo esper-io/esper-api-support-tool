@@ -405,8 +405,6 @@ class GroupManagement(wx.Dialog):
     def deleteGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            # thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
-            # thread.startWithRetry()
             Globals.THREAD_POOL.enqueue(self.deleteGroupHelper)
 
     def deleteGroupHelper(self):
@@ -509,8 +507,6 @@ class GroupManagement(wx.Dialog):
     def addSubGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            # thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
-            # thread.startWithRetry()
             Globals.THREAD_POOL.enqueue(self.addSubGroupHelper)
 
     def addSubGroupHelper(self):
@@ -726,8 +722,6 @@ class GroupManagement(wx.Dialog):
     def renameGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            # thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
-            # thread.startWithRetry()
             Globals.THREAD_POOL.enqueue(self.renameGroupHelper)
 
     def renameGroupHelper(self):
