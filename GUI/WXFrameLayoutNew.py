@@ -1995,12 +1995,7 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.disableGridProperties()
                     self.frame_toolbar.search.SetValue("")
                     self.gauge.Pulse()
-                    wxThread.GUIThread(
-                        self,
-                        iterateThroughGridRows,
-                        (self, actionClientData),
-                        name="iterateThroughGridRows",
-                    ).startWithRetry()
+                    Globals.THREAD_POOL.enqueue(iterateThroughGridRows, self, actionClientData)
                 else:
                     self.sleepInhibitor.uninhibit()
                     self.isRunning = False
