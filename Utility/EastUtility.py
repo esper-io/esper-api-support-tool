@@ -87,13 +87,13 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        api_response = getDeviceById(input)
+        api_response = getDeviceById(input, tolerance=1)
         iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
         # Iterate Through Each Device in Group VIA Api Request
         try:
             frame.Logging("---> Making API Request")
-            api_response = getAllDevices(input)
+            api_response = getAllDevices(input, tolarance=1)
             iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
         except ApiException as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
@@ -155,7 +155,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                         None,
                     ),
                 )
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance=1)
         appResp = Globals.THREAD_POOL.results()
 
         for device in api_response.results:
@@ -206,7 +206,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                         None,
                     ),
                 )
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance=1)
         appResp = Globals.THREAD_POOL.results()
 
         for device in api_response["results"]:
@@ -215,7 +215,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                     perform_web_requests,
                     (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
                 )
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance=1)
         latestResp = Globals.THREAD_POOL.results()
 
         deviceList = {}

@@ -1928,16 +1928,7 @@ class NewFrameLayout(wx.Frame):
                     % (actionLabel, groupLabel)
                 )
             self.gauge.Pulse()
-            wxThread.GUIThread(
-                self,
-                TakeAction,
-                (
-                    self,
-                    self.sidePanel.selectedGroupsList,
-                    actionClientData,
-                ),
-                name="TakeActionOnGroups",
-            ).startWithRetry()
+            Globals.THREAD_POOL.enqueue(TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData)
         elif (
             self.sidePanel.selectedDevicesList
             and actionSelection > 0
@@ -1968,12 +1959,7 @@ class NewFrameLayout(wx.Frame):
                     % (actionLabel, deviceLabel)
                 )
             self.gauge.Pulse()
-            wxThread.GUIThread(
-                self,
-                TakeAction,
-                (self, self.sidePanel.selectedDevicesList, actionClientData, True),
-                name="TakeActionOnDevices",
-            ).startWithRetry()
+            Globals.THREAD_POOL.enqueue(TakeAction, self, self.sidePanel.selectedDevicesList, actionClientData, True)
         elif actionClientData >= GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
@@ -2226,7 +2212,7 @@ class NewFrameLayout(wx.Frame):
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
                     self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
                     self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                    self.gridPanel.populateAppGrid, (
+                    self.gridPanel.populateAppGrid(
                         device,
                         deviceInfo,
                         deviceInfo["appObj"],
