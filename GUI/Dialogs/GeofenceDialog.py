@@ -5,7 +5,6 @@ import csv
 import Common.Globals as Globals
 import wx.grid
 from Common.decorator import api_tool_decorator
-from Utility.Threading import wxThread
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.Resource import displayMessageBox, getHeader
@@ -319,20 +318,16 @@ class GeofenceDialog(wx.Dialog):
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
                 self.setCursorBusy()
-                thread = wxThread.GUIThread(
-                    None,
+                Globals.THREAD_POOL.enqueue(
                     self.processCreateGeoFenceRequest,
-                    (
-                        properGroupIdList,
-                        name,
-                        description,
-                        latitude,
-                        longitude,
-                        radius,
-                        actionsList,
-                    ),
+                    properGroupIdList,
+                    name,
+                    description,
+                    latitude,
+                    longitude,
+                    radius,
+                    actionsList,
                 )
-                thread.startWithRetry()
         else:
             displayMessageBox(
                 (

@@ -13,12 +13,9 @@ import Common.Globals as Globals
 from Utility.Resource import (
     enforceRateLimit,
     getHeader,
-    joinThreadList,
-    limitActiveThreads,
     logBadResponse,
     postEventToFrame,
 )
-from Utility.Threading import wxThread
 
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
@@ -255,28 +252,28 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
 
 
 @api_tool_decorator()
-def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY):
+def getDeviceGroupsForHost(
+    config, enterprise_id, maxAttempt=Globals.MAX_RETRY, tolerance=0
+):
     try:
         api_response = getDeviceGroupsForHostHelper(config, enterprise_id)
         if api_response and hasattr(api_response, "next") and api_response.next:
             offset = Globals.limit
-            threads = []
             while offset < api_response.count:
-                thread = wxThread.GUIThread(
-                    None,
+                Globals.THREAD_POOL.enqueue(
                     getDeviceGroupsForHostHelper,
-                    (config, enterprise_id, Globals.limit, offset, maxAttempt),
-                    name="getDeviceGroupsForHostHelper",
+                    config,
+                    enterprise_id,
+                    Globals.limit,
+                    offset,
+                    maxAttempt,
                 )
-                thread.start()
-                threads.append(thread)
-                limitActiveThreads(threads)
                 offset += Globals.limit
-            joinThreadList(threads)
-            for thread in threads:
-                resp = thread.result
-                if resp and hasattr(resp, "next") and resp.next:
-                    api_response.results += resp.results
+            Globals.THREAD_POOL.join(tolerance)
+            res = Globals.THREAD_POOL.results()
+            for threadRes in res:
+                if threadRes and hasattr(threadRes, "next") and threadRes.next:
+                    api_response.results += threadRes.results
             obtained = len(api_response.results)
             remainder = api_response.count - obtained
             if remainder > 0:

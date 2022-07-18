@@ -36,7 +36,6 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     displayMessageBox,
     getHeader,
-    joinThreadList,
     postEventToFrame,
     ipv6Tomac,
     splitListIntoChunks,
@@ -290,19 +289,17 @@ def processCollectionDevices(collectionList):
                 )
                 number_of_devices += len(chunk)
 
-            t = wxThread.GUIThread(
-                Globals.frame,
-                wxThread.waitTillThreadsFinish,
-                args=(
-                    Globals.THREAD_POOL.threads,
-                    GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                    Globals.enterprise_id,
-                    3,
-                ),
-                eventType=eventUtil.myEVT_FETCH,
-                name="waitTillThreadsFinish3",
+            res = wxThread.waitTillThreadsFinish(
+                Globals.THREAD_POOL.threads,
+                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
+                Globals.enterprise_id,
+                3,
+                tolerance=1
             )
-            t.startWithRetry()
+            postEventToFrame(
+                eventUtil.myEVT_FETCH,
+                res,
+            )
     else:
         if Globals.frame:
             Globals.frame.Logging("---> No devices found for EQL query")
@@ -1137,7 +1134,7 @@ def getAllDeviceInfo(frame):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
-            getAllDevicesFromOffsets(api_response, devices)
+            getAllDevicesFromOffsets(api_response, devices, tolerance=1)
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
@@ -1174,8 +1171,8 @@ def getAllDeviceInfo(frame):
     return deviceList
 
 
-def getAllDevicesFromOffsets(api_response, devices=[]):
-    threads = []
+def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
+    # threads = []
     count = None
     apiNext = None
     if hasattr(api_response, "count"):
@@ -1189,21 +1186,34 @@ def getAllDevicesFromOffsets(api_response, devices=[]):
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = wxThread.GUIThread(
-                Globals.frame,
+            # thread = wxThread.GUIThread(
+            #     Globals.frame,
+            #     getAllDevices,
+            #     (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
+            # )
+            # threads.append(thread)
+            # thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(
                 getAllDevices,
-                (Globals.frame.sidePanel.selectedGroupsList, respLimit, respOffset),
+                Globals.frame.sidePanel.selectedGroupsList,
+                respLimit,
+                respOffset,
             )
-            threads.append(thread)
-            thread.startWithRetry()
             respOffsetInt += int(respLimit)
-        joinThreadList(threads)
-    for thread in threads:
-        if thread and thread.result:
-            if hasattr(thread.result, "results"):
-                devices += thread.result.results
-            elif type(thread.result) is dict:
-                devices += thread.result["results"]
+        Globals.THREAD_POOL.join(tolerance=tolerance)
+        # joinThreadList(threads)
+    # for thread in threads:
+    #     if thread and thread.result:
+    #         if hasattr(thread.result, "results"):
+    #             devices += thread.result.results
+    #         elif type(thread.result) is dict:
+    #             devices += thread.result["results"]
+    res = Globals.THREAD_POOL.results()
+    for thread in res:
+        if hasattr(thread, "results"):
+            devices += thread.results
+        elif type(thread) is dict:
+            devices += thread["results"]
     return devices
 
 

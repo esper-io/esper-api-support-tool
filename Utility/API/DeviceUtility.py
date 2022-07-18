@@ -178,7 +178,13 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
         api_response = None
         if type(deviceToUse) == list:
             for device in deviceToUse:
-                Globals.THREAD_POOL.enqueue(getDeviceByIdHelper, device, api_response_list, api_response, maxAttempt)
+                Globals.THREAD_POOL.enqueue(
+                    getDeviceByIdHelper,
+                    device,
+                    api_response_list,
+                    api_response,
+                    maxAttempt,
+                )
         else:
             api_response, api_response_list = getDeviceByIdHelper(
                 deviceToUse, api_response_list, api_response, maxAttempt

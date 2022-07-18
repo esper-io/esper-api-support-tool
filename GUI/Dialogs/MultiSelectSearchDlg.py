@@ -7,7 +7,6 @@ from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
 import Common.Globals as Globals
-import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 
@@ -260,9 +259,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             elif "device" in self.label.lower():
-                wxThread.GUIThread(
-                    self, self.selectAllDevices, None, name="selectAllDevices"
-                ).startWithRetry()
+                Globals.THREAD_POOL.enqueue(self.selectAllDevices)
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -321,9 +318,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
-        wxThread.GUIThread(
-            self, self.processNext, None, name="processNext"
-        ).startWithRetry()
+        Globals.THREAD_POOL.enqueue(self.processNext)
 
     def processNext(self):
         self.button_1.Enable(False)
@@ -344,9 +339,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
-        wxThread.GUIThread(
-            self, self.processPrev, None, name="processPrev"
-        ).startWithRetry()
+        Globals.THREAD_POOL.enqueue(self.processPrev)
 
     def processPrev(self):
         self.checkbox_1.Enable(False)
@@ -395,12 +388,10 @@ class MultiSelectSearchDlg(wx.Dialog):
 
             if "device" in self.label.lower():
                 resp = getAllDevices(
-                    self.group,
-                    limit=resultLimit,
-                    offset=resultOffset,
+                    self.group, limit=resultLimit, offset=resultOffset, tolarance=1
                 )
             elif "group" in self.label.lower():
-                resp = getAllGroups(offset=resultOffset)
+                resp = getAllGroups(offset=resultOffset, tolerance=1)
             if resp:
                 if hasattr(resp, "results"):
                     self.originalChoices.append(self.processDevices(resp.results))
@@ -473,7 +464,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         )
 
         if count > len(self.originalChoices[0]):
-            resp = getAllDevices(self.group, limit=resultLimit, offset=0, fetchAll=True)
+            resp = getAllDevices(
+                self.group, limit=resultLimit, offset=0, fetchAll=True, tolarance=1
+            )
             if resp:
                 self.check_list_box_1.Clear()
                 if hasattr(resp, "results"):

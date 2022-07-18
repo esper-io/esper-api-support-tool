@@ -54,7 +54,7 @@ class PreferencesDialog(wx.Dialog):
             "combineDeviceAndNetworkSheets",
             "showGroupPath",
             "last_endpoint",
-            "prereleaseUpdate"
+            "prereleaseUpdate",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)

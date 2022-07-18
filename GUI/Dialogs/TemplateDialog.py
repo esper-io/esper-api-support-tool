@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
-from Common.decorator import api_tool_decorator
 import Utility.API.EsperTemplateUtil as templateUtil
-import Utility.Threading.wxThread as wxThread
+
+import Common.Globals as Globals
 import wx
 import wx.html as wxHtml
 import json
+
+from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
+from Common.decorator import api_tool_decorator
 
 
 class TemplateDialog(wx.Dialog):
@@ -235,13 +237,9 @@ class TemplateDialog(wx.Dialog):
         self.SetCursor(myCursor)
         self.sourceTemplate = []
         self.list_box_1.Clear()
-        self.choice1thread = wxThread.GUIThread(
-            self,
-            self.populateSourceTempaltes,
-            (event.String if event.String else False),
-            name="populateSourceTempaltes",
+        Globals.THREAD_POOL.enqueue(
+            self.populateSourceTempaltes, event.String if event.String else False
         )
-        self.choice1thread.startWithRetry()
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
@@ -254,13 +252,9 @@ class TemplateDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.destTemplate = []
-        self.choice2thread = wxThread.GUIThread(
-            self,
-            self.fetchDestTempaltes,
-            (event.String if event.String else False),
-            name="fetchDestTempaltes",
+        Globals.THREAD_POOL.enqueue(
+            self.fetchDestTempaltes, event.String if event.String else False
         )
-        self.choice2thread.startWithRetry()
 
     @api_tool_decorator()
     def getTemplates(self, dataSrc):

@@ -262,7 +262,9 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadGroupHelper(self, config):
         destinationGroups = getDeviceGroupsForHost(
-            getEsperConfig(config["apiHost"], config["apiKey"]), config["enterprise"]
+            getEsperConfig(config["apiHost"], config["apiKey"]),
+            config["enterprise"],
+            tolerance=1,
         )
         for group in destinationGroups.results:
             self.combo_box_2.Append(group.path, group.id)

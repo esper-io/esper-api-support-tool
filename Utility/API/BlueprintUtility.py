@@ -268,9 +268,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             "Cloning Blueprint",
             "Time remaining",
             100,
-            style=wx.PD_ELAPSED_TIME
-            | wx.PD_AUTO_HIDE
-            | wx.PD_ESTIMATED_TIME,
+            style=wx.PD_ELAPSED_TIME | wx.PD_AUTO_HIDE | wx.PD_ESTIMATED_TIME,
         )
         try:
             blueprint = uploadingMissingBlueprintApps(
@@ -354,10 +352,13 @@ def uploadingMissingBlueprintApps(
                 "download", link, Globals.PRINT_API_LOGS
             )
         except Exception as e:
-            rsp = performGetRequestWithRetry(detail["version_url"], {
-                "Authorization": "Bearer %s" % fromConfig["apiKey"],
-                "Content-Type": "application/json",
-            })
+            rsp = performGetRequestWithRetry(
+                detail["version_url"],
+                {
+                    "Authorization": "Bearer %s" % fromConfig["apiKey"],
+                    "Content-Type": "application/json",
+                },
+            )
             if rsp.status_code < 300:
                 rsp = rsp.json()
                 link = rsp["app_file"]
@@ -547,12 +548,15 @@ def uploadMissingContentFiles(
             url = "{host}v0/enterprise/{ent_id}/content/{id}".format(
                 host=fromConfig["apiHost"],
                 ent_id=fromConfig["enterprise"],
-                id=detail["file"]
+                id=detail["file"],
             )
-            rsp = performGetRequestWithRetry(url, {
-                "Authorization": "Bearer %s" % fromConfig["apiKey"],
-                "Content-Type": "application/json",
-            })
+            rsp = performGetRequestWithRetry(
+                url,
+                {
+                    "Authorization": "Bearer %s" % fromConfig["apiKey"],
+                    "Content-Type": "application/json",
+                },
+            )
             if rsp.status_code < 300:
                 rsp = rsp.json()
                 link = rsp["download_url"]

@@ -120,7 +120,7 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
-            getEsperConfig(self.toApi, self.toKey), self.toEntId
+            getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
         )
         allDeviceGroupId = None
         found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
@@ -135,7 +135,7 @@ class EsperTemplateUtil:
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
-                    getEsperConfig(self.toApi, self.toKey), self.toEntId
+                    getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
                 )
                 _, templateFound, _ = self.checkDeviceGroup(
                     templateFound, toDeviceGroups, allDeviceGroupId

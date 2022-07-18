@@ -408,7 +408,7 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
-                        "---> Finsihed Performing EQL Query, processing results..."
+                        "---> Finished Performing EQL Query, processing results..."
                     )
                     Globals.THREAD_POOL.enqueue(
                         processCollectionDevices, deviceListResp
@@ -430,7 +430,7 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
-                        "---> Finsihed Performing EQL Query, processing results..."
+                        "---> Finished Performing EQL Query, processing results..."
                     )
                     Globals.THREAD_POOL.enqueue(
                         processCollectionDevices, deviceListResp

@@ -110,7 +110,11 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1 = wx.TreeCtrl(
             self.notebook_1_pane_1,
             wx.ID_ANY,
-            style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS | wx.TR_HIDE_ROOT,
+            style=wx.TR_EDIT_LABELS
+            | wx.TR_HAS_BUTTONS
+            | wx.TR_SINGLE
+            | wx.WANTS_CHARS
+            | wx.TR_HIDE_ROOT,
         )
         grid_sizer_1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
 
@@ -175,9 +179,10 @@ class GroupManagement(wx.Dialog):
         self.button_5.SetMinSize((20, 20))
         sizer_4.Add(self.button_5, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
-        self.tree_ctrl_2 = wx.TreeCtrl(self.notebook_2_pane_1, wx.ID_ANY, style=wx.TR_HIDE_ROOT)
+        self.tree_ctrl_2 = wx.TreeCtrl(
+            self.notebook_2_pane_1, wx.ID_ANY, style=wx.TR_HIDE_ROOT
+        )
         sizer_4.Add(self.tree_ctrl_2, 1, wx.EXPAND, 0)
-        
 
         self.notebook_2_pane_2 = TabPanel(self.notebook_2, wx.ID_ANY, "Grid")
         self.notebook_2.AddPage(self.notebook_2_pane_2, "Grid Preview")

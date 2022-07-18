@@ -2666,7 +2666,9 @@ class NewFrameLayout(wx.Frame):
             if update:
                 res = util.updateTemplate(toApi, toKey, toEntId, templateFound)
             else:
-                res = util.createTemplate(toApi, toKey, toEntId, templateFound, level + 1)
+                res = util.createTemplate(
+                    toApi, toKey, toEntId, templateFound, level + 1
+                )
         except Exception as e:
             res = e
         if type(res) == dict and "errors" not in res:

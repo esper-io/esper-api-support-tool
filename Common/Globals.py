@@ -144,9 +144,7 @@ HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hG
 LATEST_UPDATE_LINK = (
     "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
 )
-UPDATE_LINK = (
-    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
-)
+UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "?&format=json"
