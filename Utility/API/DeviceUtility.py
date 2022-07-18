@@ -171,40 +171,20 @@ def fetchDevicesFromGroupHelper(
 
 
 @api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY):
+def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_response_list = []
         api_response = None
-        threads = []
         if type(deviceToUse) == list:
-            num = 0
             for device in deviceToUse:
-                if num == 0:
-                    api_response, api_response_list = getDeviceByIdHelper(
-                        device,
-                        api_response_list,
-                        api_response,
-                        maxAttempt,
-                    )
-                else:
-                    thread = threading.Thread(
-                        target=getDeviceByIdHelper,
-                        args=(
-                            device,
-                            api_response_list,
-                            api_response,
-                            maxAttempt,
-                        ),
-                    )
-                    thread.start()
-                    threads.append(thread)
-                    limitActiveThreads(threads)
+                Globals.THREAD_POOL.enqueue(getDeviceByIdHelper, device, api_response_list, api_response, maxAttempt)
         else:
             api_response, api_response_list = getDeviceByIdHelper(
                 deviceToUse, api_response_list, api_response, maxAttempt
             )
-        joinThreadList(threads)
+        Globals.THREAD_POOL.join(tolerance=tolerance)
+        Globals.THREAD_POOL.results()
         if api_response and api_response_list and hasattr(api_response, "results"):
             api_response.results = api_response_list
         elif api_response and hasattr(api_response, "results"):

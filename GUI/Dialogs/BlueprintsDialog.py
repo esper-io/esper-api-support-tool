@@ -3,7 +3,7 @@
 import json
 import wx
 import wx.html as wxHtml
-import threading
+import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 from GUI.PromptingComboBox import PromptingComboBox
@@ -15,8 +15,6 @@ from Utility.API.BlueprintUtility import (
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import (
     getEsperConfig,
-    joinThreadList,
-    limitActiveThreads,
     openWebLinkInBrowser,
 )
 
@@ -219,26 +217,15 @@ class BlueprintsDialog(wx.Dialog):
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
         self.combo_box_1.Enable(False)
-        threading.Thread(
-            target=self.getBlueprintEnabledEndpoints,
-            name="getBlueprintEnabledEndpoints",
-        ).start()
+        Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
-        threads = []
         for config in self.configMenuOpt.values():
             if "isBlueprintsEnabled" not in config:
-                thread = threading.Thread(
-                    target=checkBlueprintEnabled,
-                    args=(config,),
-                    name="getBlueprintEnabledEndpoints",
-                )
-                thread.start()
-                threads.append(thread)
-                limitActiveThreads(threads)
-        joinThreadList(threads)
+                Globals.THREAD_POOL.enqueue(checkBlueprintEnabled, config)
+        Globals.THREAD_POOL.join(tolerance=1)
         choices = list(
             filter(
                 lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
@@ -270,10 +257,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_2.Clear()
         config = self.configMenuOpt[event.String]
         self.toConfig = config
-        thread = threading.Thread(
-            target=self.loadGroupHelper, args=(config,), name="loadGroupHelper"
-        )
-        thread.start()
+        Globals.THREAD_POOL.enqueue(self.loadGroupHelper, config)
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
@@ -292,12 +276,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_4.Clear()
         config = self.configMenuOpt[event.String]
         self.fromConfig = config
-        thread = threading.Thread(
-            target=self.loadBlueprintsHelper,
-            args=(config,),
-            name="loadBlueprintsHelper",
-        )
-        thread.start()
+        Globals.THREAD_POOL.enqueue(self.loadBlueprintsHelper, config)
 
     @api_tool_decorator()
     def loadBlueprintsHelper(self, config):
@@ -331,12 +310,7 @@ class BlueprintsDialog(wx.Dialog):
             self.combo_box_3.GetString(self.combo_box_3.GetSelection())
         ]
         if match["group"]:
-            thread = threading.Thread(
-                target=self.loadBlueprintHelper,
-                args=(event, match, config),
-                name="loadBlueprintHelper",
-            )
-            thread.start()
+            Globals.THREAD_POOL.enqueue(self.loadBlueprintHelper, event, match, config)
         else:
             self.text_ctrl_1.SetValue("No preview available")
         self.checkInputs()

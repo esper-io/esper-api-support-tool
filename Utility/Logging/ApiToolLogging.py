@@ -118,11 +118,7 @@ class ApiToolLog:
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():
-            thread = threading.Thread(
-                target=self.LogApiRequest, args=(src, api_func, writeToFile)
-            )
-            thread.start()
-            return thread
+            Globals.THREAD_POOL.enqueue(self.LogApiRequest, src, api_func, writeToFile)
         else:
             self.LogApiRequest(src, api_func, writeToFile)
 

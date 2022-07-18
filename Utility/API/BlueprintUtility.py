@@ -74,7 +74,7 @@ def getAllBlueprints():
 @api_tool_decorator()
 def getAllBlueprintsFromHost(host, key, enterprise):
     response = getAllBlueprintsFromHostHelper(host, key, enterprise, Globals.limit, 0)
-    blueprints = getAllFromOffsetsRequests(response)
+    blueprints = getAllFromOffsetsRequests(response, tolarance=1)
     if hasattr(response, "results"):
         response.results = response.results + blueprints
         response.next = None
@@ -273,6 +273,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             | wx.PD_AUTO_HIDE
             | wx.PD_ESTIMATED_TIME,
         )
+        progress.Bind(wx.EVT_BUTTON, progressDlgButtonEvent)
         blueprint = uploadingMissingBlueprintApps(
             blueprint, downloadLinks, toConfig, fromConfig, progress
         )
@@ -326,6 +327,11 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
         )
 
 
+def progressDlgButtonEvent(event):
+    obj = event.GetEventObject()
+    obj.Destory()
+
+
 def uploadingMissingBlueprintApps(
     blueprint, downloadLinks, toConfig, fromConfig, progress
 ):
@@ -344,17 +350,22 @@ def uploadingMissingBlueprintApps(
                 EventUtility.myEVT_LOG,
                 "---> Cloning Blueprint: Downloading %s" % detail["name"],
             )
+            raise Exception("expire")
             download(link, file)
             ApiToolLog().LogApiRequestOccurrence(
                 "download", link, Globals.PRINT_API_LOGS
             )
         except Exception as e:
-            # TODO: download link might have expired reobtain and try again?
-            ApiToolLog().LogError(e)
-            print(e)
-            # toApps = getAllApplicationsForHost(
-            #     getEsperConfig(toConfig["apiHost"], toConfig["apiKey"]), toConfig["enterprise"]
-            # )
+            rsp = performGetRequestWithRetry(detail["version_url"], {
+                "Authorization": "Bearer %s" % fromConfig["apiKey"],
+                "Content-Type": "application/json",
+            })
+            if rsp.status_code < 300:
+                rsp = rsp.json()
+                link = rsp["app_file"]
+                download(link, file)
+            else:
+                raise e
         num += 1
         if os.path.exists(file):
             postEventToFrame(
@@ -470,6 +481,7 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                         "link": app["download_url"],
                         "rule": app["installation_rule"],
                         "state": app["state"],
+                        "version_url": app["app_version_url"],
                     }
                 )
     blueprint["latest_revision"]["application"]["apps"] = appsToAdd
@@ -534,9 +546,21 @@ def uploadMissingContentFiles(
                 "download", link, Globals.PRINT_API_LOGS
             )
         except Exception as e:
-            # TODO: download link might have expired reobtain and try again?
-            ApiToolLog().LogError(e)
-            print(e)
+            url = "{host}v0/enterprise/{ent_id}/content/{id}".format(
+                host=fromConfig["apiHost"],
+                ent_id=fromConfig["enterprise"],
+                id=detail["file"]
+            )
+            rsp = performGetRequestWithRetry(url, {
+                "Authorization": "Bearer %s" % fromConfig["apiKey"],
+                "Content-Type": "application/json",
+            })
+            if rsp.status_code < 300:
+                rsp = rsp.json()
+                link = rsp["download_url"]
+                download(link, file)
+            else:
+                raise e
         num += 1
         if os.path.exists(file):
             postEventToFrame(

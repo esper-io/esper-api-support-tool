@@ -271,7 +271,7 @@ def processInstallDevices(deviceList):
 def processInstallDevicesHelper(chunk, newDeviceList):
     for device in chunk:
         id = device["id"]
-        deviceListing = getDeviceById(id)
+        deviceListing = getDeviceById(id, tolerance=1)
         newDeviceList.append(deviceListing)
 
 
