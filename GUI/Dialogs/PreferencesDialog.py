@@ -175,7 +175,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_10,
             "Show Apps In Device Grid",
             wx.CheckBox,
-            "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
+            "Show a list of applications in the Device Info Grid. Note: Re-adding the column will append it to the end.",
         )
 
         (_, _, self.checkbox_24,) = self.addPrefToPanel(
@@ -486,12 +486,12 @@ class PreferencesDialog(wx.Dialog):
 
         self.sections = {
             "General": self.general,
-            "Report": self.report,
             "Display": self.display,
             "Save": self.save,
-            "Grid": self.grid,
-            "Command": self.command,
             "Application": self.app,
+            "Command": self.command,
+            "Grid": self.grid,
+            "Report": self.report,
             "Prompts": self.prompts,
         }
         for key in self.sections.keys():
