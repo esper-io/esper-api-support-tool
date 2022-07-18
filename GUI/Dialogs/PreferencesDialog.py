@@ -117,7 +117,7 @@ class PreferencesDialog(wx.Dialog):
         self.report = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.report.Hide()
         sizer_5.Add(self.report, 1, wx.EXPAND, 0)
-        sizer_10 = wx.FlexGridSizer(6, 1, 0, 0)
+        sizer_10 = wx.FlexGridSizer(12, 1, 0, 0)
 
         (_, _, self.checkbox_1,) = self.addPrefToPanel(
             self.report,
@@ -125,6 +125,73 @@ class PreferencesDialog(wx.Dialog):
             "Enable Device Selection",
             wx.CheckBox,
             "Allow user to specify actions on a selections of devices within a group.",
+        )
+
+        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Fetch all devices in one page",
+            wx.CheckBox,
+            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
+        )
+
+        static_line_4 = wx.StaticLine(self.report, wx.ID_ANY)
+        sizer_10.Add(
+            static_line_4,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
+        (_, _, self.checkbox_18,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Show Disabled Devices",
+            wx.CheckBox,
+            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
+        )
+        self.checkbox_18.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
+
+        (_, _, self.checkbox_17,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Replace Serial Number with Custom",
+            wx.CheckBox,
+            "Replaces Serial Number entry with Custom Serial Number, if available.",
+        )
+
+        (_, _, self.checkbox_19,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Last Seen As Date",
+            wx.CheckBox,
+            'Display Last Seen Value as a Date instead of "<period od time> ago"',
+        )
+
+        (_, _, self.checkbox_20,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Show Apps In Device Grid",
+            wx.CheckBox,
+            "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
+        )
+
+        (_, _, self.checkbox_24,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Show Group Path Instead of Name",
+            wx.CheckBox,
+            "Show the entire Group Path instead of just a name in the Group column.",
+        )
+
+        static_line_3 = wx.StaticLine(self.report, wx.ID_ANY)
+        sizer_10.Add(
+            static_line_3,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
         )
 
         (_, _, self.spin_ctrl_1,) = self.addPrefToPanel(
@@ -162,24 +229,16 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_8.SetMax(100)
         self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
 
-        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
             self.report,
             sizer_10,
-            "Fetch all devices in one page",
-            wx.CheckBox,
-            "Attempts to fetch all info for devices in a group and display them in one page (For Groups). May impact performance.",
+            "Load X Number of Devices in Grid",
+            wx.SpinCtrl,
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
         )
-
-        (_, _, self.checkbox_18,) = self.addPrefToPanel(
-            self.report,
-            sizer_10,
-            "Show Disabled Devices",
-            wx.CheckBox,
-            "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
-        )
-        self.checkbox_18.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
-        )
+        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
+        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         # Display Options
         self.display = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -315,51 +374,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_16,
             "Sync Grid's Vertical Scroll Position",
             wx.CheckBox,
-            "Sync Grid's vertical scroll position. Sync is disabled once a column is sorted.",
-        )
-
-        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Load X Number of Devices in Grid",
-            wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
-        )
-        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
-        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
-        # Grid Report Options
-        (_, _, self.checkbox_17,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Replace Serial Number with Custom",
-            wx.CheckBox,
-            "Replaces Serial Number entry with Custom Serial Number, if available.",
-        )
-
-        (_, _, self.checkbox_19,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Last Seen As Date",
-            wx.CheckBox,
-            'Display Last Seen Value as a Date instead of "<period od time> ago"',
-        )
-
-        (_, _, self.checkbox_20,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Show Apps In Device Grid",
-            wx.CheckBox,
-            "Show a list of applications in the Device Info Grid. Note: Readding column will append it to the end.",
-        )
-
-        (_, _, self.checkbox_24,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Show Group Path Instead of Name",
-            wx.CheckBox,
-            "Show the entire Group Path instead of just a name in the Group column.",
+            "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
         # App Preferences

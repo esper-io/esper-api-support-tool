@@ -3131,3 +3131,12 @@ class NewFrameLayout(wx.Frame):
             displayMessageBox(
                 ("User Report saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
             )
+            res = displayMessageBox(
+                (
+                    "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,
+                    wx.YES_NO | wx.ICON_INFORMATION,
+                )
+            )
+            if res == wx.YES:
+                parentDirectory = Path(inFile).parent.absolute()
+                openWebLinkInBrowser(parentDirectory)
