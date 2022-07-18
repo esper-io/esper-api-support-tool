@@ -164,7 +164,7 @@ class ToolMenuBar(wx.MenuBar):
         self.bulkFactoryReset = runMenu.Append(bulkReset)
         runMenu.Append(wx.ID_SEPARATOR)
 
-        geo = wx.MenuItem(runMenu, wx.ID_RETRY, "&Create Geofence")
+        geo = wx.MenuItem(runMenu, wx.ID_ANY, "&Create Geofence")
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
