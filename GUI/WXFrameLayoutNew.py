@@ -1715,7 +1715,6 @@ class NewFrameLayout(wx.Frame):
         if Globals.IS_TOKEN_VALID:
             resp = getAllInstallableApps()
             self.addAppsToAppChoice(resp)
-            self.sidePanel.appChoice.Enable(True)
 
     def addAppstoAppChoiceThread(self, event):
         api_response = None
