@@ -15,6 +15,7 @@ class InstalledDevicesDlg(wx.Dialog):
         hide_version=False,
         title="Get Installed Devices",
         showAllVersionsOption=True,
+        showPkgTextInput=False,
     ):
         super(InstalledDevicesDlg, self).__init__(
             None,
@@ -23,6 +24,7 @@ class InstalledDevicesDlg(wx.Dialog):
         )
 
         self.appNameList = []
+        self.otherPkgInput = None
         self.apps = apps
         for app in self.apps:
             self.appNameList.append(app["appPkgName"])
@@ -39,7 +41,7 @@ class InstalledDevicesDlg(wx.Dialog):
 
         grid_sizer_1 = wx.GridSizer(1, 2 if not hide_version else 1, 0, 0)
 
-        grid_sizer_3 = wx.FlexGridSizer(3, 1, 0, 0)
+        grid_sizer_3 = wx.FlexGridSizer(4, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Applications:")
@@ -53,7 +55,7 @@ class InstalledDevicesDlg(wx.Dialog):
                 "NormalBold",
             )
         )
-        grid_sizer_3.Add(label_1, 0, wx.LEFT, 5)
+        grid_sizer_3.Add(label_1, 0, wx.LEFT, 3)
 
         sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
         grid_sizer_3.Add(sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5)
@@ -74,6 +76,20 @@ class InstalledDevicesDlg(wx.Dialog):
             style=wx.LB_HSCROLL | wx.LB_NEEDED_SB,
         )
         grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
+
+        if showPkgTextInput:
+            sizer_4 = wx.FlexGridSizer(1, 2, 0, 0)
+            grid_sizer_3.Add(sizer_4, 1, wx.ALL | wx.EXPAND, 5)
+
+            label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Other Package:")
+            sizer_4.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+            self.otherPkgInput = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
+            sizer_4.Add(self.otherPkgInput, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+            sizer_4.AddGrowableRow(0)
+            sizer_4.AddGrowableCol(0)
+            sizer_4.AddGrowableCol(1)
 
         self.list_box_2 = None
         if not hide_version:
@@ -140,6 +156,8 @@ class InstalledDevicesDlg(wx.Dialog):
         self.search.Bind(wx.EVT_SEARCH, self.onSearch)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         self.search.Bind(wx.EVT_CHAR, self.onKey)
+        if self.otherPkgInput:
+            self.otherPkgInput.Bind(wx.EVT_CHAR, self.onOtherPkgInput)
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -222,6 +240,9 @@ class InstalledDevicesDlg(wx.Dialog):
                     app_name = matches[0]["appPkgName"]
                 else:
                     app_name = matches[0]["app_name"]
+        elif self.otherPkgInput:
+            app_name = self.otherPkgInput.GetValue()
+            packageName = self.otherPkgInput.GetValue()
         if returnPkgName and not returnAppName:
             return app_id, version_id, packageName
         elif returnAppName and returnPkgName:
@@ -296,3 +317,9 @@ class InstalledDevicesDlg(wx.Dialog):
             for item in self.appNameList:
                 self.list_box_1.Append(item)
             self.isFiltered = False
+
+    def onOtherPkgInput(self, event):
+        input = self.otherPkgInput.GetValue()
+        if input:
+            self.list_box_1.SetSelection(-1)
+        event.Skip()

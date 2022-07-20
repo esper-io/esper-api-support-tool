@@ -717,9 +717,7 @@ class NewFrameLayout(wx.Frame):
 
             Globals.THREAD_POOL.enqueue(
                 self.getGridDataToSave,
-                gridDeviceData
-                if gridDeviceData
-                else self.gridPanel.grid_1_contents,
+                gridDeviceData if gridDeviceData else self.gridPanel.grid_1_contents,
                 deviceHeaders,
                 Globals.CSV_TAG_ATTR_NAME,
                 deviceGridData,
@@ -727,9 +725,7 @@ class NewFrameLayout(wx.Frame):
 
             Globals.THREAD_POOL.enqueue(
                 self.getGridDataToSave,
-                gridDeviceData
-                if gridDeviceData
-                else self.gridPanel.grid_2_contents,
+                gridDeviceData if gridDeviceData else self.gridPanel.grid_2_contents,
                 networkHeaders,
                 Globals.CSV_NETWORK_ATTR_NAME,
                 networkGridData,
@@ -1928,7 +1924,9 @@ class NewFrameLayout(wx.Frame):
                     % (actionLabel, groupLabel)
                 )
             self.gauge.Pulse()
-            Globals.THREAD_POOL.enqueue(TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData)
+            Globals.THREAD_POOL.enqueue(
+                TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData
+            )
         elif (
             self.sidePanel.selectedDevicesList
             and actionSelection > 0
@@ -1959,7 +1957,13 @@ class NewFrameLayout(wx.Frame):
                     % (actionLabel, deviceLabel)
                 )
             self.gauge.Pulse()
-            Globals.THREAD_POOL.enqueue(TakeAction, self, self.sidePanel.selectedDevicesList, actionClientData, True)
+            Globals.THREAD_POOL.enqueue(
+                TakeAction,
+                self,
+                self.sidePanel.selectedDevicesList,
+                actionClientData,
+                True,
+            )
         elif actionClientData >= GridActions.MODIFY_ALIAS_AND_TAGS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
@@ -1995,7 +1999,9 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.disableGridProperties()
                     self.frame_toolbar.search.SetValue("")
                     self.gauge.Pulse()
-                    Globals.THREAD_POOL.enqueue(iterateThroughGridRows, self, actionClientData)
+                    Globals.THREAD_POOL.enqueue(
+                        iterateThroughGridRows, self, actionClientData
+                    )
                 else:
                     self.sleepInhibitor.uninhibit()
                     self.isRunning = False
@@ -2921,6 +2927,7 @@ class NewFrameLayout(wx.Frame):
                 hide_version=True,
                 title="Uninstall Application",
                 showAllVersionsOption=False,
+                showPkgTextInput=True,
             ) as dlg:
                 res = dlg.ShowModal()
             if res == wx.ID_OK:
@@ -3133,7 +3140,8 @@ class NewFrameLayout(wx.Frame):
             )
             res = displayMessageBox(
                 (
-                    "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,
+                    "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                    % inFile,
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )
             )

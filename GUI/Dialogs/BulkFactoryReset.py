@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import csv
+from pathlib import Path
 import wx
 import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.Resource import displayMessageBox, openWebLinkInBrowser
 
 
 class BulkFactoryReset(wx.Dialog):
@@ -151,6 +153,17 @@ class BulkFactoryReset(wx.Dialog):
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
+
+        res = displayMessageBox(
+            (
+                "Reset Template CSV Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                % inFile,
+                wx.YES_NO | wx.ICON_INFORMATION,
+            )
+        )
+        if res == wx.YES:
+            parentDirectory = Path(inFile).parent.absolute()
+            openWebLinkInBrowser(parentDirectory)
         self.button_OK.Enable(True)
         self.setCursorDefault()
 

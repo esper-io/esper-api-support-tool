@@ -167,7 +167,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_10,
             "Last Seen As Date",
             wx.CheckBox,
-            'Value displayed in the “Last Seen” column will be a Date instead of a time estimation.',
+            "Value displayed in the “Last Seen” column will be a Date instead of a time estimation.",
         )
 
         (_, _, self.checkbox_20,) = self.addPrefToPanel(

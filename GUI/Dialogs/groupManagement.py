@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 
 import csv
+from pathlib import Path
 from GUI.TabPanel import TabPanel
 
-from Utility.Resource import displayMessageBox, isApiKey, resourcePath, scale_bitmap
+from Utility.Resource import (
+    displayMessageBox,
+    isApiKey,
+    openWebLinkInBrowser,
+    resourcePath,
+    scale_bitmap,
+)
 from Common.decorator import api_tool_decorator
 from Utility.API.GroupUtility import (
     deleteGroup,
@@ -978,6 +985,16 @@ class GroupManagement(wx.Dialog):
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerows(gridData)
+        res = displayMessageBox(
+            (
+                "Group Template CSV Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                % inFile,
+                wx.YES_NO | wx.ICON_INFORMATION,
+            )
+        )
+        if res == wx.YES:
+            parentDirectory = Path(inFile).parent.absolute()
+            openWebLinkInBrowser(parentDirectory)
         self.button_7.Enable(True)
         self.setCursorDefault()
 

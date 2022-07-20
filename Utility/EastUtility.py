@@ -135,7 +135,10 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         action == GeneralActions.GENERATE_APP_REPORT.value
         or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
-    ) and action != GeneralActions.GENERATE_DEVICE_REPORT.value
+    ) and (
+        action != GeneralActions.GENERATE_DEVICE_REPORT.value
+        and action < GeneralActions.SET_DEVICE_MODE.value
+    )
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value
         or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -294,7 +297,7 @@ def processCollectionDevices(collectionList):
                 GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
                 Globals.enterprise_id,
                 3,
-                tolerance=1
+                tolerance=1,
             )
             postEventToFrame(
                 eventUtil.myEVT_FETCH,

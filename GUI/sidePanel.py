@@ -511,6 +511,7 @@ class SidePanel(wx.Panel):
             hide_version=hideVersion,
             title="Select Application",
             showAllVersionsOption=False,
+            showPkgTextInput=hideVersion,
         ) as dlg:
             res = dlg.ShowModal()
             if res == wx.ID_OK:
