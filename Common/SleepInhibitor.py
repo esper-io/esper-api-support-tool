@@ -18,6 +18,7 @@ class SleepInhibitor:
     def inhibit(self):
         if platform.system() == "Windows" and Globals.INHIBIT_SLEEP:
             import ctypes
+
             ctypes.windll.kernel32.SetThreadExecutionState(
                 SleepInhibitor.ES_CONTINUOUS | SleepInhibitor.ES_SYSTEM_REQUIRED
             )
@@ -27,6 +28,7 @@ class SleepInhibitor:
     def uninhibit(self):
         if platform.system() == "Windows" and Globals.INHIBIT_SLEEP:
             import ctypes
+
             ctypes.windll.kernel32.SetThreadExecutionState(SleepInhibitor.ES_CONTINUOUS)
         elif platform.system() == "Darwin" and self.process and Globals.INHIBIT_SLEEP:
             self.process.terminate()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import string
 import esperclient
 import time
 import wx
@@ -28,25 +29,27 @@ from Utility.Web.WebRequests import (
 )
 
 
-def uninstallAppOnDevice(packageName, device=None):
+def uninstallAppOnDevice(packageName, device=None, postStatus=False):
     return executeCommandOnDevice(
         Globals.frame,
         {"package_name": packageName},
         command_type="UNINSTALL",
         deviceIds=device,
+        postStatus=postStatus,
     )
 
 
-def uninstallAppOnGroup(packageName, groups=None):
+def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
     return executeCommandOnGroup(
         Globals.frame,
         {"package_name": packageName},
         command_type="UNINSTALL",
         groupIds=groups,
+        postStatus=postStatus,
     )
 
 
-def installAppOnDevices(packageName, version=None, devices=None):
+def installAppOnDevices(packageName, version=None, devices=None, postStatus=False):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -75,11 +78,12 @@ def installAppOnDevices(packageName, version=None, devices=None):
             },
             command_type="INSTALL",
             deviceIds=devices,
+            postStatus=postStatus,
         )
     else:
         displayMessageBox(
             (
-                "Failed to find application! Please upload application (%s) to the endpoint."
+                "Failed to find application! Please upload application (%s) to the tenant."
                 % packageName,
                 wx.ICON_ERROR,
             )
@@ -90,7 +94,7 @@ def installAppOnDevices(packageName, version=None, devices=None):
         }
 
 
-def installAppOnGroups(packageName, version=None, groups=None):
+def installAppOnGroups(packageName, version=None, groups=None, postStatus=False):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -118,11 +122,12 @@ def installAppOnGroups(packageName, version=None, groups=None):
             },
             command_type="INSTALL",
             groupIds=groups,
+            postStatus=postStatus,
         )
     else:
         displayMessageBox(
             (
-                "Failed to find application! Please upload application (%s) to the endpoint."
+                "Failed to find application! Please upload application (%s) to the tenant."
                 % packageName,
                 wx.ICON_ERROR,
             )
@@ -160,7 +165,7 @@ def getAllInstallableAppsOffsets(respJson, url):
         if appsRespJson and "results" in appsRespJson:
             respJson["results"] = respJson["results"] + appsRespJson["results"]
 
-        if appsRespJson and "next" in appsRespJson:
+        if appsRespJson and "next" in appsRespJson and appsRespJson["next"]:
             respJson = getAllInstallableAppsOffsets(respJson, appsRespJson["next"])
 
     return respJson
@@ -346,23 +351,19 @@ def getAllAppVersionsForHost(
 ):
     """ Make a API call to get all Applications belonging to the Enterprise """
     try:
-        api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                enforceRateLimit()
-                api_response = api_instance.get_app_versions(
-                    app_id,
-                    enterprise_id,
-                    limit=Globals.limit,
-                    offset=0,
-                    # is_hidden=False,
+                url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
+                    tenant=config.host, enterprise_id=enterprise_id, appId=app_id
                 )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllAppVersionsForHost",
-                    api_instance.get_app_versions,
-                    Globals.PRINT_API_LOGS,
-                )
+                header = {
+                    "Authorization": f"Bearer {config.api_key['Authorization']}",
+                    "Content-Type": "application/json",
+                }
+                api_response = performGetRequestWithRetry(url, header)
+                if api_response and api_response.status_code < 300:
+                    api_response = api_response.json()
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -475,6 +476,20 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
 
 
 def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+    if type(version_id) is list:
+        api_response = None
+        for version in version_id:
+            resp = get_installed_devices(version, application_id, maxAttempt)
+            if api_response is None:
+                api_response = resp
+            else:
+                api_response.results += resp.results
+        return api_response
+    else:
+        return get_installed_devices(version_id, application_id, maxAttempt)
+
+
+def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.ApplicationApi(
         esperclient.ApiClient(Globals.configuration)
     )
@@ -576,30 +591,6 @@ def getAppDictEntry(app, update=True):
             and "device" not in app
         ):
             entry["isValid"] = True
-            # if (
-            #     "latest_version" in app
-            #     and app["latest_version"]
-            #     and "icon_url" in app["latest_version"]
-            #     and
-            #     ((
-            #         app["latest_version"]["icon_url"]
-            #         and (
-            #             "amazonaws" in app["latest_version"]["icon_url"]
-            #             or "googleusercontent" in app["latest_version"]["icon_url"]
-            #         )
-            #     ) or "hash_string" in app["latest_version"])
-            # ) or (
-            #     "versions" in app
-            #     and app["versions"]
-            #     and "icon_url" in app["versions"]
-            #     and app["versions"]["icon_url"]
-            #     and "amazonaws" in app["versions"]["icon_url"]
-            # ):
-            #     entry["isValid"] = True
-            # else:
-            #     validApp = getApplication(entry["id"])
-            #     if hasattr(validApp, "results"):
-            #         validApp = validApp.results[0] if validApp.results else validApp
 
     if (
         hasattr(validApp, "id")
@@ -653,3 +644,26 @@ def getAppDictEntry(app, update=True):
                 Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
 
     return entry
+
+
+def getDeviceAppsApiUrl(deviceid, useEnterprise=False):
+    extention = (
+        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
+        if useEnterprise
+        else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
+    )
+    hasFormat = [
+        tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
+    ]
+    if hasFormat:
+        if "limit" in hasFormat:
+            extention = extention.format(limit=Globals.limit)
+    url = (
+        Globals.BASE_DEVICE_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            device_id=deviceid,
+        )
+        + extention
+    )
+    return url

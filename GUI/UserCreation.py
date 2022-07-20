@@ -209,7 +209,7 @@ class UserCreation(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_4.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
-        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Exectute")
+        self.button_6 = wx.Button(self.panel_2, wx.ID_ANY, "Execute")
         sizer_3.Add(self.button_6, 0, wx.RIGHT, 5)
 
         self.button_7 = wx.Button(self.panel_2, wx.ID_ANY, "Cancel")
@@ -334,7 +334,6 @@ class UserCreation(wx.Frame):
                                 "firstname" not in headers and "lastname" not in headers
                             )
                         )
-                        and "password" not in headers
                         and "role" not in headers
                         and "email" not in headers
                         and self.choice_1.GetStringSelection() != "Delete"
@@ -344,7 +343,7 @@ class UserCreation(wx.Frame):
                     ):
                         displayMessageBox(
                             (
-                                "Failed to add Users. Please make sure that Username (or First and Last Name), Email, Password, and Role columns exist and are filled out for each User.",
+                                "Failed to add Users. Please make sure that Username (or First and Last Name), Email, and Role columns exist and are filled out for each User.",
                                 wx.ICON_ERROR,
                             )
                         )
@@ -368,11 +367,6 @@ class UserCreation(wx.Frame):
                             )
                             or (
                                 (
-                                    "password" in headers
-                                    and len(entry) > headers.index("password")
-                                    and not entry[headers.index("password")]
-                                )
-                                or (
                                     "role" in headers
                                     and len(entry) > headers.index("role")
                                     and not entry[headers.index("role")]

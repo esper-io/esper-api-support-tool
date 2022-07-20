@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import threading
-from Utility.EventUtility import CustomEvent
-from Common.decorator import api_tool_decorator
 import json
 import os
 import platform
@@ -14,9 +12,12 @@ import subprocess
 import wx
 import webbrowser
 import Common.Globals as Globals
+import esperclient
 
+from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
+from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
 from ratelimit import sleep_and_retry, limits
@@ -63,7 +64,7 @@ def postEventToFrame(eventType, eventValue=None):
             raise e
 
 
-def download(url, file_name, overwrite=True):
+def download(url, file_name, overwrite=True, raiseError=True):
     try:
         if os.path.exists(file_name) and overwrite:
             os.remove(file_name)
@@ -71,11 +72,18 @@ def download(url, file_name, overwrite=True):
         print(e)
         ApiToolLog().LogError(e)
     # open in binary mode
-    with open(file_name, "wb") as file:
-        # get request
-        response = requests.get(url)
-        # write to file
-        file.write(response.content)
+    try:
+        with open(file_name, "wb") as file:
+            # get request
+            response = requests.get(url)
+            # write to file
+            file.write(response.content)
+    except Exception as e:
+        ApiToolLog().LogError(e)
+        if raiseError:
+            raise e
+        else:
+            print(e)
 
 
 def checkInternetConnection(url):
@@ -95,7 +103,7 @@ def checkForInternetAccess(frame):
     while not frame.kill:
         if frame.IsShownOnScreen() and frame.IsActive():
             if not checkEsperInternetConnection() and not checkInternetConnection(
-                Globals.UPDATE_LINK
+                Globals.LATEST_UPDATE_LINK
             ):
                 displayMessageBox(
                     (
@@ -113,9 +121,16 @@ def checkForInternetAccess(frame):
 
 def checkForUpdate():
     try:
-        response = requests.get(Globals.UPDATE_LINK)
-        json_resp = response.json()
-        return json_resp
+        response = None
+        if Globals.CHECK_PRERELEASES:
+            response = requests.get(Globals.UPDATE_LINK)
+        else:
+            response = requests.get(Globals.LATEST_UPDATE_LINK)
+        if response:
+            json_resp = response.json()
+            if Globals.CHECK_PRERELEASES:
+                json_resp = json_resp[0]
+            return json_resp
     except Exception as e:
         print(e)
 
@@ -409,59 +424,27 @@ def getHeader():
         return {}
 
 
-def getAllFromOffsets(
-    func, group, api_response, maxAttempt=Globals.MAX_RETRY, results=None
-):
-    threads = []
-    responses = []
-    count = None
-    if not results:
-        results = []
-    if hasattr(api_response, "count"):
-        count = api_response.count
-    elif type(api_response) is dict and "count" in api_response:
-        count = api_response["count"]
-    apiNext = None
-    if hasattr(api_response, "next"):
-        apiNext = api_response.next
-    elif type(api_response) is dict and "next" in api_response:
-        apiNext = api_response["next"]
-    if apiNext:
-        respOffset = apiNext.split("offset=")[-1].split("&")[0]
-        respOffsetInt = int(respOffset)
-        respLimit = apiNext.split("limit=")[-1].split("&")[0]
-        while int(respOffsetInt) < count and int(respLimit) < count:
-            thread = threading.Thread(
-                target=func,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            respOffsetInt += int(respLimit)
-            limitActiveThreads(threads, max_alive=(Globals.MAX_THREAD_COUNT))
-        joinThreadList(threads)
-        obtained = sum(len(v["results"]) for v in responses) + int(respOffset)
-        remainder = count - obtained
-        if remainder > 0:
-            respOffsetInt -= int(respLimit)
-            respOffsetInt += 1
-            thread = threading.Thread(
-                target=func,
-                args=(group, respLimit, str(respOffsetInt), maxAttempt, responses),
-            )
-            threads.append(thread)
-            thread.start()
-            limitActiveThreads(threads)
-    joinThreadList(threads)
-    for resp in responses:
-        if resp and hasattr(resp, "results") and resp.results:
-            results += resp.results
-        elif type(resp) is dict and "results" in resp and resp["results"]:
-            results += resp["results"]
-    return results
-
-
 @sleep_and_retry
 @limits(calls=10, period=1)
 def enforceRateLimit():
     pass
+
+
+def getEsperConfig(host, apiKey, auth="Bearer"):
+    configuration = esperclient.Configuration()
+    configuration.host = host.replace("/v0/enterprise/", "")
+    configuration.api_key["Authorization"] = apiKey
+    configuration.api_key_prefix["Authorization"] = auth
+    return configuration
+
+
+def processFunc(event):
+    """ Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
+    fun = event.GetValue()
+    if callable(fun):
+        fun()
+    elif type(fun) == tuple and callable(fun[0]):
+        if type(fun[1]) == tuple:
+            fun[0](*fun[1])
+        else:
+            fun[0](fun[1])

@@ -38,7 +38,6 @@ def api_tool_decorator(locks=None):
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
-                    # otherThreadsRunning = False
                     currThread = threading.current_thread()
                     invalidThreadNames = [
                         "InternetCheck",

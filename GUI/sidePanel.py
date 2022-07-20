@@ -6,8 +6,9 @@ from Common.decorator import api_tool_decorator
 import csv
 import wx
 import Common.Globals as Globals
+from Utility import EventUtility
 
-from Utility.Resource import resourcePath, scale_bitmap
+from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 
 
@@ -44,7 +45,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Endpoint:")
+        label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Tenant:")
         label_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -300,7 +301,9 @@ class SidePanel(wx.Panel):
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")[3].replace("Enterprise = ", "")
-            result = list(filter(lambda x: value in x, self.parentFrame.auth_data))
+            result = list(
+                filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data)
+            )
             if result:
                 result = result[0]
             if value:
@@ -310,7 +313,15 @@ class SidePanel(wx.Panel):
                     style=wx.YES_NO | wx.ICON_WARNING,
                 )
                 if res == wx.YES:
-                    self.parentFrame.auth_data.remove(result)
+                    if result in self.parentFrame.auth_data:
+                        self.parentFrame.auth_data.remove(result)
+                    data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
+                    for entry in self.parentFrame.auth_data:
+                        authEntry = []
+                        for auth in entry.values():
+                            authEntry.append(auth)
+                        if authEntry not in data:
+                            data.append(authEntry)
                     with open(self.parentFrame.authPath, "w", newline="") as csvfile:
                         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                         writer.writerows(self.parentFrame.auth_data)
@@ -419,7 +430,6 @@ class SidePanel(wx.Panel):
                         self.selectedDevices.Append(deviceName)
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
-            self.parentFrame.onDeviceSelections(None)
 
     def clearStoredApps(self):
         self.apps = []
@@ -443,7 +453,7 @@ class SidePanel(wx.Panel):
         if len(self.apps):
             percent = self.parentFrame.gauge.GetValue()
             val = percent + int(float(len(self.apps) / 2) * 25)
-            self.parentFrame.setGaugeValue(val)
+            postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, val)
 
     @api_tool_decorator()
     def onActionSelection(self, event):
@@ -497,7 +507,10 @@ class SidePanel(wx.Panel):
         if self.selectedDevicesList and hideVersion and self.selectedDeviceApps:
             apps = self.selectedDeviceApps
         with InstalledDevicesDlg(
-            apps, hide_version=hideVersion, title="Select Application"
+            apps,
+            hide_version=hideVersion,
+            title="Select Application",
+            showAllVersionsOption=False,
         ) as dlg:
             res = dlg.ShowModal()
             if res == wx.ID_OK:

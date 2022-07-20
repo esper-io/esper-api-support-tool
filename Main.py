@@ -93,4 +93,13 @@ if __name__ == "__main__":
                 Globals.PRINT_API_LOGS = True
             else:
                 Globals.PRINT_API_LOGS = False
+        if parts[0] == "debug":
+            if (
+                parts[1].lower() == "true"
+                or parts[1].lower() == "t"
+                or parts[1].lower() == "y"
+            ):
+                Globals.IS_DEBUG = True
+            else:
+                Globals.IS_DEBUG = False
     main()

@@ -5,12 +5,8 @@ import csv
 import Common.Globals as Globals
 import wx.grid
 from Common.decorator import api_tool_decorator
-from Utility import wxThread
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
-
-# from Utility.API.EsperAPICalls import searchForMatchingDevices
-
 from Utility.Resource import displayMessageBox, getHeader
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
@@ -222,8 +218,7 @@ class GeofenceDialog(wx.Dialog):
                 self.groups = []
                 filePath = fileDialog.GetPath()
                 # Clear grid on previous content
-                thread = wxThread.GUIThread(None, self.processUpload, (filePath,))
-                thread.startWithRetry()
+                Globals.THREAD_POOL.enqueue(self.processUpload, filePath)
 
     @api_tool_decorator()
     def processUpload(self, filePath):
@@ -323,20 +318,16 @@ class GeofenceDialog(wx.Dialog):
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
                 self.setCursorBusy()
-                thread = wxThread.GUIThread(
-                    None,
+                Globals.THREAD_POOL.enqueue(
                     self.processCreateGeoFenceRequest,
-                    (
-                        properGroupIdList,
-                        name,
-                        description,
-                        latitude,
-                        longitude,
-                        radius,
-                        actionsList,
-                    ),
+                    properGroupIdList,
+                    name,
+                    description,
+                    latitude,
+                    longitude,
+                    radius,
+                    actionsList,
                 )
-                thread.startWithRetry()
         else:
             displayMessageBox(
                 (

@@ -6,13 +6,15 @@ import platform
 
 from Common.enum import GridActions, GeneralActions
 
+from Utility.Threading.ThreadPoolQueue import Pool
+
 configuration = esperclient.Configuration()
 enterprise_id = ""
 
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.19281"
+VERSION = "v0.1941"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -32,6 +34,9 @@ PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 PRINT_API_LOGS = False
 
+THREAD_POOL = Pool(MAX_THREAD_COUNT)
+THREAD_POOL.run()
+
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
@@ -50,7 +55,6 @@ grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
-rate_limiter = threading.Lock()
 
 # Known Group Var
 knownGroups = {}
@@ -137,9 +141,10 @@ JSON_COMMAND_TYPES = [
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit#heading=h.50j8ygvoempc"
-UPDATE_LINK = (
+LATEST_UPDATE_LINK = (
     "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
 )
+UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "?&format=json"
@@ -154,14 +159,13 @@ CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
     "Group": "groups",
-    "Subgroups": "subgroups",
     "Brand": "brand",
     "Model": "model",
     "Android Version": "androidVersion",
     "Android Build Number": "androidBuildNumber",
     "Status": "Status",
     "Esper Version": "esper_client",
-    "EEA Version": "eeaVersion",
+    "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
     "Template": "template_name",
     "Policy": "policy_name",
@@ -252,6 +256,7 @@ CSV_APP_ATTR_NAME = [
 BLACKLIST_PACKAGE_NAME = [
     "io.shoonya.shoonyadpc",
     "io.esper.remoteviewer",
+    "io.shoonya.helper",
 ]
 WHITELIST_AP = []
 
@@ -265,34 +270,46 @@ app = None
 csv_auth_path = ""
 
 """ Preferences """
+# General Prefs
+LAST_OPENED_ENDPOINT = -1
+FONT_SIZE = 11
+HEADER_FONT_SIZE = FONT_SIZE + 7
+CHECK_PRERELEASES = False
+
+# Save Prefs
+SAVE_VISIBILITY = False
+COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+
+# Report Prefs
+GROUP_FETCH_ALL = True
+SHOW_DISABLED_DEVICES = False
+INHIBIT_SLEEP = False
+
+# Grid Prefs
+MAX_GRID_LOAD = 100
+REPLACE_SERIAL = True
+LAST_SEEN_AS_DATE = True
+APPS_IN_DEVICE_GRID = True
+VERSON_NAME_INSTEAD_OF_CODE = False
+SHOW_GROUP_PATH = False
+
+# App Prefs
 SET_APP_STATE_AS_SHOW = False
-COMMAND_TIMEOUT = 30
-COMMAND_JSON_INPUT = True
-ENABLE_GRID_UPDATE = False
 USE_ENTERPRISE_APP = True
 SHOW_PKG_NAME = False
+COMMAND_TIMEOUT = 30
+COMMAND_JSON_INPUT = True
 REACH_QUEUED_ONLY = True
-GET_APP_EACH_DEVICE = False
-SHOW_GRID_DIALOG = True
-SHOW_TEMPLATE_DIALOG = True
-SHOW_TEMPLATE_UPDATE = True
 CMD_DEVICE_TYPE = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
-FONT_SIZE = 11
-HEADER_FONT_SIZE = FONT_SIZE + 7
-GET_IMMEDIATE_SUBGROUPS = False
-SAVE_VISIBILITY = False
-GROUP_FETCH_ALL = True
-MAX_GRID_LOAD = 100
-REPLACE_SERIAL = True
-SHOW_DISABLED_DEVICES = False
-LAST_SEEN_AS_DATE = True
-APPS_IN_DEVICE_GRID = True
-INHIBIT_SLEEP = False
-VERSON_NAME_INSTEAD_OF_CODE = False
-COMBINE_DEVICE_AND_NETWORK_SHEETS = False
+
+# Dialog Prefs
+SHOW_GRID_DIALOG = True
+SHOW_TEMPLATE_DIALOG = True
+SHOW_TEMPLATE_UPDATE = True
+
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

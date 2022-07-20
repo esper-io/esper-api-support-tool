@@ -104,7 +104,7 @@ def toggleKioskMode(
         enterprise=Globals.enterprise_id,
         command_type="DEVICE",
         device_type=Globals.CMD_DEVICE_TYPE,
-        devices=[deviceid],
+        devices=[deviceid] if type(deviceid) is str else deviceid,
         command="SET_KIOSK_APP",
         command_args=command_args,
     )
@@ -303,10 +303,14 @@ def setKiosk(frame, device, deviceInfo):
         aliasName = device.alias_name
         deviceName = device.device_name
         deviceId = device.id
-    else:
+    elif type(device) is dict:
         deviceName = device["device_name"]
         deviceId = device["id"]
         aliasName = device["alias_name"]
+    else:
+        deviceName = "List of devices"
+        aliasName = ""
+        deviceId = device
 
     logString = (
         str("--->" + str(deviceName) + " " + str(aliasName))
@@ -331,7 +335,7 @@ def setKiosk(frame, device, deviceInfo):
         else:
             logString = logString + " <failed>"
             failed = True
-        if deviceInfo["Status"] != "Online":
+        if deviceInfo and deviceInfo["Status"] != "Online":
             logString = logString + " (Device offline)"
         postEventToFrame(eventUtil.myEVT_LOG, logString)
         if failed:
@@ -373,15 +377,20 @@ def setMulti(frame, device, deviceInfo):
         aliasName = device.alias_name
         deviceName = device.device_name
         deviceId = device.id
-    else:
+    elif type(device) is dict:
         deviceName = device["device_name"]
         deviceId = device["id"]
         aliasName = device["alias_name"]
+    elif type(device) is list:
+        deviceName = "List of devices"
+        aliasName = ""
+        deviceId = device
+
     logString = str("--->" + str(deviceName) + " " + str(aliasName)) + " -> Multi ->"
     failed = False
     warning = False
     status = None
-    if deviceInfo["Mode"] == "Kiosk":
+    if deviceInfo and deviceInfo["Mode"] == "Kiosk":
         status = toggleKioskMode(frame, deviceId, {}, False)
         if status:
             if "Success" in str(status):
@@ -396,7 +405,7 @@ def setMulti(frame, device, deviceInfo):
                 failed = True
     else:
         logString = logString + " (Already Multi mode, skipping)"
-    if deviceInfo["Status"] != "Online":
+    if deviceInfo and deviceInfo["Status"] != "Online":
         logString = logString + " (Device offline)"
     postEventToFrame(eventUtil.myEVT_LOG, logString)
     if failed:
@@ -535,25 +544,27 @@ def factoryResetDevice(
 
 
 @api_tool_decorator()
-def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
+def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
-    applist = []
     extention = (
         Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
         if useEnterprise
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
-    hasFormat = [tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None]
+    hasFormat = [
+        tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
+    ]
     if hasFormat:
         if "limit" in hasFormat:
             extention = extention.format(limit=Globals.limit)
     json_resp = getInfo(extention, deviceid)
-    if (
-        json_resp
-        and "results" in json_resp
-        and len(json_resp["results"])
-        and createAppList
-    ):
+    applist = createAppList(json_resp) if createAppListArg else []
+    return applist, json_resp
+
+
+def createAppList(json_resp):
+    applist = []
+    if json_resp and "results" in json_resp and len(json_resp["results"]):
         for app in json_resp["results"]:
             if (
                 "install_state" in app and "uninstall" in app["install_state"].lower()
@@ -574,9 +585,9 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                         ]
                         if (
                             app["application"]["version"]["version_name"]
-                            and app["application"]["version"]["version_name"].startswith(
-                                "v"
-                            )
+                            and app["application"]["version"][
+                                "version_name"
+                            ].startswith("v")
                         )
                         else app["application"]["version"]["version_name"]
                     )
@@ -587,9 +598,9 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                         ]
                         if (
                             app["application"]["version"]["version_code"]
-                            and app["application"]["version"]["version_code"].startswith(
-                                "v"
-                            )
+                            and app["application"]["version"][
+                                "version_code"
+                            ].startswith("v")
                         )
                         else app["application"]["version"]["version_code"]
                     )
@@ -621,13 +632,11 @@ def getdeviceapps(deviceid, createAppList=True, useEnterprise=False):
                 "isValid" in entry and entry["isValid"]
             ):
                 Globals.frame.sidePanel.selectedDeviceApps.append(entry)
-    return applist, json_resp
+    return applist
 
 
 @api_tool_decorator()
-def setAppState(
-    device_id, pkg_name, appVer=None, state="HIDE", maxAttempt=Globals.MAX_RETRY
-):
+def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY):
     pkgName = pkg_name
     if pkgName:
         args = V0CommandArgs(
@@ -638,7 +647,7 @@ def setAppState(
             enterprise=Globals.enterprise_id,
             command_type="DEVICE",
             device_type=Globals.CMD_DEVICE_TYPE,
-            devices=[device_id],
+            devices=[device_id] if type(device_id) else device_id,
             command="SET_APP_STATE",
             command_args=args,
         )
@@ -679,9 +688,12 @@ def clearAppData(frame, device):
     if hasattr(device, "device_name"):
         deviceName = device.device_name
         deviceId = device.id
-    else:
+    elif type(device) is dict:
         deviceName = device["device_name"]
         deviceId = device["id"]
+    else:
+        deviceName = ""
+        deviceId = device
     try:
         appToUse = frame.sidePanel.selectedAppEntry["pkgName"]
         cmdArgs = {"package_name": appToUse}
@@ -690,7 +702,7 @@ def clearAppData(frame, device):
             reqData = {
                 "command_type": "DEVICE",
                 "command_args": cmdArgs,
-                "devices": [deviceId],
+                "devices": [deviceId] if type(deviceId) is str else deviceId,
                 "groups": [],
                 "device_type": Globals.CMD_DEVICE_TYPE,
                 "command": "CLEAR_APP_DATA",

@@ -15,7 +15,6 @@ import wx
 
 import Common.Globals as Globals
 from Utility.Web.WebRequests import performPostRequestWithRetry
-import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator
@@ -35,25 +34,16 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         schType = esperclient.V0CommandScheduleEnum.RECURRING
     t = None
     if result and isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnGroup,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=eventUtil.myEVT_COMMAND,
-            name="executeCommandOnGroup",
+        Globals.THREAD_POOL.enqueue(
+            executeCommandOnGroup, frame, command_args, schedule, schType, commandType
         )
     elif result and not isGroup:
-        t = wxThread.GUIThread(
-            frame,
-            executeCommandOnDevice,
-            args=(frame, command_args, schedule, schType, commandType),
-            eventType=eventUtil.myEVT_COMMAND,
-            name="executeCommandOnDevice",
+        Globals.THREAD_POOL.enqueue(
+            executeCommandOnDevice, frame, command_args, schedule, schType, commandType
         )
     if t:
         frame.menubar.disableConfigMenu()
         frame.gauge.Pulse()
-        t.startWithRetry()
 
 
 @api_tool_decorator()
@@ -108,6 +98,7 @@ def executeCommandOnGroup(
     command_type="UPDATE_DEVICE_CONFIG",
     groupIds=None,
     maxAttempt=Globals.MAX_RETRY,
+    postStatus=True,
 ):
     """ Execute a Command on a Group of Devices """
     statusList = []
@@ -157,6 +148,8 @@ def executeCommandOnGroup(
                 entry["Command Id"] = last_status.id
             entry["Status"] = last_status
             statusList.append(entry)
+    if postStatus:
+        postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
 
 
@@ -169,6 +162,7 @@ def executeCommandOnDevice(
     command_type="UPDATE_DEVICE_CONFIG",
     deviceIds=None,
     maxAttempt=Globals.MAX_RETRY,
+    postStatus=True,
 ):
     """ Execute a Command on a Device """
     statusList = []
@@ -226,6 +220,8 @@ def executeCommandOnDevice(
                 entry["Device Id"] = deviceToUse
             entry["Status"] = last_status
             statusList.append(entry)
+    if postStatus:
+        postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
 
 

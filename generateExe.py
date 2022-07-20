@@ -50,13 +50,24 @@ def updateFileVersionInfo(path="file_version_info.txt"):
 if __name__ == "__main__":
     curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
-    app_name = "%s_EsperApiSupportTool.%s" % (
+    system = platform.system()
+    bit = platform.machine()
+    if bit.endswith("i686") or bit == "arm64":
+        bit = "arm64"
+    elif bit.endswith("x86_64"):
+        bit = "x86_64"
+    elif bit.endswith("x86"):
+        bit = "x86"
+    elif bit.endswith("64"):
+        bit = "x64"
+
+    app_name = "%s_%s_%s_EsperApiSupportTool.%s" % (
+        system[0:3].lower() if system == "Windows" else "mac",
+        bit,
         Globals.VERSION.replace(".", "-"),
-        "exe" if platform.system() == "Windows" else "app",
+        "exe" if system == "Windows" else "app",
     )
-    old_app_name = "EsperApiSupportTool.%s" % (
-        "exe" if platform.system() == "Windows" else "app",
-    )
+    old_app_name = "EsperApiSupportTool.%s" % ("exe" if system == "Windows" else "app",)
 
     if not isModuleInstalled("pyinstaller"):
         installRequiredModules()
@@ -164,3 +175,7 @@ if __name__ == "__main__":
     if error:
         error = error.decode("utf-8")
         print(error)
+
+    for item in os.listdir():
+        if item.endswith(".spec"):
+            os.remove(item)

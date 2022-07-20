@@ -9,7 +9,6 @@ from Utility.Resource import getStrRatioSimilarity
 
 class ColumnVisibility(wx.Dialog):
     def __init__(self, parent, pageGridDict={}, colLabelException={}):
-        # begin wxGlade: ColumnVisibility.__init__
         super(ColumnVisibility, self).__init__(
             parent,
             wx.ID_ANY,
@@ -142,6 +141,8 @@ class ColumnVisibility(wx.Dialog):
 
     def on_tab_change(self, event):
         self.current_page = self.notebook_1.GetPage(event.GetSelection()).name
+        if self.checkBoxes[self.current_page]:
+            self.checkBoxes[self.current_page].EnsureVisible(0)
         event.Skip()
 
     @api_tool_decorator()

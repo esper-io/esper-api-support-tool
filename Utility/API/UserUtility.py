@@ -9,6 +9,7 @@ from Utility.Resource import (
 )
 
 from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
@@ -26,9 +27,12 @@ def getUserBody(user):
         if "username" in userKeys
         else (body["first_name"] + body["last_name"])
     )
-    body["password"] = user["password"]
+    if user["password"]:
+        body["password"] = user["password"]
     body["profile"] = {}
     body["email"] = user["email"]
+    body["is_active"] = True
+    body["is_endpoint_creator"] = False
     if "role" in userKeys:
         body["profile"]["role"] = user["role"]
     else:
@@ -47,6 +51,7 @@ def getUserBody(user):
                     groups.append(gp.id)
     body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
+    body["profile"]["is_customer"] = True
     return body
 
 
@@ -99,3 +104,41 @@ def deleteUser(user):
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
+
+
+def getUsers(
+    userId=None,
+    limit=Globals.limit,
+    offset=0,
+    maxAttempt=Globals.MAX_RETRY,
+    responses=[],
+):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}".format(
+        tenant=tenant,
+        limit=limit,
+        offset=offset,
+    )
+    usersResp = performGetRequestWithRetry(url, headers=getHeader())
+    resp = None
+    if usersResp.status_code < 300:
+        resp = usersResp.json()
+    if resp and responses is not None:
+        responses.append(resp)
+    return resp
+
+
+def getAllUsers():
+    userResp = getUsers()
+    users = getAllFromOffsetsRequests(userResp)
+    if hasattr(userResp, "results"):
+        userResp.results = userResp.results + users
+        userResp.next = None
+        userResp.prev = None
+    elif type(userResp) is dict and "results" in userResp:
+        userResp["results"] = userResp["results"] + users
+        userResp["next"] = None
+        userResp["prev"] = None
+    return userResp
