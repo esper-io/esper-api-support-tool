@@ -1,4 +1,3 @@
-import threading
 import time
 import Common.Globals as Globals
 
@@ -9,8 +8,6 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Resource import (
     getHeader,
-    joinThreadList,
-    limitActiveThreads,
     postEventToFrame,
 )
 
