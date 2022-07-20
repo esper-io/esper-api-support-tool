@@ -5,8 +5,6 @@ import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import (
     acquireLocks,
-    joinThreadList,
-    limitActiveThreads,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -17,14 +15,11 @@ import re
 import threading
 import wx
 import wx.grid as gridlib
-import Utility.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from Utility.deviceInfo import constructNetworkInfo
-
-# from GUI.Dialogs.ColumnVisibilityDialog import ColumnVisibilityDialog
 
 
 class GridPanel(wx.Panel):
@@ -217,8 +212,9 @@ class GridPanel(wx.Panel):
             numRows = self.grid_1.GetNumberRows()
             indx = self.grid1HeaderLabels.index("Applications")
             for row in range(numRows):
-                data = self.grid_1_contents[row]
-                self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
+                if self.grid_1.GetNumberRows() > row:
+                    data = self.grid_1_contents[row]
+                    self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
 
     @api_tool_decorator()
     def fillNetworkGridHeaders(self):
@@ -420,14 +416,11 @@ class GridPanel(wx.Panel):
             "---> Sorting Device Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.deviceDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyDeviceGrid(emptyContents=False)
         self.grid_1.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame, self.repopulateGrid, (self.grid_1_contents, col)
-            )
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.repopulateGrid, self.grid_1_contents, col)
         else:
             self.repopulateGrid(self.grid_1_contents, col)
 
@@ -474,16 +467,13 @@ class GridPanel(wx.Panel):
             "---> Sorting Network Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.networkDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyNetworkGrid(emptyContents=False)
         self.grid_2.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame,
-                self.repopulateGrid,
-                (self.grid_2_contents, col, "Network"),
+            Globals.THREAD_POOL.enqueue(
+                self.repopulateGrid, self.grid_2_contents, col, "Network"
             )
-            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_2_contents, col, "Network")
 
@@ -530,16 +520,13 @@ class GridPanel(wx.Panel):
             "---> Sorting App Grid on Column: %s Order: %s"
             % (keyName, "Descending" if self.networkDescending else "Ascending")
         )
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyAppGrid(emptyContents=False)
         self.grid_3.Freeze()
         if platform.system() == "Windows":
-            thread = wxThread.GUIThread(
-                self.parentFrame,
-                self.repopulateGrid,
-                (self.grid_3_contents, col, "App"),
+            Globals.THREAD_POOL.enqueue(
+                self.repopulateGrid, self.grid_3_contents, col, "App"
             )
-            thread.startWithRetry()
         else:
             self.repopulateGrid(self.grid_3_contents, col, "App"),
 
@@ -548,20 +535,23 @@ class GridPanel(wx.Panel):
         for info in content:
             if action == "Device":
                 self.addDeviceToDeviceGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_1_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_1_contents) * 100),
                 )
                 num += 1
             elif action == "Network":
                 self.addToNetworkGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_2_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_2_contents) * 100),
                 )
                 num += 1
             elif action == "App":
                 self.addApptoAppGrid(info)
-                self.parentFrame.setGaugeValue(
-                    int(num / len(self.grid_3_contents) * 100)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.grid_3_contents) * 100),
                 )
                 num += 1
         if action == "Device":
@@ -599,7 +589,6 @@ class GridPanel(wx.Panel):
         ]
 
         grid_win = self.grid_1.GetTargetWindow()
-        # grid_win2 = self.grid_2.GetTargetWindow()
 
         x, y = self.grid_1.CalcUnscrolledPosition(event.GetX(), event.GetY())
         coords = self.grid_1.XYToCell(x, y)
@@ -674,7 +663,6 @@ class GridPanel(wx.Panel):
             if res == wx.ID_APPLY:
                 selected = dialog.getSelected()
                 for page in pageGridDict.keys():
-                    # checkbox = dialog.getCheckBox(page)
                     for label, isChecked in selected[page].items():
                         if page == "Device":
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
@@ -692,7 +680,6 @@ class GridPanel(wx.Panel):
                                 indx, showState=isChecked
                             )
                             self.grid2ColVisibility[label] = isChecked
-                # self.parentFrame.savePrefs(self.parentFrame.prefDialog)
 
         self.parentFrame.prefDialog.colVisibilty = (
             self.grid1ColVisibility,
@@ -799,7 +786,11 @@ class GridPanel(wx.Panel):
                 else ""
             )
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-        networkInfo = device_info["network_info"] if "network_info" in device_info else constructNetworkInfo(device, device_info)
+        networkInfo = (
+            device_info["network_info"]
+            if "network_info" in device_info
+            else constructNetworkInfo(device, device_info)
+        )
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
@@ -867,7 +858,11 @@ class GridPanel(wx.Panel):
             self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
-        networkInfo = deviceInfo["network_info"] if "network_info" in deviceInfo else constructNetworkInfo(device, deviceInfo)
+        networkInfo = (
+            deviceInfo["network_info"]
+            if "network_info" in deviceInfo
+            else constructNetworkInfo(device, deviceInfo)
+        )
         if networkInfo not in self.grid_2_contents:
             self.grid_2_contents.append(networkInfo)
 
@@ -1184,12 +1179,7 @@ class GridPanel(wx.Panel):
     def updateTagCell(self, name, tags=None):
         """ Update the Tag Column in the Device Grid """
         if platform.system() == "Windows":
-            wxThread.GUIThread(
-                self.parentFrame,
-                self.processUpdateTagCell,
-                (name, tags),
-                name="UpdateTagCell",
-            )
+            Globals.THREAD_POOL.enqueue(self.processUpdateTagCell, name, tags)
         else:
             self.processUpdateTagCell(name, tags)
 
@@ -1264,21 +1254,14 @@ class GridPanel(wx.Panel):
             if numRows > Globals.MAX_ACTIVE_THREAD_COUNT
             else numRows
         )
-        threads = []
         num = 0
         while num < numRows:
-            t = wxThread.GUIThread(
-                Globals.frame,
-                self.getDeviceIdentifiersHelper,
-                args=(num, numRowsPerChunk, identifers),
-                name="getDeviceIdentifiersHelper",
+            Globals.THREAD_POOL.enqueue(
+                self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
             )
-            threads.append(t)
-            t.startWithRetry()
             num += numRowsPerChunk
-            limitActiveThreads(threads)
-
-        joinThreadList(threads)
+        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.results()
 
         releaseLocks([Globals.grid1_lock])
         return identifers

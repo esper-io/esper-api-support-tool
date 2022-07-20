@@ -9,7 +9,13 @@ from Common.decorator import api_tool_decorator
 
 
 class InstalledDevicesDlg(wx.Dialog):
-    def __init__(self, apps, hide_version=False, title="Get Installed Devices"):
+    def __init__(
+        self,
+        apps,
+        hide_version=False,
+        title="Get Installed Devices",
+        showAllVersionsOption=True,
+    ):
         super(InstalledDevicesDlg, self).__init__(
             None,
             wx.ID_ANY,
@@ -19,27 +25,9 @@ class InstalledDevicesDlg(wx.Dialog):
         self.appNameList = []
         self.apps = apps
         for app in self.apps:
-            # if Globals.SHOW_PKG_NAME:
-            #     if "appPkgName" in app:
-            #         self.appNameList.append(app["appPkgName"])
-            #     else:
-            #         for key in app.keys():
-            #             if (
-            #                 key != "app_name"
-            #                 and key != "app_state"
-            #                 and (
-            #                     (Globals.SHOW_PKG_NAME and " (" in key)
-            #                     or (not Globals.SHOW_PKG_NAME and " (" not in key)
-            #                 )
-            #             ):
-            #                 self.appNameList.append(key)
-            #                 break
-            # else:
-            # if app["app_name"] not in self.appNameList:
-            #     self.appNameList.append(app["app_name"])
-            # elif "appPkgName" in app:
             self.appNameList.append(app["appPkgName"])
         self.versions = []
+        self.showAllVersionsOption = showAllVersionsOption
 
         self.SetMinSize((400, 300))
         self.SetTitle(title)
@@ -49,7 +37,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        grid_sizer_1 = wx.FlexGridSizer(1, 2, 0, 0)
+        grid_sizer_1 = wx.GridSizer(1, 2 if not hide_version else 1, 0, 0)
 
         grid_sizer_3 = wx.FlexGridSizer(3, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
@@ -79,7 +67,12 @@ class InstalledDevicesDlg(wx.Dialog):
             self.search, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
 
-        self.list_box_1 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=self.appNameList)
+        self.list_box_1 = wx.ListBox(
+            self.panel_1,
+            wx.ID_ANY,
+            choices=self.appNameList,
+            style=wx.LB_HSCROLL | wx.LB_NEEDED_SB,
+        )
         grid_sizer_3.Add(self.list_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
         self.list_box_2 = None
@@ -126,9 +119,6 @@ class InstalledDevicesDlg(wx.Dialog):
         grid_sizer_3.AddGrowableRow(2)
         grid_sizer_3.AddGrowableCol(0)
 
-        grid_sizer_1.AddGrowableRow(0)
-        grid_sizer_1.AddGrowableCol(0)
-        grid_sizer_1.AddGrowableCol(1)
         self.panel_1.SetSizer(grid_sizer_1)
 
         self.SetSizer(sizer_1)
@@ -173,6 +163,8 @@ class InstalledDevicesDlg(wx.Dialog):
             )
         )
         self.list_box_2.Clear()
+        if self.showAllVersionsOption:
+            self.list_box_2.Append("All Enterprise Versions", -1)
         for match in matches:
             if "id" in match:
                 id = match["id"]
@@ -184,9 +176,9 @@ class InstalledDevicesDlg(wx.Dialog):
                 )
                 for version in self.versions:
                     if hasattr(version, "version_code"):
-                        self.list_box_2.Append(version.version_code)
+                        self.list_box_2.Append(version.version_code, version.id)
                     elif type(versions) == dict:
-                        self.list_box_2.Append(version["version_code"])
+                        self.list_box_2.Append(version["version_code"], version["id"])
         if matches:
             self.list_box_2.Enable(True)
         else:
@@ -201,26 +193,15 @@ class InstalledDevicesDlg(wx.Dialog):
         app_name = None
         selection = self.list_box_2.GetSelection() if self.list_box_2 else None
         if type(selection) == int and selection >= 0:
-            verMatches = list(
-                filter(
-                    lambda x: (
-                        hasattr(x, "version_code")
-                        and x.version_code
-                        == self.list_box_2.GetString(self.list_box_2.GetSelection())
-                    )
-                    or (
-                        type(x) == dict
-                        and x["version_code"]
-                        == self.list_box_2.GetString(self.list_box_2.GetSelection())
-                    ),
-                    self.versions,
-                )
-            )
-            if verMatches:
-                if hasattr(verMatches[0], "id"):
-                    version_id = verMatches[0].id
-                elif type(verMatches[0]) == dict and "id" in verMatches[0]:
-                    version_id = verMatches[0]["id"]
+            version_id = self.list_box_2.GetClientData(self.list_box_2.GetSelection())
+            if version_id == -1:
+                # User selected All Versions
+                version_id = []
+                for version in self.versions:
+                    if hasattr(version, "id"):
+                        version_id.append(version.id)
+                    elif type(version) == dict and "id" in version:
+                        version_id.append(version["id"])
         if self.list_box_1.GetSelection() >= 0:
             matches = list(
                 filter(

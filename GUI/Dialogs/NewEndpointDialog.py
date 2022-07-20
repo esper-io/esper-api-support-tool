@@ -17,7 +17,7 @@ class NewEndpointDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE,
         )
         self.SetSize((500, 400))
-        self.SetTitle("Add New Endpoint")
+        self.SetTitle("Add New Tenant")
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -25,10 +25,10 @@ class NewEndpointDialog(wx.Dialog):
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
 
         sizer_3 = wx.StaticBoxSizer(
-            wx.StaticBox(self.panel_1, wx.ID_ANY, "Add New Endpoint"), wx.VERTICAL
+            wx.StaticBox(self.panel_1, wx.ID_ANY, "Add New Tenant"), wx.VERTICAL
         )
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Endpoint Name")
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Tenant Name")
         sizer_3.Add(label_1, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
 
         self.text_ctrl_1 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
@@ -41,7 +41,7 @@ class NewEndpointDialog(wx.Dialog):
         label_2 = wx.StaticText(
             self.panel_1,
             wx.ID_ANY,
-            "Endpoint Host Name (e.g., The host in https://<host>.esper.cloud/)",
+            "Tenant Host Name (e.g., The host in https://<host>.esper.cloud/)",
         )
         sizer_3.Add(label_2, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
 

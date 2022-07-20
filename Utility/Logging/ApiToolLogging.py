@@ -74,6 +74,7 @@ class ApiToolLog:
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
             str(exc_type),
             str(exc_value),
+            "Esper Version: " + Globals.VERSION,
         ]
         for line in exc_traceback:
             content.append(line)
@@ -102,6 +103,7 @@ class ApiToolLog:
             "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type,
             "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value,
             "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
+            "Esper Version: " + Globals.VERSION,
         ]
         print_exc()
         for line in exc_traceback:
@@ -116,11 +118,7 @@ class ApiToolLog:
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():
-            thread = threading.Thread(
-                target=self.LogApiRequest, args=(src, api_func, writeToFile)
-            )
-            thread.start()
-            return thread
+            Globals.THREAD_POOL.enqueue(self.LogApiRequest, src, api_func, writeToFile)
         else:
             self.LogApiRequest(src, api_func, writeToFile)
 
@@ -193,7 +191,13 @@ class ApiToolLog:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
 
-        if Globals.IS_DEBUG:
+        if (
+            Globals.IS_DEBUG
+            or "Invalid token" in str(excpt)
+            or "ConnectionError" in str(excpt)
+            or "HTTP Response" in str(excpt)
+            or "Bad Gateway" in str(excpt)
+        ):
             return
 
         self.tracker_lock.acquire()
@@ -203,7 +207,14 @@ class ApiToolLog:
         if excpt is not None:
             content.insert(0, str(excpt))
         content.append("EAST Version:\t%s" % Globals.VERSION)
-        body = "\n".join(str(entry) for entry in content)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        body = "\n".join(
+            str(entry)
+            .replace(os.getcwd(), "<user_path>")
+            .replace(dir_path, "<user_path>")
+            .replace(os.path.expanduser("~"), "<user_path>")
+            for entry in content
+        )
 
         if isinstance(excpt, Exception):
             title = repr(excpt)

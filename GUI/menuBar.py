@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from Utility import EventUtility
 from Utility.EastUtility import processCollectionDevices
 from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import openWebLinkInBrowser, resourcePath
+from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
 from Common.decorator import api_tool_decorator
 from GUI.UserCreation import UserCreation
-import Utility.wxThread as wxThread
 import wx
 import wx.adv as adv
 import Common.Globals as Globals
@@ -38,14 +38,10 @@ class ToolMenuBar(wx.MenuBar):
 
         # File Menu
         fileMenu = wx.Menu()
-        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Endpoint\tCtrl+A")
+        foa = wx.MenuItem(fileMenu, wx.ID_OPEN, "&Add New Tenant\tCtrl+A")
         addPng = wx.Bitmap(resourcePath("Images/Menu/add.png"))
         foa.SetBitmap(addPng)
         self.fileOpenAuth = fileMenu.Append(foa)
-
-        fou = wx.MenuItem(fileMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
-        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
-        self.fileAddUser = fileMenu.Append(fou)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device CSV\tCtrl+O")
@@ -56,10 +52,6 @@ class ToolMenuBar(wx.MenuBar):
         fs = wx.MenuItem(fileMenu, wx.ID_SAVE, "&Save All Reports\tCtrl+S")
         fs.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/save.png")))
         self.fileSave = fileMenu.Append(fs)
-
-        # saveApps = wx.MenuItem(fileMenu, wx.ID_ANY, "&Save App Info \tCtrl+Shift+S")
-        # # saveApps.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/fetchSave.png")))
-        # self.fileSaveApps = fileMenu.Append(saveApps)
 
         fileMenu.Append(wx.ID_SEPARATOR)
         fas = wx.MenuItem(
@@ -73,10 +65,10 @@ class ToolMenuBar(wx.MenuBar):
         fi.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/exit.png")))
         self.fileItem = fileMenu.Append(fi)
 
-        # Endpoint Menu
+        # Tenant Menu
         self.configMenu = wx.Menu()
         self.defaultConfigVal = self.configMenu.Append(
-            wx.ID_NONE, "No Loaded Configurations", "No Loaded Configurations"
+            wx.ID_NONE, "No Loaded Tenants", "No Loaded Tenants"
         )
         self.configMenuOptions.append(self.defaultConfigVal)
 
@@ -96,10 +88,28 @@ class ToolMenuBar(wx.MenuBar):
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
         runMenu.Append(wx.ID_SEPARATOR)
-        cloneItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
-        self.clone = runMenu.Append(cloneItem)
+
+        self.cloneSubMenu = wx.Menu()
+
+        cloneItem = wx.MenuItem(
+            self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T"
+        )
+        self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
+
+        cloneBlueprint = wx.MenuItem(
+            self.cloneSubMenu,
+            wx.ID_ANY,
+            "&Clone Blueprint Across Tenants\tCtrl+Shift+B",
+        )
+        self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
+        self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
+        self.toggleCloneMenuOptions(False)
+
+        self.cloneSubMenu = runMenu.Append(wx.ID_ANY, "&Clone", self.cloneSubMenu)
+
         runMenu.Append(wx.ID_SEPARATOR)
+
         self.appSubMenu = wx.Menu()
         self.uploadApp = self.appSubMenu.Append(wx.ID_ANY, "Upload App (APK)")
         self.uploadApp.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/upload.png")))
@@ -154,9 +164,19 @@ class ToolMenuBar(wx.MenuBar):
         self.bulkFactoryReset = runMenu.Append(bulkReset)
         runMenu.Append(wx.ID_SEPARATOR)
 
-        geo = wx.MenuItem(runMenu, wx.ID_RETRY, "&Create Geofence")
+        geo = wx.MenuItem(runMenu, wx.ID_ANY, "&Create Geofence")
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
+
+        self.userSubMenu = wx.Menu()
+        fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
+        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
+        self.fileAddUser = self.userSubMenu.Append(fou)
+
+        userReport = wx.MenuItem(
+            self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
+        )
+        self.userReportItem = self.userSubMenu.Append(userReport)
 
         # View Menu
         viewMenu = wx.Menu()
@@ -166,10 +186,6 @@ class ToolMenuBar(wx.MenuBar):
             )
         )
         self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
-        # self.networkColumns = viewMenu.Append(
-        #     wx.MenuItem(viewMenu, wx.ID_ANY, "Toggle Network Columns")
-        # )
-        # self.networkColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(
@@ -215,7 +231,8 @@ class ToolMenuBar(wx.MenuBar):
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")
-        self.Append(self.configMenu, "&Configurations")
+        self.Append(self.userSubMenu, "&Users")
+        self.Append(self.configMenu, "&Tenants")
         self.Append(runMenu, "&Run")
         self.Append(helpMenu, "&Help")
 
@@ -224,7 +241,6 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def __set_properties(self):
         self.run.Enable(False)
-        self.clone.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
         self.collection.Enable(False)
@@ -233,7 +249,6 @@ class ToolMenuBar(wx.MenuBar):
         self.groupSubMenu.Enable(False)
         self.fileSave.Enable(False)
         self.fileSaveAs.Enable(False)
-        # self.fileSaveApps.Enable(False)
 
         self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
         self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
@@ -247,10 +262,10 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBothAll, self.fileSaveAs)
-        # self.Bind(wx.EVT_MENU, self.parentFrame.saveAppInfo, self.fileSaveApps)
         self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
@@ -263,9 +278,6 @@ class ToolMenuBar(wx.MenuBar):
             self.parentFrame.gridPanel.onColumnVisibility,
             self.deviceColumns,
         )
-        # self.Bind(
-        #     wx.EVT_MENU, self.parentFrame.gridPanel.onNetworkColumn, self.networkColumns
-        # )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
@@ -279,6 +291,7 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -301,10 +314,7 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def onUpdateCheck(self, event=None, showDlg=True):
         if not self.isCheckingForUpdates:
-            update = wxThread.GUIThread(
-                self, self.updateCheck, showDlg, name="UpdateCheck"
-            )
-            update.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.updateCheck, showDlg)
             self.isCheckingForUpdates = True
 
     @api_tool_decorator()
@@ -318,7 +328,7 @@ class ToolMenuBar(wx.MenuBar):
             print(e)
             ApiToolLog().LogError(e)
         if json:
-            tagVersion = json["tag_name"].replace("v", "")
+            tagVersion = json["tag_name"].split("-")[0].replace("v", "")
             if float(tagVersion) > float(Globals.VERSION.replace("v", "")):
                 downloadURL = ""
                 name = ""
@@ -384,7 +394,7 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def onEqlQuery(self, event):
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with LargeTextEntryDialog(
@@ -398,21 +408,17 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
-                        "---> Finsihed Performing EQL Query, processing results..."
+                        "---> Finished Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(
-                        self,
-                        processCollectionDevices,
-                        deviceListResp,
-                        name="eqlIterateThroughDeviceList",
+                    Globals.THREAD_POOL.enqueue(
+                        processCollectionDevices, deviceListResp
                     )
-                    thread.startWithRetry()
             else:
                 self.parentFrame.setCursorDefault()
 
     @api_tool_decorator()
     def onCollection(self, event):
-        self.parentFrame.setGaugeValue(0)
+        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
@@ -424,15 +430,11 @@ class ToolMenuBar(wx.MenuBar):
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
-                        "---> Finsihed Performing EQL Query, processing results..."
+                        "---> Finished Performing EQL Query, processing results..."
                     )
-                    thread = wxThread.GUIThread(
-                        self,
-                        processCollectionDevices,
-                        deviceListResp,
-                        name="collectionIterateThroughDeviceList",
+                    Globals.THREAD_POOL.enqueue(
+                        processCollectionDevices, deviceListResp
                     )
-                    thread.startWithRetry()
             else:
                 self.parentFrame.setCursorDefault()
             dlg.DestroyLater()
@@ -444,6 +446,11 @@ class ToolMenuBar(wx.MenuBar):
                 self.collectionSubMenu.Hide()
             else:
                 self.collectionSubMenu.Enable(False)
+        else:
+            if hasattr(self.collectionSubMenu, "Show"):
+                self.collectionSubMenu.Show()
+            else:
+                self.collectionSubMenu.Enable(True)
 
     @api_tool_decorator()
     def AddUser(self, event):
@@ -488,4 +495,11 @@ class ToolMenuBar(wx.MenuBar):
     def setSaveMenuOptionsEnableState(self, state):
         self.fileSave.Enable(state)
         self.fileSaveAs.Enable(state)
-        # self.fileSaveApps.Enable(state)
+
+    def toggleCloneMenuOptions(self, showBlueprint, toggleBothSameState=False):
+        if toggleBothSameState:
+            self.clone.Enable(enable=showBlueprint)
+            self.cloneBP.Enable(enable=showBlueprint)
+        else:
+            self.clone.Enable(enable=bool(not showBlueprint))
+            self.cloneBP.Enable(enable=showBlueprint)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import esperclient
 import os
 import wx
 from Utility.API.AppUtilities import (
@@ -10,7 +9,7 @@ from Utility.API.AppUtilities import (
 )
 from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 
-import Utility.wxThread as wxThread
+import Utility.Threading.wxThread as wxThread
 import Utility.EventUtility as eventUtil
 import Common.Globals as Globals
 
@@ -18,6 +17,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     download,
     deleteFile,
+    getEsperConfig,
     joinThreadList,
 )
 from Utility.Resource import postEventToFrame
@@ -67,7 +67,7 @@ class EsperTemplateUtil:
             dest if dest else self.getTemplates(self.toApi, self.toKey, self.toEntId)
         )
         toApps = getAllApplicationsForHost(
-            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+            getEsperConfig(self.toApi, self.toKey), self.toEntId
         )
 
         templateFound = None
@@ -82,7 +82,7 @@ class EsperTemplateUtil:
             templateFound = self.checkTemplate(
                 templateFound,
                 toApps.results,
-                self.getEsperConfig(self.toApi, self.toKey),
+                getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
             )
 
@@ -120,7 +120,7 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
-            self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+            getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
         )
         allDeviceGroupId = None
         found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
@@ -129,13 +129,13 @@ class EsperTemplateUtil:
         if not found:
             postEventToFrame(eventUtil.myEVT_LOG, "Creating new device group...")
             res = createDeviceGroupForHost(
-                self.getEsperConfig(self.toApi, self.toKey),
+                getEsperConfig(self.toApi, self.toKey),
                 self.toEntId,
                 templateFound["template"]["device_group"]["name"],
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                    getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
                 )
                 _, templateFound, _ = self.checkDeviceGroup(
                     templateFound, toDeviceGroups, allDeviceGroupId
@@ -172,13 +172,6 @@ class EsperTemplateUtil:
                         bgList.append(newBg)
                 templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
-
-    def getEsperConfig(self, host, apiKey, auth="Bearer"):
-        configuration = esperclient.Configuration()
-        configuration.host = host.replace("/v0/enterprise/", "")
-        configuration.api_key["Authorization"] = apiKey
-        configuration.api_key_prefix["Authorization"] = auth
-        return configuration
 
     @api_tool_decorator()
     def uploadWallpaper(self, link, key, enterprise_id, bg):
@@ -296,9 +289,8 @@ class EsperTemplateUtil:
 
             if missingAppThreads:
                 apps = getAllApplicationsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey), self.toEntId
+                    getEsperConfig(self.toApi, self.toKey), self.toEntId
                 ).results
-            # newTemplate["application"]["apps"] = []
             self.processApplications(template, newTemplate, apps)
         if (
             not newTemplate["application"]["startOnBoot"]
@@ -344,13 +336,13 @@ class EsperTemplateUtil:
             if ("isGPlay" in app and app["isGPlay"]) or (
                 "is_g_play" in app and app["is_g_play"]
             ):
-                newTemplate["application"]["apps"].append(app)
+                pass
             else:
                 found = False
                 for toApp in apps:
                     if toApp.package_name == app["packageName"]:
                         appVersions = getAllAppVersionsForHost(
-                            self.getEsperConfig(self.toApi, self.toKey),
+                            getEsperConfig(self.toApi, self.toKey),
                             self.toEntId,
                             toApp.id,
                         )
@@ -362,6 +354,18 @@ class EsperTemplateUtil:
                                     found = True
                                     newTemplate = self.addAppVersionToTemplate(
                                         app, newTemplate, toApp, version.id
+                                    )
+                                    break
+                        elif appVersions and type(appVersions) == dict:
+                            for version in appVersions["results"]:
+                                if version["version_code"] == app[
+                                    "versionName"
+                                ] and version["build_number"] == str(
+                                    app["versionCode"]
+                                ):
+                                    found = True
+                                    newTemplate = self.addAppVersionToTemplate(
+                                        app, newTemplate, toApp, version["id"]
                                     )
                                     break
                 if not found:
@@ -398,25 +402,72 @@ class EsperTemplateUtil:
                 "is_g_play" in app and app["is_g_play"]
             ):
                 matchingApps = getAllApplicationsForHost(
-                    self.getEsperConfig(self.toApi, self.toKey),
+                    getEsperConfig(self.toApi, self.toKey),
                     self.toEntId,
                     package_name=app["packageName"],
                 )
                 if matchingApps and hasattr(matchingApps, "results"):
                     found = False
                     for match in matchingApps.results:
-                        appId = match["id"]
+                        appId = None
+                        matchPkgName = None
+                        if type(match) is dict:
+                            appId = match["id"]
+                            matchPkgName = match["package_name"]
+                        elif hasattr(match, "id"):
+                            appId = match.id
+                            matchPkgName = match.package_name
+                        if matchPkgName != app["packageName"]:
+                            continue
                         versions = getAllAppVersionsForHost(
-                            self.getEsperConfig(self.toApi, self.toKey),
+                            getEsperConfig(self.toApi, self.toKey),
                             self.toEntId,
                             appId,
                         )
                         if versions and hasattr(versions, "results"):
                             for ver in versions.results:
-                                if ("isGPlay" in ver and ver["isGPlay"]) or (
-                                    "is_g_play" in ver and ver["is_g_play"]
+                                if (
+                                    type(ver) == dict
+                                    and "isGPlay" in ver
+                                    and ver["isGPlay"]
+                                ) or (
+                                    type(ver) == dict
+                                    and "is_g_play" in ver
+                                    and ver["is_g_play"]
                                 ):
                                     newTemplate["application"]["apps"].append(ver)
+                                    found = True
+                                    break
+                        elif versions and type(versions) == dict:
+                            for ver in versions["results"]:
+                                if (
+                                    type(ver) == dict
+                                    and "isGPlay" in ver
+                                    and ver["isGPlay"]
+                                ) or (
+                                    type(ver) == dict
+                                    and "is_g_play" in ver
+                                    and ver["is_g_play"]
+                                ):
+                                    isPlay = False
+                                    if (
+                                        type(ver) == dict
+                                        and "is_g_play" in ver
+                                        and ver["is_g_play"]
+                                    ):
+                                        isPlay = ver["is_g_play"]
+                                    else:
+                                        isPlay = ver["isGPlay"]
+                                    newTemplate["application"]["apps"].append(
+                                        {
+                                            "is_g_play": isPlay,
+                                            "id": appId,
+                                            "package_name": matchPkgName,
+                                            "installationRule": app["installationRule"],
+                                            "google_product": ver["id"],
+                                            "google_product_id": ver["id"],
+                                        }
+                                    )
                                     found = True
                                     break
                         if found:
@@ -432,7 +483,11 @@ class EsperTemplateUtil:
                     if toApp.package_name == app["packageName"]:
                         appMatch = list(
                             filter(
-                                lambda x: x["package_name"] if type(x) is dict else x.package_name == app["packageName"],
+                                lambda x: x["package_name"] == app["packageName"]
+                                if "package_name" in x
+                                else False
+                                if type(x) is dict
+                                else x.package_name == app["packageName"],
                                 newTemplate["application"]["apps"],
                             )
                         )
@@ -470,9 +525,9 @@ class EsperTemplateUtil:
         try:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "Attempting to download %s to upload to endpoint" % app["packageName"],
+                "Attempting to download %s to upload to tenant" % app["packageName"],
             )
-            file = "%s.apk" % app["applicationName"]
+            file = "%s.apk" % app["applicationName"].replace("<", "").replace(">", "")
             deleteFile(file)
             download(app["downloadUrl"], file)
             ApiToolLog().LogApiRequestOccurrence(

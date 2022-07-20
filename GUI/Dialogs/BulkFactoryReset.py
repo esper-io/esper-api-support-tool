@@ -3,9 +3,8 @@
 import csv
 import wx
 import wx.grid
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-
-import Utility.wxThread as wxThread
 
 
 class BulkFactoryReset(wx.Dialog):
@@ -138,17 +137,16 @@ class BulkFactoryReset(wx.Dialog):
         if result == wx.ID_OK:
             self.setCursorBusy()
             self.button_OK.Enable(False)
-            thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.saveGroupCSV, inFile)
 
     def saveGroupCSV(self, inFile):
         gridData = []
         gridData.append(self.expectedHeaders)
-        gridData.append(["serial_number"])
-        gridData.append(["custom_serial_number"])
-        gridData.append(["imei"])
-        gridData.append(["esper_device_name"])
-        gridData.append(["esper_device_id"])
+        gridData.append(["<serial_number>"])
+        gridData.append(["<custom_serial_number>"])
+        gridData.append(["<imei>"])
+        gridData.append(["<esper_device_name>"])
+        gridData.append(["<esper_device_id>"])
 
         with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)

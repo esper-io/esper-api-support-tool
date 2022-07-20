@@ -16,7 +16,6 @@ from Utility.API.GroupUtility import (
 import wx
 import wx.grid as gridlib
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
 
 from Common.enum import Color
 
@@ -39,6 +38,7 @@ class GroupManagement(wx.Dialog):
             "New Group Name",
         ]
         self.rootId = None
+        self.root = None
 
         super(GroupManagement, self).__init__(
             None,
@@ -110,7 +110,11 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1 = wx.TreeCtrl(
             self.notebook_1_pane_1,
             wx.ID_ANY,
-            style=wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_SINGLE | wx.WANTS_CHARS,
+            style=wx.TR_EDIT_LABELS
+            | wx.TR_HAS_BUTTONS
+            | wx.TR_SINGLE
+            | wx.WANTS_CHARS
+            | wx.TR_HIDE_ROOT,
         )
         grid_sizer_1.Add(self.tree_ctrl_1, 1, wx.EXPAND, 0)
 
@@ -175,7 +179,9 @@ class GroupManagement(wx.Dialog):
         self.button_5.SetMinSize((20, 20))
         sizer_4.Add(self.button_5, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
-        self.tree_ctrl_2 = wx.TreeCtrl(self.notebook_2_pane_1, wx.ID_ANY)
+        self.tree_ctrl_2 = wx.TreeCtrl(
+            self.notebook_2_pane_1, wx.ID_ANY, style=wx.TR_HIDE_ROOT
+        )
         sizer_4.Add(self.tree_ctrl_2, 1, wx.EXPAND, 0)
 
         self.notebook_2_pane_2 = TabPanel(self.notebook_2, wx.ID_ANY, "Grid")
@@ -241,11 +247,20 @@ class GroupManagement(wx.Dialog):
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
         self.notebook_1.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
+        self.createRootNodes()
         self.createTreeLayout()
         self.tree_ctrl_1.ExpandAll()
         self.tree_ctrl_2.ExpandAll()
 
         self.Fit()
+
+    def createRootNodes(self):
+        self.root = self.tree_ctrl_1.AddRoot("", -1)
+        self.rootId = -1
+        self.tree[self.rootId] = self.root
+
+        root = self.tree_ctrl_2.AddRoot("", -1)
+        self.uploadTreeItems[self.rootId] = root
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
@@ -266,47 +281,63 @@ class GroupManagement(wx.Dialog):
         unsorted = []
         if self.groups:
             for group in self.groups:
-                if group.name not in self.groupNameToId:
-                    self.groupNameToId[group.name] = []
-                self.groupNameToId[group.name].append(group.id)
-                self.groupIdToName[group.id] = group.name
-                parentId = self.getGroupIdFromURL(group.parent)
-                if not group.parent and not self.root:
-                    self.rootId = group.id
-                    self.groupTree[group.id] = []
-                    self.root = self.tree_ctrl_1.AddRoot(group.name, data=group.id)
-                    root2 = self.tree_ctrl_2.AddRoot(group.name, data=group.id)
-                    self.tree[group.id] = self.root
-                    self.uploadTreeItems[group.id] = root2
+                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(
+                    group
+                )
+                if groupName not in self.groupNameToId:
+                    self.groupNameToId[groupName] = []
+                self.groupNameToId[groupName].append(groupId)
+                self.groupIdToName[groupId] = groupName
+                parentId = self.getGroupIdFromURL(groupParent)
+                if not groupParent and not self.root:
+                    self.rootId = groupId
+                    self.groupTree[groupId] = []
+                    self.root = self.tree_ctrl_1.AddRoot(groupName, data=groupId)
+                    root2 = self.tree_ctrl_2.AddRoot(groupName, data=groupId)
+                    self.tree[groupId] = self.root
+                    self.uploadTreeItems[groupId] = root2
                     continue
-                if parentId in self.groupTree.keys():
-                    self.groupTree[parentId].append({group.id: []})
+                elif not groupParent and self.root:
+                    self.groupTree[groupId] = []
                     entry = self.tree_ctrl_1.AppendItem(
-                        self.tree[parentId], group.name, data=group.id
+                        self.tree[self.rootId], groupName, data=groupId
                     )
                     entry2 = self.tree_ctrl_2.AppendItem(
-                        self.uploadTreeItems[parentId], group.name, data=group.id
+                        self.uploadTreeItems[self.rootId], groupName, data=groupId
                     )
-                    self.tree[group.id] = entry
-                    self.uploadTreeItems[group.id] = entry2
+                    self.tree[groupId] = entry
+                    self.uploadTreeItems[groupId] = entry2
+                    continue
+                if parentId in self.groupTree.keys():
+                    self.groupTree[parentId].append({groupId: []})
+                    entry = self.tree_ctrl_1.AppendItem(
+                        self.tree[parentId], groupName, data=groupId
+                    )
+                    entry2 = self.tree_ctrl_2.AppendItem(
+                        self.uploadTreeItems[parentId], groupName, data=groupId
+                    )
+                    self.tree[groupId] = entry
+                    self.uploadTreeItems[groupId] = entry2
                 else:
                     unsorted.append(group)
 
         if len(unsorted) > 250:
             for group in unsorted:
+                groupName, groupId, _ = self.obtainGroupInfoFromGroupObject(group)
                 entry = self.tree_ctrl_1.AppendItem(
-                    self.tree[self.rootId], group.name, data=group.id
+                    self.tree[self.rootId], groupName, data=groupId
                 )
                 entry2 = self.tree_ctrl_2.AppendItem(
-                    self.uploadTreeItems[self.rootId], group.name, data=group.id
+                    self.uploadTreeItems[self.rootId], groupName, data=groupId
                 )
-                self.tree[group.id] = entry
-                self.uploadTreeItems[group.id] = entry2
+                self.tree[groupId] = entry
+                self.uploadTreeItems[groupId] = entry2
         else:
             while len(unsorted) > 0:
                 newUnsorted = []
                 for group in unsorted:
-                    parentId = self.getGroupIdFromURL(group.parent)
+                    _, _, groupParent = self.obtainGroupInfoFromGroupObject(group)
+                    parentId = self.getGroupIdFromURL(groupParent)
                     success = self.addGroupAsChild(self.groupTree, parentId, group)
                     if not success:
                         newUnsorted.append(group)
@@ -314,16 +345,17 @@ class GroupManagement(wx.Dialog):
 
     def addGroupAsChild(self, src, dest, group):
         for key, value in src.items():
+            groupName, groupId, _ = self.obtainGroupInfoFromGroupObject(group)
             if key == dest:
-                value.append({group.id: []})
+                value.append({groupId: []})
                 entry = self.tree_ctrl_1.AppendItem(
-                    self.tree[dest], group.name, data=group.id
+                    self.tree[dest], groupName, data=groupId
                 )
                 entry2 = self.tree_ctrl_2.AppendItem(
-                    self.uploadTreeItems[dest], group.name, data=group.id
+                    self.uploadTreeItems[dest], groupName, data=groupId
                 )
-                self.tree[group.id] = entry
-                self.uploadTreeItems[group.id] = entry2
+                self.tree[groupId] = entry
+                self.uploadTreeItems[groupId] = entry2
                 return True
             for child in value:
                 success = self.addGroupAsChild(child, dest, group)
@@ -340,6 +372,7 @@ class GroupManagement(wx.Dialog):
             self.tree = {}
             self.uploadTreeItems = {}
             self.uploadCSVTreeItems = []
+            self.createRootNodes()
             self.groups = getAllGroups().results
             self.createTreeLayout()
             self.tree_ctrl_1.ExpandAll()
@@ -372,8 +405,7 @@ class GroupManagement(wx.Dialog):
     def deleteGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.deleteGroupHelper, None)
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.deleteGroupHelper)
 
     def deleteGroupHelper(self):
         self.isBusy = True
@@ -444,16 +476,17 @@ class GroupManagement(wx.Dialog):
     def fetchGroupsThenDelete(self, oldName, parent, numSuccess):
         matchingGroups = getAllGroups(name=oldName)
         for group in matchingGroups.results:
-            parentGroup = fetchGroupName(group.parent, returnJson=True)
+            groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(group)
+            parentGroup = fetchGroupName(groupParent, returnJson=True)
             if parent == parentGroup["name"] or (
                 isApiKey(parent) and parentGroup["id"] == parent
             ):
                 treeItem = None
-                if group.id in self.uploadTreeItems:
-                    treeItem = self.uploadTreeItems[group.id]
-                elif group.name in self.uploadTreeItems:
-                    treeItem = self.uploadTreeItems[group.name]
-                deleteGroup(group.id)
+                if groupId in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupId]
+                elif groupName in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupName]
+                deleteGroup(groupId)
                 if treeItem:
                     self.tree_ctrl_2.SetItemTextColour(treeItem, Color.green.value)
                     self.tree_ctrl_2.SetItemFont(
@@ -474,8 +507,7 @@ class GroupManagement(wx.Dialog):
     def addSubGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.addSubGroupHelper, None)
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.addSubGroupHelper)
 
     def addSubGroupHelper(self):
         self.isBusy = True
@@ -587,11 +619,12 @@ class GroupManagement(wx.Dialog):
     ):
         matchingGroups = getAllGroups(name=parent)
         for group in matchingGroups.results:
+            groupName, groupId, _ = self.obtainGroupInfoFromGroupObject(group)
             treeItem = None
             if oldName in self.uploadTreeItems:
                 treeItem = self.uploadTreeItems[oldName]
-            if parent == group.name:
-                resp = createGroup(oldName, group.id)
+            if parent == groupName:
+                resp = createGroup(oldName, groupId)
                 if resp:
                     (numAlreadyExists, numSuccess,) = self.processAddGroupResult(
                         resp, numAlreadyExists, numSuccess, treeItem
@@ -674,9 +707,8 @@ class GroupManagement(wx.Dialog):
     def getChildIds(self, children, childIds):
         for childDict in children:
             childIds += list(childDict.keys())
-            if not Globals.GET_IMMEDIATE_SUBGROUPS:
-                for c in childDict.values():
-                    self.getChildIds(c, childIds)
+            for c in childDict.values():
+                self.getChildIds(c, childIds)
 
     def getGroupIdFromURL(self, url):
         return url.split("/")[-2] if url else None
@@ -690,8 +722,7 @@ class GroupManagement(wx.Dialog):
     def renameGroup(self, event):
         if not self.isBusy:
             self.setActionButtonState(False)
-            thread = wxThread.GUIThread(None, self.renameGroupHelper, None)
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.renameGroupHelper)
 
     def renameGroupHelper(self):
         self.isBusy = True
@@ -759,18 +790,21 @@ class GroupManagement(wx.Dialog):
         matchingGroups = getAllGroups(name=oldName)
         if hasattr(matchingGroups, "results") and matchingGroups.results:
             for group in matchingGroups.results:
+                groupName, groupId, groupParent = self.obtainGroupInfoFromGroupObject(
+                    group
+                )
                 treeItem = None
-                if group.id in self.uploadTreeItems:
-                    treeItem = self.uploadTreeItems[group.id]
-                elif group.name in self.uploadTreeItems:
-                    treeItem = self.uploadTreeItems[group.name]
-                elif group.id in self.tree:
-                    treeItem = self.tree[group.id]
-                parentGroup = fetchGroupName(group.parent, returnJson=True)
+                if groupId in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupId]
+                elif groupName in self.uploadTreeItems:
+                    treeItem = self.uploadTreeItems[groupName]
+                elif groupId in self.tree:
+                    treeItem = self.tree[groupId]
+                parentGroup = fetchGroupName(groupParent, returnJson=True)
                 if parent == parentGroup["name"] or (
                     isApiKey(parent) and parentGroup["id"] == parent
                 ):
-                    resp = renameGroup(group.id, newName)
+                    resp = renameGroup(groupId, newName)
                     self.processRenameGroupResult(resp, numSuccess, treeItem, newName)
                     break
         else:
@@ -934,8 +968,7 @@ class GroupManagement(wx.Dialog):
         if result == wx.ID_OK:
             self.setCursorBusy()
             self.button_7.Enable(False)
-            thread = wxThread.GUIThread(None, self.saveGroupCSV, (inFile))
-            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.saveGroupCSV, inFile)
 
     def saveGroupCSV(self, inFile):
         gridData = []
@@ -969,6 +1002,16 @@ class GroupManagement(wx.Dialog):
             for child in children:
                 self.getGroupCSV(child, id, gridData)
 
-    # def ShowModal(self):
-    #     self.createTreeLayout()
-    #     return wx.Dialog.ShowModal(self)
+    def obtainGroupInfoFromGroupObject(self, group):
+        groupName = ""
+        groupId = ""
+        groupParent = ""
+        if hasattr(group, "name"):
+            groupName = group.name
+            groupId = group.id
+            groupParent = group.parent
+        elif type(group) is dict and "name" in group:
+            groupName = group["name"]
+            groupId = group["id"]
+            groupParent = group["parent"]
+        return groupName, groupId, groupParent

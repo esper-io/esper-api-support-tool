@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
-from Common.decorator import api_tool_decorator
 import Utility.API.EsperTemplateUtil as templateUtil
-import Utility.wxThread as wxThread
+
+import Common.Globals as Globals
 import wx
 import wx.html as wxHtml
 import json
+
+from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
+from Common.decorator import api_tool_decorator
 
 
 class TemplateDialog(wx.Dialog):
@@ -44,7 +46,7 @@ class TemplateDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Endpoint:")
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Tenant:")
         sizer_5.Add(label_1, 0, 0, 0)
 
         self.choice_1 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)
@@ -53,7 +55,7 @@ class TemplateDialog(wx.Dialog):
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_6, 1, wx.EXPAND | wx.LEFT, 5)
 
-        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Endpoint:")
+        label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Tenant:")
         sizer_6.Add(label_2, 0, 0, 0)
 
         self.choice_2 = wx.Choice(self.panel_1, wx.ID_ANY, choices=choices)
@@ -235,13 +237,9 @@ class TemplateDialog(wx.Dialog):
         self.SetCursor(myCursor)
         self.sourceTemplate = []
         self.list_box_1.Clear()
-        self.choice1thread = wxThread.GUIThread(
-            self,
-            self.populateSourceTempaltes,
-            (event.String if event.String else False),
-            name="populateSourceTempaltes",
+        Globals.THREAD_POOL.enqueue(
+            self.populateSourceTempaltes, event.String if event.String else False
         )
-        self.choice1thread.startWithRetry()
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
@@ -254,13 +252,9 @@ class TemplateDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.destTemplate = []
-        self.choice2thread = wxThread.GUIThread(
-            self,
-            self.fetchDestTempaltes,
-            (event.String if event.String else False),
-            name="fetchDestTempaltes",
+        Globals.THREAD_POOL.enqueue(
+            self.fetchDestTempaltes, event.String if event.String else False
         )
-        self.choice2thread.startWithRetry()
 
     @api_tool_decorator()
     def getTemplates(self, dataSrc):

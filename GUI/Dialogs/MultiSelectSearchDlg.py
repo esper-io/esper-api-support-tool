@@ -7,7 +7,6 @@ from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
 import wx
 import math
 import Common.Globals as Globals
-import Utility.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 
@@ -35,6 +34,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         if resp and hasattr(resp, "count") and hasattr(resp, "results"):
             if len(resp.results) > 0:
                 self.limit = math.floor(resp.count / len(resp.results))
+        elif type(resp) == dict and "count" in resp and "results" in resp:
+            if len(resp["results"]) > 0:
+                self.limit = math.floor(resp["count"] / len(resp["results"]))
         self.group = None
 
         if hasattr(parent, "sidePanel"):
@@ -257,9 +259,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             if "All devices" in self.originalChoices[self.page]:
                 self.selected = ["All devices"]
             elif "device" in self.label.lower():
-                wxThread.GUIThread(
-                    self, self.selectAllDevices, None, name="selectAllDevices"
-                ).startWithRetry()
+                Globals.THREAD_POOL.enqueue(self.selectAllDevices)
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -318,7 +318,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(False)
         if self.page < self.limit:
             self.page += 1
-        wxThread.GUIThread(self, self.processNext, None, name="processNext").startWithRetry()
+        Globals.THREAD_POOL.enqueue(self.processNext)
 
     def processNext(self):
         self.button_1.Enable(False)
@@ -339,7 +339,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
-        wxThread.GUIThread(self, self.processPrev, None, name="processPrev").startWithRetry()
+        Globals.THREAD_POOL.enqueue(self.processPrev)
 
     def processPrev(self):
         self.checkbox_1.Enable(False)
@@ -358,31 +358,45 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.setCursorDefault()
 
     def checkPageButton(self):
-        if self.page == 0:
-            self.button_1.Enable(False)
-        elif self.resp.next:
-            self.button_1.Enable(True)
-
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
-        elif self.resp.previous:
+        elif hasattr(self.resp, "next") and self.resp.next:
             self.button_2.Enable(True)
+        elif type(self.resp) == dict and "next" in self.resp:
+            self.button_2.Enable(True)
+
+        if self.page == 0:
+            self.button_1.Enable(False)
+        elif hasattr(self.resp, "previous") and self.resp.previous:
+            self.button_1.Enable(True)
+        elif type(self.resp) == dict and "previous" in self.resp:
+            self.button_1.Enable(True)
 
     def updateChoices(self):
         resp = None
         if len(self.originalChoices) > self.page:
             resp = self.originalChoices[self.page]
         else:
+            resultLimit = Globals.limit
+            resultOffset = Globals.limit
+            if hasattr(self.resp, "results"):
+                resultLimit = len(self.resp.results)
+                resultOffset = len(self.resp.results) * self.page
+            elif type(self.resp) == dict and "results" in self.resp:
+                resultLimit = len(self.resp["results"])
+                resultOffset = len(self.resp["results"]) * self.page
+
             if "device" in self.label.lower():
                 resp = getAllDevices(
-                    self.group,
-                    limit=len(self.resp.results),
-                    offset=len(self.resp.results) * self.page,
+                    self.group, limit=resultLimit, offset=resultOffset, tolarance=1
                 )
             elif "group" in self.label.lower():
-                resp = getAllGroups(offset=len(self.resp.results) * self.page)
+                resp = getAllGroups(offset=resultOffset, tolerance=1)
             if resp:
-                self.originalChoices.append(self.processDevices(resp.results))
+                if hasattr(resp, "results"):
+                    self.originalChoices.append(self.processDevices(resp.results))
+                elif type(resp) == dict and "results" in resp:
+                    self.originalChoices.append(self.processDevices(resp["results"]))
 
         if resp:
             self.check_list_box_1.Clear()
@@ -440,13 +454,25 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
 
-        if self.resp.count > len(self.originalChoices[0]):
+        count = (
+            self.resp["count"] if not hasattr(self.resp, "count") else self.resp.count
+        )
+        resultLimit = (
+            len(self.resp["results"])
+            if not hasattr(self.resp, "results")
+            else len(self.resp.results)
+        )
+
+        if count > len(self.originalChoices[0]):
             resp = getAllDevices(
-                self.group, limit=len(self.resp.results), offset=0, fetchAll=True
+                self.group, limit=resultLimit, offset=0, fetchAll=True, tolarance=1
             )
             if resp:
                 self.check_list_box_1.Clear()
-                self.originalChoices[0] = self.processDevices(resp.results)
+                if hasattr(resp, "results"):
+                    self.originalChoices[0] = self.processDevices(resp.results)
+                elif type(resp) == dict and "results" in resp:
+                    self.originalChoices[0] = self.processDevices(resp["results"])
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
         self.selected = copy.deepcopy(self.originalChoices[0])

@@ -20,7 +20,7 @@ class ToolsToolBar(wx.ToolBar):
 
         add_icon = scale_bitmap(resourcePath("Images/add.png"), *size)
         self.atool = self.AddTool(
-            wx.ID_ANY, "Add New Endpoint", add_icon, "Add New Endpoint"
+            wx.ID_ANY, "Add New Tenant", add_icon, "Add New Tenant"
         )
         self.AddSeparator()
 
