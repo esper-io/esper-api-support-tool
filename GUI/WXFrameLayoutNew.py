@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 from Common.SleepInhibitor import SleepInhibitor
+from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import checkBlueprintEnabled, prepareBlueprintClone
+from Utility.API.BlueprintUtility import checkBlueprintEnabled, prepareBlueprintClone, prepareBlueprintConversion
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.UserUtility import getAllUsers
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
@@ -3147,3 +3148,17 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
+
+    @api_tool_decorator()
+    def onConvertTemplate(self, event):
+        with BlueprintsConvertDialog(self.sidePanel.configChoice) as dlg:
+            result = dlg.ShowModal()
+            if result == wx.ID_OK:
+                prepareBlueprintConversion(
+                    dlg.getTemplate(),
+                    dlg.toConfig,
+                    dlg.fromConfig,
+                    dlg.getDestinationGroup(),
+                )
+                pass
+            dlg.DestroyLater()

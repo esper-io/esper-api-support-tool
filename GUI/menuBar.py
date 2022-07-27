@@ -97,6 +97,11 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
 
+        convertTemplate = wx.MenuItem(
+            self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint"
+        )
+        self.convert = self.cloneSubMenu.Append(convertTemplate)
+
         cloneBlueprint = wx.MenuItem(
             self.cloneSubMenu,
             wx.ID_ANY,
@@ -266,6 +271,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
@@ -500,6 +506,8 @@ class ToolMenuBar(wx.MenuBar):
         if toggleBothSameState:
             self.clone.Enable(enable=showBlueprint)
             self.cloneBP.Enable(enable=showBlueprint)
+            # self.convert.Enable(enable=showBlueprint)
         else:
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
+            # self.convert.Enable(enable=showBlueprint)
