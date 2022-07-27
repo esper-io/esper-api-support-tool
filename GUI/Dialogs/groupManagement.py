@@ -111,7 +111,7 @@ class GroupManagement(wx.Dialog):
         grid_sizer_2.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
         self.button_3 = wx.Button(self.notebook_1_pane_1, wx.ID_REFRESH, "")
-        self.button_3.SetToolTip("Rerfresh Group listing")
+        self.button_3.SetToolTip("Refresh Group listing")
         grid_sizer_1.Add(self.button_3, 0, wx.ALIGN_RIGHT | wx.BOTTOM, 5)
 
         self.tree_ctrl_1 = wx.TreeCtrl(

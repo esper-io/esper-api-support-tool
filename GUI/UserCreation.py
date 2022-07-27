@@ -107,6 +107,7 @@ class UserCreation(wx.Frame):
         grid_sizer_1.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.button_1 = wx.Button(self.panel_2, wx.ID_ANY, "Download")
+        self.button_1.SetToolTip("Download User Template CSV")
         grid_sizer_1.Add(
             self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
@@ -128,6 +129,7 @@ class UserCreation(wx.Frame):
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.button_2 = wx.Button(self.panel_2, wx.ID_ANY, "Upload")
+        self.button_2.SetToolTip("Upload User CSV")
         grid_sizer_5.Add(
             self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )

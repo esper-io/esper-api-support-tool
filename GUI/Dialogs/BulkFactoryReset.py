@@ -63,7 +63,7 @@ class BulkFactoryReset(wx.Dialog):
         grid_sizer_4.Add(sizer_4, 1, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5)
 
         self.button_7 = wx.Button(self, wx.ID_ANY, "Download Template")
-        self.button_7.SetToolTip("Upload CSV file")
+        self.button_7.SetToolTip("Download Reset Template CSV file")
         sizer_4.Add(self.button_7, 0, wx.BOTTOM | wx.RIGHT, 5)
 
         self.button_6 = wx.Button(self, wx.ID_ANY, "Upload CSV")

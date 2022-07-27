@@ -64,6 +64,7 @@ class SidePanel(wx.Panel):
             wx.ID_DELETE,
             remove_icon,
         )
+        self.removeEndpointBtn.SetToolTip("Remove Tenant")
         grid_sizer_1.Add(
             self.removeEndpointBtn,
             0,
@@ -179,6 +180,7 @@ class SidePanel(wx.Panel):
         sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
         self.appChoice = wx.Button(self.panel_16, wx.ID_ANY, "Select Application")
+        self.appChoice.SetToolTip("Select Application")
         sizer_8.Add(self.appChoice, 0, wx.EXPAND | wx.TOP, 5)
 
         self.panel_17 = wx.Panel(self.panel_16, wx.ID_ANY)
@@ -230,6 +232,7 @@ class SidePanel(wx.Panel):
         sizer_1.Add(static_line_3, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
 
         self.runBtn = wx.Button(self, wx.ID_ANY, "Run", style=wx.BU_AUTODRAW)
+        self.runBtn.SetToolTip("Run Selected Action")
         sizer_1.Add(self.runBtn, 0, wx.ALL | wx.EXPAND, 5)
 
         self.panel_10.SetSizer(sizer_5)

@@ -72,6 +72,7 @@ class CollectionsDialog(wx.Dialog):
             wx.ID_ANY,
             refresh,
         )
+        self.bitmap_button_1.SetToolTip("Refresh Collection List")
         self.bitmap_button_1.SetMinSize((20, 20))
         grid_sizer_3.Add(self.bitmap_button_1, 0, wx.ALIGN_RIGHT, 0)
 

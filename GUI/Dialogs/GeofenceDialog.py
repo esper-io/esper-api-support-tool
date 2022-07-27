@@ -121,6 +121,7 @@ class GeofenceDialog(wx.Dialog):
         grid_sizer_1.Add(grid_sizer_3, 0, wx.ALL | wx.EXPAND, 5)
 
         self.button_1 = wx.Button(self, wx.ID_ANY, "Upload Devices (CSV)")
+        self.button_1.SetToolTip("Upload Device CSV")
         grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_RIGHT, 0)
 
         self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
