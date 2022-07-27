@@ -126,6 +126,11 @@ def constructNetworkInfo(device, deviceInfo):
     networkInfo["Active Connection"] = cellStatus[1]
     networkInfo["Device Name"] = getDeviceName(device)
 
+    deviceInfo["wifiAP"] = wifiStatus[0]
+    deviceInfo["currentWifi"] = wifiStatus[1]
+    deviceInfo["cellAP"] = cellStatus[0]
+    deviceInfo["activeConnection"] = cellStatus[1]
+
     for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
         if value:
             if value in deviceInfo:
