@@ -18,7 +18,9 @@
                 "--print_duration",
                 "false",
                 "--log_api",
-                "false"
+                "false",
+                "--debug",
+                "true"
             ]
         },
         {
