@@ -1,3 +1,4 @@
+from multiprocessing import Event
 import Common.Globals as Globals
 import os
 import wx
@@ -12,6 +13,7 @@ from Utility.API.AppUtilities import (
 )
 from Utility.API.ContentUtility import getAllContentFromHost, uploadContentToHost
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
+from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     deleteFile,
@@ -245,7 +247,6 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     blueprint, missingContent, downloadContentLinks = checkFromMissingContent(
         blueprint, toConfig, fromConfig
     )
-    # TODO: Handle Wallpaper transfer
 
     if Globals.SHOW_TEMPLATE_DIALOG:
         result = CheckboxMessageBox(
@@ -280,6 +281,8 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             blueprint = uploadMissingContentFiles(
                 blueprint, downloadContentLinks, toConfig, fromConfig, progress
             )
+            # TODO: Handle Wallpaper transfer
+            blueprint = uploadMissingWallpaper(blueprint, toConfig["apiHost"], toConfig["apiKey"], toConfig["enterprise"], progress)
             resp = createBlueprintForHost(
                 toConfig["apiHost"],
                 toConfig["apiKey"],
@@ -329,6 +332,35 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             raise e
 
 
+def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
+    if host and key and enterprise:
+        postEventToFrame(
+            EventUtility.myEVT_LOG, "Processing wallpapers in template..."
+        )
+        progress.Update(50, "Attempting to process wallpapers",)
+        if blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+            bgList = []
+            numTotal = len(blueprint["latest_revision"]["display_branding"]["wallpapers"])
+            num = 1
+            for bg in blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+                newBg = uploadWallpaper(
+                    host, key, enterprise, bg
+                )
+                if newBg:
+                    newBg["enterprise"] = enterprise
+                    newBg["wallpaper"] = newBg["id"]
+                    newBg["orientations"] = bg["orientations"]
+                    newBg["screen_types"] = bg["screen_types"]
+                    bgList.append(newBg)
+                    progress.Update(
+                        int((num / numTotal) * 75),
+                        "Attempting to process wallpapers",
+                    )
+            blueprint["latest_revision"]["display_branding"]["wallpapers"] = bgList
+    progress.Update(75, "Finsihed processing wallpapers")
+    return blueprint
+
+
 def uploadingMissingBlueprintApps(
     blueprint, downloadLinks, toConfig, fromConfig, progress
 ):
@@ -340,7 +372,7 @@ def uploadingMissingBlueprintApps(
         deleteFile(file)
         try:
             progress.Update(
-                int((num / numTotal) * 33),
+                int((num / numTotal) * 25),
                 "Attempting to download: %s" % detail["name"],
             )
             postEventToFrame(
@@ -378,7 +410,7 @@ def uploadingMissingBlueprintApps(
             )
             if type(res) != InlineResponse201:
                 progress.Update(
-                    int((num / numTotal) * 33), "Failed uploading %s" % detail["name"]
+                    int((num / numTotal) * 25), "Failed uploading %s" % detail["name"]
                 )
                 postEventToFrame(
                     EventUtility.myEVT_LOG,
@@ -533,7 +565,7 @@ def uploadMissingContentFiles(
             fileExtension = link.split("?")[0].split("/")[-1].split(".")[-1]
             file = "%s.%s" % (detail["name"], fileExtension)
             progress.Update(
-                int((num / numTotal) * 66),
+                int((num / numTotal) * 50),
                 "Attempting to download: %s" % detail["name"],
             )
             postEventToFrame(
@@ -574,7 +606,7 @@ def uploadMissingContentFiles(
             )
             if res and hasattr(res, "status_code") and res.status_code > 300:
                 progress.Update(
-                    int((num / numTotal) * 66), "Failed uploading %s" % detail["name"]
+                    int((num / numTotal) * 50), "Failed uploading %s" % detail["name"]
                 )
                 postEventToFrame(
                     EventUtility.myEVT_LOG,
@@ -592,7 +624,7 @@ def uploadMissingContentFiles(
             )
         num += 1
         deleteFile(file)
-    progress.Update(66, "Finished uploading missing content.")
+    progress.Update(50, "Finished uploading missing content.")
     postEventToFrame(
         EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Content"
     )
