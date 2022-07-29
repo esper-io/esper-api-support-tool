@@ -346,7 +346,6 @@ def uploadingMissingBlueprintApps(
                 EventUtility.myEVT_LOG,
                 "---> Cloning Blueprint: Downloading %s" % detail["name"],
             )
-            raise Exception("expire")
             download(link, file)
             ApiToolLog().LogApiRequestOccurrence(
                 "download", link, Globals.PRINT_API_LOGS
