@@ -100,6 +100,33 @@ def TakeAction(frame, input, action, isDevice=False):
             ApiToolLog().LogError(e)
 
 
+def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, results=None):
+    appResp = latestEvent = None
+    if getApps:
+        appResp = perform_web_requests(
+            (
+                getDeviceAppsApiUrl(deviceId, Globals.USE_ENTERPRISE_APP),
+                getHeader(),
+                "GET",
+                None,
+            )
+        )
+    if getLatestEvents:
+        latestEvent = perform_web_requests(
+            (
+                getLatestEventApiUrl(deviceId),
+                getHeader(),
+                "GET",
+                None,
+            )
+        )
+    if results is not None and type(results) is dict:
+        results[deviceId] = {
+            "app": appResp,
+            "event": latestEvent
+        }
+
+
 @api_tool_decorator()
 def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
@@ -147,35 +174,25 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
     if hasattr(api_response, "results") and len(api_response.results):
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response.results = list(filter(filterDeviceList, api_response.results))
-        for device in api_response.results:
-            if getApps:
-                Globals.THREAD_POOL.enqueue(
-                    perform_web_requests,
-                    (
-                        getDeviceAppsApiUrl(device.id, Globals.USE_ENTERPRISE_APP),
-                        getHeader(),
-                        "GET",
-                        None,
-                    ),
-                )
-        Globals.THREAD_POOL.join(tolerance=1)
-        appResp = Globals.THREAD_POOL.results()
 
-        for device in api_response.results:
-            if getLatestEvents:
-                Globals.THREAD_POOL.enqueue(
-                    perform_web_requests,
-                    (getLatestEventApiUrl(device.id), getHeader(), "GET", None),
-                )
-        Globals.THREAD_POOL.join()
-        latestResp = Globals.THREAD_POOL.results()
+        additionalInfo = {}
+        for device in api_response["results"]:
+            Globals.THREAD_POOL.enqueue(
+                getAdditionalDeviceInfo,
+                device.id,
+                getApps,
+                getLatestEvents,
+                additionalInfo
+            )
+        Globals.THREAD_POOL.join(tolerance=1)
 
         deviceList = {}
         indx = 0
         for device in api_response.results:
             deviceInfo = {}
-            appData = appResp[indx] if len(appResp) > indx else None
-            latestData = latestResp[indx] if len(latestResp) > indx else None
+            if device.id in additionalInfo:
+                latestData = additionalInfo[device.id]["event"]
+                appData = additionalInfo[device.id]["app"]
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
             populateDeviceInfoDictionaryComplieData(
@@ -198,35 +215,27 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             api_response["results"] = list(
                 filter(filterDeviceList, api_response["results"])
             )
-        for device in api_response["results"]:
-            if getApps:
-                Globals.THREAD_POOL.enqueue(
-                    perform_web_requests,
-                    (
-                        getDeviceAppsApiUrl(device["id"], Globals.USE_ENTERPRISE_APP),
-                        getHeader(),
-                        "GET",
-                        None,
-                    ),
-                )
-        Globals.THREAD_POOL.join(tolerance=1)
-        appResp = Globals.THREAD_POOL.results()
 
+        additionalInfo = {}
         for device in api_response["results"]:
-            if getLatestEvents:
-                Globals.THREAD_POOL.enqueue(
-                    perform_web_requests,
-                    (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
-                )
+            Globals.THREAD_POOL.enqueue(
+                getAdditionalDeviceInfo,
+                device["id"],
+                getApps,
+                getLatestEvents,
+                additionalInfo
+            )
         Globals.THREAD_POOL.join(tolerance=1)
-        latestResp = Globals.THREAD_POOL.results()
 
         deviceList = {}
         indx = 0
         for device in api_response["results"]:
             deviceInfo = {}
-            appData = appResp[indx] if len(appResp) > indx else None
-            latestData = latestResp[indx] if len(latestResp) > indx else None
+            latestData = appData = None
+            if device["id"] in additionalInfo:
+                latestData = additionalInfo[device["id"]]["event"]
+                appData = additionalInfo[device["id"]]["app"]
+
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
             populateDeviceInfoDictionaryComplieData(
