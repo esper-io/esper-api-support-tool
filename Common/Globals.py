@@ -217,6 +217,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
     "Esper Id": "id",
+    "Group Id": "groupId",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",

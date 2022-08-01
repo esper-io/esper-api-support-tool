@@ -562,7 +562,7 @@ def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
     return applist, json_resp
 
 
-def createAppList(json_resp):
+def createAppList(json_resp, obtainAppDictEntry=True):
     applist = []
     if json_resp and "results" in json_resp and len(json_resp["results"]):
         for app in json_resp["results"]:
@@ -577,7 +577,8 @@ def createAppList(json_resp):
             if "application" in app:
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                entry = getAppDictEntry(app, False)
+                if obtainAppDictEntry:
+                    entry = getAppDictEntry(app, False)
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["application"]["version"]["version_name"][
@@ -611,7 +612,8 @@ def createAppList(json_resp):
             else:
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                entry = getAppDictEntry(app, False)
+                if obtainAppDictEntry:
+                    entry = getAppDictEntry(app, False)
                 version = None
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (

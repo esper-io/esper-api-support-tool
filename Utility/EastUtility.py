@@ -100,6 +100,41 @@ def TakeAction(frame, input, action, isDevice=False):
             ApiToolLog().LogError(e)
 
 
+def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, results=None):
+    appResp = latestEvent = None
+    if getApps:
+        appResp = perform_web_requests(
+            (
+                getDeviceAppsApiUrl(deviceId, Globals.USE_ENTERPRISE_APP),
+                getHeader(),
+                "GET",
+                None,
+            )
+        )
+    if getLatestEvents:
+        latestEvent = perform_web_requests(
+            (
+                getLatestEventApiUrl(deviceId),
+                getHeader(),
+                "GET",
+                None,
+            )
+        )
+    if results is not None and type(results) is dict:
+        results[deviceId] = {
+            "app": appResp,
+            "event": latestEvent
+        }
+
+
+def populateDeviceList(device, deviceInfo, appData, latestData, deviceList, indx):
+    populateDeviceInfoDictionaryComplieData(
+        device, deviceInfo, appData, latestData
+    )
+    deviceInfo["num"] = indx
+    deviceList[indx] = [device, deviceInfo]
+
+
 @api_tool_decorator()
 def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
@@ -178,12 +213,18 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             latestData = latestResp[indx] if len(latestResp) > indx else None
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
-            populateDeviceInfoDictionaryComplieData(
-                device, deviceInfo, appData, latestData
+            Globals.THREAD_POOL.enqueue(
+                populateDeviceList,
+                device,
+                deviceInfo,
+                appData,
+                latestData,
+                deviceList,
+                indx
             )
-            deviceInfo["num"] = indx
-            deviceList[indx] = [device, deviceInfo]
             indx += 1
+
+        Globals.THREAD_POOL.join(tolerance=1)
 
         postEventToFrame(
             eventUtil.myEVT_FETCH,
@@ -229,12 +270,19 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             latestData = latestResp[indx] if len(latestResp) > indx else None
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
-            populateDeviceInfoDictionaryComplieData(
-                device, deviceInfo, appData, latestData
+            populateDeviceList
+            Globals.THREAD_POOL.enqueue(
+                populateDeviceList,
+                device,
+                deviceInfo,
+                appData,
+                latestData,
+                deviceList,
+                indx
             )
-            deviceInfo["num"] = indx
-            deviceList[indx] = [device, deviceInfo]
             indx += 1
+
+        Globals.THREAD_POOL.join(tolerance=1)
 
         postEventToFrame(
             eventUtil.myEVT_FETCH,
@@ -263,18 +311,16 @@ def filterDeviceList(device):
 
 def processInstallDevices(deviceList):
     newDeviceList = []
-    splitResults = splitListIntoChunks(deviceList)
-    for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(processInstallDevicesHelper, chunk, newDeviceList)
-    Globals.THREAD_POOL.join()
+    for device in deviceList:
+        Globals.THREAD_POOL.enqueue(processInstallDevicesHelper, device, newDeviceList, Globals.MAX_THREAD_COUNT)
+    Globals.THREAD_POOL.join(tolerance=1)
     processCollectionDevices({"results": newDeviceList})
 
 
-def processInstallDevicesHelper(chunk, newDeviceList):
-    for device in chunk:
-        id = device["id"]
-        deviceListing = getDeviceById(id, tolerance=1)
-        newDeviceList.append(deviceListing)
+def processInstallDevicesHelper(device, newDeviceList, tolerance=1):
+    id = device["id"]
+    deviceListing = getDeviceById(id, tolerance=tolerance)
+    newDeviceList.append(deviceListing)
 
 
 @api_tool_decorator()
@@ -442,6 +488,7 @@ def populateDeviceInfoDictionaryComplieData(
                 group = None
                 groupName = None
                 groupId = groupURL.split("/")[-2]
+                deviceInfo["groupId"] = groupId
                 if groupId in Globals.knownGroups:
                     group = Globals.knownGroups[groupId]
                 else:
@@ -577,7 +624,7 @@ def populateDeviceInfoDictionaryComplieData(
         ):
             device["tags"] = []
 
-    apps = apiCalls.createAppList(appData) if appData else []
+    apps = apiCalls.createAppList(appData, obtainAppDictEntry=False) if appData else []
     json = appData if appData else ""
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json
@@ -782,6 +829,7 @@ def populateDeviceInfoDictionary(
                 group = None
                 groupName = None
                 groupId = groupURL.split("/")[-2]
+                deviceInfo["groupId"] = groupId
                 if groupId in Globals.knownGroups:
                     group = Globals.knownGroups[groupId]
                 else:
