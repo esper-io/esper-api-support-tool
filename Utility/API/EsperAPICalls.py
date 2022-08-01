@@ -630,7 +630,7 @@ def createAppList(json_resp, obtainAppDictEntry=True):
                 applist.append(
                     constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )
-            if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
+            if entry is not None and entry not in Globals.frame.sidePanel.selectedDeviceApps and (
                 "isValid" in entry and entry["isValid"]
             ):
                 Globals.frame.sidePanel.selectedDeviceApps.append(entry)
