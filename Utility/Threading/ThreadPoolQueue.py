@@ -66,6 +66,7 @@ class Pool:
         if current_thread() not in self.threads and tolerance == 0:
             self.queue.join()
         else:
+            time.sleep(1)
             startTime = time.perf_counter()
             while True:
                 if (
