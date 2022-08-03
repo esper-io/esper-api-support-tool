@@ -327,7 +327,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         if type(template) == list:
             template = template[0]
         if template:
-            self.chosenTemplate = self.getTemplate(template)
+            self.chosenTemplate = self.getTemplateDetails(template)
             self.text_ctrl_1.Clear()
             if self.chosenTemplate:
                 self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
@@ -365,7 +365,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         return tempList["results"]
 
     @api_tool_decorator()
-    def getTemplate(self, template):
+    def getTemplateDetails(self, template):
         util = templateUtil.EsperTemplateUtil()
         dataSrc = self.configMenuOpt[
             self.combo_box_3.GetString(self.combo_box_3.GetSelection())
