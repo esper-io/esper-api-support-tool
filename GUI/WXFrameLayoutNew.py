@@ -1533,7 +1533,8 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             break
-            postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
+            # postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
+            self.onComplete((True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
