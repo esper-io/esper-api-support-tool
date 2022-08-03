@@ -505,6 +505,7 @@ class NewFrameLayout(wx.Frame):
                 if item and isinstance(item, wx.Dialog):
                     item.Destroy()
                 item.Close()
+        Globals.THREAD_POOL.abort()
         wx.Exit()
 
     @api_tool_decorator()
@@ -1305,10 +1306,10 @@ class NewFrameLayout(wx.Frame):
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
-                threads = []
+                # threads = []
                 if Globals.HAS_INTERNET:
-                    groupThread = self.PopulateGroups()
-                    appThread = self.PopulateApps()
+                    self.PopulateGroups()
+                    self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1316,10 +1317,10 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    threads = [groupThread, appThread, blueprints]
+                    # threads = [groupThread, appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
-                    threads,
+                    Globals.THREAD_POOL.threads,
                     0,
                     tolerance=1,
                 )
@@ -3041,7 +3042,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onCloneBP(self, event):
-        with BlueprintsDialog(self.sidePanel.configChoice) as dlg:
+        with BlueprintsDialog(self.sidePanel.configChoice, parent=self) as dlg:
             result = dlg.ShowModal()
             if result == wx.ID_OK:
                 prepareBlueprintClone(

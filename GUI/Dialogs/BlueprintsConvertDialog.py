@@ -7,7 +7,7 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
-from GUI.PromptingComboBox import PromptingComboBox
+
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
 )
@@ -19,7 +19,7 @@ from Utility.Resource import (
 
 
 class BlueprintsConvertDialog(wx.Dialog):
-    def __init__(self, configMenuOpt, *args, **kwds):
+    def __init__(self, configMenuOpt, parent=None, *args, **kwds):
         sizeTuple = (600, 400)
         super(BlueprintsConvertDialog, self).__init__(
             None,
@@ -29,8 +29,8 @@ class BlueprintsConvertDialog(wx.Dialog):
             | wx.MAXIMIZE_BOX
             | wx.MINIMIZE_BOX
             | wx.RESIZE_BORDER
-            | wx.STAY_ON_TOP,
         )
+        self.parent = parent
         self.SetSize(sizeTuple)
         self.SetMinSize(sizeTuple)
         self.SetTitle("Convert Template to Blueprint")
@@ -80,8 +80,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         )
         sizer_5.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.combo_box_3 = PromptingComboBox(
-            self.panel_1, "", choices=templateSrc, style=wx.CB_DROPDOWN | wx.CB_SORT
+        self.combo_box_3 = wx.ComboBox(
+            self.panel_1, value="", choices=templateSrc, style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY
         )
         sizer_5.Add(self.combo_box_3, 0, wx.EXPAND, 0)
 
@@ -104,8 +104,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         )
         sizer_6.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.combo_box_4 = PromptingComboBox(
-            self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
+        self.combo_box_4 = wx.ComboBox(
+            self.panel_1, value="", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY
         )
         self.combo_box_4.Enable(False)
         sizer_6.Add(self.combo_box_4, 0, wx.EXPAND, 0)
@@ -154,8 +154,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         )
         sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.combo_box_1 = PromptingComboBox(
-            self.panel_1, "", choices=blueprintDest, style=wx.CB_DROPDOWN | wx.CB_SORT
+        self.combo_box_1 = wx.ComboBox(
+            self.panel_1, value="", choices=blueprintDest, style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY
         )
         sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
 
@@ -175,8 +175,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         )
         sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
-        self.combo_box_2 = PromptingComboBox(
-            self.panel_1, "", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT
+        self.combo_box_2 = wx.ComboBox(
+            self.panel_1, value="", choices=[], style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY
         )
         self.combo_box_2.Enable(False)
         sizer_4.Add(self.combo_box_2, 0, wx.EXPAND, 0)
