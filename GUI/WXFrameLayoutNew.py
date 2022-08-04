@@ -435,6 +435,7 @@ class NewFrameLayout(wx.Frame):
                 with open(self.authPath, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
                     writer.writerow(csvRow)
+                Globals.csv_auth_path = self.authPath
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
@@ -1163,9 +1164,9 @@ class NewFrameLayout(wx.Frame):
                 if indx > len(self.menubar.configMenuOptions):
                     indx = len(self.menubar.configMenuOptions) - 1
                     Globals.LAST_OPENED_ENDPOINT = indx
-            defaultConfigItem = self.menubar.configMenuOptions[indx]
-            defaultConfigItem.Check(True)
-            self.loadConfiguartion(defaultConfigItem)
+                    defaultConfigItem = self.menubar.configMenuOptions[indx]
+                    defaultConfigItem.Check(True)
+                    self.loadConfiguartion(defaultConfigItem)
         else:
             self.Logging(
                 "---> "
