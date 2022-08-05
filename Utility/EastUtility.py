@@ -121,16 +121,11 @@ def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, results=None):
             )
         )
     if results is not None and type(results) is dict:
-        results[deviceId] = {
-            "app": appResp,
-            "event": latestEvent
-        }
+        results[deviceId] = {"app": appResp, "event": latestEvent}
 
 
 def populateDeviceList(device, deviceInfo, appData, latestData, deviceList, indx):
-    populateDeviceInfoDictionaryComplieData(
-        device, deviceInfo, appData, latestData
-    )
+    populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestData)
     deviceInfo["num"] = indx
     deviceList[indx] = [device, deviceInfo]
 
@@ -190,7 +185,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 device.id,
                 getApps,
                 getLatestEvents,
-                additionalInfo
+                additionalInfo,
             )
         Globals.THREAD_POOL.join(tolerance=1)
 
@@ -210,7 +205,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 appData,
                 latestData,
                 deviceList,
-                indx
+                indx,
             )
             indx += 1
 
@@ -237,7 +232,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 device["id"],
                 getApps,
                 getLatestEvents,
-                additionalInfo
+                additionalInfo,
             )
         Globals.THREAD_POOL.join(tolerance=1)
 
@@ -260,7 +255,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 appData,
                 latestData,
                 deviceList,
-                indx
+                indx,
             )
             indx += 1
 
@@ -294,7 +289,9 @@ def filterDeviceList(device):
 def processInstallDevices(deviceList):
     newDeviceList = []
     for device in deviceList:
-        Globals.THREAD_POOL.enqueue(processInstallDevicesHelper, device, newDeviceList, Globals.MAX_THREAD_COUNT)
+        Globals.THREAD_POOL.enqueue(
+            processInstallDevicesHelper, device, newDeviceList, Globals.MAX_THREAD_COUNT
+        )
     Globals.THREAD_POOL.join(tolerance=1)
     processCollectionDevices({"results": newDeviceList})
 

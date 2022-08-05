@@ -162,9 +162,7 @@ class EsperTemplateUtil:
             if templateFound["template"]["brand"]:
                 bgList = []
                 for bg in templateFound["template"]["brand"]["wallpapers"]:
-                    newBg = uploadWallpaper(
-                        self.toApi, self.toKey, self.toEntId, bg
-                    )
+                    newBg = uploadWallpaper(self.toApi, self.toKey, self.toEntId, bg)
                     if newBg:
                         newBg["enterprise"] = self.toEntId
                         newBg["wallpaper"] = newBg["id"]

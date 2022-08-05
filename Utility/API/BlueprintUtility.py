@@ -282,7 +282,13 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                 blueprint, downloadContentLinks, toConfig, fromConfig, progress
             )
             # TODO: Handle Wallpaper transfer
-            blueprint = uploadMissingWallpaper(blueprint, toConfig["apiHost"], toConfig["apiKey"], toConfig["enterprise"], progress)
+            blueprint = uploadMissingWallpaper(
+                blueprint,
+                toConfig["apiHost"],
+                toConfig["apiKey"],
+                toConfig["enterprise"],
+                progress,
+            )
             resp = createBlueprintForHost(
                 toConfig["apiHost"],
                 toConfig["apiKey"],
@@ -334,18 +340,19 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
 
 def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
     if host and key and enterprise:
-        postEventToFrame(
-            EventUtility.myEVT_LOG, "Processing wallpapers in template..."
+        postEventToFrame(EventUtility.myEVT_LOG, "Processing wallpapers in template...")
+        progress.Update(
+            50,
+            "Attempting to process wallpapers",
         )
-        progress.Update(50, "Attempting to process wallpapers",)
         if blueprint["latest_revision"]["display_branding"]["wallpapers"]:
             bgList = []
-            numTotal = len(blueprint["latest_revision"]["display_branding"]["wallpapers"])
+            numTotal = len(
+                blueprint["latest_revision"]["display_branding"]["wallpapers"]
+            )
             num = 1
             for bg in blueprint["latest_revision"]["display_branding"]["wallpapers"]:
-                newBg = uploadWallpaper(
-                    host, key, enterprise, bg
-                )
+                newBg = uploadWallpaper(host, key, enterprise, bg)
                 if newBg:
                     newBg["enterprise"] = enterprise
                     newBg["wallpaper"] = newBg["id"]
@@ -657,11 +664,7 @@ def convertTemplateToBlueprint(template):
             "sound": {},
             "display_branding": {},
             "application": {},
-            "content": {
-                "files": [],
-                "locked": False,
-                "section_type": "Independent"
-            },
+            "content": {"files": [], "locked": False, "section_type": "Independent"},
             "settings_app": {},
             "security": {},
             "google_services": {},
@@ -671,17 +674,25 @@ def convertTemplateToBlueprint(template):
         },
     }
     blueprint["latest_revision"]["connectivity"] = {
-        "incoming_numbers": None if "phonePolicy" not in templateSection and templateSection["phonePolicy"] else templateSection["phonePolicy"]["incomingNumbers"],
-        "outgoing_numbers": None if "phonePolicy" not in templateSection and templateSection["phonePolicy"] else templateSection["phonePolicy"]["outgoingNumbers"],
-        "incoming_numbers_with_tags": None if "phonePolicy" not in templateSection and templateSection["phonePolicy"] else templateSection["phonePolicy"]["incomingNumbersWithTags"],
-        "outgoing_numbers_with_tags": None if "phonePolicy" not in templateSection and templateSection["phonePolicy"] else templateSection["phonePolicy"]["outgoingNumbersWithTags"],
+        "incoming_numbers": None
+        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        else templateSection["phonePolicy"]["incomingNumbers"],
+        "outgoing_numbers": None
+        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        else templateSection["phonePolicy"]["outgoingNumbers"],
+        "incoming_numbers_with_tags": None
+        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        else templateSection["phonePolicy"]["incomingNumbersWithTags"],
+        "outgoing_numbers_with_tags": None
+        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        else templateSection["phonePolicy"]["outgoingNumbersWithTags"],
         "wifi_settings": templateSection["settings"]["wifiSettings"],
         "locked": False,
         "section_type": "Independent",
         "sms_disabled": templateSection["devicePolicy"]["smsDisabled"],
         "enable_bluetooth": templateSection["devicePolicy"]["enableBluetooth"],
         "nfc_beam_disabled": templateSection["devicePolicy"]["nfcBeamDisabled"],
-        "wifi_state": templateSection["settings"]["wifiState"]
+        "wifi_state": templateSection["settings"]["wifiState"],
     }
 
     blueprint["latest_revision"]["sound"] = {
@@ -690,17 +701,19 @@ def convertTemplateToBlueprint(template):
         "music_volume": templateSection["settings"]["musicVolume"],
         "notification_volume": templateSection["settings"]["notificationVolume"],
         "locked": False,
-        "section_type": "Independent"
+        "section_type": "Independent",
     }
 
     blueprint["latest_revision"]["display_branding"] = {
         "rotation_state": templateSection["settings"]["rotationState"],
-        "wallpapers": None if "brand" not in templateSection and not templateSection["brand"] else templateSection["brand"]["wallpapers"],  # TODO
+        "wallpapers": None
+        if "brand" not in templateSection and not templateSection["brand"]
+        else templateSection["brand"]["wallpapers"],  # TODO
         "locked": False,
         "section_type": "Independent",
         "screenshot_disabled": templateSection["devicePolicy"]["screenshotDisabled"],
         "status_bar_disabled": templateSection["devicePolicy"]["statusBarDisabled"],
-        "brightness_scale": templateSection["settings"]["brightnessScale"]
+        "brightness_scale": templateSection["settings"]["brightnessScale"],
     }
 
     blueprint["latest_revision"]["application"] = {
@@ -712,92 +725,156 @@ def convertTemplateToBlueprint(template):
         "locked": False,
         "section_type": "Independent",
         "launcher_less_dpc": templateSection["launcherLessDpc"],
-        "disable_local_app_install": templateSection["devicePolicy"]["disableLocalAppInstall"],
-        "app_uninstall_disabled": templateSection["devicePolicy"]["appUninstallDisabled"],
-        "start_on_boot": templateSection["application"]["startOnBoot"]
+        "disable_local_app_install": templateSection["devicePolicy"][
+            "disableLocalAppInstall"
+        ],
+        "app_uninstall_disabled": templateSection["devicePolicy"][
+            "appUninstallDisabled"
+        ],
+        "start_on_boot": templateSection["application"]["startOnBoot"],
     }
 
     blueprint["latest_revision"]["settings_app"] = {
         "settings_access_level": templateSection["devicePolicy"]["settingsAccessLevel"],
         "esper_settings_app": {
             "esper_settings_app_policy": {
-                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"]["flashlight"],
+                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "flashlight"
+                ],
                 "wifi": templateSection["devicePolicy"]["esperSettingsApp"]["wifi"],
-                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"]["autoRotation"],
+                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "autoRotation"
+                ],
                 "reboot": templateSection["devicePolicy"]["esperSettingsApp"]["reboot"],
-                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"]["clearAppData"],
-                "kiosk_app_selection": templateSection["devicePolicy"]["esperSettingsApp"]["kioskAppSelection"],
-                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"]["esperBranding"],
-                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"]["factoryReset"],
+                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "clearAppData"
+                ],
+                "kiosk_app_selection": templateSection["devicePolicy"][
+                    "esperSettingsApp"
+                ]["kioskAppSelection"],
+                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperBranding"
+                ],
+                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "factoryReset"
+                ],
                 "about": templateSection["devicePolicy"]["esperSettingsApp"]["about"],
-                "display": templateSection["devicePolicy"]["esperSettingsApp"]["display"],
+                "display": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "display"
+                ],
                 "sound": templateSection["devicePolicy"]["esperSettingsApp"]["sound"],
-                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"]["keyboard"],
-                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"]["inputSelection"],
-                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"]["accessibility"],
-                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"]["mobileData"],
-                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"]["bluetooth"],
-                "language": templateSection["devicePolicy"]["esperSettingsApp"]["language"],
-                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"]["timeAndDate"],
-                "storage": templateSection["devicePolicy"]["esperSettingsApp"]["storage"],
+                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "keyboard"
+                ],
+                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "inputSelection"
+                ],
+                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "accessibility"
+                ],
+                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "mobileData"
+                ],
+                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "bluetooth"
+                ],
+                "language": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "language"
+                ],
+                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "timeAndDate"
+                ],
+                "storage": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "storage"
+                ],
             },
-            "only_dock_accessible": templateSection["devicePolicy"]["esperSettingsApp"]["onlyDockAccessible"],
-            "admin_mode_password": templateSection["devicePolicy"]["esperSettingsApp"]["adminModePassword"]
+            "only_dock_accessible": templateSection["devicePolicy"]["esperSettingsApp"][
+                "onlyDockAccessible"
+            ],
+            "admin_mode_password": templateSection["devicePolicy"]["esperSettingsApp"][
+                "adminModePassword"
+            ],
         },
         "locked": False,
         "section_type": "Independent",
-        "enable_android_settings_app": templateSection["devicePolicy"]["enableAndroidSettingsApp"],
-        "config_json": templateSection["customSettingsConfig"] if "customSettingsConfig" in templateSection else {}
+        "enable_android_settings_app": templateSection["devicePolicy"][
+            "enableAndroidSettingsApp"
+        ],
+        "config_json": templateSection["customSettingsConfig"]
+        if "customSettingsConfig" in templateSection
+        else {},
     }
 
     blueprint["latest_revision"]["security"] = {
-        "password_quality": templateSection["securityPolicy"]["devicePasswordPolicy"]["passwordQuality"],
-        "minimum_password_length": templateSection["securityPolicy"]["devicePasswordPolicy"]["minimumPasswordLength"],
+        "password_quality": templateSection["securityPolicy"]["devicePasswordPolicy"][
+            "passwordQuality"
+        ],
+        "minimum_password_length": templateSection["securityPolicy"][
+            "devicePasswordPolicy"
+        ]["minimumPasswordLength"],
         "locked": False,
         "section_type": "Independent",
         "adb_disabled": templateSection["settings"]["adbDisabled"],
         "screen_off_timeout": templateSection["settings"]["screenOffTimeout"],
-        "factory_reset_disabled": templateSection["devicePolicy"]["factoryResetDisabled"],
+        "factory_reset_disabled": templateSection["devicePolicy"][
+            "factoryResetDisabled"
+        ],
         "keyguard_disabled": templateSection["devicePolicy"]["keyguardDisabled"],
-        "safe_boot_disabled": templateSection["devicePolicy"]["safeBootDisabled"]
+        "safe_boot_disabled": templateSection["devicePolicy"]["safeBootDisabled"],
     }
 
     blueprint["latest_revision"]["google_services"] = {
-        "max_account": 0 if "googleAccountPermission" not in templateSection["devicePolicy"] else templateSection["devicePolicy"]["googleAccountPermission"]["maxAccount"],
+        "max_account": 0
+        if "googleAccountPermission" not in templateSection["devicePolicy"]
+        else templateSection["devicePolicy"]["googleAccountPermission"]["maxAccount"],
         "emails": None,
         "domains": None,
         "frp_googles": templateSection["securityPolicy"]["frpGoogles"],
         "locked": False,
         "section_type": "Independent",
         "disable_play_store": templateSection["devicePolicy"]["disablePlayStore"],
-        "managed_google_play_disabled": templateSection["application"]["managedGooglePlayDisabled"],
-        "google_assistant_disabled": templateSection["devicePolicy"]["googleAssistantDisabled"]
+        "managed_google_play_disabled": templateSection["application"][
+            "managedGooglePlayDisabled"
+        ],
+        "google_assistant_disabled": templateSection["devicePolicy"][
+            "googleAssistantDisabled"
+        ],
     }
 
     blueprint["latest_revision"]["system_updates"] = {
         "type": templateSection["securityPolicy"]["deviceUpdatePolicy"]["type"],
         "locked": False,
         "section_type": "Independent",
-        "maintenance_start": templateSection["securityPolicy"]["deviceUpdatePolicy"]["maintenanceStart"],
-        "maintenance_end": templateSection["securityPolicy"]["deviceUpdatePolicy"]["maintenanceEnd"]
+        "maintenance_start": templateSection["securityPolicy"]["deviceUpdatePolicy"][
+            "maintenanceStart"
+        ],
+        "maintenance_end": templateSection["securityPolicy"]["deviceUpdatePolicy"][
+            "maintenanceEnd"
+        ],
     }
 
     blueprint["latest_revision"]["date_time"] = {
         "locked": False,
         "section_type": "Independent",
-        "date_time_config_disabled": templateSection["devicePolicy"]["dateTimeConfigDisabled"],
+        "date_time_config_disabled": templateSection["devicePolicy"][
+            "dateTimeConfigDisabled"
+        ],
         "timezone_string": templateSection["settings"]["timezoneString"],
-        "device_locale": templateSection["settings"]["deviceLocale"]
+        "device_locale": templateSection["settings"]["deviceLocale"],
     }
 
     blueprint["latest_revision"]["hardware_settings"] = {
         "gps_state": templateSection["settings"]["gpsState"],
         "locked": False,
         "section_type": "Independent",
-        "usb_file_transfer_disabled": templateSection["devicePolicy"]["usbFileTransferDisabled"],
+        "usb_file_transfer_disabled": templateSection["devicePolicy"][
+            "usbFileTransferDisabled"
+        ],
         "tethering_disabled": templateSection["devicePolicy"]["tetheringDisabled"],
         "camera_disabled": templateSection["devicePolicy"]["cameraDisabled"],
-        "usb_connectivity_disabled": templateSection["devicePolicy"]["usbConnectivityDisabled"]
+        "usb_connectivity_disabled": templateSection["devicePolicy"][
+            "usbConnectivityDisabled"
+        ],
     }
 
     return blueprint
