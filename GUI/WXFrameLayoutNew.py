@@ -1164,9 +1164,10 @@ class NewFrameLayout(wx.Frame):
                 if indx > len(self.menubar.configMenuOptions):
                     indx = len(self.menubar.configMenuOptions) - 1
                     Globals.LAST_OPENED_ENDPOINT = indx
-                    defaultConfigItem = self.menubar.configMenuOptions[indx]
-                    defaultConfigItem.Check(True)
-                    self.loadConfiguartion(defaultConfigItem)
+            if indx >= 0:
+                defaultConfigItem = self.menubar.configMenuOptions[indx]
+                defaultConfigItem.Check(True)
+                self.loadConfiguartion(defaultConfigItem)
         else:
             self.Logging(
                 "---> "
