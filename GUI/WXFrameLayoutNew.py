@@ -5,7 +5,11 @@ from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from Utility.API.BlueprintUtility import checkBlueprintEnabled, prepareBlueprintClone, prepareBlueprintConversion
+from Utility.API.BlueprintUtility import (
+    checkBlueprintEnabled,
+    prepareBlueprintClone,
+    prepareBlueprintConversion,
+)
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.UserUtility import getAllUsers
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
@@ -1308,10 +1312,10 @@ class NewFrameLayout(wx.Frame):
                 self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
-                # threads = []
+                threads = []
                 if Globals.HAS_INTERNET:
-                    self.PopulateGroups()
-                    self.PopulateApps()
+                    groupThread = self.PopulateGroups()
+                    appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1319,10 +1323,10 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    # threads = [groupThread, appThread, blueprints]
+                    threads = [groupThread, appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
-                    Globals.THREAD_POOL.threads,
+                    threads,
                     0,
                     tolerance=1,
                 )
@@ -1445,29 +1449,15 @@ class NewFrameLayout(wx.Frame):
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
             if self.WINDOWS:
-                if self.gridPanel.grid_1.IsFrozen():
-                    self.gridPanel.grid_1.Thaw()
-                if self.gridPanel.grid_2.IsFrozen():
-                    self.gridPanel.grid_2.Thaw()
-                if self.gridPanel.grid_3.IsFrozen():
-                    self.gridPanel.grid_3.Thaw()
+                self.gridPanel.thawGridsIfFrozen()
                 self.gridPanel.enableGridProperties()
                 self.gridPanel.autoSizeGridsColumns()
                 self.sidePanel.groupChoice.Enable(True)
                 self.sidePanel.deviceChoice.Enable(True)
             else:
-                if self.gridPanel.grid_1.IsFrozen():
-                    postEventToFrame(
-                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_1.Thaw
-                    )
-                if self.gridPanel.grid_2.IsFrozen():
-                    postEventToFrame(
-                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_2.Thaw
-                    )
-                if self.gridPanel.grid_3.IsFrozen():
-                    postEventToFrame(
-                        eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.grid_3.Thaw
-                    )
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.thawGridsIfFrozen
+                )
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
                     self.gridPanel.enableGridProperties,
@@ -2177,6 +2167,8 @@ class NewFrameLayout(wx.Frame):
             entId = evtValue[1]
             deviceList = evtValue[2]
 
+            # chunks = splitListIntoChunks(list(deviceList.values()))
+            # for chunk in chunks:
             Globals.THREAD_POOL.enqueue(
                 self.processFetch, action, entId, deviceList, True, len(deviceList) * 3
             )
@@ -2213,23 +2205,54 @@ class NewFrameLayout(wx.Frame):
             else:
                 deviceId = device["id"]
 
-            if action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+            # Populate Network sheet
+            if (
+                action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                else:
+                    # construct and add info to grid contents
+                    # self.gridPanel.constructNetworkGridContent(device, deviceInfo)
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructNetworkGridContent, device, deviceInfo
+                    )
+            # Populate Device sheet
+            if (
+                action == GeneralActions.GENERATE_DEVICE_REPORT.value
+                or action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
                     self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                else:
+                    # construct and add info to grid contents
+                    # self.gridPanel.constructDeviceGridContent(deviceInfo)
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructDeviceGridContent, deviceInfo
+                    )
+            # Populate App sheet
+            if (
+                action == GeneralActions.GENERATE_APP_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
                     self.gridPanel.populateAppGrid(
+                        device, deviceInfo, deviceInfo["appObj"]
+                    )
+                else:
+                    # self.gridPanel.constructAppGridContent(
+                    #     device, deviceInfo, deviceInfo["appObj"]
+                    # )
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructAppGridContent,
                         device,
                         deviceInfo,
                         deviceInfo["appObj"],
                     )
-                else:
-                    # construct and add info to grid contents
-                    self.gridPanel.constructDeviceGridContent(deviceInfo)
-                    self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-                    self.gridPanel.constructAppGridContent(
-                        device, deviceInfo, deviceInfo["appObj"]
-                    )
-            elif action == GeneralActions.SET_KIOSK.value:
+
+            if action == GeneralActions.SET_KIOSK.value:
                 Globals.THREAD_POOL.enqueue(setKiosk, self, device, deviceInfo)
             elif action == GeneralActions.SET_MULTI.value:
                 Globals.THREAD_POOL.enqueue(setMulti, self, device, deviceInfo)
@@ -2247,29 +2270,6 @@ class NewFrameLayout(wx.Frame):
                 )
             elif action == GeneralActions.UNINSTALL_APP.value:
                 Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceId)
-            elif action == GeneralActions.GENERATE_APP_REPORT.value:
-                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.populateAppGrid(
-                        device, deviceInfo, deviceInfo["appObj"]
-                    )
-                else:
-                    self.gridPanel.constructAppGridContent(
-                        device, deviceInfo, deviceInfo["appObj"]
-                    )
-            elif action == GeneralActions.GENERATE_INFO_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                else:
-                    # construct and add info to grid contents
-                    self.gridPanel.constructDeviceGridContent(deviceInfo)
-                    self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-            elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
-                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                else:
-                    # construct and add info to grid contents
-                    self.gridPanel.constructDeviceGridContent(deviceInfo)
 
             value = int(num / maxGauge * 100)
             if updateGauge and value <= 99:
@@ -2362,12 +2362,7 @@ class NewFrameLayout(wx.Frame):
             self.Thaw()
         self.gridPanel.button_2.Enable(self.gridArrowState["next"])
         self.gridPanel.button_1.Enable(self.gridArrowState["prev"])
-        if self.gridPanel.grid_1.IsFrozen():
-            self.gridPanel.grid_1.Thaw()
-        if self.gridPanel.grid_2.IsFrozen():
-            self.gridPanel.grid_2.Thaw()
-        if self.gridPanel.grid_3.IsFrozen():
-            self.gridPanel.grid_3.Thaw()
+        self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
         self.gridPanel.autoSizeGridsColumns()

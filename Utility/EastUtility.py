@@ -279,7 +279,7 @@ def filterDeviceList(device):
     deviceStatus = DeviceState.DISABLED.value
     if hasattr(device, "status"):
         deviceStatus = device.status
-    else:
+    elif type(device) == dict and "status" in device:
         deviceStatus = device["status"]
     if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
         return False
@@ -471,10 +471,16 @@ def populateDeviceInfoDictionaryComplieData(
                 if groupId in Globals.knownGroups:
                     group = Globals.knownGroups[groupId]
                 else:
-                    groupName = fetchGroupName(groupURL)
+                    groupName = fetchGroupName(groupURL, True)
+                    Globals.knownGroups[groupId] = groupName
+                    groupName = groupName["name"]
 
                 if type(group) == list and len(group) == 1:
                     groupName = group[0]
+                elif Globals.SHOW_GROUP_PATH and type(group) == dict:
+                    groupName = group["path"]
+                elif type(group) == dict:
+                    groupName = group["name"]
                 elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
                     groupName = group.path
                 elif hasattr(group, "name"):
@@ -482,8 +488,10 @@ def populateDeviceInfoDictionaryComplieData(
 
                 if groupName:
                     groupNames.append(groupName)
-                if groupId not in Globals.knownGroups:
-                    Globals.knownGroups[groupId] = groupName
+                # if groupId not in Globals.knownGroups:
+                #     Globals.knownGroups[groupId] = groupName
+        elif type(deviceGroups) == dict and Globals.SHOW_GROUP_PATH and "name" in deviceGroups:
+            groupNames.append(deviceGroups["path"])
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:
@@ -812,10 +820,16 @@ def populateDeviceInfoDictionary(
                 if groupId in Globals.knownGroups:
                     group = Globals.knownGroups[groupId]
                 else:
-                    groupName = fetchGroupName(groupURL)
+                    groupName = fetchGroupName(groupURL, True)
+                    Globals.knownGroups[groupId] = groupName
+                    groupName = groupName["name"]
 
                 if type(group) == list and len(group) == 1:
                     groupName = group[0]
+                elif Globals.SHOW_GROUP_PATH and type(group) == dict:
+                    groupName = group["path"]
+                elif type(group) == dict:
+                    groupName = group["name"]
                 elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
                     groupName = group.path
                 elif hasattr(group, "name"):
@@ -823,8 +837,10 @@ def populateDeviceInfoDictionary(
 
                 if groupName:
                     groupNames.append(groupName)
-                if groupId not in Globals.knownGroups:
-                    Globals.knownGroups[groupId] = groupName
+                # if groupId not in Globals.knownGroups:
+                #     Globals.knownGroups[groupId] = groupName
+        elif type(deviceGroups) == dict and Globals.SHOW_GROUP_PATH and "name" in deviceGroups:
+            groupNames.append(deviceGroups["path"])
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
         if len(groupNames) == 1:

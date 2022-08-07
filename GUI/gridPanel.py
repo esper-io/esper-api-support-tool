@@ -1623,3 +1623,11 @@ class GridPanel(wx.Panel):
         if grid.IsFrozen():
             grid.Thaw()
         Globals.frame.setCursorDefault()
+
+    def thawGridsIfFrozen(self):
+        if self.grid_1.IsFrozen():
+            self.grid_1.Thaw()
+        if self.grid_2.IsFrozen():
+            self.grid_2.Thaw()
+        if self.grid_3.IsFrozen():
+            self.grid_3.Thaw()
