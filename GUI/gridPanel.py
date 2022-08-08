@@ -815,7 +815,7 @@ class GridPanel(wx.Panel):
         elif value == "Wipe In-Progress":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.purple.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
-        elif value == "Unkown":
+        elif value == "Unknown":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
         releaseLocks([Globals.grid1_status_lock])
