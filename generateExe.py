@@ -179,3 +179,9 @@ if __name__ == "__main__":
     for item in os.listdir():
         if item.endswith(".spec"):
             os.remove(item)
+
+    if os.path.exists("build"):
+        try:
+            shutil.rmtree("build")
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
