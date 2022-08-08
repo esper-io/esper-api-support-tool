@@ -29,7 +29,7 @@ class IssueTracker:
             return resp
 
     def getAccessToken(self):
-        filePath = "Utility/Logging/token.json"
+        filePath = "token.json"
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
             base_path = sys._MEIPASS
