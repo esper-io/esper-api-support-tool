@@ -736,7 +736,8 @@ class GridPanel(wx.Panel):
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
             self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
-            self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+            if attribute == "Status":
+                self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
             self.setAlteredCellColor(
                 self.grid_1,
                 device_info,
@@ -1609,7 +1610,8 @@ class GridPanel(wx.Panel):
                     if attr in Globals.CSV_EDITABLE_COL:
                         isEditable = False
                     grid.SetReadOnly(grid.GetNumberRows() - 1, col, isEditable)
-                    self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
+                    if attr == "Status":
+                        self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
                     self.setAlteredCellColor(
                         grid,
                         entry,
