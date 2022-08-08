@@ -192,6 +192,11 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
         deviceList = {}
         indx = 0
+        Globals.THREAD_POOL.enqueue(
+            updateGaugeForObtainingDeviceInfo,
+            deviceList,
+            api_response.results
+        )
         for device in api_response.results:
             deviceInfo = {}
             if device.id in additionalInfo:
