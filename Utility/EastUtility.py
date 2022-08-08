@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import time
 import esperclient
 import Common.Globals as Globals
 
@@ -238,6 +239,11 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
         deviceList = {}
         indx = 0
+        Globals.THREAD_POOL.enqueue(
+            updateGaugeForObtainingDeviceInfo,
+            deviceList,
+            api_response["results"]
+        )
         for device in api_response["results"]:
             deviceInfo = {}
             latestData = appData = None
@@ -247,7 +253,6 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
             if latestData and "results" in latestData and latestData["results"]:
                 latestData = latestData["results"][0]["data"]
-            populateDeviceList
             Globals.THREAD_POOL.enqueue(
                 populateDeviceList,
                 device,
@@ -273,6 +278,19 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
+
+
+def updateGaugeForObtainingDeviceInfo(processed, deviceList):
+    initProgress = 33
+    progress = initProgress
+    while progress != 66:
+        rate = len(processed) / len(deviceList)
+        adjustedRate = rate * (66 - initProgress)
+        percent = int(adjustedRate + initProgress)
+        if percent > initProgress:
+            progress = percent
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
+            time.sleep(0.1)
 
 
 def filterDeviceList(device):
