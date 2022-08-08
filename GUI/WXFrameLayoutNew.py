@@ -2167,8 +2167,6 @@ class NewFrameLayout(wx.Frame):
             entId = evtValue[1]
             deviceList = evtValue[2]
 
-            # chunks = splitListIntoChunks(list(deviceList.values()))
-            # for chunk in chunks:
             Globals.THREAD_POOL.enqueue(
                 self.processFetch, action, entId, deviceList, True, len(deviceList) * 3
             )
