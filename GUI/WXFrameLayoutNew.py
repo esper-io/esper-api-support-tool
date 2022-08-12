@@ -968,6 +968,23 @@ class NewFrameLayout(wx.Frame):
                 Globals.CSV_NETWORK_ATTR_NAME,
                 Globals.grid2_lock,
             )
+        if "Device and Network" in data:
+            dataList.append(data["Device and Network"].columns.values.tolist())
+            dataList += data["Device and Network"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_1,
+                dataList,
+                Globals.CSV_TAG_ATTR_NAME,
+                Globals.grid1_lock,
+            )
+            dataList.append(data["Device and Network"].columns.values.tolist())
+            dataList += data["Device and Network"].values.tolist()
+            self.processCsvDataByGrid(
+                self.gridPanel.grid_2,
+                dataList,
+                Globals.CSV_NETWORK_ATTR_NAME,
+                Globals.grid2_lock,
+            )
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
