@@ -17,6 +17,7 @@ import esperclient
 from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
 from datetime import datetime, timezone
+from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from pathlib import Path
@@ -154,10 +155,17 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         os.makedirs(parentPath)
     try:
         r = requests.get(url, stream=True, allow_redirects=redirects)
+        total_length = r.headers.get('content-length')
+        if total_length:
+            total_length = int(total_length)
+
+        dl = 0
         with open(fullPath, "wb") as file:
             for chunk in r.iter_content(chunk_size=chunk_size):
+                dl += len(chunk)
                 if chunk:
                     file.write(chunk)
+                postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, int(dl / total_length * 100))
         return fullPath
     except Exception as e:
         print(e)

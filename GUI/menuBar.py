@@ -357,6 +357,7 @@ class ToolMenuBar(wx.MenuBar):
                     if dlg.ShowModal() == wx.ID_YES:
                         result = None
                         try:
+                            self.parentFrame.gauge.Pulse()
                             result = downloadFileFromUrl(downloadURL, name)
                         except Exception as e:
                             print(e)
@@ -364,7 +365,7 @@ class ToolMenuBar(wx.MenuBar):
                         if result:
                             showDlg = True
                             msg = (
-                                "Download Succeeded! File should be located at:\n\n%s\nPlease open the executable from the download!"
+                                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
                                 % result
                             )
                         else:
