@@ -155,7 +155,7 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         os.makedirs(parentPath)
     try:
         r = requests.get(url, stream=True, allow_redirects=redirects)
-        total_length = r.headers.get('content-length')
+        total_length = r.headers.get("content-length")
         if total_length:
             total_length = int(total_length)
 
@@ -165,7 +165,9 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
                 dl += len(chunk)
                 if chunk:
                     file.write(chunk)
-                postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, int(dl / total_length * 100))
+                postEventToFrame(
+                    EventUtility.myEVT_UPDATE_GAUGE, int(dl / total_length * 100)
+                )
         return fullPath
     except Exception as e:
         print(e)

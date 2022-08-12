@@ -109,7 +109,9 @@ class InstalledDevicesDlg(wx.Dialog):
             )
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
-            self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_EXTENDED)
+            self.list_box_2 = wx.ListBox(
+                self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_EXTENDED
+            )
             grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
             self.list_box_2.Bind(wx.EVT_LISTBOX, self.onVersionSelect)
 

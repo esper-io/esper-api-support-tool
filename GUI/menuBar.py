@@ -138,7 +138,9 @@ class ToolMenuBar(wx.MenuBar):
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
         self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
-        self.downloadGroups = self.groupSubMenu.Append(wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G")
+        self.downloadGroups = self.groupSubMenu.Append(
+            wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G"
+        )
         self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
         self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
         runMenu.Append(wx.ID_SEPARATOR)

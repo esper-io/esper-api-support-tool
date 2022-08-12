@@ -193,9 +193,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         deviceList = {}
         indx = 0
         Globals.THREAD_POOL.enqueue(
-            updateGaugeForObtainingDeviceInfo,
-            deviceList,
-            api_response.results
+            updateGaugeForObtainingDeviceInfo, deviceList, api_response.results
         )
         for device in api_response.results:
             deviceInfo = {}
@@ -245,9 +243,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         deviceList = {}
         indx = 0
         Globals.THREAD_POOL.enqueue(
-            updateGaugeForObtainingDeviceInfo,
-            deviceList,
-            api_response["results"]
+            updateGaugeForObtainingDeviceInfo, deviceList, api_response["results"]
         )
         for device in api_response["results"]:
             deviceInfo = {}
@@ -513,7 +509,11 @@ def populateDeviceInfoDictionaryComplieData(
                     groupNames.append(groupName)
                 # if groupId not in Globals.knownGroups:
                 #     Globals.knownGroups[groupId] = groupName
-        elif type(deviceGroups) == dict and Globals.SHOW_GROUP_PATH and "name" in deviceGroups:
+        elif (
+            type(deviceGroups) == dict
+            and Globals.SHOW_GROUP_PATH
+            and "name" in deviceGroups
+        ):
             groupNames.append(deviceGroups["path"])
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
@@ -862,7 +862,11 @@ def populateDeviceInfoDictionary(
                     groupNames.append(groupName)
                 # if groupId not in Globals.knownGroups:
                 #     Globals.knownGroups[groupId] = groupName
-        elif type(deviceGroups) == dict and Globals.SHOW_GROUP_PATH and "name" in deviceGroups:
+        elif (
+            type(deviceGroups) == dict
+            and Globals.SHOW_GROUP_PATH
+            and "name" in deviceGroups
+        ):
             groupNames.append(deviceGroups["path"])
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])

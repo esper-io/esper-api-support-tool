@@ -1577,7 +1577,10 @@ class NewFrameLayout(wx.Frame):
         results = None
         if hasattr(self.sidePanel.groupsResp, "results"):
             results = self.sidePanel.groupsResp.results
-        elif type(self.sidePanel.groupsResp) is dict and "results" in self.sidePanel.groupsResp:
+        elif (
+            type(self.sidePanel.groupsResp) is dict
+            and "results" in self.sidePanel.groupsResp
+        ):
             results = self.sidePanel.groupsResp["results"]
         num = 1
         self.groups = results
@@ -3083,7 +3086,9 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onUserReport(self, event):
-        defaultFileName = "%s_User-Report" % datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        defaultFileName = "%s_User-Report" % datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S"
+        )
         dlg = wx.FileDialog(
             self,
             message="Save User Report as...",
@@ -3177,7 +3182,9 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def downloadGroups(self, event):
-        defaultFileName = "%s_Group-Report" % datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        defaultFileName = "%s_Group-Report" % datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S"
+        )
         dlg = wx.FileDialog(
             self,
             message="Save Group Report as...",
@@ -3194,7 +3201,7 @@ class NewFrameLayout(wx.Frame):
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
-            
+
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
             data = [
                 [
@@ -3206,8 +3213,7 @@ class NewFrameLayout(wx.Frame):
                     "Count of Child Groups",
                     "Parent Group URL",
                     "Thumbnail",
-                    "Blueprint"
-                    "Created On",
+                    "Blueprint" "Created On",
                     "Updated On",
                 ]
             ]
@@ -3227,7 +3233,8 @@ class NewFrameLayout(wx.Frame):
                 entry.append(group["updated_on"])
                 data.append(entry)
                 postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.sidePanel.groupsResp["results"]) * 90)
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(self.sidePanel.groupsResp["results"]) * 90),
                 )
                 num += 1
             createNewFile(inFile)

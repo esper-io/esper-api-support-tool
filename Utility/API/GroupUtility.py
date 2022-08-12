@@ -155,35 +155,11 @@ def getAllGroupsHelper(
     if not offset:
         offset = Globals.offset
     try:
-        # api_instance = esperclient.DeviceGroupApi(
-        #     esperclient.ApiClient(Globals.configuration)
-        # )
-        # api_response = None
-        # for attempt in range(maxAttempt):
-        #     try:
-        #         enforceRateLimit()
-        #         api_response = api_instance.get_all_groups(
-        #             Globals.enterprise_id,
-        #             name=name,
-        #             limit=limit,
-        #             offset=offset,
-        #         )
-        #         ApiToolLog().LogApiRequestOccurrence(
-        #             "getAllGroups", api_instance.get_all_groups, Globals.PRINT_API_LOGS
-        #         )
-        #         break
-        #     except Exception as e:
-        #         if attempt == maxAttempt - 1:
-        #             ApiToolLog().LogError(e)
-        #             raise e
-        #         if "429" not in str(e) and "Too Many Requests" not in str(e):
-        #             time.sleep(Globals.RETRY_SLEEP)
-        #         else:
-        #             time.sleep(
-        #                 Globals.RETRY_SLEEP * 20 * (attempt + 1)
-        #             )  # Sleep for a minute * retry number
         url = "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
-            tenant=Globals.configuration.host, enterprise=Globals.enterprise_id, lim=limit, page=offset
+            tenant=Globals.configuration.host,
+            enterprise=Globals.enterprise_id,
+            lim=limit,
+            page=offset,
         )
         api_response = performGetRequestWithRetry(url, getHeader())
         if api_response and api_response.status_code < 300:
