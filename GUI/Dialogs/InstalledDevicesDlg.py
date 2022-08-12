@@ -109,8 +109,9 @@ class InstalledDevicesDlg(wx.Dialog):
             )
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
-            self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[])
+            self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_EXTENDED)
             grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
+            self.list_box_2.Bind(wx.EVT_LISTBOX, self.onVersionSelect)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -209,17 +210,28 @@ class InstalledDevicesDlg(wx.Dialog):
         packageName = None
         version_id = None
         app_name = None
-        selection = self.list_box_2.GetSelection() if self.list_box_2 else None
-        if type(selection) == int and selection >= 0:
-            version_id = self.list_box_2.GetClientData(self.list_box_2.GetSelection())
-            if version_id == -1:
-                # User selected All Versions
+        selection = self.list_box_2.GetSelections() if self.list_box_2 else None
+        if type(selection) is list and selection:
+            if len(selection) == 1:
+                version_id = self.list_box_2.GetClientData(selection[0])
+                if version_id == -1:
+                    # User selected All Versions
+                    version_id = []
+                    for version in self.versions:
+                        if hasattr(version, "id"):
+                            version_id.append(version.id)
+                        elif type(version) == dict and "id" in version:
+                            version_id.append(version["id"])
+            else:
                 version_id = []
+                indx = 0
                 for version in self.versions:
-                    if hasattr(version, "id"):
-                        version_id.append(version.id)
-                    elif type(version) == dict and "id" in version:
-                        version_id.append(version["id"])
+                    if indx in selection:
+                        if hasattr(version, "id"):
+                            version_id.append(version.id)
+                        elif type(version) == dict and "id" in version:
+                            version_id.append(version["id"])
+                    indx += 1
         if self.list_box_1.GetSelection() >= 0:
             matches = list(
                 filter(
@@ -323,3 +335,15 @@ class InstalledDevicesDlg(wx.Dialog):
         if input:
             self.list_box_1.SetSelection(-1)
         event.Skip()
+
+    def onVersionSelect(self, event):
+        val = event.String
+        event.Skip()
+        wx.CallAfter(self.processVersionSelect, val)
+
+    def processVersionSelect(self, val):
+        selections = self.list_box_2.GetSelections()
+        if 0 in selections:
+            for item in selections:
+                if item != 0:
+                    self.list_box_2.Deselect(item)
