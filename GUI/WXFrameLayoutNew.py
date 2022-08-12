@@ -1573,14 +1573,14 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
         """ Populate Group Choice """
-        results = (
-            event.GetValue().results
-            if hasattr(event.GetValue(), "results")
-            else event.GetValue()
-        )
+        self.sidePanel.groupsResp = event.GetValue()
+        results = None
+        if hasattr(self.sidePanel.groupsResp, "results"):
+            results = self.sidePanel.groupsResp.results
+        elif type(self.sidePanel.groupsResp) is dict and "results" in self.sidePanel.groupsResp:
+            results = self.sidePanel.groupsResp["results"]
         num = 1
         self.groups = results
-        self.sidePanel.groupsResp = event.GetValue()
         if results:
             results = sorted(
                 results,
@@ -3083,10 +3083,11 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onUserReport(self, event):
+        defaultFileName = "%s_User-Report" % datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         dlg = wx.FileDialog(
             self,
             message="Save User Report as...",
-            defaultFile="",
+            defaultFile=defaultFileName,
             wildcard="CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
@@ -3149,9 +3150,6 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(True)
             self.gridPanel.enableGridProperties()
 
-            displayMessageBox(
-                ("User Report saved to file: %s" % inFile, wx.OK | wx.ICON_INFORMATION)
-            )
             res = displayMessageBox(
                 (
                     "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
@@ -3176,3 +3174,81 @@ class NewFrameLayout(wx.Frame):
                 )
                 pass
             dlg.DestroyLater()
+
+    @api_tool_decorator()
+    def downloadGroups(self, event):
+        defaultFileName = "%s_Group-Report" % datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        dlg = wx.FileDialog(
+            self,
+            message="Save Group Report as...",
+            defaultFile=defaultFileName,
+            wildcard="CSV files (*.csv)|*.csv",
+            defaultDir=str(self.defaultDir),
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        )
+        result = dlg.ShowModal()
+        inFile = dlg.GetPath()
+
+        if result == wx.ID_OK:  # Save button was pressed
+            self.gauge.Pulse()
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+            data = [
+                [
+                    "Group Id",
+                    "Group Name",
+                    "Group Path",
+                    "Description",
+                    "Device Count",
+                    "Count of Child Groups",
+                    "Parent Group URL",
+                    "Thumbnail",
+                    "Blueprint"
+                    "Created On",
+                    "Updated On",
+                ]
+            ]
+            num = 1
+            for group in self.sidePanel.groupsResp["results"]:
+                entry = []
+                entry.append(group["id"])
+                entry.append(group["name"])
+                entry.append(group["path"])
+                entry.append(group["description"])
+                entry.append(group["device_count"])
+                entry.append(group["children_count"])
+                entry.append(group["parent"] if "parent" in group else "")
+                entry.append(group["thumbnail"])
+                entry.append(group["blueprint"])
+                entry.append(group["created_on"])
+                entry.append(group["updated_on"])
+                data.append(entry)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.sidePanel.groupsResp["results"]) * 90)
+                )
+                num += 1
+            createNewFile(inFile)
+
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(data)
+
+            self.Logging("---> User Report saved to file: " + inFile)
+            self.setCursorDefault()
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+            self.toggleEnabledState(True)
+            self.gridPanel.enableGridProperties()
+
+            res = displayMessageBox(
+                (
+                    "Group Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                    % inFile,
+                    wx.YES_NO | wx.ICON_INFORMATION,
+                )
+            )
+            if res == wx.YES:
+                parentDirectory = Path(inFile).parent.absolute()
+                openWebLinkInBrowser(parentDirectory)
