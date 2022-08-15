@@ -1246,7 +1246,7 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
-    def getDeviceIdentifersFromGrid(self):
+    def getDeviceIdentifersFromGrid(self, tolerance=0):
         acquireLocks([Globals.grid1_lock])
         identifers = []
         numRows = self.grid_1.GetNumberRows()
@@ -1261,7 +1261,8 @@ class GridPanel(wx.Panel):
                 self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
             )
             num += numRowsPerChunk
-        Globals.THREAD_POOL.join()
+        # TODO fix join
+        Globals.THREAD_POOL.join(tolerance)
         Globals.THREAD_POOL.results()
 
         releaseLocks([Globals.grid1_lock])

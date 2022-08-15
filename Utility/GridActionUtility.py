@@ -316,8 +316,8 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
 
 @api_tool_decorator()
 def setAppStateForAllAppsListed(state):
-    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
     if devices:
         for device in devices:
             Globals.THREAD_POOL.enqueue(
@@ -397,7 +397,7 @@ def setAllAppsState(frame, device, state):
 
 @api_tool_decorator()
 def setAppStateForSpecificAppListed(action):
-    api_response = getDevicesFromGrid()
+    api_response = getDevicesFromGrid(tolerance=1)
     state = None
     if action == 50:
         state == "HIDE"
@@ -479,9 +479,9 @@ def setAppStateForSpecificAppListed(action):
 
 
 @api_tool_decorator()
-def getDevicesFromGrid(deviceIdentifers=None):
+def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     if not deviceIdentifers:
-        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid()
+        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=tolerance)
     devices = []
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     splitResults = splitListIntoChunks(deviceIdentifers)
@@ -489,7 +489,7 @@ def getDevicesFromGrid(deviceIdentifers=None):
         Globals.THREAD_POOL.enqueue(
             getDevicesFromGridHelper, chunk, api_instance, devices
         )
-    Globals.THREAD_POOL.join()
+    Globals.THREAD_POOL.join(tolerance)
     return devices
 
 
@@ -578,7 +578,7 @@ def getDevicesFromGridHelper(
 
 @api_tool_decorator()
 def relocateDeviceToNewGroup(frame):
-    devices = getDevicesFromGrid()
+    devices = getDevicesFromGrid(tolerance=1)
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
     splitResults = splitListIntoChunks(devices)
@@ -686,7 +686,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
 
 @api_tool_decorator()
 def installListedLatestApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
     gridAppList, _ = frame.gridPanel.getAppsFromGrid()
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
 
@@ -790,9 +790,9 @@ def processInstallLatestAppChunk(devices, appList, appChoice=False):
 
 @api_tool_decorator()
 def uninstallListedApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
     gridAppList, _ = frame.gridPanel.getAppsFromGrid()
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
 
     splitResults = splitListIntoChunks(devices)
 
@@ -872,8 +872,8 @@ def processUninstallAppChunk(devices, appList, appChoice=False):
 
 
 def installApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
@@ -892,8 +892,8 @@ def installApp(frame):
 
 
 def uninstallApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid()
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers)
+    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
+    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
 
     splitResults = splitListIntoChunks(devices)
 
@@ -933,7 +933,7 @@ def processBulkFactoryReset(devices, numDevices, processed):
 
 
 def bulkFactoryReset(identifers):
-    devices = getDevicesFromGrid(deviceIdentifers=identifers)
+    devices = getDevicesFromGrid(deviceIdentifers=identifers, tolerance=1)
 
     splitResults = splitListIntoChunks(devices)
     numDevices = len(devices)
@@ -975,7 +975,7 @@ def processSetDeviceDisabled(devices, numDevices, processed):
 
 
 def setDevicesDisabled():
-    devices = getDevicesFromGrid()
+    devices = getDevicesFromGrid(tolerance=1)
 
     splitResults = splitListIntoChunks(devices)
     numDevices = len(devices)
