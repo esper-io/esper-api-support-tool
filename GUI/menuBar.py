@@ -235,7 +235,7 @@ class ToolMenuBar(wx.MenuBar):
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
-        self.ConfigMenuPosition = 3
+        self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")

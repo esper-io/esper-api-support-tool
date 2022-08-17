@@ -46,3 +46,4 @@ class Worker(Thread):
             finally:
                 # task complete no matter what happened
                 self.queue.task_done()
+        self.idle.set()

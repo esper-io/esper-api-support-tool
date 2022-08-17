@@ -57,6 +57,9 @@ class Pool:
             )
         return True
 
+    def clearQueue(self):
+        self.queue.queue.clear()
+
     def enqueue(self, func, *args, **kargs):
         """Add a task to the queue"""
         self.queue.put((func, args, kargs))

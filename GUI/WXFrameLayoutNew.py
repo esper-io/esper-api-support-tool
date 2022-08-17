@@ -1246,6 +1246,8 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.notebook_1.SetSelection(0)
         self.setCursorBusy()
 
+        Globals.THREAD_POOL.clearQueue()
+
         for thread in threading.enumerate():
             if thread.name == "fetchUpdateDataActionThread":
                 if hasattr(thread, "stop"):
@@ -1596,6 +1598,8 @@ class NewFrameLayout(wx.Frame):
         if results and len(results):
             for group in results:
                 if hasattr(group, "name"):
+                    if hasattr(group, "enterprise") and Globals.enterprise_id not in group.enterprise:
+                        return
                     if group.name not in self.sidePanel.groups:
                         self.sidePanel.groups[group.name] = group.id
                     else:
@@ -1603,6 +1607,8 @@ class NewFrameLayout(wx.Frame):
                     if group.id not in Globals.knownGroups:
                         Globals.knownGroups[group.id] = group
                 elif type(group) is dict:
+                    if Globals.enterprise_id not in group["enterprise"]:
+                        return
                     if group["name"] not in self.sidePanel.groups:
                         self.sidePanel.groups[group["name"]] = group["id"]
                     else:
@@ -2781,6 +2787,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
 
         self.menubar.fileOpenAuth.Enable(state)
+        self.menubar.EnableTop(4, state)
         self.menubar.fileOpenConfig.Enable(state)
         self.menubar.pref.Enable(state)
         self.menubar.collection.Enable(state)
