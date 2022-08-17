@@ -2778,7 +2778,9 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
+        self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
 
+        self.menubar.fileOpenAuth.Enable(state)
         self.menubar.fileOpenConfig.Enable(state)
         self.menubar.pref.Enable(state)
         self.menubar.collection.Enable(state)
