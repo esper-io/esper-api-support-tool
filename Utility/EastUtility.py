@@ -563,8 +563,16 @@ def populateDeviceInfoDictionaryComplieData(
         elif (
             deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
             and deviceStatus < DeviceState.INACTIVE.value
+        ) or (
+            deviceStatus >= DeviceState.ONBOARDING_IN_PROGRESS.value
+            and deviceStatus <= DeviceState.ONBOARDED.value
         ):
-            deviceInfo["Status"] = "Provisioning"
+            deviceInfo["Status"] = "Onboarding"
+        elif (
+            deviceStatus >= DeviceState.AFW_ACCOUNT_ADDED.value
+            and deviceStatus <= DeviceState.CUSTOM_SETTINGS_PROCESSED.value
+        ):
+            deviceInfo["Status"] = "Applying Blueprint"
         elif deviceStatus == DeviceState.INACTIVE.value:
             deviceInfo["Status"] = "Offline"
         elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:

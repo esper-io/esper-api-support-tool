@@ -47,6 +47,20 @@ class DeviceState(Enum):
     INACTIVE = 60  # This state is set by cloud, when device is unreachable
     WIPE_IN_PROGRESS = 70  # State set by cloud, in the 5 minute waiting period for WIPE
 
+    ONBOARDING_IN_PROGRESS = 80
+    ONBOARDING_FAILED = 90
+    ONBOARDED = 100
+
+    AFW_ACCOUNT_ADDED = 110
+    APPS_INSTALLED = 120
+    BRANDING_PROCESSED = 130
+    PERMISSION_POLICY_PROCESSED = 140
+    DEVICE_POLICY_PROCESSED = 150
+    DEVICE_SETTINGS_PROCESSED = 160
+    SECURITY_POLICY_PROCESSED = 170
+    PHONE_POLICY_PROCESSED = 180
+    CUSTOM_SETTINGS_PROCESSED = 190
+
 
 class Color(Enum):
     white = wx.Colour(255, 255, 255)
