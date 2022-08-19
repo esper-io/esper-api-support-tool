@@ -14,7 +14,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.1944"
+VERSION = "v0.1945"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -182,6 +182,7 @@ CSV_TAG_ATTR_NAME = {
     "Device Type": "device_type",
     "Registered On": "provisioned_on",
     "Updated On": "updated_on",
+    "Created On": "created_on",
     "Last Seen": "last_seen",
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
