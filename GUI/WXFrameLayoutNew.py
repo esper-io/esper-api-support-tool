@@ -1468,11 +1468,11 @@ class NewFrameLayout(wx.Frame):
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
             if self.WINDOWS:
-                self.gridPanel.thawGridsIfFrozen()
                 self.gridPanel.enableGridProperties()
                 self.gridPanel.autoSizeGridsColumns()
                 self.sidePanel.groupChoice.Enable(True)
                 self.sidePanel.deviceChoice.Enable(True)
+                self.gridPanel.thawGridsIfFrozen()
             else:
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.thawGridsIfFrozen
