@@ -321,13 +321,17 @@ class SidePanel(wx.Panel):
                     data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
                     for entry in self.parentFrame.auth_data:
                         authEntry = []
+                        num = 0
                         for auth in entry.values():
+                            if num == 4:
+                                break
                             authEntry.append(auth)
+                            num += 1
                         if authEntry not in data:
                             data.append(authEntry)
                     with open(self.parentFrame.authPath, "w", newline="") as csvfile:
                         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                        writer.writerows(self.parentFrame.auth_data)
+                        writer.writerows(data)
                     for child in self.parentFrame.menubar.configMenu.GetMenuItems():
                         if value in self.configChoice[child.GetItemLabel()].values():
                             self.parentFrame.menubar.configMenu.Delete(child)
