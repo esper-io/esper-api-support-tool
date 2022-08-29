@@ -147,10 +147,10 @@ LATEST_UPDATE_LINK = (
 UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
-BASE_REQUEST_EXTENSION = "?&format=json"
-DEVICE_STATUS_REQUEST_EXTENSION = "status?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&app_type=ENTERPRISE"
-DEVICE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&format=json"
+BASE_REQUEST_EXTENSION = "/?&format=json"
+DEVICE_STATUS_REQUEST_EXTENSION = "status/?&format=json&latest_event=0"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTERPRISE"
+DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]

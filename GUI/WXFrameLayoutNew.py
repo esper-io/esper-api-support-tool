@@ -86,6 +86,7 @@ from Utility.EastUtility import (
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
+    checkIfCurrentThreadStopped,
     openWebLinkInBrowser,
     postEventToFrame,
     resourcePath,
@@ -137,6 +138,8 @@ class NewFrameLayout(wx.Frame):
         self.AppState = None
         self.searchThreads = []
         self.blueprintsEnabled = False
+        self.previousGroupFetchThread = None
+        self.firstRun = True
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -200,22 +203,7 @@ class NewFrameLayout(wx.Frame):
         self.statusBar.SetFieldsCount(2)
         self.SetStatusBar(self.statusBar)
         self.statusBar.SetStatusText("")
-
-        self.sbText = wx.StaticText(self.statusBar, wx.ID_ANY, "")
-        self.statusBar.AddWidget(
-            self.sbText, pos=0, horizontalalignment=ESB.ESB_EXACT_FIT
-        )
-        self.sbText.Bind(wx.EVT_LEFT_UP, self.showConsole)
-
-        self.gauge = wx.Gauge(
-            self.statusBar,
-            wx.ID_ANY,
-            100,
-            style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH,
-        )
-        self.statusBar.AddWidget(
-            self.gauge, pos=1, horizontalalignment=ESB.ESB_EXACT_FIT
-        )
+        self.statusBar.AddStaicTextAndGauge()
         # End Status Bar
 
         # Set Icon
@@ -236,7 +224,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
-        self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.setGaugeValue)
+        self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
         self.Bind(eventUtil.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
         self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
         self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
@@ -397,6 +385,9 @@ class NewFrameLayout(wx.Frame):
                 res = dialog.ShowModal()
                 if res == wx.ID_ADD:
                     try:
+                        Globals.THREAD_POOL.abort()
+                        Globals.THREAD_POOL.clearQueue()
+                        Globals.THREAD_POOL.run(True)
                         name, host, entId, key, prefix = dialog.getInputValues()
                         csvRow = dialog.getCSVRowEntry()
                         isValid = self.addEndpointEntry(
@@ -563,7 +554,7 @@ class NewFrameLayout(wx.Frame):
                 self.toggleEnabledState(False)
                 self.gridPanel.disableGridProperties()
                 self.Logging("Attempting to save file at %s" % inFile)
-                self.gauge.Pulse()
+                self.statusBar.gauge.Pulse()
                 Globals.THREAD_POOL.enqueue(self.saveAllFile, inFile)
                 return True
             elif (
@@ -1202,7 +1193,7 @@ class NewFrameLayout(wx.Frame):
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
-            (wx.CallLater, (3000, self.setGaugeValue, 0)),
+            (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
         )
         return returnItem
 
@@ -1246,13 +1237,11 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.notebook_1.SetSelection(0)
         self.setCursorBusy()
 
-        Globals.THREAD_POOL.clearQueue()
-
-        for thread in threading.enumerate():
-            if thread.name == "fetchUpdateDataActionThread":
-                if hasattr(thread, "stop"):
-                    thread.stop()
-
+        if not self.firstRun:
+            Globals.THREAD_POOL.abort()
+            Globals.THREAD_POOL.clearQueue()
+            Globals.THREAD_POOL.run(True)
+        self.firstRun = False
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."
@@ -1556,6 +1545,8 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.Logging("--->Attempting to populate groups...")
         self.setCursorBusy()
+        if self.previousGroupFetchThread:
+            self.previousGroupFetchThread.stop()
         thread = wxThread.GUIThread(
             self,
             getAllGroups,
@@ -1570,6 +1561,7 @@ class NewFrameLayout(wx.Frame):
             name="PopulateGroupsGetAll",
         )
         thread.startWithRetry()
+        self.previousGroupFetchThread = thread
         return thread
 
     @api_tool_decorator()
@@ -1638,7 +1630,7 @@ class NewFrameLayout(wx.Frame):
             self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
             self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-            self.gauge.Pulse()
+            self.statusBar.gauge.Pulse()
         else:
             if not self.isRunning or not self.isBusy:
                 self.sidePanel.runBtn.Enable(True)
@@ -1943,7 +1935,7 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on group, %s.'
                     % (actionLabel, groupLabel)
                 )
-            self.gauge.Pulse()
+            self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData
             )
@@ -1976,7 +1968,7 @@ class NewFrameLayout(wx.Frame):
                     '---> Attempting to run action, "%s", on device, %s.'
                     % (actionLabel, deviceLabel)
                 )
-            self.gauge.Pulse()
+            self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction,
                 self,
@@ -2018,7 +2010,7 @@ class NewFrameLayout(wx.Frame):
                     )
                     self.gridPanel.disableGridProperties()
                     self.frame_toolbar.search.SetValue("")
-                    self.gauge.Pulse()
+                    self.statusBar.gauge.Pulse()
                     Globals.THREAD_POOL.enqueue(
                         iterateThroughGridRows, self, actionClientData
                     )
@@ -2169,19 +2161,19 @@ class NewFrameLayout(wx.Frame):
                 res = dialog.ShowModal()
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
-            (wx.CallLater, (3000, self.setGaugeValue, 0)),
+            (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
         )
 
     @api_tool_decorator()
     def setStatus(self, status, orgingalMsg, isError=False):
         """ Set status bar text """
-        self.sbText.SetLabel(status)
+        self.statusBar.sbText.SetLabel(status)
         if orgingalMsg:
-            self.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
+            self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
         if isError:
-            self.sbText.SetForegroundColour(Color.red.value)
+            self.statusBar.sbText.SetForegroundColour(Color.red.value)
         else:
-            self.sbText.SetForegroundColour(Color.black.value)
+            self.statusBar.sbText.SetForegroundColour(Color.black.value)
 
     @api_tool_decorator()
     def onFetch(self, event):
@@ -2216,10 +2208,9 @@ class NewFrameLayout(wx.Frame):
             if entId != Globals.enterprise_id:
                 self.onClearGrids(None)
                 break
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    self.onClearGrids(None)
-                    break
+            if checkIfCurrentThreadStopped():
+                self.onClearGrids(None)
+                break
             device = entry[0]
             deviceInfo = entry[1]
 
@@ -2326,25 +2317,6 @@ class NewFrameLayout(wx.Frame):
     def MacPrintFile(self, file_path):
         pass
 
-    @api_tool_decorator(locks=[Globals.gauge_lock])
-    def setGaugeValue(self, value):
-        """ Attempt to set Gauge to the specififed value """
-        if Globals.gauge_lock.locked():
-            return
-        Globals.gauge_lock.acquire()
-        if hasattr(value, "GetValue"):
-            value = value.GetValue()
-        if bool(self.gauge):
-            maxValue = self.gauge.GetRange()
-            if value > maxValue:
-                value = maxValue
-            if value < 0:
-                value = 0
-            if value >= 0 and value <= maxValue:
-                self.gauge.SetValue(value)
-        if Globals.gauge_lock.locked():
-            Globals.gauge_lock.release()
-
     @api_tool_decorator()
     def onComplete(self, event, isError=False):
         """ Things that should be done once an Action is completed """
@@ -2404,7 +2376,7 @@ class NewFrameLayout(wx.Frame):
         if not self.IsIconized() and self.IsActive():
             postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
-                (wx.CallLater, (3000, self.setGaugeValue, 0)),
+                (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
             )
         if cmdResults:
             self.onCommandDone(cmdResults)
@@ -2418,7 +2390,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onActivate(self, event, skip=True):
         if not self.isRunning and not self.isUploading and not self.isBusy:
-            wx.CallLater(3000, self.setGaugeValue, 0)
+            wx.CallLater(3000, self.statusBar.setGaugeValue, 0)
         if self.notification:
             self.notification.Close()
         self.Refresh()
@@ -2593,7 +2565,7 @@ class NewFrameLayout(wx.Frame):
     def prepareClone(self, tmpDialog):
         self.setCursorBusy()
         self.isRunning = True
-        self.gauge.Pulse()
+        self.statusBar.gauge.Pulse()
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
         Globals.THREAD_POOL.enqueue(
             util.prepareTemplate, tmpDialog.destTemplate, tmpDialog.chosenTemplate
@@ -2815,7 +2787,7 @@ class NewFrameLayout(wx.Frame):
                     app, version = dlg.getAppValues()
                     if app and version:
                         self.onClearGrids(None)
-                        self.gauge.Pulse()
+                        self.statusBar.gauge.Pulse()
                         self.isRunning = True
                         resp = getInstallDevices(version, app)
                         res = []
@@ -2984,7 +2956,7 @@ class NewFrameLayout(wx.Frame):
             if type(val) == tuple:
                 delayMs = val[0]
                 value = val[1]
-        wx.CallLater(delayMs, self.setGaugeValue, value)
+        wx.CallLater(delayMs, self.statusBar.setGaugeValue, value)
 
     @api_tool_decorator()
     def displayNotificationEvent(self, event):
@@ -3056,7 +3028,7 @@ class NewFrameLayout(wx.Frame):
             res = dlg.ShowModal()
 
             if res == wx.ID_OK:
-                self.gauge.Pulse()
+                self.statusBar.gauge.Pulse()
                 ids = dlg.getIdentifiers()
                 bulkFactoryReset(ids)
 
@@ -3110,7 +3082,7 @@ class NewFrameLayout(wx.Frame):
         inFile = dlg.GetPath()
 
         if result == wx.ID_OK:  # Save button was pressed
-            self.gauge.Pulse()
+            self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
@@ -3206,7 +3178,7 @@ class NewFrameLayout(wx.Frame):
         inFile = dlg.GetPath()
 
         if result == wx.ID_OK:  # Save button was pressed
-            self.gauge.Pulse()
+            self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()

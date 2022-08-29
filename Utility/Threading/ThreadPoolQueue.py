@@ -1,5 +1,6 @@
 # !/usr/bin/env python
 
+import threading
 import time
 
 from queue import Queue
@@ -72,9 +73,12 @@ class Pool:
             time.sleep(1)
             startTime = time.perf_counter()
             while True:
+                isAbortSet = False
+                if hasattr(threading.current_thread(), "abort"):
+                    isAbortSet = threading.current_thread().abort.is_set()
                 if (
                     timeout > 0 and time.perf_counter() - startTime >= timeout
-                ) or self.isDoneWithinTolerance(queueTolerance=tolerance):
+                ) or self.isDoneWithinTolerance(queueTolerance=tolerance) or isAbortSet:
                     break
                 time.sleep(0.01)
 

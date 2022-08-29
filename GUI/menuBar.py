@@ -361,7 +361,7 @@ class ToolMenuBar(wx.MenuBar):
                     if dlg.ShowModal() == wx.ID_YES:
                         result = None
                         try:
-                            self.parentFrame.gauge.Pulse()
+                            self.parentFrame.statusBar.gauge.Pulse()
                             result = downloadFileFromUrl(downloadURL, name)
                         except Exception as e:
                             print(e)
@@ -415,7 +415,7 @@ class ToolMenuBar(wx.MenuBar):
                 eql = textDialog.GetValue()
                 if eql:
                     self.parentFrame.toggleEnabledState(False)
-                    self.parentFrame.gauge.Pulse()
+                    self.parentFrame.statusBar.gauge.Pulse()
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
@@ -436,7 +436,7 @@ class ToolMenuBar(wx.MenuBar):
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
-                    self.parentFrame.gauge.Pulse()
+                    self.parentFrame.statusBar.gauge.Pulse()
                     self.parentFrame.toggleEnabledState(False)
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)

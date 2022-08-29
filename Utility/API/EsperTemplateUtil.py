@@ -60,7 +60,7 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def prepareTemplate(self, dest=None, chosenTemplate=None):
         if self.parent and self.parent.gauge:
-            self.parent.gauge.Pulse()
+            self.parent.statusBar.gauge.Pulse()
 
         self.toApi = self.apiLink.format(tenant=self.toTenant)
 

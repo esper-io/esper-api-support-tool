@@ -24,7 +24,7 @@ def waitTillThreadsFinish(
 
     initPercent = 0
     if Globals.frame.gauge:
-        initPercent = Globals.frame.gauge.GetValue()
+        initPercent = Globals.frame.statusBar.gauge.GetValue()
     initVal = 0
     if source == 1:
         deviceList = {}

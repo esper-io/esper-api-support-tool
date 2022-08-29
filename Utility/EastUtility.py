@@ -5,7 +5,6 @@ import esperclient
 import Common.Globals as Globals
 
 import Utility.Threading.wxThread as wxThread
-import threading
 import wx
 import platform
 import Utility.API.EsperAPICalls as apiCalls
@@ -35,6 +34,7 @@ from Utility.deviceInfo import constructNetworkInfo
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
+    checkIfCurrentThreadStopped,
     displayMessageBox,
     getHeader,
     postEventToFrame,
@@ -272,9 +272,8 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             (action, entId, deviceList),
         )
     else:
-        if hasattr(threading.current_thread(), "isStopped"):
-            if threading.current_thread().isStopped():
-                return
+        if checkIfCurrentThreadStopped():
+            return
         frame.Logging("---> No devices found for group")
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
@@ -284,7 +283,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
     initProgress = 33
     progress = initProgress
-    while progress != 66:
+    while progress < 66:
         rate = len(processed) / len(deviceList)
         adjustedRate = rate * (66 - initProgress)
         percent = int(adjustedRate + initProgress)
@@ -362,9 +361,8 @@ def processCollectionDevices(collectionList):
 def fillInDeviceInfoDict(chunk, number_of_devices, getApps=True, getLatestEvent=True):
     deviceList = {}
     for device in chunk:
-        if hasattr(threading.current_thread(), "isStopped"):
-            if threading.current_thread().isStopped():
-                return
+        if checkIfCurrentThreadStopped():
+            return
         try:
             deviceInfo = {}
             deviceInfo = populateDeviceInfoDictionary(
@@ -391,9 +389,8 @@ def processDevices(
     deviceList = {}
 
     for device in chunk:
-        if hasattr(threading.current_thread(), "isStopped"):
-            if threading.current_thread().isStopped():
-                return
+        if checkIfCurrentThreadStopped():
+            return
         deviceInfo = {}
         deviceInfo = populateDeviceInfoDictionary(
             device, deviceInfo, getApps, getLatestEvents, action

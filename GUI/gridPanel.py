@@ -5,6 +5,7 @@ import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import (
     acquireLocks,
+    checkIfCurrentThreadStopped,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -12,7 +13,6 @@ from Utility.Resource import (
 )
 import Common.Globals as Globals
 import re
-import threading
 import wx
 import wx.grid as gridlib
 import Utility.EventUtility as eventUtil
@@ -371,8 +371,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -430,8 +430,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -482,8 +482,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -615,9 +615,8 @@ class GridPanel(wx.Panel):
         if grid != self.grid_1:
             statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    return
+            if checkIfCurrentThreadStopped():
+                return
             if rowNum < grid.GetNumberRows():
                 match = []
                 [
@@ -727,10 +726,9 @@ class GridPanel(wx.Panel):
             if "Esper Name" == attribute:
                 esperName = value
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    releaseLocks([Globals.grid1_lock])
-                    return
+            if checkIfCurrentThreadStopped():
+                releaseLocks([Globals.grid1_lock])
+                return
             self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
@@ -1524,10 +1522,9 @@ class GridPanel(wx.Panel):
         self.grid_3.AppendRows(1)
         for attribute in Globals.CSV_APP_ATTR_NAME:
             value = info[attribute] if attribute in info else ""
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    releaseLocks([Globals.grid3_lock])
-                    return
+            if checkIfCurrentThreadStopped():
+                releaseLocks([Globals.grid3_lock])
+                return
             self.grid_3.SetCellValue(self.grid_3.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:

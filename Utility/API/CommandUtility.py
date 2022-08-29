@@ -43,7 +43,7 @@ def createCommand(frame, command_args, commandType, schedule, schType):
         )
     if t:
         frame.menubar.disableConfigMenu()
-        frame.gauge.Pulse()
+        frame.statusBar.gauge.Pulse()
 
 
 @api_tool_decorator()

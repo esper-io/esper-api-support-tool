@@ -61,7 +61,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
     tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
     aliasDic = frame.gridPanel.getDeviceAliasFromList()
-    frame.gauge.SetValue(1)
+    frame.statusBar.gauge.SetValue(1)
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
 
     devices = []
@@ -244,7 +244,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
+            int(frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
     if type(status) != dict:
@@ -304,7 +304,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         postEventToFrame(eventUtil.myEVT_UPDATE_TAG_CELL, (deviceName, tags))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(frame.gauge.GetValue() + 1 / maxGaugeAction * 100),
+            int(frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
     status = {
         "Device Name": deviceName,

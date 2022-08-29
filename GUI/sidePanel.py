@@ -454,7 +454,7 @@ class SidePanel(wx.Panel):
         self.apps = tmp
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         if len(self.apps):
-            percent = self.parentFrame.gauge.GetValue()
+            percent = self.parentFrame.statusBar.gauge.GetValue()
             val = percent + int(float(len(self.apps) / 2) * 25)
             postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, val)
 

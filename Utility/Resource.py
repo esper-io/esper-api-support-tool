@@ -380,9 +380,8 @@ def updateErrorTracker():
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
             time.sleep(60)
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    break
+            if checkIfCurrentThreadStopped():
+                break
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
@@ -458,3 +457,12 @@ def processFunc(event):
             fun[0](*fun[1])
         else:
             fun[0](fun[1])
+
+
+def checkIfCurrentThreadStopped():
+    isAbortSet = False
+    if hasattr(threading.current_thread(), "abort"):
+        isAbortSet = threading.current_thread().abort.is_set()
+    elif hasattr(threading.current_thread(), "isStopped"):
+        isAbortSet = threading.current_thread().isStopped()
+    return isAbortSet

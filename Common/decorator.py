@@ -54,7 +54,7 @@ def api_tool_decorator(locks=None):
                             thread.stop()
                     Globals.frame.onComplete(None, True)
                     Globals.frame.setCursorDefault()
-                    Globals.frame.setGaugeValue(100)
+                    Globals.frame.statusBar.setGaugeValue(100)
                     if Globals.msg_lock.locked():
                         Globals.msg_lock.release()
                     if "locks" in kwargs:
