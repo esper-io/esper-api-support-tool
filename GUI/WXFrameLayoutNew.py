@@ -1218,6 +1218,10 @@ class NewFrameLayout(wx.Frame):
     def loadConfiguartion(self, event, *args, **kwargs):
         """Populate Frame Layout With Device Configuration"""
         self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
+        if not self.firstRun:
+            Globals.THREAD_POOL.abort()
+            Globals.THREAD_POOL.clearQueue()
+            Globals.THREAD_POOL.run(True)
         self.onClearGrids(None)
         clearKnownGroups()
         try:
@@ -1237,10 +1241,6 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.notebook_1.SetSelection(0)
         self.setCursorBusy()
 
-        if not self.firstRun:
-            Globals.THREAD_POOL.abort()
-            Globals.THREAD_POOL.clearQueue()
-            Globals.THREAD_POOL.run(True)
         self.firstRun = False
         try:
             self.Logging(
@@ -1346,7 +1346,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator(locks=[Globals.token_lock])
     def validateToken(self):
         Globals.token_lock.acquire()
-        res = getTokenInfo()
+        res = getTokenInfo(maxAttempt=2)
         if res and hasattr(res, "expires_on"):
             Globals.IS_TOKEN_VALID = True
             if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
