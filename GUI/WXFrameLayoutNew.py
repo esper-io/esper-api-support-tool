@@ -2379,7 +2379,10 @@ class NewFrameLayout(wx.Frame):
                 (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
             )
         if cmdResults:
-            self.onCommandDone(cmdResults)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.onCommandDone, (cmdResults,)),
+            )
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
