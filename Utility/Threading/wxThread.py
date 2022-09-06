@@ -23,7 +23,7 @@ def waitTillThreadsFinish(
         joinThreadList(threads)
 
     initPercent = 0
-    if Globals.frame.gauge:
+    if Globals.frame.statusBar.gauge:
         initPercent = Globals.frame.statusBar.gauge.GetValue()
     initVal = 0
     if source == 1:
