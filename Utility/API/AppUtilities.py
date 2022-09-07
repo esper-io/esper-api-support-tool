@@ -545,6 +545,7 @@ def get_installed_devices_api(version_id, application_id, limit, offset, maxAtte
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
 
+
 def getAppDictEntry(app, update=True):
     entry = None
     appName = None
