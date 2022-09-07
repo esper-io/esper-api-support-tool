@@ -312,9 +312,10 @@ def processInstallDevices(deviceList):
         Globals.THREAD_POOL.enqueue(
             processInstallDevicesHelper, device, newDeviceList, Globals.MAX_THREAD_COUNT
         )
+    time.sleep(1)
     Globals.THREAD_POOL.join(tolerance=1)
-    postEventToFrame(eventUtil.myEVT_LOG, "---> Gathered Device Info for Installed Devices")
-    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 66)
+    postEventToFrame(eventUtil.myEVT_LOG, "---> Gathered Basic Device Info for Installed Devices")
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
     processCollectionDevices({"results": newDeviceList})
 
 
@@ -333,6 +334,7 @@ def processCollectionDevices(collectionList):
         )
         if splitResults:
             number_of_devices = 0
+            postEventToFrame(eventUtil.myEVT_LOG, "---> Gathering Device's Network and App Info")
             for chunk in splitResults:
                 Globals.THREAD_POOL.enqueue(
                     fillInDeviceInfoDict, chunk, number_of_devices
