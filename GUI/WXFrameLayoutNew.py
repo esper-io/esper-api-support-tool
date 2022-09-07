@@ -2783,6 +2783,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
+        reset = True
         if self.sidePanel.apps:
             self.setCursorBusy()
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
@@ -2794,30 +2795,13 @@ class NewFrameLayout(wx.Frame):
                     if app and version:
                         self.onClearGrids(None)
                         self.statusBar.gauge.Pulse()
+                        self.setCursorBusy()
                         self.isRunning = True
-                        resp = getInstallDevices(version, app)
-                        res = []
-                        for r in resp.results:
-                            if r and hasattr(r, "to_dict"):
-                                res.append(r.to_dict())
-                            elif r and type(r) is dict:
-                                res.append(r)
-                        postEventToFrame(eventUtil.myEVT_LOG, "---> Get Installed Devices API Request Finished")
-                        self.statusBar.gauge.Pulse()
-                        if res:
-                            Globals.THREAD_POOL.enqueue(processInstallDevices, res)
-                        else:
-                            displayMessageBox(
-                                (
-                                    "No devices with the selected app version(s) found",
-                                    wx.ICON_INFORMATION,
-                                )
-                            )
-                            postEventToFrame(
-                                eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0)
-                            )
-                            self.setCursorDefault()
-                            self.toggleEnabledState(True)
+                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+                        self.toggleEnabledState(False)
+                        self.sleepInhibitor.inhibit()
+                        reset = False
+                        Globals.THREAD_POOL.enqueue(self.fetchInstalledDevices, app, version)
                     else:
                         displayMessageBox(
                             (
@@ -2836,9 +2820,34 @@ class NewFrameLayout(wx.Frame):
                     wx.ICON_INFORMATION,
                 )
             )
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
-        self.setCursorDefault()
-        self.toggleEnabledState(True)
+        if reset:
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
+
+    def fetchInstalledDevices(self, app, version):
+        resp = getInstallDevices(version, app, tolarance=1)
+        res = []
+        for r in resp.results:
+            if r and hasattr(r, "to_dict"):
+                res.append(r.to_dict())
+            elif r and type(r) is dict:
+                res.append(r)
+        postEventToFrame(eventUtil.myEVT_LOG, "---> Get Installed Devices API Request Finished")
+        if res:
+            Globals.THREAD_POOL.enqueue(processInstallDevices, res)
+        else:
+            displayMessageBox(
+                (
+                    "No devices with the selected app version(s) found",
+                    wx.ICON_INFORMATION,
+                )
+            )
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0)
+            )
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
 
     @api_tool_decorator()
     def moveGroup(self, event=None):

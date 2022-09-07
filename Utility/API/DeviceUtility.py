@@ -168,7 +168,7 @@ def fetchDevicesFromGroupHelper(
 
 
 @api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
+def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=True):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_response_list = []
@@ -202,7 +202,8 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
                 "next": None,
                 "previous": None,
             }
-        postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
+        if log:
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)

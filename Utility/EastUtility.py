@@ -306,6 +306,7 @@ def filterDeviceList(device):
 
 def processInstallDevices(deviceList):
     postEventToFrame(eventUtil.myEVT_LOG, "---> Getting Device Info for Installed Devices")
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
     newDeviceList = []
     for device in deviceList:
         Globals.THREAD_POOL.enqueue(
@@ -313,12 +314,13 @@ def processInstallDevices(deviceList):
         )
     Globals.THREAD_POOL.join(tolerance=1)
     postEventToFrame(eventUtil.myEVT_LOG, "---> Gathered Device Info for Installed Devices")
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 66)
     processCollectionDevices({"results": newDeviceList})
 
 
 def processInstallDevicesHelper(device, newDeviceList, tolerance=1):
     id = device["id"]
-    deviceListing = getDeviceById(id, tolerance=tolerance)
+    deviceListing = getDeviceById(id, tolerance=tolerance, log=False)
     newDeviceList.append(deviceListing)
 
 

@@ -476,18 +476,18 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
     return jsonResp
 
 
-def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0):
     if type(version_id) is list:
         api_response = None
         for version in version_id:
-            resp = get_installed_devices(version, application_id, maxAttempt)
+            resp = get_installed_devices(version, application_id, maxAttempt, tolarance=tolarance)
             if api_response is None:
                 api_response = resp
             else:
                 api_response.results += resp.results
         return api_response
     else:
-        return get_installed_devices(version_id, application_id, maxAttempt)
+        return get_installed_devices(version_id, application_id, maxAttempt, tolarance=tolarance)
 
 
 def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0):
