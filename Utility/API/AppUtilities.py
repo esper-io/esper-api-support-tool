@@ -25,6 +25,7 @@ from Utility.Resource import (
 )
 
 from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
     performGetRequestWithRetry,
 )
 
@@ -489,7 +490,25 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
         return get_installed_devices(version_id, application_id, maxAttempt)
 
 
-def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0):
+    offset = 0
+    response = get_installed_devices_api(version_id, application_id, Globals.limit, offset, maxAttempt)
+    if len(response.results) != response.count:
+        devices = getAllFromOffsetsRequests(response, None, tolarance)
+        if hasattr(response, "results"):
+            response.results = response.results + devices
+            response.next = None
+            response.prev = None
+        elif type(response) is dict and "results" in response:
+            response["next"] = None
+            response["prev"] = None
+            for device in devices:
+                if device not in response["results"]:
+                    response["results"].append(device)
+    return response
+
+
+def get_installed_devices_api(version_id, application_id, limit, offset, maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.ApplicationApi(
         esperclient.ApiClient(Globals.configuration)
     )
@@ -502,8 +521,8 @@ def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RET
                 version_id,
                 application_id,
                 enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
+                limit=limit,
+                offset=offset,
             )
             ApiToolLog().LogApiRequestOccurrence(
                 "getInstallDevices",
@@ -525,7 +544,6 @@ def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RET
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
-
 
 def getAppDictEntry(app, update=True):
     entry = None

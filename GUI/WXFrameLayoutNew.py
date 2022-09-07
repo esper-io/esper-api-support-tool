@@ -2403,9 +2403,12 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onClearGrids(self, event):
         """ Empty Grids """
-        Globals.THREAD_POOL.enqueue(self.gridPanel.emptyDeviceGrid)
-        Globals.THREAD_POOL.enqueue(self.gridPanel.emptyNetworkGrid)
-        Globals.THREAD_POOL.enqueue(self.gridPanel.emptyAppGrid)
+        self.gridPanel.emptyDeviceGrid()
+        self.gridPanel.emptyNetworkGrid()
+        self.gridPanel.emptyAppGrid()
+        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyDeviceGrid)
+        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyNetworkGrid)
+        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyAppGrid)
 
     @api_tool_decorator()
     def readAuthCSV(self):
@@ -2795,8 +2798,12 @@ class NewFrameLayout(wx.Frame):
                         resp = getInstallDevices(version, app)
                         res = []
                         for r in resp.results:
-                            if r:
+                            if r and hasattr(r, "to_dict"):
                                 res.append(r.to_dict())
+                            elif r and type(r) is dict:
+                                res.append(r)
+                        postEventToFrame(eventUtil.myEVT_LOG, "---> Get Installed Devices API Request Finished")
+                        self.statusBar.gauge.Pulse()
                         if res:
                             Globals.THREAD_POOL.enqueue(processInstallDevices, res)
                         else:
