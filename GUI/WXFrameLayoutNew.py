@@ -1636,10 +1636,9 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.runBtn.Enable(True)
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
-        for clientData in self.sidePanel.selectedGroupsList:
-            Globals.THREAD_POOL.enqueue(
-                self.addDevicesToDeviceChoice, clientData, tolerance=2
-            )
+        Globals.THREAD_POOL.enqueue(
+            self.addDevicesToDeviceChoice, tolerance=2
+        )
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
@@ -1648,43 +1647,44 @@ class NewFrameLayout(wx.Frame):
         )
 
     @api_tool_decorator()
-    def addDevicesToDeviceChoice(self, groupId, tolerance=0):
+    def addDevicesToDeviceChoice(self, tolerance=0):
         """ Populate Device Choice """
-        api_response = getAllDevices(
-            groupId,
-            limit=Globals.limit,
-            fetchAll=Globals.GROUP_FETCH_ALL,
-            tolarance=tolerance,
-        )
-        self.sidePanel.deviceResp = api_response
-        splitResults = None
-        if hasattr(api_response, "results") and len(api_response.results):
-            self.Logging("---> Processing fetched devices...")
-            if not Globals.SHOW_DISABLED_DEVICES:
-                api_response.results = list(
-                    filter(filterDeviceList, api_response.results)
-                )
-            api_response.results = sorted(
-                api_response.results,
-                key=lambda i: i.device_name.lower(),
+        for clientData in self.sidePanel.selectedGroupsList:
+            api_response = getAllDevices(
+                clientData,
+                limit=Globals.limit,
+                fetchAll=Globals.GROUP_FETCH_ALL,
+                tolarance=tolerance,
             )
-            splitResults = splitListIntoChunks(api_response.results)
-        elif type(api_response) is dict and len(api_response["results"]):
-            self.Logging("---> Processing fetched devices...")
-            if not Globals.SHOW_DISABLED_DEVICES:
-                api_response["results"] = list(
-                    filter(filterDeviceList, api_response["results"])
+            self.sidePanel.deviceResp = api_response
+            splitResults = None
+            if hasattr(api_response, "results") and len(api_response.results):
+                self.Logging("---> Processing fetched devices...")
+                if not Globals.SHOW_DISABLED_DEVICES:
+                    api_response.results = list(
+                        filter(filterDeviceList, api_response.results)
+                    )
+                api_response.results = sorted(
+                    api_response.results,
+                    key=lambda i: i.device_name.lower(),
                 )
-            api_response["results"] = sorted(
-                api_response["results"],
-                key=lambda i: i["device_name"].lower(),
-            )
-            splitResults = splitListIntoChunks(api_response["results"])
+                splitResults = splitListIntoChunks(api_response.results)
+            elif type(api_response) is dict and len(api_response["results"]):
+                self.Logging("---> Processing fetched devices...")
+                if not Globals.SHOW_DISABLED_DEVICES:
+                    api_response["results"] = list(
+                        filter(filterDeviceList, api_response["results"])
+                    )
+                api_response["results"] = sorted(
+                    api_response["results"],
+                    key=lambda i: i["device_name"].lower(),
+                )
+                splitResults = splitListIntoChunks(api_response["results"])
 
-        if splitResults:
-            for chunk in splitResults:
-                Globals.THREAD_POOL.enqueue(self.processAddDeviceToChoice, chunk)
-            Globals.THREAD_POOL.join(tolerance=tolerance)
+            if splitResults:
+                for chunk in splitResults:
+                    Globals.THREAD_POOL.enqueue(self.processAddDeviceToChoice, chunk)
+                Globals.THREAD_POOL.join(tolerance=tolerance)
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
