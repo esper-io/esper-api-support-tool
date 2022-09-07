@@ -21,7 +21,6 @@ def waitTillThreadsFinish(
         Globals.THREAD_POOL.join(tolerance)
     else:
         joinThreadList(threads)
-
     initPercent = 0
     if Globals.frame.statusBar.gauge:
         initPercent = Globals.frame.statusBar.gauge.GetValue()
