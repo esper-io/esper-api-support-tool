@@ -327,7 +327,7 @@ def processInstallDevicesHelper(device, newDeviceList, tolerance=1):
 
 @api_tool_decorator()
 def processCollectionDevices(collectionList):
-    if collectionList["results"]:
+    if "results" in collectionList and collectionList["results"]:
         maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
         splitResults = splitListIntoChunks(
             collectionList["results"], maxThread=maxThread
