@@ -29,6 +29,8 @@ def uploadWallpaper(link, key, enterprise_id, bg):
                 "orientation": bg["orientation"],
                 "enterprise": enterprise_id,
             }
+            if not link.endswith("/"):
+                link += "/"
             url = (
                 link
                 + enterprise_id
