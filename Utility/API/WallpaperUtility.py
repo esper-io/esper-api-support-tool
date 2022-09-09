@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import json
 import os
 import wx
 import Common.Globals as Globals
