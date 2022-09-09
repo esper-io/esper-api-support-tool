@@ -2418,10 +2418,11 @@ class NewFrameLayout(wx.Frame):
             with open(Globals.csv_auth_path, "r") as csvFile:
                 auth_csv_reader = csv.DictReader(csvFile)
                 self.auth_data = list(auth_csv_reader)
-            self.auth_data = sorted(
-                self.auth_data,
-                key=lambda i: list(map(str, i["name"].lower())),
-            )
+            if self.auth_data:
+                self.auth_data = sorted(
+                    self.auth_data,
+                    key=lambda i: list(map(str, i["name"].lower())),
+                )
 
     @api_tool_decorator()
     def loadPref(self):
