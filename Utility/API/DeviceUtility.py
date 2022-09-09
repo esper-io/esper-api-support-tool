@@ -207,7 +207,7 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=Tr
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
 
 
 def getDeviceByIdHelper(
@@ -228,7 +228,7 @@ def getDeviceByIdHelper(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)

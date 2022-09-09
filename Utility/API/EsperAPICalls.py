@@ -124,7 +124,7 @@ def toggleKioskMode(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -142,7 +142,7 @@ def toggleKioskMode(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -216,7 +216,7 @@ def setdevicename(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -239,7 +239,7 @@ def setdevicename(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -270,7 +270,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -281,7 +281,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         return e
 
 
@@ -463,7 +463,7 @@ def validateConfiguration(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -475,7 +475,7 @@ def validateConfiguration(
             return True
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     return False
 
 
@@ -509,7 +509,7 @@ def factoryResetDevice(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -527,7 +527,7 @@ def factoryResetDevice(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -672,7 +672,7 @@ def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY)
                 ):
                     return None
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -729,7 +729,7 @@ def clearAppData(frame, device):
                 )
             )
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (deviceName)
         )
@@ -798,7 +798,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)

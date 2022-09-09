@@ -245,7 +245,7 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -282,7 +282,7 @@ def waitForCommandToFinish(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -333,7 +333,7 @@ def waitForCommandToFinish(
                     break
                 except Exception as e:
                     if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
+                        ApiToolLog().LogError(e, postIssue=False)
                         raise e
                     if "429" not in str(e) and "Too Many Requests" not in str(e):
                         time.sleep(Globals.RETRY_SLEEP)
@@ -379,5 +379,5 @@ def postEsperCommand(command_data, useV0=True):
         json_resp = resp.json()
         logBadResponse(url, resp, json_resp)
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     return resp, json_resp

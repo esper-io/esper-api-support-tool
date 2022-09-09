@@ -60,7 +60,7 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     return json.loads(e.body)
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -90,7 +90,7 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     return json.loads(e.body)
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -130,7 +130,7 @@ def fetchGroupName(groupURL, returnJson=False):
                 else:
                     return json_resp["name"]
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         logBadResponse(groupURL, resp, None)
     return None
 
@@ -217,7 +217,7 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -294,7 +294,7 @@ def getDeviceGroupsForHostHelper(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
         return api_response
@@ -322,7 +322,7 @@ def createDeviceGroupForHost(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 time.sleep(Globals.RETRY_SLEEP)
         return api_response

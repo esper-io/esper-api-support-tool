@@ -209,7 +209,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -240,7 +240,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                     attempt == maxAttempt - 1
                     or "App Upload failed as this version already exists" in str(e)
                 ):
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -279,7 +279,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     break
                 except Exception as e:
                     if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
+                        ApiToolLog().LogError(e, postIssue=False)
                         raise e
                     if "429" not in str(e) and "Too Many Requests" not in str(e):
                         time.sleep(Globals.RETRY_SLEEP)
@@ -328,7 +328,7 @@ def getAllApplicationsForHost(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -368,7 +368,7 @@ def getAllAppVersionsForHost(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -431,7 +431,7 @@ def getAppVersions(
                 return api_response
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     print(
                         "Exception when calling ApplicationApi->get_app_versions: %s\n"
                         % e
@@ -532,7 +532,7 @@ def get_installed_devices_api(version_id, application_id, limit, offset, maxAtte
             return api_response
         except ApiException as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 print(
                     "Exception when calling ApplicationApi->get_install_devices: %s\n"
                     % e

@@ -38,7 +38,7 @@ def performGetRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
@@ -88,7 +88,7 @@ def performPatchRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
@@ -140,7 +140,7 @@ def performPutRequestWithRetry(
                 break
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
@@ -192,7 +192,7 @@ def performDeleteRequestWithRetry(
                 break
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
@@ -244,7 +244,7 @@ def performPostRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:

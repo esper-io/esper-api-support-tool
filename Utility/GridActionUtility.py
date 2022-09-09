@@ -558,7 +558,7 @@ def getDevicesFromGridHelper(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
