@@ -2721,13 +2721,22 @@ class NewFrameLayout(wx.Frame):
             )
             or wx.EVT_CHAR.typeId == event
         ):
-            self.applySearchColor(queryString, Color.white.value, True)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.applySearchColor, (queryString, Color.white.value, True)),
+            )
         if queryString:
-            self.applySearchColor(queryString, Color.lightYellow.value)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.applySearchColor, (queryString, Color.lightYellow.value)),
+            )
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
-            self.applySearchColor(queryString, Color.white.value, True)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.applySearchColor, (queryString, Color.white.value, True)),
+            )
         self.setCursorDefault()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
         self.gridPanel.enableGridProperties()
