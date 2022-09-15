@@ -128,7 +128,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[])
+        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
         self.selectedGroups.SetFont(
             wx.Font(
@@ -160,7 +160,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[])
+        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
         self.selectedDevices.SetFont(
             wx.Font(
