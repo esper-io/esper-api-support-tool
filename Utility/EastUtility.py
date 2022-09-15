@@ -28,7 +28,7 @@ from Utility.API.DeviceUtility import (
     getLatestEventApiUrl,
 )
 from Utility.API.GroupUtility import fetchGroupName
-from Utility.API.CommandUtility import executeCommandOnDevice
+from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.Web.WebRequests import perform_web_requests
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.GridActionUtility import iterateThroughGridRows
@@ -88,17 +88,29 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        api_response = getDeviceById(input, tolerance=1)
-        iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
-    else:
-        # Iterate Through Each Device in Group VIA Api Request
-        try:
-            frame.Logging("---> Making API Request")
-            api_response = getAllDevices(input, tolarance=1)
+        if action >= GeneralActions.SET_DEVICE_MODE.value:
+            postEventToFrame(
+                eventUtil.myEVT_FETCH,
+                (action, Globals.enterprise_id, input),
+            )
+        else:
+            api_response = getDeviceById(input, tolerance=1)
             iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
-        except ApiException as e:
-            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-            ApiToolLog().LogError(e)
+    else:
+        if action >= GeneralActions.SET_DEVICE_MODE.value:
+            postEventToFrame(
+                eventUtil.myEVT_FETCH,
+                (action, Globals.enterprise_id, input),
+            )
+        else:
+            # Iterate Through Each Device in Group VIA Api Request
+            try:
+                frame.Logging("---> Making API Request")
+                api_response = getAllDevices(input, tolarance=1)
+                iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
+            except ApiException as e:
+                print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+                ApiToolLog().LogError(e)
 
 
 def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, results=None):
@@ -1151,7 +1163,7 @@ def getValueFromLatestEvent(respData, eventName):
     return event
 
 
-def removeNonWhitelisted(deviceId, deviceInfo=None):
+def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
     detailInfo = None
     if not deviceInfo:
         detailInfo = getDeviceDetail(deviceId)
@@ -1166,9 +1178,14 @@ def removeNonWhitelisted(deviceId, deviceInfo=None):
     command_args = V0CommandArgs(
         wifi_access_points=removeList,
     )
-    return executeCommandOnDevice(
-        Globals.frame, command_args, command_type="REMOVE_WIFI_AP", deviceIds=[deviceId]
-    )
+    if isGroup:
+        return executeCommandOnGroup(
+            Globals.frame, command_args, command_type="REMOVE_WIFI_AP", groupIds=[deviceId] if type(deviceId) != list else deviceId
+        )
+    else:
+        return executeCommandOnDevice(
+            Globals.frame, command_args, command_type="REMOVE_WIFI_AP", deviceIds=[deviceId] if type(deviceId) != list else deviceId
+        )
 
 
 def clearKnownGroups():

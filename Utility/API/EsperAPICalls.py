@@ -91,6 +91,7 @@ def toggleKioskMode(
     deviceid,
     appToUse,
     isKiosk,
+    isGroup=False,
     timeout=Globals.COMMAND_TIMEOUT,
     maxAttempt=Globals.MAX_RETRY,
 ):
@@ -100,14 +101,25 @@ def toggleKioskMode(
         command_args = esperclient.V0CommandArgs(package_name=appToUse)
     else:
         command_args = {}
-    command = esperclient.V0CommandRequest(
-        enterprise=Globals.enterprise_id,
-        command_type="DEVICE",
-        device_type=Globals.CMD_DEVICE_TYPE,
-        devices=[deviceid] if type(deviceid) is str else deviceid,
-        command="SET_KIOSK_APP",
-        command_args=command_args,
-    )
+    command = None
+    if isGroup:
+        command = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="GROUP",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            groups=[deviceid] if type(deviceid) is str else deviceid,
+            command="SET_KIOSK_APP",
+            command_args=command_args,
+        )
+    else:
+        command = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="DEVICE",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            devices=[deviceid] if type(deviceid) is str else deviceid,
+            command="SET_KIOSK_APP",
+            command_args=command_args,
+        )
     api_response = None
     for attempt in range(maxAttempt):
         try:
@@ -286,7 +298,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def setKiosk(frame, device, deviceInfo):
+def setKiosk(frame, device, deviceInfo, isGroup=False):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
     failed = False
@@ -319,11 +331,11 @@ def setKiosk(frame, device, deviceInfo):
     )
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
-        stateStatus = setAppState(deviceId, appToUse, state="SHOW")
+        stateStatus = setAppState(deviceId, appToUse, state="SHOW", isGroup=isGroup)
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
-    status = toggleKioskMode(frame, deviceId, appToUse, True, timeout)
+    status = toggleKioskMode(frame, deviceId, appToUse, True, timeout, isGroup=isGroup)
     if status:
         if "Success" in str(status):
             logString = logString + " <success>"
@@ -368,7 +380,7 @@ def setKiosk(frame, device, deviceInfo):
 
 
 @api_tool_decorator()
-def setMulti(frame, device, deviceInfo):
+def setMulti(frame, device, deviceInfo, isGroup=False):
     """Toggles Multi App Mode"""
     deviceName = None
     deviceId = None
@@ -391,7 +403,7 @@ def setMulti(frame, device, deviceInfo):
     warning = False
     status = None
     if deviceInfo and deviceInfo["Mode"] == "Kiosk":
-        status = toggleKioskMode(frame, deviceId, {}, False)
+        status = toggleKioskMode(frame, deviceId, {}, False, isGroup=isGroup)
         if status:
             if "Success" in str(status):
                 logString = logString + " <success>"
@@ -640,21 +652,32 @@ def createAppList(json_resp, obtainAppDictEntry=True):
 
 
 @api_tool_decorator()
-def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY):
+def setAppState(device_id, pkg_name, state="HIDE", isGroup=False, maxAttempt=Globals.MAX_RETRY):
     pkgName = pkg_name
     if pkgName:
         args = V0CommandArgs(
             app_state=state,
             package_name=pkgName,
         )
-        request = esperclient.V0CommandRequest(
-            enterprise=Globals.enterprise_id,
-            command_type="DEVICE",
-            device_type=Globals.CMD_DEVICE_TYPE,
-            devices=[device_id] if type(device_id) else device_id,
-            command="SET_APP_STATE",
-            command_args=args,
-        )
+        request = None
+        if not isGroup:
+            request = esperclient.V0CommandRequest(
+                enterprise=Globals.enterprise_id,
+                command_type="DEVICE",
+                device_type=Globals.CMD_DEVICE_TYPE,
+                devices=[device_id] if type(device_id) != list else device_id,
+                command="SET_APP_STATE",
+                command_args=args,
+            )
+        else:
+            request = esperclient.V0CommandRequest(
+                enterprise=Globals.enterprise_id,
+                command_type="GROUP",
+                device_type=Globals.CMD_DEVICE_TYPE,
+                groups=[device_id] if type(device_id) != list else device_id,
+                command="SET_APP_STATE",
+                command_args=args,
+            )
         api_instance = getCommandsApiInstance()
         for attempt in range(maxAttempt):
             try:
@@ -685,7 +708,7 @@ def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY)
 
 
 @api_tool_decorator()
-def clearAppData(frame, device):
+def clearAppData(frame, device, isGroup=False):
     json_resp = None
     deviceName = None
     deviceId = None
@@ -703,14 +726,23 @@ def clearAppData(frame, device):
         cmdArgs = {"package_name": appToUse}
 
         if cmdArgs:
-            reqData = {
-                "command_type": "DEVICE",
-                "command_args": cmdArgs,
-                "devices": [deviceId] if type(deviceId) is str else deviceId,
-                "groups": [],
-                "device_type": Globals.CMD_DEVICE_TYPE,
-                "command": "CLEAR_APP_DATA",
-            }
+            reqData = None
+            if not isGroup:
+                reqData = {
+                    "command_type": "DEVICE",
+                    "command_args": cmdArgs,
+                    "devices": [deviceId] if type(deviceId) is str else deviceId,
+                    "device_type": Globals.CMD_DEVICE_TYPE,
+                    "command": "CLEAR_APP_DATA",
+                }
+            else:
+                reqData = {
+                    "command_type": "GROUP",
+                    "command_args": cmdArgs,
+                    "groups": [deviceId] if type(deviceId) is str else deviceId,
+                    "device_type": Globals.CMD_DEVICE_TYPE,
+                    "command": "CLEAR_APP_DATA",
+                }
             resp, json_resp = postEsperCommand(reqData)
             logBadResponse(resp.request.url, resp, json_resp)
             if resp.status_code > 300:

@@ -30,14 +30,25 @@ from Utility.Web.WebRequests import (
 )
 
 
-def uninstallAppOnDevice(packageName, device=None, postStatus=False):
-    return executeCommandOnDevice(
-        Globals.frame,
-        {"package_name": packageName},
-        command_type="UNINSTALL",
-        deviceIds=device,
-        postStatus=postStatus,
-    )
+def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=False):
+    if isGroup:
+        return executeCommandOnGroup(
+            Globals.frame,
+            {"package_name": packageName},
+            command_type="UNINSTALL",
+            groupIds=device,
+            postStatus=postStatus,
+            combineRequests=True
+        )
+    else:
+        return executeCommandOnDevice(
+            Globals.frame,
+            {"package_name": packageName},
+            command_type="UNINSTALL",
+            deviceIds=device,
+            postStatus=postStatus,
+            combineRequests=True
+        )
 
 
 def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
@@ -47,10 +58,11 @@ def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
         command_type="UNINSTALL",
         groupIds=groups,
         postStatus=postStatus,
+        combineRequests=True
     )
 
 
-def installAppOnDevices(packageName, version=None, devices=None, postStatus=False):
+def installAppOnDevices(packageName, version=None, devices=None, postStatus=False, isGroup=False):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -71,16 +83,30 @@ def installAppOnDevices(packageName, version=None, devices=None, postStatus=Fals
                         appVersionId = appVersion["id"]
                         break
     if appVersion:
-        return executeCommandOnDevice(
-            Globals.frame,
-            {
-                "app_version": appVersionId,
-                "package_name": packageName,
-            },
-            command_type="INSTALL",
-            deviceIds=devices,
-            postStatus=postStatus,
-        )
+        if isGroup:
+            return executeCommandOnGroup(
+                Globals.frame,
+                {
+                    "app_version": appVersionId,
+                    "package_name": packageName,
+                },
+                command_type="INSTALL",
+                groupIds=devices,
+                postStatus=postStatus,
+                combineRequests=True
+            )
+        else:
+            return executeCommandOnDevice(
+                Globals.frame,
+                {
+                    "app_version": appVersionId,
+                    "package_name": packageName,
+                },
+                command_type="INSTALL",
+                deviceIds=devices,
+                postStatus=postStatus,
+                combineRequests=True
+            )
     else:
         displayMessageBox(
             (
@@ -124,6 +150,7 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
             command_type="INSTALL",
             groupIds=groups,
             postStatus=postStatus,
+            combineRequests=True
         )
     else:
         displayMessageBox(

@@ -2105,7 +2105,7 @@ class NewFrameLayout(wx.Frame):
                             ) = cmdDialog.GetValue()
                             if cmdArgs is not None:
                                 createCommand(
-                                    self, cmdArgs, commandType, schArgs, schType
+                                    self, cmdArgs, commandType, schArgs, schType, combineRequests=True
                                 )
                         except Exception as e:
                             displayMessageBox(
@@ -2204,92 +2204,91 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
-        for entry in deviceList.values():
-            if entId != Globals.enterprise_id:
-                self.onClearGrids(None)
-                break
-            if checkIfCurrentThreadStopped():
-                self.onClearGrids(None)
-                break
-            device = entry[0]
-            deviceInfo = entry[1]
 
-            deviceId = None
-            if hasattr(device, "id"):
-                deviceId = device.id
-            else:
-                deviceId = device["id"]
+        isGroup = True
+        if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
+            isGroup = False
 
-            # Populate Network sheet
-            if (
-                action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                else:
-                    # construct and add info to grid contents
-                    # self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructNetworkGridContent, device, deviceInfo
-                    )
-            # Populate Device sheet
-            if (
-                action == GeneralActions.GENERATE_DEVICE_REPORT.value
-                or action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                else:
-                    # construct and add info to grid contents
-                    # self.gridPanel.constructDeviceGridContent(deviceInfo)
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructDeviceGridContent, deviceInfo
-                    )
-            # Populate App sheet
-            if (
-                action == GeneralActions.GENERATE_APP_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.populateAppGrid(
-                        device, deviceInfo, deviceInfo["appObj"]
-                    )
-                else:
-                    # self.gridPanel.constructAppGridContent(
-                    #     device, deviceInfo, deviceInfo["appObj"]
-                    # )
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructAppGridContent,
-                        device,
-                        deviceInfo,
-                        deviceInfo["appObj"],
-                    )
+        if action == GeneralActions.SET_KIOSK.value:
+            Globals.THREAD_POOL.enqueue(setKiosk, self, deviceList, None, isGroup=isGroup)
+        elif action == GeneralActions.SET_MULTI.value:
+            Globals.THREAD_POOL.enqueue(setMulti, self, deviceList, None, isGroup=isGroup)
+        elif action == GeneralActions.CLEAR_APP_DATA.value:
+            Globals.THREAD_POOL.enqueue(clearAppData, self, deviceList, isGroup)
+        elif action == GeneralActions.SET_APP_STATE.value:
+            Globals.THREAD_POOL.enqueue(
+                setAppState, deviceList, appToUse, self.AppState, isGroup
+            )
+        elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
+            Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceList, None, isGroup)
+        elif action == GeneralActions.INSTALL_APP.value:
+            Globals.THREAD_POOL.enqueue(
+                installAppOnDevices, appToUse, appVersion, deviceList, isGroup
+            )
+        elif action == GeneralActions.UNINSTALL_APP.value:
+            Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceList, isGroup)
+        else:
+            for entry in deviceList.values():
+                if entId != Globals.enterprise_id:
+                    self.onClearGrids(None)
+                    break
+                if checkIfCurrentThreadStopped():
+                    self.onClearGrids(None)
+                    break
+                device = entry[0]
+                deviceInfo = entry[1]
 
-            if action == GeneralActions.SET_KIOSK.value:
-                Globals.THREAD_POOL.enqueue(setKiosk, self, device, deviceInfo)
-            elif action == GeneralActions.SET_MULTI.value:
-                Globals.THREAD_POOL.enqueue(setMulti, self, device, deviceInfo)
-            elif action == GeneralActions.CLEAR_APP_DATA.value:
-                Globals.THREAD_POOL.enqueue(clearAppData, self, device)
-            elif action == GeneralActions.SET_APP_STATE.value:
-                Globals.THREAD_POOL.enqueue(
-                    setAppState, deviceId, appToUse, self.AppState
-                )
-            elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
-                Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceId, deviceInfo)
-            elif action == GeneralActions.INSTALL_APP.value:
-                Globals.THREAD_POOL.enqueue(
-                    installAppOnDevices, appToUse, appVersion, deviceId
-                )
-            elif action == GeneralActions.UNINSTALL_APP.value:
-                Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceId)
+                # Populate Network sheet
+                if (
+                    action == GeneralActions.GENERATE_INFO_REPORT.value
+                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                ):
+                    if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                        self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                    else:
+                        # construct and add info to grid contents
+                        # self.gridPanel.constructNetworkGridContent(device, deviceInfo)
+                        Globals.THREAD_POOL.enqueue(
+                            self.gridPanel.constructNetworkGridContent, device, deviceInfo
+                        )
+                # Populate Device sheet
+                if (
+                    action == GeneralActions.GENERATE_DEVICE_REPORT.value
+                    or action == GeneralActions.GENERATE_INFO_REPORT.value
+                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                ):
+                    if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
+                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    else:
+                        # construct and add info to grid contents
+                        # self.gridPanel.constructDeviceGridContent(deviceInfo)
+                        Globals.THREAD_POOL.enqueue(
+                            self.gridPanel.constructDeviceGridContent, deviceInfo
+                        )
+                # Populate App sheet
+                if (
+                    action == GeneralActions.GENERATE_APP_REPORT.value
+                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                ):
+                    if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
+                        self.gridPanel.populateAppGrid(
+                            device, deviceInfo, deviceInfo["appObj"]
+                        )
+                    else:
+                        # self.gridPanel.constructAppGridContent(
+                        #     device, deviceInfo, deviceInfo["appObj"]
+                        # )
+                        Globals.THREAD_POOL.enqueue(
+                            self.gridPanel.constructAppGridContent,
+                            device,
+                            deviceInfo,
+                            deviceInfo["appObj"],
+                        )
 
-            value = int(num / maxGauge * 100)
-            if updateGauge and value <= 99:
-                num += 1
-                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
+                value = int(num / maxGauge * 100)
+                if updateGauge and value <= 99:
+                    num += 1
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
