@@ -94,7 +94,6 @@ GRID_ACTIONS = {
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,
     "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
     # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
-    # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
 LOGLIST = []

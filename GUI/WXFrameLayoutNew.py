@@ -1062,6 +1062,7 @@ class NewFrameLayout(wx.Frame):
                                 try:
                                     ast.literal_eval(colValue)
                                 except:
+                                    colValue = str(colValue)
                                     if (
                                         expectedCol == "Tags"
                                         and "," in colValue

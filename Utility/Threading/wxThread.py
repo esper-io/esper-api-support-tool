@@ -64,7 +64,7 @@ def waitTillThreadsFinish(
                     changeSucceeded += thread[0]
                     succeeded += thread[1]
                     numNewName += thread[2]
-                    # devices += thread._args[1] TODO
+                    devices += thread[3]
                     statuses += thread[4]
         else:
             for thread in threads:
@@ -116,9 +116,9 @@ def waitTillThreadsFinish(
         msg = ""
         if action == GridActions.MOVE_GROUP.value:
             msg = "Results of moving devices' groups."
-        elif action == GridActions.INSTALL_LATEST_APP.value:
+        elif action == GridActions.INSTALL_APP.value:
             msg = "Results of installing given app packages."
-        elif action == GridActions.UNINSTALL_LISTED_APP.value:
+        elif action == GridActions.UNINSTALL_APP.value:
             msg = "Results of uninstalling given app packages."
         elif action == GridActions.FACTORY_RESET.value:
             msg = "Results of Factory Reset."

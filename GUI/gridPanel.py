@@ -905,6 +905,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_index = self.grid1HeaderLabels.index("Esper Id")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
@@ -914,6 +915,7 @@ class GridPanel(wx.Panel):
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
                 indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
+                id = self.grid_1.GetCellValue(rowNum, id_index)
                 properTagList = []
                 for r in re.findall(
                     r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
@@ -987,6 +989,18 @@ class GridPanel(wx.Panel):
                     else:
                         rowTagList[rowNum] = {
                             "imei2": imei2,
+                            "tags": properTagList,
+                        }
+                if id:
+                    if len(properTagList) <= 5:
+                        tagList[id] = properTagList
+                    else:
+                        tagList[id] = properTagList[: Globals.MAX_TAGS]
+                    if rowNum in rowTagList.keys():
+                        rowTagList[rowNum]["id"] = id
+                    else:
+                        rowTagList[rowNum] = {
+                            "id": id,
                             "tags": properTagList,
                         }
         releaseLocks([Globals.grid1_lock])
@@ -1079,6 +1093,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_indx = self.grid1HeaderLabels.index("Esper Id")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
@@ -1086,6 +1101,7 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
+                id = self.grid_1.GetCellValue(rowNum, id_indx)
                 alias = self.grid_1.GetCellValue(rowNum, indx)
                 if esperName and esperName not in aliasList.keys():
                     aliasList[esperName] = alias
@@ -1097,6 +1113,8 @@ class GridPanel(wx.Panel):
                     aliasList[imei1] = alias
                 if imei2 and imei2 not in aliasList.keys():
                     aliasList[imei2] = alias
+                if id and id not in aliasList.keys():
+                    aliasList[id] = alias
         releaseLocks([Globals.grid1_lock])
         return aliasList
 
@@ -1272,6 +1290,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_indx = self.grid1HeaderLabels.index("Esper Id")
         rowNum = start
         while (rowNum - start) < limit:
             if rowNum < self.grid_1.GetNumberRows():
@@ -1280,7 +1299,15 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
+                id = self.grid_1.GetCellValue(rowNum, id_indx)
+                identifers.append({
+                    "name": esperName,
+                    "serial": serialNum,
+                    "custom": cusSerialNum,
+                    "imei1": imei1,
+                    "imei2": imei2,
+                    "id": id
+                })
             else:
                 break
             rowNum += 1
@@ -1290,31 +1317,51 @@ class GridPanel(wx.Panel):
     def getDeviceAppFromGrid(self):
         acquireLocks([Globals.grid1_lock])
         appList = {}
-        indx = self.grid1HeaderLabels.index("Applications")
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                apps = self.grid_1.GetCellValue(rowNum, indx)
-                appListKeys = appList.keys()
-                if esperName and esperName not in appListKeys:
-                    appList[esperName] = apps
-                elif serialNum and serialNum not in appListKeys:
-                    appList[serialNum] = apps
-                elif cusSerialNum and cusSerialNum not in appListKeys:
-                    appList[cusSerialNum] = apps
-                elif imei1 and imei1 not in appListKeys:
-                    appList[imei1] = apps
-                elif imei2 and imei2 not in appListKeys:
-                    appList[imei2] = apps
+        if Globals.APPS_IN_DEVICE_GRID:
+            indx = self.grid1HeaderLabels.index("Applications")
+            en_indx = self.grid1HeaderLabels.index("Esper Name")
+            sn_indx = self.grid1HeaderLabels.index("Serial Number")
+            csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
+            imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
+            imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+            id_indx = self.grid1HeaderLabels.index("Esper Id")
+            for rowNum in range(self.grid_1.GetNumberRows()):
+                if rowNum < self.grid_1.GetNumberRows():
+                    esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                    serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                    cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
+                    imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
+                    imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
+                    id = self.grid_1.GetCellValue(rowNum, id_indx)
+                    apps = self.grid_1.GetCellValue(rowNum, indx)
+                    appListKeys = appList.keys()
+                    if esperName and esperName not in appListKeys:
+                        appList[esperName] = apps
+                    if serialNum and serialNum not in appListKeys:
+                        appList[serialNum] = apps
+                    if cusSerialNum and cusSerialNum not in appListKeys:
+                        appList[cusSerialNum] = apps
+                    if imei1 and imei1 not in appListKeys:
+                        appList[imei1] = apps
+                    if imei2 and imei2 not in appListKeys:
+                        appList[imei2] = apps
+                    if id and id not in appListKeys:
+                        appList[id] = apps
+        elif self.grid_3_contents:
+            en_indx = self.grid3HeaderLabels.index("Esper Name")
+            pn_indx = self.grid3HeaderLabels.index("Package Name")
+
+            for rowNum in range(self.grid_3.GetNumberRows()):
+                if rowNum < self.grid_3.GetNumberRows():
+                    esperName = self.grid_3.GetCellValue(rowNum, en_indx)
+                    packageName = self.grid_3.GetCellValue(rowNum, pn_indx)
+
+                    appListKeys = appList.keys()
+                    if esperName in appListKeys:
+                        appList[esperName] = packageName
+                    else:
+                        appList[esperName] += ",%s" % packageName
+
         releaseLocks([Globals.grid1_lock])
         return appList
 
@@ -1328,7 +1375,7 @@ class GridPanel(wx.Panel):
                     lambda x: (
                         x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
                         if hasattr(device, "device_name")
-                        else device["device_name"]
+                        else device["device_name"] if type(device) is dict else device
                     ),
                     self.grid_1_contents,
                 )
