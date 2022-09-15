@@ -235,16 +235,7 @@ def executeCommandOnDevice(
             statusList.append(entry)
         else:
             entry = {}
-            if deviceEntryName and len(deviceEntryName) > 1:
-                parts = deviceEntryName[0].split(" ")
-                if len(parts) > 3:
-                    entry["Esper Name"] = parts[2]
-                    entry["Alias"] = parts[3]
-                elif len(parts) > 2:
-                    entry["Esper Name"] = parts[2]
-                entry["Devices"] = devicelist
-            else:
-                entry["Devices"] = devicelist
+            entry["Devices"] = devicelist
             entry["Status"] = last_status
             statusList.append(entry)
     if postStatus:

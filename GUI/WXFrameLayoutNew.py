@@ -1797,6 +1797,16 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.enterpriseApps.append(entry)
 
     @api_tool_decorator()
+    def getAppDataForRun(self):
+        appSelection = self.sidePanel.selectedApp.GetSelection()
+        appLabel = (
+            self.sidePanel.selectedAppEntry["name"]
+            if self.sidePanel.selectedAppEntry
+            else ""
+        )
+        return appSelection, appLabel
+
+    @api_tool_decorator()
     def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
         if not Globals.HAS_INTERNET:
@@ -1822,7 +1832,7 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.grid_2.UnsetSortingColumn()
         self.gridPanel.grid_3.UnsetSortingColumn()
 
-        appSelection = self.sidePanel.selectedApp.GetSelection()
+        appSelection, appLabel = self.getAppDataForRun()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
@@ -1834,11 +1844,6 @@ class NewFrameLayout(wx.Frame):
             else False
         )
 
-        appLabel = (
-            self.sidePanel.selectedAppEntry["name"]
-            if self.sidePanel.selectedAppEntry
-            else ""
-        )
         actionLabel = (
             self.sidePanel.actionChoice.Items[actionSelection]
             if len(self.sidePanel.actionChoice.Items) > 0
@@ -1918,8 +1923,9 @@ class NewFrameLayout(wx.Frame):
         ):
             # run action on group
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
-                self.sleepInhibitor.uninhibit()
-                return
+                appSelection, appLabel = self.getAppDataForRun()
+                # self.sleepInhibitor.uninhibit()
+                # return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.grid_3_contents = []
@@ -1947,8 +1953,9 @@ class NewFrameLayout(wx.Frame):
         ):
             # run action on device
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
-                self.sleepInhibitor.uninhibit()
-                return
+                appSelection, appLabel = self.getAppDataForRun()
+                # self.sleepInhibitor.uninhibit()
+                # return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.grid_3_contents = []
@@ -1997,8 +2004,9 @@ class NewFrameLayout(wx.Frame):
                     if self.checkAppRequirement(
                         actionClientData, appSelection, appLabel
                     ):
-                        self.sleepInhibitor.uninhibit()
-                        return
+                        # self.sleepInhibitor.uninhibit()
+                        # return
+                        appSelection, appLabel = self.getAppDataForRun()
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % actionLabel
                     )
@@ -2053,13 +2061,14 @@ class NewFrameLayout(wx.Frame):
             or actionClientData == GridActions.INSTALL_APP.value
             or actionClientData == GridActions.UNINSTALL_APP.value
         ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
-            displayMessageBox(
-                ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-            )
+            self.sidePanel.onAppSelection(None)
+            # displayMessageBox(
+            #     ("Please select a valid application", wx.OK | wx.ICON_ERROR)
+            # )
             self.sidePanel.notebook_1.SetSelection(2)
-            self.isRunning = False
-            self.setCursorDefault()
-            self.toggleEnabledState(True)
+            # self.isRunning = False
+            # self.setCursorDefault()
+            # self.toggleEnabledState(True)
             return True
         return False
 
@@ -2214,19 +2223,19 @@ class NewFrameLayout(wx.Frame):
         elif action == GeneralActions.SET_MULTI.value:
             Globals.THREAD_POOL.enqueue(setMulti, self, deviceList, None, isGroup=isGroup)
         elif action == GeneralActions.CLEAR_APP_DATA.value:
-            Globals.THREAD_POOL.enqueue(clearAppData, self, deviceList, isGroup)
+            Globals.THREAD_POOL.enqueue(clearAppData, self, deviceList, isGroup=isGroup)
         elif action == GeneralActions.SET_APP_STATE.value:
             Globals.THREAD_POOL.enqueue(
-                setAppState, deviceList, appToUse, self.AppState, isGroup
+                setAppState, deviceList, appToUse, self.AppState, isGroup=isGroup
             )
         elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
-            Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceList, None, isGroup)
+            Globals.THREAD_POOL.enqueue(removeNonWhitelisted, deviceList, None, isGroup=isGroup)
         elif action == GeneralActions.INSTALL_APP.value:
             Globals.THREAD_POOL.enqueue(
-                installAppOnDevices, appToUse, appVersion, deviceList, isGroup
+                installAppOnDevices, appToUse, appVersion, deviceList, isGroup=isGroup
             )
         elif action == GeneralActions.UNINSTALL_APP.value:
-            Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceList, isGroup)
+            Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceList, isGroup=isGroup)
         else:
             for entry in deviceList.values():
                 if entId != Globals.enterprise_id:
