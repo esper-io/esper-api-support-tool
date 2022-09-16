@@ -1026,9 +1026,9 @@ class GroupManagement(wx.Dialog):
         if hasattr(group, "name"):
             groupName = group.name
             groupId = group.id
-            groupParent = group.parent
+            groupParent = group.parent if hasattr(group, "parent") else ""
         elif type(group) is dict and "name" in group:
             groupName = group["name"]
             groupId = group["id"]
-            groupParent = group["parent"]
+            groupParent = group["parent"] if "parent" in group else ""
         return groupName, groupId, groupParent
