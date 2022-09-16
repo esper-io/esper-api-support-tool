@@ -668,7 +668,7 @@ def installApp(frame):
 
     devices = getDeviceIdFromGridDevices(devices)
     Globals.THREAD_POOL.enqueue(
-        processInstallLatestApp, devices, frame.sidePanel.selectedAppEntry, True
+        processInstallLatestApp, devices, frame.sidePanel.selectedAppEntry
     )
 
     Globals.THREAD_POOL.enqueue(
