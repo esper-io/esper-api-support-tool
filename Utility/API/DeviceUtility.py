@@ -103,6 +103,8 @@ def get_all_devices_helper(
         api_response = api_response.json()
         if type(responses) == list:
             responses.append(api_response)
+    else:
+        raise Exception("%s:\t\n%s" % (api_response.status_code, api_response.content))
     return api_response
 
 
