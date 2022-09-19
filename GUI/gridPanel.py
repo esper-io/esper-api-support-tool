@@ -807,7 +807,7 @@ class GridPanel(wx.Panel):
         elif value == "Unspecified":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
-        elif value == "Provisioning":
+        elif value == "Provisioning" or value == "Onboarding":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.orange.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
         elif value == "Wipe In-Progress":
