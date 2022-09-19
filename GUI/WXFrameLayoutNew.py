@@ -812,6 +812,8 @@ class NewFrameLayout(wx.Frame):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
+            if sys.platform() == "darwin":
+                parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
     def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
