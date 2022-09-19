@@ -812,7 +812,7 @@ class NewFrameLayout(wx.Frame):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
-            if sys.platform() == "darwin":
+            if platform.system() == "Darwin":
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
