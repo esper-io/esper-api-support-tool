@@ -179,7 +179,7 @@ class SidePanel(wx.Panel):
 
         sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
-        self.appChoice = wx.Button(self.panel_16, wx.ID_ANY, "Select Application", style=wx.LB_HSCROLL)
+        self.appChoice = wx.Button(self.panel_16, wx.ID_ANY, "Select Application")
         self.appChoice.SetToolTip("Select Application")
         sizer_8.Add(self.appChoice, 0, wx.EXPAND | wx.TOP, 5)
 
@@ -188,7 +188,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[])
+        self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
         self.selectedApp.SetToolTip("Currently Selected Application")
         self.selectedApp.SetFont(
             wx.Font(
