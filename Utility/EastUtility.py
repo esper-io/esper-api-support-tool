@@ -1249,24 +1249,38 @@ def getAllDeviceInfo(frame):
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
+    additionalInfo = {}
     for device in api_response["results"]:
         Globals.THREAD_POOL.enqueue(
-            perform_web_requests,
-            (getLatestEventApiUrl(device["id"]), getHeader(), "GET", None),
+            getAdditionalDeviceInfo,
+            device["id"],
+            False,
+            True,
+            additionalInfo,
         )
-    Globals.THREAD_POOL.join(1)
-    latestResp = Globals.THREAD_POOL.results()
+    Globals.THREAD_POOL.join(tolerance=1)
 
     deviceList = {}
     indx = 0
+
     for device in api_response["results"]:
         deviceInfo = {}
-        latestData = latestResp[indx] if len(latestResp) > indx else None
+        latestData = appData = None
+        if device["id"] in additionalInfo:
+            latestData = additionalInfo[device["id"]]["event"]
+            appData = additionalInfo[device["id"]]["app"]
+
         if latestData and "results" in latestData and latestData["results"]:
             latestData = latestData["results"][0]["data"]
-        populateDeviceInfoDictionaryComplieData(device, deviceInfo, None, latestData)
-        deviceInfo["num"] = indx
-        deviceList[indx] = [device, deviceInfo]
+        Globals.THREAD_POOL.enqueue(
+            populateDeviceList,
+            device,
+            deviceInfo,
+            appData,
+            latestData,
+            deviceList,
+            indx,
+        )
         indx += 1
 
     return deviceList
