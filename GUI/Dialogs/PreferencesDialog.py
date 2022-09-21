@@ -55,6 +55,7 @@ class PreferencesDialog(wx.Dialog):
             "showGroupPath",
             "last_endpoint",
             "prereleaseUpdate",
+            "appFilter",
         ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -153,6 +154,16 @@ class PreferencesDialog(wx.Dialog):
         self.checkbox_18.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
         )
+
+        (_, _, self.combobox_2,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Filter App State",
+            wx.ComboBox,
+            "Filter Apps shown in the App Report by their State (SHOW, HIDE, DISBALED). Default: All App States Shown",
+            choice=Globals.APP_FILTER_TYPES,
+        )
+        self.combobox_2.SetSelection(0)
 
         (_, _, self.checkbox_17,) = self.addPrefToPanel(
             self.report,
@@ -577,6 +588,7 @@ class PreferencesDialog(wx.Dialog):
             "combineDeviceAndNetworkSheets": self.checkbox_23.IsChecked(),
             "showGroupPath": self.checkbox_24.IsChecked(),
             "prereleaseUpdate": self.checkbox_25.IsChecked(),
+            "appFilter": self.combobox_2.GetValue(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -609,6 +621,7 @@ class PreferencesDialog(wx.Dialog):
         ]
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
         Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
+        Globals.APP_FILTER = self.combobox_2.GetValue().lower()
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -777,6 +790,15 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.combobox_1.SetSelection(self.prefs["runCommandOn"])
             Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
+        if "appFilter" in self.prefs and self.prefs["appFilter"]:
+            if isinstance(self.prefs["appFilter"], str):
+                indx = self.combobox_1.GetItems().index(
+                    self.prefs["appFilter"].capitalize()
+                )
+                self.combobox_1.SetSelection(indx)
+            else:
+                self.combobox_1.SetSelection(self.prefs["appFilter"])
+            Globals.APP_FILTER = self.combobox_1.GetValue().lower()
         if "maxThread" in self.prefs and self.prefs["maxThread"]:
             maxThread = Globals.MAX_THREAD_COUNT
             maxThread = int(self.prefs["maxThread"])
@@ -1057,6 +1079,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHOW_GROUP_PATH
         elif key == "last_endpoint":
             return Globals.LAST_OPENED_ENDPOINT
+        elif key == "appFilter":
+            return Globals.APP_FILTER
         else:
             return None
 

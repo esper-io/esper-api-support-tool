@@ -698,6 +698,8 @@ def getDeviceAppsApiUrl(deviceid, useEnterprise=False):
         if useEnterprise
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
+    if Globals.APP_FILTER.lower() != "all":
+        extention += "&state=%s" % Globals.APP_FILTER.upper()
     hasFormat = [
         tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
     ]

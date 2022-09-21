@@ -263,6 +263,8 @@ WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
+APP_FILTER_TYPES = ["All", "SHOW", "HIDE", "DISABLE"]
+
 """ WxPython Frame """
 frame = None
 app = None
@@ -302,6 +304,7 @@ COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
 REACH_QUEUED_ONLY = True
 CMD_DEVICE_TYPE = "all"
+APP_FILTER = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
