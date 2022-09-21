@@ -792,12 +792,12 @@ class PreferencesDialog(wx.Dialog):
             Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         if "appFilter" in self.prefs and self.prefs["appFilter"]:
             if isinstance(self.prefs["appFilter"], str):
-                indx = self.combobox_1.GetItems().index(
+                indx = self.combobox_2.GetItems().index(
                     self.prefs["appFilter"].capitalize()
                 )
-                self.combobox_1.SetSelection(indx)
+                self.combobox_2.SetSelection(indx)
             else:
-                self.combobox_1.SetSelection(self.prefs["appFilter"])
+                self.combobox_2.SetSelection(self.prefs["appFilter"])
             Globals.APP_FILTER = self.combobox_1.GetValue().lower()
         if "maxThread" in self.prefs and self.prefs["maxThread"]:
             maxThread = Globals.MAX_THREAD_COUNT
