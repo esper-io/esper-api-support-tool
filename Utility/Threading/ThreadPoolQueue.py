@@ -33,8 +33,15 @@ class Pool:
         """Start the threads, or restart them if you've aborted"""
         # either wait for them to finish or return false if some arent
         if block:
+            time_waiting = time.perf_counter()
             while self.alive():
                 time.sleep(1)
+                if time.perf_counter() - time_waiting > 60:
+                    for t in self.threads:
+                        try:
+                            t.raise_exception()
+                        except:
+                            pass
         elif self.alive():
             return False
 
