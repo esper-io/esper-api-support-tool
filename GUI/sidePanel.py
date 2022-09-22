@@ -25,6 +25,7 @@ class SidePanel(wx.Panel):
         self.selectedGroupsList = []
         self.groupsResp = None
         self.groups = {}
+        self.groupDeviceCount = {}
         self.enterpriseApps = []
         self.selectedDeviceApps = []
         self.selectedAppEntry = []
@@ -367,12 +368,20 @@ class SidePanel(wx.Panel):
     def onGroupSelection(self, event):
         if not self.parentFrame.isRunning:
             choices = list(self.groups.keys())
+            newChoices = []
+            deviceCountKeys = self.groupDeviceCount.keys()
+            for choice in choices:
+                match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
+                if match:
+                    match = match[0]
+                    newChoices.append("%s (Device Count: %s)" % (choice, self.groupDeviceCount[match]))
+
             if self.groupMultiDialog:
                 self.groupMultiDialog = None
             if not self.groupMultiDialog:
                 self.groupMultiDialog = MultiSelectSearchDlg(
                     self.parentFrame,
-                    choices,
+                    newChoices,
                     label="Select Group(s)",
                     title="Select Group(s)",
                     resp=self.groupsResp,

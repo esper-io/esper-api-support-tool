@@ -146,6 +146,8 @@ def populateDeviceList(device, deviceInfo, appData, latestData, deviceList, indx
 @api_tool_decorator()
 def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
+    if hasattr(Globals.frame, "start_time"):
+        print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
     if api_response:
         if hasattr(api_response, "next"):
             if api_response.next:
@@ -1192,7 +1194,7 @@ def clearKnownGroups():
     Globals.knownGroups.clear()
 
 
-def getAllDeviceInfo(frame):
+def getAllDeviceInfo(frame, action=None):
     devices = []
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
         api_instance = esperclient.DeviceApi(
@@ -1249,13 +1251,29 @@ def getAllDeviceInfo(frame):
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
+    getApps = False
+    getLatestEvents = True
+
+    if action == GeneralActions.GENERATE_APP_REPORT.value:
+        getApps = True
+        getLatestEvents = False
+    elif action == GeneralActions.GENERATE_DEVICE_REPORT.value:
+        getApps = False
+        getLatestEvents = False
+    elif action == GeneralActions.GENERATE_INFO_REPORT.value:
+        getApps = False
+        getLatestEvents = True
+    elif action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+        getApps = True
+        getLatestEvents = True
+
     additionalInfo = {}
     for device in api_response["results"]:
         Globals.THREAD_POOL.enqueue(
             getAdditionalDeviceInfo,
             device["id"],
-            False,
-            True,
+            getApps,
+            getLatestEvents,
             additionalInfo,
         )
     Globals.THREAD_POOL.join(tolerance=1)

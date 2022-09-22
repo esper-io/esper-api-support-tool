@@ -535,7 +535,7 @@ class NewFrameLayout(wx.Frame):
             return False
 
     @api_tool_decorator()
-    def onSaveBothAll(self, event):
+    def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             dlg = wx.FileDialog(
                 self,
@@ -555,7 +555,7 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.disableGridProperties()
                 self.Logging("Attempting to save file at %s" % inFile)
                 self.statusBar.gauge.Pulse()
-                Globals.THREAD_POOL.enqueue(self.saveAllFile, inFile)
+                Globals.THREAD_POOL.enqueue(self.saveAllFile, inFile, action=action)
                 return True
             elif (
                 result == wx.ID_CANCEL
@@ -607,14 +607,14 @@ class NewFrameLayout(wx.Frame):
         return headers, deviceHeaders, networkHeaders
 
     @api_tool_decorator()
-    def saveAllFile(self, inFile):
+    def saveAllFile(self, inFile, action=None):
         self.sleepInhibitor.inhibit()
         self.start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
-        deviceList = getAllDeviceInfo(self)
-        self.Logging("Finished fetching device and network information for CSV")
+        deviceList = getAllDeviceInfo(self, action=action)
+        self.Logging("Finished fetching information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
@@ -623,7 +623,7 @@ class NewFrameLayout(wx.Frame):
             Globals.THREAD_POOL.enqueue(self.fetchAllGridData, chunk, gridDeviceData)
         Globals.THREAD_POOL.join(1)
 
-        self.Logging("Finished compiling device and network information for CSV")
+        self.Logging("Finished compiling information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
@@ -1604,10 +1604,25 @@ class NewFrameLayout(wx.Frame):
                 elif type(group) is dict:
                     if Globals.enterprise_id not in group["enterprise"]:
                         return
-                    if group["name"] not in self.sidePanel.groups:
-                        self.sidePanel.groups[group["name"]] = group["id"]
+                    groupEntryId = group["name"]
+                    if groupEntryId not in self.sidePanel.groups:
+                        self.sidePanel.groups[groupEntryId] = group["id"]
                     else:
-                        self.sidePanel.groups[group["path"]] = group["id"]
+                        groupEntryId = group["path"]
+                        self.sidePanel.groups[groupEntryId] = group["id"]
+
+                    pathParts = group["path"].split("/")
+                    path = ""
+                    for p in pathParts:
+                        if path:
+                            path = path + "/" + p
+                        else:
+                            path = p
+                        if path in self.sidePanel.groupDeviceCount:
+                            self.sidePanel.groupDeviceCount[path] += group["device_count"]
+                        else:
+                            self.sidePanel.groupDeviceCount[path] = group["device_count"]
+
                     if group["id"] not in Globals.knownGroups:
                         Globals.knownGroups[group["id"]] = group
                 postEventToFrame(
@@ -1853,6 +1868,30 @@ class NewFrameLayout(wx.Frame):
             and self.sidePanel.actionChoice.Items[actionSelection]
             else ""
         )
+
+        estimatedDeviceCount = len(self.sidePanel.selectedDevicesList)
+        if not self.sidePanel.selectedDevicesList:
+            for group in self.sidePanel.selectedGroupsList:
+                match = list(filter(lambda x: x["id"] == group, self.groups))
+                if match:
+                    match = match[0]
+                    if type(match) == dict and "device_count" in match:
+                        match = list(filter(lambda x: x.endswith(match["name"]), self.sidePanel.groupDeviceCount.keys()))
+                        if match:
+                            match = match[0]
+                            estimatedDeviceCount += self.sidePanel.groupDeviceCount[match]
+                    elif hasattr(match, "device_count"):
+                        # estimatedDeviceCount += match.device_count
+                        match = list(filter(lambda x: x.endswith(match.name), self.sidePanel.groupDeviceCount.keys()))
+                        if match:
+                            match = match[0]
+                            estimatedDeviceCount += self.sidePanel.groupDeviceCount[match]
+
+        if actionClientData <= GeneralActions.GENERATE_APP_REPORT.value and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT:
+            res = displayMessageBox(("Would you like to save directly to a file? Recommened for reports with large amounts of devices.", wx.ICON_INFORMATION | wx.YES_NO))
+            if res == wx.YES:
+                return self.onSaveBothAll(action=actionClientData)
+
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
                 self,
@@ -2216,6 +2255,7 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
+        # num = num + (num - Globals.MAX_GRID_LOAD + 1)
 
         isGroup = True
         if len(Globals.frame.sidePanel.selectedDevicesList) > 0:

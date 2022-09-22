@@ -248,7 +248,7 @@ def joinThreadList(threads):
 @api_tool_decorator(locks=[])
 def limitActiveThreads(
     threads,
-    max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2),
+    max_alive=(Globals.MAX_THREAD_COUNT / 2),
     timeout=-1,
     breakEnabled=True,
 ):
@@ -434,7 +434,7 @@ def getHeader():
 
 
 @sleep_and_retry
-@limits(calls=10, period=1)
+@limits(calls=4000, period=(5 * 60))
 def enforceRateLimit():
     pass
 
