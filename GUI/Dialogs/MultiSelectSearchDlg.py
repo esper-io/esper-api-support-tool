@@ -31,6 +31,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.page = 0
         self.resp = resp
         self.limit = 0
+        self.allDeviceStr = ""
         if resp and hasattr(resp, "count") and hasattr(resp, "results"):
             if len(resp.results) > 0:
                 self.limit = math.floor(resp.count / len(resp.results))
@@ -41,6 +42,12 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if hasattr(parent, "sidePanel"):
             self.group = parent.sidePanel.selectedGroupsList
+
+        for choice in choices:
+            groupName = choice.split(" (Device Count:")[0]
+            if "All devices" == groupName:
+                self.allDeviceStr = choice
+                break
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -219,7 +226,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
 
-        if "All devices" in self.selected:
+        if self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -236,7 +243,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         elif selectionStr not in self.selected:
             self.selected.append(selectionStr)
 
-        if "All devices" in self.selected:
+        if self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -256,8 +263,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
-            if "All devices" in self.originalChoices[self.page]:
-                self.selected = ["All devices"]
+            if self.allDeviceStr in self.originalChoices[self.page]:
+                self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
             else:

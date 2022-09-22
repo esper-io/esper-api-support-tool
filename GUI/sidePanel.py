@@ -393,9 +393,10 @@ class SidePanel(wx.Panel):
                 selections = self.groupMultiDialog.GetSelections()
                 if selections:
                     for groupName in selections:
-                        groupId = self.groups[groupName]
-                        self.selectedGroups.Append(groupName)
-                        if groupName.lower() == "all devices":
+                        groupNameProper = groupName.split(" (Device Count:")[0]
+                        groupId = self.groups[groupNameProper]
+                        self.selectedGroups.Append(groupNameProper)
+                        if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
                             self.selectedGroupsList = []
                             self.selectedGroups.Append(groupName)
