@@ -318,6 +318,8 @@ def displayMessageBox(event):
 
 
 def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
+    if maxThread <= 0:
+        return mainList
     n = int(len(mainList) / maxThread)
     if n == 0:
         n = len(mainList)

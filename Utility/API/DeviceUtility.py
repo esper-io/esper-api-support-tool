@@ -121,9 +121,7 @@ def get_all_devices(
         elif type(response) is dict and "results" in response:
             response["next"] = None
             response["prev"] = None
-            for device in devices:
-                if device not in response["results"]:
-                    response["results"].append(device)
+            response["results"] = response["results"] + devices
     return response
 
 

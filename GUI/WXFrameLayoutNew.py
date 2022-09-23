@@ -522,10 +522,6 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
             Globals.THREAD_POOL.enqueue(self.saveFile, inFile)
-            if inFile.endswith(".csv") and self.gridPanel.grid_3_contents:
-                newFileName = dlg.GetFilename().replace(".csv", "_app-report.csv")
-                inFile = dlg.GetPath().replace(dlg.GetFilename(), newFileName)
-                Globals.THREAD_POOL.enqueue(self.saveAppInfoAsFile, inFile)
             dlg.DestroyLater()
             return True
         elif (
@@ -614,6 +610,8 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self, action=action)
+        if hasattr(Globals.frame, "start_time"):
+            print("Fetch deviceinfo list time: %s" % (time.time() - Globals.frame.start_time))
         self.Logging("Finished fetching information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
@@ -627,7 +625,7 @@ class NewFrameLayout(wx.Frame):
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
 
         self.saveGridData(
-            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
+            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData, action=action
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
@@ -641,6 +639,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveFile(self, inFile):
+        self.Logging("Preparing to save data to: %s" % inFile)
         self.defaultDir = Path(inFile).parent
         gridDeviceData = []
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
@@ -663,7 +662,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveGridData(
-        self, inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
+        self, inFile, headers, deviceHeaders, networkHeaders, gridDeviceData, action=None
     ):
         if inFile.endswith(".csv"):
             threads = []
@@ -682,56 +681,69 @@ class NewFrameLayout(wx.Frame):
             createNewFile(inFile)
 
             num = len(gridDeviceData)
-            for deviceData in gridDeviceData:
-                rowValues = []
-                for header in headers:
-                    value = ""
-                    if header in deviceData:
-                        value = deviceData[header]
-                    else:
-                        if header in deviceHeaders:
-                            if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
-                                value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
-                        if header in networkHeaders:
-                            if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
-                                value = deviceData[
-                                    Globals.CSV_NETWORK_ATTR_NAME[header]
-                                ]
-                    rowValues.append(value)
-                gridData.append(rowValues)
-                val = (num / (len(gridDeviceData) * 2)) * 100
-                if val <= 95:
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-                num += 1
+            if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value:
+                for deviceData in gridDeviceData:
+                    rowValues = []
+                    for header in headers:
+                        value = ""
+                        if header in deviceData:
+                            value = deviceData[header]
+                        else:
+                            if header in deviceHeaders:
+                                if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
+                                    value = deviceData[Globals.CSV_TAG_ATTR_NAME[header]]
+                            if header in networkHeaders:
+                                if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
+                                    value = deviceData[
+                                        Globals.CSV_NETWORK_ATTR_NAME[header]
+                                    ]
+                        rowValues.append(value)
+                    gridData.append(rowValues)
+                    val = (num / (len(gridDeviceData) * 2)) * 100
+                    if val <= 95:
+                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
+                    num += 1
+                with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                    writer.writerows(gridData)
+            if not action or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
+                if inFile.endswith(".csv"):
+                    inFile = inFile[:-4]
+                inFile += "_app-report.csv"
 
-            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(gridData)
+            if not action or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value or action == GeneralActions.GENERATE_APP_REPORT.value:
+                self.saveAppInfoAsFile(inFile)
         elif inFile.endswith(".xlsx"):
             deviceGridData = []
             networkGridData = []
             appGridData = []
             threads = []
 
-            Globals.THREAD_POOL.enqueue(
-                self.getGridDataToSave,
-                gridDeviceData if gridDeviceData else self.gridPanel.grid_1_contents,
-                deviceHeaders,
-                Globals.CSV_TAG_ATTR_NAME,
-                deviceGridData,
-            )
+            if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value:
+                Globals.THREAD_POOL.enqueue(
+                    self.getGridDataToSave,
+                    gridDeviceData if gridDeviceData else self.gridPanel.grid_1_contents,
+                    deviceHeaders,
+                    Globals.CSV_TAG_ATTR_NAME,
+                    deviceGridData,
+                )
 
-            Globals.THREAD_POOL.enqueue(
-                self.getGridDataToSave,
-                gridDeviceData if gridDeviceData else self.gridPanel.grid_2_contents,
-                networkHeaders,
-                Globals.CSV_NETWORK_ATTR_NAME,
-                networkGridData,
-            )
+            if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
+                Globals.THREAD_POOL.enqueue(
+                    self.getGridDataToSave,
+                    gridDeviceData if gridDeviceData else self.gridPanel.grid_2_contents,
+                    networkHeaders,
+                    Globals.CSV_NETWORK_ATTR_NAME,
+                    networkGridData,
+                )
 
-            for entry in self.gridPanel.grid_3_contents:
-                appGridData.append(list(entry.values()))
-
+            chunks = splitListIntoChunks(self.gridPanel.grid_3_contents, maxThread=max(Globals.MAX_THREAD_COUNT - 2, 1))
+            for chunk in chunks:
+                Globals.THREAD_POOL.enqueue(
+                    self.populateAppData,
+                    appGridData,
+                    chunk
+                )
             Globals.THREAD_POOL.join(tolerance=1)
 
             df_1 = None
@@ -762,6 +774,8 @@ class NewFrameLayout(wx.Frame):
                 )
             df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
 
+            self.Logging("Saving file to: %s" % inFile)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
             with pd.ExcelWriter(inFile) as writer1:
                 sheetOneName = (
                     "Device and Network"
@@ -769,7 +783,7 @@ class NewFrameLayout(wx.Frame):
                     else "Device"
                 )
                 if deviceGridData:
-                    df_1.to_excel(writer1, sheet_name=sheetOneName, index=False)
+                    df_1.to_excel(writer1, sheet_name=sheetOneName, index=False, engine="xlsxwriter")
                     for column in df_1:
                         column_width = max(
                             df_1[column].astype(str).map(len).max(), len(column)
@@ -779,7 +793,7 @@ class NewFrameLayout(wx.Frame):
                             col_idx, col_idx, column_width
                         )
                 if networkGridData and df_2 is not None:
-                    df_2.to_excel(writer1, sheet_name="Network", index=False)
+                    df_2.to_excel(writer1, sheet_name="Network", index=False, engine="xlsxwriter")
                     for column in df_2:
                         column_width = max(
                             df_2[column].astype(str).map(len).max(), len(column)
@@ -789,7 +803,7 @@ class NewFrameLayout(wx.Frame):
                             col_idx, col_idx, column_width
                         )
                 if appGridData:
-                    df_3.to_excel(writer1, sheet_name="Application", index=False)
+                    df_3.to_excel(writer1, sheet_name="Application", index=False, engine="xlsxwriter")
                     for column in df_3:
                         column_width = max(
                             df_3[column].astype(str).map(len).max(), len(column)
@@ -816,6 +830,15 @@ class NewFrameLayout(wx.Frame):
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
+    def populateAppData(self, appGridData, content):
+        for entry in content:
+            if type(entry) is list:
+                for elm in entry:
+                    if type(elm) is dict:
+                        appGridData.append(list(elm.values()))
+            elif type(entry) is dict:
+                appGridData.append(list(entry.values()))
+
     def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
         for entry in contents:
             rowValues = []
@@ -836,7 +859,11 @@ class NewFrameLayout(wx.Frame):
 
         num = 1
         for entry in self.gridPanel.grid_3_contents:
-            gridData.append(list(entry.values()))
+            if type(entry) is dict:
+                gridData.append(list(entry.values()))
+            elif type(entry) is list:
+                for row in entry:
+                    gridData.append(list(row.values()))
             val = (num / len(self.gridPanel.grid_3_contents)) * 100
             if val <= 95:
                 postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
@@ -1888,9 +1915,9 @@ class NewFrameLayout(wx.Frame):
                             estimatedDeviceCount += self.sidePanel.groupDeviceCount[match]
 
         if actionClientData <= GeneralActions.GENERATE_APP_REPORT.value and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT:
-            res = displayMessageBox(("Would you like to save directly to a file? Recommened for reports with large amounts of devices.", wx.ICON_INFORMATION | wx.YES_NO))
+            res = displayMessageBox(("Would you like to save directly to a file?\n\nRecommened for reports with large amounts of devices.", wx.ICON_INFORMATION | wx.YES_NO))
             if res == wx.YES:
-                return self.onSaveBothAll(action=actionClientData)
+                return self.onSaveBothAll(None, action=actionClientData)
 
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
@@ -2255,7 +2282,7 @@ class NewFrameLayout(wx.Frame):
         ):
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
-        # num = num + (num - Globals.MAX_GRID_LOAD + 1)
+        num = num + (num - Globals.MAX_GRID_LOAD + 1)
 
         isGroup = True
         if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
@@ -2280,67 +2307,19 @@ class NewFrameLayout(wx.Frame):
         elif action == GeneralActions.UNINSTALL_APP.value:
             Globals.THREAD_POOL.enqueue(uninstallAppOnDevice, appToUse, deviceList, isGroup=isGroup)
         else:
-            for entry in deviceList.values():
-                if entId != Globals.enterprise_id:
-                    self.onClearGrids(None)
-                    break
-                if checkIfCurrentThreadStopped():
-                    self.onClearGrids(None)
-                    break
-                device = entry[0]
-                deviceInfo = entry[1]
+            # populate visiable devices first
+            gridDisplayData = list(deviceList.values())[:Globals.MAX_GRID_LOAD]
 
-                # Populate Network sheet
-                if (
-                    action == GeneralActions.GENERATE_INFO_REPORT.value
-                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                ):
-                    if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                        self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
-                    else:
-                        # construct and add info to grid contents
-                        # self.gridPanel.constructNetworkGridContent(device, deviceInfo)
-                        Globals.THREAD_POOL.enqueue(
-                            self.gridPanel.constructNetworkGridContent, device, deviceInfo
-                        )
-                # Populate Device sheet
-                if (
-                    action == GeneralActions.GENERATE_DEVICE_REPORT.value
-                    or action == GeneralActions.GENERATE_INFO_REPORT.value
-                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                ):
-                    if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                        self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
-                    else:
-                        # construct and add info to grid contents
-                        # self.gridPanel.constructDeviceGridContent(deviceInfo)
-                        Globals.THREAD_POOL.enqueue(
-                            self.gridPanel.constructDeviceGridContent, deviceInfo
-                        )
-                # Populate App sheet
-                if (
-                    action == GeneralActions.GENERATE_APP_REPORT.value
-                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                ):
-                    if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                        self.gridPanel.populateAppGrid(
-                            device, deviceInfo, deviceInfo["appObj"]
-                        )
-                    else:
-                        # self.gridPanel.constructAppGridContent(
-                        #     device, deviceInfo, deviceInfo["appObj"]
-                        # )
-                        Globals.THREAD_POOL.enqueue(
-                            self.gridPanel.constructAppGridContent,
-                            device,
-                            deviceInfo,
-                            deviceInfo["appObj"],
-                        )
+            # let worker threads process rest of data
+            workerData = list(deviceList.values())[Globals.MAX_GRID_LOAD:]
+            splitWorkerData = splitListIntoChunks(workerData, maxThread=((Globals.MAX_THREAD_COUNT * 2) / 3))
+            self.processDeviceListForGrid(entId, gridDisplayData, action, maxGauge, updateGauge, num)
 
-                value = int(num / maxGauge * 100)
-                if updateGauge and value <= 99:
-                    num += 1
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
+            for chunk in splitWorkerData:
+                Globals.THREAD_POOL.enqueue(
+                    self.processDeviceListForGrid, entId, chunk, action, maxGauge, updateGauge, num
+                )
+
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
@@ -2348,6 +2327,60 @@ class NewFrameLayout(wx.Frame):
             action,
             tolerance=1,
         )
+
+    def processDeviceListForGrid(self, entId, deviceList, action, maxGauge, updateGauge, num):
+        for entry in deviceList:
+            if entId != Globals.enterprise_id:
+                self.onClearGrids(None)
+                break
+            if checkIfCurrentThreadStopped():
+                self.onClearGrids(None)
+                break
+            device = entry[0]
+            deviceInfo = entry[1]
+
+            # Populate Network sheet
+            if (
+                action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
+                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                else:
+                    # construct and add info to grid contents
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructNetworkGridContent, device, deviceInfo
+                    )
+            # Populate Device sheet
+            if (
+                action == GeneralActions.GENERATE_DEVICE_REPORT.value
+                or action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
+                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                else:
+                    # construct and add info to grid contents
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructDeviceGridContent, deviceInfo
+                    )
+            # Populate App sheet
+            if (
+                action == GeneralActions.GENERATE_APP_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
+                    self.gridPanel.populateAppGrid(
+                        device, deviceInfo, deviceInfo["appObj"]
+                    )
+                else:
+                    Globals.THREAD_POOL.enqueue(
+                        self.gridPanel.constructAppGridContent, device, deviceInfo, deviceInfo["appObj"]
+                    )
+            value = int(num / maxGauge * 100)
+            if updateGauge and value <= 99:
+                num += 1
+                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
 
     @api_tool_decorator()
     def MacReopenApp(self, event):

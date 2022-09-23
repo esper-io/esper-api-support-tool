@@ -783,6 +783,42 @@ def populateDeviceInfoDictionaryComplieData(
 
     deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
 
+    for attribute in Globals.CSV_TAG_ATTR_NAME:
+        value = (
+            deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]]
+            if Globals.CSV_TAG_ATTR_NAME[attribute] in deviceInfo
+            else ""
+        )
+        deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+
+    if latestEventData:
+        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
+            value = deviceInfo["network_info"][attribute] if attribute in deviceInfo["network_info"] else ""
+            deviceInfo[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
+
+    if appData and "results" in deviceInfo["appObj"]:
+        deviceInfo["AppsEntry"] = []
+        info = {}
+        for app in deviceInfo["appObj"]["results"]:
+            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
+                info = {
+                    "Esper Name": device.device_name
+                    if hasattr(device, "device_name")
+                    else device["device_name"],
+                    "Group": deviceInfo["groups"],
+                    "Application Name": app["app_name"],
+                    "Application Type": app["app_type"],
+                    "Application Version Code": app["version_code"],
+                    "Application Version Name": app["version_name"],
+                    "Package Name": app["package_name"],
+                    "State": app["state"],
+                    "Whitelisted": app["whitelisted"],
+                    "Can Clear Data": app["is_data_clearable"],
+                    "Can Uninstall": app["is_uninstallable"],
+                }
+            if info and info not in deviceInfo["AppsEntry"]:
+                deviceInfo["AppsEntry"].append(info)
+
     return deviceInfo
 
 
@@ -1251,6 +1287,9 @@ def getAllDeviceInfo(frame, action=None):
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
+    if hasattr(Globals.frame, "start_time"):
+        print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
+
     getApps = False
     getLatestEvents = True
 
@@ -1278,6 +1317,9 @@ def getAllDeviceInfo(frame, action=None):
         )
     Globals.THREAD_POOL.join(tolerance=1)
 
+    if hasattr(Globals.frame, "start_time"):
+        print("Fetch additional info time: %s" % (time.time() - Globals.frame.start_time))
+
     deviceList = {}
     indx = 0
 
@@ -1300,6 +1342,8 @@ def getAllDeviceInfo(frame, action=None):
             indx,
         )
         indx += 1
+
+    Globals.THREAD_POOL.join(tolerance=1)
 
     return deviceList
 

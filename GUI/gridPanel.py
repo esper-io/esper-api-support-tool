@@ -755,26 +755,8 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock])
 
     def constructDeviceGridContent(self, device_info):
-        device = {}
-        for attribute in Globals.CSV_TAG_ATTR_NAME:
-            value = (
-                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                else ""
-            )
-            if "Esper Name" == attribute:
-                esperName = value
-            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-        esperNameAccessor = Globals.CSV_TAG_ATTR_NAME["Esper Name"]
-        deviceListing = list(
-            filter(
-                lambda x: (x[esperNameAccessor] == esperName),
-                self.grid_1_contents,
-            )
-        )
-        if device not in self.grid_1_contents and not deviceListing:
-            self.grid_1_contents.append(device)
-        return device
+        if device_info not in self.grid_1_contents:
+            self.grid_1_contents.append(device_info)
 
     def getDeviceNetworkInfoListing(self, device, device_info):
         device = {}
@@ -793,6 +775,7 @@ class GridPanel(wx.Panel):
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
+        self.grid_3_contents += device_info["AppsEntry"] if "AppsEntry" in device_info else []
         return device
 
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
@@ -857,13 +840,8 @@ class GridPanel(wx.Panel):
             self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
-        networkInfo = (
-            deviceInfo["network_info"]
-            if "network_info" in deviceInfo
-            else constructNetworkInfo(device, deviceInfo)
-        )
-        if networkInfo not in self.grid_2_contents:
-            self.grid_2_contents.append(networkInfo)
+        if deviceInfo not in self.grid_2_contents:
+            self.grid_2_contents.append(deviceInfo)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
@@ -1267,8 +1245,8 @@ class GridPanel(wx.Panel):
         identifers = []
         numRows = self.grid_1.GetNumberRows()
         numRowsPerChunk = (
-            int(numRows / Globals.MAX_ACTIVE_THREAD_COUNT)
-            if numRows > Globals.MAX_ACTIVE_THREAD_COUNT
+            int(numRows / Globals.MAX_THREAD_COUNT)
+            if numRows > Globals.MAX_THREAD_COUNT
             else numRows
         )
         num = 0
@@ -1582,25 +1560,11 @@ class GridPanel(wx.Panel):
             self.grid_3_contents.append(info)
 
     def constructAppGridContent(self, device, deviceInfo, apps):
-        info = {}
-        for app in apps["results"]:
-            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
-                info = {
-                    "Esper Name": device.device_name
-                    if hasattr(device, "device_name")
-                    else device["device_name"],
-                    "Group": deviceInfo["groups"],
-                    "Application Name": app["app_name"],
-                    "Application Type": app["app_type"],
-                    "Application Version Code": app["version_code"],
-                    "Application Version Name": app["version_name"],
-                    "Package Name": app["package_name"],
-                    "State": app["state"],
-                    "Whitelisted": app["whitelisted"],
-                    "Can Clear Data": app["is_data_clearable"],
-                    "Can Uninstall": app["is_uninstallable"],
-                }
-            if info and info not in self.grid_3_contents:
+        info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
+        if info and info not in self.grid_3_contents:
+            if type(info) is list:
+                self.grid_3_contents.extend(info)
+            else:
                 self.grid_3_contents.append(info)
 
     def onScroll(self, event):
