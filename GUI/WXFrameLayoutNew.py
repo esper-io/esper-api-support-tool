@@ -808,15 +808,19 @@ class NewFrameLayout(wx.Frame):
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
             splitDevices = (
                 np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
-                if df_1
+                if df_1 is not None and deviceRowCount > 0
                 else []
             )
             splitNetwork = (
                 np.array_split(df_2, len(df_2) // Globals.SHEET_CHUNK_SIZE)
-                if df_2
+                if df_2 is not None and deviceRowCount > 0
                 else []
             )
-            splitApps = np.array_split(df_3, len(df_3) // Globals.SHEET_CHUNK_SIZE)
+            splitApps = (
+                np.array_split(df_3, len(df_3) // Globals.SHEET_CHUNK_SIZE)
+                if df_3 is not None and appRowCount > 0
+                else []
+            )
 
             if (
                 deviceRowCount <= Globals.SHEET_CHUNK_SIZE
