@@ -19,7 +19,7 @@ class MyApp(wx.App):
             self.name = "EAST-%s" % wx.GetUserId()
             self.instance = wx.SingleInstanceChecker(self.name)
 
-            if self.instance.IsAnotherRunning():
+            if self.instance.IsAnotherRunning() and not Globals.IS_DEBUG:
                 wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
                 return False
 
