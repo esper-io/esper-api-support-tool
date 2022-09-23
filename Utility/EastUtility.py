@@ -1335,11 +1335,6 @@ def getAllDeviceInfo(frame, action=None):
         )
     Globals.THREAD_POOL.join(tolerance=1)
 
-    if hasattr(Globals.frame, "start_time"):
-        print(
-            "Fetch additional info time: %s" % (time.time() - Globals.frame.start_time)
-        )
-
     deviceList = {}
     indx = 0
 
