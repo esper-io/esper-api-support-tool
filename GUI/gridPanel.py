@@ -371,7 +371,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
                 and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
@@ -430,7 +431,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
                 and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
@@ -482,7 +484,8 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.statusBar.gauge.GetValue() != self.parentFrame.statusBar.gauge.GetRange()
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
                 and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
@@ -775,7 +778,9 @@ class GridPanel(wx.Panel):
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
-        self.grid_3_contents += device_info["AppsEntry"] if "AppsEntry" in device_info else []
+        self.grid_3_contents += (
+            device_info["AppsEntry"] if "AppsEntry" in device_info else []
+        )
         return device
 
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
@@ -1278,14 +1283,16 @@ class GridPanel(wx.Panel):
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
                 id = self.grid_1.GetCellValue(rowNum, id_indx)
-                identifers.append({
-                    "name": esperName,
-                    "serial": serialNum,
-                    "custom": cusSerialNum,
-                    "imei1": imei1,
-                    "imei2": imei2,
-                    "id": id
-                })
+                identifers.append(
+                    {
+                        "name": esperName,
+                        "serial": serialNum,
+                        "custom": cusSerialNum,
+                        "imei1": imei1,
+                        "imei2": imei2,
+                        "id": id,
+                    }
+                )
             else:
                 break
             rowNum += 1
@@ -1353,7 +1360,9 @@ class GridPanel(wx.Panel):
                     lambda x: (
                         x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
                         if hasattr(device, "device_name")
-                        else device["device_name"] if type(device) is dict else device
+                        else device["device_name"]
+                        if type(device) is dict
+                        else device
                     ),
                     self.grid_1_contents,
                 )

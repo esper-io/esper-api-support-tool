@@ -38,7 +38,7 @@ def uploadContentToHost(host, enterprise, key, file):
     file = {
         "Content-Disposition": 'form-data; name="key"; filename="%s"' % file,
         "key": open(file, "rb"),
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     resp = performPostRequestWithRetry(
         url,

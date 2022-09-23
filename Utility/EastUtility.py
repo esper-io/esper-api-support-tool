@@ -107,7 +107,9 @@ def TakeAction(frame, input, action, isDevice=False):
             try:
                 frame.Logging("---> Making API Request")
                 api_response = getAllDevices(input, tolarance=1)
-                iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
+                iterateThroughDeviceList(
+                    frame, action, api_response, Globals.enterprise_id
+                )
             except ApiException as e:
                 print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
                 ApiToolLog().LogError(e)
@@ -319,7 +321,9 @@ def filterDeviceList(device):
 
 
 def processInstallDevices(deviceList):
-    postEventToFrame(eventUtil.myEVT_LOG, "---> Getting Device Info for Installed Devices")
+    postEventToFrame(
+        eventUtil.myEVT_LOG, "---> Getting Device Info for Installed Devices"
+    )
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
     newDeviceList = []
     for device in deviceList:
@@ -328,7 +332,9 @@ def processInstallDevices(deviceList):
         )
     time.sleep(1)
     Globals.THREAD_POOL.join(tolerance=1)
-    postEventToFrame(eventUtil.myEVT_LOG, "---> Gathered Basic Device Info for Installed Devices")
+    postEventToFrame(
+        eventUtil.myEVT_LOG, "---> Gathered Basic Device Info for Installed Devices"
+    )
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
     processCollectionDevices({"results": newDeviceList})
 
@@ -348,7 +354,9 @@ def processCollectionDevices(collectionList):
         )
         if splitResults:
             number_of_devices = 0
-            postEventToFrame(eventUtil.myEVT_LOG, "---> Gathering Device's Network and App Info")
+            postEventToFrame(
+                eventUtil.myEVT_LOG, "---> Gathering Device's Network and App Info"
+            )
             for chunk in splitResults:
                 Globals.THREAD_POOL.enqueue(
                     fillInDeviceInfoDict, chunk, number_of_devices
@@ -793,7 +801,11 @@ def populateDeviceInfoDictionaryComplieData(
 
     if latestEventData:
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = deviceInfo["network_info"][attribute] if attribute in deviceInfo["network_info"] else ""
+            value = (
+                deviceInfo["network_info"][attribute]
+                if attribute in deviceInfo["network_info"]
+                else ""
+            )
             deviceInfo[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
 
     if appData and "results" in deviceInfo["appObj"]:
@@ -1218,11 +1230,17 @@ def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
     )
     if isGroup:
         return executeCommandOnGroup(
-            Globals.frame, command_args, command_type="REMOVE_WIFI_AP", groupIds=[deviceId] if type(deviceId) != list else deviceId
+            Globals.frame,
+            command_args,
+            command_type="REMOVE_WIFI_AP",
+            groupIds=[deviceId] if type(deviceId) != list else deviceId,
         )
     else:
         return executeCommandOnDevice(
-            Globals.frame, command_args, command_type="REMOVE_WIFI_AP", deviceIds=[deviceId] if type(deviceId) != list else deviceId
+            Globals.frame,
+            command_args,
+            command_type="REMOVE_WIFI_AP",
+            deviceIds=[deviceId] if type(deviceId) != list else deviceId,
         )
 
 
@@ -1318,7 +1336,9 @@ def getAllDeviceInfo(frame, action=None):
     Globals.THREAD_POOL.join(tolerance=1)
 
     if hasattr(Globals.frame, "start_time"):
-        print("Fetch additional info time: %s" % (time.time() - Globals.frame.start_time))
+        print(
+            "Fetch additional info time: %s" % (time.time() - Globals.frame.start_time)
+        )
 
     deviceList = {}
     indx = 0

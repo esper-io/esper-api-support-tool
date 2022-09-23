@@ -38,7 +38,7 @@ def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=Fal
             command_type="UNINSTALL",
             groupIds=device,
             postStatus=postStatus,
-            combineRequests=True
+            combineRequests=True,
         )
     else:
         return executeCommandOnDevice(
@@ -47,7 +47,7 @@ def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=Fal
             command_type="UNINSTALL",
             deviceIds=device,
             postStatus=postStatus,
-            combineRequests=True
+            combineRequests=True,
         )
 
 
@@ -58,11 +58,13 @@ def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
         command_type="UNINSTALL",
         groupIds=groups,
         postStatus=postStatus,
-        combineRequests=True
+        combineRequests=True,
     )
 
 
-def installAppOnDevices(packageName, version=None, devices=None, postStatus=False, isGroup=False):
+def installAppOnDevices(
+    packageName, version=None, devices=None, postStatus=False, isGroup=False
+):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -93,7 +95,7 @@ def installAppOnDevices(packageName, version=None, devices=None, postStatus=Fals
                 command_type="INSTALL",
                 groupIds=devices,
                 postStatus=postStatus,
-                combineRequests=True
+                combineRequests=True,
             )
         else:
             return executeCommandOnDevice(
@@ -105,7 +107,7 @@ def installAppOnDevices(packageName, version=None, devices=None, postStatus=Fals
                 command_type="INSTALL",
                 deviceIds=devices,
                 postStatus=postStatus,
-                combineRequests=True
+                combineRequests=True,
             )
     else:
         displayMessageBox(
@@ -150,7 +152,7 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
             command_type="INSTALL",
             groupIds=groups,
             postStatus=postStatus,
-            combineRequests=True
+            combineRequests=True,
         )
     else:
         displayMessageBox(
@@ -503,23 +505,33 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
     return jsonResp
 
 
-def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0):
+def getInstallDevices(
+    version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0
+):
     if type(version_id) is list:
         api_response = None
         for version in version_id:
-            resp = get_installed_devices(version, application_id, maxAttempt, tolarance=tolarance)
+            resp = get_installed_devices(
+                version, application_id, maxAttempt, tolarance=tolarance
+            )
             if api_response is None:
                 api_response = resp
             else:
                 api_response.results += resp.results
         return api_response
     else:
-        return get_installed_devices(version_id, application_id, maxAttempt, tolarance=tolarance)
+        return get_installed_devices(
+            version_id, application_id, maxAttempt, tolarance=tolarance
+        )
 
 
-def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0):
+def get_installed_devices(
+    version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0
+):
     offset = 0
-    response = get_installed_devices_api(version_id, application_id, Globals.limit, offset, maxAttempt)
+    response = get_installed_devices_api(
+        version_id, application_id, Globals.limit, offset, maxAttempt
+    )
     if len(response.results) != response.count:
         devices = getAllFromOffsetsRequests(response, None, tolarance)
         if hasattr(response, "results"):
@@ -535,7 +547,9 @@ def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RET
     return response
 
 
-def get_installed_devices_api(version_id, application_id, limit, offset, maxAttempt=Globals.MAX_RETRY):
+def get_installed_devices_api(
+    version_id, application_id, limit, offset, maxAttempt=Globals.MAX_RETRY
+):
     api_instance = esperclient.ApplicationApi(
         esperclient.ApiClient(Globals.configuration)
     )

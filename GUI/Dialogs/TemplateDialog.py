@@ -262,7 +262,11 @@ class TemplateDialog(wx.Dialog):
         tempList = util.getTemplates(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
         )
-        return tempList["results"] if tempList is not None and "results" in tempList else tempList
+        return (
+            tempList["results"]
+            if tempList is not None and "results" in tempList
+            else tempList
+        )
 
     @api_tool_decorator()
     def getTemplate(self, template):

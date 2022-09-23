@@ -22,7 +22,9 @@ from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
 
 @api_tool_decorator()
-def createCommand(frame, command_args, commandType, schedule, schType, combineRequests=False):
+def createCommand(
+    frame, command_args, commandType, schedule, schType, combineRequests=False
+):
     """ Attempt to apply a Command given user specifications """
     result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
 
@@ -35,11 +37,23 @@ def createCommand(frame, command_args, commandType, schedule, schType, combineRe
     t = None
     if result and isGroup:
         Globals.THREAD_POOL.enqueue(
-            executeCommandOnGroup, frame, command_args, schedule, schType, commandType, combineRequests=combineRequests
+            executeCommandOnGroup,
+            frame,
+            command_args,
+            schedule,
+            schType,
+            commandType,
+            combineRequests=combineRequests,
         )
     elif result and not isGroup:
         Globals.THREAD_POOL.enqueue(
-            executeCommandOnDevice, frame, command_args, schedule, schType, commandType, combineRequests=combineRequests
+            executeCommandOnDevice,
+            frame,
+            command_args,
+            schedule,
+            schType,
+            commandType,
+            combineRequests=combineRequests,
         )
     if t:
         frame.menubar.disableConfigMenu()
@@ -99,7 +113,7 @@ def executeCommandOnGroup(
     groupIds=None,
     maxAttempt=Globals.MAX_RETRY,
     postStatus=True,
-    combineRequests=False
+    combineRequests=False,
 ):
     """ Execute a Command on a Group of Devices """
     statusList = []
@@ -110,7 +124,14 @@ def executeCommandOnGroup(
         groupList = groupIds
     if not combineRequests:
         for groupToUse in groupList:
-            last_status = sendCommandToGroup([groupToUse], command_type, command_args, schedule_type, schedule, maxAttempt)
+            last_status = sendCommandToGroup(
+                [groupToUse],
+                command_type,
+                command_args,
+                schedule_type,
+                schedule,
+                maxAttempt,
+            )
             entryName = list(
                 filter(lambda x: groupToUse == x[1], frame.sidePanel.devices.items())
             )
@@ -141,7 +162,9 @@ def executeCommandOnGroup(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        last_status = sendCommandToGroup(groupList, command_type, command_args, schedule_type, schedule, maxAttempt)
+        last_status = sendCommandToGroup(
+            groupList, command_type, command_args, schedule_type, schedule, maxAttempt
+        )
         if last_status and hasattr(last_status, "state"):
             entry = {}
             entry["Groups"] = groupList
@@ -184,7 +207,14 @@ def executeCommandOnDevice(
         devicelist = deviceIds
     if not combineRequests:
         for deviceToUse in devicelist:
-            last_status = sendCommandToDevice([deviceToUse], command_type, command_args, schedule_type, schedule, maxAttempt)
+            last_status = sendCommandToDevice(
+                [deviceToUse],
+                command_type,
+                command_args,
+                schedule_type,
+                schedule,
+                maxAttempt,
+            )
             deviceEntryName = list(
                 filter(lambda x: deviceToUse == x[1], frame.sidePanel.devices.items())
             )
@@ -223,7 +253,9 @@ def executeCommandOnDevice(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        last_status = sendCommandToDevice(devicelist, command_type, command_args, schedule_type, schedule, maxAttempt)
+        last_status = sendCommandToDevice(
+            devicelist, command_type, command_args, schedule_type, schedule, maxAttempt
+        )
         if last_status and hasattr(last_status, "state"):
             entry = {}
             entry["Devices"] = devicelist
@@ -243,7 +275,14 @@ def executeCommandOnDevice(
     return statusList
 
 
-def sendCommandToDevice(deviceList, command_type, command_args, schedule_type, schedule, maxAttempt=Globals.MAX_RETRY):
+def sendCommandToDevice(
+    deviceList,
+    command_type,
+    command_args,
+    schedule_type,
+    schedule,
+    maxAttempt=Globals.MAX_RETRY,
+):
     request = esperclient.V0CommandRequest(
         enterprise=Globals.enterprise_id,
         command_type="DEVICE",
@@ -258,7 +297,14 @@ def sendCommandToDevice(deviceList, command_type, command_args, schedule_type, s
     return last_status
 
 
-def sendCommandToGroup(groupList, command_type, command_args, schedule_type, schedule, maxAttempt=Globals.MAX_RETRY):
+def sendCommandToGroup(
+    groupList,
+    command_type,
+    command_args,
+    schedule_type,
+    schedule,
+    maxAttempt=Globals.MAX_RETRY,
+):
     request = esperclient.V0CommandRequest(
         enterprise=Globals.enterprise_id,
         command_type="GROUP",

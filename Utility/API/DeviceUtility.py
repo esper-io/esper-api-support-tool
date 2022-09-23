@@ -104,7 +104,9 @@ def get_all_devices_helper(
         if type(responses) == list:
             responses.append(api_response)
     else:
-        raise Exception("HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content))
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
     return api_response
 
 

@@ -129,7 +129,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
+        self.selectedGroups = wx.ListBox(
+            self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
         self.selectedGroups.SetFont(
             wx.Font(
@@ -161,7 +163,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
+        self.selectedDevices = wx.ListBox(
+            self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
         self.selectedDevices.SetFont(
             wx.Font(
@@ -189,7 +193,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
+        self.selectedApp = wx.ListBox(
+            self.panel_17, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedApp.SetToolTip("Currently Selected Application")
         self.selectedApp.SetFont(
             wx.Font(
@@ -374,7 +380,9 @@ class SidePanel(wx.Panel):
                 match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
                 if match:
                     match = match[0]
-                    newChoices.append("%s (Device Count: %s)" % (choice, self.groupDeviceCount[match]))
+                    newChoices.append(
+                        "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
+                    )
 
             if self.groupMultiDialog:
                 self.groupMultiDialog = None

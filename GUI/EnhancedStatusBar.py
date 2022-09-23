@@ -278,9 +278,7 @@ class EnhancedStatusBar(wx.StatusBar):
 
     def AddStaicTextAndGauge(self):
         self.sbText = wx.StaticText(self, wx.ID_ANY, "")
-        self.AddWidget(
-            self.sbText, pos=0, horizontalalignment=ESB_EXACT_FIT
-        )
+        self.AddWidget(self.sbText, pos=0, horizontalalignment=ESB_EXACT_FIT)
         self.sbText.Bind(wx.EVT_LEFT_UP, self.Parent.showConsole)
 
         self.gauge = wx.Gauge(
@@ -289,9 +287,7 @@ class EnhancedStatusBar(wx.StatusBar):
             100,
             style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH,
         )
-        self.AddWidget(
-            self.gauge, pos=1, horizontalalignment=ESB_EXACT_FIT
-        )
+        self.AddWidget(self.gauge, pos=1, horizontalalignment=ESB_EXACT_FIT)
 
     @api_tool_decorator(locks=[Globals.gauge_lock])
     def setGaugeValue(self, value):

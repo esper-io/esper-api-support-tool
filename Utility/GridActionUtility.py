@@ -291,9 +291,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
             "customSerialNumber" in hardware
             and hardware["customSerialNumber"] in tagsFromGrid.keys()
         )
-        or (
-            deviceId in tagsFromGrid.keys()
-        )
+        or (deviceId in tagsFromGrid.keys())
     ):
         tagsFromCell = None
         key = None
@@ -421,7 +419,9 @@ def setAllAppsState(frame, device, state):
 @api_tool_decorator()
 def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     if not deviceIdentifers:
-        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=tolerance)
+        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(
+            tolerance=tolerance
+        )
     devices = []
     api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     splitResults = splitListIntoChunks(deviceIdentifers)

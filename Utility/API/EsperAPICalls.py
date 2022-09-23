@@ -652,7 +652,9 @@ def createAppList(json_resp, obtainAppDictEntry=True):
 
 
 @api_tool_decorator()
-def setAppState(device_id, pkg_name, state="HIDE", isGroup=False, maxAttempt=Globals.MAX_RETRY):
+def setAppState(
+    device_id, pkg_name, state="HIDE", isGroup=False, maxAttempt=Globals.MAX_RETRY
+):
     pkgName = pkg_name
     if pkgName:
         args = V0CommandArgs(

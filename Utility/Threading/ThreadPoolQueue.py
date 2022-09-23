@@ -84,8 +84,10 @@ class Pool:
                 if hasattr(threading.current_thread(), "abort"):
                     isAbortSet = threading.current_thread().abort.is_set()
                 if (
-                    timeout > 0 and time.perf_counter() - startTime >= timeout
-                ) or self.isDoneWithinTolerance(queueTolerance=tolerance) or isAbortSet:
+                    (timeout > 0 and time.perf_counter() - startTime >= timeout)
+                    or self.isDoneWithinTolerance(queueTolerance=tolerance)
+                    or isAbortSet
+                ):
                     break
                 time.sleep(0.01)
 

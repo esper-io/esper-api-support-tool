@@ -6,7 +6,12 @@ import Common.Globals as Globals
 from Utility import EventUtility
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit, getHeader, postEventToFrame, checkIfCurrentThreadStopped
+from Utility.Resource import (
+    enforceRateLimit,
+    getHeader,
+    postEventToFrame,
+    checkIfCurrentThreadStopped,
+)
 
 
 def performGetRequestWithRetry(
