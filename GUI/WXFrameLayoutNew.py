@@ -611,11 +611,6 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self, action=action)
-        if hasattr(Globals.frame, "start_time"):
-            print(
-                "Fetch deviceinfo list time: %s"
-                % (time.time() - Globals.frame.start_time)
-            )
         self.Logging("Finished fetching information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
@@ -624,6 +619,12 @@ class NewFrameLayout(wx.Frame):
         for chunk in splitResults:
             Globals.THREAD_POOL.enqueue(self.fetchAllGridData, chunk, gridDeviceData)
         Globals.THREAD_POOL.join(1)
+
+        if hasattr(Globals.frame, "start_time"):
+            print(
+                "Fetch deviceinfo list time: %s"
+                % (time.time() - Globals.frame.start_time)
+            )
 
         self.Logging("Finished compiling information for CSV")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
@@ -805,7 +806,11 @@ class NewFrameLayout(wx.Frame):
 
             self.Logging("Saving file to: %s" % inFile)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-            splitDevices = np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
+            splitDevices = (
+                np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
+                if df_1
+                else []
+            )
             splitNetwork = (
                 np.array_split(df_2, len(df_2) // Globals.SHEET_CHUNK_SIZE)
                 if df_2
