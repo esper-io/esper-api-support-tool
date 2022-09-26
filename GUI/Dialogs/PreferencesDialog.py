@@ -293,6 +293,14 @@ class PreferencesDialog(wx.Dialog):
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
         )
 
+        static_line_5 = wx.StaticLine(self.save, wx.ID_ANY)
+        sizer_12.Add(
+            static_line_5,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
         (_, _, self.checkbox_26,) = self.addPrefToPanel(
             self.save,
             sizer_12,
