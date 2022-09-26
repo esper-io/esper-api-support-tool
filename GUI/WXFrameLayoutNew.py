@@ -615,10 +615,14 @@ class NewFrameLayout(wx.Frame):
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
-        splitResults = splitListIntoChunks(list(deviceList.values()))
-        for chunk in splitResults:
-            Globals.THREAD_POOL.enqueue(self.fetchAllGridData, chunk, gridDeviceData)
-        Globals.THREAD_POOL.join(1)
+        for item in deviceList.values():
+            if len(item) > 1 and item[1]:
+                gridDeviceData.append(item[1])
+
+        for device in gridDeviceData:
+            self.gridPanel.grid_3_contents += (
+                device["AppsEntry"] if "AppsEntry" in device else []
+            )
 
         if hasattr(Globals.frame, "start_time"):
             print(
@@ -806,22 +810,6 @@ class NewFrameLayout(wx.Frame):
 
             self.Logging("Saving file to: %s" % inFile)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-            splitDevices = (
-                np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
-                if df_1 is not None and deviceRowCount > 0
-                else []
-            )
-            splitNetwork = (
-                np.array_split(df_2, len(df_2) // Globals.SHEET_CHUNK_SIZE)
-                if df_2 is not None and deviceRowCount > 0
-                else []
-            )
-            splitApps = (
-                np.array_split(df_3, len(df_3) // Globals.SHEET_CHUNK_SIZE)
-                if df_3 is not None and appRowCount > 0
-                else []
-            )
-
             if (
                 deviceRowCount <= Globals.SHEET_CHUNK_SIZE
                 and appRowCount <= Globals.SHEET_CHUNK_SIZE
@@ -836,6 +824,22 @@ class NewFrameLayout(wx.Frame):
                     df_3,
                 )
             else:
+                splitDevices = (
+                    np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
+                    if df_1 is not None and deviceRowCount > 0
+                    else []
+                )
+                splitNetwork = (
+                    np.array_split(df_2, len(df_2) // Globals.SHEET_CHUNK_SIZE)
+                    if df_2 is not None and deviceRowCount > 0
+                    else []
+                )
+                splitApps = (
+                    np.array_split(df_3, len(df_3) // Globals.SHEET_CHUNK_SIZE)
+                    if df_3 is not None and appRowCount > 0
+                    else []
+                )
+
                 if inFile.endswith(".xlsx"):
                     inFile = inFile[:-4]
                 for i in range(max(len(splitDevices), len(splitApps))):
