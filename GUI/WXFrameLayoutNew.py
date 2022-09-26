@@ -810,7 +810,7 @@ class NewFrameLayout(wx.Frame):
 
             self.Logging("Saving file to: %s" % inFile)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-            if (
+            if not Globals.SPLIT_EXCEL_FILE or (
                 deviceRowCount <= Globals.SHEET_CHUNK_SIZE
                 and appRowCount <= Globals.SHEET_CHUNK_SIZE
             ):
@@ -823,7 +823,10 @@ class NewFrameLayout(wx.Frame):
                     appGridData,
                     df_3,
                 )
-            else:
+            elif Globals.SPLIT_EXCEL_FILE and (
+                deviceRowCount >= Globals.SHEET_CHUNK_SIZE
+                or appRowCount >= Globals.SHEET_CHUNK_SIZE
+            ):
                 splitDevices = (
                     np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
                     if df_1 is not None and deviceRowCount > 0
@@ -844,8 +847,16 @@ class NewFrameLayout(wx.Frame):
                     inFile = inFile[:-4]
                 for i in range(max(len(splitDevices), len(splitApps))):
                     fileName = "%s_{:02d}.xlsx".format(i) % inFile
-                    df_device = splitDevices[i] if splitDevices and len(splitDevices) > i else None
-                    df_network = splitNetwork[i] if splitNetwork and len(splitNetwork) > i else None
+                    df_device = (
+                        splitDevices[i]
+                        if splitDevices and len(splitDevices) > i
+                        else None
+                    )
+                    df_network = (
+                        splitNetwork[i]
+                        if splitNetwork and len(splitNetwork) > i
+                        else None
+                    )
                     df_apps = splitApps[i] if splitApps and len(splitApps) > i else None
                     self.writeToExcelFile(
                         fileName,
