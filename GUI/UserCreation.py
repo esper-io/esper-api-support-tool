@@ -476,7 +476,8 @@ class UserCreation(wx.Frame):
                 else:
                     for header in entry:
                         headers.append(header.lower().replace(" ", ""))
-        self.grid_1.Thaw()
+        if self.grid_1.IsFrozen():
+            self.grid_1.Thaw()
         self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(True)
