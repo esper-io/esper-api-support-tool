@@ -15,6 +15,7 @@ from traceback import print_exc, extract_tb, format_list
 from Utility.Logging.IssueTracker import IssueTracker
 
 from fuzzywuzzy import fuzz
+from esperclient.rest import ApiException
 
 
 class ApiToolLog:
@@ -188,6 +189,9 @@ class ApiToolLog:
                     Globals.api_log_lock.release()
 
     def postIssueToTrack(self, excpt, content):
+        if not Globals.AUTO_REPORT_ISSUES:
+            return
+
         def getStrRatioSimilarity(s, t, usePartial=False):
             if usePartial:
                 return fuzz.partial_ratio(s.lower(), t.lower())
@@ -199,6 +203,9 @@ class ApiToolLog:
             or "ConnectionError" in str(excpt)
             or "HTTP Response" in str(excpt)
             or "Bad Gateway" in str(excpt)
+            or "Permission denied" in str(excpt)
+            or "HTTP" in str(excpt)
+            or type(excpt) is ApiException
         ):
             return
 
