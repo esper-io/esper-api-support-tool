@@ -194,7 +194,7 @@ CSV_TAG_ATTR_NAME = {
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
-    "Location": "location_info",
+    "Location Coordinates (Alt, Lat., Long.)": "location_info",
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
     "Screen Timeout (ms)": "screenOffTimeout",
