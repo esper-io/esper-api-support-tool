@@ -196,15 +196,16 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             api_response.results = list(filter(filterDeviceList, api_response.results))
 
         additionalInfo = {}
-        for device in api_response["results"]:
-            Globals.THREAD_POOL.enqueue(
-                getAdditionalDeviceInfo,
-                device.id,
-                getApps,
-                getLatestEvents,
-                additionalInfo,
-            )
-        Globals.THREAD_POOL.join(tolerance=1)
+        if getApps or getLatestEvents:
+            for device in api_response["results"]:
+                Globals.THREAD_POOL.enqueue(
+                    getAdditionalDeviceInfo,
+                    device.id,
+                    getApps,
+                    getLatestEvents,
+                    additionalInfo,
+                )
+            Globals.THREAD_POOL.join(tolerance=1)
 
         deviceList = {}
         indx = 0
@@ -213,6 +214,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         )
         for device in api_response.results:
             deviceInfo = {}
+            latestData = appData = None
             if device.id in additionalInfo:
                 latestData = additionalInfo[device.id]["event"]
                 appData = additionalInfo[device.id]["app"]
