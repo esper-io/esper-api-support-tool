@@ -297,15 +297,6 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0):
                 perform_web_requests, (url, getHeader(), "GET", None)
             )
             respOffsetInt += int(respLimit)
-        if respOffsetInt > count:
-            respOffsetInt -= int(respLimit)
-            respOffsetInt += 1
-            url = apiNext.replace(
-                "offset=%s" % respOffset, "offset=%s" % str(respOffsetInt)
-            )
-            Globals.THREAD_POOL.enqueue(
-                perform_web_requests, (url, getHeader(), "GET", None)
-            )
 
     Globals.THREAD_POOL.join(tolarance)
     resultList = Globals.THREAD_POOL.results()
