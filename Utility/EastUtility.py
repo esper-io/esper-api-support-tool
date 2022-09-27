@@ -1325,15 +1325,16 @@ def getAllDeviceInfo(frame, action=None):
         getLatestEvents = True
 
     additionalInfo = {}
-    for device in api_response["results"]:
-        Globals.THREAD_POOL.enqueue(
-            getAdditionalDeviceInfo,
-            device["id"],
-            getApps,
-            getLatestEvents,
-            additionalInfo,
-        )
-    Globals.THREAD_POOL.join(tolerance=1)
+    if getApps or getLatestEvents:
+        for device in api_response["results"]:
+            Globals.THREAD_POOL.enqueue(
+                getAdditionalDeviceInfo,
+                device["id"],
+                getApps,
+                getLatestEvents,
+                additionalInfo,
+            )
+        Globals.THREAD_POOL.join(tolerance=1)
 
     deviceList = {}
     indx = 0
