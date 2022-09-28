@@ -152,7 +152,14 @@ class NewEndpointDialog(wx.Dialog):
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
-        return [name, host, entId, key, prefix]
+        # return [name, host, entId, key, prefix]
+        return {
+            "name": name,
+            "apiHost": host,
+            "enterprise": entId,
+            "apiKey": key,
+            "apiPrefix": prefix
+        }
 
     @api_tool_decorator()
     def checkInputs(self, event):

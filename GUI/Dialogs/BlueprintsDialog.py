@@ -9,7 +9,7 @@ from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
     getAllBlueprintsFromHost,
-    getGroupBlueprintDetail,
+    getGroupBlueprintDetailForHost,
 )
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import (
@@ -330,7 +330,7 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadBlueprintHelper(self, event, match, config):
-        revision = getGroupBlueprintDetail(
+        revision = getGroupBlueprintDetailForHost(
             config["apiHost"],
             config["apiKey"],
             config["enterprise"],

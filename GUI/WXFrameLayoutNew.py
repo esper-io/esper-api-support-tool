@@ -7,8 +7,11 @@ from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
+    getAllBlueprints,
+    modifyAppsInBlueprints,
     prepareBlueprintClone,
     prepareBlueprintConversion,
+    pushBlueprintUpdate,
 )
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.UserUtility import getAllUsers
@@ -141,6 +144,7 @@ class NewFrameLayout(wx.Frame):
         self.blueprintsEnabled = False
         self.previousGroupFetchThread = None
         self.firstRun = True
+        self.changedBlueprints = []
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -430,20 +434,32 @@ class NewFrameLayout(wx.Frame):
             ) and not matchingConfig:
                 with open(self.authPath, "a", newline="") as csvfile:
                     writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerow(csvRow)
+                    if type(csvRow) is dict:
+                        writer.writerow(list(csvRow.values()))
+                    else:
+                        writer.writerow(csvRow)
                 Globals.csv_auth_path = self.authPath
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
             elif csvRow in self.auth_data or matchingConfig:
-                self.auth_data = [
-                    csvRow if x == matchingConfig["name"] else x for x in self.auth_data
-                ]
+                self.auth_data_tmp = []
+                for entry in self.auth_data:
+                    if entry["apiHost"] == matchingConfig["apiHost"]:
+                        self.auth_data_tmp.append(csvRow)
+                    else:
+                        self.auth_data_tmp.append(entry)
+                self.auth_data = self.auth_data_tmp
+
                 tmp = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
                 for auth in self.auth_data:
                     authEntry = []
+                    indx = 0
                     for val in auth.values():
+                        if indx > len(tmp[0]):
+                            break
                         authEntry.append(val)
+                        indx += 1
                     if authEntry not in tmp:
                         tmp.append(authEntry)
                 with open(self.authPath, "w", newline="") as csvfile:
@@ -1430,6 +1446,9 @@ class NewFrameLayout(wx.Frame):
             prefix = config[2]
             entId = config[3]
 
+        if not prefix:
+            prefix = "Bearer"
+
         if host and key and prefix and entId:
             self.sidePanel.configList.AppendText("API Host = " + host + "\n")
             self.sidePanel.configList.AppendText("API key = " + key + "\n")
@@ -1462,6 +1481,7 @@ class NewFrameLayout(wx.Frame):
                     )
                     blueprints.start()
                     threads = [groupThread, appThread, blueprints]
+                    # self.menubar.toggleAddTenantOptions(False)
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     threads,
@@ -3013,6 +3033,7 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
 
+        # self.menubar.toggleAddTenantOptions(state)
         self.menubar.fileOpenAuth.Enable(state)
         self.menubar.EnableTop(4, state)
         self.menubar.fileOpenConfig.Enable(state)
@@ -3510,3 +3531,74 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
+
+    def onNewBlueprintApp(self, event):
+        reset = True
+        if self.sidePanel.apps:
+            self.setCursorBusy()
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+            self.toggleEnabledState(False)
+            with InstalledDevicesDlg(
+                self.sidePanel.apps,
+                title="Select New Blueprint App",
+                showAllVersionsOption=False,
+                showBlueprintInput=True
+            ) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    selection, apps = dlg.getBlueprintInputs()
+                    self.Logging("Fetching List of Blueprints...")
+                    blueprints = getAllBlueprints()
+                    self.Logging("Processing List of Blueprints...")
+                    Globals.THREAD_POOL.enqueue(modifyAppsInBlueprints, blueprints, apps, self.changedBlueprints, addToAppListIfNotPresent=selection)
+        else:
+            displayMessageBox(
+                (
+                    "No apps found",
+                    wx.ICON_INFORMATION,
+                )
+            )
+        if reset:
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
+
+    def displayBlueprintActionDlg(self, success, total):
+        res = None
+        opt = None
+        options = ["Apply Immediatly", "Schedule", "Do Nothing"]
+        with wx.SingleChoiceDialog(
+            self,
+            "Successfully changed %s of %s Blueprints   .\nWhat action would you like to apply to the changed Blueprints?" % (success, total),
+            "",
+            options
+        ) as dlg:
+            res = dlg.ShowModal()
+            if res == wx.ID_OK:
+                opt = dlg.GetStringSelection()
+            else:
+                return None
+
+        pushSuccess = 0
+        if not opt or opt == options[2]:
+            return None
+        elif opt == options[1]:
+            # Push immediately
+            for bp in self.changedBlueprints:
+                updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
+                if updateResp and updateResp.status_code < 300:
+                    pushSuccess += 1
+        else:
+            # prompt for schedule
+            schedule = None
+            for bp in self.changedBlueprints:
+                updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"], schedule=schedule)
+                if updateResp and updateResp.status_code < 300:
+                    pushSuccess += 1
+
+        displayMessageBox(
+            (
+                "Successfully sent Update Blueprint command to %s of %s" & (pushSuccess, total),
+                wx.ICON_INFORMATION,
+            )
+        )

@@ -109,7 +109,6 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
-        self.toggleCloneMenuOptions(False)
 
         self.cloneSubMenu = runMenu.Append(wx.ID_ANY, "&Clone", self.cloneSubMenu)
 
@@ -130,6 +129,10 @@ class ToolMenuBar(wx.MenuBar):
         self.appSubMenu.Append(wx.ID_SEPARATOR)
         self.installedDevices = self.appSubMenu.Append(
             wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
+        )
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.newBlueprintApp = self.appSubMenu.Append(
+            wx.ID_ANY, "&Push new app to Blueprints"
         )
         self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
         self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
@@ -235,6 +238,8 @@ class ToolMenuBar(wx.MenuBar):
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
+        self.toggleCloneMenuOptions(False)
+
         self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
@@ -278,6 +283,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
+        )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp
         )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
@@ -512,7 +520,13 @@ class ToolMenuBar(wx.MenuBar):
             self.clone.Enable(enable=showBlueprint)
             self.cloneBP.Enable(enable=showBlueprint)
             # self.convert.Enable(enable=showBlueprint)
+            self.newBlueprintApp.Enable(enable=showBlueprint)
         else:
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
+            self.newBlueprintApp.Enable(enable=showBlueprint)
             # self.convert.Enable(enable=showBlueprint)
+
+    def toggleAddTenantOptions(self, state):
+        self.defaultConfigVal.Enable(enable=state)
+        self.fileOpenAuth.Enable(enable=state)
