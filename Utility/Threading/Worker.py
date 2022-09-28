@@ -50,7 +50,7 @@ class Worker(Thread):
         self.idle.set()
 
     def raise_exception(self):
-        thread_id = self.get_id()
+        thread_id = self.ident
         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
             thread_id, ctypes.py_object(SystemExit)
         )

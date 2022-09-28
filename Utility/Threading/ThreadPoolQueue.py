@@ -38,10 +38,11 @@ class Pool:
                 time.sleep(1)
                 if time.perf_counter() - time_waiting > 60:
                     for t in self.threads:
-                        try:
-                            t.raise_exception()
-                        except:
-                            pass
+                        if t.is_alive():
+                            try:
+                                t.raise_exception()
+                            except:
+                                pass
         elif self.alive():
             return False
 
