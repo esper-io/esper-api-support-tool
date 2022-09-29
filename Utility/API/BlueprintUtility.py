@@ -1059,7 +1059,7 @@ def editBlueprintApps(groupId, body):
     return resp
 
 
-def pushBlueprintUpdate(blueprintId, groupId, schedule=None):
+def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMMEDIATE"):
     body = {
         "command_type": "GROUP",
         "command_args": {
@@ -1071,10 +1071,12 @@ def pushBlueprintUpdate(blueprintId, groupId, schedule=None):
         "groups": [groupId] if type(groupId) is str else groupId,
         "device_type": "all",
         "command": "UPDATE_BLUEPRINT",
+        "schedule": schedule_type,
+        "schedule_args": schedule
     }
     resp, jsonResp = postEsperCommand(command_data=body)
 
-    return jsonResp
+    return resp, jsonResp
 
 
 def modifyAppsInBlueprints(blueprints, apps, changedList, addToAppListIfNotPresent=True):

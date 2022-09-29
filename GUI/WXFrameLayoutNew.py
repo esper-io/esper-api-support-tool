@@ -5,6 +5,7 @@ from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
 from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
     getAllBlueprints,
@@ -3567,38 +3568,57 @@ class NewFrameLayout(wx.Frame):
         res = None
         opt = None
         options = ["Apply Immediatly", "Schedule", "Do Nothing"]
-        with wx.SingleChoiceDialog(
-            self,
-            "Successfully changed %s of %s Blueprints   .\nWhat action would you like to apply to the changed Blueprints?" % (success, total),
-            "",
-            options
-        ) as dlg:
-            res = dlg.ShowModal()
-            if res == wx.ID_OK:
-                opt = dlg.GetStringSelection()
-            else:
+        if success > 0:
+            with wx.SingleChoiceDialog(
+                self,
+                "Successfully changed %s of %s Blueprints.\nWhat action would you like to apply to the changed Blueprints?" % (success, total),
+                "",
+                options
+            ) as dlg:
+                res = dlg.ShowModal()
+                if res == wx.ID_OK:
+                    opt = dlg.GetStringSelection()
+                else:
+                    return None
+
+            pushSuccess = 0
+            if not opt or opt == options[2]:
                 return None
+            elif opt == options[0]:
+                # Push immediately
+                for bp in self.changedBlueprints:
+                    updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
+                    if updateResp and updateResp.status_code < 300:
+                        pushSuccess += 1
+            elif opt == options[1]:
+                # prompt for schedule
+                schedule = None
+                scheduleType = "WINDOW"
+                with ScheduleCmdDialog() as dlg:
+                    res = dlg.ShowModal()
+                    if res == wx.ID_OK:
+                        if dlg.isRecurring():
+                            scheduleType = "RECURRING"
+                        schedule = dlg.getScheduleDict()
 
-        pushSuccess = 0
-        if not opt or opt == options[2]:
-            return None
-        elif opt == options[1]:
-            # Push immediately
-            for bp in self.changedBlueprints:
-                updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
-                if updateResp and updateResp.status_code < 300:
-                    pushSuccess += 1
+                statusList = []
+                for bp in self.changedBlueprints:
+                    updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"], schedule=schedule, schedule_type=scheduleType)
+                    if updateResp and updateResp.status_code < 300:
+                        pushSuccess += 1
+                    statusList.append({
+                        "Blueprint Id": bp["id"],
+                        "Blueprint Name": bp["name"],
+                        "Group Id": bp["group"],
+                        "Group Path": Globals.knownGroups[bp["group"]]["path"] if bp["group"] in Globals.knownGroups else "Unknown",
+                        "Response": updateResp.text
+                    })
+
+            postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
         else:
-            # prompt for schedule
-            schedule = None
-            for bp in self.changedBlueprints:
-                updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"], schedule=schedule)
-                if updateResp and updateResp.status_code < 300:
-                    pushSuccess += 1
-
-        displayMessageBox(
-            (
-                "Successfully sent Update Blueprint command to %s of %s" & (pushSuccess, total),
-                wx.ICON_INFORMATION,
+            displayMessageBox(
+                (
+                    "Successfully changed %s of %s Blueprints." & (success, total),
+                    wx.ICON_INFORMATION,
+                )
             )
-        )
