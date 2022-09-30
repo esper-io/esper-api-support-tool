@@ -841,8 +841,7 @@ class NewFrameLayout(wx.Frame):
                     deviceRowCount <= Globals.SHEET_CHUNK_SIZE
                     and appRowCount <= Globals.SHEET_CHUNK_SIZE
                 )
-                or estimatedFileSizeInMb < Globals.MAX_FILE_SIZE_BEFORE_SPLIT
-            ):
+            ) and estimatedFileSizeInMb < Globals.MAX_FILE_SIZE_BEFORE_SPLIT:
                 self.writeToExcelFile(
                     inFile,
                     deviceGridData,
