@@ -825,11 +825,11 @@ class NewFrameLayout(wx.Frame):
             df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
             appRowCount = len(df_3.index)
             estimatedFileSize = 0
-            if df_1:
+            if df_1 is not None:
                 estimatedFileSize += sum(df_1.memory_usage(deep=True))
-            if df_2:
+            if df_2 is not None:
                 estimatedFileSize += sum(df_2.memory_usage(deep=True))
-            if df_3:
+            if df_3 is not None:
                 estimatedFileSize += sum(df_3.memory_usage(deep=True))
             estimatedFileSizeInMb = estimatedFileSize / 1000000
 
@@ -891,7 +891,8 @@ class NewFrameLayout(wx.Frame):
                         else None
                     )
                     df_apps = splitApps[i] if splitApps and len(splitApps) > i else None
-                    self.writeToExcelFile(
+                    Globals.THREAD_POOL.enqueue(
+                        self.writeToExcelFile,
                         fileName,
                         deviceGridData if df_device is not None else None,
                         df_device,
@@ -900,6 +901,7 @@ class NewFrameLayout(wx.Frame):
                         appGridData if df_apps is not None else None,
                         df_apps,
                     )
+        Globals.THREAD_POOL.join(tolerance=1)
 
         self.Logging("---> Info saved to file: " + inFile)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
