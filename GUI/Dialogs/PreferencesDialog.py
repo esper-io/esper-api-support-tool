@@ -328,7 +328,7 @@ class PreferencesDialog(wx.Dialog):
             wx.SpinCtrl,
             "Maximum amount of rows saved to a file. Will use Spinner value * 1000. Default: 100 -> 100,000",
         )
-        self.spin_ctrl_12.SetMin(0)
+        self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
         self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)
         self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE / 1000)
 
