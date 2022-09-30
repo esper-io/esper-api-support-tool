@@ -26,14 +26,32 @@ class ScheduleCmdDialog(wx.Dialog):
         grid_sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Schedule Command")
-        label_1.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_1.SetFont(
+            wx.Font(
+                12,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_1.Add(label_1, 0, wx.EXPAND | wx.LEFT | wx.TOP, 2)
 
-        self.radio_box_1 = wx.RadioBox(self.panel_1, wx.ID_ANY, "Time relative to", choices=["Console", "Device"], majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        self.radio_box_1 = wx.RadioBox(
+            self.panel_1,
+            wx.ID_ANY,
+            "Time relative to",
+            choices=["Console", "Device"],
+            majorDimension=1,
+            style=wx.RA_SPECIFY_COLS,
+        )
         self.radio_box_1.SetSelection(1)
         grid_sizer_1.Add(self.radio_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.window_1 = wx.SplitterWindow(self.panel_1, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER)
+        self.window_1 = wx.SplitterWindow(
+            self.panel_1, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER
+        )
         self.window_1.SetMinimumPaneSize(50)
         grid_sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
 
@@ -51,10 +69,26 @@ class ScheduleCmdDialog(wx.Dialog):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Days to Repeat On:")
-        label_2.SetFont(wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_2.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
         sizer_3.Add(label_2, 0, wx.LEFT, 2)
 
-        self.check_list_box_1 = wx.CheckListBox(self.panel_3, wx.ID_ANY, choices=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+        self.check_list_box_1 = wx.CheckListBox(
+            self.panel_3,
+            wx.ID_ANY,
+            choices=[
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ],
+        )
         sizer_3.Add(self.check_list_box_1, 0, wx.ALL | wx.EXPAND, 5)
         self.check_list_box_1.Enable(False)
 
@@ -66,7 +100,11 @@ class ScheduleCmdDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
 
         label_3 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Start Date:")
-        label_3.SetFont(wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_3.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
         sizer_4.Add(label_3, 0, wx.LEFT, 2)
 
         self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
@@ -77,7 +115,11 @@ class ScheduleCmdDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_6, 1, wx.EXPAND, 0)
 
         label_5 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "End Date:")
-        label_5.SetFont(wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_5.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
         sizer_6.Add(label_5, 0, wx.LEFT, 2)
 
         self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
@@ -87,8 +129,14 @@ class ScheduleCmdDialog(wx.Dialog):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
 
-        label_4 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Start Time  (24 hour format):")
-        label_4.SetFont(wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_4 = wx.StaticText(
+            self.window_1_pane_2, wx.ID_ANY, "Start Time  (24 hour format):"
+        )
+        label_4.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
         sizer_5.Add(label_4, 0, wx.LEFT, 2)
 
         # self.text_ctrl_1 = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "")
@@ -99,8 +147,14 @@ class ScheduleCmdDialog(wx.Dialog):
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_7, 1, wx.EXPAND, 0)
 
-        label_6 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "End Time (24 hour format):")
-        label_6.SetFont(wx.Font(9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_6 = wx.StaticText(
+            self.window_1_pane_2, wx.ID_ANY, "End Time (24 hour format):"
+        )
+        label_6.SetFont(
+            wx.Font(
+                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+            )
+        )
         sizer_7.Add(label_6, 0, wx.LEFT, 2)
 
         # self.text_ctrl_2 = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "")
@@ -172,8 +226,8 @@ class ScheduleCmdDialog(wx.Dialog):
 
         startDateTime, endDateTime, _, _ = self.getDateTimeStrings()
 
-        dt = datetime.strptime(startDateTime, '%Y-%m-%dT%H:%M:%SZ')
-        dt2 = datetime.strptime(endDateTime, '%Y-%m-%dT%H:%M:%SZ')
+        dt = datetime.strptime(startDateTime, "%Y-%m-%dT%H:%M:%SZ")
+        dt2 = datetime.strptime(endDateTime, "%Y-%m-%dT%H:%M:%SZ")
 
         if (dt2 - dt).total_seconds() <= 0:
             isValid = False

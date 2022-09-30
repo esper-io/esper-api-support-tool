@@ -158,7 +158,7 @@ class NewEndpointDialog(wx.Dialog):
             "apiHost": host,
             "enterprise": entId,
             "apiKey": key,
-            "apiPrefix": prefix
+            "apiPrefix": prefix,
         }
 
     @api_tool_decorator()

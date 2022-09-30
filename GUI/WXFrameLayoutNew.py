@@ -824,12 +824,24 @@ class NewFrameLayout(wx.Frame):
                 )
             df_3 = pd.DataFrame(appGridData, columns=Globals.CSV_APP_ATTR_NAME)
             appRowCount = len(df_3.index)
+            estimatedFileSize = 0
+            if df_1:
+                estimatedFileSize += sum(df_1.memory_usage(deep=True))
+            if df_2:
+                estimatedFileSize += sum(df_2.memory_usage(deep=True))
+            if df_3:
+                estimatedFileSize += sum(df_3.memory_usage(deep=True))
+            estimatedFileSizeInMb = estimatedFileSize / 1000000
 
             self.Logging("Saving file to: %s" % inFile)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-            if not Globals.SPLIT_EXCEL_FILE or (
-                deviceRowCount <= Globals.SHEET_CHUNK_SIZE
-                and appRowCount <= Globals.SHEET_CHUNK_SIZE
+            if (
+                not Globals.SPLIT_EXCEL_FILE
+                or (
+                    deviceRowCount <= Globals.SHEET_CHUNK_SIZE
+                    and appRowCount <= Globals.SHEET_CHUNK_SIZE
+                )
+                or estimatedFileSizeInMb < Globals.MAX_FILE_SIZE_BEFORE_SPLIT
             ):
                 self.writeToExcelFile(
                     inFile,
@@ -840,9 +852,13 @@ class NewFrameLayout(wx.Frame):
                     appGridData,
                     df_3,
                 )
-            elif Globals.SPLIT_EXCEL_FILE and (
-                deviceRowCount >= Globals.SHEET_CHUNK_SIZE
-                or appRowCount >= Globals.SHEET_CHUNK_SIZE
+            elif (
+                Globals.SPLIT_EXCEL_FILE
+                and (
+                    deviceRowCount >= Globals.SHEET_CHUNK_SIZE
+                    or appRowCount >= Globals.SHEET_CHUNK_SIZE
+                )
+                or estimatedFileSizeInMb >= Globals.MAX_FILE_SIZE_BEFORE_SPLIT
             ):
                 splitDevices = (
                     np.array_split(df_1, len(df_1) // Globals.SHEET_CHUNK_SIZE)
@@ -3544,7 +3560,7 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.apps,
                 title="Select New Blueprint App",
                 showAllVersionsOption=False,
-                showBlueprintInput=True
+                showBlueprintInput=True,
             ) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
@@ -3552,7 +3568,13 @@ class NewFrameLayout(wx.Frame):
                     self.Logging("Fetching List of Blueprints...")
                     blueprints = getAllBlueprints()
                     self.Logging("Processing List of Blueprints...")
-                    Globals.THREAD_POOL.enqueue(modifyAppsInBlueprints, blueprints, apps, self.changedBlueprints, addToAppListIfNotPresent=selection)
+                    Globals.THREAD_POOL.enqueue(
+                        modifyAppsInBlueprints,
+                        blueprints,
+                        apps,
+                        self.changedBlueprints,
+                        addToAppListIfNotPresent=selection,
+                    )
         else:
             displayMessageBox(
                 (
@@ -3572,9 +3594,10 @@ class NewFrameLayout(wx.Frame):
         if success > 0:
             with wx.SingleChoiceDialog(
                 self,
-                "Successfully changed %s of %s Blueprints.\nWhat action would you like to apply to the changed Blueprints?" % (success, total),
+                "Successfully changed %s of %s Blueprints.\nWhat action would you like to apply to the changed Blueprints?"
+                % (success, total),
                 "",
-                options
+                options,
             ) as dlg:
                 res = dlg.ShowModal()
                 if res == wx.ID_OK:
@@ -3604,16 +3627,25 @@ class NewFrameLayout(wx.Frame):
 
                 statusList = []
                 for bp in self.changedBlueprints:
-                    updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"], schedule=schedule, schedule_type=scheduleType)
+                    updateResp, _ = pushBlueprintUpdate(
+                        bp["id"],
+                        bp["group"],
+                        schedule=schedule,
+                        schedule_type=scheduleType,
+                    )
                     if updateResp and updateResp.status_code < 300:
                         pushSuccess += 1
-                    statusList.append({
-                        "Blueprint Id": bp["id"],
-                        "Blueprint Name": bp["name"],
-                        "Group Id": bp["group"],
-                        "Group Path": Globals.knownGroups[bp["group"]]["path"] if bp["group"] in Globals.knownGroups else "Unknown",
-                        "Response": updateResp.text
-                    })
+                    statusList.append(
+                        {
+                            "Blueprint Id": bp["id"],
+                            "Blueprint Name": bp["name"],
+                            "Group Id": bp["group"],
+                            "Group Path": Globals.knownGroups[bp["group"]]["path"]
+                            if bp["group"] in Globals.knownGroups
+                            else "Unknown",
+                            "Response": updateResp.text,
+                        }
+                    )
 
             postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
         else:

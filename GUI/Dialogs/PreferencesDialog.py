@@ -315,7 +315,10 @@ class PreferencesDialog(wx.Dialog):
             sizer_12,
             "Split Large Excel Files into smaller files",
             wx.CheckBox,
-            "Excel has issues opening large spreadsheets. Thus to avoid this we can split the file into smaller parts.",
+            (
+                "Excel has issues opening large spreadsheets. Thus to avoid this we can split the file into smaller parts. Report will be split if estimated file size exceeds %sMB."
+                % Globals.MAX_FILE_SIZE_BEFORE_SPLIT
+            ),
         )
         self.checkbox_26.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.SPLIT_EXCEL_FILE else wx.CHK_CHECKED
@@ -953,12 +956,16 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.INHIBIT_SLEEP = False
 
-        if self.checkBooleanValuePrefAndSet("appVersionNameInsteadOfCode", self.checkbox_22):
+        if self.checkBooleanValuePrefAndSet(
+            "appVersionNameInsteadOfCode", self.checkbox_22
+        ):
             Globals.VERSON_NAME_INSTEAD_OF_CODE = True
         else:
             Globals.VERSON_NAME_INSTEAD_OF_CODE = False
 
-        if self.checkBooleanValuePrefAndSet("combineDeviceAndNetworkSheets", self.checkbox_23):
+        if self.checkBooleanValuePrefAndSet(
+            "combineDeviceAndNetworkSheets", self.checkbox_23
+        ):
             Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = True
         else:
             Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = False
@@ -1000,8 +1007,7 @@ class PreferencesDialog(wx.Dialog):
         isEnabled = False
         if key in self.prefs:
             if (
-                isinstance(self.prefs[key], str)
-                and self.prefs[key].lower() == "true"
+                isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true"
             ) or self.prefs[key] is True:
                 checkbox.Set3StateValue(wx.CHK_CHECKED)
                 isEnabled = True

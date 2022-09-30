@@ -1,4 +1,3 @@
-
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 import os
@@ -906,152 +905,19 @@ def convertTemplateToBlueprint(template):
 
 
 def editBlueprintApps(groupId, body):
-    url = "{tenant}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
-        tenant=Globals.configuration.host,
-        enterprise_id=Globals.enterprise_id,
-        group_id=groupId,
+    url = (
+        "{tenant}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
+            tenant=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            group_id=groupId,
+        )
     )
-    # body = {
-    #     "name": "JSON App Config",
-    #     "description": "",
-    #     "latest_revision": {
-    #         "locked": False,
-    #         "comments": "",
-    #         "connectivity": {
-    #             "sms_disabled": True,
-    #             "enable_bluetooth": True,
-    #             "wifi_state": True,
-    #             "nfc_beam_disabled": True,
-    #             "wifi_settings": [],
-    #             "locked": False,
-    #         },
-    #         "sound": {
-    #             "alarm_volume": 50,
-    #             "music_volume": 50,
-    #             "ring_volume": 50,
-    #             "notification_volume": 50,
-    #             "locked": False,
-    #         },
-    #         "display_branding": {
-    #             "screenshot_disabled": False,
-    #             "status_bar_disabled": False,
-    #             "rotation_state": "AUTO",
-    #             "brightness_scale": 75,
-    #             "wallpapers": None,
-    #             "locked": False,
-    #         },
-    #         "hardware_settings": {
-    #             "gps_state": "LOCATION_MODE_HIGH_ACCURACY",
-    #             "usb_file_transfer_disabled": True,
-    #             "tethering_disabled": True,
-    #             "camera_disabled": True,
-    #             "usb_connectivity_disabled": True,
-    #             "locked": False,
-    #         },
-    #         "date_time": {
-    #             "timezone_string": None,
-    #             "device_locale": None,
-    #             "date_time_config_disabled": False,
-    #             "locked": False,
-    #         },
-    #         "settings_app": {
-    #             "enable_android_settings_app": True,
-    #             "settings_access_level": "SHOONYA",
-    #             "esper_settings_app": {
-    #                 "only_dock_accessible": False,
-    #                 "admin_mode_password": "1234",
-    #                 "esper_settings_app_policy": {
-    #                     "flashlight": "USER",
-    #                     "wifi": "USER",
-    #                     "auto_rotation": "USER",
-    #                     "reboot": "USER",
-    #                     "kiosk_app_selection": "USER",
-    #                     "esper_branding": "USER",
-    #                     "factory_reset": "USER",
-    #                     "about": "USER",
-    #                     "display": "USER",
-    #                     "sound": "USER",
-    #                     "keyboard": "USER",
-    #                     "input_selection": "USER",
-    #                     "accessibility": "USER",
-    #                     "mobile_data": "USER",
-    #                     "bluetooth": "USER",
-    #                     "language": "USER",
-    #                     "time_and_date": "USER",
-    #                     "clear_app_data": "USER",
-    #                     "storage": "USER",
-    #                 },
-    #             },
-    #             "config_json": {
-    #                 "managedAppConfigurations": {
-    #                     "com.android.chrome": {
-    #                         "URLAllowlist": [
-    #                             "https://service.smartstartinc.com/User/Login"
-    #                         ],
-    #                         "URLBlocklist": ["*"],
-    #                         "BrowserSignin": "0",
-    #                         "HomepageLocation": "https://service.smartstartinc.com/User/Login",
-    #                     }
-    #                 }
-    #             },
-    #             "locked": False,
-    #         },
-    #         "system_updates": {
-    #             "type": "TYPE_INSTALL_DISABLED",
-    #             "locked": False,
-    #             "maintenance_start": None,
-    #             "maintenance_end": None,
-    #         },
-    #         "google_services": {
-    #             "disable_play_store": True,
-    #             "google_assistant_disabled": True,
-    #             "managed_google_play_disabled": True,
-    #             "max_account": 0,
-    #             "emails": None,
-    #             "domains": None,
-    #             "frp_googles": [],
-    #             "locked": False,
-    #         },
-    #         "security": {
-    #             "password_quality": "PASSWORD_QUALITY_UNSPECIFIED",
-    #             "minimum_password_length": 4,
-    #             "adb_disabled": True,
-    #             "safe_boot_disabled": True,
-    #             "screen_off_timeout": 5000,
-    #             "factory_reset_disabled": False,
-    #             "keyguard_disabled": True,
-    #             "locked": False,
-    #         },
-    #         "application": {
-    #             "app_mode": "MULTI_APP",
-    #             "disable_local_app_install": False,
-    #             "launcher_less_dpc": False,
-    #             "app_uninstall_disabled": False,
-    #             "apps": [
-    #                 {
-    #                     "is_g_play": False,
-    #                     "app_version": "14c0f0c2-a7e2-4843-bc2e-7096c27b3f7f",
-    #                     "state": "SHOW",
-    #                     "application_name": "Esper Blog",
-    #                     "version_codes": ["1.0"],
-    #                     "package_name": "com.esper.EsperBlog",
-    #                     "installation_rule": "DURING",
-    #                     "release_name": "0",
-    #                 }
-    #             ],
-    #             "permission_policy": "PERMISSION_POLICY_AUTO_GRANT",
-    #             "preload_apps": [
-    #                 {"package_name": "com.android.chrome", "state": "SHOW"}
-    #             ],
-    #             "start_on_boot": None,
-    #             "launch_on_start": None,
-    #             "locked": False,
-    #         },
-    #         "content": {"files": [], "locked": False},
-    #     },
-    # }
 
-    if body["latest_revision"]["security"]["password_quality"] == "PASSWORD_QUALITY_UNSPECIFIED" and "minimum_password_length" in body["latest_revision"]["security"]:
+    if (
+        body["latest_revision"]["security"]["password_quality"]
+        == "PASSWORD_QUALITY_UNSPECIFIED"
+        and "minimum_password_length" in body["latest_revision"]["security"]
+    ):
         del body["latest_revision"]["security"]["minimum_password_length"]
 
     resp = performPostRequestWithRetry(url, json=body, headers=getHeader())
@@ -1072,14 +938,16 @@ def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMME
         "device_type": "all",
         "command": "UPDATE_BLUEPRINT",
         "schedule": schedule_type,
-        "schedule_args": schedule
+        "schedule_args": schedule,
     }
     resp, jsonResp = postEsperCommand(command_data=body)
 
     return resp, jsonResp
 
 
-def modifyAppsInBlueprints(blueprints, apps, changedList, addToAppListIfNotPresent=True):
+def modifyAppsInBlueprints(
+    blueprints, apps, changedList, addToAppListIfNotPresent=True
+):
     success = 0
     total = 0
     for bp in blueprints["results"]:
@@ -1101,31 +969,35 @@ def modifyAppsInBlueprints(blueprints, apps, changedList, addToAppListIfNotPrese
                     for bpApp in resp["latest_revision"]["application"]["apps"]:
                         if bpApp["package_name"] == app["package"]:
                             changed = True
-                            appList.append({
-                                "is_g_play": app["isPlayStore"],
-                                "app_version": app["versionId"],
-                                "state": bpApp["state"],
-                                "application_name": app["name"],
-                                "version_codes": app["codes"],
-                                "package_name": app["package"],
-                                "installation_rule": bpApp["installation_rule"],
-                                "release_name": app["releaseName"],
-                            })
+                            appList.append(
+                                {
+                                    "is_g_play": app["isPlayStore"],
+                                    "app_version": app["versionId"],
+                                    "state": bpApp["state"],
+                                    "application_name": app["name"],
+                                    "version_codes": app["codes"],
+                                    "package_name": app["package"],
+                                    "installation_rule": bpApp["installation_rule"],
+                                    "release_name": app["releaseName"],
+                                }
+                            )
                         else:
                             appList.append(bpApp)
                     resp["latest_revision"]["application"]["apps"] = appList
                 elif addToAppListIfNotPresent:
                     # Go through and add or update app entry
-                    resp["latest_revision"]["application"]["apps"].append({
-                        "is_g_play": app["isPlayStore"],
-                        "app_version": app["versionId"],
-                        "state": "SHOW",
-                        "application_name": app["name"],
-                        "version_codes": app["codes"],
-                        "package_name": app["package"],
-                        "installation_rule": "DURING",
-                        "release_name": app["releaseName"],
-                    })
+                    resp["latest_revision"]["application"]["apps"].append(
+                        {
+                            "is_g_play": app["isPlayStore"],
+                            "app_version": app["versionId"],
+                            "state": "SHOW",
+                            "application_name": app["name"],
+                            "version_codes": app["codes"],
+                            "package_name": app["package"],
+                            "installation_rule": "DURING",
+                            "release_name": app["releaseName"],
+                        }
+                    )
                     changed = True
             if changed:
                 total += 1

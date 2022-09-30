@@ -113,7 +113,10 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
             self.list_box_2 = wx.ListBox(
-                self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_SINGLE if showBlueprintInput else wx.LB_EXTENDED
+                self.panel_1,
+                wx.ID_ANY,
+                choices=[],
+                style=wx.LB_SINGLE if showBlueprintInput else wx.LB_EXTENDED,
             )
             grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
             self.list_box_2.Bind(wx.EVT_LISTBOX, self.onVersionSelect)
@@ -148,10 +151,24 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_6.Add(sizer_5, 1, wx.EXPAND, 0)
 
             label_5 = wx.StaticText(self.panel_5, wx.ID_ANY, "Selected Apps:")
-            label_5.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+            label_5.SetFont(
+                wx.Font(
+                    11,
+                    wx.FONTFAMILY_DEFAULT,
+                    wx.FONTSTYLE_NORMAL,
+                    wx.FONTWEIGHT_BOLD,
+                    0,
+                    "",
+                )
+            )
             sizer_5.Add(label_5, 0, wx.LEFT, 5)
 
-            self.text_ctrl_3 = wx.TextCtrl(self.panel_5, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP)
+            self.text_ctrl_3 = wx.TextCtrl(
+                self.panel_5,
+                wx.ID_ANY,
+                "",
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
+            )
             sizer_5.Add(self.text_ctrl_3, 0, wx.ALL | wx.EXPAND, 5)
 
             self.radio_box_2 = wx.RadioBox(
@@ -160,9 +177,10 @@ class InstalledDevicesDlg(wx.Dialog):
                 "Do you want to push the selected App to all Blueprints or only updates Blueprints that already have this app?",
                 choices=[
                     "Push to All Blueprints (if app is not defined it will be added)",
-                    "Push ONLY to Blueprint that already have the app"],
+                    "Push ONLY to Blueprint that already have the app",
+                ],
                 majorDimension=1,
-                style=wx.RA_SPECIFY_COLS
+                style=wx.RA_SPECIFY_COLS,
             )
             self.radio_box_2.SetSelection(1)
             grid_sizer_6.Add(self.radio_box_2, 0, wx.ALL | wx.EXPAND, 5)
@@ -471,16 +489,18 @@ class InstalledDevicesDlg(wx.Dialog):
                 app_name = matches[0]["appPkgName"]
             else:
                 app_name = matches[0]["app_name"]
-            self.newBluePrintApp.append({
-                "name": app_name,
-                "id": app_id,
-                "package": packageName,
-                "versionId": versionClientData,
-                "version": version,
-                "isPlayStore": versionMatches[0]["is_g_play"],
-                "codes": [versionMatches[0]["build_number"]],
-                "releaseName": versionMatches[0]["release_name"],
-            })
+            self.newBluePrintApp.append(
+                {
+                    "name": app_name,
+                    "id": app_id,
+                    "package": packageName,
+                    "versionId": versionClientData,
+                    "version": version,
+                    "isPlayStore": versionMatches[0]["is_g_play"],
+                    "codes": [versionMatches[0]["build_number"]],
+                    "releaseName": versionMatches[0]["release_name"],
+                }
+            )
 
         self.updateBlueprintSelectedAppElm()
 
@@ -501,13 +521,20 @@ class InstalledDevicesDlg(wx.Dialog):
         selectedAppStr = ""
         for entry in self.newBluePrintApp:
             if Globals.SHOW_PKG_NAME:
-                selectedAppStr += "%s (%s) - %s\n" % (entry["name"], entry["package"], entry["version"])
+                selectedAppStr += "%s (%s) - %s\n" % (
+                    entry["name"],
+                    entry["package"],
+                    entry["version"],
+                )
             else:
                 selectedAppStr += "%s - %s\n" % (entry["name"], entry["version"])
         self.text_ctrl_3.SetValue(selectedAppStr)
 
     def getBlueprintInputs(self):
         if self.radio_box_2:
-            return True if self.radio_box_2.GetSelection() == 0 else False, self.newBluePrintApp
+            return (
+                True if self.radio_box_2.GetSelection() == 0 else False,
+                self.newBluePrintApp,
+            )
         else:
             return None

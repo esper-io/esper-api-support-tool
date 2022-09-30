@@ -284,9 +284,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
         )
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp
-        )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
