@@ -902,6 +902,7 @@ class NewFrameLayout(wx.Frame):
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
+    @api_tool_decorator()
     def writeToExcelFile(
         self, inFile, deviceGridData, df_1, networkGridData, df_2, appGridData, df_3
     ):
