@@ -513,7 +513,11 @@ class SidePanel(wx.Panel):
                 self.notebook_1.SetSelection(2)
         else:
             self.appChoice.Enable(False)
-            if self.selectedGroupsList:
+            if (
+                self.selectedGroupsList
+                and not self.parentFrame.preferences
+                or self.parentFrame.preferences["enableDevice"] is True
+            ):
                 self.notebook_1.SetSelection(1)
             else:
                 self.notebook_1.SetSelection(0)

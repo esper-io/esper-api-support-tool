@@ -316,8 +316,7 @@ class PreferencesDialog(wx.Dialog):
             "Split Large Excel Files into smaller files",
             wx.CheckBox,
             (
-                "Excel has issues opening large spreadsheets. Thus to avoid this we can split the file into smaller parts. Report will be split if estimated file size exceeds %sMB."
-                % Globals.MAX_FILE_SIZE_BEFORE_SPLIT
+                "Excel has issues opening large spreadsheets. Thus to avoid this we can split the file into smaller parts."
             ),
         )
         self.checkbox_26.Set3StateValue(
@@ -992,7 +991,7 @@ class PreferencesDialog(wx.Dialog):
 
         if "maxSplitFileSize" in self.prefs:
             Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"])
-            self.spin_ctrl_10.SetValue(Globals.SHEET_CHUNK_SIZE)
+            self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE)
 
         if self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27):
             Globals.AUTO_REPORT_ISSUES = True
