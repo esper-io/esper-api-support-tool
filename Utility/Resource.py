@@ -430,6 +430,7 @@ def getHeader():
         return {
             "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
             "Content-Type": "application/json",
+            "User-Agent": "Esper Api Support Tool %s " % Globals.VERSION,
         }
     else:
         return {}
