@@ -794,47 +794,17 @@ class NewFrameLayout(wx.Frame):
 
             for _ in range(Globals.MAX_RETRY):
                 try:
-                    deviceRowCount = len(deviceGridData)
-                    appRowCount = len(appGridData)
+                    # deviceRowCount = len(deviceGridData)
+                    # appRowCount = len(appGridData)
 
                     self.Logging("Saving file to: %s" % inFile)
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-                    sliceSize = Globals.SHEET_CHUNK_SIZE
-                    if not Globals.SPLIT_EXCEL_FILE or (
-                        deviceRowCount <= Globals.SHEET_CHUNK_SIZE
-                        and appRowCount <= Globals.SHEET_CHUNK_SIZE
-                    ):
-                        self.writeToExcelFile(
-                            inFile,
-                            deviceGridData,
-                            networkGridData,
-                            appGridData,
-                        )
-                    elif Globals.SPLIT_EXCEL_FILE and (
-                        deviceRowCount >= Globals.SHEET_CHUNK_SIZE
-                        or appRowCount >= Globals.SHEET_CHUNK_SIZE
-                    ):
-                        if inFile.endswith(".xlsx"):
-                            inFile = inFile[:-4]
-                        maxLoop = max(
-                            math.ceil(len(deviceGridData) / sliceSize),
-                            math.ceil(len(networkGridData) / sliceSize),
-                            math.ceil(len(appGridData) / sliceSize),
-                        )
-                        for num in range(maxLoop):
-                            fileName = "%s_{:02d}.xlsx".format(num) % inFile
-                            offsetNum = 0
-                            if num != 0:
-                                offsetNum = (sliceSize * num) + 1
-                            Globals.THREAD_POOL.enqueue(
-                                self.writeToExcelFile,
-                                fileName,
-                                deviceGridData,
-                                networkGridData,
-                                appGridData,
-                                sliceSize,
-                                offsetNum,
-                            )
+                    self.writeToExcelFile(
+                        inFile,
+                        deviceGridData,
+                        networkGridData,
+                        appGridData,
+                    )
                 except Exception as e:
                     ApiToolLog().LogError(e)
                     continue
@@ -874,23 +844,18 @@ class NewFrameLayout(wx.Frame):
             and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
             and offset < len(deviceGridData)
         ):
+            endIndx = len(deviceGridData)
+            if len(deviceGridData) > (offset + limit):
+                endIndx = offset + limit
             df_devices = pd.DataFrame(
                 deviceGridData[
-                    offset : (offset + limit)
-                    if len(deviceGridData) > (offset + limit)
-                    else (len(deviceGridData) - 1)
-                    if limit > 0
-                    else len(deviceGridData)
+                    offset : endIndx
                 ],
                 columns=Globals.CSV_TAG_ATTR_NAME.keys(),
             )
             df_network = pd.DataFrame(
                 networkGridData[
-                    offset : (offset + limit)
-                    if len(networkGridData) > (offset + limit)
-                    else (len(networkGridData) - 1)
-                    if limit > 0
-                    else len(networkGridData)
+                    offset : endIndx
                 ],
                 columns=Globals.CSV_NETWORK_ATTR_NAME.keys(),
             )
@@ -907,13 +872,12 @@ class NewFrameLayout(wx.Frame):
             )
             df_1.set_axis(device_sheet_columns, axis=1, inplace=True)
         elif deviceGridData and offset < len(deviceGridData):
+            endIndx = len(deviceGridData)
+            if len(deviceGridData) > (offset + limit):
+                endIndx = offset + limit
             df_1 = pd.DataFrame(
                 deviceGridData[
-                    offset : (offset + limit)
-                    if len(deviceGridData) > (offset + limit)
-                    else (len(deviceGridData) - 1)
-                    if limit > 0
-                    else len(deviceGridData)
+                    offset : endIndx
                 ],
                 columns=device_sheet_columns,
             )
@@ -923,13 +887,12 @@ class NewFrameLayout(wx.Frame):
         if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS and offset < len(
             networkGridData
         ):
+            endIndx = len(networkGridData)
+            if len(networkGridData) > (offset + limit):
+                endIndx = offset + limit
             df_2 = pd.DataFrame(
                 networkGridData[
-                    offset : (offset + limit)
-                    if len(networkGridData) > (offset + limit)
-                    else (len(networkGridData) - 1)
-                    if limit > 0
-                    else len(networkGridData)
+                    offset : endIndx
                 ],
                 columns=Globals.CSV_NETWORK_ATTR_NAME.keys(),
             )
@@ -937,13 +900,12 @@ class NewFrameLayout(wx.Frame):
         # TODO: Memory error
         df_3 = None
         if appGridData and offset < len(appGridData):
+            endIndx = len(appGridData) - 1
+            if len(appGridData) > (offset + limit):
+                endIndx = offset + limit
             df_3 = pd.DataFrame(
                 appGridData[
-                    offset : (offset + limit)
-                    if len(appGridData) > (offset + limit)
-                    else (len(appGridData) - 1)
-                    if limit > 0
-                    else len(appGridData)
+                    offset : endIndx
                 ],
                 columns=Globals.CSV_APP_ATTR_NAME,
             )
@@ -956,98 +918,112 @@ class NewFrameLayout(wx.Frame):
         inFile,
         deviceGridData,
         networkGridData,
-        appGridData,
-        limit=-1,
-        offset=0,
-        mode="w",
+        appGridData
     ):
-        file_exists = os.path.exists(inFile)
         with pd.ExcelWriter(
             inFile,
-            mode=mode,
             engine="xlsxwriter",
-            if_sheet_exists="new" if file_exists else None,
         ) as writer1:
             sheetOneName = (
                 "Device and Network"
                 if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
                 else "Device"
             )
-            df_1, _, _ = self.getDataFrames(
-                deviceGridData=deviceGridData,
-                networkGridData=networkGridData,
-                appGridData=None,
-                limit=limit,
-                offset=offset,
+            maxDeviceLoop = max(
+                math.ceil(len(deviceGridData) / Globals.SHEET_CHUNK_SIZE),
+                math.ceil(len(networkGridData) / Globals.SHEET_CHUNK_SIZE),
             )
-            if df_1 is not None:
-                df_1.to_excel(
-                    writer1, sheet_name=sheetOneName, index=False, engine="xlsxwriter"
-                )
-                for column in df_1:
-                    column_width = max(
-                        df_1[column].astype(str).map(len).max(), len(column)
-                    )
-                    col_idx = df_1.columns.get_loc(column)
-                    if hasattr(writer1.sheets[sheetOneName], "set_column"):
-                        writer1.sheets[sheetOneName].set_column(
-                            col_idx, col_idx, column_width
-                        )
-                    elif hasattr(writer1.sheets[sheetOneName], "column_dimensions"):
-                        writer1.sheets[sheetOneName].column_dimensions[
-                            column
-                        ].width = column_width
-            del df_1
-            if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
-                _, df_2, _ = self.getDataFrames(
-                    deviceGridData=None,
+            appLoop = math.ceil(len(appGridData) / Globals.SHEET_CHUNK_SIZE)
+            for num in range(maxDeviceLoop):
+                offsetNum = 0
+                if num != 0:
+                    offsetNum = (Globals.SHEET_CHUNK_SIZE * num)
+                df_1, _, _ = self.getDataFrames(
+                    deviceGridData=deviceGridData,
                     networkGridData=networkGridData,
                     appGridData=None,
-                    limit=limit,
-                    offset=offset,
+                    limit=Globals.SHEET_CHUNK_SIZE,
+                    offset=offsetNum,
                 )
-                if df_2 is not None:
-                    df_2.to_excel(
-                        writer1, sheet_name="Network", index=False, engine="xlsxwriter"
+                if df_1 is not None:
+                    sheetName = sheetOneName
+                    if maxDeviceLoop > 1:
+                        sheetName += " Part %s" % str((num + 1))
+                    df_1.to_excel(
+                        writer1, sheet_name=sheetName, index=False, engine="xlsxwriter"
                     )
-                    for column in df_2:
+                    for column in df_1:
                         column_width = max(
-                            df_2[column].astype(str).map(len).max(), len(column)
+                            df_1[column].astype(str).map(len).max(), len(column)
                         )
-                        col_idx = df_2.columns.get_loc(column)
-                        if hasattr(writer1.sheets["Network"], "set_column"):
-                            writer1.sheets["Network"].set_column(
+                        col_idx = df_1.columns.get_loc(column)
+                        if hasattr(writer1.sheets[sheetName], "set_column"):
+                            writer1.sheets[sheetName].set_column(
                                 col_idx, col_idx, column_width
                             )
-                        elif hasattr(writer1.sheets["Network"], "column_dimensions"):
-                            writer1.sheets["Network"].column_dimensions[
+                        elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
+                            writer1.sheets[sheetName].column_dimensions[
                                 column
                             ].width = column_width
-                del df_2
-            _, _, df_3 = self.getDataFrames(
-                deviceGridData=None,
-                networkGridData=None,
-                appGridData=appGridData,
-                limit=limit,
-                offset=offset,
-            )
-            if df_3 is not None:
-                df_3.to_excel(
-                    writer1, sheet_name="Application", index=False, engine="xlsxwriter"
-                )
-                for column in df_3:
-                    column_width = max(
-                        df_3[column].astype(str).map(len).max(), len(column)
+                if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+                    _, df_2, _ = self.getDataFrames(
+                        deviceGridData=None,
+                        networkGridData=networkGridData,
+                        appGridData=None,
+                        limit=Globals.SHEET_CHUNK_SIZE,
+                        offset=offsetNum,
                     )
-                    col_idx = df_3.columns.get_loc(column)
-                    if hasattr(writer1.sheets["Application"], "set_column"):
-                        writer1.sheets["Application"].set_column(
-                            col_idx, col_idx, column_width
+                    if df_2 is not None:
+                        sheetName = "Network"
+                        if maxDeviceLoop > 1:
+                            sheetName += " Part %s" % str((num + 1))
+                        df_2.to_excel(
+                            writer1, sheet_name="Network", index=False, engine="xlsxwriter"
                         )
-                    elif hasattr(writer1.sheets["Application"], "column_dimensions"):
-                        writer1.sheets["Application"].column_dimensions[
-                            column
-                        ].width = column_width
+                        for column in df_2:
+                            column_width = max(
+                                df_2[column].astype(str).map(len).max(), len(column)
+                            )
+                            col_idx = df_2.columns.get_loc(column)
+                            if hasattr(writer1.sheets[sheetName], "set_column"):
+                                writer1.sheets[sheetName].set_column(
+                                    col_idx, col_idx, column_width
+                                )
+                            elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
+                                writer1.sheets[sheetName].column_dimensions[
+                                    column
+                                ].width = column_width
+            for num in range(appLoop):
+                offsetNum = 0
+                if num != 0:
+                    offsetNum = (Globals.SHEET_CHUNK_SIZE * num) + 1
+                _, _, df_3 = self.getDataFrames(
+                    deviceGridData=None,
+                    networkGridData=None,
+                    appGridData=appGridData,
+                    limit=Globals.SHEET_CHUNK_SIZE,
+                    offset=offsetNum,
+                )
+                if df_3 is not None:
+                    sheetName = "Application"
+                    if appLoop > 1:
+                        sheetName += " Part %s" % str((num + 1))
+                    df_3.to_excel(
+                        writer1, sheet_name=sheetName, index=False, engine="xlsxwriter"
+                    )
+                    for column in df_3:
+                        column_width = max(
+                            df_3[column].astype(str).map(len).max(), len(column)
+                        )
+                        col_idx = df_3.columns.get_loc(column)
+                        if hasattr(writer1.sheets[sheetName], "set_column"):
+                            writer1.sheets[sheetName].set_column(
+                                col_idx, col_idx, column_width
+                            )
+                        elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
+                            writer1.sheets[sheetName].column_dimensions[
+                                column
+                            ].width = column_width
 
     # @api_tool_decorator()
     # def writeToExcelFile(self, inFile, df_1, df_2, df_3, mode="w",):

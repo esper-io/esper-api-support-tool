@@ -56,8 +56,6 @@ class PreferencesDialog(wx.Dialog):
             "last_endpoint",
             "prereleaseUpdate",
             "appFilter",
-            "splitExcelFile",
-            "maxSplitFileSize",
             "allowAutoIssuePost",
         ]
 
@@ -309,30 +307,6 @@ class PreferencesDialog(wx.Dialog):
             wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
             5,
         )
-
-        (_, _, self.checkbox_26,) = self.addPrefToPanel(
-            self.save,
-            sizer_12,
-            "Split Large Excel Files into smaller files",
-            wx.CheckBox,
-            (
-                "Excel has issues opening large spreadsheets. Thus to avoid this we can split the file into smaller parts."
-            ),
-        )
-        self.checkbox_26.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SPLIT_EXCEL_FILE else wx.CHK_CHECKED
-        )
-
-        (_, _, self.spin_ctrl_12,) = self.addPrefToPanel(
-            self.save,
-            sizer_12,
-            "Maximum Split File Size",
-            wx.SpinCtrl,
-            "Maximum amount of rows saved to a file. Will use Spinner value * 1000. Default: 100 -> 100,000",
-        )
-        self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE / 1000)
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -632,8 +606,6 @@ class PreferencesDialog(wx.Dialog):
             "showGroupPath": self.checkbox_24.IsChecked(),
             "prereleaseUpdate": self.checkbox_25.IsChecked(),
             "appFilter": self.combobox_2.GetValue(),
-            "splitExcelFile": self.checkbox_26.IsChecked(),
-            "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
         }
 
@@ -668,8 +640,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
         Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
         Globals.APP_FILTER = self.combobox_2.GetValue().lower()
-        Globals.SPLIT_EXCEL_FILE = self.prefs["splitExcelFile"]
-        Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"]) * 1000
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
 
         if Globals.APPS_IN_DEVICE_GRID:
@@ -984,15 +954,6 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.CHECK_PRERELEASES = False
 
-        if self.checkBooleanValuePrefAndSet("splitExcelFile", self.checkbox_26):
-            Globals.SPLIT_EXCEL_FILE = True
-        else:
-            Globals.SPLIT_EXCEL_FILE = False
-
-        if "maxSplitFileSize" in self.prefs:
-            Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"])
-            self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE)
-
         if self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27):
             Globals.AUTO_REPORT_ISSUES = True
         else:
@@ -1103,10 +1064,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.LAST_OPENED_ENDPOINT
         elif key == "appFilter":
             return Globals.APP_FILTER
-        elif key == "splitExcelFile":
-            return Globals.SPLIT_EXCEL_FILE
-        elif key == "maxSplitFileSize":
-            return Globals.SHEET_CHUNK_SIZE
         elif key == "allowAutoIssuePost":
             return Globals.AUTO_REPORT_ISSUES
         else:
