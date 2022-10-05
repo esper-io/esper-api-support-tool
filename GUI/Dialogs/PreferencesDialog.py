@@ -969,8 +969,8 @@ class PreferencesDialog(wx.Dialog):
             Globals.CHECK_PRERELEASES = False
 
         if "maxSplitFileSize" in self.prefs:
-            Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"])
-            self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE)
+            Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"]) * 1000
+            self.spin_ctrl_12.SetValue(int(self.prefs["maxSplitFileSize"]))
 
         if self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27):
             Globals.AUTO_REPORT_ISSUES = True
