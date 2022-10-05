@@ -14,7 +14,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.1946"
+VERSION = "v0.1947"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50

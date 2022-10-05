@@ -755,58 +755,86 @@ class NewFrameLayout(wx.Frame):
             ):
                 self.saveAppInfoAsFile(inFile)
         elif inFile.endswith(".xlsx"):
-            deviceGridData = []
-            networkGridData = []
-            appGridData = []
-            threads = []
-
-            if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value:
-                Globals.THREAD_POOL.enqueue(
-                    self.getGridDataToSave,
-                    gridDeviceData
-                    if gridDeviceData
-                    else self.gridPanel.grid_1_contents,
-                    deviceHeaders,
-                    Globals.CSV_TAG_ATTR_NAME,
-                    deviceGridData,
-                )
-
-            if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
-                Globals.THREAD_POOL.enqueue(
-                    self.getGridDataToSave,
-                    gridDeviceData
-                    if gridDeviceData
-                    else self.gridPanel.grid_2_contents,
-                    networkHeaders,
-                    Globals.CSV_NETWORK_ATTR_NAME,
-                    networkGridData,
-                )
-
-            chunks = splitListIntoChunks(
-                self.gridPanel.grid_3_contents,
-                maxThread=max(Globals.MAX_THREAD_COUNT - 2, 1),
-            )
-            for chunk in chunks:
-                Globals.THREAD_POOL.enqueue(self.populateAppData, appGridData, chunk)
-            Globals.THREAD_POOL.join(tolerance=1)
-
             for attempt in range(Globals.MAX_RETRY):
                 try:
-                    self.Logging("Saving file to: %s" % inFile)
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-                    self.writeToExcelUsingXlxsWriter(
-                        inFile,
-                        deviceGridData,
-                        networkGridData,
-                        appGridData,
-                    )
+                    my_wb = xlsxwriter.Workbook(inFile)
+                    # Save Device & Network information, if selected
+                    if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+                        baseSheetName = "Device & Network"
+                        if gridDeviceData:
+                            self.populateWorkSheet(
+                                my_wb,
+                                gridDeviceData,
+                                baseSheetName,
+                                list(deviceHeaders) + list(networkHeaders)[2:],
+                                {**Globals.CSV_TAG_ATTR_NAME, **Globals.CSV_NETWORK_ATTR_NAME}
+                            )
+                        else:
+                            self.populateWorkSheet(
+                                my_wb,
+                                self.gridPanel.grid_1_contents + self.gridPanel.grid_2_contents,
+                                baseSheetName,
+                                list(deviceHeaders) + list(networkHeaders)[2:],
+                                {**Globals.CSV_TAG_ATTR_NAME, **Globals.CSV_NETWORK_ATTR_NAME}
+                            )
+                    else:
+                        # Save Device Info
+                        baseSheetName = "Device"
+                        if gridDeviceData and (not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value):
+                            self.populateWorkSheet(
+                                my_wb,
+                                gridDeviceData,
+                                baseSheetName,
+                                deviceHeaders,
+                                Globals.CSV_TAG_ATTR_NAME
+                            )
+                        else:
+                            self.populateWorkSheet(
+                                my_wb,
+                                self.gridPanel.grid_1_contents,
+                                baseSheetName,
+                                deviceHeaders,
+                                Globals.CSV_TAG_ATTR_NAME
+                            )
+                        # Save Network Info
+                        baseSheetName = "Network"
+                        if gridDeviceData and (not action or action <= GeneralActions.GENERATE_INFO_REPORT.value):
+                            self.populateWorkSheet(
+                                my_wb,
+                                gridDeviceData,
+                                baseSheetName,
+                                networkHeaders,
+                                Globals.CSV_NETWORK_ATTR_NAME
+                            )
+                        else:
+                            self.populateWorkSheet(
+                                my_wb,
+                                self.gridPanel.grid_2_contents,
+                                baseSheetName,
+                                networkHeaders,
+                                Globals.CSV_NETWORK_ATTR_NAME
+                            )
+                    # Save App Info
+                    if self.gridPanel.grid_3_contents:
+                        baseSheetName = "Application"
+                        self.populateWorkSheet(
+                            my_wb,
+                            self.gridPanel.grid_3_contents,
+                            baseSheetName,
+                            Globals.CSV_APP_ATTR_NAME,
+                            None
+                        )
+                    my_wb.close()
                 except Exception as e:
                     if attempt == Globals.MAX_RETRY - 1:
                         raise e
                     else:
                         ApiToolLog().LogError(e)
+                        time.sleep(15)
+                        self.Logging("Retrying save: %s" % str(e))
                         continue
                 break
+
         Globals.THREAD_POOL.join(tolerance=1)
 
         self.Logging("---> Info saved to file: " + inFile)
@@ -826,132 +854,52 @@ class NewFrameLayout(wx.Frame):
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
-    def writeToExcelUsingXlxsWriter(
-        self, inFile, deviceGridData, networkGridData, appGridData
-    ):
-        my_wb = xlsxwriter.Workbook(inFile)
-        sheetName = "Device"
-        deviceHeader = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
-            sheetName = "Device and Network"
-            tempData = []
-            deviceHeader = (
-                list(Globals.CSV_TAG_ATTR_NAME.keys())
-                + list(Globals.CSV_NETWORK_ATTR_NAME.keys())[2:]
-            )
-            indx = 0
-            for entry in deviceGridData:
-                tempData.append(entry + networkGridData[indx][2:])
-                indx += 1
-            deviceGridData = tempData
-            networkGridData = None
-        else:
-            deviceGridData.insert(0, deviceHeader)
-        if deviceGridData:
-            deviceLoopNum = math.ceil(len(deviceGridData) / Globals.SHEET_CHUNK_SIZE)
-            spareSheetName = sheetName
-            for num in range(deviceLoopNum):
-                sheetName = spareSheetName
-                if deviceLoopNum != 1:
-                    sheetName += " Part %s" % (num + 1)
-                offset = Globals.SHEET_CHUNK_SIZE * num
-                endIndx = len(deviceGridData)
-                if len(deviceGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
-                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
-                self.addDataToWorkSheet(
-                    my_wb,
-                    sheetName,
-                    deviceGridData[offset:endIndx],
-                    deviceHeader,
-                )
-        del deviceGridData
-        if networkGridData:
-            loopNum = math.ceil(len(networkGridData) / Globals.SHEET_CHUNK_SIZE)
-            for num in range(loopNum):
-                sheetName = "Network"
-                if loopNum != 1:
-                    sheetName += " Part %s" % (num + 1)
-                offset = Globals.SHEET_CHUNK_SIZE * num
-                endIndx = len(networkGridData)
-                if len(networkGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
-                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
-                self.addDataToWorkSheet(
-                    my_wb,
-                    sheetName,
-                    networkGridData[offset:endIndx],
-                    list(Globals.CSV_NETWORK_ATTR_NAME.keys()),
-                )
-        del networkGridData
-        if appGridData:
-            loopNum = math.ceil(len(appGridData) / Globals.SHEET_CHUNK_SIZE)
-            for num in range(loopNum):
-                sheetName = "Application"
-                if loopNum != 1:
-                    sheetName += " Part %s" % (num + 1)
-                offset = Globals.SHEET_CHUNK_SIZE * num
-                endIndx = len(appGridData)
-                if len(appGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
-                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
-                self.addDataToWorkSheet(
-                    my_wb,
-                    sheetName,
-                    appGridData[offset:endIndx],
-                    list(Globals.CSV_APP_ATTR_NAME),
-                )
-        del appGridData
-        my_wb.close()
-
-    def addDataToWorkSheet(self, wb, sheetName, data, header):
-        if data:
-            ws3 = wb.add_worksheet(sheetName)
-            bold = wb.add_format({"bold": True})
-            bold.set_align("center")
-            bold.set_align("vcenter")
-            data.insert(0, header)
+    def populateWorkSheet(self, workbook, dataSource, baseSheetName, headers, headerKeys):
+        loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
+        bold = workbook.add_format({"bold": True})
+        bold.set_align("center")
+        bold.set_align("vcenter")
+        for num in range(loopNum):
             rowIndx = 0
+            sheetName = baseSheetName
+            if loopNum != 1:
+                sheetName += " Part %s" % (num + 1)
+            worksheet = workbook.add_worksheet(sheetName)
             maxColumnWidth = {}
-            for row in data:
+            offset = Globals.SHEET_CHUNK_SIZE * num
+            endIndx = len(dataSource)
+            if len(dataSource) > (offset + Globals.SHEET_CHUNK_SIZE):
+                endIndx = offset + Globals.SHEET_CHUNK_SIZE
+            colIndx = 0
+            for header in headers:
+                worksheet.write(rowIndx, colIndx, header, bold)
+                maxColumnWidth[header] = len(header) + 5
+                colIndx += 1
+            rowIndx = 1
+            for entry in dataSource[offset:endIndx]:
                 colIndx = 0
-                for col in row:
-                    if rowIndx == 0:
-                        ws3.write(rowIndx, colIndx, col, bold)
-                    else:
-                        ws3.write(rowIndx, colIndx, str(col))
-                    if header[colIndx] not in maxColumnWidth or (
-                        type(col) is not bool
-                        and col is not None
-                        and header[colIndx] in maxColumnWidth
-                        and maxColumnWidth[header[colIndx]] < len(col)
+                for col in headers:
+                    value = ""
+                    if type(entry) is list:
+                        value = entry[colIndx]
+                    elif col in entry:
+                        value = entry[col]
+                    elif headerKeys and col in headerKeys and headerKeys[col] in entry:
+                        value = entry[headerKeys[col]]
+                    worksheet.write(rowIndx, colIndx, str(value))
+                    if headers[colIndx] not in maxColumnWidth or (
+                        type(value) is not bool
+                        and value is not None
+                        and headers[colIndx] in maxColumnWidth
+                        and maxColumnWidth[headers[colIndx]] < len(value)
                     ):
-                        maxColumnWidth[header[colIndx]] = len(col) + 5
-                    elif type(col) is bool or col is None:
-                        maxColumnWidth[header[colIndx]] = len(header[colIndx])
+                        maxColumnWidth[headers[colIndx]] = len(value) + 5
+                    elif type(value) is bool or value is None or not value:
+                        maxColumnWidth[headers[colIndx]] = len(headers[colIndx])
                     colIndx += 1
                 rowIndx += 1
-            for num in range(len(header)):
-                ws3.set_column(num, num, maxColumnWidth[header[num]])
-
-    def populateAppData(self, appGridData, content):
-        for entry in content:
-            if type(entry) is list:
-                for elm in entry:
-                    if type(elm) is dict:
-                        appGridData.append(list(elm.values()))
-            elif type(entry) is dict:
-                appGridData.append(list(entry.values()))
-
-    def getGridDataToSave(self, contents, headers, headerKeys, deviceGridData):
-        for entry in contents:
-            rowValues = []
-            for header in headers:
-                value = ""
-                if header in entry:
-                    value = entry[header]
-                elif headerKeys[header] in entry:
-                    value = entry[headerKeys[header]]
-                rowValues.append(value)
-            deviceGridData.append(rowValues)
-        return deviceGridData
+            for num in range(len(headers)):
+                worksheet.set_column(num, num, maxColumnWidth[headers[num]])
 
     def saveAppInfoAsFile(self, inFile):
         gridData = []
