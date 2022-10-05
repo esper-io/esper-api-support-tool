@@ -3508,6 +3508,7 @@ class NewFrameLayout(wx.Frame):
                     return None
 
             pushSuccess = 0
+            statusList = []
             if not opt or opt == options[2]:
                 return None
             elif opt == options[0]:
@@ -3516,6 +3517,17 @@ class NewFrameLayout(wx.Frame):
                     updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
                     if updateResp and updateResp.status_code < 300:
                         pushSuccess += 1
+                    statusList.append(
+                        {
+                            "Blueprint Id": bp["id"],
+                            "Blueprint Name": bp["name"],
+                            "Group Id": bp["group"],
+                            "Group Path": Globals.knownGroups[bp["group"]]["path"]
+                            if bp["group"] in Globals.knownGroups
+                            else "Unknown",
+                            "Response": updateResp.text,
+                        }
+                    )
             elif opt == options[1]:
                 # prompt for schedule
                 schedule = None
@@ -3526,8 +3538,9 @@ class NewFrameLayout(wx.Frame):
                         if dlg.isRecurring():
                             scheduleType = "RECURRING"
                         schedule = dlg.getScheduleDict()
+                    else:
+                        return None
 
-                statusList = []
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(
                         bp["id"],
