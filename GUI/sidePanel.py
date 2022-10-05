@@ -403,7 +403,7 @@ class SidePanel(wx.Panel):
                     for groupName in selections:
                         groupNameProper = groupName.split(" (Device Count:")[0]
                         groupId = self.groups[groupNameProper]
-                        self.selectedGroups.Append(groupNameProper)
+                        self.selectedGroups.Append(groupName)
                         if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
                             self.selectedGroupsList = []
