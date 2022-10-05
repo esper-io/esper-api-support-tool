@@ -195,37 +195,18 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response.results = list(filter(filterDeviceList, api_response.results))
 
-        additionalInfo = {}
-        if getApps or getLatestEvents:
-            for device in api_response["results"]:
-                Globals.THREAD_POOL.enqueue(
-                    getAdditionalDeviceInfo,
-                    device.id,
-                    getApps,
-                    getLatestEvents,
-                    additionalInfo,
-                )
-            Globals.THREAD_POOL.join(tolerance=1)
-
         deviceList = {}
         indx = 0
         Globals.THREAD_POOL.enqueue(
             updateGaugeForObtainingDeviceInfo, deviceList, api_response.results
         )
         for device in api_response.results:
-            deviceInfo = {}
-            latestData = appData = None
-            if device.id in additionalInfo:
-                latestData = additionalInfo[device.id]["event"]
-                appData = additionalInfo[device.id]["app"]
-            if latestData and "results" in latestData and latestData["results"]:
-                latestData = latestData["results"][0]["data"]
             Globals.THREAD_POOL.enqueue(
-                populateDeviceList,
+                processDeviceInDeviceList,
                 device,
-                deviceInfo,
-                appData,
-                latestData,
+                device.id,
+                getApps,
+                getLatestEvents,
                 deviceList,
                 indx,
             )
@@ -247,37 +228,18 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
                 filter(filterDeviceList, api_response["results"])
             )
 
-        additionalInfo = {}
-        for device in api_response["results"]:
-            Globals.THREAD_POOL.enqueue(
-                getAdditionalDeviceInfo,
-                device["id"],
-                getApps,
-                getLatestEvents,
-                additionalInfo,
-            )
-        Globals.THREAD_POOL.join(tolerance=1)
-
         deviceList = {}
         indx = 0
         Globals.THREAD_POOL.enqueue(
             updateGaugeForObtainingDeviceInfo, deviceList, api_response["results"]
         )
         for device in api_response["results"]:
-            deviceInfo = {}
-            latestData = appData = None
-            if device["id"] in additionalInfo:
-                latestData = additionalInfo[device["id"]]["event"]
-                appData = additionalInfo[device["id"]]["app"]
-
-            if latestData and "results" in latestData and latestData["results"]:
-                latestData = latestData["results"][0]["data"]
             Globals.THREAD_POOL.enqueue(
-                populateDeviceList,
+                processDeviceInDeviceList,
                 device,
-                deviceInfo,
-                appData,
-                latestData,
+                device["id"],
+                getApps,
+                getLatestEvents,
                 deviceList,
                 indx,
             )
@@ -296,6 +258,31 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
+
+
+def processDeviceInDeviceList(device, deviceId, getApps, getLatestEvents, deviceList, indx):
+    additionalInfo = {}
+    getAdditionalDeviceInfo(
+        deviceId,
+        getApps,
+        getLatestEvents,
+        additionalInfo
+    )
+    deviceInfo = {}
+    latestData = appData = None
+    if deviceId in additionalInfo:
+        latestData = additionalInfo[deviceId]["event"]
+        appData = additionalInfo[deviceId]["app"]
+    if latestData and "results" in latestData and latestData["results"]:
+        latestData = latestData["results"][0]["data"]
+    populateDeviceList(
+        device,
+        deviceInfo,
+        appData,
+        latestData,
+        deviceList,
+        indx,
+    )
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
@@ -1322,36 +1309,16 @@ def getAllDeviceInfo(frame, action=None):
         getApps = True
         getLatestEvents = True
 
-    additionalInfo = {}
-    if getApps or getLatestEvents:
-        for device in api_response["results"]:
-            Globals.THREAD_POOL.enqueue(
-                getAdditionalDeviceInfo,
-                device["id"],
-                getApps,
-                getLatestEvents,
-                additionalInfo,
-            )
-        Globals.THREAD_POOL.join(tolerance=1)
-
     deviceList = {}
     indx = 0
 
     for device in api_response["results"]:
-        deviceInfo = {}
-        latestData = appData = None
-        if device["id"] in additionalInfo:
-            latestData = additionalInfo[device["id"]]["event"]
-            appData = additionalInfo[device["id"]]["app"]
-
-        if latestData and "results" in latestData and latestData["results"]:
-            latestData = latestData["results"][0]["data"]
         Globals.THREAD_POOL.enqueue(
-            populateDeviceList,
+            processDeviceInDeviceList,
             device,
-            deviceInfo,
-            appData,
-            latestData,
+            device["id"],
+            getApps,
+            getLatestEvents,
             deviceList,
             indx,
         )
