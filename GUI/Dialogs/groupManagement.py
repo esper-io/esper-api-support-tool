@@ -29,7 +29,7 @@ from Common.enum import Color
 
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):
-        # begin wxGlade: MyDialog.__init__
+
         self.groups = groups
         self.groupTree = {}
         self.tree = {}

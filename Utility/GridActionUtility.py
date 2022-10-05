@@ -332,10 +332,6 @@ def setAppStateForAllAppsListed(state):
     deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
     if devices:
-        # for device in devices:
-        #     Globals.THREAD_POOL.enqueue(
-        #         setAllAppsState, Globals.frame, device, Globals.frame.AppState
-        #     )
         deviceList = getDeviceIdFromGridDevices(devices)
 
         Globals.THREAD_POOL.enqueue(

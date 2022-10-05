@@ -7,7 +7,6 @@ import wx
 
 class ColumnVisibilityDialog(wx.Dialog):
     def __init__(self, parent, grid, choiceData=[]):
-        # begin wxGlade: MyDialog.__init__
         super(ColumnVisibilityDialog, self).__init__(
             parent,
             wx.ID_ANY,
@@ -46,7 +45,6 @@ class ColumnVisibilityDialog(wx.Dialog):
 
         self.__set_properties()
         self.__do_layout()
-        # end wxGlade
 
     @api_tool_decorator()
     def OnSelection(self, event):
@@ -83,15 +81,12 @@ class ColumnVisibilityDialog(wx.Dialog):
 
     @api_tool_decorator()
     def __set_properties(self):
-        # begin wxGlade: MyDialog.__set_properties
         self.SetTitle("Column Visibility")
         self.panel_3.SetMinSize((354, 150))
         self.panel_3.SetBackgroundColour(wx.Colour(255, 119, 255))
-        # end wxGlade
 
     @api_tool_decorator()
     def __do_layout(self):
-        # begin wxGlade: MyDialog.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
@@ -117,4 +112,3 @@ class ColumnVisibilityDialog(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
-        # end wxGlade

@@ -1260,7 +1260,6 @@ class GridPanel(wx.Panel):
                 self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
             )
             num += numRowsPerChunk
-        # TODO fix join
         Globals.THREAD_POOL.join(tolerance)
         Globals.THREAD_POOL.results()
 

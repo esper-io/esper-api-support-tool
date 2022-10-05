@@ -732,7 +732,7 @@ def convertTemplateToBlueprint(template):
         "rotation_state": templateSection["settings"]["rotationState"],
         "wallpapers": None
         if "brand" not in templateSection and not templateSection["brand"]
-        else templateSection["brand"]["wallpapers"],  # TODO
+        else templateSection["brand"]["wallpapers"],
         "locked": False,
         "section_type": "Independent",
         "screenshot_disabled": templateSection["devicePolicy"]["screenshotDisabled"],
@@ -930,7 +930,6 @@ def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMME
         "command_type": "GROUP",
         "command_args": {
             "apply_all": True,
-            # "group_url": "undefineddevicegroup/%s/" % groupId,
             "blueprint_revision_id": blueprintId,
         },
         "devices": [],
@@ -1001,7 +1000,6 @@ def modifyAppsInBlueprints(
                     changed = True
             if changed:
                 total += 1
-                # updateResp = pushBlueprintUpdate(bp["group"], bp["id"])
                 updateResp = editBlueprintApps(bp["group"], resp)
                 if updateResp and updateResp.status_code < 300:
                     changedList.append(bp)

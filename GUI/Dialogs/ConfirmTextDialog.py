@@ -9,7 +9,6 @@ import wx.html as wxHtml
 
 class ConfirmTextDialog(wx.Dialog):
     def __init__(self, title, label, caption, detail, parent=None):
-        # begin wxGlade: MyDialog.__init__
         minSize = (500, 400)
         super(ConfirmTextDialog, self).__init__(
             parent,
@@ -94,7 +93,6 @@ class ConfirmTextDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
 
         self.Fit()
-        # end wxGlade
 
     @api_tool_decorator()
     def OnClose(self, event):

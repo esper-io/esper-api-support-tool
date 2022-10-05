@@ -534,8 +534,6 @@ def populateDeviceInfoDictionaryComplieData(
 
                 if groupName:
                     groupNames.append(groupName)
-                # if groupId not in Globals.knownGroups:
-                #     Globals.knownGroups[groupId] = groupName
         elif (
             type(deviceGroups) == dict
             and Globals.SHOW_GROUP_PATH
@@ -935,8 +933,6 @@ def populateDeviceInfoDictionary(
 
                 if groupName:
                     groupNames.append(groupName)
-                # if groupId not in Globals.knownGroups:
-                #     Globals.knownGroups[groupId] = groupName
         elif (
             type(deviceGroups) == dict
             and Globals.SHOW_GROUP_PATH
@@ -1367,7 +1363,6 @@ def getAllDeviceInfo(frame, action=None):
 
 
 def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
-    # threads = []
     count = None
     apiNext = None
     if hasattr(api_response, "count"):

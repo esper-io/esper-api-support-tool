@@ -34,6 +34,7 @@ import tempfile
 import ast
 
 import pandas as pd
+import xlsxwriter
 
 import math
 import wx.adv as wxadv
@@ -118,8 +119,6 @@ class NewFrameLayout(wx.Frame):
     def __init__(self):
         self.prefPath = ""
         self.authPath = ""
-
-        pd.options.display.max_rows = 9999999
 
         self.consoleWin = None
         self.refresh = None
@@ -683,7 +682,6 @@ class NewFrameLayout(wx.Frame):
         tempDict.update(device)
         for entry in self.gridPanel.grid_2_contents:
             if entry["Device Name"] == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]:
-                # if deviceListing:
                 tempDict.update(entry)
                 break
         gridDeviceData.append(tempDict)
@@ -792,22 +790,22 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(self.populateAppData, appGridData, chunk)
             Globals.THREAD_POOL.join(tolerance=1)
 
-            for _ in range(Globals.MAX_RETRY):
+            for attempt in range(Globals.MAX_RETRY):
                 try:
-                    # deviceRowCount = len(deviceGridData)
-                    # appRowCount = len(appGridData)
-
                     self.Logging("Saving file to: %s" % inFile)
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
-                    self.writeToExcelFile(
+                    self.writeToExcelUsingXlxsWriter(
                         inFile,
                         deviceGridData,
                         networkGridData,
                         appGridData,
                     )
                 except Exception as e:
-                    ApiToolLog().LogError(e)
-                    continue
+                    if attempt == Globals.MAX_RETRY - 1:
+                        raise e
+                    else:
+                        ApiToolLog().LogError(e)
+                        continue
                 break
         Globals.THREAD_POOL.join(tolerance=1)
 
@@ -828,255 +826,110 @@ class NewFrameLayout(wx.Frame):
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
-    def getDataFrames(
-        self,
-        deviceGridData=None,
-        networkGridData=None,
-        appGridData=None,
-        limit=-1,
-        offset=0,
+    def writeToExcelUsingXlxsWriter(
+        self, inFile, deviceGridData, networkGridData, appGridData
     ):
-        df_1 = None
-        device_sheet_columns = Globals.CSV_TAG_ATTR_NAME.keys()
-        if (
-            deviceGridData
-            and networkGridData
-            and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
-            and offset < len(deviceGridData)
-        ):
-            endIndx = len(deviceGridData)
-            if len(deviceGridData) > (offset + limit):
-                endIndx = offset + limit
-            df_devices = pd.DataFrame(
-                deviceGridData[
-                    offset : endIndx
-                ],
-                columns=Globals.CSV_TAG_ATTR_NAME.keys(),
-            )
-            df_network = pd.DataFrame(
-                networkGridData[
-                    offset : endIndx
-                ],
-                columns=Globals.CSV_NETWORK_ATTR_NAME.keys(),
-            )
-            device_sheet_columns = (
+        my_wb = xlsxwriter.Workbook(inFile)
+        sheetName = "Device"
+        deviceHeader = list(Globals.CSV_TAG_ATTR_NAME.keys())
+        if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+            sheetName = "Device and Network"
+            tempData = []
+            deviceHeader = (
                 list(Globals.CSV_TAG_ATTR_NAME.keys())
                 + list(Globals.CSV_NETWORK_ATTR_NAME.keys())[2:]
             )
-            df_1 = pd.concat(
-                [
-                    df_devices,
-                    df_network.drop(columns=["Esper Name", "Group"]),
-                ],
-                axis=1,
-            )
-            df_1.set_axis(device_sheet_columns, axis=1, inplace=True)
-        elif deviceGridData and offset < len(deviceGridData):
-            endIndx = len(deviceGridData)
-            if len(deviceGridData) > (offset + limit):
-                endIndx = offset + limit
-            df_1 = pd.DataFrame(
-                deviceGridData[
-                    offset : endIndx
-                ],
-                columns=device_sheet_columns,
-            )
-        if df_1 is not None:
-            df_1.columns = device_sheet_columns
-        df_2 = None
-        if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS and offset < len(
-            networkGridData
-        ):
-            endIndx = len(networkGridData)
-            if len(networkGridData) > (offset + limit):
-                endIndx = offset + limit
-            df_2 = pd.DataFrame(
-                networkGridData[
-                    offset : endIndx
-                ],
-                columns=Globals.CSV_NETWORK_ATTR_NAME.keys(),
-            )
-            df_2.columns = Globals.CSV_NETWORK_ATTR_NAME.keys()
-        # TODO: Memory error
-        df_3 = None
-        if appGridData and offset < len(appGridData):
-            endIndx = len(appGridData) - 1
-            if len(appGridData) > (offset + limit):
-                endIndx = offset + limit
-            df_3 = pd.DataFrame(
-                appGridData[
-                    offset : endIndx
-                ],
-                columns=Globals.CSV_APP_ATTR_NAME,
-            )
-            df_3.columns = Globals.CSV_APP_ATTR_NAME
-        return df_1, df_2, df_3
-
-    @api_tool_decorator()
-    def writeToExcelFile(
-        self,
-        inFile,
-        deviceGridData,
-        networkGridData,
-        appGridData
-    ):
-        with pd.ExcelWriter(
-            inFile,
-            engine="xlsxwriter",
-        ) as writer1:
-            sheetOneName = (
-                "Device and Network"
-                if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
-                else "Device"
-            )
-            maxDeviceLoop = max(
-                math.ceil(len(deviceGridData) / Globals.SHEET_CHUNK_SIZE),
-                math.ceil(len(networkGridData) / Globals.SHEET_CHUNK_SIZE),
-            )
-            appLoop = math.ceil(len(appGridData) / Globals.SHEET_CHUNK_SIZE)
-            for num in range(maxDeviceLoop):
-                offsetNum = 0
-                if num != 0:
-                    offsetNum = (Globals.SHEET_CHUNK_SIZE * num)
-                df_1, _, _ = self.getDataFrames(
-                    deviceGridData=deviceGridData,
-                    networkGridData=networkGridData,
-                    appGridData=None,
-                    limit=Globals.SHEET_CHUNK_SIZE,
-                    offset=offsetNum,
+            indx = 0
+            for entry in deviceGridData:
+                tempData.append(entry + networkGridData[indx][2:])
+                indx += 1
+            deviceGridData = tempData
+            networkGridData = None
+        else:
+            deviceGridData.insert(0, deviceHeader)
+        if deviceGridData:
+            deviceLoopNum = math.ceil(len(deviceGridData) / Globals.SHEET_CHUNK_SIZE)
+            spareSheetName = sheetName
+            for num in range(deviceLoopNum):
+                sheetName = spareSheetName
+                if deviceLoopNum != 1:
+                    sheetName += " Part %s" % (num + 1)
+                offset = Globals.SHEET_CHUNK_SIZE * num
+                endIndx = len(deviceGridData)
+                if len(deviceGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
+                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
+                self.addDataToWorkSheet(
+                    my_wb,
+                    sheetName,
+                    deviceGridData[offset:endIndx],
+                    deviceHeader,
                 )
-                if df_1 is not None:
-                    sheetName = sheetOneName
-                    if maxDeviceLoop > 1:
-                        sheetName += " Part %s" % str((num + 1))
-                    df_1.to_excel(
-                        writer1, sheet_name=sheetName, index=False, engine="xlsxwriter"
-                    )
-                    for column in df_1:
-                        column_width = max(
-                            df_1[column].astype(str).map(len).max(), len(column)
-                        )
-                        col_idx = df_1.columns.get_loc(column)
-                        if hasattr(writer1.sheets[sheetName], "set_column"):
-                            writer1.sheets[sheetName].set_column(
-                                col_idx, col_idx, column_width
-                            )
-                        elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
-                            writer1.sheets[sheetName].column_dimensions[
-                                column
-                            ].width = column_width
-                if not Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
-                    _, df_2, _ = self.getDataFrames(
-                        deviceGridData=None,
-                        networkGridData=networkGridData,
-                        appGridData=None,
-                        limit=Globals.SHEET_CHUNK_SIZE,
-                        offset=offsetNum,
-                    )
-                    if df_2 is not None:
-                        sheetName = "Network"
-                        if maxDeviceLoop > 1:
-                            sheetName += " Part %s" % str((num + 1))
-                        df_2.to_excel(
-                            writer1, sheet_name="Network", index=False, engine="xlsxwriter"
-                        )
-                        for column in df_2:
-                            column_width = max(
-                                df_2[column].astype(str).map(len).max(), len(column)
-                            )
-                            col_idx = df_2.columns.get_loc(column)
-                            if hasattr(writer1.sheets[sheetName], "set_column"):
-                                writer1.sheets[sheetName].set_column(
-                                    col_idx, col_idx, column_width
-                                )
-                            elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
-                                writer1.sheets[sheetName].column_dimensions[
-                                    column
-                                ].width = column_width
-            for num in range(appLoop):
-                offsetNum = 0
-                if num != 0:
-                    offsetNum = (Globals.SHEET_CHUNK_SIZE * num) + 1
-                _, _, df_3 = self.getDataFrames(
-                    deviceGridData=None,
-                    networkGridData=None,
-                    appGridData=appGridData,
-                    limit=Globals.SHEET_CHUNK_SIZE,
-                    offset=offsetNum,
+        del deviceGridData
+        if networkGridData:
+            loopNum = math.ceil(len(networkGridData) / Globals.SHEET_CHUNK_SIZE)
+            for num in range(loopNum):
+                sheetName = "Network"
+                if loopNum != 1:
+                    sheetName += " Part %s" % (num + 1)
+                offset = Globals.SHEET_CHUNK_SIZE * num
+                endIndx = len(networkGridData)
+                if len(networkGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
+                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
+                self.addDataToWorkSheet(
+                    my_wb,
+                    sheetName,
+                    networkGridData[offset:endIndx],
+                    list(Globals.CSV_NETWORK_ATTR_NAME.keys()),
                 )
-                if df_3 is not None:
-                    sheetName = "Application"
-                    if appLoop > 1:
-                        sheetName += " Part %s" % str((num + 1))
-                    df_3.to_excel(
-                        writer1, sheet_name=sheetName, index=False, engine="xlsxwriter"
-                    )
-                    for column in df_3:
-                        column_width = max(
-                            df_3[column].astype(str).map(len).max(), len(column)
-                        )
-                        col_idx = df_3.columns.get_loc(column)
-                        if hasattr(writer1.sheets[sheetName], "set_column"):
-                            writer1.sheets[sheetName].set_column(
-                                col_idx, col_idx, column_width
-                            )
-                        elif hasattr(writer1.sheets[sheetName], "column_dimensions"):
-                            writer1.sheets[sheetName].column_dimensions[
-                                column
-                            ].width = column_width
+        del networkGridData
+        if appGridData:
+            loopNum = math.ceil(len(appGridData) / Globals.SHEET_CHUNK_SIZE)
+            for num in range(loopNum):
+                sheetName = "Application"
+                if loopNum != 1:
+                    sheetName += " Part %s" % (num + 1)
+                offset = Globals.SHEET_CHUNK_SIZE * num
+                endIndx = len(appGridData)
+                if len(appGridData) > (offset + Globals.SHEET_CHUNK_SIZE):
+                    endIndx = offset + Globals.SHEET_CHUNK_SIZE
+                self.addDataToWorkSheet(
+                    my_wb,
+                    sheetName,
+                    appGridData[offset:endIndx],
+                    list(Globals.CSV_APP_ATTR_NAME),
+                )
+        del appGridData
+        my_wb.close()
 
-    # @api_tool_decorator()
-    # def writeToExcelFile(self, inFile, df_1, df_2, df_3, mode="w",):
-    #     file_exists = os.path.exists(inFile)
-    #     with pd.ExcelWriter(inFile, mode=mode, engine="xlsxwriter", if_sheet_exists="new" if file_exists else None) as writer1:
-    #         sheetOneName = (
-    #             "Device and Network"
-    #             if Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
-    #             else "Device"
-    #         )
-    #         if df_1 is not None:
-    #             df_1.to_excel(
-    #                 writer1, sheet_name=sheetOneName, index=False, engine="xlsxwriter"
-    #             )
-    #             for column in df_1:
-    #                 column_width = max(
-    #                     df_1[column].astype(str).map(len).max(), len(column)
-    #                 )
-    #                 col_idx = df_1.columns.get_loc(column)
-    #                 if hasattr(writer1.sheets[sheetOneName], "set_column"):
-    #                     writer1.sheets[sheetOneName].set_column(
-    #                         col_idx, col_idx, column_width
-    #                     )
-    #                 elif hasattr(writer1.sheets[sheetOneName], "column_dimensions"):
-    #                     writer1.sheets[sheetOneName].column_dimensions[column].width = column_width
-    #         if df_2 is not None:
-    #             df_2.to_excel(
-    #                 writer1, sheet_name="Network", index=False, engine="xlsxwriter"
-    #             )
-    #             for column in df_2:
-    #                 column_width = max(
-    #                     df_2[column].astype(str).map(len).max(), len(column)
-    #                 )
-    #                 col_idx = df_2.columns.get_loc(column)
-    #                 if hasattr(writer1.sheets["Network"], "set_column"):
-    #                     writer1.sheets["Network"].set_column(col_idx, col_idx, column_width)
-    #                 elif hasattr(writer1.sheets["Network"], "column_dimensions"):
-    #                     writer1.sheets["Network"].column_dimensions[column].width = column_width
-    #         if df_3 is not None:
-    #             df_3.to_excel(
-    #                 writer1, sheet_name="Application", index=False, engine="xlsxwriter"
-    #             )
-    #             for column in df_3:
-    #                 column_width = max(
-    #                     df_3[column].astype(str).map(len).max(), len(column)
-    #                 )
-    #                 col_idx = df_3.columns.get_loc(column)
-    #                 if hasattr(writer1.sheets["Application"], "set_column"):
-    #                     writer1.sheets["Application"].set_column(
-    #                         col_idx, col_idx, column_width
-    #                     )
-    #                 elif hasattr(writer1.sheets["Application"], "column_dimensions"):
-    #                     writer1.sheets["Application"].column_dimensions[column].width = column_width
+    def addDataToWorkSheet(self, wb, sheetName, data, header):
+        if data:
+            ws3 = wb.add_worksheet(sheetName)
+            bold = wb.add_format({"bold": True})
+            bold.set_align("center")
+            bold.set_align("vcenter")
+            data.insert(0, header)
+            rowIndx = 0
+            maxColumnWidth = {}
+            for row in data:
+                colIndx = 0
+                for col in row:
+                    if rowIndx == 0:
+                        ws3.write(rowIndx, colIndx, col, bold)
+                    else:
+                        ws3.write(rowIndx, colIndx, str(col))
+                    if header[colIndx] not in maxColumnWidth or (
+                        type(col) is not bool
+                        and col is not None
+                        and header[colIndx] in maxColumnWidth
+                        and maxColumnWidth[header[colIndx]] < len(col)
+                    ):
+                        maxColumnWidth[header[colIndx]] = len(col) + 5
+                    elif type(col) is bool or col is None:
+                        maxColumnWidth[header[colIndx]] = len(header[colIndx])
+                    colIndx += 1
+                rowIndx += 1
+            for num in range(len(header)):
+                ws3.set_column(num, num, maxColumnWidth[header[num]])
 
     def populateAppData(self, appGridData, content):
         for entry in content:
@@ -1218,41 +1071,43 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.grid_1.Freeze()
         self.gridPanel.grid_2.Freeze()
         dataList = []
-        if "Device" in data:
-            dataList.append(data["Device"].columns.values.tolist())
-            dataList += data["Device"].values.tolist()
-            self.processCsvDataByGrid(
-                self.gridPanel.grid_1,
-                dataList,
-                Globals.CSV_TAG_ATTR_NAME,
-                Globals.grid1_lock,
-            )
-        if "Network" in data:
-            dataList.append(data["Network"].columns.values.tolist())
-            dataList += data["Network"].values.tolist()
-            self.processCsvDataByGrid(
-                self.gridPanel.grid_2,
-                dataList,
-                Globals.CSV_NETWORK_ATTR_NAME,
-                Globals.grid2_lock,
-            )
-        if "Device and Network" in data:
-            dataList.append(data["Device and Network"].columns.values.tolist())
-            dataList += data["Device and Network"].values.tolist()
-            self.processCsvDataByGrid(
-                self.gridPanel.grid_1,
-                dataList,
-                Globals.CSV_TAG_ATTR_NAME,
-                Globals.grid1_lock,
-            )
-            dataList.append(data["Device and Network"].columns.values.tolist())
-            dataList += data["Device and Network"].values.tolist()
-            self.processCsvDataByGrid(
-                self.gridPanel.grid_2,
-                dataList,
-                Globals.CSV_NETWORK_ATTR_NAME,
-                Globals.grid2_lock,
-            )
+        sheets = data.keys()
+        for sheet in sheets:
+            if "Device and Network" in sheet:
+                dataList.append(data[sheet].columns.values.tolist())
+                dataList += data[sheet].values.tolist()
+                self.processCsvDataByGrid(
+                    self.gridPanel.grid_1,
+                    dataList,
+                    Globals.CSV_TAG_ATTR_NAME,
+                    Globals.grid1_lock,
+                )
+                dataList.append(data[sheet].columns.values.tolist())
+                dataList += data[sheet].values.tolist()
+                self.processCsvDataByGrid(
+                    self.gridPanel.grid_2,
+                    dataList,
+                    Globals.CSV_NETWORK_ATTR_NAME,
+                    Globals.grid2_lock,
+                )
+            elif "Device" in sheet:
+                dataList.append(data[sheet].columns.values.tolist())
+                dataList += data[sheet].values.tolist()
+                self.processCsvDataByGrid(
+                    self.gridPanel.grid_1,
+                    dataList,
+                    Globals.CSV_TAG_ATTR_NAME,
+                    Globals.grid1_lock,
+                )
+            elif "Network" in sheet:
+                dataList.append(data[sheet].columns.values.tolist())
+                dataList += data[sheet].values.tolist()
+                self.processCsvDataByGrid(
+                    self.gridPanel.grid_2,
+                    dataList,
+                    Globals.CSV_NETWORK_ATTR_NAME,
+                    Globals.grid2_lock,
+                )
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
@@ -1612,7 +1467,6 @@ class NewFrameLayout(wx.Frame):
                     )
                     blueprints.start()
                     threads = [groupThread, appThread, blueprints]
-                    # self.menubar.toggleAddTenantOptions(False)
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     threads,
@@ -1814,7 +1668,6 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             break
-            # postEventToFrame(eventUtil.myEVT_COMPLETE, (True, action, cmdResults))
             self.onComplete((True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
@@ -2171,7 +2024,6 @@ class NewFrameLayout(wx.Frame):
                                 match
                             ]
                     elif hasattr(match, "device_count"):
-                        # estimatedDeviceCount += match.device_count
                         match = list(
                             filter(
                                 lambda x: x.endswith(match.name),
@@ -2195,6 +2047,11 @@ class NewFrameLayout(wx.Frame):
                 )
             )
             if res == wx.YES:
+                self.onClearGrids(None)
+                self.gridPanel.grid_1_contents = []
+                self.gridPanel.grid_2_contents = []
+                self.gridPanel.grid_3_contents = []
+                self.gridPanel.userEdited = []
                 return self.onSaveBothAll(None, action=actionClientData)
 
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
@@ -2271,8 +2128,6 @@ class NewFrameLayout(wx.Frame):
             # run action on group
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
-                # self.sleepInhibitor.uninhibit()
-                # return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.grid_3_contents = []
@@ -2301,8 +2156,6 @@ class NewFrameLayout(wx.Frame):
             # run action on device
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
-                # self.sleepInhibitor.uninhibit()
-                # return
             self.gridPanel.grid_1_contents = []
             self.gridPanel.grid_2_contents = []
             self.gridPanel.grid_3_contents = []
@@ -2351,8 +2204,6 @@ class NewFrameLayout(wx.Frame):
                     if self.checkAppRequirement(
                         actionClientData, appSelection, appLabel
                     ):
-                        # self.sleepInhibitor.uninhibit()
-                        # return
                         appSelection, appLabel = self.getAppDataForRun()
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % actionLabel
@@ -2409,13 +2260,7 @@ class NewFrameLayout(wx.Frame):
             or actionClientData == GridActions.UNINSTALL_APP.value
         ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
             self.sidePanel.onAppSelection(None)
-            # displayMessageBox(
-            #     ("Please select a valid application", wx.OK | wx.ICON_ERROR)
-            # )
             self.sidePanel.notebook_1.SetSelection(2)
-            # self.isRunning = False
-            # self.setCursorDefault()
-            # self.toggleEnabledState(True)
             return True
         return False
 
@@ -2796,9 +2641,6 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.emptyDeviceGrid()
         self.gridPanel.emptyNetworkGrid()
         self.gridPanel.emptyAppGrid()
-        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyDeviceGrid)
-        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyNetworkGrid)
-        # Globals.THREAD_POOL.enqueue(self.gridPanel.emptyAppGrid)
 
     @api_tool_decorator()
     def readAuthCSV(self):
@@ -3164,7 +3006,6 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
 
-        # self.menubar.toggleAddTenantOptions(state)
         self.menubar.fileOpenAuth.Enable(state)
         self.menubar.EnableTop(4, state)
         self.menubar.fileOpenConfig.Enable(state)

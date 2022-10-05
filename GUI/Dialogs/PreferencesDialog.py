@@ -312,9 +312,9 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.spin_ctrl_12,) = self.addPrefToPanel(
             self.save,
             sizer_12,
-            "Maximum Split File Size",
+            "Maximum Split Sheet Size",
             wx.SpinCtrl,
-            "Most Spreadsheet programs have issues display large amounts of data.\nThis preference specificies the maximum amount of rows saved to a sheet.\nWill use Spinner value * 1000. Default: 100 -> 100,000",
+            "Most Spreadsheet programs have issues display large amounts of data.\nThis preference specifies the max amount of rows saved to a sheet.\nWill use Spinner value * 1000. Default: 100 -> 100,000",
         )
         self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
         self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)

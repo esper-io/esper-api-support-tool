@@ -13,7 +13,7 @@ from Common.decorator import api_tool_decorator
 
 class TemplateDialog(wx.Dialog):
     def __init__(self, configMenuOpt, parent=None):
-        # begin wxGlade: MyDialog.__init__
+
         super(TemplateDialog, self).__init__(
             None,
             wx.ID_ANY,
@@ -182,7 +182,6 @@ class TemplateDialog(wx.Dialog):
         self.button_CANCEL.SetFocus()
 
         self.Fit()
-        # end wxGlade
 
     @api_tool_decorator()
     def getInputSelections(self):
