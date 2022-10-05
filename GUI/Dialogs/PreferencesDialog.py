@@ -56,6 +56,7 @@ class PreferencesDialog(wx.Dialog):
             "last_endpoint",
             "prereleaseUpdate",
             "appFilter",
+            "maxSplitFileSize",
             "allowAutoIssuePost",
         ]
 
@@ -307,6 +308,17 @@ class PreferencesDialog(wx.Dialog):
             wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
             5,
         )
+
+        (_, _, self.spin_ctrl_12,) = self.addPrefToPanel(
+            self.save,
+            sizer_12,
+            "Maximum Split File Size",
+            wx.SpinCtrl,
+            "Most Spreadsheet programs have issues display large amounts of data.\nThis preference specificies the maximum amount of rows saved to a sheet.\nWill use Spinner value * 1000. Default: 100 -> 100,000",
+        )
+        self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
+        self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)
+        self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE / 1000)
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -606,6 +618,7 @@ class PreferencesDialog(wx.Dialog):
             "showGroupPath": self.checkbox_24.IsChecked(),
             "prereleaseUpdate": self.checkbox_25.IsChecked(),
             "appFilter": self.combobox_2.GetValue(),
+            "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
         }
 
@@ -640,6 +653,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
         Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
         Globals.APP_FILTER = self.combobox_2.GetValue().lower()
+        Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"]) * 1000
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
 
         if Globals.APPS_IN_DEVICE_GRID:
@@ -954,6 +968,10 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.CHECK_PRERELEASES = False
 
+        if "maxSplitFileSize" in self.prefs:
+            Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"])
+            self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE)
+
         if self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27):
             Globals.AUTO_REPORT_ISSUES = True
         else:
@@ -1064,6 +1082,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.LAST_OPENED_ENDPOINT
         elif key == "appFilter":
             return Globals.APP_FILTER
+        elif key == "maxSplitFileSize":
+            return Globals.SHEET_CHUNK_SIZE
         elif key == "allowAutoIssuePost":
             return Globals.AUTO_REPORT_ISSUES
         else:
