@@ -23,7 +23,6 @@ class PreferencesDialog(wx.Dialog):
         self.prefKeys = [
             "enableDevice",
             "limit",
-            "offset",
             "gridDialog",
             "windowSize",
             "windowPosition",
@@ -38,7 +37,6 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow",
             "useJsonForCmd",
             "runCommandOn",
-            "maxThread",
             "syncGridScroll",
             "aliasDayDelta",
             "fontSize",
@@ -226,29 +224,6 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_1.SetValue(Globals.limit)
-
-        (panel_9, _, self.spin_ctrl_2,) = self.addPrefToPanel(
-            self.report,
-            sizer_10,
-            "API Request Offset",
-            wx.SpinCtrl,
-            "Page of results the API sends back (starts at 0). Min:0 Max: 100",
-        )
-        panel_9.Hide()
-        self.spin_ctrl_2.SetMin(0)
-        self.spin_ctrl_2.SetValue(Globals.offset)
-
-        (panel_43, _, self.spin_ctrl_8,) = self.addPrefToPanel(
-            self.report,
-            sizer_10,
-            "Max Threads",
-            wx.SpinCtrl,
-            "Maximum number of threads that will be created to perform an action. Min: 10 Max: 100",
-        )
-        panel_43.Hide()
-        self.spin_ctrl_8.SetMin(10)
-        self.spin_ctrl_8.SetMax(100)
-        self.spin_ctrl_8.SetValue(Globals.MAX_THREAD_COUNT)
 
         (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
             self.report,
@@ -581,7 +556,6 @@ class PreferencesDialog(wx.Dialog):
         self.prefs = {
             "enableDevice": self.checkbox_1.IsChecked(),
             "limit": self.spin_ctrl_1.GetValue(),
-            "offset": self.spin_ctrl_2.GetValue(),
             "gridDialog": self.checkbox_8.IsChecked(),
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
@@ -600,7 +574,6 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
-            "maxThread": self.spin_ctrl_8.GetValue(),
             "syncGridScroll": self.checkbox_13.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
@@ -631,11 +604,9 @@ class PreferencesDialog(wx.Dialog):
         Globals.REACH_QUEUED_ONLY = self.prefs["reachQueueStateOnly"]
         Globals.SHOW_PKG_NAME = self.prefs["showPkg"]
         Globals.limit = self.prefs["limit"]
-        Globals.offset = self.prefs["offset"]
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
-        Globals.MAX_THREAD_COUNT = self.prefs["maxThread"]
         Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
@@ -697,12 +668,6 @@ class PreferencesDialog(wx.Dialog):
             elif Globals.limit < Globals.MIN_LIMIT:
                 Globals.limit = Globals.MIN_LIMIT
             self.spin_ctrl_1.SetValue(Globals.limit)
-
-        if "offset" in self.prefs and self.prefs["offset"]:
-            Globals.offset = self.prefs["offset"]
-            if Globals.offset < 0:
-                Globals.offset = 0
-            self.spin_ctrl_2.SetValue(Globals.offset)
 
         if "gridDialog" in self.prefs and type(self.prefs["gridDialog"]) == bool:
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
@@ -1022,8 +987,6 @@ class PreferencesDialog(wx.Dialog):
             return True
         elif key == "limit":
             return Globals.MAX_LIMIT
-        elif key == "offset":
-            return Globals.offset
         elif key == "gridDialog":
             return Globals.SHOW_GRID_DIALOG
         elif key == "templateDialog":
@@ -1052,8 +1015,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMMAND_JSON_INPUT
         elif key == "runCommandOn":
             return Globals.CMD_DEVICE_TYPE
-        elif key == "maxThread":
-            return Globals.MAX_THREAD_COUNT
         elif key == "syncGridScroll":
             return Globals.MATCH_SCROLL_POS
         elif key == "aliasDayDelta":
