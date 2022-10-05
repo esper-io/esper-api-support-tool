@@ -3513,6 +3513,7 @@ class NewFrameLayout(wx.Frame):
                 return None
             elif opt == options[0]:
                 # Push immediately
+                num = 1
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
                     if updateResp and updateResp.status_code < 300:
@@ -3528,6 +3529,8 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.changedBlueprints) * 100))
+                    num += 1
             elif opt == options[1]:
                 # prompt for schedule
                 schedule = None
@@ -3541,6 +3544,7 @@ class NewFrameLayout(wx.Frame):
                     else:
                         return None
 
+                num = 1
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(
                         bp["id"],
@@ -3561,6 +3565,8 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.changedBlueprints) * 100))
+                    num += 1
 
             postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
         else:
