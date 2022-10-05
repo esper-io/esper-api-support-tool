@@ -759,7 +759,11 @@ class NewFrameLayout(wx.Frame):
                 try:
                     my_wb = xlsxwriter.Workbook(inFile)
                     # Save Device & Network information, if selected
-                    if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
+                    if (
+                        not action
+                        or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
+                        and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+                    ):
                         baseSheetName = "Device & Network"
                         if gridDeviceData:
                             self.populateWorkSheet(
@@ -767,26 +771,36 @@ class NewFrameLayout(wx.Frame):
                                 gridDeviceData,
                                 baseSheetName,
                                 list(deviceHeaders) + list(networkHeaders)[2:],
-                                {**Globals.CSV_TAG_ATTR_NAME, **Globals.CSV_NETWORK_ATTR_NAME}
+                                {
+                                    **Globals.CSV_TAG_ATTR_NAME,
+                                    **Globals.CSV_NETWORK_ATTR_NAME,
+                                },
                             )
                         else:
                             self.populateWorkSheet(
                                 my_wb,
-                                self.gridPanel.grid_1_contents + self.gridPanel.grid_2_contents,
+                                self.gridPanel.grid_1_contents
+                                + self.gridPanel.grid_2_contents,
                                 baseSheetName,
                                 list(deviceHeaders) + list(networkHeaders)[2:],
-                                {**Globals.CSV_TAG_ATTR_NAME, **Globals.CSV_NETWORK_ATTR_NAME}
+                                {
+                                    **Globals.CSV_TAG_ATTR_NAME,
+                                    **Globals.CSV_NETWORK_ATTR_NAME,
+                                },
                             )
                     else:
                         # Save Device Info
                         baseSheetName = "Device"
-                        if gridDeviceData and (not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value):
+                        if gridDeviceData and (
+                            not action
+                            or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
+                        ):
                             self.populateWorkSheet(
                                 my_wb,
                                 gridDeviceData,
                                 baseSheetName,
                                 deviceHeaders,
-                                Globals.CSV_TAG_ATTR_NAME
+                                Globals.CSV_TAG_ATTR_NAME,
                             )
                         else:
                             self.populateWorkSheet(
@@ -794,17 +808,20 @@ class NewFrameLayout(wx.Frame):
                                 self.gridPanel.grid_1_contents,
                                 baseSheetName,
                                 deviceHeaders,
-                                Globals.CSV_TAG_ATTR_NAME
+                                Globals.CSV_TAG_ATTR_NAME,
                             )
                         # Save Network Info
                         baseSheetName = "Network"
-                        if gridDeviceData and (not action or action <= GeneralActions.GENERATE_INFO_REPORT.value):
+                        if gridDeviceData and (
+                            not action
+                            or action <= GeneralActions.GENERATE_INFO_REPORT.value
+                        ):
                             self.populateWorkSheet(
                                 my_wb,
                                 gridDeviceData,
                                 baseSheetName,
                                 networkHeaders,
-                                Globals.CSV_NETWORK_ATTR_NAME
+                                Globals.CSV_NETWORK_ATTR_NAME,
                             )
                         else:
                             self.populateWorkSheet(
@@ -812,7 +829,7 @@ class NewFrameLayout(wx.Frame):
                                 self.gridPanel.grid_2_contents,
                                 baseSheetName,
                                 networkHeaders,
-                                Globals.CSV_NETWORK_ATTR_NAME
+                                Globals.CSV_NETWORK_ATTR_NAME,
                             )
                     # Save App Info
                     if self.gridPanel.grid_3_contents:
@@ -822,7 +839,7 @@ class NewFrameLayout(wx.Frame):
                             self.gridPanel.grid_3_contents,
                             baseSheetName,
                             Globals.CSV_APP_ATTR_NAME,
-                            None
+                            None,
                         )
                     my_wb.close()
                 except Exception as e:
@@ -854,7 +871,9 @@ class NewFrameLayout(wx.Frame):
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
 
-    def populateWorkSheet(self, workbook, dataSource, baseSheetName, headers, headerKeys):
+    def populateWorkSheet(
+        self, workbook, dataSource, baseSheetName, headers, headerKeys
+    ):
         loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
         bold = workbook.add_format({"bold": True})
         bold.set_align("center")
@@ -3529,7 +3548,10 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.changedBlueprints) * 100))
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE,
+                        int(num / len(self.changedBlueprints) * 100),
+                    )
                     num += 1
             elif opt == options[1]:
                 # prompt for schedule
@@ -3565,7 +3587,10 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(num / len(self.changedBlueprints) * 100))
+                    postEventToFrame(
+                        eventUtil.myEVT_UPDATE_GAUGE,
+                        int(num / len(self.changedBlueprints) * 100),
+                    )
                     num += 1
 
             postEventToFrame(eventUtil.myEVT_COMMAND, statusList)

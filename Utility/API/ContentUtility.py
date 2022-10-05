@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Resource import getHeader

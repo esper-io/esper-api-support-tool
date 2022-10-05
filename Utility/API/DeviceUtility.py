@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import time
 import Common.Globals as Globals
 

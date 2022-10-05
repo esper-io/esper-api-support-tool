@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import platform
 from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap

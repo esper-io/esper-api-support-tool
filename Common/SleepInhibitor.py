@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import platform
 import Common.Globals as Globals
 from subprocess import Popen, PIPE
