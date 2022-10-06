@@ -260,14 +260,11 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
 
 
-def processDeviceInDeviceList(device, deviceId, getApps, getLatestEvents, deviceList, indx):
+def processDeviceInDeviceList(
+    device, deviceId, getApps, getLatestEvents, deviceList, indx
+):
     additionalInfo = {}
-    getAdditionalDeviceInfo(
-        deviceId,
-        getApps,
-        getLatestEvents,
-        additionalInfo
-    )
+    getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, additionalInfo)
     deviceInfo = {}
     latestData = appData = None
     if deviceId in additionalInfo:
