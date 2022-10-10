@@ -295,7 +295,7 @@ class PreferencesDialog(wx.Dialog):
                 Globals.MAX_SHEET_CHUNK_SIZE / 1000,
                 Globals.MIN_SHEET_CHUNK_SIZE / 1000,
                 Globals.MAX_SHEET_CHUNK_SIZE,
-                Globals.MIN_SHEET_CHUNK_SIZE
+                Globals.MIN_SHEET_CHUNK_SIZE,
             ),
         )
         self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)

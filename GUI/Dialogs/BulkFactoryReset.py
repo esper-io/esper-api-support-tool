@@ -6,7 +6,11 @@ import wx
 import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import correctSaveFileName, displayMessageBox, openWebLinkInBrowser
+from Utility.Resource import (
+    correctSaveFileName,
+    displayMessageBox,
+    openWebLinkInBrowser,
+)
 
 
 class BulkFactoryReset(wx.Dialog):

@@ -760,7 +760,7 @@ class NewFrameLayout(wx.Frame):
         elif inFile.endswith(".xlsx"):
             for attempt in range(Globals.MAX_RETRY):
                 try:
-                    my_wb = xlsxwriter.Workbook(inFile, {'constant_memory': True})
+                    my_wb = xlsxwriter.Workbook(inFile, {"constant_memory": True})
                     # Save Device & Network information, if selected
                     if (
                         not action
