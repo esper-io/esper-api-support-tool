@@ -24,6 +24,7 @@ class BulkFactoryReset(wx.Dialog):
         self.SetSize((555, 400))
         self.SetMinSize((555, 400))
         self.SetTitle("Bulk Factory Reset")
+        self.SetThemeEnabled(False)
 
         self.identifers = []
         self.expectedHeaders = ["Device Identifiers"]

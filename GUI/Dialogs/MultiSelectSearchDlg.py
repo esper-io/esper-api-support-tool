@@ -23,6 +23,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetSize(size)
         self.SetMinSize(size)
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
         self.originalChoices = [choices]
         self.selected = []

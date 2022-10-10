@@ -25,6 +25,7 @@ class CollectionsDialog(wx.Dialog):
         self.SetSize((583, 407))
         self.SetMinSize((583, 407))
         self.SetTitle("Collections")
+        self.SetThemeEnabled(False)
 
         self.parentFrame = parent
 

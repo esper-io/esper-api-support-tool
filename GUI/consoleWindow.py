@@ -20,6 +20,7 @@ class Console(wx.Frame):
             self.WINDOWS = True
         else:
             self.WINDOWS = False
+        self.SetThemeEnabled(False)
 
         no_sys_menu = (
             wx.MINIMIZE_BOX

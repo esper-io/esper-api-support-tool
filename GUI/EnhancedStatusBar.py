@@ -109,6 +109,7 @@ class EnhancedStatusBar(wx.StatusBar):
         self._parent = parent
         self.sbText = None
         self.gauge = None
+        self.SetThemeEnabled(False)
 
         # wx.EVT_SIZE(self, self.OnSize)
         self.Bind(wx.EVT_SIZE, self.OnSize)

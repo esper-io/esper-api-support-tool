@@ -17,6 +17,7 @@ class PreferencesDialog(wx.Dialog):
         self.size = (800, 500)
         self.SetSize(self.size)
         self.SetMinSize(self.size)
+        self.SetThemeEnabled(False)
 
         self.parent = parent
         self.prefs = {}

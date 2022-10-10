@@ -18,6 +18,7 @@ class NewEndpointDialog(wx.Dialog):
         )
         self.SetSize((500, 400))
         self.SetTitle("Add New Tenant")
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

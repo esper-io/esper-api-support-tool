@@ -33,6 +33,7 @@ class ToolMenuBar(wx.MenuBar):
         self.WINDOWS = False
         self.uc = None
 
+        self.SetThemeEnabled(False)
         if platform.system() == "Windows":
             self.WINDOWS = True
 

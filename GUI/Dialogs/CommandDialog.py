@@ -22,6 +22,7 @@ class CommandDialog(wx.Dialog):
             size=(400, 200),
             style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL | wx.RESIZE_BORDER,
         )
+        self.SetThemeEnabled(False)
         self.isJsonInput = Globals.COMMAND_JSON_INPUT
         if self.isJsonInput:
             self.createJsonWindowView(title, value)

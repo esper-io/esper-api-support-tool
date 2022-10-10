@@ -35,6 +35,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.SetMinSize(sizeTuple)
         self.SetTitle("Convert Template to Blueprint")
 
+        self.SetThemeEnabled(False)
+
         self.configMenuOpt = configMenuOpt
         self.blueprints = None
         self.toConfig = None

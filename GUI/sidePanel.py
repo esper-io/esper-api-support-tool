@@ -33,6 +33,8 @@ class SidePanel(wx.Panel):
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
 
+        self.SetThemeEnabled(False)
+
         sizer_1 = wx.FlexGridSizer(7, 1, 0, 0)
 
         self.panel_2 = wx.Panel(self, wx.ID_ANY)

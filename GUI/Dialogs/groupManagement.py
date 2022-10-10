@@ -54,6 +54,7 @@ class GroupManagement(wx.Dialog):
         self.SetSize((800, 500))
         self.SetMinSize((800, 500))
         self.SetTitle("Group Management")
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

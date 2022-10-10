@@ -19,6 +19,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.SetMinSize(minSize)
         self.SetSize(minSize)
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
         sizer_7 = wx.FlexGridSizer(4, 1, 0, 0)
 

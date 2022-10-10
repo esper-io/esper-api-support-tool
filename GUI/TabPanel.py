@@ -7,4 +7,5 @@ class TabPanel(wx.Panel):
     def __init__(self, parent, id, name):
         """"""
         super().__init__(parent=parent, id=id)
+        self.SetThemeEnabled(False)
         self.name = name

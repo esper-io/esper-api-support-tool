@@ -22,6 +22,7 @@ class GeofenceDialog(wx.Dialog):
         self.SetSize((650, 500))
         self.SetMinSize((650, 500))
         self.SetTitle("Create Geofence")
+        self.SetThemeEnabled(False)
 
         self.groups = []
         self.gridHeaderLabels = [

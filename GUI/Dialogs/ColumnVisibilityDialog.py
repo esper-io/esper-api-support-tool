@@ -13,6 +13,7 @@ class ColumnVisibilityDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE,
         )
         self.grid = grid
+        self.SetThemeEnabled(False)
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)

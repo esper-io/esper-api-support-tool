@@ -17,6 +17,7 @@ class ScheduleCmdDialog(wx.Dialog):
         self.SetTitle("Schedule Command")
         self.SetSize((400, 400))
         self.SetMinSize((400, 400))
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

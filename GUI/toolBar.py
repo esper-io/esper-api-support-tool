@@ -16,6 +16,8 @@ class ToolsToolBar(wx.ToolBar):
             size = (24, 24)
         self.SetToolBitmapSize(size)
 
+        self.SetThemeEnabled(False)
+
         close_icon = scale_bitmap(resourcePath("Images/exit.png"), *size)
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
         self.AddSeparator()

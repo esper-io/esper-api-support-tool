@@ -17,6 +17,7 @@ class ColumnVisibility(wx.Dialog):
         self.SetTitle("Column Visibility")
         self.SetMinSize((500, 500))
         self.SetSize((500, 500))
+        self.SetThemeEnabled(False)
 
         self.choiceDataDict = {}
         self.pageGridDict = pageGridDict

@@ -34,6 +34,7 @@ class BlueprintsDialog(wx.Dialog):
         self.SetSize(sizeTuple)
         self.SetMinSize(sizeTuple)
         self.SetTitle("Clone Blueprint")
+        self.SetThemeEnabled(False)
 
         self.configMenuOpt = configMenuOpt
         self.blueprints = None

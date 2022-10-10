@@ -55,6 +55,8 @@ class UserCreation(wx.Frame):
         self.parent = parent
         self.lastFilePath = ""
 
+        self.SetThemeEnabled(False)
+
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)

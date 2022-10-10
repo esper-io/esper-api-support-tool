@@ -36,6 +36,7 @@ class InstalledDevicesDlg(wx.Dialog):
 
         self.SetMinSize((400, 300))
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
