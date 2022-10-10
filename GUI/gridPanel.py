@@ -69,6 +69,7 @@ class GridPanel(wx.Panel):
         sizer_3.Add(self.button_2, 0, wx.LEFT, 5)
 
         self.notebook_2 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_2.SetThemeEnabled(False)
         grid_sizer_2.Add(self.notebook_2, 1, wx.EXPAND, 0)
 
         self.notebook_2.SetFont(
@@ -133,6 +134,9 @@ class GridPanel(wx.Panel):
         self.grid_1.SetThemeEnabled(False)
         self.grid_2.SetThemeEnabled(False)
         self.grid_3.SetThemeEnabled(False)
+        self.grid_1.GetGridWindow().SetThemeEnabled(False)
+        self.grid_2.GetGridWindow().SetThemeEnabled(False)
+        self.grid_3.GetGridWindow().SetThemeEnabled(False)
 
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 

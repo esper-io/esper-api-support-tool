@@ -59,6 +59,7 @@ class GroupManagement(wx.Dialog):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetThemeEnabled(False)
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
         self.notebook_1_pane_1 = TabPanel(self.notebook_1, wx.ID_ANY, "Single")

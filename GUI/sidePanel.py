@@ -102,6 +102,7 @@ class SidePanel(wx.Panel):
         )
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetThemeEnabled(False)
         self.notebook_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,

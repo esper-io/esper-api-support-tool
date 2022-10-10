@@ -42,6 +42,7 @@ class ColumnVisibility(wx.Dialog):
         grid_sizer_1.Add(self.text_ctrl_1, 0, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5)
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetThemeEnabled(False)
         grid_sizer_1.Add(self.notebook_1, 1, wx.EXPAND, 0)
 
         for page in pageGridDict.keys():
