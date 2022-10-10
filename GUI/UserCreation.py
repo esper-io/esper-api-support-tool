@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
+import csv
 import json
 import os
+
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
-import csv
 import wx
 import wx.grid
-
 from Common.decorator import api_tool_decorator
-
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-
 from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 from Utility.Resource import (
     correctSaveFileName,
@@ -19,6 +16,8 @@ from Utility.Resource import (
     displayMessageBox,
     postEventToFrame,
 )
+
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 
 class UserCreation(wx.Frame):
@@ -306,7 +305,7 @@ class UserCreation(wx.Frame):
                     self.lastFilePath = os.path.abspath(
                         os.path.join(self.lastFilePath, os.pardir)
                     )
-                self.processUpload(fileDialog.GetPath())
+                self.processUpload(fileDialog.s())
 
     @api_tool_decorator()
     def onFileDrop(self, event):

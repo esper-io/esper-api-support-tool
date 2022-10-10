@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 
-import threading
 import json
-import re
 import os
 import platform
-import requests
+import re
 import shlex
-import sys
-import time
 import subprocess
-import wx
+import sys
+import threading
+import time
 import webbrowser
+from datetime import datetime, timezone
+from pathlib import Path
+
 import Common.Globals as Globals
 import esperclient
-
+import requests
+import wx
 from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
-from datetime import datetime, timezone
+from ratelimit import limits, sleep_and_retry
+
 from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from pathlib import Path
-from ratelimit import sleep_and_retry, limits
 
 
 def resourcePath(relative_path):

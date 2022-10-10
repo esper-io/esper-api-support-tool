@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-import requests
 import time
-import Common.Globals as Globals
-from Utility import EventUtility
 
+import Common.Globals as Globals
+import requests
+from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
+    checkIfCurrentThreadStopped,
     enforceRateLimit,
     getHeader,
     postEventToFrame,
-    checkIfCurrentThreadStopped,
 )
 
 

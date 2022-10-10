@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 
-import tempfile
+import os
 import platform
 import sys
-import os
-import traceback
-import Common.Globals as Globals
-import Common.ApiTracker as ApiTracker
+import tempfile
 import threading
-
+import traceback
 from datetime import datetime
-from traceback import print_exc, extract_tb, format_list
+from traceback import extract_tb, format_list, print_exc
 
-from Utility.Logging.IssueTracker import IssueTracker
-
-from fuzzywuzzy import fuzz
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
 from esperclient.rest import ApiException
+from fuzzywuzzy import fuzz
+from Utility.Logging.IssueTracker import IssueTracker
 
 
 class ApiToolLog:

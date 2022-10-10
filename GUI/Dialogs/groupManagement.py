@@ -2,8 +2,20 @@
 
 import csv
 from pathlib import Path
-from GUI.TabPanel import TabPanel
 
+import Common.Globals as Globals
+import wx
+import wx.grid as gridlib
+from Common.decorator import api_tool_decorator
+from Common.enum import Color
+from GUI.TabPanel import TabPanel
+from Utility.API.GroupUtility import (
+    createGroup,
+    deleteGroup,
+    fetchGroupName,
+    getAllGroups,
+    renameGroup,
+)
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
@@ -12,20 +24,6 @@ from Utility.Resource import (
     resourcePath,
     scale_bitmap,
 )
-from Common.decorator import api_tool_decorator
-from Utility.API.GroupUtility import (
-    deleteGroup,
-    createGroup,
-    fetchGroupName,
-    getAllGroups,
-    renameGroup,
-)
-
-import wx
-import wx.grid as gridlib
-import Common.Globals as Globals
-
-from Common.enum import Color
 
 
 class GroupManagement(wx.Dialog):

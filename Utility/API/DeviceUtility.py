@@ -1,20 +1,14 @@
 #!/usr/bin/env python
 
 import time
+
 import Common.Globals as Globals
-
-
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility
-from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.API.EsperAPICalls import getInfo, patchInfo
-from Utility.Resource import (
-    getHeader,
-    postEventToFrame,
-)
-
 from esperclient.rest import ApiException
-
+from Utility import EventUtility
+from Utility.API.EsperAPICalls import getInfo, patchInfo
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Resource import getHeader, postEventToFrame
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,

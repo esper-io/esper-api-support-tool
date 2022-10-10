@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
 import wx
+from Common.decorator import api_tool_decorator
 
 
 class PreferencesDialog(wx.Dialog):

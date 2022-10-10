@@ -1,11 +1,40 @@
 #!/usr/bin/env python
 
+import ast
+import csv
+import json
+import math
+import os.path
+import platform
+import sys
+import tempfile
+import threading
+import time
+from datetime import datetime
+from pathlib import Path
+
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
+import pandas as pd
+import Utility.API.EsperTemplateUtil as templateUtil
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
+import wx
+import wx.adv as wxadv
+import xlsxwriter
+
+from Common.decorator import api_tool_decorator
+from Common.enum import Color, GeneralActions, GridActions
 from Common.SleepInhibitor import SleepInhibitor
-from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
-from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
-from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
-from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
+from Utility.API.AppUtilities import (
+    getAllInstallableApps,
+    getAppDictEntry,
+    getInstallDevices,
+    installAppOnDevices,
+    installAppOnGroups,
+    uninstallAppOnDevice,
+    uninstallAppOnGroup,
+)
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
     getAllBlueprints,
@@ -14,71 +43,19 @@ from Utility.API.BlueprintUtility import (
     prepareBlueprintConversion,
     pushBlueprintUpdate,
 )
+from Utility.API.CommandUtility import createCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.UserUtility import getAllUsers
-from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
-from GUI.Dialogs.groupManagement import GroupManagement
-from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
-from wx.core import TextEntryDialog
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-
-import sys
-import threading
-import wx
-import time
-import csv
-import os.path
-import platform
-import json
-import tempfile
-import ast
-
-import pandas as pd
-import xlsxwriter
-
-import math
-import wx.adv as wxadv
-import Utility.EventUtility as eventUtil
-
-import Common.Globals as Globals
-import Common.ApiTracker as ApiTracker
-import GUI.EnhancedStatusBar as ESB
-
-import Utility.Threading.wxThread as wxThread
-import Utility.API.EsperTemplateUtil as templateUtil
-
-from Common.enum import Color, GeneralActions, GridActions
-
-from datetime import datetime
-
-from GUI.sidePanel import SidePanel
-from GUI.gridPanel import GridPanel
-from GUI.toolBar import ToolsToolBar
-from GUI.menuBar import ToolMenuBar
-from GUI.consoleWindow import Console
-from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
-from GUI.Dialogs.TemplateDialog import TemplateDialog
-from GUI.Dialogs.CommandDialog import CommandDialog
-from GUI.Dialogs.PreferencesDialog import PreferencesDialog
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-
-from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
-
-from Common.decorator import api_tool_decorator
-
-from pathlib import Path
-
-from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.crypto import crypto
 from Utility.API.EsperAPICalls import (
     clearAppData,
+    getTokenInfo,
     setAppState,
     setKiosk,
     setMulti,
     validateConfiguration,
-    getTokenInfo,
 )
+from Utility.API.GroupUtility import getAllGroups, moveGroup
+from Utility.API.UserUtility import getAllUsers
+from Utility.crypto import crypto
 from Utility.EastUtility import (
     TakeAction,
     clearKnownGroups,
@@ -88,32 +65,46 @@ from Utility.EastUtility import (
     removeNonWhitelisted,
     uploadAppToEndpoint,
 )
+from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
     checkIfCurrentThreadStopped,
     correctSaveFileName,
+    createNewFile,
+    displayMessageBox,
+    joinThreadList,
     openWebLinkInBrowser,
     postEventToFrame,
+    processFunc,
     resourcePath,
-    createNewFile,
-    joinThreadList,
-    displayMessageBox,
     splitListIntoChunks,
     updateErrorTracker,
-    processFunc,
 )
-from Utility.API.CommandUtility import createCommand
-from Utility.API.AppUtilities import (
-    getAllInstallableApps,
-    getAppDictEntry,
-    getInstallDevices,
-    installAppOnDevices,
-    uninstallAppOnDevice,
-    installAppOnGroups,
-    uninstallAppOnGroup,
-)
-from Utility.API.GroupUtility import getAllGroups, moveGroup
+from wx.core import TextEntryDialog
+
+import GUI.EnhancedStatusBar as ESB
+from GUI.consoleWindow import Console
+from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
+from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
+from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from GUI.Dialogs.CommandDialog import CommandDialog
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from GUI.Dialogs.groupManagement import GroupManagement
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
+from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
+from GUI.Dialogs.PreferencesDialog import PreferencesDialog
+from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
+from GUI.Dialogs.TemplateDialog import TemplateDialog
+from GUI.gridPanel import GridPanel
+from GUI.menuBar import ToolMenuBar
+from GUI.sidePanel import SidePanel
+from GUI.toolBar import ToolsToolBar
 
 
 class NewFrameLayout(wx.Frame):

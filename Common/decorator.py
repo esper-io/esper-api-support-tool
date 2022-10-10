@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
 import json
 import sys
-import time
-import wx
 import threading
-
+import time
 from datetime import datetime
 from functools import wraps
+from traceback import extract_tb, format_list, print_exc
+
+import wx
 from esperclient.rest import ApiException
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from traceback import print_exc, extract_tb, format_list
+
+import Common.Globals as Globals
 
 
 def api_tool_decorator(locks=None):

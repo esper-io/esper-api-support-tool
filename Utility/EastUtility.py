@@ -1,25 +1,24 @@
 #!/usr/bin/env python
 
-import time
-import esperclient
-import Common.Globals as Globals
-
-import Utility.Threading.wxThread as wxThread
-import wx
-import platform
-import Utility.API.EsperAPICalls as apiCalls
-import Utility.EventUtility as eventUtil
 import math
-import pytz
-
-from Common.decorator import api_tool_decorator
-from Common.enum import DeviceState, GeneralActions
-
+import platform
+import time
 from datetime import datetime
 
+import Common.Globals as Globals
+import esperclient
+import pytz
+import wx
+from Common.decorator import api_tool_decorator
+from Common.enum import DeviceState, GeneralActions
 from esperclient.models.v0_command_args import V0CommandArgs
+from esperclient.rest import ApiException
 
+import Utility.API.EsperAPICalls as apiCalls
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
 from Utility.API.AppUtilities import getDeviceAppsApiUrl, uploadApplication
+from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.API.DeviceUtility import (
     getAllDevices,
     getDeviceById,
@@ -28,8 +27,6 @@ from Utility.API.DeviceUtility import (
     getLatestEventApiUrl,
 )
 from Utility.API.GroupUtility import fetchGroupName
-from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
-from Utility.Web.WebRequests import perform_web_requests
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -37,13 +34,12 @@ from Utility.Resource import (
     checkIfCurrentThreadStopped,
     displayMessageBox,
     getHeader,
-    postEventToFrame,
     ipv6Tomac,
+    postEventToFrame,
     splitListIntoChunks,
     utc_to_local,
 )
-
-from esperclient.rest import ApiException
+from Utility.Web.WebRequests import perform_web_requests
 
 
 @api_tool_decorator()
