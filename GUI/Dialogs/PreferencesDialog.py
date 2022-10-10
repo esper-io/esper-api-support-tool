@@ -627,6 +627,10 @@ class PreferencesDialog(wx.Dialog):
         Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
         Globals.APP_FILTER = self.combobox_2.GetValue().lower()
         Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"]) * 1000
+        if Globals.SHEET_CHUNK_SIZE < Globals.MIN_SHEET_CHUNK_SIZE:
+            Globals.SHEET_CHUNK_SIZE = Globals.MIN_SHEET_CHUNK_SIZE
+        elif Globals.SHEET_CHUNK_SIZE > Globals.MAX_SHEET_CHUNK_SIZE:
+            Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
 
         if Globals.APPS_IN_DEVICE_GRID:
