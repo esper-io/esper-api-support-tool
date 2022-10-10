@@ -32,7 +32,6 @@ import platform
 import json
 import tempfile
 import ast
-import re
 
 import pandas as pd
 import xlsxwriter
