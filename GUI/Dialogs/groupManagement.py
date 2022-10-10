@@ -5,6 +5,7 @@ from pathlib import Path
 from GUI.TabPanel import TabPanel
 
 from Utility.Resource import (
+    correctSaveFileName,
     displayMessageBox,
     isApiKey,
     openWebLinkInBrowser,
@@ -970,6 +971,7 @@ class GroupManagement(wx.Dialog):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
         dlg.DestroyLater()
 
         if result == wx.ID_OK:

@@ -2,6 +2,7 @@
 
 import threading
 import json
+import re
 import os
 import platform
 import requests
@@ -469,3 +470,7 @@ def checkIfCurrentThreadStopped():
     elif hasattr(threading.current_thread(), "isStopped"):
         isAbortSet = threading.current_thread().isStopped()
     return isAbortSet
+
+
+def correctSaveFileName(inFile):
+    return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)

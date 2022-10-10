@@ -14,6 +14,7 @@ from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 from Utility.Resource import (
+    correctSaveFileName,
     createNewFile,
     displayMessageBox,
     postEventToFrame,
@@ -275,6 +276,7 @@ class UserCreation(wx.Frame):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
         dlg.DestroyLater()
 
         if result == wx.ID_OK:

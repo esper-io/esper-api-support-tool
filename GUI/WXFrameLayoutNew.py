@@ -32,6 +32,7 @@ import platform
 import json
 import tempfile
 import ast
+import re
 
 import pandas as pd
 import xlsxwriter
@@ -92,6 +93,7 @@ from Utility.Resource import (
     checkEsperInternetConnection,
     checkForInternetAccess,
     checkIfCurrentThreadStopped,
+    correctSaveFileName,
     openWebLinkInBrowser,
     postEventToFrame,
     resourcePath,
@@ -530,6 +532,7 @@ class NewFrameLayout(wx.Frame):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.setCursorBusy()
@@ -557,6 +560,7 @@ class NewFrameLayout(wx.Frame):
             )
             result = dlg.ShowModal()
             inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
             dlg.DestroyLater()
 
             if result == wx.ID_OK:  # Save button was pressed
@@ -3310,6 +3314,7 @@ class NewFrameLayout(wx.Frame):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()
@@ -3406,6 +3411,7 @@ class NewFrameLayout(wx.Frame):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()
