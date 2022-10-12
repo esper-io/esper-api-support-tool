@@ -280,7 +280,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
-        # self.Bind(wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
