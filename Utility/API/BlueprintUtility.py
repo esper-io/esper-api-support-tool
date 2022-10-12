@@ -915,7 +915,7 @@ def convertTemplateToBlueprint(template):
 
 
 @api_tool_decorator()
-def editBlueprintApps(groupId, body):
+def editBlueprintApps(groupId, body, appStr=""):
     url = (
         "{tenant}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
             tenant=Globals.configuration.host,
@@ -930,6 +930,8 @@ def editBlueprintApps(groupId, body):
         and "minimum_password_length" in body["latest_revision"]["security"]
     ):
         del body["latest_revision"]["security"]["minimum_password_length"]
+
+    body["latest_revision"]["comments"] = "Editting Blueprint Apps %svia E.A.S.T." % ("(" + appStr + ") ")
 
     resp = performPostRequestWithRetry(url, json=body, headers=getHeader())
 
@@ -967,6 +969,7 @@ def modifyAppsInBlueprints(
         if resp:
             resp = resp.json()
             changed = False
+            appStr = ""
             for app in apps:
                 match = list(
                     filter(
@@ -976,6 +979,7 @@ def modifyAppsInBlueprints(
                 )
 
                 if match:
+                    appStr += "%s, " % app["name"]
                     # Check each blueprint to see if app is present, update entry
                     appList = []
                     for bpApp in resp["latest_revision"]["application"]["apps"]:
@@ -997,6 +1001,7 @@ def modifyAppsInBlueprints(
                             appList.append(bpApp)
                     resp["latest_revision"]["application"]["apps"] = appList
                 elif addToAppListIfNotPresent:
+                    appStr += "%s, " % app["name"]
                     # Go through and add or update app entry
                     resp["latest_revision"]["application"]["apps"].append(
                         {
@@ -1013,7 +1018,9 @@ def modifyAppsInBlueprints(
                     changed = True
             if changed:
                 total += 1
-                updateResp = editBlueprintApps(bp["group"], resp)
+                if appStr.endswith(", "):
+                    appStr = appStr[:-2]
+                updateResp = editBlueprintApps(bp["group"], resp, appStr)
                 if updateResp and updateResp.status_code < 300:
                     changedList.append(bp)
                     success += 1
