@@ -98,10 +98,10 @@ class ToolMenuBar(wx.MenuBar):
         self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
 
-        # convertTemplate = wx.MenuItem(
-        #     self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint"
-        # )
-        # self.convert = self.cloneSubMenu.Append(convertTemplate)
+        convertTemplate = wx.MenuItem(
+            self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint"
+        )
+        self.convert = self.cloneSubMenu.Append(convertTemplate)
 
         cloneBlueprint = wx.MenuItem(
             self.cloneSubMenu,
@@ -518,13 +518,13 @@ class ToolMenuBar(wx.MenuBar):
         if toggleBothSameState:
             self.clone.Enable(enable=showBlueprint)
             self.cloneBP.Enable(enable=showBlueprint)
-            # self.convert.Enable(enable=showBlueprint)
+            self.convert.Enable(enable=showBlueprint)
             self.newBlueprintApp.Enable(enable=showBlueprint)
         else:
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
             self.newBlueprintApp.Enable(enable=showBlueprint)
-            # self.convert.Enable(enable=showBlueprint)
+            self.convert.Enable(enable=showBlueprint)
 
     def toggleAddTenantOptions(self, state):
         self.defaultConfigVal.Enable(enable=state)
