@@ -44,11 +44,18 @@ class MultiSelectSearchDlg(wx.Dialog):
         if hasattr(parent, "sidePanel"):
             self.group = parent.sidePanel.selectedGroupsList
 
-        for choice in choices:
-            groupName = choice.split(" (Device Count:")[0]
-            if "All devices" == groupName:
-                self.allDeviceStr = choice
-                break
+        blueprintEnabled = False
+        config = parent.sidePanel.configChoice[
+            parent.configMenuItem.GetItemLabelText()
+        ]
+        if "isBlueprintsEnabled" in config:
+            blueprintEnabled = config["isBlueprintsEnabled"]
+        if not blueprintEnabled:
+            for choice in choices:
+                groupName = choice.split(" (Device Count:")[0]
+                if "All devices" == groupName:
+                    self.allDeviceStr = choice
+                    break
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -227,7 +234,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
 
-        if self.allDeviceStr in self.selected:
+        if self.allDeviceStr and self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -244,7 +251,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         elif selectionStr not in self.selected:
             self.selected.append(selectionStr)
 
-        if self.allDeviceStr in self.selected:
+        if self.allDeviceStr and self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -264,7 +271,7 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
-            if self.allDeviceStr in self.originalChoices[self.page]:
+            if self.allDeviceStr and self.allDeviceStr in self.originalChoices[self.page]:
                 self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
