@@ -368,9 +368,10 @@ class BlueprintsConvertDialog(wx.Dialog):
     def populateSourceTempaltes(self, srcName):
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
-            for template in self.sourceTemplate:
-                self.combo_box_4.Append(template["name"])
-            self.combo_box_4.Enable(True)
+            if self.sourceTemplate:
+                for template in self.sourceTemplate:
+                    self.combo_box_4.Append(template["name"])
+                self.combo_box_4.Enable(True)
         self.checkInputs()
 
     @api_tool_decorator()
@@ -379,7 +380,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         tempList = util.getTemplates(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
         )
-        return tempList["results"]
+        return tempList["results"] if tempList and "results" in tempList else None
 
     @api_tool_decorator()
     def getTemplateDetails(self, template):

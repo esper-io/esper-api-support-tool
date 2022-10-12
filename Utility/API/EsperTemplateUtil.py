@@ -560,8 +560,9 @@ class EsperTemplateUtil:
                 + self.limit_extension.format(num=Globals.limit)
             )
             resp = performGetRequestWithRetry(url, headers=headers)
-            json_resp = resp.json()
-            return json_resp
+            if resp:
+                json_resp = resp.json()
+                return json_resp
         except Exception as e:
             raise e
 
