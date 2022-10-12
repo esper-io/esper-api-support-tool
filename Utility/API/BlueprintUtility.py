@@ -246,6 +246,7 @@ def createBlueprintForHost(host, key, enterprise, groupId, body):
     return resp
 
 
+@api_tool_decorator()
 def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     blueprint.pop("id", None)
     blueprint.pop("locked", None)
@@ -364,6 +365,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             raise e
 
 
+@api_tool_decorator()
 def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
     if host and key and enterprise:
         postEventToFrame(EventUtility.myEVT_LOG, "Processing wallpapers in template...")
@@ -394,6 +396,7 @@ def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
     return blueprint
 
 
+@api_tool_decorator()
 def uploadingMissingBlueprintApps(
     blueprint, downloadLinks, toConfig, fromConfig, progress
 ):
@@ -470,6 +473,7 @@ def uploadingMissingBlueprintApps(
     return blueprint
 
 
+@api_tool_decorator()
 def checkFromMissingApps(blueprint, toConfig, fromConfig):
     postEventToFrame(
         EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Applications"
@@ -552,6 +556,7 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
     return blueprint, missingApps, downloadLink
 
 
+@api_tool_decorator()
 def checkFromMissingContent(blueprint, toConfig, fromConfig):
     postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Content")
     toContent = getAllContentFromHost(
@@ -587,6 +592,7 @@ def checkFromMissingContent(blueprint, toConfig, fromConfig):
     return blueprint, missingContent, downloadContentLink
 
 
+@api_tool_decorator()
 def uploadMissingContentFiles(
     blueprint, downloadContentLinks, toConfig, fromConfig, progress
 ):
@@ -664,6 +670,7 @@ def uploadMissingContentFiles(
     return blueprint
 
 
+@api_tool_decorator()
 def prepareBlueprintConversion(template, toConfig, fromConfig, group):
     template.pop("id", None)
     template.pop("locked", None)
@@ -676,6 +683,7 @@ def prepareBlueprintConversion(template, toConfig, fromConfig, group):
     prepareBlueprintClone(blueprint, toConfig, fromConfig, group)
 
 
+@api_tool_decorator()
 def convertTemplateToBlueprint(template):
     templateSection = template["template"]
     blueprint = {
@@ -906,6 +914,7 @@ def convertTemplateToBlueprint(template):
     return blueprint
 
 
+@api_tool_decorator()
 def editBlueprintApps(groupId, body):
     url = (
         "{tenant}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
@@ -927,6 +936,7 @@ def editBlueprintApps(groupId, body):
     return resp
 
 
+@api_tool_decorator()
 def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMMEDIATE"):
     body = {
         "command_type": "GROUP",
@@ -946,6 +956,7 @@ def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMME
     return resp, jsonResp
 
 
+@api_tool_decorator()
 def modifyAppsInBlueprints(
     blueprints, apps, changedList, addToAppListIfNotPresent=True
 ):
@@ -955,6 +966,7 @@ def modifyAppsInBlueprints(
         resp = getGroupBlueprintDetail(bp["group"], bp["id"])
         if resp:
             resp = resp.json()
+            changed = False
             for app in apps:
                 match = list(
                     filter(
@@ -962,7 +974,6 @@ def modifyAppsInBlueprints(
                         resp["latest_revision"]["application"]["apps"],
                     )
                 )
-                changed = False
 
                 if match:
                     # Check each blueprint to see if app is present, update entry
