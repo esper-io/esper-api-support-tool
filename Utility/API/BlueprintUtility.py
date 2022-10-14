@@ -672,15 +672,17 @@ def uploadMissingContentFiles(
 
 @api_tool_decorator()
 def prepareBlueprintConversion(template, toConfig, fromConfig, group):
-    template.pop("id", None)
-    template.pop("locked", None)
-    template.pop("created_on", None)
-    template.pop("updated_on", None)
-    template.pop("group", None)
+    if template:
+        template.pop("id", None)
+        template.pop("locked", None)
+        template.pop("created_on", None)
+        template.pop("updated_on", None)
+        template.pop("group", None)
 
-    blueprint = convertTemplateToBlueprint(template)
+        blueprint = convertTemplateToBlueprint(template)
 
-    prepareBlueprintClone(blueprint, toConfig, fromConfig, group)
+        if blueprint:
+            prepareBlueprintClone(blueprint, toConfig, fromConfig, group)
 
 
 @api_tool_decorator()
@@ -707,20 +709,36 @@ def convertTemplateToBlueprint(template):
             "hardware_settings": {},
         },
     }
+
+    blueprintAPList = []
+    if templateSection["settings"]["wifiSettings"]:
+        for ap in templateSection["settings"]["wifiSettings"]:
+            blueprintAPList.append({
+                "wifi_ssid": ap["wifiSsid"],
+                "wifi_security_type": ap["wifiSecurityType"],
+                "wifi_phase2_auth": ap["wifiPhase2Auth"] if "wifiPhase2Auth" in ap else None,
+                "hidden": ap["hidden"] if "hidden" in ap else None,
+                "wifi_eap_method": ap["wifiEapMethod"] if "wifiEapMethod" in ap else None,
+                "identity": ap["identity"] if "identity" in ap else None,
+                "anonymous_identity": ap["anonymousIdentity"] if "anonymousIdentity" in ap else None,
+                "domain": ap["domain"],
+                "wifi_password": ap["wifiPassword"],
+            })
+
     blueprint["latest_revision"]["connectivity"] = {
         "incoming_numbers": None
-        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["incomingNumbers"],
         "outgoing_numbers": None
-        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["outgoingNumbers"],
         "incoming_numbers_with_tags": None
-        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["incomingNumbersWithTags"],
         "outgoing_numbers_with_tags": None
-        if "phonePolicy" not in templateSection and templateSection["phonePolicy"]
+        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["outgoingNumbersWithTags"],
-        "wifi_settings": templateSection["settings"]["wifiSettings"],
+        "wifi_settings": blueprintAPList,
         "locked": False,
         "section_type": "Independent",
         "sms_disabled": templateSection["devicePolicy"]["smsDisabled"],
@@ -728,7 +746,6 @@ def convertTemplateToBlueprint(template):
         "nfc_beam_disabled": templateSection["devicePolicy"]["nfcBeamDisabled"],
         "wifi_state": templateSection["settings"]["wifiState"],
     }
-
     blueprint["latest_revision"]["sound"] = {
         "alarm_volume": templateSection["settings"]["alarmVolume"],
         "ring_volume": templateSection["settings"]["ringVolume"],
@@ -741,7 +758,7 @@ def convertTemplateToBlueprint(template):
     blueprint["latest_revision"]["display_branding"] = {
         "rotation_state": templateSection["settings"]["rotationState"],
         "wallpapers": None
-        if "brand" not in templateSection and not templateSection["brand"]
+        if "brand" not in templateSection or ("brand" in templateSection and not templateSection["brand"])
         else templateSection["brand"]["wallpapers"],
         "locked": False,
         "section_type": "Independent",
@@ -750,10 +767,18 @@ def convertTemplateToBlueprint(template):
         "brightness_scale": templateSection["settings"]["brightnessScale"],
     }
 
+    preloadedAppList = []
+    if templateSection["application"]["launchOnStart"]:
+        for preload in templateSection["application"]["launchOnStart"]:
+            preloadedAppList.append({
+                "package_name": preload["packageName"],
+                "state": preload["state"],
+            })
+
     blueprint["latest_revision"]["application"] = {
         "apps": templateSection["application"]["apps"],
         "app_mode": templateSection["application"]["appMode"],
-        "preload_apps": templateSection["application"]["preloadApps"],
+        "preload_apps": preloadedAppList,
         "launch_on_start": templateSection["application"]["launchOnStart"],
         "permission_policy": templateSection["securityPolicy"]["permissionPolicy"],
         "locked": False,
@@ -772,53 +797,53 @@ def convertTemplateToBlueprint(template):
         "settings_access_level": templateSection["devicePolicy"]["settingsAccessLevel"],
         "esper_settings_app": {
             "esper_settings_app_policy": {
-                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"][
+                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "flashlight"
                 ],
-                "wifi": templateSection["devicePolicy"]["esperSettingsApp"]["wifi"],
-                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"][
+                "wifi": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["wifi"],
+                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "autoRotation"
                 ],
-                "reboot": templateSection["devicePolicy"]["esperSettingsApp"]["reboot"],
-                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                "reboot": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["reboot"],
+                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "clearAppData"
                 ],
                 "kiosk_app_selection": templateSection["devicePolicy"][
                     "esperSettingsApp"
-                ]["kioskAppSelection"],
-                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"][
+                ]["esperSettingsAppPolicy"]["kioskAppSelection"],
+                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "esperBranding"
                 ],
-                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"][
+                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "factoryReset"
                 ],
-                "about": templateSection["devicePolicy"]["esperSettingsApp"]["about"],
-                "display": templateSection["devicePolicy"]["esperSettingsApp"][
+                "about": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["about"],
+                "display": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "display"
                 ],
-                "sound": templateSection["devicePolicy"]["esperSettingsApp"]["sound"],
-                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"][
+                "sound": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["sound"],
+                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "keyboard"
                 ],
-                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"][
+                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "inputSelection"
                 ],
-                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"][
+                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "accessibility"
                 ],
-                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "mobileData"
                 ],
-                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"][
+                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "bluetooth"
                 ],
-                "language": templateSection["devicePolicy"]["esperSettingsApp"][
+                "language": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "language"
                 ],
-                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"][
+                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "timeAndDate"
                 ],
-                "storage": templateSection["devicePolicy"]["esperSettingsApp"][
+                "storage": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
                     "storage"
                 ],
             },
@@ -859,7 +884,7 @@ def convertTemplateToBlueprint(template):
 
     blueprint["latest_revision"]["google_services"] = {
         "max_account": 0
-        if "googleAccountPermission" not in templateSection["devicePolicy"]
+        if "googleAccountPermission" not in templateSection["devicePolicy"] or ("googleAccountPermission" in templateSection["devicePolicy"] and not templateSection["devicePolicy"]["googleAccountPermission"])
         else templateSection["devicePolicy"]["googleAccountPermission"]["maxAccount"],
         "emails": None,
         "domains": None,

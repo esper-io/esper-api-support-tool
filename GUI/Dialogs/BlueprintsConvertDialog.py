@@ -328,8 +328,10 @@ class BlueprintsConvertDialog(wx.Dialog):
             self.Close()
 
     def getTemplate(self):
-        if self.chosenTemplate:
+        if self.chosenTemplate and hasattr(self.chosenTemplate, "json"):
             return self.chosenTemplate.json()
+        elif self.chosenTemplate:
+            return self.chosenTemplate
 
     def getDestinationGroup(self):
         return self.group
