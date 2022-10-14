@@ -713,30 +713,42 @@ def convertTemplateToBlueprint(template):
     blueprintAPList = []
     if templateSection["settings"]["wifiSettings"]:
         for ap in templateSection["settings"]["wifiSettings"]:
-            blueprintAPList.append({
-                "wifi_ssid": ap["wifiSsid"],
-                "wifi_security_type": ap["wifiSecurityType"],
-                "wifi_phase2_auth": ap["wifiPhase2Auth"] if "wifiPhase2Auth" in ap else None,
-                "hidden": ap["hidden"] if "hidden" in ap else None,
-                "wifi_eap_method": ap["wifiEapMethod"] if "wifiEapMethod" in ap else None,
-                "identity": ap["identity"] if "identity" in ap else None,
-                "anonymous_identity": ap["anonymousIdentity"] if "anonymousIdentity" in ap else None,
-                "domain": ap["domain"],
-                "wifi_password": ap["wifiPassword"],
-            })
+            blueprintAPList.append(
+                {
+                    "wifi_ssid": ap["wifiSsid"],
+                    "wifi_security_type": ap["wifiSecurityType"],
+                    "wifi_phase2_auth": ap["wifiPhase2Auth"]
+                    if "wifiPhase2Auth" in ap
+                    else None,
+                    "hidden": ap["hidden"] if "hidden" in ap else None,
+                    "wifi_eap_method": ap["wifiEapMethod"]
+                    if "wifiEapMethod" in ap
+                    else None,
+                    "identity": ap["identity"] if "identity" in ap else None,
+                    "anonymous_identity": ap["anonymousIdentity"]
+                    if "anonymousIdentity" in ap
+                    else None,
+                    "domain": ap["domain"],
+                    "wifi_password": ap["wifiPassword"],
+                }
+            )
 
     blueprint["latest_revision"]["connectivity"] = {
         "incoming_numbers": None
-        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["incomingNumbers"],
         "outgoing_numbers": None
-        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["outgoingNumbers"],
         "incoming_numbers_with_tags": None
-        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["incomingNumbersWithTags"],
         "outgoing_numbers_with_tags": None
-        if "phonePolicy" not in templateSection or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
         else templateSection["phonePolicy"]["outgoingNumbersWithTags"],
         "wifi_settings": blueprintAPList,
         "locked": False,
@@ -758,7 +770,8 @@ def convertTemplateToBlueprint(template):
     blueprint["latest_revision"]["display_branding"] = {
         "rotation_state": templateSection["settings"]["rotationState"],
         "wallpapers": None
-        if "brand" not in templateSection or ("brand" in templateSection and not templateSection["brand"])
+        if "brand" not in templateSection
+        or ("brand" in templateSection and not templateSection["brand"])
         else templateSection["brand"]["wallpapers"],
         "locked": False,
         "section_type": "Independent",
@@ -770,10 +783,12 @@ def convertTemplateToBlueprint(template):
     preloadedAppList = []
     if templateSection["application"]["launchOnStart"]:
         for preload in templateSection["application"]["launchOnStart"]:
-            preloadedAppList.append({
-                "package_name": preload["packageName"],
-                "state": preload["state"],
-            })
+            preloadedAppList.append(
+                {
+                    "package_name": preload["packageName"],
+                    "state": preload["state"],
+                }
+            )
 
     blueprint["latest_revision"]["application"] = {
         "apps": templateSection["application"]["apps"],
@@ -797,55 +812,63 @@ def convertTemplateToBlueprint(template):
         "settings_access_level": templateSection["devicePolicy"]["settingsAccessLevel"],
         "esper_settings_app": {
             "esper_settings_app_policy": {
-                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "flashlight"
-                ],
-                "wifi": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["wifi"],
-                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "autoRotation"
-                ],
-                "reboot": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["reboot"],
-                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "clearAppData"
-                ],
+                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["flashlight"],
+                "wifi": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["wifi"],
+                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["autoRotation"],
+                "reboot": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["reboot"],
+                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["clearAppData"],
                 "kiosk_app_selection": templateSection["devicePolicy"][
                     "esperSettingsApp"
                 ]["esperSettingsAppPolicy"]["kioskAppSelection"],
-                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "esperBranding"
-                ],
-                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "factoryReset"
-                ],
-                "about": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["about"],
-                "display": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "display"
-                ],
-                "sound": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"]["sound"],
-                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "keyboard"
-                ],
-                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "inputSelection"
-                ],
-                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "accessibility"
-                ],
-                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "mobileData"
-                ],
-                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "bluetooth"
-                ],
-                "language": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "language"
-                ],
-                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "timeAndDate"
-                ],
-                "storage": templateSection["devicePolicy"]["esperSettingsApp"]["esperSettingsAppPolicy"][
-                    "storage"
-                ],
+                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["esperBranding"],
+                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["factoryReset"],
+                "about": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["about"],
+                "display": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["display"],
+                "sound": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["sound"],
+                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["keyboard"],
+                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["inputSelection"],
+                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["accessibility"],
+                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["mobileData"],
+                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["bluetooth"],
+                "language": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["language"],
+                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["timeAndDate"],
+                "storage": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["storage"],
             },
             "only_dock_accessible": templateSection["devicePolicy"]["esperSettingsApp"][
                 "onlyDockAccessible"
@@ -884,7 +907,11 @@ def convertTemplateToBlueprint(template):
 
     blueprint["latest_revision"]["google_services"] = {
         "max_account": 0
-        if "googleAccountPermission" not in templateSection["devicePolicy"] or ("googleAccountPermission" in templateSection["devicePolicy"] and not templateSection["devicePolicy"]["googleAccountPermission"])
+        if "googleAccountPermission" not in templateSection["devicePolicy"]
+        or (
+            "googleAccountPermission" in templateSection["devicePolicy"]
+            and not templateSection["devicePolicy"]["googleAccountPermission"]
+        )
         else templateSection["devicePolicy"]["googleAccountPermission"]["maxAccount"],
         "emails": None,
         "domains": None,
@@ -956,7 +983,9 @@ def editBlueprintApps(groupId, body, appStr=""):
     ):
         del body["latest_revision"]["security"]["minimum_password_length"]
 
-    body["latest_revision"]["comments"] = "Editting Blueprint Apps %svia E.A.S.T." % ("(" + appStr + ") ")
+    body["latest_revision"]["comments"] = "Editting Blueprint Apps %svia E.A.S.T." % (
+        "(" + appStr + ") "
+    )
 
     resp = performPostRequestWithRetry(url, json=body, headers=getHeader())
 

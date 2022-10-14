@@ -45,9 +45,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             self.group = parent.sidePanel.selectedGroupsList
 
         blueprintEnabled = False
-        config = parent.sidePanel.configChoice[
-            parent.configMenuItem.GetItemLabelText()
-        ]
+        config = parent.sidePanel.configChoice[parent.configMenuItem.GetItemLabelText()]
         if "isBlueprintsEnabled" in config:
             blueprintEnabled = config["isBlueprintsEnabled"]
         if not blueprintEnabled:
@@ -271,7 +269,10 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
-            if self.allDeviceStr and self.allDeviceStr in self.originalChoices[self.page]:
+            if (
+                self.allDeviceStr
+                and self.allDeviceStr in self.originalChoices[self.page]
+            ):
                 self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
