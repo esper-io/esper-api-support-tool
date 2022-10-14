@@ -1442,7 +1442,10 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator(locks=[Globals.token_lock])
     def validateToken(self):
         Globals.token_lock.acquire()
-        res = getTokenInfo(maxAttempt=2)
+        try:
+            res = getTokenInfo(maxAttempt=2)
+        except:
+            pass
         if res and hasattr(res, "expires_on"):
             Globals.IS_TOKEN_VALID = True
             if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
