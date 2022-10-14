@@ -812,7 +812,7 @@ class PreferencesDialog(wx.Dialog):
         if "appFilter" in self.prefs and self.prefs["appFilter"]:
             if isinstance(self.prefs["appFilter"], str):
                 indx = self.combobox_2.GetItems().index(
-                    self.prefs["appFilter"].capitalize()
+                    self.prefs["appFilter"].upper()
                 )
                 self.combobox_2.SetSelection(indx)
             else:

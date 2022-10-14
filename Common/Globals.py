@@ -268,7 +268,7 @@ WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
-APP_FILTER_TYPES = ["All", "SHOW", "HIDE", "DISABLE"]
+APP_FILTER_TYPES = ["ALL", "SHOW", "HIDE", "DISABLE"]
 
 """ WxPython Frame """
 frame = None
