@@ -1034,6 +1034,7 @@ class NewFrameLayout(wx.Frame):
                 self.processXlsxUpload(dfs)
             except:
                 pass
+        self.gridPanel.notebook_2.SetSelection(0)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
             eventUtil.myEVT_DISPLAY_NOTIFICATION,
@@ -1053,7 +1054,7 @@ class NewFrameLayout(wx.Frame):
         dataList = []
         sheets = data.keys()
         for sheet in sheets:
-            if "Device & Network" in sheet:
+            if "Device & Network" in sheet or "Device and Network" in sheet:
                 dataList.append(data[sheet].columns.values.tolist())
                 dataList += data[sheet].values.tolist()
                 self.processCsvDataByGrid(
