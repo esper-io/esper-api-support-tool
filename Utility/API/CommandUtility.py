@@ -163,7 +163,7 @@ def executeCommandOnGroup(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        splitGroupList = splitListIntoChunks(groupList, 500)
+        splitGroupList = splitListIntoChunks(groupList, maxChunkSize=500)
         for gList in splitGroupList:
             last_status = sendCommandToGroup(
                 gList, command_type, command_args, schedule_type, schedule, maxAttempt
@@ -256,7 +256,7 @@ def executeCommandOnDevice(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        splitDeviceList = splitListIntoChunks(devicelist, 500)
+        splitDeviceList = splitListIntoChunks(devicelist, maxChunkSize=500)
         for dList in splitDeviceList:
             last_status = sendCommandToDevice(
                 dList, command_type, command_args, schedule_type, schedule, maxAttempt

@@ -319,10 +319,12 @@ def displayMessageBox(event):
     return res
 
 
-def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
+def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None):
     if maxThread <= 0:
         return mainList
     n = int(len(mainList) / maxThread)
+    if maxChunkSize:
+        n = maxChunkSize
     if n == 0:
         n = len(mainList)
     if n > 0:
