@@ -1041,6 +1041,12 @@ class NewFrameLayout(wx.Frame):
             ("E.A.S.T.", "Device CSV Upload Completed"),
         )
         self.setCursorDefault()
+        self.toggleEnabledState(True)
+        self.sidePanel.groupChoice.Enable(True)
+        self.sidePanel.deviceChoice.Enable(True)
+        self.gridPanel.enableGridProperties()
+        self.gridPanel.grid_1.Thaw()
+        self.gridPanel.grid_2.Thaw()
         self.isUploading = False
 
     def processXlsxUpload(self, data):
