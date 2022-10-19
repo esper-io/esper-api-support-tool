@@ -42,8 +42,6 @@ def iterateThroughGridRows(frame, action):
         uninstallApp(frame)
     if action == GridActions.SET_DEVICE_DISABLED.value:
         setDevicesDisabled()
-    if action == GridActions.PING.value:
-        pingDevices()
 
 
 @api_tool_decorator()
