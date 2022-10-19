@@ -385,7 +385,10 @@ def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
                     newBg["enterprise"] = enterprise
                     newBg["wallpaper"] = newBg["id"]
                     newBg["orientations"] = bg["orientations"]
-                    newBg["screen_types"] = bg["screen_types"]
+                    if "screen_types" in bg:
+                        newBg["screen_types"] = bg["screen_types"]
+                    elif "screenTypes" in bg:
+                        newBg["screen_types"] = bg["screenTypes"]
                     bgList.append(newBg)
                     progress.Update(
                         int((num / numTotal) * 75),
@@ -498,43 +501,90 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                 toConfig["enterprise"],
                 match[0].id,
             )
-            for version in toAppVersions.results:
-                if (
-                    version.version_code == app["version_codes"][0]
-                    or version.build_number == app["version_codes"][0]
-                ):
-                    if app["is_g_play"] and version.is_g_play:
-                        # TODO: Add properly
-                        # Found matching Play Store app
-                        appsToAdd.append(
-                            {
-                                "app_version": version.id,
-                                "package_name": app["package_name"],
-                                "application_name": app["application_name"],
-                                "is_g_play": version.is_g_play,
-                                "installation_rule": app["installation_rule"],
-                                "state": app["state"],
-                            }
-                        )
-                    elif not app["is_g_play"] and (
-                        not hasattr(version, "is_g_play") or not version.is_g_play
+            if hasattr(toAppVersions, "results"):
+                for version in toAppVersions.results:
+                    if (
+                        version.version_code == app["version_codes"][0]
+                        or version.build_number == app["version_codes"][0]
                     ):
-                        # Found matching enterprise version
-                        appsToAdd.append(
-                            {
-                                "app_version": version.id,
+                        if app["is_g_play"] and version.is_g_play:
+                            # TODO: Add properly
+                            # Found matching Play Store app
+                            appsToAdd.append(
+                                {
+                                    "app_version": version.id,
+                                    "package_name": app["package_name"],
+                                    "application_name": app["application_name"],
+                                    "is_g_play": version.is_g_play,
+                                    "installation_rule": app["installation_rule"],
+                                    "state": app["state"],
+                                }
+                            )
+                        elif not app["is_g_play"] and (
+                            not hasattr(version, "is_g_play") or not version.is_g_play
+                        ):
+                            # Found matching enterprise version
+                            appsToAdd.append(
+                                {
+                                    "app_version": version.id,
+                                    "package_name": app["package_name"],
+                                    "application_name": app["application_name"],
+                                    "is_g_play": version.is_g_play
+                                    if hasattr(version, "is_g_play")
+                                    else False,
+                                    "version_codes": [version.build_number],
+                                    "installation_rule": app["installation_rule"],
+                                    "release_name": version.release_name,
+                                    "state": app["state"],
+                                }
+                            )
+                            appAdded = True
+            elif type(toAppVersions) is dict:
+                for version in toAppVersions["results"]:
+                    if (
+                        (
+                            "version_codes" in app
+                            and (
+                                version["version_code"] == app["version_codes"][0]
+                                or version["build_number"] == app["version_codes"][0]
+                            )
+                        )
+                        or version["version_code"] == app["version_name"]
+                        or version["build_number"] == app["version_code"]
+                    ):
+                        if app["is_g_play"] and version["is_g_play"]:
+                            # TODO: Add properly
+                            # Found matching Play Store app
+                            entry = {
+                                "app_version": version["id"],
                                 "package_name": app["package_name"],
                                 "application_name": app["application_name"],
-                                "is_g_play": version.is_g_play
+                                "is_g_play": version["is_g_play"],
+                                "installation_rule": app["installation_rule"],
+                            }
+                            if "state" in app:
+                                entry["state"] = app["state"]
+                            appsToAdd.append(entry)
+                        elif not app["is_g_play"] and (
+                            not hasattr(version, "is_g_play")
+                            or not version["is_g_play"]
+                        ):
+                            # Found matching enterprise version
+                            entry = {
+                                "app_version": version["id"],
+                                "package_name": app["package_name"],
+                                "application_name": app["application_name"],
+                                "is_g_play": version["is_g_play"]
                                 if hasattr(version, "is_g_play")
                                 else False,
-                                "version_codes": [version.build_number],
+                                "version_codes": [version["build_number"]],
                                 "installation_rule": app["installation_rule"],
-                                "release_name": version.release_name,
-                                "state": app["state"],
+                                "release_name": version["release_name"],
                             }
-                        )
-                        appAdded = True
+                            if "state" in app:
+                                entry["state"] = app["state"]
+                            appsToAdd.append(entry)
+                            appAdded = True
         if not appAdded:
             postEventToFrame(
                 EventUtility.myEVT_LOG,
@@ -542,16 +592,21 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
             )
             missingApps += "%s, " % app["application_name"]
             if "download_url" in app and app["download_url"]:
-                downloadLink.append(
-                    {
-                        "name": app["application_name"],
-                        "version": app["app_version"],
-                        "link": app["download_url"],
-                        "rule": app["installation_rule"],
-                        "state": app["state"],
-                        "version_url": app["app_version_url"],
-                    }
-                )
+                entry = {
+                    "name": app["application_name"],
+                    "version": app["app_version"],
+                    "link": app["download_url"],
+                    "rule": app["installation_rule"],
+                }
+                if "app_version_url" in app:
+                    entry["version_url"] = app["app_version_url"]
+                elif "download_url" in app:
+                    entry["version_url"] = app["download_url"]
+                if "state" in app:
+                    entry["state"] = app["state"]
+                else:
+                    entry["state"] = "SHOW"
+                downloadLink.append(entry)
     blueprint["latest_revision"]["application"]["apps"] = appsToAdd
     return blueprint, missingApps, downloadLink
 
@@ -793,7 +848,7 @@ def convertTemplateToBlueprint(template):
     appList = []
     if templateSection["application"]["apps"]:
         for app in templateSection["application"]["apps"]:
-            preloadedAppList.append(
+            appList.append(
                 {
                     "id": app["id"],
                     "is_g_play": app["isGPlay"],

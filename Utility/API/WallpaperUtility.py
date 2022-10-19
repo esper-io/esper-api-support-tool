@@ -32,6 +32,7 @@ def uploadWallpaper(link, key, enterprise_id, bg):
                 link += "/"
             url = (
                 link
+                + "enterprise/"
                 + enterprise_id
                 + "/wallpaper/"
                 + "?limit={num}".format(num=Globals.limit)
