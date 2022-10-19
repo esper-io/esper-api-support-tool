@@ -790,8 +790,33 @@ def convertTemplateToBlueprint(template):
                 }
             )
 
+    appList = []
+    if templateSection["application"]["apps"]:
+        for app in templateSection["application"]["apps"]:
+            preloadedAppList.append(
+                {
+                    "id": app["id"],
+                    "is_g_play": app["isGPlay"],
+                    "app_version": app["appVersion"],
+                    "google_product": app["googleProduct"],
+                    "download_url": app["downloadUrl"],
+                    "application_id": app["applicationId"],
+                    "version_name": app["versionName"],
+                    "hash_string": app["hashString"],
+                    "google_product_id": app["googleProductId"],
+                    "app_version_id": app["appVersionId"],
+                    "installation_rule": app["installationRule"],
+                    "release_name": app["releaseName"],
+                    "application_name": app["applicationName"],
+                    "package_name": app["packageName"],
+                    "min_sdk_version": app["minSdkVersion"],
+                    "icon_url": app["iconUrl"],
+                    "version_code": app["versionCode"],
+                }
+            )
+
     blueprint["latest_revision"]["application"] = {
-        "apps": templateSection["application"]["apps"],
+        "apps": appList,
         "app_mode": templateSection["application"]["appMode"],
         "preload_apps": preloadedAppList,
         "launch_on_start": templateSection["application"]["launchOnStart"],
