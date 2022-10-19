@@ -773,8 +773,10 @@ class NewFrameLayout(wx.Frame):
                         else:
                             self.populateWorkSheet(
                                 my_wb,
-                                self.gridPanel.grid_1_contents
-                                + self.gridPanel.grid_2_contents,
+                                self.mergeDataSource(
+                                    self.gridPanel.grid_1_contents,
+                                    self.gridPanel.grid_2_contents,
+                                ),
                                 baseSheetName,
                                 list(deviceHeaders) + list(networkHeaders)[2:],
                                 {
@@ -864,6 +866,23 @@ class NewFrameLayout(wx.Frame):
             if platform.system() == "Darwin":
                 parentDirectory = "file://" + os.path.realpath(parentDirectory)
             openWebLinkInBrowser(parentDirectory)
+
+    def mergeDataSource(self, deviceList, networkList):
+        newData = []
+        networkIndx = {}
+        indx = 0
+        for network in networkList:
+            name = network["Esper Name"]
+            networkIndx[name] = indx
+            indx += 1
+        for device in deviceList:
+            name = device["EsperName"]
+            if name in networkIndx:
+                device.update(networkList[networkIndx[name]])
+                newData.append(device)
+            else:
+                newData.append(device)
+        return newData
 
     def populateWorkSheet(
         self, workbook, dataSource, baseSheetName, headers, headerKeys
@@ -1034,7 +1053,7 @@ class NewFrameLayout(wx.Frame):
         dataList = []
         sheets = data.keys()
         for sheet in sheets:
-            if "Device and Network" in sheet:
+            if "Device & Network" in sheet:
                 dataList.append(data[sheet].columns.values.tolist())
                 dataList += data[sheet].values.tolist()
                 self.processCsvDataByGrid(

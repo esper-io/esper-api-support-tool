@@ -663,9 +663,11 @@ def installApp(frame):
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
 
     devices = getDeviceIdFromGridDevices(devices)
-    Globals.THREAD_POOL.enqueue(
-        processInstallLatestApp, devices, frame.sidePanel.selectedAppEntry
-    )
+    deviceList = splitListIntoChunks(devices, maxThread=500)
+    for entry in deviceList:
+        Globals.THREAD_POOL.enqueue(
+            processInstallLatestApp, entry, frame.sidePanel.selectedAppEntry
+        )
 
     Globals.THREAD_POOL.enqueue(
         wxThread.waitTillThreadsFinish,
@@ -682,9 +684,11 @@ def uninstallApp(frame):
     devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
 
     devices = getDeviceIdFromGridDevices(devices)
-    Globals.THREAD_POOL.enqueue(
-        processUninstallApp, devices, frame.sidePanel.selectedAppEntry
-    )
+    deviceList = splitListIntoChunks(devices, maxThread=500)
+    for entry in deviceList:
+        Globals.THREAD_POOL.enqueue(
+            processUninstallApp, entry, frame.sidePanel.selectedAppEntry
+        )
 
     Globals.THREAD_POOL.enqueue(
         wxThread.waitTillThreadsFinish,
