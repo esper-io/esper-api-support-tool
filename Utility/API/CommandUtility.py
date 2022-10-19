@@ -6,6 +6,7 @@ from Utility.Resource import (
     getHeader,
     logBadResponse,
     postEventToFrame,
+    splitListIntoChunks,
 )
 import ast
 import time
@@ -162,25 +163,27 @@ def executeCommandOnGroup(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        last_status = sendCommandToGroup(
-            groupList, command_type, command_args, schedule_type, schedule, maxAttempt
-        )
-        if last_status and hasattr(last_status, "state"):
-            entry = {}
-            entry["Groups"] = groupList
-            if hasattr(last_status, "id"):
-                entry["Command Id"] = last_status.id
-            entry["Status State"] = last_status.state
-            if hasattr(last_status, "reason"):
-                entry["Reason"] = last_status.reason
-            statusList.append(entry)
-        else:
-            entry = {}
-            entry["Groups"] = groupList
-            if hasattr(last_status, "state"):
-                entry["Command Id"] = last_status.id
-            entry["Status"] = last_status
-            statusList.append(entry)
+        splitGroupList = splitListIntoChunks(groupList, 500)
+        for gList in splitGroupList:
+            last_status = sendCommandToGroup(
+                gList, command_type, command_args, schedule_type, schedule, maxAttempt
+            )
+            if last_status and hasattr(last_status, "state"):
+                entry = {}
+                entry["Groups"] = gList
+                if hasattr(last_status, "id"):
+                    entry["Command Id"] = last_status.id
+                entry["Status State"] = last_status.state
+                if hasattr(last_status, "reason"):
+                    entry["Reason"] = last_status.reason
+                statusList.append(entry)
+            else:
+                entry = {}
+                entry["Groups"] = gList
+                if hasattr(last_status, "state"):
+                    entry["Command Id"] = last_status.id
+                entry["Status"] = last_status
+                statusList.append(entry)
     if postStatus:
         postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
@@ -253,23 +256,25 @@ def executeCommandOnDevice(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        last_status = sendCommandToDevice(
-            devicelist, command_type, command_args, schedule_type, schedule, maxAttempt
-        )
-        if last_status and hasattr(last_status, "state"):
-            entry = {}
-            entry["Devices"] = devicelist
-            if hasattr(last_status, "id"):
-                entry["Command Id"] = last_status.id
-            entry["status"] = last_status.state
-            if hasattr(last_status, "reason"):
-                entry["Reason"] = last_status.reason
-            statusList.append(entry)
-        else:
-            entry = {}
-            entry["Devices"] = devicelist
-            entry["Status"] = last_status
-            statusList.append(entry)
+        splitDeviceList = splitListIntoChunks(devicelist, 500)
+        for dList in splitDeviceList:
+            last_status = sendCommandToDevice(
+                dList, command_type, command_args, schedule_type, schedule, maxAttempt
+            )
+            if last_status and hasattr(last_status, "state"):
+                entry = {}
+                entry["Devices"] = dList
+                if hasattr(last_status, "id"):
+                    entry["Command Id"] = last_status.id
+                entry["status"] = last_status.state
+                if hasattr(last_status, "reason"):
+                    entry["Reason"] = last_status.reason
+                statusList.append(entry)
+            else:
+                entry = {}
+                entry["Devices"] = dList
+                entry["Status"] = last_status
+                statusList.append(entry)
     if postStatus:
         postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
