@@ -3449,7 +3449,8 @@ class NewFrameLayout(wx.Frame):
                     "Count of Child Groups",
                     "Parent Group URL",
                     "Thumbnail",
-                    "Blueprint" "Created On",
+                    "Blueprint",
+                    "Created On",
                     "Updated On",
                 ]
             ]
