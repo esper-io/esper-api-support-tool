@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import os
 import wx
 from Utility.API.AppUtilities import (
     getAllAppVersionsForHost,
@@ -8,6 +7,7 @@ from Utility.API.AppUtilities import (
     uploadApplicationForHost,
 )
 from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
+from Utility.API.WallpaperUtility import uploadWallpaper
 
 import Utility.Threading.wxThread as wxThread
 import Utility.EventUtility as eventUtil
@@ -59,7 +59,7 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def prepareTemplate(self, dest=None, chosenTemplate=None):
         if self.parent and self.parent.gauge:
-            self.parent.gauge.Pulse()
+            self.parent.statusBar.gauge.Pulse()
 
         self.toApi = self.apiLink.format(tenant=self.toTenant)
 
@@ -161,9 +161,7 @@ class EsperTemplateUtil:
             if templateFound["template"]["brand"]:
                 bgList = []
                 for bg in templateFound["template"]["brand"]["wallpapers"]:
-                    newBg = self.uploadWallpaper(
-                        self.toApi, self.toKey, self.toEntId, bg
-                    )
+                    newBg = uploadWallpaper(self.toApi, self.toKey, self.toEntId, bg)
                     if newBg:
                         newBg["enterprise"] = self.toEntId
                         newBg["wallpaper"] = newBg["id"]
@@ -172,60 +170,6 @@ class EsperTemplateUtil:
                         bgList.append(newBg)
                 templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
-
-    @api_tool_decorator()
-    def uploadWallpaper(self, link, key, enterprise_id, bg):
-        json_resp = None
-        files = None
-        try:
-            headers = {
-                "Authorization": f"Bearer {key}",
-            }
-            download(bg["url"], "wallpaper.jpeg")
-            ApiToolLog().LogApiRequestOccurrence(
-                "download", bg["url"], Globals.PRINT_API_LOGS
-            )
-            if os.path.exists("wallpaper.jpeg"):
-                payload = {
-                    "orientation": bg["orientation"],
-                    "enterprise": enterprise_id,
-                }
-                url = (
-                    link
-                    + enterprise_id
-                    + self.wallpaper_extension
-                    + self.limit_extension.format(num=Globals.limit)
-                )
-                files = {"image_file": open("wallpaper.jpeg", "rb")}
-                postEventToFrame(
-                    eventUtil.myEVT_LOG, "Attempting to upload wallpaper..."
-                )
-                resp = performPostRequestWithRetry(
-                    url, headers=headers, data=payload, files=files
-                )
-                if resp.ok:
-                    postEventToFrame(eventUtil.myEVT_LOG, "Wallpaper upload Succeeded!")
-                    json_resp = resp.json()
-                else:
-                    postEventToFrame(eventUtil.myEVT_LOG, "Wallpaper upload Failed!")
-                    wx.MessageBox(
-                        "Wallpaper upload Failed! Source: %s" % bg["url"],
-                        style=wx.OK | wx.ICON_ERROR,
-                    )
-                    resp.raise_for_status()
-            else:
-                wx.MessageBox(
-                    "Failed to download wallpaper for uploading",
-                    style=wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            raise e
-        finally:
-            if files:
-                files["image_file"].close()
-        deleteFile("wallpaper.jpeg")
-        if json_resp:
-            return json_resp
 
     def checkDeviceGroup(self, templateFound, toDeviceGroups, allDeviceGroupId):
         found = False
@@ -616,8 +560,9 @@ class EsperTemplateUtil:
                 + self.limit_extension.format(num=Globals.limit)
             )
             resp = performGetRequestWithRetry(url, headers=headers)
-            json_resp = resp.json()
-            return json_resp
+            if resp:
+                json_resp = resp.json()
+                return json_resp
         except Exception as e:
             raise e
 

@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 
 import asyncio
-
+import ctypes
 from threading import Thread
 
 
@@ -46,3 +46,13 @@ class Worker(Thread):
             finally:
                 # task complete no matter what happened
                 self.queue.task_done()
+        self.idle.set()
+
+    def raise_exception(self):
+        thread_id = self.ident
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            thread_id, ctypes.py_object(SystemExit)
+        )
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print("Exception raise failure")

@@ -33,6 +33,7 @@ class ToolMenuBar(wx.MenuBar):
         self.WINDOWS = False
         self.uc = None
 
+        self.SetThemeEnabled(False)
         if platform.system() == "Windows":
             self.WINDOWS = True
 
@@ -104,7 +105,13 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.cloneBP = self.cloneSubMenu.Append(cloneBlueprint)
         self.cloneBP.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
-        self.toggleCloneMenuOptions(False)
+
+        self.cloneSubMenu.Append(wx.ID_SEPARATOR)
+
+        convertTemplate = wx.MenuItem(
+            self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint"
+        )
+        self.convert = self.cloneSubMenu.Append(convertTemplate)
 
         self.cloneSubMenu = runMenu.Append(wx.ID_ANY, "&Clone", self.cloneSubMenu)
 
@@ -126,6 +133,10 @@ class ToolMenuBar(wx.MenuBar):
         self.installedDevices = self.appSubMenu.Append(
             wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
+        self.appSubMenu.Append(wx.ID_SEPARATOR)
+        self.newBlueprintApp = self.appSubMenu.Append(
+            wx.ID_ANY, "&Push new app to Blueprints"
+        )
         self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
         self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
@@ -133,6 +144,9 @@ class ToolMenuBar(wx.MenuBar):
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
         self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
+        self.downloadGroups = self.groupSubMenu.Append(
+            wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G"
+        )
         self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
         self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
         runMenu.Append(wx.ID_SEPARATOR)
@@ -227,7 +241,9 @@ class ToolMenuBar(wx.MenuBar):
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
-        self.ConfigMenuPosition = 3
+        self.toggleCloneMenuOptions(False)
+
+        self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")
@@ -266,10 +282,12 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
         self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
         self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices
         )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
         )
@@ -280,6 +298,7 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
+        self.Bind(wx.EVT_MENU, self.parentFrame.downloadGroups, self.downloadGroups)
         self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
         self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
         self.Bind(wx.EVT_MENU, self.onClearData, self.clearData)
@@ -351,6 +370,7 @@ class ToolMenuBar(wx.MenuBar):
                     if dlg.ShowModal() == wx.ID_YES:
                         result = None
                         try:
+                            self.parentFrame.statusBar.gauge.Pulse()
                             result = downloadFileFromUrl(downloadURL, name)
                         except Exception as e:
                             print(e)
@@ -358,7 +378,7 @@ class ToolMenuBar(wx.MenuBar):
                         if result:
                             showDlg = True
                             msg = (
-                                "Download Succeeded! File should be located at:\n\n%s\nPlease open the executable from the download!"
+                                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
                                 % result
                             )
                         else:
@@ -404,7 +424,7 @@ class ToolMenuBar(wx.MenuBar):
                 eql = textDialog.GetValue()
                 if eql:
                     self.parentFrame.toggleEnabledState(False)
-                    self.parentFrame.gauge.Pulse()
+                    self.parentFrame.statusBar.gauge.Pulse()
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
                     self.parentFrame.Logging(
@@ -425,7 +445,7 @@ class ToolMenuBar(wx.MenuBar):
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
-                    self.parentFrame.gauge.Pulse()
+                    self.parentFrame.statusBar.gauge.Pulse()
                     self.parentFrame.toggleEnabledState(False)
                     self.parentFrame.Logging("---> Performing EQL Query")
                     deviceListResp = preformEqlSearch(eql, None, returnJson=True)
@@ -500,6 +520,12 @@ class ToolMenuBar(wx.MenuBar):
         if toggleBothSameState:
             self.clone.Enable(enable=showBlueprint)
             self.cloneBP.Enable(enable=showBlueprint)
+            self.newBlueprintApp.Enable(enable=showBlueprint)
         else:
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
+            self.newBlueprintApp.Enable(enable=showBlueprint)
+
+    def toggleAddTenantOptions(self, state):
+        self.defaultConfigVal.Enable(enable=state)
+        self.fileOpenAuth.Enable(enable=state)

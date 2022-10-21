@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import webbrowser
 import datetime
 import subprocess
 import pathlib
@@ -161,6 +162,7 @@ if __name__ == "__main__":
                 dispath + "/Main.app",
                 dispath + "/" + app_name,
             )
+        webbrowser.open(dispath)
     except Exception as e:
         print(
             "FAILED to remove old executeable or rename the newly generated executable"
@@ -179,3 +181,9 @@ if __name__ == "__main__":
     for item in os.listdir():
         if item.endswith(".spec"):
             os.remove(item)
+
+    if os.path.exists("build"):
+        try:
+            shutil.rmtree("build")
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))

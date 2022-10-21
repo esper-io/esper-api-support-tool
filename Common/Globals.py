@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import esperclient
-import threading
 import platform
+import threading
 
-from Common.enum import GridActions, GeneralActions
-
+import esperclient
 from Utility.Threading.ThreadPoolQueue import Pool
+
+from Common.enum import GeneralActions, GridActions
 
 configuration = esperclient.Configuration()
 enterprise_id = ""
@@ -14,7 +14,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.1942"
+VERSION = "v0.19473"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -24,15 +24,20 @@ MAX_TAGS = 5
 error_tracker = {}
 IS_TOKEN_VALID = False
 
+MAX_DEVICE_COUNT = 5000
+
 MAX_ERROR_TIME_DIFF = 2
-MAX_ACTIVE_THREAD_COUNT = 32
-MAX_THREAD_COUNT = 16
+MAX_THREAD_COUNT = 24
 MAX_RETRY = 5
 RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
 PRINT_RESPONSES = False
 PRINT_FUNC_DURATION = False
 PRINT_API_LOGS = False
+
+SHEET_CHUNK_SIZE = 500000
+MIN_SHEET_CHUNK_SIZE = 50000
+MAX_SHEET_CHUNK_SIZE = 500000
 
 THREAD_POOL = Pool(MAX_THREAD_COUNT)
 THREAD_POOL.run()
@@ -94,7 +99,6 @@ GRID_ACTIONS = {
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,
     "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
     # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
-    # "Action -> Set Specific Apps' State to Hide": 50,
 }
 
 LOGLIST = []
@@ -147,10 +151,10 @@ LATEST_UPDATE_LINK = (
 UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
-BASE_REQUEST_EXTENSION = "?&format=json"
-DEVICE_STATUS_REQUEST_EXTENSION = "status?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&app_type=ENTERPRISE"
-DEVICE_APP_LIST_REQUEST_EXTENSION = "app?limit={limit}&format=json"
+BASE_REQUEST_EXTENSION = "/?&format=json"
+DEVICE_STATUS_REQUEST_EXTENSION = "status/?&format=json&latest_event=0"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTERPRISE"
+DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
 CSV_DEPRECATED_HEADER_LABEL = ["Number"]
@@ -182,6 +186,7 @@ CSV_TAG_ATTR_NAME = {
     "Device Type": "device_type",
     "Registered On": "provisioned_on",
     "Updated On": "updated_on",
+    "Created On": "created_on",
     "Last Seen": "last_seen",
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
@@ -190,7 +195,7 @@ CSV_TAG_ATTR_NAME = {
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
-    "Location": "location_info",
+    "Location Coordinates (Alt, Lat., Long.)": "location_info",
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
     "Screen Timeout (ms)": "screenOffTimeout",
@@ -217,6 +222,7 @@ CSV_TAG_ATTR_NAME = {
     "Battery Capacity Total (Ah)": "batteryCapacityTotal",
     "Battery Level Absolute": "batteryLevelAbsolute",
     "Esper Id": "id",
+    "Group Id": "groupId",
 }
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
@@ -262,6 +268,8 @@ WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
+APP_FILTER_TYPES = ["ALL", "SHOW", "HIDE", "DISABLE"]
+
 """ WxPython Frame """
 frame = None
 app = None
@@ -275,6 +283,7 @@ LAST_OPENED_ENDPOINT = -1
 FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 CHECK_PRERELEASES = False
+AUTO_REPORT_ISSUES = False
 
 # Save Prefs
 SAVE_VISIBILITY = False
@@ -301,6 +310,7 @@ COMMAND_TIMEOUT = 30
 COMMAND_JSON_INPUT = True
 REACH_QUEUED_ONLY = True
 CMD_DEVICE_TYPE = "all"
+APP_FILTER = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356

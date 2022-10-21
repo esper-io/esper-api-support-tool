@@ -57,6 +57,9 @@ Latest Revision before Latest Revision before Latest Revision: 31 May 2005, 23.1
 """
 
 import wx
+import Common.Globals as Globals
+
+from Common.decorator import api_tool_decorator
 
 # Horizontal Alignment Constants
 ESB_ALIGN_CENTER_VERTICAL = 1
@@ -104,6 +107,9 @@ class EnhancedStatusBar(wx.StatusBar):
         self._items = {}
         self._curPos = 0
         self._parent = parent
+        self.sbText = None
+        self.gauge = None
+        self.SetThemeEnabled(False)
 
         # wx.EVT_SIZE(self, self.OnSize)
         self.Bind(wx.EVT_SIZE, self.OnSize)
@@ -270,3 +276,35 @@ class EnhancedStatusBar(wx.StatusBar):
         )
 
         wx.CallAfter(self.OnSize, None)
+
+    def AddStaicTextAndGauge(self):
+        self.sbText = wx.StaticText(self, wx.ID_ANY, "")
+        self.AddWidget(self.sbText, pos=0, horizontalalignment=ESB_EXACT_FIT)
+        self.sbText.Bind(wx.EVT_LEFT_UP, self.Parent.showConsole)
+
+        self.gauge = wx.Gauge(
+            self,
+            wx.ID_ANY,
+            100,
+            style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH,
+        )
+        self.AddWidget(self.gauge, pos=1, horizontalalignment=ESB_EXACT_FIT)
+
+    @api_tool_decorator(locks=[Globals.gauge_lock])
+    def setGaugeValue(self, value):
+        """ Attempt to set Gauge to the specififed value """
+        if Globals.gauge_lock.locked():
+            return
+        Globals.gauge_lock.acquire()
+        if hasattr(value, "GetValue"):
+            value = value.GetValue()
+        if bool(self.gauge):
+            maxValue = self.gauge.GetRange()
+            if value > maxValue:
+                value = maxValue
+            if value < 0:
+                value = 0
+            if value >= 0 and value <= maxValue:
+                self.gauge.SetValue(value)
+        if Globals.gauge_lock.locked():
+            Globals.gauge_lock.release()

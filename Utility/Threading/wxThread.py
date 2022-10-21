@@ -21,10 +21,9 @@ def waitTillThreadsFinish(
         Globals.THREAD_POOL.join(tolerance)
     else:
         joinThreadList(threads)
-
     initPercent = 0
-    if Globals.frame.gauge:
-        initPercent = Globals.frame.gauge.GetValue()
+    if Globals.frame.statusBar.gauge:
+        initPercent = Globals.frame.statusBar.gauge.GetValue()
     initVal = 0
     if source == 1:
         deviceList = {}
@@ -65,7 +64,7 @@ def waitTillThreadsFinish(
                     changeSucceeded += thread[0]
                     succeeded += thread[1]
                     numNewName += thread[2]
-                    # devices += thread._args[1] TODO
+                    devices += thread[3]
                     statuses += thread[4]
         else:
             for thread in threads:
@@ -117,9 +116,9 @@ def waitTillThreadsFinish(
         msg = ""
         if action == GridActions.MOVE_GROUP.value:
             msg = "Results of moving devices' groups."
-        elif action == GridActions.INSTALL_LATEST_APP.value:
+        elif action == GridActions.INSTALL_APP.value:
             msg = "Results of installing given app packages."
-        elif action == GridActions.UNINSTALL_LISTED_APP.value:
+        elif action == GridActions.UNINSTALL_APP.value:
             msg = "Results of uninstalling given app packages."
         elif action == GridActions.FACTORY_RESET.value:
             msg = "Results of Factory Reset."

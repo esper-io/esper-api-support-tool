@@ -5,6 +5,7 @@ import time
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.Resource import (
     acquireLocks,
+    checkIfCurrentThreadStopped,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -12,7 +13,6 @@ from Utility.Resource import (
 )
 import Common.Globals as Globals
 import re
-import threading
 import wx
 import wx.grid as gridlib
 import Utility.EventUtility as eventUtil
@@ -69,6 +69,7 @@ class GridPanel(wx.Panel):
         sizer_3.Add(self.button_2, 0, wx.LEFT, 5)
 
         self.notebook_2 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_2.SetThemeEnabled(False)
         grid_sizer_2.Add(self.notebook_2, 1, wx.EXPAND, 0)
 
         self.notebook_2.SetFont(
@@ -129,6 +130,14 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator()
     def __set_properties(self):
+        self.SetThemeEnabled(False)
+        self.grid_1.SetThemeEnabled(False)
+        self.grid_2.SetThemeEnabled(False)
+        self.grid_3.SetThemeEnabled(False)
+        self.grid_1.GetGridWindow().SetThemeEnabled(False)
+        self.grid_2.GetGridWindow().SetThemeEnabled(False)
+        self.grid_3.GetGridWindow().SetThemeEnabled(False)
+
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
@@ -371,8 +380,9 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -430,8 +440,9 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -482,8 +493,9 @@ class GridPanel(wx.Panel):
         if (
             self.parentFrame.isRunning
             or (
-                self.parentFrame.gauge.GetValue() != self.parentFrame.gauge.GetRange()
-                and self.parentFrame.gauge.GetValue() != 0
+                self.parentFrame.statusBar.gauge.GetValue()
+                != self.parentFrame.statusBar.gauge.GetRange()
+                and self.parentFrame.statusBar.gauge.GetValue() != 0
             )
             or self.parentFrame.CSVUploaded
             or self.disableProperties
@@ -615,9 +627,8 @@ class GridPanel(wx.Panel):
         if grid != self.grid_1:
             statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    return
+            if checkIfCurrentThreadStopped():
+                return
             if rowNum < grid.GetNumberRows():
                 match = []
                 [
@@ -727,16 +738,16 @@ class GridPanel(wx.Panel):
             if "Esper Name" == attribute:
                 esperName = value
             device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    releaseLocks([Globals.grid1_lock])
-                    return
+            if checkIfCurrentThreadStopped():
+                releaseLocks([Globals.grid1_lock])
+                return
             self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
             self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
-            self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+            if attribute == "Status":
+                self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
             self.setAlteredCellColor(
                 self.grid_1,
                 device_info,
@@ -756,26 +767,8 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock])
 
     def constructDeviceGridContent(self, device_info):
-        device = {}
-        for attribute in Globals.CSV_TAG_ATTR_NAME:
-            value = (
-                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                else ""
-            )
-            if "Esper Name" == attribute:
-                esperName = value
-            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-        esperNameAccessor = Globals.CSV_TAG_ATTR_NAME["Esper Name"]
-        deviceListing = list(
-            filter(
-                lambda x: (x[esperNameAccessor] == esperName),
-                self.grid_1_contents,
-            )
-        )
-        if device not in self.grid_1_contents and not deviceListing:
-            self.grid_1_contents.append(device)
-        return device
+        if device_info not in self.grid_1_contents:
+            self.grid_1_contents.append(device_info)
 
     def getDeviceNetworkInfoListing(self, device, device_info):
         device = {}
@@ -794,6 +787,9 @@ class GridPanel(wx.Panel):
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
             device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
+        self.grid_3_contents += (
+            device_info["AppsEntry"] if "AppsEntry" in device_info else []
+        )
         return device
 
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
@@ -808,13 +804,13 @@ class GridPanel(wx.Panel):
         elif value == "Unspecified":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
-        elif value == "Provisioning":
+        elif value == "Provisioning" or value == "Onboarding":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.orange.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
         elif value == "Wipe In-Progress":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.purple.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
-        elif value == "Unkown":
+        elif value == "Unknown":
             self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
             self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
         releaseLocks([Globals.grid1_status_lock])
@@ -858,13 +854,8 @@ class GridPanel(wx.Panel):
             self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
-        networkInfo = (
-            deviceInfo["network_info"]
-            if "network_info" in deviceInfo
-            else constructNetworkInfo(device, deviceInfo)
-        )
-        if networkInfo not in self.grid_2_contents:
-            self.grid_2_contents.append(networkInfo)
+        if deviceInfo not in self.grid_2_contents:
+            self.grid_2_contents.append(deviceInfo)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
@@ -906,6 +897,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_index = self.grid1HeaderLabels.index("Esper Id")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
@@ -915,6 +907,7 @@ class GridPanel(wx.Panel):
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
                 indx = self.grid1HeaderLabels.index("Tags")
                 tags = self.grid_1.GetCellValue(rowNum, indx)
+                id = self.grid_1.GetCellValue(rowNum, id_index)
                 properTagList = []
                 for r in re.findall(
                     r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
@@ -988,6 +981,18 @@ class GridPanel(wx.Panel):
                     else:
                         rowTagList[rowNum] = {
                             "imei2": imei2,
+                            "tags": properTagList,
+                        }
+                if id:
+                    if len(properTagList) <= 5:
+                        tagList[id] = properTagList
+                    else:
+                        tagList[id] = properTagList[: Globals.MAX_TAGS]
+                    if rowNum in rowTagList.keys():
+                        rowTagList[rowNum]["id"] = id
+                    else:
+                        rowTagList[rowNum] = {
+                            "id": id,
                             "tags": properTagList,
                         }
         releaseLocks([Globals.grid1_lock])
@@ -1080,6 +1085,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_indx = self.grid1HeaderLabels.index("Esper Id")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, en_indx)
@@ -1087,6 +1093,7 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
+                id = self.grid_1.GetCellValue(rowNum, id_indx)
                 alias = self.grid_1.GetCellValue(rowNum, indx)
                 if esperName and esperName not in aliasList.keys():
                     aliasList[esperName] = alias
@@ -1098,6 +1105,8 @@ class GridPanel(wx.Panel):
                     aliasList[imei1] = alias
                 if imei2 and imei2 not in aliasList.keys():
                     aliasList[imei2] = alias
+                if id and id not in aliasList.keys():
+                    aliasList[id] = alias
         releaseLocks([Globals.grid1_lock])
         return aliasList
 
@@ -1245,13 +1254,13 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
-    def getDeviceIdentifersFromGrid(self):
+    def getDeviceIdentifersFromGrid(self, tolerance=0):
         acquireLocks([Globals.grid1_lock])
         identifers = []
         numRows = self.grid_1.GetNumberRows()
         numRowsPerChunk = (
-            int(numRows / Globals.MAX_ACTIVE_THREAD_COUNT)
-            if numRows > Globals.MAX_ACTIVE_THREAD_COUNT
+            int(numRows / Globals.MAX_THREAD_COUNT)
+            if numRows > Globals.MAX_THREAD_COUNT
             else numRows
         )
         num = 0
@@ -1260,7 +1269,7 @@ class GridPanel(wx.Panel):
                 self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
             )
             num += numRowsPerChunk
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance)
         Globals.THREAD_POOL.results()
 
         releaseLocks([Globals.grid1_lock])
@@ -1272,6 +1281,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_indx = self.grid1HeaderLabels.index("Esper Id")
         rowNum = start
         while (rowNum - start) < limit:
             if rowNum < self.grid_1.GetNumberRows():
@@ -1280,7 +1290,17 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                identifers.append((esperName, serialNum, cusSerialNum, imei1, imei2))
+                id = self.grid_1.GetCellValue(rowNum, id_indx)
+                identifers.append(
+                    {
+                        "name": esperName,
+                        "serial": serialNum,
+                        "custom": cusSerialNum,
+                        "imei1": imei1,
+                        "imei2": imei2,
+                        "id": id,
+                    }
+                )
             else:
                 break
             rowNum += 1
@@ -1290,31 +1310,51 @@ class GridPanel(wx.Panel):
     def getDeviceAppFromGrid(self):
         acquireLocks([Globals.grid1_lock])
         appList = {}
-        indx = self.grid1HeaderLabels.index("Applications")
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                apps = self.grid_1.GetCellValue(rowNum, indx)
-                appListKeys = appList.keys()
-                if esperName and esperName not in appListKeys:
-                    appList[esperName] = apps
-                elif serialNum and serialNum not in appListKeys:
-                    appList[serialNum] = apps
-                elif cusSerialNum and cusSerialNum not in appListKeys:
-                    appList[cusSerialNum] = apps
-                elif imei1 and imei1 not in appListKeys:
-                    appList[imei1] = apps
-                elif imei2 and imei2 not in appListKeys:
-                    appList[imei2] = apps
+        if Globals.APPS_IN_DEVICE_GRID:
+            indx = self.grid1HeaderLabels.index("Applications")
+            en_indx = self.grid1HeaderLabels.index("Esper Name")
+            sn_indx = self.grid1HeaderLabels.index("Serial Number")
+            csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
+            imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
+            imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+            id_indx = self.grid1HeaderLabels.index("Esper Id")
+            for rowNum in range(self.grid_1.GetNumberRows()):
+                if rowNum < self.grid_1.GetNumberRows():
+                    esperName = self.grid_1.GetCellValue(rowNum, en_indx)
+                    serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
+                    cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
+                    imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
+                    imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
+                    id = self.grid_1.GetCellValue(rowNum, id_indx)
+                    apps = self.grid_1.GetCellValue(rowNum, indx)
+                    appListKeys = appList.keys()
+                    if esperName and esperName not in appListKeys:
+                        appList[esperName] = apps
+                    if serialNum and serialNum not in appListKeys:
+                        appList[serialNum] = apps
+                    if cusSerialNum and cusSerialNum not in appListKeys:
+                        appList[cusSerialNum] = apps
+                    if imei1 and imei1 not in appListKeys:
+                        appList[imei1] = apps
+                    if imei2 and imei2 not in appListKeys:
+                        appList[imei2] = apps
+                    if id and id not in appListKeys:
+                        appList[id] = apps
+        elif self.grid_3_contents:
+            en_indx = self.grid3HeaderLabels.index("Esper Name")
+            pn_indx = self.grid3HeaderLabels.index("Package Name")
+
+            for rowNum in range(self.grid_3.GetNumberRows()):
+                if rowNum < self.grid_3.GetNumberRows():
+                    esperName = self.grid_3.GetCellValue(rowNum, en_indx)
+                    packageName = self.grid_3.GetCellValue(rowNum, pn_indx)
+
+                    appListKeys = appList.keys()
+                    if esperName in appListKeys:
+                        appList[esperName] = packageName
+                    else:
+                        appList[esperName] += ",%s" % packageName
+
         releaseLocks([Globals.grid1_lock])
         return appList
 
@@ -1329,6 +1369,8 @@ class GridPanel(wx.Panel):
                         x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
                         if hasattr(device, "device_name")
                         else device["device_name"]
+                        if type(device) is dict
+                        else device
                     ),
                     self.grid_1_contents,
                 )
@@ -1522,10 +1564,9 @@ class GridPanel(wx.Panel):
         self.grid_3.AppendRows(1)
         for attribute in Globals.CSV_APP_ATTR_NAME:
             value = info[attribute] if attribute in info else ""
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    releaseLocks([Globals.grid3_lock])
-                    return
+            if checkIfCurrentThreadStopped():
+                releaseLocks([Globals.grid3_lock])
+                return
             self.grid_3.SetCellValue(self.grid_3.GetNumberRows() - 1, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
@@ -1536,25 +1577,11 @@ class GridPanel(wx.Panel):
             self.grid_3_contents.append(info)
 
     def constructAppGridContent(self, device, deviceInfo, apps):
-        info = {}
-        for app in apps["results"]:
-            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
-                info = {
-                    "Esper Name": device.device_name
-                    if hasattr(device, "device_name")
-                    else device["device_name"],
-                    "Group": deviceInfo["groups"],
-                    "Application Name": app["app_name"],
-                    "Application Type": app["app_type"],
-                    "Application Version Code": app["version_code"],
-                    "Application Version Name": app["version_name"],
-                    "Package Name": app["package_name"],
-                    "State": app["state"],
-                    "Whitelisted": app["whitelisted"],
-                    "Can Clear Data": app["is_data_clearable"],
-                    "Can Uninstall": app["is_uninstallable"],
-                }
-            if info and info not in self.grid_3_contents:
+        info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
+        if info and info not in self.grid_3_contents:
+            if type(info) is list:
+                self.grid_3_contents.extend(info)
+            else:
                 self.grid_3_contents.append(info)
 
     def onScroll(self, event):
@@ -1609,7 +1636,8 @@ class GridPanel(wx.Panel):
                     if attr in Globals.CSV_EDITABLE_COL:
                         isEditable = False
                     grid.SetReadOnly(grid.GetNumberRows() - 1, col, isEditable)
-                    self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
+                    if attr == "Status":
+                        self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
                     self.setAlteredCellColor(
                         grid,
                         entry,
@@ -1623,3 +1651,11 @@ class GridPanel(wx.Panel):
         if grid.IsFrozen():
             grid.Thaw()
         Globals.frame.setCursorDefault()
+
+    def thawGridsIfFrozen(self):
+        if self.grid_1.IsFrozen():
+            self.grid_1.Thaw()
+        if self.grid_2.IsFrozen():
+            self.grid_2.Thaw()
+        if self.grid_3.IsFrozen():
+            self.grid_3.Thaw()

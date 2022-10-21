@@ -22,6 +22,7 @@ class LargeTextEntryDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, *args, **kwds)
         self.SetSize((400, 300))
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

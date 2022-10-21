@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
+import Utility.API.EsperTemplateUtil as templateUtil
 import json
 import wx
 import wx.html as wxHtml
 import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
+
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
-    getAllBlueprintsFromHost,
-    getGroupBlueprintDetailForHost,
 )
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import (
@@ -18,11 +18,11 @@ from Utility.Resource import (
 )
 
 
-class BlueprintsDialog(wx.Dialog):
+class BlueprintsConvertDialog(wx.Dialog):
     def __init__(self, configMenuOpt, parent=None, *args, **kwds):
         sizeTuple = (600, 400)
-        super(BlueprintsDialog, self).__init__(
-            parent,
+        super(BlueprintsConvertDialog, self).__init__(
+            None,
             wx.ID_ANY,
             size=sizeTuple,
             style=wx.DEFAULT_DIALOG_STYLE
@@ -33,16 +33,25 @@ class BlueprintsDialog(wx.Dialog):
         self.parent = parent
         self.SetSize(sizeTuple)
         self.SetMinSize(sizeTuple)
-        self.SetTitle("Clone Blueprint")
+        self.SetTitle("Convert Template to Blueprint")
+
         self.SetThemeEnabled(False)
 
         self.configMenuOpt = configMenuOpt
         self.blueprints = None
         self.toConfig = None
         self.fromConfig = None
-        self.blueprint = None
+        self.chosenTemplate = None
         self.group = None
-        choices = list(
+        self.sourceTemplate = []
+        templateSrc = list(
+            filter(
+                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
+                and not self.configMenuOpt[x]["isBlueprintsEnabled"],
+                self.configMenuOpt.keys(),
+            )
+        )
+        blueprintDest = list(
             filter(
                 lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
                 and self.configMenuOpt[x]["isBlueprintsEnabled"],
@@ -76,7 +85,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_3 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=templateSrc,
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_5.Add(self.combo_box_3, 0, wx.EXPAND, 0)
@@ -87,7 +96,7 @@ class BlueprintsDialog(wx.Dialog):
         sizer_6 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_1.Add(sizer_6, 1, wx.BOTTOM | wx.EXPAND, 5)
 
-        label_5 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Blueprint:")
+        label_5 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Template:")
         label_5.SetFont(
             wx.Font(
                 12,
@@ -112,7 +121,7 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
-        label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Blueprint Preview:")
+        label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Template Preview:")
         label_4.SetFont(
             wx.Font(
                 12,
@@ -156,7 +165,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_1 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=blueprintDest,
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
@@ -223,8 +232,8 @@ class BlueprintsDialog(wx.Dialog):
 
         self.combo_box_1.Bind(wx.EVT_COMBOBOX, self.loadGroups)
         self.combo_box_2.Bind(wx.EVT_COMBOBOX, self.checkInputs)
-        self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadBlueprints)
-        self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadBlueprintPreview)
+        self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadTemplates)
+        self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadTemplatePreview)
 
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
@@ -238,16 +247,27 @@ class BlueprintsDialog(wx.Dialog):
             if "isBlueprintsEnabled" not in config:
                 Globals.THREAD_POOL.enqueue(checkBlueprintEnabled, config)
         Globals.THREAD_POOL.join(tolerance=1)
-        choices = list(
+        enabled = list(
             filter(
                 lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
                 and self.configMenuOpt[x]["isBlueprintsEnabled"],
                 self.configMenuOpt.keys(),
             )
         )
-        for choice in choices:
-            self.combo_box_3.Append(choice)
+        disabled = list(
+            filter(
+                lambda x: "isBlueprintsEnabled" not in self.configMenuOpt[x]
+                or (
+                    "isBlueprintsEnabled" in self.configMenuOpt[x]
+                    and not self.configMenuOpt[x]["isBlueprintsEnabled"]
+                ),
+                self.configMenuOpt.keys(),
+            )
+        )
+        for choice in enabled:
             self.combo_box_1.Append(choice)
+        for choice in disabled:
+            self.combo_box_3.Append(choice)
         self.combo_box_3.Enable(True)
         self.combo_box_1.Enable(True)
         self.combo_box_3.SetSelection(-1)
@@ -284,72 +304,6 @@ class BlueprintsDialog(wx.Dialog):
         self.checkInputs()
 
     @api_tool_decorator()
-    def loadBlueprints(self, event):
-        self.changeCursorToWait()
-        self.combo_box_4.Enable(False)
-        self.combo_box_4.Clear()
-        config = self.configMenuOpt[event.String]
-        self.fromConfig = config
-        Globals.THREAD_POOL.enqueue(self.loadBlueprintsHelper, config)
-
-    @api_tool_decorator()
-    def loadBlueprintsHelper(self, config):
-        bps = getAllBlueprintsFromHost(
-            config["apiHost"], config["apiKey"], config["enterprise"]
-        )
-        if bps:
-            self.blueprints = bps.json()
-            for blueprint in self.blueprints["results"]:
-                if blueprint["name"]:
-                    self.combo_box_4.Append(blueprint["name"], blueprint["id"])
-                else:
-                    self.combo_box_4.Append(
-                        "Blueprint %s" % blueprint["id"], blueprint["id"]
-                    )
-            self.checkInputs()
-        self.combo_box_4.Enable(True)
-
-    @api_tool_decorator()
-    def loadBlueprintPreview(self, event):
-        self.changeCursorToWait()
-        match = list(
-            filter(
-                lambda x: x["id"] == event.ClientData,
-                self.blueprints["results"],
-            )
-        )
-        if match:
-            match = match[0]
-        config = self.configMenuOpt[
-            self.combo_box_3.GetString(self.combo_box_3.GetSelection())
-        ]
-        if match["group"]:
-            Globals.THREAD_POOL.enqueue(self.loadBlueprintHelper, event, match, config)
-        else:
-            self.text_ctrl_1.SetValue("No preview available")
-        self.checkInputs()
-
-    @api_tool_decorator()
-    def loadBlueprintHelper(self, event, match, config):
-        revision = getGroupBlueprintDetailForHost(
-            config["apiHost"],
-            config["apiKey"],
-            config["enterprise"],
-            match["group"],
-            event.ClientData,
-        )
-        self.blueprint = revision
-        formattedRes = ""
-        try:
-            formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
-        except:
-            formattedRes = json.dumps(str(revision.json()), indent=2).replace(
-                "\\n", "\n"
-            )
-        self.text_ctrl_1.SetValue(formattedRes)
-        self.checkInputs()
-
-    @api_tool_decorator()
     def checkInputs(self, event=None):
         if (
             self.combo_box_1.GetValue()
@@ -357,7 +311,7 @@ class BlueprintsDialog(wx.Dialog):
             and self.combo_box_3.GetValue()
             and self.combo_box_4.GetValue()
             and self.combo_box_1.GetValue() != self.combo_box_3.GetValue()
-            and self.blueprint
+            and self.chosenTemplate
         ):
             self.button_OK.Enable(True)
         else:
@@ -373,9 +327,69 @@ class BlueprintsDialog(wx.Dialog):
         elif self.IsShown():
             self.Close()
 
-    def getBlueprint(self):
-        if self.blueprint:
-            return self.blueprint.json()
+    def getTemplate(self):
+        if self.chosenTemplate and hasattr(self.chosenTemplate, "json"):
+            return self.chosenTemplate.json()
+        elif self.chosenTemplate:
+            return self.chosenTemplate
 
     def getDestinationGroup(self):
         return self.group
+
+    def loadTemplatePreview(self, event):
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
+        selection = event.GetSelection()
+        name = self.combo_box_4.GetString(selection)
+        template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
+
+        if type(template) == list:
+            template = template[0]
+        if template:
+            self.chosenTemplate = self.getTemplateDetails(template)
+            self.text_ctrl_1.Clear()
+            if self.chosenTemplate:
+                self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+            else:
+                self.text_ctrl_1.AppendText(
+                    "An ERROR occured when fetching the template, please try again."
+                )
+            self.text_ctrl_1.ShowPosition(0)
+        self.checkInputs()
+
+    def loadTemplates(self, event):
+        myCursor = wx.Cursor(wx.CURSOR_WAIT)
+        self.SetCursor(myCursor)
+        self.sourceTemplate = []
+        self.combo_box_4.Clear()
+        Globals.THREAD_POOL.enqueue(
+            self.populateSourceTempaltes, event.String if event.String else False
+        )
+
+    @api_tool_decorator()
+    def populateSourceTempaltes(self, srcName):
+        if srcName:
+            self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
+            if self.sourceTemplate:
+                for template in self.sourceTemplate:
+                    self.combo_box_4.Append(template["name"])
+                self.combo_box_4.Enable(True)
+        self.checkInputs()
+
+    @api_tool_decorator()
+    def getTemplates(self, dataSrc):
+        util = templateUtil.EsperTemplateUtil(dataSrc, None)
+        tempList = util.getTemplates(
+            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
+        )
+        return tempList["results"] if tempList and "results" in tempList else None
+
+    @api_tool_decorator()
+    def getTemplateDetails(self, template):
+        util = templateUtil.EsperTemplateUtil()
+        dataSrc = self.configMenuOpt[
+            self.combo_box_3.GetString(self.combo_box_3.GetSelection())
+        ]
+        return util.getTemplate(
+            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
+        )

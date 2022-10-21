@@ -13,6 +13,7 @@ class CheckboxMessageBox(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL,
         )
         self.SetSize((400, 200))
+        self.SetThemeEnabled(False)
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
         self.panel_3 = wx.Panel(self.panel_1, wx.ID_ANY)

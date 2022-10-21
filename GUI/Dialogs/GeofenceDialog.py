@@ -22,6 +22,7 @@ class GeofenceDialog(wx.Dialog):
         self.SetSize((650, 500))
         self.SetMinSize((650, 500))
         self.SetTitle("Create Geofence")
+        self.SetThemeEnabled(False)
 
         self.groups = []
         self.gridHeaderLabels = [
@@ -283,7 +284,8 @@ class GeofenceDialog(wx.Dialog):
                 self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 1)
                 self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 2)
             self.grid_1.AutoSizeColumns()
-            self.grid_1.Thaw()
+            if self.grid_1.IsFrozen():
+                self.grid_1.Thaw()
 
     @api_tool_decorator()
     def createGeofence(self, event):

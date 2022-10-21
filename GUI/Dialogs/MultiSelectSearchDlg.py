@@ -23,6 +23,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetSize(size)
         self.SetMinSize(size)
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
         self.originalChoices = [choices]
         self.selected = []
@@ -31,6 +32,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.page = 0
         self.resp = resp
         self.limit = 0
+        self.allDeviceStr = ""
         if resp and hasattr(resp, "count") and hasattr(resp, "results"):
             if len(resp.results) > 0:
                 self.limit = math.floor(resp.count / len(resp.results))
@@ -41,6 +43,17 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if hasattr(parent, "sidePanel"):
             self.group = parent.sidePanel.selectedGroupsList
+
+        blueprintEnabled = False
+        config = parent.sidePanel.configChoice[parent.configMenuItem.GetItemLabelText()]
+        if "isBlueprintsEnabled" in config:
+            blueprintEnabled = config["isBlueprintsEnabled"]
+        if not blueprintEnabled:
+            for choice in choices:
+                groupName = choice.split(" (Device Count:")[0]
+                if "All devices" == groupName:
+                    self.allDeviceStr = choice
+                    break
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -219,7 +232,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Deselect(selection)
         self.check_list_box_1.SetCheckedItems(tuple(checked))
 
-        if "All devices" in self.selected:
+        if self.allDeviceStr and self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -236,7 +249,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         elif selectionStr not in self.selected:
             self.selected.append(selectionStr)
 
-        if "All devices" in self.selected:
+        if self.allDeviceStr and self.allDeviceStr in self.selected:
             self.checkbox_1.Set3StateValue(wx.CHK_CHECKED)
             self.onSelectEvent()
         elif len(self.selected) != len(self.originalChoices[self.page]):
@@ -256,8 +269,11 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if self.checkbox_1.IsChecked():
-            if "All devices" in self.originalChoices[self.page]:
-                self.selected = ["All devices"]
+            if (
+                self.allDeviceStr
+                and self.allDeviceStr in self.originalChoices[self.page]
+            ):
+                self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
             else:
@@ -454,25 +470,24 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
 
-        count = (
-            self.resp["count"] if not hasattr(self.resp, "count") else self.resp.count
-        )
-        resultLimit = (
-            len(self.resp["results"])
-            if not hasattr(self.resp, "results")
-            else len(self.resp.results)
-        )
+        count = 0
+        selectedGroups = self.Parent.sidePanel.selectedGroups.GetStrings()
+        for group in selectedGroups:
+            parts = group.split("Device Count: ")
+            if len(parts) > 1:
+                num = parts[1].replace(")", "")
+                count += int(num)
 
         if count > len(self.originalChoices[0]):
-            resp = getAllDevices(
-                self.group, limit=resultLimit, offset=0, fetchAll=True, tolarance=1
+            self.resp = getAllDevices(
+                self.group, limit=Globals.limit, offset=0, fetchAll=True, tolarance=1
             )
-            if resp:
+            if self.resp:
                 self.check_list_box_1.Clear()
-                if hasattr(resp, "results"):
-                    self.originalChoices[0] = self.processDevices(resp.results)
-                elif type(resp) == dict and "results" in resp:
-                    self.originalChoices[0] = self.processDevices(resp["results"])
+                if hasattr(self.resp, "results"):
+                    self.originalChoices[0] = self.processDevices(self.resp.results)
+                elif type(self.resp) == dict and "results" in self.resp:
+                    self.originalChoices[0] = self.processDevices(self.resp["results"])
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
         self.selected = copy.deepcopy(self.originalChoices[0])

@@ -16,6 +16,7 @@ class InstalledDevicesDlg(wx.Dialog):
         title="Get Installed Devices",
         showAllVersionsOption=True,
         showPkgTextInput=False,
+        showBlueprintInput=False,
     ):
         super(InstalledDevicesDlg, self).__init__(
             None,
@@ -24,6 +25,8 @@ class InstalledDevicesDlg(wx.Dialog):
         )
 
         self.appNameList = []
+        self.newBluePrintApp = []
+        self.radio_box_2 = None
         self.otherPkgInput = None
         self.apps = apps
         for app in self.apps:
@@ -33,8 +36,9 @@ class InstalledDevicesDlg(wx.Dialog):
 
         self.SetMinSize((400, 300))
         self.SetTitle(title)
+        self.SetThemeEnabled(False)
 
-        sizer_1 = wx.BoxSizer(wx.VERTICAL)
+        sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
@@ -60,7 +64,7 @@ class InstalledDevicesDlg(wx.Dialog):
         sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
         grid_sizer_3.Add(sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5)
 
-        label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Search")
+        label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "App Search")
         sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.search = wx.SearchCtrl(self.panel_1, wx.ID_ANY, "")
@@ -93,10 +97,10 @@ class InstalledDevicesDlg(wx.Dialog):
 
         self.list_box_2 = None
         if not hide_version:
-            grid_sizer_2 = wx.FlexGridSizer(2, 1, 0, 0)
+            grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
             grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
 
-            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Versions:")
+            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "App Versions:")
             label_2.SetFont(
                 wx.Font(
                     Globals.FONT_SIZE,
@@ -109,8 +113,88 @@ class InstalledDevicesDlg(wx.Dialog):
             )
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
-            self.list_box_2 = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[])
+            self.list_box_2 = wx.ListBox(
+                self.panel_1,
+                wx.ID_ANY,
+                choices=[],
+                style=wx.LB_SINGLE if showBlueprintInput else wx.LB_EXTENDED,
+            )
             grid_sizer_2.Add(self.list_box_2, 0, wx.ALL | wx.EXPAND, 5)
+            self.list_box_2.Bind(wx.EVT_LISTBOX, self.onVersionSelect)
+
+            if showBlueprintInput:
+                sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
+                grid_sizer_2.Add(sizer_6, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+                self.button_2 = wx.Button(self.panel_1, wx.ID_REMOVE, "")
+                sizer_6.Add(self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+                self.button_2.Bind(wx.EVT_BUTTON, self.RemoveBlueprintChangeList)
+
+                self.button_1 = wx.Button(self.panel_1, wx.ID_ADD, "")
+                sizer_6.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+                self.button_1.Bind(wx.EVT_BUTTON, self.AddToBlueprintChangeList)
+
+        if showBlueprintInput:
+            self.panel_3 = wx.Panel(self, wx.ID_ANY)
+            sizer_1.Add(self.panel_3, 1, wx.EXPAND | wx.TOP, 2)
+
+            grid_sizer_4 = wx.GridSizer(1, 1, 0, 0)
+
+            self.panel_5 = wx.Panel(self.panel_3, wx.ID_ANY)
+            grid_sizer_4.Add(self.panel_5, 1, wx.ALL | wx.EXPAND, 5)
+
+            grid_sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
+
+            static_line_1 = wx.StaticLine(self.panel_5, wx.ID_ANY)
+            grid_sizer_6.Add(static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+
+            sizer_5 = wx.FlexGridSizer(2, 1, 0, 0)
+            grid_sizer_6.Add(sizer_5, 1, wx.EXPAND, 0)
+
+            label_5 = wx.StaticText(self.panel_5, wx.ID_ANY, "Selected Apps:")
+            label_5.SetFont(
+                wx.Font(
+                    11,
+                    wx.FONTFAMILY_DEFAULT,
+                    wx.FONTSTYLE_NORMAL,
+                    wx.FONTWEIGHT_BOLD,
+                    0,
+                    "",
+                )
+            )
+            sizer_5.Add(label_5, 0, wx.LEFT, 5)
+
+            self.text_ctrl_3 = wx.TextCtrl(
+                self.panel_5,
+                wx.ID_ANY,
+                "",
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
+            )
+            sizer_5.Add(self.text_ctrl_3, 0, wx.ALL | wx.EXPAND, 5)
+
+            self.radio_box_2 = wx.RadioBox(
+                self.panel_5,
+                wx.ID_ANY,
+                "Do you want to push the selected App to all Blueprints or only updates Blueprints that already have this app?",
+                choices=[
+                    "Push to All Blueprints (if app is not defined it will be added)",
+                    "Push ONLY to Blueprint that already have the app",
+                ],
+                majorDimension=1,
+                style=wx.RA_SPECIFY_COLS,
+            )
+            self.radio_box_2.SetSelection(1)
+            grid_sizer_6.Add(self.radio_box_2, 0, wx.ALL | wx.EXPAND, 5)
+
+            sizer_5.AddGrowableRow(1)
+            sizer_5.AddGrowableCol(0)
+
+            grid_sizer_6.AddGrowableRow(1)
+            grid_sizer_6.AddGrowableRow(2)
+            grid_sizer_6.AddGrowableCol(0)
+            self.panel_5.SetSizer(grid_sizer_6)
+
+            self.panel_3.SetSizer(grid_sizer_4)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -137,6 +221,9 @@ class InstalledDevicesDlg(wx.Dialog):
 
         self.panel_1.SetSizer(grid_sizer_1)
 
+        sizer_1.AddGrowableRow(0)
+        sizer_1.AddGrowableRow(1)
+        sizer_1.AddGrowableCol(0)
         self.SetSizer(sizer_1)
 
         self.SetAffirmativeId(self.button_OK.GetId())
@@ -209,17 +296,28 @@ class InstalledDevicesDlg(wx.Dialog):
         packageName = None
         version_id = None
         app_name = None
-        selection = self.list_box_2.GetSelection() if self.list_box_2 else None
-        if type(selection) == int and selection >= 0:
-            version_id = self.list_box_2.GetClientData(self.list_box_2.GetSelection())
-            if version_id == -1:
-                # User selected All Versions
+        selection = self.list_box_2.GetSelections() if self.list_box_2 else None
+        if type(selection) is list and selection:
+            if len(selection) == 1:
+                version_id = self.list_box_2.GetClientData(selection[0])
+                if version_id == -1:
+                    # User selected All Versions
+                    version_id = []
+                    for version in self.versions:
+                        if hasattr(version, "id"):
+                            version_id.append(version.id)
+                        elif type(version) == dict and "id" in version:
+                            version_id.append(version["id"])
+            else:
                 version_id = []
+                indx = 0
                 for version in self.versions:
-                    if hasattr(version, "id"):
-                        version_id.append(version.id)
-                    elif type(version) == dict and "id" in version:
-                        version_id.append(version["id"])
+                    if indx in selection:
+                        if hasattr(version, "id"):
+                            version_id.append(version.id)
+                        elif type(version) == dict and "id" in version:
+                            version_id.append(version["id"])
+                    indx += 1
         if self.list_box_1.GetSelection() >= 0:
             matches = list(
                 filter(
@@ -251,6 +349,31 @@ class InstalledDevicesDlg(wx.Dialog):
             return app_id, version_id, app_name
         else:
             return app_id, version_id
+
+    @api_tool_decorator()
+    def getSelectedAppVersionInfo(self):
+        selection = self.list_box_2.GetSelections() if self.list_box_2 else None
+        matches = []
+        if type(selection) is list and selection:
+            if len(selection) == 1:
+                version_id = self.list_box_2.GetClientData(selection[0])
+                matches = list(
+                    filter(
+                        lambda x: x["id"] == version_id,
+                        self.versions,
+                    )
+                )
+            else:
+                indx = 0
+                for version in self.versions:
+                    if indx in selection:
+                        if hasattr(version, "id"):
+                            matches.append(version.id)
+                        elif type(version) == dict and "id" in version:
+                            matches.append(version["id"])
+                    indx += 1
+
+        return matches
 
     @api_tool_decorator()
     def onKey(self, event):
@@ -323,3 +446,96 @@ class InstalledDevicesDlg(wx.Dialog):
         if input:
             self.list_box_1.SetSelection(-1)
         event.Skip()
+
+    def onVersionSelect(self, event):
+        val = event.String
+        event.Skip()
+        wx.CallAfter(self.processVersionSelect, val)
+
+    def processVersionSelect(self, val):
+        selections = self.list_box_2.GetSelections()
+        if 0 in selections:
+            for item in selections:
+                if item != 0:
+                    self.list_box_2.Deselect(item)
+
+    def AddToBlueprintChangeList(self, event):
+        versionSelection = self.list_box_2.GetSelection()
+        if versionSelection >= 0:
+            versionClientData = self.list_box_2.GetClientData(versionSelection)
+            version = self.list_box_2.GetString(versionSelection)
+
+            matches = list(
+                filter(
+                    lambda x: x["app_name"]
+                    == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    or (
+                        "appPkgName" in x
+                        and x["appPkgName"]
+                        == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    ),
+                    self.apps,
+                )
+            )
+            versionMatches = list(
+                filter(
+                    lambda x: x["id"] == versionClientData,
+                    self.versions,
+                )
+            )
+            app_id = matches[0]["id"]
+            packageName = matches[0]["packageName"]
+            app_name = None
+            if Globals.SHOW_PKG_NAME:
+                app_name = matches[0]["appPkgName"]
+            else:
+                app_name = matches[0]["app_name"]
+            self.newBluePrintApp.append(
+                {
+                    "name": app_name,
+                    "id": app_id,
+                    "package": packageName,
+                    "versionId": versionClientData,
+                    "version": version,
+                    "isPlayStore": versionMatches[0]["is_g_play"],
+                    "codes": [versionMatches[0]["build_number"]],
+                    "releaseName": versionMatches[0]["release_name"],
+                }
+            )
+
+        self.updateBlueprintSelectedAppElm()
+
+    def RemoveBlueprintChangeList(self, event):
+        selection = self.list_box_2.GetSelection()
+        versionClientData = self.list_box_2.GetClientData(selection)
+
+        match = None
+        for entry in self.newBluePrintApp:
+            if entry["versionId"] == versionClientData:
+                match = entry
+                break
+        if match:
+            self.newBluePrintApp.remove(match)
+        self.updateBlueprintSelectedAppElm()
+
+    def updateBlueprintSelectedAppElm(self):
+        selectedAppStr = ""
+        for entry in self.newBluePrintApp:
+            if Globals.SHOW_PKG_NAME:
+                selectedAppStr += "%s (%s) - %s\n" % (
+                    entry["name"],
+                    entry["package"],
+                    entry["version"],
+                )
+            else:
+                selectedAppStr += "%s - %s\n" % (entry["name"], entry["version"])
+        self.text_ctrl_3.SetValue(selectedAppStr)
+
+    def getBlueprintInputs(self):
+        if self.radio_box_2:
+            return (
+                True if self.radio_box_2.GetSelection() == 0 else False,
+                self.newBluePrintApp,
+            )
+        else:
+            return None

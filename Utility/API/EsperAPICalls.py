@@ -91,6 +91,7 @@ def toggleKioskMode(
     deviceid,
     appToUse,
     isKiosk,
+    isGroup=False,
     timeout=Globals.COMMAND_TIMEOUT,
     maxAttempt=Globals.MAX_RETRY,
 ):
@@ -100,14 +101,25 @@ def toggleKioskMode(
         command_args = esperclient.V0CommandArgs(package_name=appToUse)
     else:
         command_args = {}
-    command = esperclient.V0CommandRequest(
-        enterprise=Globals.enterprise_id,
-        command_type="DEVICE",
-        device_type=Globals.CMD_DEVICE_TYPE,
-        devices=[deviceid] if type(deviceid) is str else deviceid,
-        command="SET_KIOSK_APP",
-        command_args=command_args,
-    )
+    command = None
+    if isGroup:
+        command = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="GROUP",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            groups=[deviceid] if type(deviceid) is str else deviceid,
+            command="SET_KIOSK_APP",
+            command_args=command_args,
+        )
+    else:
+        command = esperclient.V0CommandRequest(
+            enterprise=Globals.enterprise_id,
+            command_type="DEVICE",
+            device_type=Globals.CMD_DEVICE_TYPE,
+            devices=[deviceid] if type(deviceid) is str else deviceid,
+            command="SET_KIOSK_APP",
+            command_args=command_args,
+        )
     api_response = None
     for attempt in range(maxAttempt):
         try:
@@ -124,7 +136,7 @@ def toggleKioskMode(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -142,7 +154,7 @@ def toggleKioskMode(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -216,7 +228,7 @@ def setdevicename(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -239,7 +251,7 @@ def setdevicename(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -270,7 +282,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -281,12 +293,12 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         return e
 
 
 @api_tool_decorator()
-def setKiosk(frame, device, deviceInfo):
+def setKiosk(frame, device, deviceInfo, isGroup=False):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
     failed = False
@@ -319,11 +331,11 @@ def setKiosk(frame, device, deviceInfo):
     )
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
-        stateStatus = setAppState(deviceId, appToUse, state="SHOW")
+        stateStatus = setAppState(deviceId, appToUse, state="SHOW", isGroup=isGroup)
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
-    status = toggleKioskMode(frame, deviceId, appToUse, True, timeout)
+    status = toggleKioskMode(frame, deviceId, appToUse, True, timeout, isGroup=isGroup)
     if status:
         if "Success" in str(status):
             logString = logString + " <success>"
@@ -368,7 +380,7 @@ def setKiosk(frame, device, deviceInfo):
 
 
 @api_tool_decorator()
-def setMulti(frame, device, deviceInfo):
+def setMulti(frame, device, deviceInfo, isGroup=False):
     """Toggles Multi App Mode"""
     deviceName = None
     deviceId = None
@@ -391,7 +403,7 @@ def setMulti(frame, device, deviceInfo):
     warning = False
     status = None
     if deviceInfo and deviceInfo["Mode"] == "Kiosk":
-        status = toggleKioskMode(frame, deviceId, {}, False)
+        status = toggleKioskMode(frame, deviceId, {}, False, isGroup=isGroup)
         if status:
             if "Success" in str(status):
                 logString = logString + " <success>"
@@ -463,7 +475,7 @@ def validateConfiguration(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -475,7 +487,7 @@ def validateConfiguration(
             return True
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     return False
 
 
@@ -509,7 +521,7 @@ def factoryResetDevice(
                 logBadResponse("create command api", api_response, None)
                 return None
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -527,7 +539,7 @@ def factoryResetDevice(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
@@ -562,7 +574,7 @@ def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
     return applist, json_resp
 
 
-def createAppList(json_resp):
+def createAppList(json_resp, obtainAppDictEntry=True):
     applist = []
     if json_resp and "results" in json_resp and len(json_resp["results"]):
         for app in json_resp["results"]:
@@ -577,7 +589,8 @@ def createAppList(json_resp):
             if "application" in app:
                 if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                entry = getAppDictEntry(app, False)
+                if obtainAppDictEntry:
+                    entry = getAppDictEntry(app, False)
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["application"]["version"]["version_name"][
@@ -611,7 +624,8 @@ def createAppList(json_resp):
             else:
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
                     continue
-                entry = getAppDictEntry(app, False)
+                if obtainAppDictEntry:
+                    entry = getAppDictEntry(app, False)
                 version = None
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
@@ -628,29 +642,44 @@ def createAppList(json_resp):
                 applist.append(
                     constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )
-            if entry not in Globals.frame.sidePanel.selectedDeviceApps and (
-                "isValid" in entry and entry["isValid"]
+            if (
+                entry is not None
+                and entry not in Globals.frame.sidePanel.selectedDeviceApps
+                and ("isValid" in entry and entry["isValid"])
             ):
                 Globals.frame.sidePanel.selectedDeviceApps.append(entry)
     return applist
 
 
 @api_tool_decorator()
-def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY):
+def setAppState(
+    device_id, pkg_name, state="HIDE", isGroup=False, maxAttempt=Globals.MAX_RETRY
+):
     pkgName = pkg_name
     if pkgName:
         args = V0CommandArgs(
             app_state=state,
             package_name=pkgName,
         )
-        request = esperclient.V0CommandRequest(
-            enterprise=Globals.enterprise_id,
-            command_type="DEVICE",
-            device_type=Globals.CMD_DEVICE_TYPE,
-            devices=[device_id] if type(device_id) else device_id,
-            command="SET_APP_STATE",
-            command_args=args,
-        )
+        request = None
+        if not isGroup:
+            request = esperclient.V0CommandRequest(
+                enterprise=Globals.enterprise_id,
+                command_type="DEVICE",
+                device_type=Globals.CMD_DEVICE_TYPE,
+                devices=[device_id] if type(device_id) != list else device_id,
+                command="SET_APP_STATE",
+                command_args=args,
+            )
+        else:
+            request = esperclient.V0CommandRequest(
+                enterprise=Globals.enterprise_id,
+                command_type="GROUP",
+                device_type=Globals.CMD_DEVICE_TYPE,
+                groups=[device_id] if type(device_id) != list else device_id,
+                command="SET_APP_STATE",
+                command_args=args,
+            )
         api_instance = getCommandsApiInstance()
         for attempt in range(maxAttempt):
             try:
@@ -668,7 +697,7 @@ def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY)
                 ):
                     return None
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -681,7 +710,7 @@ def setAppState(device_id, pkg_name, state="HIDE", maxAttempt=Globals.MAX_RETRY)
 
 
 @api_tool_decorator()
-def clearAppData(frame, device):
+def clearAppData(frame, device, isGroup=False):
     json_resp = None
     deviceName = None
     deviceId = None
@@ -699,14 +728,23 @@ def clearAppData(frame, device):
         cmdArgs = {"package_name": appToUse}
 
         if cmdArgs:
-            reqData = {
-                "command_type": "DEVICE",
-                "command_args": cmdArgs,
-                "devices": [deviceId] if type(deviceId) is str else deviceId,
-                "groups": [],
-                "device_type": Globals.CMD_DEVICE_TYPE,
-                "command": "CLEAR_APP_DATA",
-            }
+            reqData = None
+            if not isGroup:
+                reqData = {
+                    "command_type": "DEVICE",
+                    "command_args": cmdArgs,
+                    "devices": [deviceId] if type(deviceId) is str else deviceId,
+                    "device_type": Globals.CMD_DEVICE_TYPE,
+                    "command": "CLEAR_APP_DATA",
+                }
+            else:
+                reqData = {
+                    "command_type": "GROUP",
+                    "command_args": cmdArgs,
+                    "groups": [deviceId] if type(deviceId) is str else deviceId,
+                    "device_type": Globals.CMD_DEVICE_TYPE,
+                    "command": "CLEAR_APP_DATA",
+                }
             resp, json_resp = postEsperCommand(reqData)
             logBadResponse(resp.request.url, resp, json_resp)
             if resp.status_code > 300:
@@ -725,7 +763,7 @@ def clearAppData(frame, device):
                 )
             )
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (deviceName)
         )
@@ -794,7 +832,7 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)

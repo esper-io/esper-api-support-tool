@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
-import requests
 import time
-import Common.Globals as Globals
-from Utility import EventUtility
 
+import Common.Globals as Globals
+import requests
+from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit, getHeader, postEventToFrame
+from Utility.Resource import (
+    checkIfCurrentThreadStopped,
+    enforceRateLimit,
+    getHeader,
+    postEventToFrame,
+)
 
 
 def performGetRequestWithRetry(
@@ -38,13 +43,24 @@ def performGetRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
+                if attempt == 0:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
+                else:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+            postEventToFrame(EventUtility.myEVT_LOG, str(e))
     return resp
 
 
@@ -77,13 +93,24 @@ def performPatchRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
+                if attempt == 0:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
+                else:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+            postEventToFrame(EventUtility.myEVT_LOG, str(e))
     return resp
 
 
@@ -118,13 +145,24 @@ def performPutRequestWithRetry(
                 break
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
+                if attempt == 0:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
+                else:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+            postEventToFrame(EventUtility.myEVT_LOG, str(e))
     return resp
 
 
@@ -159,13 +197,24 @@ def performDeleteRequestWithRetry(
                 break
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
+                if attempt == 0:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
+                else:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+            postEventToFrame(EventUtility.myEVT_LOG, str(e))
     return resp
 
 
@@ -200,13 +249,24 @@ def performPostRequestWithRetry(
                 )  # Sleep for a minute * retry number
         except Exception as e:
             if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)
             else:
+                if attempt == 0:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in 1 minute",
+                    )
+                else:
+                    postEventToFrame(
+                        EventUtility.myEVT_LOG,
+                        "Rate Limit Encountered retrying in %s minutes" % attempt + 1,
+                    )
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+            postEventToFrame(EventUtility.myEVT_LOG, str(e))
     return resp
 
 
@@ -228,6 +288,8 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0):
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
         while int(respOffsetInt) < count and int(respLimit) < count:
+            if checkIfCurrentThreadStopped():
+                return
             url = apiNext.replace(
                 "offset=%s" % respOffset, "offset=%s" % str(respOffsetInt)
             )
@@ -235,15 +297,6 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0):
                 perform_web_requests, (url, getHeader(), "GET", None)
             )
             respOffsetInt += int(respLimit)
-        if respOffsetInt > count:
-            respOffsetInt -= int(respLimit)
-            respOffsetInt += 1
-            url = apiNext.replace(
-                "offset=%s" % respOffset, "offset=%s" % str(respOffsetInt)
-            )
-            Globals.THREAD_POOL.enqueue(
-                perform_web_requests, (url, getHeader(), "GET", None)
-            )
 
     Globals.THREAD_POOL.join(tolarance)
     resultList = Globals.THREAD_POOL.results()

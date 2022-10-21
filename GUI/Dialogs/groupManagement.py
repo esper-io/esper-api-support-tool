@@ -2,34 +2,33 @@
 
 import csv
 from pathlib import Path
-from GUI.TabPanel import TabPanel
 
+import Common.Globals as Globals
+import wx
+import wx.grid as gridlib
+from Common.decorator import api_tool_decorator
+from Common.enum import Color
+from GUI.TabPanel import TabPanel
+from Utility.API.GroupUtility import (
+    createGroup,
+    deleteGroup,
+    fetchGroupName,
+    getAllGroups,
+    renameGroup,
+)
 from Utility.Resource import (
+    correctSaveFileName,
     displayMessageBox,
     isApiKey,
     openWebLinkInBrowser,
     resourcePath,
     scale_bitmap,
 )
-from Common.decorator import api_tool_decorator
-from Utility.API.GroupUtility import (
-    deleteGroup,
-    createGroup,
-    fetchGroupName,
-    getAllGroups,
-    renameGroup,
-)
-
-import wx
-import wx.grid as gridlib
-import Common.Globals as Globals
-
-from Common.enum import Color
 
 
 class GroupManagement(wx.Dialog):
     def __init__(self, groups, *args, **kwds):
-        # begin wxGlade: MyDialog.__init__
+
         self.groups = groups
         self.groupTree = {}
         self.tree = {}
@@ -55,10 +54,12 @@ class GroupManagement(wx.Dialog):
         self.SetSize((800, 500))
         self.SetMinSize((800, 500))
         self.SetTitle("Group Management")
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetThemeEnabled(False)
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
         self.notebook_1_pane_1 = TabPanel(self.notebook_1, wx.ID_ANY, "Single")
@@ -970,6 +971,7 @@ class GroupManagement(wx.Dialog):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
         dlg.DestroyLater()
 
         if result == wx.ID_OK:
@@ -1026,9 +1028,9 @@ class GroupManagement(wx.Dialog):
         if hasattr(group, "name"):
             groupName = group.name
             groupId = group.id
-            groupParent = group.parent
+            groupParent = group.parent if hasattr(group, "parent") else ""
         elif type(group) is dict and "name" in group:
             groupName = group["name"]
             groupId = group["id"]
-            groupParent = group["parent"]
+            groupParent = group["parent"] if "parent" in group else ""
         return groupName, groupId, groupParent

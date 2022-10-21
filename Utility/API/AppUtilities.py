@@ -25,18 +25,30 @@ from Utility.Resource import (
 )
 
 from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
     performGetRequestWithRetry,
 )
 
 
-def uninstallAppOnDevice(packageName, device=None, postStatus=False):
-    return executeCommandOnDevice(
-        Globals.frame,
-        {"package_name": packageName},
-        command_type="UNINSTALL",
-        deviceIds=device,
-        postStatus=postStatus,
-    )
+def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=False):
+    if isGroup:
+        return executeCommandOnGroup(
+            Globals.frame,
+            {"package_name": packageName},
+            command_type="UNINSTALL",
+            groupIds=device,
+            postStatus=postStatus,
+            combineRequests=True,
+        )
+    else:
+        return executeCommandOnDevice(
+            Globals.frame,
+            {"package_name": packageName},
+            command_type="UNINSTALL",
+            deviceIds=device,
+            postStatus=postStatus,
+            combineRequests=True,
+        )
 
 
 def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
@@ -46,10 +58,13 @@ def uninstallAppOnGroup(packageName, groups=None, postStatus=False):
         command_type="UNINSTALL",
         groupIds=groups,
         postStatus=postStatus,
+        combineRequests=True,
     )
 
 
-def installAppOnDevices(packageName, version=None, devices=None, postStatus=False):
+def installAppOnDevices(
+    packageName, version=None, devices=None, postStatus=False, isGroup=False
+):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -70,16 +85,30 @@ def installAppOnDevices(packageName, version=None, devices=None, postStatus=Fals
                         appVersionId = appVersion["id"]
                         break
     if appVersion:
-        return executeCommandOnDevice(
-            Globals.frame,
-            {
-                "app_version": appVersionId,
-                "package_name": packageName,
-            },
-            command_type="INSTALL",
-            deviceIds=devices,
-            postStatus=postStatus,
-        )
+        if isGroup:
+            return executeCommandOnGroup(
+                Globals.frame,
+                {
+                    "app_version": appVersionId,
+                    "package_name": packageName,
+                },
+                command_type="INSTALL",
+                groupIds=devices,
+                postStatus=postStatus,
+                combineRequests=True,
+            )
+        else:
+            return executeCommandOnDevice(
+                Globals.frame,
+                {
+                    "app_version": appVersionId,
+                    "package_name": packageName,
+                },
+                command_type="INSTALL",
+                deviceIds=devices,
+                postStatus=postStatus,
+                combineRequests=True,
+            )
     else:
         displayMessageBox(
             (
@@ -123,6 +152,7 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
             command_type="INSTALL",
             groupIds=groups,
             postStatus=postStatus,
+            combineRequests=True,
         )
     else:
         displayMessageBox(
@@ -208,7 +238,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -239,7 +269,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                     attempt == maxAttempt - 1
                     or "App Upload failed as this version already exists" in str(e)
                 ):
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -278,7 +308,7 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     break
                 except Exception as e:
                     if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e)
+                        ApiToolLog().LogError(e, postIssue=False)
                         raise e
                     if "429" not in str(e) and "Too Many Requests" not in str(e):
                         time.sleep(Globals.RETRY_SLEEP)
@@ -327,7 +357,7 @@ def getAllApplicationsForHost(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -367,7 +397,7 @@ def getAllAppVersionsForHost(
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -430,7 +460,7 @@ def getAppVersions(
                 return api_response
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e)
+                    ApiToolLog().LogError(e, postIssue=False)
                     print(
                         "Exception when calling ApplicationApi->get_app_versions: %s\n"
                         % e
@@ -475,21 +505,51 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
     return jsonResp
 
 
-def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+def getInstallDevices(
+    version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0
+):
     if type(version_id) is list:
         api_response = None
         for version in version_id:
-            resp = get_installed_devices(version, application_id, maxAttempt)
+            resp = get_installed_devices(
+                version, application_id, maxAttempt, tolarance=tolarance
+            )
             if api_response is None:
                 api_response = resp
             else:
                 api_response.results += resp.results
         return api_response
     else:
-        return get_installed_devices(version_id, application_id, maxAttempt)
+        return get_installed_devices(
+            version_id, application_id, maxAttempt, tolarance=tolarance
+        )
 
 
-def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RETRY):
+def get_installed_devices(
+    version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0
+):
+    offset = 0
+    response = get_installed_devices_api(
+        version_id, application_id, Globals.limit, offset, maxAttempt
+    )
+    if len(response.results) != response.count:
+        devices = getAllFromOffsetsRequests(response, None, tolarance)
+        if hasattr(response, "results"):
+            response.results = response.results + devices
+            response.next = None
+            response.prev = None
+        elif type(response) is dict and "results" in response:
+            response["next"] = None
+            response["prev"] = None
+            for device in devices:
+                if device not in response["results"]:
+                    response["results"].append(device)
+    return response
+
+
+def get_installed_devices_api(
+    version_id, application_id, limit, offset, maxAttempt=Globals.MAX_RETRY
+):
     api_instance = esperclient.ApplicationApi(
         esperclient.ApiClient(Globals.configuration)
     )
@@ -502,8 +562,8 @@ def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RET
                 version_id,
                 application_id,
                 enterprise_id,
-                limit=Globals.limit,
-                offset=Globals.offset,
+                limit=limit,
+                offset=offset,
             )
             ApiToolLog().LogApiRequestOccurrence(
                 "getInstallDevices",
@@ -513,7 +573,7 @@ def get_installed_devices(version_id, application_id, maxAttempt=Globals.MAX_RET
             return api_response
         except ApiException as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 print(
                     "Exception when calling ApplicationApi->get_install_devices: %s\n"
                     % e
@@ -652,6 +712,8 @@ def getDeviceAppsApiUrl(deviceid, useEnterprise=False):
         if useEnterprise
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
+    if Globals.APP_FILTER.lower() != "all":
+        extention += "&state=%s" % Globals.APP_FILTER.upper()
     hasFormat = [
         tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
     ]

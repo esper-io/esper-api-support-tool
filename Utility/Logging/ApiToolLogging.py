@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 
-import tempfile
+import os
 import platform
 import sys
-import os
-import traceback
-import Common.Globals as Globals
-import Common.ApiTracker as ApiTracker
+import tempfile
 import threading
-
+import traceback
 from datetime import datetime
-from traceback import print_exc, extract_tb, format_list
+from traceback import extract_tb, format_list, print_exc
 
-from Utility.Logging.IssueTracker import IssueTracker
-
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
+from esperclient.rest import ApiException
 from fuzzywuzzy import fuzz
+from Utility.Logging.IssueTracker import IssueTracker
 
 
 class ApiToolLog:
@@ -64,7 +63,9 @@ class ApiToolLog:
             with open(file, "w"):
                 pass
 
-    def LogError(self, e, exc_type=None, exc_value=None, exc_traceback=None):
+    def LogError(
+        self, e, exc_type=None, exc_value=None, exc_traceback=None, postIssue=True
+    ):
         if exc_type is None or exc_value is None or exc_traceback is None:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             exc_traceback = format_list(extract_tb(exc_traceback))
@@ -186,6 +187,9 @@ class ApiToolLog:
                     Globals.api_log_lock.release()
 
     def postIssueToTrack(self, excpt, content):
+        if not Globals.AUTO_REPORT_ISSUES:
+            return
+
         def getStrRatioSimilarity(s, t, usePartial=False):
             if usePartial:
                 return fuzz.partial_ratio(s.lower(), t.lower())
@@ -197,6 +201,9 @@ class ApiToolLog:
             or "ConnectionError" in str(excpt)
             or "HTTP Response" in str(excpt)
             or "Bad Gateway" in str(excpt)
+            or "Permission denied" in str(excpt)
+            or "HTTP" in str(excpt)
+            or type(excpt) is ApiException
         ):
             return
 

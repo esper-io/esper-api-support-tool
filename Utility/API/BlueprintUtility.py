@@ -1,4 +1,7 @@
+#!/usr/bin/env python
+
 import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
 import os
 import wx
 
@@ -10,8 +13,10 @@ from Utility.API.AppUtilities import (
     getAllApplicationsForHost,
     uploadApplicationForHost,
 )
+from Utility.API.CommandUtility import postEsperCommand
 from Utility.API.ContentUtility import getAllContentFromHost, uploadContentToHost
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
+from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     deleteFile,
@@ -68,6 +73,14 @@ def getAllBlueprints():
         baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        respJson = resp.json()
+        blueprints = getAllFromOffsetsRequests(respJson)
+        if type(blueprints) is dict and "results" in blueprints:
+            respJson["results"] = respJson["results"] + blueprints["results"]
+            respJson["next"] = None
+            respJson["prev"] = None
+        return respJson
     return resp
 
 
@@ -183,7 +196,7 @@ def getGroupBlueprint(host, key, enterprise, groupId):
 
 
 @api_tool_decorator()
-def getGroupBlueprintDetail(host, key, enterprise, groupId, blueprintId):
+def getGroupBlueprintDetailForHost(host, key, enterprise, groupId, blueprintId):
     url = "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/{blueprint_id}".format(
         baseUrl=host,
         enterprise_id=enterprise,
@@ -196,6 +209,21 @@ def getGroupBlueprintDetail(host, key, enterprise, groupId, blueprintId):
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
         },
+    )
+    return resp
+
+
+@api_tool_decorator()
+def getGroupBlueprintDetail(groupId, blueprintId):
+    url = "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/{blueprint_id}".format(
+        baseUrl=Globals.configuration.host,
+        enterprise_id=Globals.enterprise_id,
+        group_id=groupId,
+        blueprint_id=blueprintId,
+    )
+    resp = performGetRequestWithRetry(
+        url,
+        headers=getHeader(),
     )
     return resp
 
@@ -218,6 +246,7 @@ def createBlueprintForHost(host, key, enterprise, groupId, body):
     return resp
 
 
+@api_tool_decorator()
 def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     blueprint.pop("id", None)
     blueprint.pop("locked", None)
@@ -279,6 +308,14 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             blueprint = uploadMissingContentFiles(
                 blueprint, downloadContentLinks, toConfig, fromConfig, progress
             )
+            # TODO: Handle Wallpaper transfer
+            blueprint = uploadMissingWallpaper(
+                blueprint,
+                toConfig["apiHost"],
+                toConfig["apiKey"],
+                toConfig["enterprise"],
+                progress,
+            )
             resp = createBlueprintForHost(
                 toConfig["apiHost"],
                 toConfig["apiKey"],
@@ -328,6 +365,41 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             raise e
 
 
+@api_tool_decorator()
+def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
+    if host and key and enterprise:
+        postEventToFrame(EventUtility.myEVT_LOG, "Processing wallpapers in template...")
+        progress.Update(
+            50,
+            "Attempting to process wallpapers",
+        )
+        if blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+            bgList = []
+            numTotal = len(
+                blueprint["latest_revision"]["display_branding"]["wallpapers"]
+            )
+            num = 1
+            for bg in blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+                newBg = uploadWallpaper(host, key, enterprise, bg)
+                if newBg:
+                    newBg["enterprise"] = enterprise
+                    newBg["wallpaper"] = newBg["id"]
+                    newBg["orientations"] = bg["orientations"]
+                    if "screen_types" in bg:
+                        newBg["screen_types"] = bg["screen_types"]
+                    elif "screenTypes" in bg:
+                        newBg["screen_types"] = bg["screenTypes"]
+                    bgList.append(newBg)
+                    progress.Update(
+                        int((num / numTotal) * 75),
+                        "Attempting to process wallpapers",
+                    )
+            blueprint["latest_revision"]["display_branding"]["wallpapers"] = bgList
+    progress.Update(75, "Finsihed processing wallpapers")
+    return blueprint
+
+
+@api_tool_decorator()
 def uploadingMissingBlueprintApps(
     blueprint, downloadLinks, toConfig, fromConfig, progress
 ):
@@ -339,7 +411,7 @@ def uploadingMissingBlueprintApps(
         deleteFile(file)
         try:
             progress.Update(
-                int((num / numTotal) * 33),
+                int((num / numTotal) * 25),
                 "Attempting to download: %s" % detail["name"],
             )
             postEventToFrame(
@@ -377,7 +449,7 @@ def uploadingMissingBlueprintApps(
             )
             if type(res) != InlineResponse201:
                 progress.Update(
-                    int((num / numTotal) * 33), "Failed uploading %s" % detail["name"]
+                    int((num / numTotal) * 25), "Failed uploading %s" % detail["name"]
                 )
                 postEventToFrame(
                     EventUtility.myEVT_LOG,
@@ -404,6 +476,7 @@ def uploadingMissingBlueprintApps(
     return blueprint
 
 
+@api_tool_decorator()
 def checkFromMissingApps(blueprint, toConfig, fromConfig):
     postEventToFrame(
         EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Applications"
@@ -428,43 +501,90 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                 toConfig["enterprise"],
                 match[0].id,
             )
-            for version in toAppVersions.results:
-                if (
-                    version.version_code == app["version_codes"][0]
-                    or version.build_number == app["version_codes"][0]
-                ):
-                    if app["is_g_play"] and version.is_g_play:
-                        # TODO: Add properly
-                        # Found matching Play Store app
-                        appsToAdd.append(
-                            {
-                                "app_version": version.id,
-                                "package_name": app["package_name"],
-                                "application_name": app["application_name"],
-                                "is_g_play": version.is_g_play,
-                                "installation_rule": app["installation_rule"],
-                                "state": app["state"],
-                            }
-                        )
-                    elif not app["is_g_play"] and (
-                        not hasattr(version, "is_g_play") or not version.is_g_play
+            if hasattr(toAppVersions, "results"):
+                for version in toAppVersions.results:
+                    if (
+                        version.version_code == app["version_codes"][0]
+                        or version.build_number == app["version_codes"][0]
                     ):
-                        # Found matching enterprise version
-                        appsToAdd.append(
-                            {
-                                "app_version": version.id,
+                        if app["is_g_play"] and version.is_g_play:
+                            # TODO: Add properly
+                            # Found matching Play Store app
+                            appsToAdd.append(
+                                {
+                                    "app_version": version.id,
+                                    "package_name": app["package_name"],
+                                    "application_name": app["application_name"],
+                                    "is_g_play": version.is_g_play,
+                                    "installation_rule": app["installation_rule"],
+                                    "state": app["state"],
+                                }
+                            )
+                        elif not app["is_g_play"] and (
+                            not hasattr(version, "is_g_play") or not version.is_g_play
+                        ):
+                            # Found matching enterprise version
+                            appsToAdd.append(
+                                {
+                                    "app_version": version.id,
+                                    "package_name": app["package_name"],
+                                    "application_name": app["application_name"],
+                                    "is_g_play": version.is_g_play
+                                    if hasattr(version, "is_g_play")
+                                    else False,
+                                    "version_codes": [version.build_number],
+                                    "installation_rule": app["installation_rule"],
+                                    "release_name": version.release_name,
+                                    "state": app["state"],
+                                }
+                            )
+                            appAdded = True
+            elif type(toAppVersions) is dict:
+                for version in toAppVersions["results"]:
+                    if (
+                        (
+                            "version_codes" in app
+                            and (
+                                version["version_code"] == app["version_codes"][0]
+                                or version["build_number"] == app["version_codes"][0]
+                            )
+                        )
+                        or version["version_code"] == app["version_name"]
+                        or version["build_number"] == app["version_code"]
+                    ):
+                        if app["is_g_play"] and version["is_g_play"]:
+                            # TODO: Add properly
+                            # Found matching Play Store app
+                            entry = {
+                                "app_version": version["id"],
                                 "package_name": app["package_name"],
                                 "application_name": app["application_name"],
-                                "is_g_play": version.is_g_play
+                                "is_g_play": version["is_g_play"],
+                                "installation_rule": app["installation_rule"],
+                            }
+                            if "state" in app:
+                                entry["state"] = app["state"]
+                            appsToAdd.append(entry)
+                        elif not app["is_g_play"] and (
+                            not hasattr(version, "is_g_play")
+                            or not version["is_g_play"]
+                        ):
+                            # Found matching enterprise version
+                            entry = {
+                                "app_version": version["id"],
+                                "package_name": app["package_name"],
+                                "application_name": app["application_name"],
+                                "is_g_play": version["is_g_play"]
                                 if hasattr(version, "is_g_play")
                                 else False,
-                                "version_codes": [version.build_number],
+                                "version_codes": [version["build_number"]],
                                 "installation_rule": app["installation_rule"],
-                                "release_name": version.release_name,
-                                "state": app["state"],
+                                "release_name": version["release_name"],
                             }
-                        )
-                        appAdded = True
+                            if "state" in app:
+                                entry["state"] = app["state"]
+                            appsToAdd.append(entry)
+                            appAdded = True
         if not appAdded:
             postEventToFrame(
                 EventUtility.myEVT_LOG,
@@ -472,20 +592,26 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
             )
             missingApps += "%s, " % app["application_name"]
             if "download_url" in app and app["download_url"]:
-                downloadLink.append(
-                    {
-                        "name": app["application_name"],
-                        "version": app["app_version"],
-                        "link": app["download_url"],
-                        "rule": app["installation_rule"],
-                        "state": app["state"],
-                        "version_url": app["app_version_url"],
-                    }
-                )
+                entry = {
+                    "name": app["application_name"],
+                    "version": app["app_version"],
+                    "link": app["download_url"],
+                    "rule": app["installation_rule"],
+                }
+                if "app_version_url" in app:
+                    entry["version_url"] = app["app_version_url"]
+                elif "download_url" in app:
+                    entry["version_url"] = app["download_url"]
+                if "state" in app:
+                    entry["state"] = app["state"]
+                else:
+                    entry["state"] = "SHOW"
+                downloadLink.append(entry)
     blueprint["latest_revision"]["application"]["apps"] = appsToAdd
     return blueprint, missingApps, downloadLink
 
 
+@api_tool_decorator()
 def checkFromMissingContent(blueprint, toConfig, fromConfig):
     postEventToFrame(EventUtility.myEVT_LOG, "---> Cloning Blueprint: Fetching Content")
     toContent = getAllContentFromHost(
@@ -521,6 +647,7 @@ def checkFromMissingContent(blueprint, toConfig, fromConfig):
     return blueprint, missingContent, downloadContentLink
 
 
+@api_tool_decorator()
 def uploadMissingContentFiles(
     blueprint, downloadContentLinks, toConfig, fromConfig, progress
 ):
@@ -532,7 +659,7 @@ def uploadMissingContentFiles(
             fileExtension = link.split("?")[0].split("/")[-1].split(".")[-1]
             file = "%s.%s" % (detail["name"], fileExtension)
             progress.Update(
-                int((num / numTotal) * 66),
+                int((num / numTotal) * 50),
                 "Attempting to download: %s" % detail["name"],
             )
             postEventToFrame(
@@ -573,7 +700,7 @@ def uploadMissingContentFiles(
             )
             if res and hasattr(res, "status_code") and res.status_code > 300:
                 progress.Update(
-                    int((num / numTotal) * 66), "Failed uploading %s" % detail["name"]
+                    int((num / numTotal) * 50), "Failed uploading %s" % detail["name"]
                 )
                 postEventToFrame(
                     EventUtility.myEVT_LOG,
@@ -591,8 +718,448 @@ def uploadMissingContentFiles(
             )
         num += 1
         deleteFile(file)
-    progress.Update(66, "Finished uploading missing content.")
+    progress.Update(50, "Finished uploading missing content.")
     postEventToFrame(
         EventUtility.myEVT_LOG, "---> Cloning Blueprint: Finished Uploading Content"
     )
     return blueprint
+
+
+@api_tool_decorator()
+def prepareBlueprintConversion(template, toConfig, fromConfig, group):
+    if template:
+        template.pop("id", None)
+        template.pop("locked", None)
+        template.pop("created_on", None)
+        template.pop("updated_on", None)
+        template.pop("group", None)
+
+        blueprint = convertTemplateToBlueprint(template)
+
+        if blueprint:
+            prepareBlueprintClone(blueprint, toConfig, fromConfig, group)
+
+
+@api_tool_decorator()
+def convertTemplateToBlueprint(template):
+    templateSection = template["template"]
+    blueprint = {
+        "name": template["name"],
+        "description": template["description"],
+        "latest_revision": {
+            "locked": False,
+            "current": True,
+            "type": "Independent",
+            "comments": "Cloned from Template",
+            "connectivity": {},
+            "sound": {},
+            "display_branding": {},
+            "application": {},
+            "content": {"files": [], "locked": False, "section_type": "Independent"},
+            "settings_app": {},
+            "security": {},
+            "google_services": {},
+            "system_updates": {},
+            "date_time": {},
+            "hardware_settings": {},
+        },
+    }
+
+    blueprintAPList = []
+    if templateSection["settings"]["wifiSettings"]:
+        for ap in templateSection["settings"]["wifiSettings"]:
+            blueprintAPList.append(
+                {
+                    "wifi_ssid": ap["wifiSsid"],
+                    "wifi_security_type": ap["wifiSecurityType"],
+                    "wifi_phase2_auth": ap["wifiPhase2Auth"]
+                    if "wifiPhase2Auth" in ap
+                    else None,
+                    "hidden": ap["hidden"] if "hidden" in ap else None,
+                    "wifi_eap_method": ap["wifiEapMethod"]
+                    if "wifiEapMethod" in ap
+                    else None,
+                    "identity": ap["identity"] if "identity" in ap else None,
+                    "anonymous_identity": ap["anonymousIdentity"]
+                    if "anonymousIdentity" in ap
+                    else None,
+                    "domain": ap["domain"],
+                    "wifi_password": ap["wifiPassword"],
+                }
+            )
+
+    blueprint["latest_revision"]["connectivity"] = {
+        "incoming_numbers": None
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        else templateSection["phonePolicy"]["incomingNumbers"],
+        "outgoing_numbers": None
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        else templateSection["phonePolicy"]["outgoingNumbers"],
+        "incoming_numbers_with_tags": None
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        else templateSection["phonePolicy"]["incomingNumbersWithTags"],
+        "outgoing_numbers_with_tags": None
+        if "phonePolicy" not in templateSection
+        or ("phonePolicy" in templateSection and not templateSection["phonePolicy"])
+        else templateSection["phonePolicy"]["outgoingNumbersWithTags"],
+        "wifi_settings": blueprintAPList,
+        "locked": False,
+        "section_type": "Independent",
+        "sms_disabled": templateSection["devicePolicy"]["smsDisabled"],
+        "enable_bluetooth": templateSection["devicePolicy"]["enableBluetooth"],
+        "nfc_beam_disabled": templateSection["devicePolicy"]["nfcBeamDisabled"],
+        "wifi_state": templateSection["settings"]["wifiState"],
+    }
+    blueprint["latest_revision"]["sound"] = {
+        "alarm_volume": templateSection["settings"]["alarmVolume"],
+        "ring_volume": templateSection["settings"]["ringVolume"],
+        "music_volume": templateSection["settings"]["musicVolume"],
+        "notification_volume": templateSection["settings"]["notificationVolume"],
+        "locked": False,
+        "section_type": "Independent",
+    }
+
+    blueprint["latest_revision"]["display_branding"] = {
+        "rotation_state": templateSection["settings"]["rotationState"],
+        "wallpapers": None
+        if "brand" not in templateSection
+        or ("brand" in templateSection and not templateSection["brand"])
+        else templateSection["brand"]["wallpapers"],
+        "locked": False,
+        "section_type": "Independent",
+        "screenshot_disabled": templateSection["devicePolicy"]["screenshotDisabled"],
+        "status_bar_disabled": templateSection["devicePolicy"]["statusBarDisabled"],
+        "brightness_scale": templateSection["settings"]["brightnessScale"],
+    }
+
+    preloadedAppList = []
+    if templateSection["application"]["launchOnStart"]:
+        for preload in templateSection["application"]["launchOnStart"]:
+            preloadedAppList.append(
+                {
+                    "package_name": preload["packageName"],
+                    "state": preload["state"],
+                }
+            )
+
+    appList = []
+    if templateSection["application"]["apps"]:
+        for app in templateSection["application"]["apps"]:
+            appList.append(
+                {
+                    "id": app["id"],
+                    "is_g_play": app["isGPlay"],
+                    "app_version": app["appVersion"],
+                    "google_product": app["googleProduct"],
+                    "download_url": app["downloadUrl"],
+                    "application_id": app["applicationId"],
+                    "version_name": app["versionName"],
+                    "hash_string": app["hashString"],
+                    "google_product_id": app["googleProductId"],
+                    "app_version_id": app["appVersionId"],
+                    "installation_rule": app["installationRule"],
+                    "release_name": app["releaseName"],
+                    "application_name": app["applicationName"],
+                    "package_name": app["packageName"],
+                    "min_sdk_version": app["minSdkVersion"],
+                    "icon_url": app["iconUrl"],
+                    "version_code": app["versionCode"],
+                }
+            )
+
+    blueprint["latest_revision"]["application"] = {
+        "apps": appList,
+        "app_mode": templateSection["application"]["appMode"],
+        "preload_apps": preloadedAppList,
+        "launch_on_start": templateSection["application"]["launchOnStart"],
+        "permission_policy": templateSection["securityPolicy"]["permissionPolicy"],
+        "locked": False,
+        "section_type": "Independent",
+        "launcher_less_dpc": templateSection["launcherLessDpc"],
+        "disable_local_app_install": templateSection["devicePolicy"][
+            "disableLocalAppInstall"
+        ],
+        "app_uninstall_disabled": templateSection["devicePolicy"][
+            "appUninstallDisabled"
+        ],
+        "start_on_boot": templateSection["application"]["startOnBoot"],
+    }
+
+    blueprint["latest_revision"]["settings_app"] = {
+        "settings_access_level": templateSection["devicePolicy"]["settingsAccessLevel"],
+        "esper_settings_app": {
+            "esper_settings_app_policy": {
+                "flashlight": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["flashlight"],
+                "wifi": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["wifi"],
+                "auto_rotation": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["autoRotation"],
+                "reboot": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["reboot"],
+                "clear_app_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["clearAppData"],
+                "kiosk_app_selection": templateSection["devicePolicy"][
+                    "esperSettingsApp"
+                ]["esperSettingsAppPolicy"]["kioskAppSelection"],
+                "esper_branding": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["esperBranding"],
+                "factory_reset": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["factoryReset"],
+                "about": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["about"],
+                "display": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["display"],
+                "sound": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["sound"],
+                "keyboard": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["keyboard"],
+                "input_selection": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["inputSelection"],
+                "accessibility": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["accessibility"],
+                "mobile_data": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["mobileData"],
+                "bluetooth": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["bluetooth"],
+                "language": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["language"],
+                "time_and_date": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["timeAndDate"],
+                "storage": templateSection["devicePolicy"]["esperSettingsApp"][
+                    "esperSettingsAppPolicy"
+                ]["storage"],
+            },
+            "only_dock_accessible": templateSection["devicePolicy"]["esperSettingsApp"][
+                "onlyDockAccessible"
+            ],
+            "admin_mode_password": templateSection["devicePolicy"]["esperSettingsApp"][
+                "adminModePassword"
+            ],
+        },
+        "locked": False,
+        "section_type": "Independent",
+        "enable_android_settings_app": templateSection["devicePolicy"][
+            "enableAndroidSettingsApp"
+        ],
+        "config_json": templateSection["customSettingsConfig"]
+        if "customSettingsConfig" in templateSection
+        else {},
+    }
+
+    blueprint["latest_revision"]["security"] = {
+        "password_quality": templateSection["securityPolicy"]["devicePasswordPolicy"][
+            "passwordQuality"
+        ],
+        "minimum_password_length": templateSection["securityPolicy"][
+            "devicePasswordPolicy"
+        ]["minimumPasswordLength"],
+        "locked": False,
+        "section_type": "Independent",
+        "adb_disabled": templateSection["settings"]["adbDisabled"],
+        "screen_off_timeout": templateSection["settings"]["screenOffTimeout"],
+        "factory_reset_disabled": templateSection["devicePolicy"][
+            "factoryResetDisabled"
+        ],
+        "keyguard_disabled": templateSection["devicePolicy"]["keyguardDisabled"],
+        "safe_boot_disabled": templateSection["devicePolicy"]["safeBootDisabled"],
+    }
+
+    blueprint["latest_revision"]["google_services"] = {
+        "max_account": 0
+        if "googleAccountPermission" not in templateSection["devicePolicy"]
+        or (
+            "googleAccountPermission" in templateSection["devicePolicy"]
+            and not templateSection["devicePolicy"]["googleAccountPermission"]
+        )
+        else templateSection["devicePolicy"]["googleAccountPermission"]["maxAccount"],
+        "emails": None,
+        "domains": None,
+        "frp_googles": templateSection["securityPolicy"]["frpGoogles"],
+        "locked": False,
+        "section_type": "Independent",
+        "disable_play_store": templateSection["devicePolicy"]["disablePlayStore"],
+        "managed_google_play_disabled": templateSection["application"][
+            "managedGooglePlayDisabled"
+        ],
+        "google_assistant_disabled": templateSection["devicePolicy"][
+            "googleAssistantDisabled"
+        ],
+    }
+
+    blueprint["latest_revision"]["system_updates"] = {
+        "type": templateSection["securityPolicy"]["deviceUpdatePolicy"]["type"],
+        "locked": False,
+        "section_type": "Independent",
+        "maintenance_start": templateSection["securityPolicy"]["deviceUpdatePolicy"][
+            "maintenanceStart"
+        ],
+        "maintenance_end": templateSection["securityPolicy"]["deviceUpdatePolicy"][
+            "maintenanceEnd"
+        ],
+    }
+
+    blueprint["latest_revision"]["date_time"] = {
+        "locked": False,
+        "section_type": "Independent",
+        "date_time_config_disabled": templateSection["devicePolicy"][
+            "dateTimeConfigDisabled"
+        ],
+        "timezone_string": templateSection["settings"]["timezoneString"],
+        "device_locale": templateSection["settings"]["deviceLocale"],
+    }
+
+    blueprint["latest_revision"]["hardware_settings"] = {
+        "gps_state": templateSection["settings"]["gpsState"],
+        "locked": False,
+        "section_type": "Independent",
+        "usb_file_transfer_disabled": templateSection["devicePolicy"][
+            "usbFileTransferDisabled"
+        ],
+        "tethering_disabled": templateSection["devicePolicy"]["tetheringDisabled"],
+        "camera_disabled": templateSection["devicePolicy"]["cameraDisabled"],
+        "usb_connectivity_disabled": templateSection["devicePolicy"][
+            "usbConnectivityDisabled"
+        ],
+    }
+
+    return blueprint
+
+
+@api_tool_decorator()
+def editBlueprintApps(groupId, body, appStr=""):
+    url = (
+        "{tenant}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
+            tenant=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            group_id=groupId,
+        )
+    )
+
+    if (
+        body["latest_revision"]["security"]["password_quality"]
+        == "PASSWORD_QUALITY_UNSPECIFIED"
+        and "minimum_password_length" in body["latest_revision"]["security"]
+    ):
+        del body["latest_revision"]["security"]["minimum_password_length"]
+
+    body["latest_revision"]["comments"] = "Editting Blueprint Apps %svia E.A.S.T." % (
+        "(" + appStr + ") "
+    )
+
+    resp = performPostRequestWithRetry(url, json=body, headers=getHeader())
+
+    return resp
+
+
+@api_tool_decorator()
+def pushBlueprintUpdate(blueprintId, groupId, schedule=None, schedule_type="IMMEDIATE"):
+    body = {
+        "command_type": "GROUP",
+        "command_args": {
+            "apply_all": True,
+            "blueprint_revision_id": blueprintId,
+        },
+        "devices": [],
+        "groups": [groupId] if type(groupId) is str else groupId,
+        "device_type": "all",
+        "command": "UPDATE_BLUEPRINT",
+        "schedule": schedule_type,
+        "schedule_args": schedule,
+    }
+    resp, jsonResp = postEsperCommand(command_data=body)
+
+    return resp, jsonResp
+
+
+@api_tool_decorator()
+def modifyAppsInBlueprints(
+    blueprints, apps, changedList, addToAppListIfNotPresent=True
+):
+    success = 0
+    total = 0
+    for bp in blueprints["results"]:
+        resp = getGroupBlueprintDetail(bp["group"], bp["id"])
+        if resp:
+            resp = resp.json()
+            changed = False
+            appStr = ""
+            for app in apps:
+                match = list(
+                    filter(
+                        lambda x: app["package"] == x["package_name"],
+                        resp["latest_revision"]["application"]["apps"],
+                    )
+                )
+
+                if match:
+                    appStr += "%s, " % app["name"]
+                    # Check each blueprint to see if app is present, update entry
+                    appList = []
+                    for bpApp in resp["latest_revision"]["application"]["apps"]:
+                        if bpApp["package_name"] == app["package"]:
+                            changed = True
+                            appList.append(
+                                {
+                                    "is_g_play": app["isPlayStore"],
+                                    "app_version": app["versionId"],
+                                    "state": bpApp["state"],
+                                    "application_name": app["name"],
+                                    "version_codes": app["codes"],
+                                    "package_name": app["package"],
+                                    "installation_rule": bpApp["installation_rule"],
+                                    "release_name": app["releaseName"],
+                                }
+                            )
+                        else:
+                            appList.append(bpApp)
+                    resp["latest_revision"]["application"]["apps"] = appList
+                elif addToAppListIfNotPresent:
+                    appStr += "%s, " % app["name"]
+                    # Go through and add or update app entry
+                    resp["latest_revision"]["application"]["apps"].append(
+                        {
+                            "is_g_play": app["isPlayStore"],
+                            "app_version": app["versionId"],
+                            "state": "SHOW",
+                            "application_name": app["name"],
+                            "version_codes": app["codes"],
+                            "package_name": app["package"],
+                            "installation_rule": "DURING",
+                            "release_name": app["releaseName"],
+                        }
+                    )
+                    changed = True
+            if changed:
+                total += 1
+                if appStr.endswith(", "):
+                    appStr = appStr[:-2]
+                updateResp = editBlueprintApps(bp["group"], resp, appStr)
+                if updateResp and updateResp.status_code < 300:
+                    changedList.append(bp)
+                    success += 1
+    postEventToFrame(
+        eventUtil.myEVT_PROCESS_FUNCTION,
+        (Globals.frame.displayBlueprintActionDlg, (success, total)),
+    )
+    return success, total

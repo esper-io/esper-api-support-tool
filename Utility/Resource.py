@@ -1,26 +1,29 @@
 #!/usr/bin/env python
 
-import threading
 import json
 import os
 import platform
-import requests
+import re
 import shlex
-import sys
-import time
 import subprocess
-import wx
+import sys
+import threading
+import time
 import webbrowser
+from datetime import datetime, timezone
+from pathlib import Path
+
 import Common.Globals as Globals
 import esperclient
-
+import requests
+import wx
 from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
-from datetime import datetime, timezone
+from ratelimit import limits, sleep_and_retry
+
+from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from pathlib import Path
-from ratelimit import sleep_and_retry, limits
 
 
 def resourcePath(relative_path):
@@ -70,7 +73,7 @@ def download(url, file_name, overwrite=True, raiseError=True):
             os.remove(file_name)
     except Exception as e:
         print(e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     # open in binary mode
     try:
         with open(file_name, "wb") as file:
@@ -79,7 +82,7 @@ def download(url, file_name, overwrite=True, raiseError=True):
             # write to file
             file.write(response.content)
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
         if raiseError:
             raise e
         else:
@@ -154,14 +157,23 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
         os.makedirs(parentPath)
     try:
         r = requests.get(url, stream=True, allow_redirects=redirects)
+        total_length = r.headers.get("content-length")
+        if total_length:
+            total_length = int(total_length)
+
+        dl = 0
         with open(fullPath, "wb") as file:
             for chunk in r.iter_content(chunk_size=chunk_size):
+                dl += len(chunk)
                 if chunk:
                     file.write(chunk)
+                postEventToFrame(
+                    EventUtility.myEVT_UPDATE_GAUGE, int(dl / total_length * 100)
+                )
         return fullPath
     except Exception as e:
         print(e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     return None
 
 
@@ -172,7 +184,7 @@ def deleteFile(file):
             return True
     except Exception as e:
         print(e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
     return False
 
 
@@ -238,7 +250,7 @@ def joinThreadList(threads):
 @api_tool_decorator(locks=[])
 def limitActiveThreads(
     threads,
-    max_alive=(Globals.MAX_ACTIVE_THREAD_COUNT / 2),
+    max_alive=(Globals.MAX_THREAD_COUNT / 2),
     timeout=-1,
     breakEnabled=True,
 ):
@@ -307,8 +319,12 @@ def displayMessageBox(event):
     return res
 
 
-def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT):
+def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None):
+    if maxThread <= 0:
+        return mainList
     n = int(len(mainList) / maxThread)
+    if maxChunkSize:
+        n = maxChunkSize
     if n == 0:
         n = len(mainList)
     if n > 0:
@@ -370,9 +386,8 @@ def updateErrorTracker():
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
             time.sleep(60)
-            if hasattr(threading.current_thread(), "isStopped"):
-                if threading.current_thread().isStopped():
-                    break
+            if checkIfCurrentThreadStopped():
+                break
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
@@ -419,13 +434,14 @@ def getHeader():
         return {
             "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
             "Content-Type": "application/json",
+            "User-Agent": "Esper Api Support Tool %s " % Globals.VERSION,
         }
     else:
         return {}
 
 
 @sleep_and_retry
-@limits(calls=10, period=1)
+@limits(calls=4000, period=(5 * 60))
 def enforceRateLimit():
     pass
 
@@ -448,3 +464,16 @@ def processFunc(event):
             fun[0](*fun[1])
         else:
             fun[0](fun[1])
+
+
+def checkIfCurrentThreadStopped():
+    isAbortSet = False
+    if hasattr(threading.current_thread(), "abort"):
+        isAbortSet = threading.current_thread().abort.is_set()
+    elif hasattr(threading.current_thread(), "isStopped"):
+        isAbortSet = threading.current_thread().isStopped()
+    return isAbortSet
+
+
+def correctSaveFileName(inFile):
+    return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)

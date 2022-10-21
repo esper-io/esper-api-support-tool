@@ -32,6 +32,7 @@ class Console(wx.Frame):
         wx.Frame.__init__(
             self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
         )
+        self.SetThemeEnabled(False)
         icon = wx.Icon()
         icon.CopyFromBitmap(
             wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG)
