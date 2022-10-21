@@ -88,7 +88,7 @@ class GridPanel(wx.Panel):
 
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_1 = wx.grid.Grid(self.panel_14, wx.ID_ANY, size=(1, 1))
+        self.grid_1 = gridlib.Grid(self.panel_14, wx.ID_ANY, size=(1, 1))
         sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
 
         self.panel_15 = wx.Panel(self.notebook_2, wx.ID_ANY)
@@ -96,7 +96,7 @@ class GridPanel(wx.Panel):
 
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_2 = wx.grid.Grid(self.panel_15, wx.ID_ANY, size=(1, 1))
+        self.grid_2 = gridlib.Grid(self.panel_15, wx.ID_ANY, size=(1, 1))
         sizer_7.Add(self.grid_2, 1, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.notebook_2, wx.ID_ANY)
@@ -104,7 +104,7 @@ class GridPanel(wx.Panel):
 
         sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_3 = wx.grid.Grid(self.panel_16, wx.ID_ANY, size=(1, 1))
+        self.grid_3 = gridlib.Grid(self.panel_16, wx.ID_ANY, size=(1, 1))
         sizer_8.Add(self.grid_3, 1, wx.EXPAND, 0)
 
         self.panel_16.SetSizer(sizer_8)
