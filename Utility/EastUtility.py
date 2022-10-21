@@ -1296,7 +1296,7 @@ def getAllDeviceInfo(frame, action=None):
         getApps = False
         getLatestEvents = False
     elif action == GeneralActions.GENERATE_INFO_REPORT.value:
-        getApps = False
+        getApps = False if not Globals.APPS_IN_DEVICE_GRID else True
         getLatestEvents = True
     elif action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value:
         getApps = True
