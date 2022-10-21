@@ -2,11 +2,16 @@
 
 import csv
 from pathlib import Path
+
+import Common.Globals as Globals
 import wx
 import wx.grid
-import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import displayMessageBox, openWebLinkInBrowser
+from Utility.Resource import (
+    correctSaveFileName,
+    displayMessageBox,
+    openWebLinkInBrowser,
+)
 
 
 class BulkFactoryReset(wx.Dialog):
@@ -19,6 +24,7 @@ class BulkFactoryReset(wx.Dialog):
         self.SetSize((555, 400))
         self.SetMinSize((555, 400))
         self.SetTitle("Bulk Factory Reset")
+        self.SetThemeEnabled(False)
 
         self.identifers = []
         self.expectedHeaders = ["Device Identifiers"]
@@ -134,6 +140,7 @@ class BulkFactoryReset(wx.Dialog):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
         dlg.DestroyLater()
 
         if result == wx.ID_OK:

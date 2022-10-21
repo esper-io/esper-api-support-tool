@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Resource import getHeader
@@ -35,11 +37,16 @@ def uploadContentToHost(host, enterprise, key, file):
     url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/upload/".format(
         baseUrl=host, enterprise_id=enterprise
     )
+    file = {
+        "Content-Disposition": 'form-data; name="key"; filename="%s"' % file,
+        "key": open(file, "rb"),
+        "Content-Type": "application/json",
+    }
     resp = performPostRequestWithRetry(
         url,
         headers={
-            "Authorization": f"Bearer {key}",
+            "Authorization": "Bearer %s" % key,
         },
-        files={"key": open(file, "rb")},
+        files=file,
     )
     return resp

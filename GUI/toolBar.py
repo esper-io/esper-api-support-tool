@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import platform
 from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
@@ -13,6 +15,8 @@ class ToolsToolBar(wx.ToolBar):
         if platform.system() != "Windows":
             size = (24, 24)
         self.SetToolBitmapSize(size)
+
+        self.SetThemeEnabled(False)
 
         close_icon = scale_bitmap(resourcePath("Images/exit.png"), *size)
         self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")

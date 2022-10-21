@@ -1,18 +1,14 @@
+#!/usr/bin/env python
+
 import time
+
 import Common.Globals as Globals
-
-
 from Common.decorator import api_tool_decorator
-from Utility import EventUtility
-from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.API.EsperAPICalls import getInfo, patchInfo
-from Utility.Resource import (
-    getHeader,
-    postEventToFrame,
-)
-
 from esperclient.rest import ApiException
-
+from Utility import EventUtility
+from Utility.API.EsperAPICalls import getInfo, patchInfo
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Resource import getHeader, postEventToFrame
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,
@@ -103,6 +99,10 @@ def get_all_devices_helper(
         api_response = api_response.json()
         if type(responses) == list:
             responses.append(api_response)
+    else:
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
     return api_response
 
 
@@ -119,9 +119,7 @@ def get_all_devices(
         elif type(response) is dict and "results" in response:
             response["next"] = None
             response["prev"] = None
-            for device in devices:
-                if device not in response["results"]:
-                    response["results"].append(device)
+            response["results"] = response["results"] + devices
     return response
 
 
@@ -168,7 +166,7 @@ def fetchDevicesFromGroupHelper(
 
 
 @api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
+def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=True):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_response_list = []
@@ -202,11 +200,12 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0):
                 "next": None,
                 "previous": None,
             }
-        postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
+        if log:
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False)
 
 
 def getDeviceByIdHelper(
@@ -227,7 +226,7 @@ def getDeviceByIdHelper(
             break
         except Exception as e:
             if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(e, postIssue=False)
                 raise e
             if "429" not in str(e) and "Too Many Requests" not in str(e):
                 time.sleep(Globals.RETRY_SLEEP)

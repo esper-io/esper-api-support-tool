@@ -25,12 +25,15 @@ class SidePanel(wx.Panel):
         self.selectedGroupsList = []
         self.groupsResp = None
         self.groups = {}
+        self.groupDeviceCount = {}
         self.enterpriseApps = []
         self.selectedDeviceApps = []
         self.selectedAppEntry = []
 
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
+
+        self.SetThemeEnabled(False)
 
         sizer_1 = wx.FlexGridSizer(7, 1, 0, 0)
 
@@ -99,6 +102,7 @@ class SidePanel(wx.Panel):
         )
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
+        self.notebook_1.SetThemeEnabled(False)
         self.notebook_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -128,7 +132,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[])
+        self.selectedGroups = wx.ListBox(
+            self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
         self.selectedGroups.SetFont(
             wx.Font(
@@ -160,7 +166,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[])
+        self.selectedDevices = wx.ListBox(
+            self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
         self.selectedDevices.SetFont(
             wx.Font(
@@ -188,7 +196,9 @@ class SidePanel(wx.Panel):
 
         grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedApp = wx.ListBox(self.panel_17, wx.ID_ANY, choices=[])
+        self.selectedApp = wx.ListBox(
+            self.panel_17, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
+        )
         self.selectedApp.SetToolTip("Currently Selected Application")
         self.selectedApp.SetFont(
             wx.Font(
@@ -321,13 +331,17 @@ class SidePanel(wx.Panel):
                     data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
                     for entry in self.parentFrame.auth_data:
                         authEntry = []
+                        num = 0
                         for auth in entry.values():
+                            if num == 4:
+                                break
                             authEntry.append(auth)
+                            num += 1
                         if authEntry not in data:
                             data.append(authEntry)
                     with open(self.parentFrame.authPath, "w", newline="") as csvfile:
                         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                        writer.writerows(self.parentFrame.auth_data)
+                        writer.writerows(data)
                     for child in self.parentFrame.menubar.configMenu.GetMenuItems():
                         if value in self.configChoice[child.GetItemLabel()].values():
                             self.parentFrame.menubar.configMenu.Delete(child)
@@ -363,12 +377,22 @@ class SidePanel(wx.Panel):
     def onGroupSelection(self, event):
         if not self.parentFrame.isRunning:
             choices = list(self.groups.keys())
+            newChoices = []
+            deviceCountKeys = self.groupDeviceCount.keys()
+            for choice in choices:
+                match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
+                if match:
+                    match = match[0]
+                    newChoices.append(
+                        "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
+                    )
+
             if self.groupMultiDialog:
                 self.groupMultiDialog = None
             if not self.groupMultiDialog:
                 self.groupMultiDialog = MultiSelectSearchDlg(
                     self.parentFrame,
-                    choices,
+                    newChoices,
                     label="Select Group(s)",
                     title="Select Group(s)",
                     resp=self.groupsResp,
@@ -380,9 +404,10 @@ class SidePanel(wx.Panel):
                 selections = self.groupMultiDialog.GetSelections()
                 if selections:
                     for groupName in selections:
-                        groupId = self.groups[groupName]
+                        groupNameProper = groupName.split(" (Device Count:")[0]
+                        groupId = self.groups[groupNameProper]
                         self.selectedGroups.Append(groupName)
-                        if groupName.lower() == "all devices":
+                        if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
                             self.selectedGroupsList = []
                             self.selectedGroups.Append(groupName)
@@ -454,7 +479,7 @@ class SidePanel(wx.Panel):
         self.apps = tmp
         self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
         if len(self.apps):
-            percent = self.parentFrame.gauge.GetValue()
+            percent = self.parentFrame.statusBar.gauge.GetValue()
             val = percent + int(float(len(self.apps) / 2) * 25)
             postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, val)
 
@@ -491,7 +516,10 @@ class SidePanel(wx.Panel):
                 self.notebook_1.SetSelection(2)
         else:
             self.appChoice.Enable(False)
-            if self.selectedGroupsList:
+            if self.selectedGroupsList and (
+                not self.parentFrame.preferences
+                or self.parentFrame.preferences["enableDevice"] is True
+            ):
                 self.notebook_1.SetSelection(1)
             else:
                 self.notebook_1.SetSelection(0)

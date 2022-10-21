@@ -13,7 +13,7 @@ from Common.decorator import api_tool_decorator
 
 class TemplateDialog(wx.Dialog):
     def __init__(self, configMenuOpt, parent=None):
-        # begin wxGlade: MyDialog.__init__
+
         super(TemplateDialog, self).__init__(
             None,
             wx.ID_ANY,
@@ -26,6 +26,7 @@ class TemplateDialog(wx.Dialog):
         self.chosenTemplate = None
         self.choice1thread = None
         self.choice2thread = None
+        self.SetThemeEnabled(False)
 
         choices = list(self.configMenuOpt.keys())
         choices.insert(0, "")
@@ -182,7 +183,6 @@ class TemplateDialog(wx.Dialog):
         self.button_CANCEL.SetFocus()
 
         self.Fit()
-        # end wxGlade
 
     @api_tool_decorator()
     def getInputSelections(self):
@@ -262,7 +262,11 @@ class TemplateDialog(wx.Dialog):
         tempList = util.getTemplates(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
         )
-        return tempList["results"]
+        return (
+            tempList["results"]
+            if tempList is not None and "results" in tempList
+            else tempList
+        )
 
     @api_tool_decorator()
     def getTemplate(self, template):

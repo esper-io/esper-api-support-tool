@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 API_REQUEST_SESSION_TRACKER = 0
 
 API_REQUEST_TRACKER = {

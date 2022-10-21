@@ -1,5 +1,6 @@
 # !/usr/bin/env python
 
+import threading
 import time
 
 from queue import Queue
@@ -32,8 +33,16 @@ class Pool:
         """Start the threads, or restart them if you've aborted"""
         # either wait for them to finish or return false if some arent
         if block:
+            time_waiting = time.perf_counter()
             while self.alive():
                 time.sleep(1)
+                if time.perf_counter() - time_waiting > 60:
+                    for t in self.threads:
+                        if t.is_alive():
+                            try:
+                                t.raise_exception()
+                            except:
+                                pass
         elif self.alive():
             return False
 
@@ -57,6 +66,9 @@ class Pool:
             )
         return True
 
+    def clearQueue(self):
+        self.queue.queue.clear()
+
     def enqueue(self, func, *args, **kargs):
         """Add a task to the queue"""
         self.queue.put((func, args, kargs))
@@ -69,9 +81,14 @@ class Pool:
             time.sleep(1)
             startTime = time.perf_counter()
             while True:
+                isAbortSet = False
+                if hasattr(threading.current_thread(), "abort"):
+                    isAbortSet = threading.current_thread().abort.is_set()
                 if (
-                    timeout > 0 and time.perf_counter() - startTime >= timeout
-                ) or self.isDoneWithinTolerance(queueTolerance=tolerance):
+                    (timeout > 0 and time.perf_counter() - startTime >= timeout)
+                    or self.isDoneWithinTolerance(queueTolerance=tolerance)
+                    or isAbortSet
+                ):
                     break
                 time.sleep(0.01)
 

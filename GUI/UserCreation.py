@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
+import csv
 import json
 import os
+
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
-import csv
 import wx
 import wx.grid
-
 from Common.decorator import api_tool_decorator
-
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-
 from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 from Utility.Resource import (
+    correctSaveFileName,
     createNewFile,
     displayMessageBox,
     postEventToFrame,
 )
+
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 
 class UserCreation(wx.Frame):
@@ -54,6 +54,8 @@ class UserCreation(wx.Frame):
         self.roles = ["Enterprise Admin", "Viewer", "Group Viewer", "Group Admin"]
         self.parent = parent
         self.lastFilePath = ""
+
+        self.SetThemeEnabled(False)
 
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
 
@@ -275,6 +277,7 @@ class UserCreation(wx.Frame):
         )
         result = dlg.ShowModal()
         inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
         dlg.DestroyLater()
 
         if result == wx.ID_OK:
@@ -304,7 +307,7 @@ class UserCreation(wx.Frame):
                     self.lastFilePath = os.path.abspath(
                         os.path.join(self.lastFilePath, os.pardir)
                     )
-                self.processUpload(fileDialog.GetPath())
+                self.processUpload(fileDialog.s())
 
     @api_tool_decorator()
     def onFileDrop(self, event):
@@ -476,7 +479,8 @@ class UserCreation(wx.Frame):
                 else:
                     for header in entry:
                         headers.append(header.lower().replace(" ", ""))
-        self.grid_1.Thaw()
+        if self.grid_1.IsFrozen():
+            self.grid_1.Thaw()
         self.grid_1.AutoSizeColumns()
         if self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(True)
