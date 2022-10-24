@@ -233,7 +233,7 @@ class ApiToolLog:
             match = False
             for issue in issues:
                 ratio = getStrRatioSimilarity(issue["title"], title, True)
-                if ratio > 90:
+                if ratio >= 90:
                     match = True
                     tracker.postIssueComment(issue["number"], content)
                     break
