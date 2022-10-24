@@ -647,7 +647,7 @@ def populateDeviceInfoDictionaryComplieData(
         ):
             device["tags"] = []
 
-    apps = apiCalls.createAppList(appData, obtainAppDictEntry=False) if appData else []
+    apps = apiCalls.createAppList(appData, obtainAppDictEntry=False, filterData=True) if appData else []
     json = appData if appData else ""
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json

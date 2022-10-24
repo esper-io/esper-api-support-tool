@@ -2708,6 +2708,7 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning:
             return
         self.prefDialog.SetPrefs(self.preferences, onBoot=False)
+        self.prefDialog.appColFilter = Globals.APP_COL_FILTER
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.isSavingPrefs = True
             Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)

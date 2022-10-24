@@ -29,14 +29,11 @@ class LargeTextEntryDialog(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_3 = wx.BoxSizer(wx.VERTICAL)
+        sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        label_1 = wx.StaticText(
-            self.panel_1,
-            wx.ID_ANY,
-            label,
-        )
-        label_1.Wrap(300)
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, label, style=wx.ST_ELLIPSIZE_END)
+        label_1.SetFont(wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, 0, ""))
+        label_1.Wrap(500)
         label_1.SetToolTip(label)
         label_1.SetFont(
             wx.Font(
@@ -48,17 +45,12 @@ class LargeTextEntryDialog(wx.Dialog):
                 "Normal",
             )
         )
-        sizer_3.Add(label_1, 0, 0, 0)
+        sizer_3.Add(label_1, 0, wx.ALL, 5)
 
-        grid_sizer_1 = wx.GridSizer(1, 1, 0, 0)
-        sizer_3.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-
-        self.text_ctrl_1 = wx.TextCtrl(
-            self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP
-        )
+        self.text_ctrl_1 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP)
         self.text_ctrl_1.SetValue(str(textPlaceHolder))
         self.text_ctrl_1.SetEditable(enableEdit)
-        grid_sizer_1.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
+        sizer_3.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -72,6 +64,8 @@ class LargeTextEntryDialog(wx.Dialog):
 
         sizer_2.Realize()
 
+        sizer_3.AddGrowableRow(1)
+        sizer_3.AddGrowableCol(0)
         self.panel_1.SetSizer(sizer_3)
 
         self.SetSizer(sizer_1)

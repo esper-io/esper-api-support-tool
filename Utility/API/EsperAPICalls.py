@@ -574,7 +574,7 @@ def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
     return applist, json_resp
 
 
-def createAppList(json_resp, obtainAppDictEntry=True):
+def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
     applist = []
     if json_resp and "results" in json_resp and len(json_resp["results"]):
         for app in json_resp["results"]:
@@ -587,7 +587,8 @@ def createAppList(json_resp, obtainAppDictEntry=True):
                 continue
             entry = None
             if "application" in app:
-                if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                pkgName = app["application"]["package_name"]
+                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (filterData and pkgName not in Globals.APP_COL_FILTER):
                     continue
                 if obtainAppDictEntry:
                     entry = getAppDictEntry(app, False)
@@ -619,10 +620,9 @@ def createAppList(json_resp, obtainAppDictEntry=True):
                     )
 
                 appName = app["application"]["application_name"]
-                pkgName = app["application"]["package_name"]
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
             else:
-                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (filterData and app["package_name"] not in Globals.APP_COL_FILTER):
                     continue
                 if obtainAppDictEntry:
                     entry = getAppDictEntry(app, False)

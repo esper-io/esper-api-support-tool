@@ -3,6 +3,7 @@
 import Common.Globals as Globals
 import wx
 from Common.decorator import api_tool_decorator
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 
 
 class PreferencesDialog(wx.Dialog):
@@ -57,7 +58,9 @@ class PreferencesDialog(wx.Dialog):
             "appFilter",
             "maxSplitFileSize",
             "allowAutoIssuePost",
+            "appColFilter"
         ]
+        self.appColFilter = Globals.APP_COL_FILTER
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -226,17 +229,6 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_1.SetValue(Globals.limit)
 
-        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
-            self.report,
-            sizer_10,
-            "Load X Number of Devices in Grid",
-            wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
-        )
-        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
-        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
         # Display Options
         self.display = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.display.Hide()
@@ -400,12 +392,23 @@ class PreferencesDialog(wx.Dialog):
             "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
+        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Load X Number of Devices in Grid",
+            wx.SpinCtrl,
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
+        )
+        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
+        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
+
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_9 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_2,) = self.addPrefToPanel(
             self.app,
@@ -415,12 +418,12 @@ class PreferencesDialog(wx.Dialog):
             "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
 
-        (_, _, self.checkbox_4,) = self.addPrefToPanel(
-            self.app,
-            sizer_9,
-            "Show App's Package Name",
-            wx.CheckBox,
-            "Displays an Application's Package Name (e.g., In Tags or the Application input)",
+        static_line_6 = wx.StaticLine(self.app, wx.ID_ANY)
+        sizer_9.Add(
+            static_line_6,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
         )
 
         (_, _, self.checkbox_11,) = self.addPrefToPanel(
@@ -431,12 +434,36 @@ class PreferencesDialog(wx.Dialog):
             "Set App State to SHOW before setting the application as a Kiosk app on device.",
         )
 
+        static_line_7 = wx.StaticLine(self.app, wx.ID_ANY)
+        sizer_9.Add(
+            static_line_7,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
+        (_, _, self.checkbox_4,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Show App's Package Name",
+            wx.CheckBox,
+            "Displays an Application's Package Name (e.g., In Tags or the Application input)",
+        )
+
         (_, _, self.checkbox_22,) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Display Version Name Instead of Code",
             wx.CheckBox,
             "Displays the App Version Name instead of the Version Code",
+        )
+
+        (_, _, self.btn_appFilter,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Filter App Column",
+            wx.Button,
+            "Filter the Application Column to only show paricular applications",
         )
 
         # Prompts Preferences
@@ -523,6 +550,7 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
+        self.btn_appFilter.Bind(wx.EVT_BUTTON, self.appFilterDlg)
 
         self.Fit()
 
@@ -601,6 +629,7 @@ class PreferencesDialog(wx.Dialog):
             "appFilter": self.combobox_2.GetValue(),
             "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
+            "appColFilter": self.appColFilter
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -638,6 +667,7 @@ class PreferencesDialog(wx.Dialog):
         elif Globals.SHEET_CHUNK_SIZE > Globals.MAX_SHEET_CHUNK_SIZE:
             Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
+        Globals.APP_COL_FILTER = self.appColFilter
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -956,6 +986,9 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.AUTO_REPORT_ISSUES = False
 
+        if "appColFilter" in self.prefs and type(self.prefs["appColFilter"]) is list:
+            Globals.APP_COL_FILTER = self.prefs["appColFilter"]
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1061,6 +1094,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHEET_CHUNK_SIZE
         elif key == "allowAutoIssuePost":
             return Globals.AUTO_REPORT_ISSUES
+        elif key == "appColFilter":
+            return Globals.APP_COL_FILTER
         else:
             return None
 
@@ -1069,7 +1104,7 @@ class PreferencesDialog(wx.Dialog):
         event.Skip()
 
     def addPrefToPanel(
-        self, sourcePanel, sourceSizer, label, inputObjType, toolTip="", choice=[]
+        self, sourcePanel, sourceSizer, labelText, inputObjType, toolTip="", choice=[]
     ):
         panel = wx.Panel(sourcePanel, wx.ID_ANY)
         if sourceSizer.GetEffectiveRowsCount() >= sourceSizer.GetRows():
@@ -1081,7 +1116,7 @@ class PreferencesDialog(wx.Dialog):
         label = wx.StaticText(
             panel,
             wx.ID_ANY,
-            label,
+            labelText,
             style=wx.ST_ELLIPSIZE_END,
         )
         label.SetToolTip(toolTip)
@@ -1104,6 +1139,8 @@ class PreferencesDialog(wx.Dialog):
                 choices=choice,
                 style=wx.CB_DROPDOWN | wx.CB_READONLY,
             )
+        elif inputObjType == wx.Button:
+            inputObj = wx.Button(panel_2, id=wx.ID_ANY, label=labelText)
         if inputObj:
             grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
@@ -1111,3 +1148,19 @@ class PreferencesDialog(wx.Dialog):
         panel_2.SetSizer(grid_sizer)
 
         return panel, panel_2, inputObj
+
+    def appFilterDlg(self, event):
+        with LargeTextEntryDialog(
+            None,
+            "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
+            "App Column Filter",
+            textPlaceHolder=",".join(self.appColFilter) if self.appColFilter else ",".join(Globals.APP_COL_FILTER) if Globals.APP_COL_FILTER else ""
+        ) as textDialog:
+            if textDialog.ShowModal() == wx.ID_OK:
+                appList = textDialog.GetValue()
+                splitList = appList.split(",")
+                properAppList = []
+                for app in splitList:
+                    cleanPkgName = app.strip()
+                    properAppList.append(cleanPkgName)
+                self.appColFilter = properAppList
