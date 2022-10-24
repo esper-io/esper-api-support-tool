@@ -2782,6 +2782,17 @@ class NewFrameLayout(wx.Frame):
                             return
                         self.processDeviceCSVUpload(data)
                         self.gridPanel.grid_1.AutoSizeColumns()
+            elif file.endswith(".xlxs"):
+                if self.WINDOWS:
+                    Globals.THREAD_POOL.enqueue(self.openDeviceCSV, file)
+                else:
+                    self.openDeviceCSV(file)
+                Globals.THREAD_POOL.enqueue(
+                    self.waitForThreadsThenSetCursorDefault,
+                    Globals.THREAD_POOL.threads,
+                    2,
+                    tolerance=1,
+                )
 
     @api_tool_decorator()
     def onClone(self, event):
