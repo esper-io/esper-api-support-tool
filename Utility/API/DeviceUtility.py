@@ -242,3 +242,32 @@ def getDeviceByIdHelper(
 
 def setDeviceDisabled(deviceId):
     return patchInfo("", deviceId, jsonData={"state": 20})
+
+
+def searchForDevice(search=None, imei=None, serial=None, name=None):
+    extention = "device/"
+
+    if search is not None:
+        extention += "?limit=%s&search=%s" % (Globals.limit, search)
+    elif imei is not None:
+        extention += "?limit=%s&imei=%s" % (Globals.limit, imei)
+    elif serial is not None:
+        extention += "?limit=%s&serial=%s" % (Globals.limit, serial)
+    elif name is not None:
+        extention += "?limit=%s&name=%s" % (Globals.limit, name)
+
+    url = (
+        Globals.BASE_REQUEST_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+        )
+        + extention
+    )
+    api_response = performGetRequestWithRetry(url, getHeader())
+    if api_response.status_code < 300:
+        api_response = api_response.json()
+    else:
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
+    return api_response

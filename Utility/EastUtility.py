@@ -25,6 +25,7 @@ from Utility.API.DeviceUtility import (
     getDeviceDetail,
     getLatestEvent,
     getLatestEventApiUrl,
+    searchForDevice,
 )
 from Utility.API.GroupUtility import fetchGroupName
 from Utility.deviceInfo import constructNetworkInfo
@@ -1229,9 +1230,6 @@ def clearKnownGroups():
 def getAllDeviceInfo(frame, action=None):
     devices = []
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
         labels = list(
             filter(
                 lambda key: frame.sidePanel.devices[key]
@@ -1240,19 +1238,8 @@ def getAllDeviceInfo(frame, action=None):
             )
         )
         for label in labels:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                search=label,
-                limit=Globals.limit,
-                offset=Globals.offset,
-            )
-            if (
-                api_response
-                and hasattr(api_response, "results")
-                and api_response.results
-            ):
-                devices += api_response.results
-            elif type(api_response) is dict and "results" in api_response:
+            api_response = searchForDevice(search=label)
+            if type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response.results = list(filter(filterDeviceList, api_response.results))
