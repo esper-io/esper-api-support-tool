@@ -638,7 +638,7 @@ class NewFrameLayout(wx.Frame):
             )
 
         self.Logging("Finished compiling information for CSV")
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
 
         self.saveGridData(
             inFile,
@@ -783,6 +783,8 @@ class NewFrameLayout(wx.Frame):
                                     **Globals.CSV_TAG_ATTR_NAME,
                                     **Globals.CSV_NETWORK_ATTR_NAME,
                                 },
+                                maxGauge=95,
+                                beginGauge=85,
                             )
                     else:
                         # Save Device Info
@@ -797,6 +799,8 @@ class NewFrameLayout(wx.Frame):
                                 baseSheetName,
                                 deviceHeaders,
                                 Globals.CSV_TAG_ATTR_NAME,
+                                maxGauge=90,
+                                beginGauge=85,
                             )
                         else:
                             self.populateWorkSheet(
@@ -805,8 +809,11 @@ class NewFrameLayout(wx.Frame):
                                 baseSheetName,
                                 deviceHeaders,
                                 Globals.CSV_TAG_ATTR_NAME,
+                                maxGauge=90,
+                                beginGauge=85,
                             )
                         # Save Network Info
+                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 90)
                         baseSheetName = "Network"
                         if gridDeviceData and (
                             not action
@@ -818,6 +825,8 @@ class NewFrameLayout(wx.Frame):
                                 baseSheetName,
                                 networkHeaders,
                                 Globals.CSV_NETWORK_ATTR_NAME,
+                                maxGauge=95,
+                                beginGauge=90,
                             )
                         else:
                             self.populateWorkSheet(
@@ -826,7 +835,10 @@ class NewFrameLayout(wx.Frame):
                                 baseSheetName,
                                 networkHeaders,
                                 Globals.CSV_NETWORK_ATTR_NAME,
+                                maxGauge=95,
+                                beginGauge=90,
                             )
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 95)
                     # Save App Info
                     if self.gridPanel.grid_3_contents:
                         baseSheetName = "Application"
@@ -836,6 +848,8 @@ class NewFrameLayout(wx.Frame):
                             baseSheetName,
                             Globals.CSV_APP_ATTR_NAME,
                             None,
+                            maxGauge=100,
+                            beginGauge=95,
                         )
                     my_wb.close()
                 except Exception as e:
@@ -872,6 +886,8 @@ class NewFrameLayout(wx.Frame):
         networkIndx = {}
         indx = 0
         for network in networkList:
+            if "network_info" in network:
+                network = network["network_info"]
             name = network["Esper Name"]
             networkIndx[name] = indx
             indx += 1
@@ -885,12 +901,14 @@ class NewFrameLayout(wx.Frame):
         return newData
 
     def populateWorkSheet(
-        self, workbook, dataSource, baseSheetName, headers, headerKeys
+        self, workbook, dataSource, baseSheetName, headers, headerKeys, maxGauge=100, beginGauge=85
     ):
         loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
         bold = workbook.add_format({"bold": True})
         bold.set_align("center")
         bold.set_align("vcenter")
+        numProcessed = 1
+        startTime = datetime.now()
         for num in range(loopNum):
             rowIndx = 0
             sheetName = baseSheetName
@@ -930,6 +948,11 @@ class NewFrameLayout(wx.Frame):
                         maxColumnWidth[headers[colIndx]] = len(headers[colIndx])
                     colIndx += 1
                 rowIndx += 1
+                # Update Gauge every 2 seonds
+                if int((datetime.now() - startTime).total_seconds()) % 2 == 0:
+                    percent = int((numProcessed / len(dataSource)) * (maxGauge - beginGauge)) + beginGauge
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
+                numProcessed += 1
             for num in range(len(headers)):
                 worksheet.set_column(num, num, maxColumnWidth[headers[num]])
 
