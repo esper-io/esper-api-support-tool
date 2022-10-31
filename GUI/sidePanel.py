@@ -382,7 +382,14 @@ class SidePanel(wx.Panel):
             for choice in choices:
                 match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
                 if match:
-                    match = match[0]
+                    if len(match) == 1:
+                        match = match[0]
+                    else:
+                        for m in match:
+                            parts = m.split("/")
+                            if parts[-1] == choice:
+                                match = m
+                                break
                     newChoices.append(
                         "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
                     )
