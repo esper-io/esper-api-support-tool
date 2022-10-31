@@ -244,17 +244,54 @@ def setDeviceDisabled(deviceId):
     return patchInfo("", deviceId, jsonData={"state": 20})
 
 
-def searchForDevice(search=None, imei=None, serial=None, name=None):
+def searchForDevice(search=None, imei=None, serial=None, name=None, group=None, state=None, brand=None, gms=None, tags=None):
     extention = "device/"
 
     if search is not None:
-        extention += "?limit=%s&search=%s" % (Globals.limit, search)
-    elif imei is not None:
-        extention += "?limit=%s&imei=%s" % (Globals.limit, imei)
-    elif serial is not None:
-        extention += "?limit=%s&serial=%s" % (Globals.limit, serial)
-    elif name is not None:
-        extention += "?limit=%s&name=%s" % (Globals.limit, name)
+        if "?limit=" not in extention:
+            extention += "?limit=%s&search=%s" % (Globals.limit, search)
+        else:
+            extention += "&search=%s" % (search)
+    if imei is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&imei=%s" % (Globals.limit, imei)
+        else:
+            extention += "&imei=%s" % (imei)
+    if serial is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&serial=%s" % (Globals.limit, serial)
+        else:
+            extention += "&serial=%s" % (serial)
+    if name is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&name=%s" % (Globals.limit, name)
+        else:
+            extention += "&name=%s" % (name)
+    if group is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&group=%s" % (Globals.limit, group)
+        else:
+            extention += "&group=%s" % (group)
+    if state is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&state=%s" % (Globals.limit, state)
+        else:
+            extention += "&state=%s" % (state)
+    if brand is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&brand=%s" % (Globals.limit, brand)
+        else:
+            extention += "&brand=%s" % (brand)
+    if gms is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&is_gms=%s" % (Globals.limit, gms)
+        else:
+            extention += "&is_gms=%s" % (gms)
+    if tags is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&tags=%s" % (Globals.limit, tags)
+        else:
+            extention += "&tags=%s" % (tags)
 
     url = (
         Globals.BASE_REQUEST_URL.format(

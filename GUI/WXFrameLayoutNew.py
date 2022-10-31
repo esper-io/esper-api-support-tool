@@ -949,7 +949,7 @@ class NewFrameLayout(wx.Frame):
                     colIndx += 1
                 rowIndx += 1
                 # Update Gauge every 2 seonds
-                if int((datetime.now() - startTime).total_seconds()) % 2 == 0:
+                if int((datetime.now() - startTime).total_seconds()) % 5 == 0:
                     percent = int((numProcessed / len(dataSource)) * (maxGauge - beginGauge)) + beginGauge
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
                 numProcessed += 1
@@ -1857,18 +1857,18 @@ class NewFrameLayout(wx.Frame):
         for device in chunk:
             name = ""
             if hasattr(device, "hardware_info"):
-                name = "%s %s %s %s" % (
+                name = "%s ~ %s ~ %s %s" % (
                     device.hardware_info["manufacturer"],
                     device.hardware_info["model"],
                     device.device_name,
-                    device.alias_name if device.alias_name else "",
+                    "~ %s" % device.alias_name if device.alias_name else "",
                 )
             else:
-                name = "%s %s %s %s" % (
+                name = "%s ~ %s ~ %s %s" % (
                     device["hardwareInfo"]["manufacturer"],
                     device["hardwareInfo"]["model"],
                     device["device_name"],
-                    device["alias_name"] if device["alias_name"] else "",
+                    "~ %s" % device["alias_name"] if device["alias_name"] else "",
                 )
             if name and name not in self.sidePanel.devices:
                 if hasattr(device, "id"):

@@ -1238,11 +1238,16 @@ def getAllDeviceInfo(frame, action=None):
             )
         )
         for label in labels:
-            api_response = searchForDevice(search=label)
-            if type(api_response) is dict and "results" in api_response:
-                devices += api_response["results"]
-        if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(filter(filterDeviceList, api_response.results))
+            labelParts = label.split("~")
+            api_response = searchForDevice(search=labelParts[2])
+            if type(api_response) is dict and "results" in api_response and api_response["results"]:
+                if len(api_response["results"]) == 1:
+                    devices += api_response["results"]
+                else:
+                    for device in api_response["results"]:
+                        if device["device_name"] == labelParts[2]:
+                            devices.append(device)
+                            break
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList, tolarance=1
@@ -1262,10 +1267,9 @@ def getAllDeviceInfo(frame, action=None):
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to get devices",
             )
-        if not Globals.SHOW_DISABLED_DEVICES:
-            api_response["results"] = list(
-                filter(filterDeviceList, api_response["results"])
-            )
+
+    if not Globals.SHOW_DISABLED_DEVICES:
+        devices = list(filter(filterDeviceList, devices))
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
@@ -1292,7 +1296,7 @@ def getAllDeviceInfo(frame, action=None):
     deviceList = {}
     indx = 0
 
-    for device in api_response["results"]:
+    for device in devices:
         Globals.THREAD_POOL.enqueue(
             processDeviceInDeviceList,
             device,
