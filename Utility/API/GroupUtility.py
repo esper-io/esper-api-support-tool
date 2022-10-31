@@ -179,11 +179,11 @@ def get_all_groups(
 ):
     response = getAllGroupsHelper(name, limit, offset, maxAttempt)
     groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
-    if hasattr(response, "results"):
+    if hasattr(response, "results") and groups:
         response.results = response.results + groups
         response.next = None
         response.prev = None
-    elif type(response) is dict and "results" in response:
+    elif type(response) is dict and "results" in response and groups:
         response["results"] = response["results"] + groups
         response["next"] = None
         response["prev"] = None
