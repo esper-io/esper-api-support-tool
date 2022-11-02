@@ -271,6 +271,10 @@ CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
 APP_FILTER_TYPES = ["ALL", "SHOW", "HIDE", "DISABLE"]
 
+EXCEPTION_MSGS = [
+    "Not Able to Process CSV File! Missing HEADERS!"
+]
+
 """ WxPython Frame """
 frame = None
 app = None

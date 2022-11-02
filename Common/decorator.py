@@ -80,7 +80,7 @@ def api_tool_decorator(locks=None):
 
 def determineErrorDisplay(e):
     Globals.error_lock.acquire(timeout=10)
-    if str(e) in Globals.error_tracker:
+    if str(e) in Globals.error_tracker and str(e) not in Globals.EXCEPTION_MSGS:
         occurred = Globals.error_tracker[str(e)]
         timeDiff = datetime.now() - occurred
         minutes = timeDiff.total_seconds() / 60

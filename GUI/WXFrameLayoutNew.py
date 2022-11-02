@@ -74,6 +74,7 @@ from Utility.Resource import (
     correctSaveFileName,
     createNewFile,
     displayMessageBox,
+    getStrRatioSimilarity,
     joinThreadList,
     openWebLinkInBrowser,
     postEventToFrame,
@@ -1140,6 +1141,108 @@ class NewFrameLayout(wx.Frame):
             Globals.grid2_lock,
         )
 
+    # @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
+    # def processCsvDataByGrid(self, grid, data, headers, lock=None):
+    #     if lock:
+    #         lock.acquire()
+    #     grid_headers = list(headers.keys())
+    #     len_reader = len(data)
+    #     rowCount = 1
+    #     num = 0
+    #     for row in data:
+    #         postEventToFrame(
+    #             eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
+    #         )
+    #         rowCount += 1
+    #         if not all("" == val or val.isspace() for val in row):
+    #             if num == 0:
+    #                 header = row
+    #                 num += 1
+    #                 continue
+    #             grid.AppendRows(1)
+    #             toolCol = 0
+    #             for expectedCol in headers.keys():
+    #                 fileCol = 0
+    #                 for colValue in row:
+    #                     colName = (
+    #                         str(header[fileCol]).replace(" ", "").lower()
+    #                         if len(header) > fileCol
+    #                         else ""
+    #                     )
+    #                     if colValue == "--":
+    #                         colValue = ""
+    #                     if colName == "storenumber":
+    #                         colName = "Alias"
+    #                         header[fileCol] = "Alias"
+    #                     if colName == "tag":
+    #                         colName = "Tags"
+    #                         header[fileCol] = "Tags"
+    #                     if (
+    #                         (
+    #                             expectedCol == "Device Name"
+    #                             or expectedCol == "Esper Name"
+    #                         )
+    #                         and colName == "espername"
+    #                         and grid == self.gridPanel.grid_2
+    #                     ):
+    #                         colName = "devicename"
+    #                     if expectedCol == "Esper Name" and colName == "devicename":
+    #                         colName = "devicename"
+    #                         expectedCol = "devicename"
+    #                     if (
+    #                         fileCol < len(header)
+    #                         and str(header[fileCol]).strip()
+    #                         in Globals.CSV_DEPRECATED_HEADER_LABEL
+    #                     ) or (
+    #                         fileCol < len(header)
+    #                         and str(header[fileCol]).strip() not in headers.keys()
+    #                         and colName != "devicename"
+    #                     ):
+    #                         fileCol += 1
+    #                         continue
+    #                     if colName == expectedCol.replace(" ", "").lower():
+    #                         if expectedCol == "Tags":
+    #                             try:
+    #                                 ast.literal_eval(colValue)
+    #                             except:
+    #                                 colValue = str(colValue)
+    #                                 if (
+    #                                     expectedCol == "Tags"
+    #                                     and "," in colValue
+    #                                     and (
+    #                                         (
+    #                                             colValue.count('"') % 2 != 0
+    #                                             or colValue.count("'") % 2 != 0
+    #                                             or colValue.count("’") % 2 != 0
+    #                                         )
+    #                                         or (
+    #                                             '"' not in colValue
+    #                                             and "'" not in colValue
+    #                                             and "’" not in colValue
+    #                                         )
+    #                                     )
+    #                                 ):
+    #                                     colValue = '"' + colValue + '"'
+    #                         grid.SetCellValue(
+    #                             grid.GetNumberRows() - 1,
+    #                             toolCol,
+    #                             str(colValue),
+    #                         )
+    #                         isEditable = True
+    #                         if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
+    #                             isEditable = False
+    #                         grid.SetReadOnly(
+    #                             grid.GetNumberRows() - 1,
+    #                             toolCol,
+    #                             isEditable,
+    #                         )
+    #                         fileCol += 1
+    #                         break
+    #                     fileCol += 1
+    #                 toolCol += 1
+    #     if lock:
+    #         lock.release()
+
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def processCsvDataByGrid(self, grid, data, headers, lock=None):
         if lock:
@@ -1148,6 +1251,7 @@ class NewFrameLayout(wx.Frame):
         len_reader = len(data)
         rowCount = 1
         num = 0
+        header = None
         for row in data:
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
@@ -1156,91 +1260,99 @@ class NewFrameLayout(wx.Frame):
             if not all("" == val or val.isspace() for val in row):
                 if num == 0:
                     header = row
+                    validHeader = False
+                    for colName in header:
+                        if colName in grid_headers:
+                            # Assume its valid if it has at least one valid entry
+                            validHeader = True
+                            break
+                    if not validHeader:
+                        raise Exception("Not Able to Process CSV File! Missing HEADERS!")
                     num += 1
                     continue
                 grid.AppendRows(1)
-                toolCol = 0
-                for expectedCol in headers.keys():
-                    fileCol = 0
-                    for colValue in row:
-                        colName = (
-                            str(header[fileCol]).replace(" ", "").lower()
-                            if len(header) > fileCol
-                            else ""
-                        )
-                        if colValue == "--":
-                            colValue = ""
-                        if colName == "storenumber":
-                            colName = "Alias"
-                            header[fileCol] = "Alias"
-                        if colName == "tag":
-                            colName = "Tags"
-                            header[fileCol] = "Tags"
-                        if (
-                            (
-                                expectedCol == "Device Name"
-                                or expectedCol == "Esper Name"
-                            )
-                            and colName == "espername"
-                            and grid == self.gridPanel.grid_2
-                        ):
-                            colName = "devicename"
-                        if expectedCol == "Esper Name" and colName == "devicename":
-                            colName = "devicename"
-                            expectedCol = "devicename"
-                        if (
-                            fileCol < len(header)
-                            and str(header[fileCol]).strip()
-                            in Globals.CSV_DEPRECATED_HEADER_LABEL
-                        ) or (
-                            fileCol < len(header)
-                            and str(header[fileCol]).strip() not in headers.keys()
-                            and colName != "devicename"
-                        ):
-                            fileCol += 1
-                            continue
-                        if colName == expectedCol.replace(" ", "").lower():
-                            if expectedCol == "Tags":
-                                try:
-                                    ast.literal_eval(colValue)
-                                except:
-                                    colValue = str(colValue)
-                                    if (
-                                        expectedCol == "Tags"
-                                        and "," in colValue
-                                        and (
-                                            (
-                                                colValue.count('"') % 2 != 0
-                                                or colValue.count("'") % 2 != 0
-                                                or colValue.count("’") % 2 != 0
-                                            )
-                                            or (
-                                                '"' not in colValue
-                                                and "'" not in colValue
-                                                and "’" not in colValue
-                                            )
-                                        )
-                                    ):
-                                        colValue = '"' + colValue + '"'
-                            grid.SetCellValue(
-                                grid.GetNumberRows() - 1,
-                                toolCol,
-                                str(colValue),
-                            )
-                            isEditable = True
-                            if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
-                                isEditable = False
-                            grid.SetReadOnly(
-                                grid.GetNumberRows() - 1,
-                                toolCol,
-                                isEditable,
-                            )
-                            fileCol += 1
-                            break
-                        fileCol += 1
-                    toolCol += 1
+                rowNum = grid.GetNumberRows() - 1
+                self.processCSVRow(row, rowNum, header, grid_headers, grid)
         if lock:
             lock.release()
+
+    def processCSVRow(self, row, rowNum, header, grid_headers, grid):
+        fileCol = 0
+        for colValue in row:
+            colName = self.getAndValidateColumnHeaderName(header, fileCol)
+            if colValue == "--":
+                colValue = ""
+            if (
+                fileCol < len(header)
+                and colName.strip()
+                in Globals.CSV_DEPRECATED_HEADER_LABEL
+            ) or (
+                fileCol < len(header)
+                and colName.strip() not in grid_headers
+                and colName != "devicename"
+            ):
+                fileCol += 1
+                continue
+            expectedCol = ""
+            if colName in grid_headers:
+                expectedCol = colName
+            else:
+                for col in grid_headers:
+                    if getStrRatioSimilarity(colName, col) >= 95:
+                        expectedCol = col
+                        break
+            if expectedCol:
+                toolCol = grid_headers.index(expectedCol)
+                if expectedCol == "Tags":
+                    try:
+                        ast.literal_eval(colValue)
+                    except:
+                        colValue = str(colValue)
+                        if (
+                            expectedCol == "Tags"
+                            and "," in colValue
+                            and (
+                                (
+                                    colValue.count('"') % 2 != 0
+                                    or colValue.count("'") % 2 != 0
+                                    or colValue.count("’") % 2 != 0
+                                )
+                                or (
+                                    '"' not in colValue
+                                    and "'" not in colValue
+                                    and "’" not in colValue
+                                )
+                            )
+                        ):
+                            colValue = '"' + colValue + '"'
+                grid.SetCellValue(
+                    rowNum,
+                    toolCol,
+                    str(colValue),
+                )
+                isEditable = True
+                if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
+                    isEditable = False
+                grid.SetReadOnly(
+                    rowNum,
+                    toolCol,
+                    isEditable,
+                )
+                fileCol += 1
+
+    def getAndValidateColumnHeaderName(self, header, indx):
+        colName = (
+            str(header[indx])  # .replace(" ", "").lower()
+            if len(header) > indx
+            else ""
+        )
+        if colName.lower() == "storenumber" or colName.lower() == "store number":
+            colName = "Alias"
+        if colName.lower() == "tag":
+            colName = "Tags"
+        # if colName == "espername" or colName == "devicename":
+        #     colName = "devicename"
+        return colName
 
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, event=None, getItemForName=None):
@@ -2631,6 +2743,7 @@ class NewFrameLayout(wx.Frame):
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (self.onCommandDone, (cmdResults,)),
             )
+        self.isUploading = False
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
@@ -2780,9 +2893,10 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning:
             return
 
+        self.isUploading = True
         for file in event.Files:
             if file.endswith(".csv"):
-                with open(file, "r") as csvFile:
+                with open(file, "r", encoding="utf-8") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
@@ -2803,19 +2917,29 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             return
-                        self.processDeviceCSVUpload(data)
-                        self.gridPanel.grid_1.AutoSizeColumns()
+                        if self.WINDOWS:
+                            Globals.THREAD_POOL.enqueue(self.processDeviceCSVUpload, data)
+                            Globals.THREAD_POOL.enqueue(
+                                self.waitForThreadsThenSetCursorDefault,
+                                Globals.THREAD_POOL.threads,
+                                2,
+                                tolerance=1,
+                            )
+                        else:
+                            self.processDeviceCSVUpload(data)
+                            postEventToFrame(eventUtil.myEVT_COMPLETE, True)
             elif file.endswith(".xlxs"):
                 if self.WINDOWS:
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, file)
+                    Globals.THREAD_POOL.enqueue(
+                        self.waitForThreadsThenSetCursorDefault,
+                        Globals.THREAD_POOL.threads,
+                        2,
+                        tolerance=1,
+                    )
                 else:
                     self.openDeviceCSV(file)
-                Globals.THREAD_POOL.enqueue(
-                    self.waitForThreadsThenSetCursorDefault,
-                    Globals.THREAD_POOL.threads,
-                    2,
-                    tolerance=1,
-                )
+                    postEventToFrame(eventUtil.myEVT_COMPLETE, True)
 
     @api_tool_decorator()
     def onClone(self, event):

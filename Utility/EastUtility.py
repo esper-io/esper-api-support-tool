@@ -6,7 +6,6 @@ import time
 from datetime import datetime
 
 import Common.Globals as Globals
-import esperclient
 import pytz
 import wx
 from Common.decorator import api_tool_decorator
