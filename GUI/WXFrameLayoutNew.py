@@ -1714,6 +1714,7 @@ class NewFrameLayout(wx.Frame):
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
+            self.isUploading = False
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
             if self.WINDOWS:
@@ -2743,7 +2744,6 @@ class NewFrameLayout(wx.Frame):
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (self.onCommandDone, (cmdResults,)),
             )
-        self.isUploading = False
         self.menubar.enableConfigMenu()
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
