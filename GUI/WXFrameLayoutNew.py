@@ -1350,8 +1350,6 @@ class NewFrameLayout(wx.Frame):
             colName = "Alias"
         if colName.lower() == "tag":
             colName = "Tags"
-        # if colName == "espername" or colName == "devicename":
-        #     colName = "devicename"
         return colName
 
     @api_tool_decorator()
