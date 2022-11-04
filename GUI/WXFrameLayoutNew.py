@@ -382,7 +382,6 @@ class NewFrameLayout(wx.Frame):
                 res = dialog.ShowModal()
                 if res == wx.ID_ADD:
                     try:
-                        Globals.THREAD_POOL.clearQueue()
                         name, host, entId, key, prefix = dialog.getInputValues()
                         csvRow = dialog.getCSVRowEntry()
                         isValid = self.addEndpointEntry(
