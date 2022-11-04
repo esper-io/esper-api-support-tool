@@ -901,7 +901,14 @@ class NewFrameLayout(wx.Frame):
         return newData
 
     def populateWorkSheet(
-        self, workbook, dataSource, baseSheetName, headers, headerKeys, maxGauge=100, beginGauge=85
+        self,
+        workbook,
+        dataSource,
+        baseSheetName,
+        headers,
+        headerKeys,
+        maxGauge=100,
+        beginGauge=85,
     ):
         loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
         bold = workbook.add_format({"bold": True})
@@ -950,7 +957,10 @@ class NewFrameLayout(wx.Frame):
                 rowIndx += 1
                 # Update Gauge every 2 seonds
                 if int((datetime.now() - startTime).total_seconds()) % 5 == 0:
-                    percent = int((numProcessed / len(dataSource)) * (maxGauge - beginGauge)) + beginGauge
+                    percent = (
+                        int((numProcessed / len(dataSource)) * (maxGauge - beginGauge))
+                        + beginGauge
+                    )
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
                 numProcessed += 1
             for num in range(len(headers)):
@@ -1164,7 +1174,9 @@ class NewFrameLayout(wx.Frame):
                             validHeader = True
                             break
                     if not validHeader:
-                        raise Exception("Not Able to Process CSV File! Missing HEADERS!")
+                        raise Exception(
+                            "Not Able to Process CSV File! Missing HEADERS!"
+                        )
                     num += 1
                     continue
                 grid.AppendRows(1)
@@ -1181,8 +1193,7 @@ class NewFrameLayout(wx.Frame):
                 colValue = ""
             if (
                 fileCol < len(header)
-                and colName.strip()
-                in Globals.CSV_DEPRECATED_HEADER_LABEL
+                and colName.strip() in Globals.CSV_DEPRECATED_HEADER_LABEL
             ) or (
                 fileCol < len(header)
                 and colName.strip() not in grid_headers
@@ -1239,9 +1250,7 @@ class NewFrameLayout(wx.Frame):
 
     def getAndValidateColumnHeaderName(self, header, indx):
         colName = (
-            str(header[indx])  # .replace(" ", "").lower()
-            if len(header) > indx
-            else ""
+            str(header[indx]) if len(header) > indx else ""  # .replace(" ", "").lower()
         )
         if colName.lower() == "storenumber" or colName.lower() == "store number":
             colName = "Alias"
@@ -2016,9 +2025,8 @@ class NewFrameLayout(wx.Frame):
 
         allDevicesSelected = (
             True
-            if hasattr(self.sidePanel.deviceResp, "count")
-            and len(self.sidePanel.selectedDevicesList)
-            == self.sidePanel.deviceResp.count
+            if len(self.sidePanel.selectedDevicesList)
+            == len(self.sidePanel.deviceResp["results"])
             else False
         )
 
@@ -2816,7 +2824,9 @@ class NewFrameLayout(wx.Frame):
                             )
                             return
                         if self.WINDOWS:
-                            Globals.THREAD_POOL.enqueue(self.processDeviceCSVUpload, data)
+                            Globals.THREAD_POOL.enqueue(
+                                self.processDeviceCSVUpload, data
+                            )
                             Globals.THREAD_POOL.enqueue(
                                 self.waitForThreadsThenSetCursorDefault,
                                 Globals.THREAD_POOL.threads,

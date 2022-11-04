@@ -588,7 +588,9 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
             entry = None
             if "application" in app:
                 pkgName = app["application"]["package_name"]
-                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (filterData and pkgName not in Globals.APP_COL_FILTER):
+                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
+                    filterData and pkgName not in Globals.APP_COL_FILTER
+                ):
                     continue
                 if obtainAppDictEntry:
                     entry = getAppDictEntry(app, False)
@@ -622,7 +624,9 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 appName = app["application"]["application_name"]
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
             else:
-                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (filterData and app["package_name"] not in Globals.APP_COL_FILTER):
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
+                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
+                ):
                     continue
                 if obtainAppDictEntry:
                     entry = getAppDictEntry(app, False)

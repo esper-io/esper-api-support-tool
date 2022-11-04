@@ -244,7 +244,17 @@ def setDeviceDisabled(deviceId):
     return patchInfo("", deviceId, jsonData={"state": 20})
 
 
-def searchForDevice(search=None, imei=None, serial=None, name=None, group=None, state=None, brand=None, gms=None, tags=None):
+def searchForDevice(
+    search=None,
+    imei=None,
+    serial=None,
+    name=None,
+    group=None,
+    state=None,
+    brand=None,
+    gms=None,
+    tags=None,
+):
     extention = "device/"
 
     if search is not None:

@@ -647,7 +647,11 @@ def populateDeviceInfoDictionaryComplieData(
         ):
             device["tags"] = []
 
-    apps = apiCalls.createAppList(appData, obtainAppDictEntry=False, filterData=True) if appData else []
+    apps = (
+        apiCalls.createAppList(appData, obtainAppDictEntry=False, filterData=True)
+        if appData
+        else []
+    )
     json = appData if appData else ""
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json
@@ -1228,7 +1232,9 @@ def clearKnownGroups():
 
 def getAllDeviceInfo(frame, action=None):
     devices = []
-    if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(Globals.frame.sidePanel.selectedDevicesList) < len(frame.sidePanel.devices):
+    if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(
+        Globals.frame.sidePanel.selectedDevicesList
+    ) < len(frame.sidePanel.devices):
         labels = list(
             filter(
                 lambda key: frame.sidePanel.devices[key]
@@ -1238,7 +1244,9 @@ def getAllDeviceInfo(frame, action=None):
         )
         for label in labels:
             labelParts = label.split("~")
-            Globals.THREAD_POOL.enqueue(searchForDeviceAndAppendToList, labelParts[2], devices)
+            Globals.THREAD_POOL.enqueue(
+                searchForDeviceAndAppendToList, labelParts[2], devices
+            )
         Globals.THREAD_POOL.join(tolerance=1)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
@@ -1307,7 +1315,11 @@ def getAllDeviceInfo(frame, action=None):
 
 def searchForDeviceAndAppendToList(searchTerm, listToAppend):
     api_response = searchForDevice(search=searchTerm)
-    if type(api_response) is dict and "results" in api_response and api_response["results"]:
+    if (
+        type(api_response) is dict
+        and "results" in api_response
+        and api_response["results"]
+    ):
         if len(api_response["results"]) == 1:
             listToAppend += api_response["results"]
         else:

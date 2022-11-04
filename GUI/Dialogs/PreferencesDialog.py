@@ -58,7 +58,7 @@ class PreferencesDialog(wx.Dialog):
             "appFilter",
             "maxSplitFileSize",
             "allowAutoIssuePost",
-            "appColFilter"
+            "appColFilter",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -629,7 +629,7 @@ class PreferencesDialog(wx.Dialog):
             "appFilter": self.combobox_2.GetValue(),
             "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
-            "appColFilter": self.appColFilter
+            "appColFilter": self.appColFilter,
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -1154,7 +1154,11 @@ class PreferencesDialog(wx.Dialog):
             None,
             "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
             "App Column Filter",
-            textPlaceHolder=",".join(self.appColFilter) if self.appColFilter else ",".join(Globals.APP_COL_FILTER) if Globals.APP_COL_FILTER else ""
+            textPlaceHolder=",".join(self.appColFilter)
+            if self.appColFilter
+            else ",".join(Globals.APP_COL_FILTER)
+            if Globals.APP_COL_FILTER
+            else "",
         ) as textDialog:
             if textDialog.ShowModal() == wx.ID_OK:
                 appList = textDialog.GetValue()

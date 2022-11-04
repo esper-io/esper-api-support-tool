@@ -221,7 +221,10 @@ class GridPanel(wx.Panel):
             numRows = self.grid_1.GetNumberRows()
             indx = self.grid1HeaderLabels.index("Applications")
             for row in range(numRows):
-                if self.grid_1.GetNumberRows() > row and len(self.grid_1_contents) > row:
+                if (
+                    self.grid_1.GetNumberRows() > row
+                    and len(self.grid_1_contents) > row
+                ):
                     data = self.grid_1_contents[row]
                     self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
 
