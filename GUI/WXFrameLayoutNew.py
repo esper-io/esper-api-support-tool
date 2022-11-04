@@ -1378,6 +1378,7 @@ class NewFrameLayout(wx.Frame):
                 self.groupManage.Destroy()
         except:
             pass
+        # Reset Side Panel
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.groupDeviceCount = {}
@@ -1385,10 +1386,12 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
-        self.frame_toolbar.search.SetValue("")
-        self.sidePanel.clearStoredApps()
-        self.toggleEnabledState(False)
         self.sidePanel.notebook_1.SetSelection(0)
+        self.sidePanel.clearStoredApps()
+        # Clear Search Input
+        self.frame_toolbar.search.SetValue("")
+        # Disable other options
+        self.toggleEnabledState(False)
         self.setCursorBusy()
 
         self.firstRun = False
@@ -3051,8 +3054,10 @@ class NewFrameLayout(wx.Frame):
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
         self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
 
+        # Toggle Menu Bar Items
         self.menubar.fileOpenAuth.Enable(state)
-        self.menubar.EnableTop(4, state)
+        self.menubar.EnableTop(self.menubar.ConfigMenuPosition, state)
+        self.menubar.EnableTop(self.menubar.RunMenuPosition, state)
         self.menubar.fileOpenConfig.Enable(state)
         self.menubar.pref.Enable(state)
         self.menubar.collection.Enable(state)
