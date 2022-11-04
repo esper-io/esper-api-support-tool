@@ -144,7 +144,7 @@ JSON_COMMAND_TYPES = [
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
-HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit#heading=h.50j8ygvoempc"
+HELP_LINK = "https://github.com/esper-io/esper-api-support-tool/wiki"
 LATEST_UPDATE_LINK = (
     "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
 )
