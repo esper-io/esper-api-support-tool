@@ -900,6 +900,7 @@ class NewFrameLayout(wx.Frame):
                 newData.append(device)
         return newData
 
+    @api_tool_decorator()
     def populateWorkSheet(
         self,
         workbook,
@@ -966,6 +967,7 @@ class NewFrameLayout(wx.Frame):
             for num in range(len(headers)):
                 worksheet.set_column(num, num, maxColumnWidth[headers[num]])
 
+    @api_tool_decorator()
     def saveAppInfoAsFile(self, inFile):
         gridData = []
         gridData.append(Globals.CSV_APP_ATTR_NAME)
