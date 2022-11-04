@@ -1228,7 +1228,7 @@ def clearKnownGroups():
 
 def getAllDeviceInfo(frame, action=None):
     devices = []
-    if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
+    if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(Globals.frame.sidePanel.selectedDevicesList) < len(frame.sidePanel.devices):
         labels = list(
             filter(
                 lambda key: frame.sidePanel.devices[key]
@@ -1238,15 +1238,8 @@ def getAllDeviceInfo(frame, action=None):
         )
         for label in labels:
             labelParts = label.split("~")
-            api_response = searchForDevice(search=labelParts[2])
-            if type(api_response) is dict and "results" in api_response and api_response["results"]:
-                if len(api_response["results"]) == 1:
-                    devices += api_response["results"]
-                else:
-                    for device in api_response["results"]:
-                        if device["device_name"] == labelParts[2]:
-                            devices.append(device)
-                            break
+            Globals.THREAD_POOL.enqueue(searchForDeviceAndAppendToList, labelParts[2], devices)
+        Globals.THREAD_POOL.join(tolerance=1)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList, tolarance=1
@@ -1310,6 +1303,18 @@ def getAllDeviceInfo(frame, action=None):
     Globals.THREAD_POOL.join(tolerance=1)
 
     return deviceList
+
+
+def searchForDeviceAndAppendToList(searchTerm, listToAppend):
+    api_response = searchForDevice(search=searchTerm)
+    if type(api_response) is dict and "results" in api_response and api_response["results"]:
+        if len(api_response["results"]) == 1:
+            listToAppend += api_response["results"]
+        else:
+            for device in api_response["results"]:
+                if device["device_name"] == searchTerm:
+                    listToAppend.append(device)
+                    break
 
 
 def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
