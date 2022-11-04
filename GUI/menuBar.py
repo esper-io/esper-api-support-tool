@@ -243,8 +243,15 @@ class ToolMenuBar(wx.MenuBar):
 
         self.toggleCloneMenuOptions(False)
 
+        self.sensitiveMenuOptions = [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+        ]
         self.ConfigMenuPosition = 4
-        self.RunMenuPosition = 5
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
         self.Append(viewMenu, "&View")

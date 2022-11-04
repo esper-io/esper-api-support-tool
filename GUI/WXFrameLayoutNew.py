@@ -3062,8 +3062,8 @@ class NewFrameLayout(wx.Frame):
 
         # Toggle Menu Bar Items
         self.menubar.fileOpenAuth.Enable(state)
-        self.menubar.EnableTop(self.menubar.ConfigMenuPosition, state)
-        self.menubar.EnableTop(self.menubar.RunMenuPosition, state)
+        for option in self.menubar.sensitiveMenuOptions:
+            self.menubar.EnableTop(option, state)
         self.menubar.fileOpenConfig.Enable(state)
         self.menubar.pref.Enable(state)
         self.menubar.collection.Enable(state)
