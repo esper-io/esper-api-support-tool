@@ -64,7 +64,7 @@ class ApiToolLog:
                 pass
 
     def LogError(
-        self, e, exc_type=None, exc_value=None, exc_traceback=None, postIssue=True
+        self, e, exc_type=None, exc_value=None, exc_traceback=None
     ):
         if exc_type is None or exc_value is None or exc_traceback is None:
             exc_type, exc_value, exc_traceback = sys.exc_info()

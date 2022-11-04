@@ -696,22 +696,6 @@ class GroupManagement(wx.Dialog):
             self.button_2.Enable(False)
             self.button_4.Enable(False)
 
-    def getSubGroups(self, groupId):
-        return self.getSubGroupsHelper(self.groupTree, groupId)
-
-    def getSubGroupsHelper(self, src, groupId):
-        for id, children in src.items():
-            if id == groupId:
-                childIds = []
-                self.getChildIds(children, childIds)
-                return childIds
-            else:
-                for child in children:
-                    childrenList = self.getSubGroupsHelper(child, groupId)
-                    if childrenList:
-                        return childrenList
-        return []
-
     def getChildIds(self, children, childIds):
         for childDict in children:
             childIds += list(childDict.keys())

@@ -654,11 +654,6 @@ class NewFrameLayout(wx.Frame):
             print("Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
-    def fetchAllGridData(self, chunk, gridDeviceData):
-        for entry in chunk:
-            gridDeviceData.append(self.gridPanel.getDeviceNetworkInfoListing(*entry))
-
-    @api_tool_decorator()
     def saveFile(self, inFile):
         self.Logging("Preparing to save data to: %s" % inFile)
         self.defaultDir = Path(inFile).parent
@@ -3623,7 +3618,6 @@ class NewFrameLayout(wx.Frame):
                 else:
                     return None
 
-            pushSuccess = 0
             statusList = []
             if not opt or opt == options[2]:
                 return None
@@ -3632,8 +3626,6 @@ class NewFrameLayout(wx.Frame):
                 num = 1
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
-                    if updateResp and updateResp.status_code < 300:
-                        pushSuccess += 1
                     statusList.append(
                         {
                             "Blueprint Id": bp["id"],
@@ -3671,8 +3663,6 @@ class NewFrameLayout(wx.Frame):
                         schedule=schedule,
                         schedule_type=scheduleType,
                     )
-                    if updateResp and updateResp.status_code < 300:
-                        pushSuccess += 1
                     statusList.append(
                         {
                             "Blueprint Id": bp["id"],

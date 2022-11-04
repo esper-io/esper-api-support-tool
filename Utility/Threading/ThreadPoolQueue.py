@@ -113,9 +113,9 @@ class Pool:
         numActive = [i.is_set() for i in self.idles].count(False)
         return numActive <= tolarance
 
-    def done(self):
-        """Returns True if not tasks are left to be completed"""
-        return self.queue.empty()
+    # def done(self):
+    #     """Returns True if no tasks are left to be completed"""
+    #     return self.queue.empty()
 
     def isDoneWithinTolerance(self, queueTolerance=0):
         return self.idle(queueTolerance)

@@ -249,14 +249,14 @@ class ColumnVisibility(wx.Dialog):
             return self.check_list_box_1.IsChecked(item)
         return True
 
-    def getChoiceDataDict(self):
-        return self.choiceDataDict
+    # def getChoiceDataDict(self):
+    #     return self.choiceDataDict
 
     def getSelected(self):
         return self.selected
 
-    def getCheckboxes(self):
-        return self.checkBoxes
+    # def getCheckboxes(self):
+    #     return self.checkBoxes
 
-    def getCheckBox(self, label):
-        return self.checkBoxes[label]
+    # def getCheckBox(self, label):
+    #     return self.checkBoxes[label]

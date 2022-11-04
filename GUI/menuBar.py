@@ -526,7 +526,3 @@ class ToolMenuBar(wx.MenuBar):
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
             self.newBlueprintApp.Enable(enable=showBlueprint)
-
-    def toggleAddTenantOptions(self, state):
-        self.defaultConfigVal.Enable(enable=state)
-        self.fileOpenAuth.Enable(enable=state)

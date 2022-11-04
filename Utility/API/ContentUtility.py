@@ -9,13 +9,13 @@ from Utility.Web.WebRequests import (
 )
 
 
-@api_tool_decorator()
-def getAllContent():
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/".format(
-        baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id
-    )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
+# @api_tool_decorator()
+# def getAllContent():
+#     url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/".format(
+#         baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id
+#     )
+#     resp = performGetRequestWithRetry(url, headers=getHeader())
+#     return resp
 
 
 @api_tool_decorator()

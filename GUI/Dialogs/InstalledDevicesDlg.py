@@ -351,31 +351,6 @@ class InstalledDevicesDlg(wx.Dialog):
             return app_id, version_id
 
     @api_tool_decorator()
-    def getSelectedAppVersionInfo(self):
-        selection = self.list_box_2.GetSelections() if self.list_box_2 else None
-        matches = []
-        if type(selection) is list and selection:
-            if len(selection) == 1:
-                version_id = self.list_box_2.GetClientData(selection[0])
-                matches = list(
-                    filter(
-                        lambda x: x["id"] == version_id,
-                        self.versions,
-                    )
-                )
-            else:
-                indx = 0
-                for version in self.versions:
-                    if indx in selection:
-                        if hasattr(version, "id"):
-                            matches.append(version.id)
-                        elif type(version) == dict and "id" in version:
-                            matches.append(version["id"])
-                    indx += 1
-
-        return matches
-
-    @api_tool_decorator()
     def onKey(self, event):
         keycode = event.GetKeyCode()
         # CTRL + C or CTRL + Insert

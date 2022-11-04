@@ -38,7 +38,6 @@ class EsperTemplateUtil:
     def __init__(self, toInfo=None, templateName=None, parent=None):
         self.apiLink = "https://{tenant}-api.esper.cloud/api/v0/enterprise/"
         self.template_extension = "/devicetemplate/"
-        self.wallpaper_extension = "/wallpaper/"
         self.limit_extension = "?limit={num}"
         self.parent = parent
         self.toTenant = (

@@ -24,8 +24,6 @@ class TemplateDialog(wx.Dialog):
         self.destTemplate = []
         self.configMenuOpt = configMenuOpt
         self.chosenTemplate = None
-        self.choice1thread = None
-        self.choice2thread = None
         self.SetThemeEnabled(False)
 
         choices = list(self.configMenuOpt.keys())

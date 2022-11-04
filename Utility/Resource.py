@@ -247,28 +247,6 @@ def joinThreadList(threads):
                 thread.join()
 
 
-@api_tool_decorator(locks=[])
-def limitActiveThreads(
-    threads,
-    max_alive=(Globals.MAX_THREAD_COUNT / 2),
-    timeout=-1,
-    breakEnabled=True,
-):
-    if threads:
-        numAlive = 0
-        for thread in threads:
-            if thread.is_alive():
-                numAlive += 1
-        if numAlive >= max_alive:
-            for thread in threads:
-                if thread.is_alive():
-                    thread.join()
-                    if breakEnabled:
-                        if timeout > -1:
-                            time.sleep(timeout)
-                        break
-
-
 def ipv6Tomac(ipv6):
     # remove subnet info if given
     subnetIndex = ipv6.find("/")

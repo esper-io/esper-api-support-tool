@@ -412,21 +412,21 @@ def getAllAppVersionsForHost(
         )
 
 
-def getApplication(application_id):
-    api_instance = esperclient.ApplicationApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    enterprise_id = Globals.enterprise_id
-    try:
-        # Get application information
+# def getApplication(application_id):
+#     api_instance = esperclient.ApplicationApi(
+#         esperclient.ApiClient(Globals.configuration)
+#     )
+#     enterprise_id = Globals.enterprise_id
+#     try:
+#         # Get application information
 
-        api_response = api_instance.get_application(application_id, enterprise_id)
-        ApiToolLog().LogApiRequestOccurrence(
-            "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
-        )
-        return api_response
-    except ApiException as e:
-        print("Exception when calling ApplicationApi->get_application: %s\n" % e)
+#         api_response = api_instance.get_application(application_id, enterprise_id)
+#         ApiToolLog().LogApiRequestOccurrence(
+#             "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
+#         )
+#         return api_response
+#     except ApiException as e:
+#         print("Exception when calling ApplicationApi->get_application: %s\n" % e)
 
 
 def getAppVersions(
