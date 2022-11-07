@@ -405,6 +405,7 @@ class SidePanel(wx.Panel):
                     resp=self.groupsResp,
                 )
 
+            Globals.OPEN_DIALOGS.append(self.groupMultiDialog)
             if self.groupMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
                 self.clearSelections()
@@ -422,7 +423,7 @@ class SidePanel(wx.Panel):
                             break
                         if groupId not in self.selectedGroupsList:
                             self.selectedGroupsList.append(groupId)
-
+            Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
@@ -448,6 +449,7 @@ class SidePanel(wx.Panel):
                     title="Select Device(s)",
                     resp=self.deviceResp,
                 )
+            Globals.OPEN_DIALOGS.append(self.deviceMultiDialog)
             if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
                 self.selectedDevices.Clear()
@@ -465,6 +467,7 @@ class SidePanel(wx.Panel):
                         self.selectedDevices.Append(deviceName)
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
+            Globals.OPEN_DIALOGS.remove(self.deviceMultiDialog)
 
     def clearStoredApps(self):
         self.apps = []
@@ -551,7 +554,9 @@ class SidePanel(wx.Panel):
             showAllVersionsOption=False,
             showPkgTextInput=hideVersion,
         ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             res = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
             if res == wx.ID_OK:
                 app_id, version, pkg, app_name = dlg.getAppValues(
                     returnPkgName=True, returnAppName=True

@@ -138,7 +138,9 @@ class BulkFactoryReset(wx.Dialog):
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         )
+        Globals.OPEN_DIALOGS.append(dlg)
         result = dlg.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dlg)
         inFile = dlg.GetPath()
         correctSaveFileName(inFile)
         dlg.DestroyLater()
@@ -182,7 +184,9 @@ class BulkFactoryReset(wx.Dialog):
             wildcard="CSV files (*.csv)|*.csv",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
                 filePath = fileDialog.GetPath()

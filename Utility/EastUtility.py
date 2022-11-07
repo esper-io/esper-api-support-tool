@@ -1230,7 +1230,7 @@ def clearKnownGroups():
     Globals.knownGroups.clear()
 
 
-def getAllDeviceInfo(frame, action=None):
+def getAllDeviceInfo(frame, action=None, allDevices=True):
     devices = []
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(
         Globals.frame.sidePanel.selectedDevicesList
@@ -1250,7 +1250,10 @@ def getAllDeviceInfo(frame, action=None):
         Globals.THREAD_POOL.join(tolerance=1)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
-            Globals.frame.sidePanel.selectedGroupsList, tolarance=1
+            Globals.frame.sidePanel.selectedGroupsList
+            if Globals.frame.sidePanel.selectedGroupsList and not allDevices
+            else " ",
+            tolarance=1,
         )
         if api_response:
             if (

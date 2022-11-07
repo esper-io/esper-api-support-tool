@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import Common.Globals as Globals
+import os
 import wx
+import wx.adv as wxadv
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 
@@ -19,6 +21,7 @@ class PreferencesDialog(wx.Dialog):
         self.SetSize(self.size)
         self.SetMinSize(self.size)
         self.SetThemeEnabled(False)
+        self.file_location = os.getcwd()
 
         self.parent = parent
         self.prefs = {}
@@ -59,6 +62,11 @@ class PreferencesDialog(wx.Dialog):
             "maxSplitFileSize",
             "allowAutoIssuePost",
             "appColFilter",
+            "scheduleSaveLocation",
+            "scheduleBeginTime",
+            "scheduleEnabled",
+            "scheduleReportType",
+            "scheduleInterval",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -466,6 +474,61 @@ class PreferencesDialog(wx.Dialog):
             "Filter the Application Column to only show paricular applications",
         )
 
+        # Schedule Preferences
+        self.schedule = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.schedule.Hide()
+        sizer_5.Add(self.schedule, 1, wx.EXPAND, 0)
+
+        sizer_20 = wx.FlexGridSizer(7, 1, 0, 0)
+
+        (_, _, self.checkbox_26,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Enable Schedule Report",
+            wx.CheckBox,
+            "Generates a report at the specified time (if the tool is open) and again some inteval later."
+            + " If the tool is being used when the scheduled time arrives the report will be delayed until the task is done."
+            + " The report will be auto saved at the appointed location. Report will generate a report for the whole endpoint.",
+        )
+
+        (_, _, self.btn_save_report,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Report Location",
+            wx.Button,
+            "Where the report should be saved.",
+        )
+        self.btn_save_report.Bind(wx.EVT_BUTTON, self.reportSaveLocation)
+
+        (_, _, self.reportType,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Report Type",
+            wx.ComboBox,
+            "The type of report should be generated at the appointed time. Options: Device, Device & Network, App, All",
+            choice=["Device", "Device & Network", "App", "All"],
+        )
+        self.reportType.SetSelection(1)
+
+        (_, _, self.timepicker,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Begin Time",
+            wxadv.TimePickerCtrl,
+            "When the first report should be generated. If the current time is after the designated time, the report will start generating and then follow the interval period.",
+        )
+
+        (_, _, self.spin_ctrl_13,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Schedule Interval",
+            wx.SpinCtrl,
+            "Schedule Interval when the report will be regenerated. Interval is in Hours.",
+        )
+        self.spin_ctrl_13.SetValue(12)
+        self.spin_ctrl_13.SetMin(8)
+        self.spin_ctrl_13.SetMax(23)
+
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.prompts.Hide()
@@ -497,6 +560,9 @@ class PreferencesDialog(wx.Dialog):
         sizer_2.AddButton(self.button_APPLY)
 
         sizer_2.Realize()
+
+        sizer_20.AddGrowableCol(0)
+        self.schedule.SetSizer(sizer_20)
 
         sizer_19.AddGrowableCol(0)
         self.prompts.SetSizer(sizer_19)
@@ -542,6 +608,7 @@ class PreferencesDialog(wx.Dialog):
             "Command": self.command,
             "Grid": self.grid,
             "Report": self.report,
+            "Schedule": self.schedule,
             "Prompts": self.prompts,
         }
         for key in self.sections.keys():
@@ -630,6 +697,15 @@ class PreferencesDialog(wx.Dialog):
             "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
             "appColFilter": self.appColFilter,
+            "scheduleSaveLocation": self.file_location,
+            "scheduleBeginTime": [
+                self.timepicker.GetValue().GetHour(),
+                self.timepicker.GetValue().GetMinute(),
+                self.timepicker.GetValue().GetSecond(),
+            ],
+            "scheduleEnabled": self.checkbox_26.IsChecked(),
+            "scheduleReportType": self.reportType.GetValue(),
+            "scheduleInterval": self.spin_ctrl_13.GetValue(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -668,6 +744,12 @@ class PreferencesDialog(wx.Dialog):
             Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
         Globals.APP_COL_FILTER = self.appColFilter
+
+        Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
+        Globals.SCHEDULE_INTERVEL = self.prefs["scheduleInterval"]
+        Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
+        Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
+        Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -989,6 +1071,42 @@ class PreferencesDialog(wx.Dialog):
         if "appColFilter" in self.prefs and type(self.prefs["appColFilter"]) is list:
             Globals.APP_COL_FILTER = self.prefs["appColFilter"]
 
+        if self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26):
+            Globals.SCHEDULE_ENABLED = True
+        else:
+            Globals.SCHEDULE_ENABLED = False
+
+        if "scheduleReportType" in self.prefs and self.prefs["scheduleReportType"]:
+            if isinstance(self.prefs["scheduleReportType"], str):
+                indx = self.reportType.GetItems().index(
+                    self.prefs["scheduleReportType"]
+                )
+                self.reportType.SetSelection(indx)
+            else:
+                self.reportType.SetSelection(self.prefs["scheduleReportType"])
+            Globals.SCHEDULE_TYPE = self.reportType.GetValue().lower()
+
+        if "scheduleInterval" in self.prefs and self.prefs["scheduleInterval"]:
+            Globals.SCHEDULE_INTERVEL = self.prefs["scheduleInterval"]
+
+        if (
+            "scheduleBeginTime" in self.prefs
+            and self.prefs["scheduleBeginTime"]
+            and type(self.prefs["scheduleBeginTime"]) is list
+        ):
+            self.timepicker.SetTime(
+                self.prefs["scheduleBeginTime"][0],
+                self.prefs["scheduleBeginTime"][1],
+                self.prefs["scheduleBeginTime"][2],
+            )
+            Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
+
+        if "scheduleSaveLocation" in self.prefs and self.prefs["scheduleSaveLocation"]:
+            self.file_location = self.prefs["scheduleSaveLocation"]
+            Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
+        else:
+            self.file_location = Globals.SCHEDULE_LOCATION
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1096,6 +1214,16 @@ class PreferencesDialog(wx.Dialog):
             return Globals.AUTO_REPORT_ISSUES
         elif key == "appColFilter":
             return Globals.APP_COL_FILTER
+        elif key == "scheduleSaveLocation":
+            return Globals.SCHEDULE_LOCATION
+        elif key == "scheduleBeginTime":
+            return Globals.SCHEDULE_TIME
+        elif key == "scheduleEnabled":
+            return Globals.SCHEDULE_ENABLED
+        elif key == "scheduleReportType":
+            return Globals.SCHEDULE_TYPE
+        elif key == "scheduleInterval":
+            return Globals.SCHEDULE_INTERVEL
         else:
             return None
 
@@ -1141,6 +1269,8 @@ class PreferencesDialog(wx.Dialog):
             )
         elif inputObjType == wx.Button:
             inputObj = wx.Button(panel_2, id=wx.ID_ANY, label=labelText)
+        elif inputObjType == wxadv.TimePickerCtrl:
+            inputObj = wxadv.TimePickerCtrl(panel_2, id=wx.ID_ANY)
         if inputObj:
             grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
@@ -1160,6 +1290,7 @@ class PreferencesDialog(wx.Dialog):
             if Globals.APP_COL_FILTER
             else "",
         ) as textDialog:
+            Globals.OPEN_DIALOGS.append(textDialog)
             if textDialog.ShowModal() == wx.ID_OK:
                 appList = textDialog.GetValue()
                 splitList = appList.split(",")
@@ -1168,3 +1299,19 @@ class PreferencesDialog(wx.Dialog):
                     cleanPkgName = app.strip()
                     properAppList.append(cleanPkgName)
                 self.appColFilter = properAppList
+            Globals.OPEN_DIALOGS.remove(textDialog)
+
+    def reportSaveLocation(self, event):
+        dlg = wx.FileDialog(
+            self,
+            message="Report Save Location and File Type",
+            defaultFile="",
+            wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
+            defaultDir=str(self.file_location),
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        )
+        Globals.OPEN_DIALOGS.append(dlg)
+        result = dlg.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dlg)
+        if result == wx.ID_OK:
+            self.file_location = dlg.GetPath()

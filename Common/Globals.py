@@ -2,6 +2,7 @@
 
 import platform
 import threading
+import os
 
 import esperclient
 from Utility.Threading.ThreadPoolQueue import Pool
@@ -27,7 +28,7 @@ IS_TOKEN_VALID = False
 MAX_DEVICE_COUNT = 5000
 
 MAX_ERROR_TIME_DIFF = 2
-MAX_THREAD_COUNT = 24
+MAX_THREAD_COUNT = 20
 MAX_RETRY = 5
 RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
@@ -63,6 +64,8 @@ token_lock = threading.Lock()
 
 # Known Group Var
 knownGroups = {}
+
+OPEN_DIALOGS = []
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
@@ -130,8 +133,6 @@ JSON_COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    # "INSTALL",
-    # "UNINSTALL",
     "SET_NEW_POLICY",
     "ADD_WIFI_AP",
     "REMOVE_WIFI_AP",
@@ -157,8 +158,7 @@ DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTE
 DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
-CSV_DEPRECATED_HEADER_LABEL = ["Number"]
-CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
+
 CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
@@ -260,12 +260,18 @@ CSV_APP_ATTR_NAME = [
     "Can Clear Data",
     "Can Uninstall",
 ]
+
+WHITELIST_AP = []
+
+""" Static Lists """
+CSV_DEPRECATED_HEADER_LABEL = ["Number"]
+CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
+
 BLACKLIST_PACKAGE_NAME = [
     "io.shoonya.shoonyadpc",
     "io.esper.remoteviewer",
     "io.shoonya.helper",
 ]
-WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
@@ -323,6 +329,13 @@ APP_COL_FILTER = []
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
+
+# Schedule Report
+SCHEDULE_INTERVEL = 12
+SCHEDULE_TYPE = "Device & Network"
+SCHEDULE_TIME = [12, 0, 0]
+SCHEDULE_ENABLED = False
+SCHEDULE_LOCATION = os.getcwd()
 
 
 limit = MAX_LIMIT  # Number of results to return per page

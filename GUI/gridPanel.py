@@ -673,7 +673,9 @@ class GridPanel(wx.Panel):
         }
 
         with ColumnVisibility(self, pageGridDict, colLabelException) as dialog:
+            Globals.OPEN_DIALOGS.append(dialog)
             res = dialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dialog)
             if res == wx.ID_APPLY:
                 selected = dialog.getSelected()
                 for page in pageGridDict.keys():

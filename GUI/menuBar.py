@@ -243,14 +243,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.toggleCloneMenuOptions(False)
 
-        self.sensitiveMenuOptions = [
-            0,
-            1,
-            2,
-            3,
-            4,
-            5
-        ]
+        self.sensitiveMenuOptions = [0, 1, 2, 3, 4, 5]
         self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
@@ -375,6 +368,7 @@ class ToolMenuBar(wx.MenuBar):
                         "Update",
                         wx.YES_NO | wx.ICON_QUESTION,
                     )
+                    Globals.OPEN_DIALOGS.append(dlg)
                     if dlg.ShowModal() == wx.ID_YES:
                         result = None
                         try:
@@ -392,6 +386,7 @@ class ToolMenuBar(wx.MenuBar):
                         else:
                             icon = wx.ICON_ERROR
                             msg = "An error occured while downloading the update. Please try again later."
+                    Globals.OPEN_DIALOGS.remove(dlg)
             else:
                 msg = "You are up-to-date!"
         else:
@@ -428,6 +423,7 @@ class ToolMenuBar(wx.MenuBar):
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
         ) as textDialog:
+            Globals.OPEN_DIALOGS.append(textDialog)
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
                 if eql:
@@ -443,6 +439,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            Globals.OPEN_DIALOGS.remove(textDialog)
 
     @api_tool_decorator()
     def onCollection(self, event):
@@ -450,6 +447,7 @@ class ToolMenuBar(wx.MenuBar):
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
@@ -465,6 +463,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            Globals.OPEN_DIALOGS.remove(dlg)
             dlg.DestroyLater()
 
     @api_tool_decorator()

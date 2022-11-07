@@ -94,7 +94,9 @@ def confirmCommand(cmd, commandType, schedule, schType):
     with CmdConfirmDialog(
         commandType, cmdFormatted, schType, schFormatted, applyTo, label
     ) as dialog:
+        Globals.OPEN_DIALOGS.append(dialog)
         res = dialog.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dialog)
         if res == wx.ID_OK:
             modal = wx.YES
 

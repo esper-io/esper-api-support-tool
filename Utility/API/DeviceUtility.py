@@ -85,8 +85,12 @@ def get_all_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
     extention = "device/?limit=%s&offset=%s" % (limit, offset)
-    if groupToUse:
-        extention = "device/?group=%s&limit=%s&offset=%s" % (groupToUse, limit, offset)
+    if groupToUse.strip():
+        extention = "device/?group=%s&limit=%s&offset=%s" % (
+            groupToUse.strip(),
+            limit,
+            offset,
+        )
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,

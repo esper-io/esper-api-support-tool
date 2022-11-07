@@ -285,7 +285,9 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                 missingContent if missingContent else None,
             ),
         )
+        Globals.OPEN_DIALOGS.append(result)
         res = result.ShowModal()
+        Globals.OPEN_DIALOGS.remove(result)
 
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False

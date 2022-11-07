@@ -275,7 +275,9 @@ class UserCreation(wx.Frame):
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         )
+        Globals.OPEN_DIALOGS.append(dlg)
         result = dlg.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dlg)
         inFile = dlg.GetPath()
         correctSaveFileName(inFile)
         dlg.DestroyLater()
@@ -300,7 +302,9 @@ class UserCreation(wx.Frame):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.lastFilePath),
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 self.lastFilePath = fileDialog.GetPath()
                 if not os.path.isdir(self.lastFilePath):
@@ -516,7 +520,9 @@ class UserCreation(wx.Frame):
             formattedRes,
             parent=self,
         ) as dialog:
+            Globals.OPEN_DIALOGS.append(dialog)
             res = dialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dialog)
         if bool(self.dialog):
             self.dialog.Update(self.dialog.GetRange())
             self.dialog.Destroy()

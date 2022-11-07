@@ -214,7 +214,9 @@ class GeofenceDialog(wx.Dialog):
             wildcard="CSV files (*.csv)|*.csv",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Clear list of devices
                 self.groups = []
