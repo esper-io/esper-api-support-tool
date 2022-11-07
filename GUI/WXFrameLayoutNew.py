@@ -3840,6 +3840,6 @@ class NewFrameLayout(wx.Frame):
             eventUtil.myEVT_PROCESS_FUNCTION,
             (
                 wx.CallLater,
-                (Globals.SCHEDULE_INTERVEL * 3600000, self.beginScheduledReport),
+                (Globals.SCHEDULE_INTERVAL * 3600000, self.beginScheduledReport),
             ),
         )

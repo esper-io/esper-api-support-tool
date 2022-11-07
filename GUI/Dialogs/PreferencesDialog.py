@@ -525,9 +525,9 @@ class PreferencesDialog(wx.Dialog):
             wx.SpinCtrl,
             "Schedule Interval when the report will be regenerated. Interval is in Hours.",
         )
-        self.spin_ctrl_13.SetValue(12)
-        self.spin_ctrl_13.SetMin(8)
-        self.spin_ctrl_13.SetMax(23)
+        self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
+        self.spin_ctrl_13.SetMin(Globals.MIN_SCHEDULE_INTERVAL)
+        self.spin_ctrl_13.SetMax(Globals.MAX_SCHEDULE_INTERVAL)
 
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -746,7 +746,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.APP_COL_FILTER = self.appColFilter
 
         Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
-        Globals.SCHEDULE_INTERVEL = self.prefs["scheduleInterval"]
+        Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
         Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
         Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
@@ -1087,7 +1087,15 @@ class PreferencesDialog(wx.Dialog):
             Globals.SCHEDULE_TYPE = self.reportType.GetValue().lower()
 
         if "scheduleInterval" in self.prefs and self.prefs["scheduleInterval"]:
-            Globals.SCHEDULE_INTERVEL = self.prefs["scheduleInterval"]
+            try:
+                Globals.SCHEDULE_INTERVAL = int(self.prefs["scheduleInterval"])
+            except:
+                pass
+            if Globals.SCHEDULE_INTERVAL < Globals.MIN_SCHEDULE_INTERVAL:
+                Globals.SCHEDULE_INTERVAL = Globals.MIN_SCHEDULE_INTERVAL
+            if Globals.SCHEDULE_INTERVAL > Globals.MAX_SCHEDULE_INTERVAL:
+                Globals.SCHEDULE_INTERVAL = Globals.MAX_SCHEDULE_INTERVAL
+            self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
 
         if (
             "scheduleBeginTime" in self.prefs
@@ -1223,7 +1231,7 @@ class PreferencesDialog(wx.Dialog):
         elif key == "scheduleReportType":
             return Globals.SCHEDULE_TYPE
         elif key == "scheduleInterval":
-            return Globals.SCHEDULE_INTERVEL
+            return Globals.SCHEDULE_INTERVAL
         else:
             return None
 
