@@ -1274,7 +1274,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
     if not Globals.SHOW_DISABLED_DEVICES:
         devices = list(filter(filterDeviceList, devices))
 
-    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 10)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
 
     if hasattr(Globals.frame, "start_time"):
@@ -1312,6 +1312,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
         indx += 1
 
     Globals.THREAD_POOL.join(tolerance=1)
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
 
     return deviceList
 

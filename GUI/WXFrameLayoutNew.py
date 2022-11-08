@@ -348,7 +348,10 @@ class NewFrameLayout(wx.Frame):
     def onLog(self, event):
         """ Event trying to log data """
         evtValue = event.GetValue()
-        self.Logging(evtValue)
+        if type(evtValue) is tuple:
+            self.Logging(evtValue[0], evtValue[1])
+        else:
+            self.Logging(evtValue)
 
     @api_tool_decorator()
     def Logging(self, entry, isError=False):
@@ -626,18 +629,20 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices)
-        self.Logging("Finished fetching information for CSV")
+        self.Logging("Finished fetching device information")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
+        num = 1
+        self.Logging("Processing device information for file")
         for item in deviceList.values():
             if len(item) > 1 and item[1]:
                 gridDeviceData.append(item[1])
-
-        for device in gridDeviceData:
-            self.gridPanel.grid_3_contents += (
-                device["AppsEntry"] if "AppsEntry" in device else []
-            )
+                self.gridPanel.grid_3_contents += (
+                    item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
+                )
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(num / len(deviceList.values())) * 35 ) + 50)
+            num += 1
 
         if hasattr(Globals.frame, "start_time"):
             print(
@@ -645,7 +650,7 @@ class NewFrameLayout(wx.Frame):
                 % (time.time() - Globals.frame.start_time)
             )
 
-        self.Logging("Finished compiling information for CSV")
+        self.Logging("Finished compiling information")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
 
         self.saveGridData(
@@ -3810,6 +3815,9 @@ class NewFrameLayout(wx.Frame):
             or self.isBusy
         ):
             time.sleep(60)
+
+        if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
+            return
 
         self.Logging("Performing scheduled report")
         correctSaveFileName(filePath)
