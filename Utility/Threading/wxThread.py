@@ -232,6 +232,8 @@ class GUIThread(threading.Thread):
 
     def startWithRetry(self):
         for attempt in range(Globals.MAX_RETRY):
+            if self.isStopped():
+                return
             try:
                 return super().start()
             except Exception as e:

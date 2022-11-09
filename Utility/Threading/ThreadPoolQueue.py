@@ -84,6 +84,8 @@ class Pool:
                 isAbortSet = False
                 if hasattr(threading.current_thread(), "abort"):
                     isAbortSet = threading.current_thread().abort.is_set()
+                if hasattr(threading.current_thread(), "isStopped") and not isAbortSet:
+                    isAbortSet = threading.current_thread().isStopped()
                 if (
                     (timeout > 0 and time.perf_counter() - startTime >= timeout)
                     or self.isDoneWithinTolerance(queueTolerance=tolerance)
