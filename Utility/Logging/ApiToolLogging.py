@@ -85,13 +85,15 @@ class ApiToolLog:
 
         self.postIssueToTrack(e, content)
 
+        Globals.frame.Logging(str(e), True)
+
     def LogPlace(self, str):
         with open(self.placePath, "a") as myfile:
             myfile.write("%s\t: %s\n" % (datetime.now(), str))
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:
-            myfile.write(response)
+            myfile.write(response + "\n")
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -114,6 +116,8 @@ class ApiToolLog:
             myfile.write("\n")
 
         self.postIssueToTrack("%s %s" % (content[2], content[3]), content)
+
+        Globals.frame.Logging(str(content), True)
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():

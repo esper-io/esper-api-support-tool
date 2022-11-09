@@ -629,8 +629,6 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices)
-        self.Logging("Finished fetching device information")
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
         gridDeviceData = []
 
         num = 1
@@ -641,8 +639,9 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.grid_3_contents += (
                     item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
                 )
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(num / len(deviceList.values())) * 35 ) + 50)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(num / len(deviceList.values())) * 35) + 50)
             num += 1
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
         if hasattr(Globals.frame, "start_time"):
             print(
@@ -676,7 +675,7 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         self.saveGridData(
-            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
+            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData, action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
@@ -851,8 +850,12 @@ class NewFrameLayout(wx.Frame):
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 95)
                     # Save App Info
                     if self.gridPanel.grid_3_contents and (
-                        action == GeneralActions.GENERATE_APP_REPORT.value
-                        or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                        not action
+                        or (
+                            action
+                            and action == GeneralActions.GENERATE_APP_REPORT.value
+                            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                        )
                     ):
                         baseSheetName = "Application"
                         self.populateWorkSheet(
@@ -1604,6 +1607,7 @@ class NewFrameLayout(wx.Frame):
             if len(evtVal) > 2:
                 action = evtVal[2]
         if threads == Globals.THREAD_POOL.threads:
+            time.sleep(3)
             Globals.THREAD_POOL.join(tolerance=tolerance)
         else:
             joinThreadList(threads)
@@ -2029,6 +2033,16 @@ class NewFrameLayout(wx.Frame):
 
         if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
             return
+
+        end_time = time.time() + 120
+        while (
+            self.isRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+        ) and time.time() < end_time:
+            time.sleep(1)
         self.start_time = time.time()
         self.setCursorBusy()
         self.isRunning = True
@@ -2047,7 +2061,8 @@ class NewFrameLayout(wx.Frame):
 
         allDevicesSelected = (
             True
-            if len(self.sidePanel.selectedDevicesList)
+            if self.sidePanel.deviceResp
+            and len(self.sidePanel.selectedDevicesList)
             == len(self.sidePanel.deviceResp["results"])
             else False
         )
@@ -3814,7 +3829,7 @@ class NewFrameLayout(wx.Frame):
             or self.isUploading
             or self.isBusy
         ):
-            time.sleep(60)
+            time.sleep(60 * 5)
 
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
             return

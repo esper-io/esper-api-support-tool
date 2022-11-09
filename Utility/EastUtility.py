@@ -257,7 +257,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
 
 def processDeviceInDeviceList(
-    device, deviceId, getApps, getLatestEvents, deviceList, indx
+    device, deviceId, getApps, getLatestEvents, deviceList, indx, maxDevices=None
 ):
     additionalInfo = {}
     getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, additionalInfo)
@@ -276,6 +276,8 @@ def processDeviceInDeviceList(
         deviceList,
         indx,
     )
+    if maxDevices:
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices) * 5) + 10)
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
@@ -1308,6 +1310,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
             getLatestEvents,
             deviceList,
             indx,
+            maxDevices=len(devices)
         )
         indx += 1
 

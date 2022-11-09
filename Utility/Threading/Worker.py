@@ -17,6 +17,7 @@ class Worker(Thread):
         self.idle = idle
         self.daemon = True
         self.setLoop = setLoop
+        self.currentWork = None
         self.start()
 
     def run(self):
@@ -37,6 +38,8 @@ class Worker(Thread):
 
             try:
                 # the function may raise
+                if hasattr(func, "__name__"):
+                    self.currentWork = func.__name__
                 result = func(*args, **kwargs)
                 if result is not None:
                     self.results.put(result)
@@ -46,6 +49,7 @@ class Worker(Thread):
             finally:
                 # task complete no matter what happened
                 self.queue.task_done()
+                self.currentWork = None
         self.idle.set()
 
     def raise_exception(self):
