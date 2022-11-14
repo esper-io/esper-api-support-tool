@@ -277,7 +277,7 @@ def processDeviceInDeviceList(
         indx,
     )
     if maxDevices:
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 5)) + 10)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 15)) + 10)
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
