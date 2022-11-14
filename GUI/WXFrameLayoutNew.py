@@ -140,6 +140,9 @@ class NewFrameLayout(wx.Frame):
 
         self.scheduleReport = None
         self.delayScheduleReport = True
+        self.scheduleReportRunning = False
+
+        self.isSaving = False
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -520,6 +523,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
+        self.isSaving = True
         dlg = wx.FileDialog(
             self,
             message="Save Reports as...",
@@ -545,11 +549,13 @@ class NewFrameLayout(wx.Frame):
             result == wx.ID_CANCEL
         ):  # Either the cancel button was pressed or the window was closed
             dlg.DestroyLater()
+            self.isSaving = False
             return False
 
     @api_tool_decorator()
     def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
+            self.isSaving = True
             dlg = wx.FileDialog(
                 self,
                 message="Save Reports as...",
@@ -576,6 +582,7 @@ class NewFrameLayout(wx.Frame):
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
+                self.isSaving = False
                 return False
         else:
             displayMessageBox(
@@ -2035,7 +2042,7 @@ class NewFrameLayout(wx.Frame):
             )
             return
 
-        if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
+        if self.isBusy or not self.sidePanel.runBtn.IsEnabled() or self.scheduleReportRunning:
             return
 
         end_time = time.time() + 120
@@ -2693,6 +2700,8 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.notebook_2.SetSelection(0)
         elif action == GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.notebook_2.SetSelection(2)
+        if self.isSaving:
+            self.isSaving = False
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             postEventToFrame(
@@ -3479,6 +3488,7 @@ class NewFrameLayout(wx.Frame):
         defaultFileName = "%s_User-Report" % datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S"
         )
+        self.isSaving = True
         dlg = wx.FileDialog(
             self,
             message="Save User Report as...",
@@ -3555,6 +3565,7 @@ class NewFrameLayout(wx.Frame):
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )
             )
+            self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
@@ -3580,6 +3591,7 @@ class NewFrameLayout(wx.Frame):
         defaultFileName = "%s_Group-Report" % datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S"
         )
+        self.isSaving = True
         dlg = wx.FileDialog(
             self,
             message="Save Group Report as...",
@@ -3655,6 +3667,7 @@ class NewFrameLayout(wx.Frame):
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )
             )
+            self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
@@ -3825,32 +3838,51 @@ class NewFrameLayout(wx.Frame):
         else:
             filePath = parentPath + fileName
 
+        Globals.THREAD_POOL.enqueue(self.beginScheduledReportHelper, filePath)
+
+    def waitUntilNotBusy(self, isScheduledReport=False, amountSleep=60):
+        # Pause until a minute after current task is complete
+        if isScheduledReport:
+            currentTime = datetime.now().time()
+            while (
+                self.isRunning
+                or self.scheduleReportRunning
+                or self.isRunningUpdate
+                or self.isSavingPrefs
+                or self.isUploading
+                or self.isBusy
+                or self.isSaving
+                or Globals.OPEN_DIALOGS
+            ):
+                time.sleep(amountSleep)
+        else:
+            currentTime = datetime.now().time()
+            while (
+                self.isRunning
+                or self.scheduleReportRunning
+                or self.isRunningUpdate
+                or self.isSavingPrefs
+                or self.isUploading
+                or self.isBusy
+                or self.isSaving
+                or Globals.OPEN_DIALOGS
+            ) and (
+                currentTime.hour < Globals.SCHEDULE_TIME[0]
+                and currentTime.minute < Globals.SCHEDULE_TIME[1]
+                and currentTime.second < Globals.SCHEDULE_TIME[2]
+            ):
+                time.sleep(amountSleep)
+
+    def beginScheduledReportHelper(self, filePath):
         if self.delayScheduleReport:
             time.sleep(60 * 5)
         self.delayScheduleReport = False
 
-        # Pause until a minute after current task is complete
-        currentTime = datetime.now().time()
-        while (
-            self.isRunning
-            or self.isRunningUpdate
-            or self.isSavingPrefs
-            or self.isUploading
-            or self.isBusy
-            or Globals.OPEN_DIALOGS
-        ) and (
-            currentTime.hour < Globals.SCHEDULE_TIME[0]
-            and currentTime.minute < Globals.SCHEDULE_TIME[1]
-            and currentTime.second < Globals.SCHEDULE_TIME[2]
-        ):
-            time.sleep(60)
+        self.waitUntilNotBusy(isScheduledReport=True)
 
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
             return
 
-        Globals.THREAD_POOL.enqueue(self.beginScheduledReportHelper, filePath)
-
-    def beginScheduledReportHelper(self, filePath):
         self.Logging("Performing scheduled report")
         correctSaveFileName(filePath)
         self.setCursorBusy()
@@ -3866,6 +3898,10 @@ class NewFrameLayout(wx.Frame):
             reportAction = GeneralActions.GENERATE_APP_REPORT.value
         elif Globals.SCHEDULE_TYPE == "All":
             reportAction = GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+
+        self.waitUntilNotBusy(isScheduledReport=True)
+
+        self.scheduleReportRunning = True
         Globals.THREAD_POOL.enqueue(
             self.saveAllFile,
             filePath,
@@ -3884,3 +3920,4 @@ class NewFrameLayout(wx.Frame):
                 (Globals.SCHEDULE_INTERVAL * 3600000, self.beginScheduledReport),
             ),
         )
+        self.scheduleReportRunning = False

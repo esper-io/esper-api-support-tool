@@ -277,7 +277,7 @@ def processDeviceInDeviceList(
         indx,
     )
     if maxDevices:
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices) * 5) + 10)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 5)) + 10)
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
@@ -1256,6 +1256,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             if Globals.frame.sidePanel.selectedGroupsList and not allDevices
             else " ",
             tolarance=tolarance,
+            timeout=3 * 60
         )
         if api_response:
             if (
