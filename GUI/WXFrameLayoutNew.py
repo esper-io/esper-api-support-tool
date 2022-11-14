@@ -882,7 +882,7 @@ class NewFrameLayout(wx.Frame):
                         continue
                 break
 
-        Globals.THREAD_POOL.join(tolerance=1)
+        Globals.THREAD_POOL.join(tolerance=tolarance)
 
         self.Logging("---> Info saved to file: " + inFile)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
