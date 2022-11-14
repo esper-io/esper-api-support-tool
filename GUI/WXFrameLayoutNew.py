@@ -623,13 +623,14 @@ class NewFrameLayout(wx.Frame):
         return headers, deviceHeaders, networkHeaders
 
     @api_tool_decorator()
-    def saveAllFile(self, inFile, action=None, showDlg=True, allDevices=False):
+    def saveAllFile(self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1):
         self.sleepInhibitor.inhibit()
         self.start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
-        deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices)
+        self.Logging("Obtaining Device data....")
+        deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices, tolarance=tolarance)
         gridDeviceData = []
 
         num = 1
@@ -3853,7 +3854,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.toggleEnabledState(False)
         self.gridPanel.disableGridProperties()
-        self.Logging("Attempting to save file at %s" % filePath)
+        self.Logging("Attempting to save scheduled report at %s" % filePath)
         self.statusBar.gauge.Pulse()
 
         reportAction = GeneralActions.GENERATE_INFO_REPORT.value
@@ -3869,6 +3870,7 @@ class NewFrameLayout(wx.Frame):
             action=reportAction,
             showDlg=False,
             allDevices=True,
+            tolarance=2,
         )
         Globals.THREAD_POOL.join()
 

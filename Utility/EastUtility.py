@@ -1232,7 +1232,7 @@ def clearKnownGroups():
     Globals.knownGroups.clear()
 
 
-def getAllDeviceInfo(frame, action=None, allDevices=True):
+def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
     devices = []
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(
         Globals.frame.sidePanel.selectedDevicesList
@@ -1255,7 +1255,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
             Globals.frame.sidePanel.selectedGroupsList
             if Globals.frame.sidePanel.selectedGroupsList and not allDevices
             else " ",
-            tolarance=1,
+            tolarance=tolarance,
         )
         if api_response:
             if (
@@ -1277,7 +1277,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
         devices = list(filter(filterDeviceList, devices))
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 10)
-    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
+    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching basic device information")
 
     if hasattr(Globals.frame, "start_time"):
         print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
@@ -1316,6 +1316,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True):
 
     Globals.THREAD_POOL.join(tolerance=1)
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
+    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching extended device information")
 
     return deviceList
 
