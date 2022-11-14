@@ -3899,8 +3899,6 @@ class NewFrameLayout(wx.Frame):
         elif Globals.SCHEDULE_TYPE == "All":
             reportAction = GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
 
-        self.waitUntilNotBusy(isScheduledReport=True)
-
         self.scheduleReportRunning = True
         Globals.THREAD_POOL.enqueue(
             self.saveAllFile,
@@ -3910,7 +3908,7 @@ class NewFrameLayout(wx.Frame):
             allDevices=True,
             tolarance=2,
         )
-        Globals.THREAD_POOL.join()
+        Globals.THREAD_POOL.join(tolerance=1)
 
         # Schedule next occurrance of report
         postEventToFrame(
