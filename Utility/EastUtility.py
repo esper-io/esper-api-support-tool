@@ -1266,7 +1266,6 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
-            getAllDevicesFromOffsets(api_response, devices, tolerance=1, timeout=3 * 60)
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
