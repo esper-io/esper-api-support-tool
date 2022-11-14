@@ -139,6 +139,7 @@ class NewFrameLayout(wx.Frame):
         self.changedBlueprints = []
 
         self.scheduleReport = None
+        self.delayScheduleReport = True
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -3821,19 +3822,32 @@ class NewFrameLayout(wx.Frame):
         else:
             filePath = parentPath + fileName
 
+        if self.delayScheduleReport:
+            time.sleep(60 * 5)
+        self.delayScheduleReport = False
+
         # Pause until a minute after current task is complete
+        currentTime = datetime.now().time()
         while (
             self.isRunning
             or self.isRunningUpdate
             or self.isSavingPrefs
             or self.isUploading
             or self.isBusy
+            or Globals.OPEN_DIALOGS
+        ) and (
+            currentTime.hour < Globals.SCHEDULE_TIME[0]
+            and currentTime.minute < Globals.SCHEDULE_TIME[1]
+            and currentTime.second < Globals.SCHEDULE_TIME[2]
         ):
-            time.sleep(60 * 5)
+            time.sleep(60)
 
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
             return
 
+        Globals.THREAD_POOL.enqueue(self.beginScheduledReportHelper, filePath)
+
+    def beginScheduledReportHelper(self, filePath):
         self.Logging("Performing scheduled report")
         correctSaveFileName(filePath)
         self.setCursorBusy()
