@@ -662,6 +662,7 @@ class NewFrameLayout(wx.Frame):
             gridDeviceData,
             action=action,
             showDlg=showDlg,
+            tolarance=tolarance
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
@@ -700,6 +701,7 @@ class NewFrameLayout(wx.Frame):
         gridDeviceData,
         action=None,
         showDlg=True,
+        tolarance=1,
     ):
         if inFile.endswith(".csv"):
             threads = []

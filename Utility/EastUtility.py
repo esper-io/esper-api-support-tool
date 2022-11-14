@@ -1249,7 +1249,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             Globals.THREAD_POOL.enqueue(
                 searchForDeviceAndAppendToList, labelParts[2], devices
             )
-        Globals.THREAD_POOL.join(tolerance=1)
+        Globals.THREAD_POOL.join(tolerance=1, timeout=3 * 60)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
             Globals.frame.sidePanel.selectedGroupsList
@@ -1266,7 +1266,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
-            getAllDevicesFromOffsets(api_response, devices, tolerance=1)
+            getAllDevicesFromOffsets(api_response, devices, tolerance=1, timeout=3 * 60)
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
@@ -1314,7 +1314,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
         )
         indx += 1
 
-    Globals.THREAD_POOL.join(tolerance=1)
+    Globals.THREAD_POOL.join(tolerance=tolarance)
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching extended device information")
 
@@ -1337,7 +1337,7 @@ def searchForDeviceAndAppendToList(searchTerm, listToAppend):
                     break
 
 
-def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
+def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0, timeout=-1):
     count = None
     apiNext = None
     if hasattr(api_response, "count"):
@@ -1358,7 +1358,7 @@ def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
                 respOffset,
             )
             respOffsetInt += int(respLimit)
-        Globals.THREAD_POOL.join(tolerance=tolerance)
+        Globals.THREAD_POOL.join(tolerance=tolerance, timeout=timeout)
     res = Globals.THREAD_POOL.results()
     for thread in res:
         if hasattr(thread, "results"):
