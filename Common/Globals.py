@@ -332,13 +332,12 @@ SHOW_TEMPLATE_UPDATE = True
 
 # Schedule Report
 SCHEDULE_INTERVAL = 12
-MIN_SCHEDULE_INTERVAL = 2
+MIN_SCHEDULE_INTERVAL = 8
 MAX_SCHEDULE_INTERVAL = 23
 SCHEDULE_TYPE = "Device & Network"
 SCHEDULE_TIME = [12, 0, 0]
 SCHEDULE_ENABLED = False
 SCHEDULE_LOCATION = os.getcwd()
-
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
