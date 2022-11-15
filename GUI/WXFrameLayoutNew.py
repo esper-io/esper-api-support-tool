@@ -3872,7 +3872,7 @@ class NewFrameLayout(wx.Frame):
             allDevices=True,
             tolarance=2,
         )
-        Globals.THREAD_POOL.join(tolerance=1)
+        Globals.THREAD_POOL.join()
 
         # Schedule next occurrance of report
         postEventToFrame(
