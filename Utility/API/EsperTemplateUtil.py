@@ -167,7 +167,8 @@ class EsperTemplateUtil:
                         newBg["orientations"] = bg["orientations"]
                         newBg["screen_types"] = bg["screen_types"]
                         bgList.append(newBg)
-                templateFound["template"]["brand"]["wallpapers"] = bgList
+                if bgList:
+                    templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
 
     def checkDeviceGroup(self, templateFound, toDeviceGroups, allDeviceGroupId):
