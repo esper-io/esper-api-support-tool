@@ -1301,6 +1301,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
     deviceList = {}
     indx = 0
 
+    postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
     for device in devices:
         Globals.THREAD_POOL.enqueue(
             processDeviceInDeviceList,
