@@ -141,6 +141,7 @@ class NewFrameLayout(wx.Frame):
         self.scheduleReport = None
         self.delayScheduleReport = True
         self.scheduleReportRunning = False
+        self.scheduleCallLater = []
 
         self.isSaving = False
 
@@ -3809,6 +3810,7 @@ class NewFrameLayout(wx.Frame):
             if self.scheduleReport:
                 # Stop exisiting report, just in case timing differs
                 self.scheduleReport.stop()
+                self.stopOtherScheduledCalls()
             # Start scheduled report
             self.scheduleReport = wxThread.GUIThread(
                 self, self.beginScheduledReport, None, name="ScheduledReportThread"
@@ -3817,6 +3819,7 @@ class NewFrameLayout(wx.Frame):
         elif self.scheduleReport:
             # Stop report thread as it should be disabled
             self.scheduleReport.stop()
+            self.stopOtherScheduledCalls()
 
     def beginScheduledReport(self):
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
@@ -3863,14 +3866,27 @@ class NewFrameLayout(wx.Frame):
         Globals.THREAD_POOL.join()
 
         # Schedule next occurrance of report
+        self.processScheduleCallLater()
+        self.scheduleReportRunning = False
+
+    def processScheduleCallLater(self):
+        self.stopOtherScheduledCalls()
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
             (
-                wx.CallLater,
-                (Globals.SCHEDULE_INTERVAL * 3600000, self.handleScheduleReportPref),
+                self.startScheduleReportCall
             ),
         )
-        self.scheduleReportRunning = False
+
+    def startScheduleReportCall(self):
+        self.scheduleCallLater.append(wx.CallLater(Globals.SCHEDULE_INTERVAL * 3600000, self.handleScheduleReportPref))
+
+    def stopOtherScheduledCalls(self):
+        for entry in self.scheduleCallLater:
+            if hasattr(entry, "Stop"):
+                entry.Stop()
+                entry.Notify()
+        self.scheduleCallLater = []
 
     def waitUntilNotBusy(self, amountSleep=60):
         # Pause until a minute after current task is complete
