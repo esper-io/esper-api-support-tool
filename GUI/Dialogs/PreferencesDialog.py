@@ -63,6 +63,7 @@ class PreferencesDialog(wx.Dialog):
             "allowAutoIssuePost",
             "appColFilter",
             "scheduleSaveLocation",
+            "scheduleSaveType",
             "scheduleBeginTime",
             "scheduleEnabled",
             "scheduleReportType",
@@ -500,6 +501,17 @@ class PreferencesDialog(wx.Dialog):
         )
         self.btn_save_report.Bind(wx.EVT_BUTTON, self.reportSaveLocation)
 
+        self.reportSaveTypes = ["xlsx", "csv"]
+        (_, _, self.reportSaveType,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Save File Format",
+            wx.ComboBox,
+            "File type the report should be saved as.",
+            choice=self.reportSaveTypes,
+        )
+        self.reportType.SetSelection(0)
+
         (_, _, self.reportType,) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
@@ -698,6 +710,7 @@ class PreferencesDialog(wx.Dialog):
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
             "appColFilter": self.appColFilter,
             "scheduleSaveLocation": self.file_location,
+            "scheduleSaveType": self.reportSaveType.GetValue(),
             "scheduleBeginTime": [
                 self.timepicker.GetValue().GetHour(),
                 self.timepicker.GetValue().GetMinute(),
@@ -748,6 +761,8 @@ class PreferencesDialog(wx.Dialog):
         Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
         Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
         Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
+        Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
+
         Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
         Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
 
@@ -1115,6 +1130,10 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.file_location = Globals.SCHEDULE_LOCATION
 
+        if "scheduleSaveType" in self.prefs and self.prefs["scheduleSaveType"]:
+            Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
+            self.reportType.SetSelection(self.reportSaveTypes.index(Globals.SCHEDULE_SAVE))
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1224,6 +1243,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.APP_COL_FILTER
         elif key == "scheduleSaveLocation":
             return Globals.SCHEDULE_LOCATION
+        elif key == "scheduleSaveType":
+            return Globals.SCHEDULE_SAVE
         elif key == "scheduleBeginTime":
             return Globals.SCHEDULE_TIME
         elif key == "scheduleEnabled":
@@ -1310,13 +1331,10 @@ class PreferencesDialog(wx.Dialog):
             Globals.OPEN_DIALOGS.remove(textDialog)
 
     def reportSaveLocation(self, event):
-        dlg = wx.FileDialog(
+        dlg = wx.DirDialog(
             self,
             message="Report Save Location and File Type",
-            defaultFile="",
-            wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
             defaultDir=str(self.file_location),
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         )
         Globals.OPEN_DIALOGS.append(dlg)
         result = dlg.ShowModal()

@@ -338,6 +338,7 @@ SCHEDULE_TYPE = "Device & Network"
 SCHEDULE_TIME = [12, 0, 0]
 SCHEDULE_ENABLED = False
 SCHEDULE_LOCATION = os.getcwd()
+SCHEDULE_SAVE = "xlsx"
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

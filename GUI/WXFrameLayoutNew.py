@@ -3822,21 +3822,9 @@ class NewFrameLayout(wx.Frame):
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
             return
 
-        filePath = Globals.SCHEDULE_LOCATION
-        parentPath = Globals.SCHEDULE_LOCATION
-        fileName = "%s_EAST-Report" % datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        if Globals.SCHEDULE_LOCATION.endswith(
-            ".csv"
-        ) or Globals.SCHEDULE_LOCATION.endswith(".xlsx"):
-            filePath = Path(Globals.SCHEDULE_LOCATION)
-            parentPath = filePath.parent
-            if Globals.SCHEDULE_LOCATION.endswith(".csv"):
-                fileName += ".csv"
-            elif Globals.SCHEDULE_LOCATION.endswith(".xlsx"):
-                fileName += ".xlsx"
-            filePath = os.path.join(parentPath, fileName)
-        else:
-            filePath = parentPath + fileName
+        dirPath = Globals.SCHEDULE_LOCATION
+        fileName = "%s_EAST-Report.%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), Globals.SCHEDULE_SAVE)
+        filePath = os.path.join(dirPath, fileName)
 
         if self.delayScheduleReport:
             time.sleep(60 * 5)
