@@ -1326,7 +1326,8 @@ class PreferencesDialog(wx.Dialog):
                 properAppList = []
                 for app in splitList:
                     cleanPkgName = app.strip()
-                    properAppList.append(cleanPkgName)
+                    if cleanPkgName:
+                        properAppList.append(cleanPkgName)
                 self.appColFilter = properAppList
             Globals.OPEN_DIALOGS.remove(textDialog)
 
