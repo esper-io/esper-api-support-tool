@@ -472,7 +472,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_9,
             "Filter App Column",
             wx.Button,
-            "Filter the Application Column to only show particular  applications",
+            "Filter the Application Column to only show particular applications.",
         )
 
         # Schedule Preferences
