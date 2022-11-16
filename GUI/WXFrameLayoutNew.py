@@ -3870,7 +3870,7 @@ class NewFrameLayout(wx.Frame):
             action=reportAction,
             showDlg=False,
             allDevices=True,
-            tolarance=2,
+            tolarance=1,
         )
         Globals.THREAD_POOL.join()
 
