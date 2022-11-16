@@ -1132,7 +1132,7 @@ class PreferencesDialog(wx.Dialog):
 
         if "scheduleSaveType" in self.prefs and self.prefs["scheduleSaveType"]:
             Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
-            self.reportType.SetSelection(self.reportSaveTypes.index(Globals.SCHEDULE_SAVE))
+            self.reportSaveType.SetSelection(self.reportSaveTypes.index(Globals.SCHEDULE_SAVE))
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
@@ -1334,7 +1334,7 @@ class PreferencesDialog(wx.Dialog):
         dlg = wx.DirDialog(
             self,
             message="Report Save Location and File Type",
-            defaultDir=str(self.file_location),
+            defaultPath=str(self.file_location),
         )
         Globals.OPEN_DIALOGS.append(dlg)
         result = dlg.ShowModal()
