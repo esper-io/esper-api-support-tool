@@ -510,7 +510,7 @@ class PreferencesDialog(wx.Dialog):
             "File type the report should be saved as.",
             choice=self.reportSaveTypes,
         )
-        self.reportType.SetSelection(0)
+        self.reportSaveType.SetSelection(0)
 
         (_, _, self.reportType,) = self.addPrefToPanel(
             self.schedule,

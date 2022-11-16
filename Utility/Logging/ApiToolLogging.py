@@ -86,7 +86,8 @@ class ApiToolLog:
         if postIssue:
             self.postIssueToTrack(e, content)
 
-        Globals.frame.Logging(str(e), True)
+        if Globals.frame:
+            Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str):
         with open(self.placePath, "a") as myfile:
