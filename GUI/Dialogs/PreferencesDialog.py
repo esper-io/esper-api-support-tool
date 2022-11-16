@@ -64,7 +64,6 @@ class PreferencesDialog(wx.Dialog):
             "appColFilter",
             "scheduleSaveLocation",
             "scheduleSaveType",
-            "scheduleBeginTime",
             "scheduleEnabled",
             "scheduleReportType",
             "scheduleInterval",
@@ -522,14 +521,6 @@ class PreferencesDialog(wx.Dialog):
         )
         self.reportType.SetSelection(1)
 
-        (_, _, self.timepicker,) = self.addPrefToPanel(
-            self.schedule,
-            sizer_20,
-            "Begin Time",
-            wxadv.TimePickerCtrl,
-            "When the first report should be generated. If the current time is after the designated time, the report will start generating and then follow the interval period.",
-        )
-
         (_, _, self.spin_ctrl_13,) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
@@ -711,11 +702,6 @@ class PreferencesDialog(wx.Dialog):
             "appColFilter": self.appColFilter,
             "scheduleSaveLocation": self.file_location,
             "scheduleSaveType": self.reportSaveType.GetValue(),
-            "scheduleBeginTime": [
-                self.timepicker.GetValue().GetHour(),
-                self.timepicker.GetValue().GetMinute(),
-                self.timepicker.GetValue().GetSecond(),
-            ],
             "scheduleEnabled": self.checkbox_26.IsChecked(),
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
@@ -762,8 +748,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
         Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
-
-        Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
         Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
 
         if Globals.APPS_IN_DEVICE_GRID:
@@ -1112,18 +1096,6 @@ class PreferencesDialog(wx.Dialog):
                 Globals.SCHEDULE_INTERVAL = Globals.MAX_SCHEDULE_INTERVAL
             self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
 
-        if (
-            "scheduleBeginTime" in self.prefs
-            and self.prefs["scheduleBeginTime"]
-            and type(self.prefs["scheduleBeginTime"]) is list
-        ):
-            self.timepicker.SetTime(
-                self.prefs["scheduleBeginTime"][0],
-                self.prefs["scheduleBeginTime"][1],
-                self.prefs["scheduleBeginTime"][2],
-            )
-            Globals.SCHEDULE_TIME = self.prefs["scheduleBeginTime"]
-
         if "scheduleSaveLocation" in self.prefs and self.prefs["scheduleSaveLocation"]:
             self.file_location = self.prefs["scheduleSaveLocation"]
             Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
@@ -1245,8 +1217,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SCHEDULE_LOCATION
         elif key == "scheduleSaveType":
             return Globals.SCHEDULE_SAVE
-        elif key == "scheduleBeginTime":
-            return Globals.SCHEDULE_TIME
         elif key == "scheduleEnabled":
             return Globals.SCHEDULE_ENABLED
         elif key == "scheduleReportType":

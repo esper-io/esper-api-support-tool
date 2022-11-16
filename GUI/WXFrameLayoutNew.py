@@ -3830,7 +3830,7 @@ class NewFrameLayout(wx.Frame):
             time.sleep(60 * 5)
         self.delayScheduleReport = False
 
-        self.waitUntilNotBusy(isScheduledReport=True)
+        self.waitUntilNotBusy()
 
         if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
             return
@@ -3872,35 +3872,16 @@ class NewFrameLayout(wx.Frame):
         )
         self.scheduleReportRunning = False
 
-    def waitUntilNotBusy(self, isScheduledReport=False, amountSleep=60):
+    def waitUntilNotBusy(self, amountSleep=60):
         # Pause until a minute after current task is complete
-        if isScheduledReport:
-            currentTime = datetime.now().time()
-            while (
-                self.isRunning
-                or self.scheduleReportRunning
-                or self.isRunningUpdate
-                or self.isSavingPrefs
-                or self.isUploading
-                or self.isBusy
-                or self.isSaving
-                or Globals.OPEN_DIALOGS
-            ):
-                time.sleep(amountSleep)
-        else:
-            currentTime = datetime.now().time()
-            while (
-                self.isRunning
-                or self.scheduleReportRunning
-                or self.isRunningUpdate
-                or self.isSavingPrefs
-                or self.isUploading
-                or self.isBusy
-                or self.isSaving
-                or Globals.OPEN_DIALOGS
-            ) and (
-                currentTime.hour < Globals.SCHEDULE_TIME[0]
-                and currentTime.minute < Globals.SCHEDULE_TIME[1]
-                and currentTime.second < Globals.SCHEDULE_TIME[2]
-            ):
-                time.sleep(amountSleep)
+        while (
+            self.isRunning
+            or self.scheduleReportRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+            or self.isSaving
+            or Globals.OPEN_DIALOGS
+        ):
+            time.sleep(amountSleep)
