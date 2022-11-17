@@ -80,7 +80,7 @@ class ApiToolLog:
 
         with open(self.logPath, "a") as myfile:
             for entry in content:
-                myfile.write(entry)
+                myfile.write("%s\n" % entry)
             myfile.write("\n")
 
         if postIssue:
@@ -114,7 +114,7 @@ class ApiToolLog:
         self.limitLogFileSizes()
         with open(self.logPath, "a") as myfile:
             for entry in content:
-                myfile.write(entry)
+                myfile.write("%s\n" % entry)
             myfile.write("\n")
 
         self.postIssueToTrack("%s %s" % (content[2], content[3]), content)

@@ -40,8 +40,11 @@ SHEET_CHUNK_SIZE = 500000
 MIN_SHEET_CHUNK_SIZE = 50000
 MAX_SHEET_CHUNK_SIZE = 500000
 
-THREAD_POOL = Pool(MAX_THREAD_COUNT)
-THREAD_POOL.run()
+IS_GENERATEING_EXE = False
+
+THREAD_POOL = Pool(MAX_THREAD_COUNT) if not IS_GENERATEING_EXE else None
+if THREAD_POOL:
+    THREAD_POOL.run()
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently

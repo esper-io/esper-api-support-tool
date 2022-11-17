@@ -49,6 +49,7 @@ def updateFileVersionInfo(path="file_version_info.txt"):
 
 
 if __name__ == "__main__":
+    Globals.IS_GENERATEING_EXE = True
     curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
     system = platform.system()

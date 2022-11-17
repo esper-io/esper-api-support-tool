@@ -1303,16 +1303,28 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
 
     postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
     for device in devices:
-        Globals.THREAD_POOL.enqueue(
-            processDeviceInDeviceList,
-            device,
-            device["id"],
-            getApps,
-            getLatestEvents,
-            deviceList,
-            indx,
-            maxDevices=len(devices)
-        )
+        if type(device) is dict:
+            Globals.THREAD_POOL.enqueue(
+                processDeviceInDeviceList,
+                device,
+                device["id"],
+                getApps,
+                getLatestEvents,
+                deviceList,
+                indx,
+                maxDevices=len(devices)
+            )
+        elif hasattr(device, "id"):
+            Globals.THREAD_POOL.enqueue(
+                processDeviceInDeviceList,
+                device,
+                device.id,
+                getApps,
+                getLatestEvents,
+                deviceList,
+                indx,
+                maxDevices=len(devices)
+            )
         indx += 1
 
     Globals.THREAD_POOL.join(tolerance=tolarance)
