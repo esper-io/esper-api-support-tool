@@ -46,9 +46,12 @@ def getUserBody(user):
             groups.append(group)
         else:
             resp = getAllGroups(name=group)
-            if resp and resp.results:
+            if resp and hasattr(resp, "results") and resp.results:
                 for gp in resp.results:
                     groups.append(gp.id)
+            elif resp and type(resp) is dict and "results" in resp and resp["results"]:
+                for gp in resp["results"]:
+                    groups.append(gp["id"])
     body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
     body["profile"]["is_customer"] = True
