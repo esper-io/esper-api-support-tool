@@ -207,6 +207,7 @@ class ApiToolLog:
             or "Bad Gateway" in str(excpt)
             or "Permission denied" in str(excpt)
             or "HTTP" in str(excpt)
+            or "Failed to load configuration" in str(excpt)
             or type(excpt) is ApiException
         ):
             return
