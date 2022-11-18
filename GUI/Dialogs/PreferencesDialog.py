@@ -486,7 +486,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_20,
             "Enable Schedule Report",
             wx.CheckBox,
-            "Generates a report at the specified time (if the tool is open) and again some inteval later."
+            "Generates a report at the specified time (if the tool is open) and again some interval later."
             + " If the tool is being used when the scheduled time arrives the report will be delayed until the task is done."
             + " The report will be auto saved at the appointed location. Report will generate a report for the whole endpoint.",
         )
@@ -516,7 +516,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_20,
             "Report Type",
             wx.ComboBox,
-            "The type of report should be generated at the appointed time. Options: Device, Device & Network, App, All",
+            "The type of report should be generated at the appointed time. Options: Device, Device & Network, App, All.",
             choice=["Device", "Device & Network", "App", "All"],
         )
         self.reportType.SetSelection(1)
