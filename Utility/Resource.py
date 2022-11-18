@@ -37,6 +37,7 @@ def resourcePath(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+@api_tool_decorator()
 def createNewFile(filePath, fileData=None):
     """ Create a new File to write in """
     if not os.path.exists(filePath):
