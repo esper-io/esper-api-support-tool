@@ -111,9 +111,8 @@ class EnhancedStatusBar(wx.StatusBar):
         self.gauge = None
         self.SetThemeEnabled(False)
 
-        # wx.EVT_SIZE(self, self.OnSize)
         self.Bind(wx.EVT_SIZE, self.OnSize)
-        wx.CallAfter(self.OnSize, None)
+        # wx.CallAfter(self.OnSize, None)
 
     def OnSize(self, event):
         """Handles The wx.EVT_SIZE Events For The StatusBar.
