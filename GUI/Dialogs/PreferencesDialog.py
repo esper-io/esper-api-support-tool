@@ -1130,6 +1130,9 @@ class PreferencesDialog(wx.Dialog):
         if not self.prefs:
             self.prefs = {}
 
+        self.prefs["windowPosition"] = self.getDefaultKeyValue("windowPosition")
+        self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
+
         for key in self.prefKeys:
             if key not in self.prefs.keys() or self.prefs[key] is None:
                 self.prefs[key] = self.getDefaultKeyValue(key)
