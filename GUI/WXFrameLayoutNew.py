@@ -525,19 +525,21 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onSaveBoth(self, event):
         self.isSaving = True
-        dlg = wx.FileDialog(
+        inFile = ""
+        result = wx.ID_CANCEL
+        with wx.FileDialog(
             self,
             message="Save Reports as...",
             defaultFile="",
             wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        Globals.OPEN_DIALOGS.append(dlg)
-        result = dlg.ShowModal()
-        Globals.OPEN_DIALOGS.remove(dlg)
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.setCursorBusy()
@@ -557,20 +559,21 @@ class NewFrameLayout(wx.Frame):
     def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             self.isSaving = True
-            dlg = wx.FileDialog(
+            inFile = ""
+            result = wx.ID_CANCEL
+            with wx.FileDialog(
                 self,
                 message="Save Reports as...",
                 defaultFile="",
                 wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-            )
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
-            dlg.DestroyLater()
+            ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
+                result = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
+                inFile = dlg.GetPath()
+                correctSaveFileName(inFile)
 
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
@@ -3490,19 +3493,21 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        dlg = wx.FileDialog(
+        inFile = ""
+        result = wx.ID_CANCEL
+        with wx.FileDialog(
             self,
             message="Save User Report as...",
             defaultFile=defaultFileName,
             wildcard="CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        Globals.OPEN_DIALOGS.append(dlg)
-        result = dlg.ShowModal()
-        Globals.OPEN_DIALOGS.remove(dlg)
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()
@@ -3593,19 +3598,19 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        dlg = wx.FileDialog(
+        with wx.FileDialog(
             self,
             message="Save Group Report as...",
             defaultFile=defaultFileName,
             wildcard="CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        Globals.OPEN_DIALOGS.append(dlg)
-        result = dlg.ShowModal()
-        Globals.OPEN_DIALOGS.remove(dlg)
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()

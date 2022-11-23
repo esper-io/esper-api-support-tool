@@ -268,19 +268,20 @@ class UserCreation(wx.Frame):
         self.DestroyLater()
 
     def downloadTemplate(self, event):
-        dlg = wx.FileDialog(
+        inFile = ""
+        result = None
+        with wx.FileDialog(
             self,
             message="Save User Creation CSV Template",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        Globals.OPEN_DIALOGS.append(dlg)
-        result = dlg.ShowModal()
-        Globals.OPEN_DIALOGS.remove(dlg)
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             createNewFile(inFile)

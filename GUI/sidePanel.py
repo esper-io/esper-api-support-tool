@@ -424,6 +424,8 @@ class SidePanel(wx.Panel):
                         if groupId not in self.selectedGroupsList:
                             self.selectedGroupsList.append(groupId)
             Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
+            if not Globals.frame.WINDOWS:
+                self.groupMultiDialog.DestroyLater()
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
@@ -468,6 +470,8 @@ class SidePanel(wx.Panel):
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
             Globals.OPEN_DIALOGS.remove(self.deviceMultiDialog)
+            if not Globals.frame.WINDOWS:
+                self.deviceMultiDialog.DestroyLater()
 
     def clearStoredApps(self):
         self.apps = []

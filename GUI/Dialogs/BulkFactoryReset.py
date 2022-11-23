@@ -131,19 +131,20 @@ class BulkFactoryReset(wx.Dialog):
         self.onClose(event)
 
     def downloadCSV(self, event):
-        dlg = wx.FileDialog(
+        result = None
+        inFile = ""
+        with wx.FileDialog(
             self,
             message="Save Bulk Factory Reset CSV as...",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        Globals.OPEN_DIALOGS.append(dlg)
-        result = dlg.ShowModal()
-        Globals.OPEN_DIALOGS.remove(dlg)
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             self.setCursorBusy()

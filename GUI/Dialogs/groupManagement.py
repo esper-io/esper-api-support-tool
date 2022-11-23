@@ -948,17 +948,18 @@ class GroupManagement(wx.Dialog):
         event.Skip()
 
     def downloadCSV(self, event):
-        dlg = wx.FileDialog(
+        result = None
+        inFile = None
+        with wx.FileDialog(
             self,
             message="Save Group Manage CSV as...",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            result = dlg.ShowModal()
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             self.setCursorBusy()
