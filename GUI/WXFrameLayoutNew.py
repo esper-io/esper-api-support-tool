@@ -347,7 +347,10 @@ class NewFrameLayout(wx.Frame):
                     )
             if child.GetChildren():
                 self.setFontSizeForLabels(parent=child)
-        self.Refresh()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def onLog(self, event):
@@ -546,12 +549,10 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
             Globals.THREAD_POOL.enqueue(self.saveFile, inFile)
-            dlg.DestroyLater()
             return True
         elif (
             result == wx.ID_CANCEL
         ):  # Either the cancel button was pressed or the window was closed
-            dlg.DestroyLater()
             self.isSaving = False
             return False
 
@@ -1681,7 +1682,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
-                    self.gridPanel.enableGridProperties,
+                    self.gridPanel.autoSizeGridsColumns,
                 )
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
@@ -1746,6 +1747,10 @@ class NewFrameLayout(wx.Frame):
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def PopulateGroups(self):
@@ -1844,6 +1849,10 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def PopulateDevices(self, event):
@@ -2721,6 +2730,10 @@ class NewFrameLayout(wx.Frame):
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
         self.sleepInhibitor.uninhibit()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
         if hasattr(self, "start_time"):
             print("Run Execution time: %s" % (time.time() - self.start_time))
 
@@ -2730,7 +2743,7 @@ class NewFrameLayout(wx.Frame):
             wx.CallLater(3000, self.statusBar.setGaugeValue, 0)
         if Globals.OPEN_DIALOGS:
             for window in Globals.OPEN_DIALOGS:
-                if window and hasattr(window, "Raise"):
+                if window and hasattr(window, "Raise") and not self.isSaving:
                     window.Raise()
         if self.notification:
             self.notification.Close()

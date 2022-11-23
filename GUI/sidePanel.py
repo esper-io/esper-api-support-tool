@@ -436,6 +436,7 @@ class SidePanel(wx.Panel):
                 self.parentFrame.PopulateDevices(None)
             else:
                 self.parentFrame.menubar.enableConfigMenu()
+            Globals.frame.Refresh()
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):
@@ -472,6 +473,7 @@ class SidePanel(wx.Panel):
             Globals.OPEN_DIALOGS.remove(self.deviceMultiDialog)
             if not Globals.frame.WINDOWS:
                 self.deviceMultiDialog.DestroyLater()
+            Globals.frame.Refresh()
 
     def clearStoredApps(self):
         self.apps = []

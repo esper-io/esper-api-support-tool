@@ -206,7 +206,10 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        self.grid_1.AutoSizeColumns()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.grid_1.AutoSizeColumns,
+        )
 
     def deleteAppColInDeviceGrid(self):
         numCols = self.grid_1.GetNumberCols()
@@ -241,7 +244,10 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        self.grid_2.AutoSizeColumns()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.grid_2.AutoSizeColumns,
+        )
 
     @api_tool_decorator()
     def fillAppGridHeaders(self):
@@ -256,7 +262,10 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        self.grid_3.AutoSizeColumns()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.grid_3.AutoSizeColumns,
+        )
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def emptyDeviceGrid(self, emptyContents=True):
@@ -316,7 +325,10 @@ class GridPanel(wx.Panel):
         self.userEdited.append((event.Row, event.Col))
         editor = self.grid_1.GetCellEditor(event.Row, event.Col)
         if not editor.IsCreated():
-            self.grid_1.AutoSizeColumns()
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                self.grid_1.AutoSizeColumns,
+            )
         self.onCellEdit(event)
         releaseLocks([Globals.grid1_lock])
 
@@ -570,20 +582,28 @@ class GridPanel(wx.Panel):
                 )
                 num += 1
         if action == "Device":
-            self.grid_1.AutoSizeColumns()
-            self.grid_1.MakeCellVisible(0, col)
-            self.grid_1.Thaw()
+            self.repopulateGridUIChanges(self.grid_1, col)
         elif action == "Network":
-            self.grid_2.AutoSizeColumns()
-            self.grid_2.MakeCellVisible(0, col)
-            self.grid_2.Thaw()
+            self.repopulateGridUIChanges(self.grid_2, col)
         elif action == "App":
-            self.grid_3.AutoSizeColumns()
-            self.grid_3.MakeCellVisible(0, col)
-            self.grid_3.Thaw()
+            self.repopulateGridUIChanges(self.grid_3, col)
         self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
         time.sleep(3)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (0))
+
+    def repopulateGridUIChanges(self, grid, column):
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            grid.AutoSizeColumns,
+        )
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (grid.MakeCellVisible, (0, column)),
+        )
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            grid.Thaw,
+        )
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
@@ -822,20 +842,24 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid_color_lock])
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
-        acquireLocks([Globals.grid_color_lock])
+        # acquireLocks([Globals.grid_color_lock])
         if (
             attribute == "Alias"
             and "OriginalAlias" in device_info
             and device_info["Alias"] != device_info["OriginalAlias"]
-        ):
-            grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
+        ):postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
+            )
         if (
             attribute == "Tags"
             and "OriginalTags" in device_info
             and device_info["Tags"] != device_info["OriginalTags"]
-        ):
-            grid.SetCellBackgroundColour(rowNum, indx, Color.lightBlue.value)
-        releaseLocks([Globals.grid_color_lock])
+        ):postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
+            )
+        # releaseLocks([Globals.grid_color_lock])
 
     @api_tool_decorator(locks=[Globals.grid2_lock])
     def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
