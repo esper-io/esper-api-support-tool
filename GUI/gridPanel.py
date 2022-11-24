@@ -206,10 +206,13 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            self.grid_1.AutoSizeColumns,
-        )
+        if platform.system() == "Windows":
+            self.grid_1.AutoSizeColumns()
+        else:
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                self.grid_1.AutoSizeColumns,
+            )
 
     def deleteAppColInDeviceGrid(self):
         numCols = self.grid_1.GetNumberCols()
@@ -244,10 +247,13 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            self.grid_2.AutoSizeColumns,
-        )
+        if platform.system() == "Windows":
+            self.grid_2.AutoSizeColumns()
+        else:
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                self.grid_2.AutoSizeColumns,
+            )
 
     @api_tool_decorator()
     def fillAppGridHeaders(self):
@@ -262,10 +268,13 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            self.grid_3.AutoSizeColumns,
-        )
+        if platform.system() == "Windows":
+            self.grid_3.AutoSizeColumns()
+        else:
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                self.grid_3.AutoSizeColumns,
+            )
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def emptyDeviceGrid(self, emptyContents=True):
@@ -325,10 +334,13 @@ class GridPanel(wx.Panel):
         self.userEdited.append((event.Row, event.Col))
         editor = self.grid_1.GetCellEditor(event.Row, event.Col)
         if not editor.IsCreated():
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                self.grid_1.AutoSizeColumns,
-            )
+            if platform.system() == "Windows":
+                self.grid_1.AutoSizeColumns()
+            else:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    self.grid_1.AutoSizeColumns,
+                )
         self.onCellEdit(event)
         releaseLocks([Globals.grid1_lock])
 
@@ -592,18 +604,23 @@ class GridPanel(wx.Panel):
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (0))
 
     def repopulateGridUIChanges(self, grid, column):
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            grid.AutoSizeColumns,
-        )
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            (grid.MakeCellVisible, (0, column)),
-        )
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            grid.Thaw,
-        )
+        if platform.system() == "Windows":
+            grid.AutoSizeColumns()
+            grid.MakeCellVisible(0, column)
+            grid.Thaw()
+        else:
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                grid.AutoSizeColumns,
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (grid.MakeCellVisible, (0, column)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                grid.Thaw,
+            )
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
@@ -847,15 +864,12 @@ class GridPanel(wx.Panel):
             attribute == "Alias"
             and "OriginalAlias" in device_info
             and device_info["Alias"] != device_info["OriginalAlias"]
-        ):postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
-            )
-        if (
+        ) or (
             attribute == "Tags"
             and "OriginalTags" in device_info
             and device_info["Tags"] != device_info["OriginalTags"]
-        ):postEventToFrame(
+        ):
+            postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
             )
