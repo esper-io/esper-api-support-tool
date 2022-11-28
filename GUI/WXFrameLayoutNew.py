@@ -3960,8 +3960,8 @@ class NewFrameLayout(wx.Frame):
         fileName = "%s_EAST-Report.%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), Globals.SCHEDULE_SAVE)
         filePath = os.path.join(dirPath, fileName)
 
-        # if self.delayScheduleReport:
-        #     time.sleep(60 * 5)
+        if self.delayScheduleReport:
+            time.sleep(60 * 5)
         self.delayScheduleReport = False
 
         self.waitUntilNotBusy()
