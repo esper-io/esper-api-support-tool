@@ -1489,19 +1489,19 @@ class GridPanel(wx.Panel):
         scrollPosPercentage = self.getScrollpercentage(self.grid_1)
         if scrollPosPercentage >= 90:
             self.populateGridRows(
-                self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME
+                self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME, lock=Globals.grid1_lock
             )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_2)
         if scrollPosPercentage >= 90:
             self.populateGridRows(
-                self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME
+                self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME, lock=Globals.grid2_lock
             )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_3)
         if scrollPosPercentage >= 90:
             self.populateGridRows(
-                self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME
+                self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME, lock=Globals.grid3_lock
             )
         if event:
             event.Skip()
@@ -1514,7 +1514,9 @@ class GridPanel(wx.Panel):
             scrollPosPercentage = numerator / denominator * 100
         return scrollPosPercentage
 
-    def populateGridRows(self, grid, content, fields):
+    def populateGridRows(self, grid, content, fields, lock=None):
+        if lock and hasattr(lock, "acquire"):
+            lock.acquire()
         if content:
             curNumRow = grid.GetNumberRows()
             num = curNumRow
@@ -1526,23 +1528,24 @@ class GridPanel(wx.Panel):
                 grid.AppendRows(1)
                 entry = content[num]
                 col = 0
+                gridRow = grid.GetNumberRows() - 1
                 for attr in fields:
                     value = None
                     if type(fields) == dict:
                         value = entry[fields[attr]] if fields[attr] in entry else ""
                     if type(fields) == list or not value:
                         value = entry[attr] if attr in entry else ""
-                    grid.SetCellValue(grid.GetNumberRows() - 1, col, str(value))
+                    grid.SetCellValue(gridRow, col, str(value))
                     isEditable = True
                     if attr in Globals.CSV_EDITABLE_COL:
                         isEditable = False
-                    grid.SetReadOnly(grid.GetNumberRows() - 1, col, isEditable)
+                    grid.SetReadOnly(gridRow, col, isEditable)
                     if attr == "Status":
-                        self.setStatusCellColor(value, grid.GetNumberRows() - 1, col)
+                        self.setStatusCellColor(value, gridRow, col)
                     self.setAlteredCellColor(
                         grid,
                         entry,
-                        grid.GetNumberRows() - 1,
+                        gridRow,
                         attr,
                         col,
                     )
@@ -1551,6 +1554,8 @@ class GridPanel(wx.Panel):
                 curNumRow = grid.GetNumberRows()
         if grid.IsFrozen():
             grid.Thaw()
+        if lock and hasattr(lock, "locked") and lock.locked() and hasattr(lock, "release"):
+            lock.release()
         Globals.frame.setCursorDefault()
 
     def thawGridsIfFrozen(self):
