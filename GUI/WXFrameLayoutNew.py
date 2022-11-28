@@ -3136,44 +3136,157 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
-        self.sidePanel.runBtn.Enable(state)
-        self.sidePanel.actionChoice.Enable(state)
-        self.sidePanel.removeEndpointBtn.Enable(state)
+        if self.WINDOWS:
+            self.sidePanel.runBtn.Enable(state)
+            self.sidePanel.actionChoice.Enable(state)
+            self.sidePanel.removeEndpointBtn.Enable(state)
 
-        if not self.sidePanel.appChoice.IsEnabled() and state:
-            action = self.sidePanel.actionChoice.GetValue()
-            clientData = None
-            if action in Globals.GENERAL_ACTIONS:
-                clientData = Globals.GENERAL_ACTIONS[action]
-            elif action in Globals.GRID_ACTIONS:
-                clientData = Globals.GRID_ACTIONS[action]
-            self.sidePanel.setAppChoiceState(clientData)
+            if not self.sidePanel.appChoice.IsEnabled() and state:
+                action = self.sidePanel.actionChoice.GetValue()
+                clientData = None
+                if action in Globals.GENERAL_ACTIONS:
+                    clientData = Globals.GENERAL_ACTIONS[action]
+                elif action in Globals.GRID_ACTIONS:
+                    clientData = Globals.GRID_ACTIONS[action]
+                self.sidePanel.setAppChoiceState(clientData)
+            else:
+                self.sidePanel.appChoice.Enable(state)
+
+            self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
+
+            # Toggle Menu Bar Items
+            self.menubar.fileOpenAuth.Enable(state)
+            for option in self.menubar.sensitiveMenuOptions:
+                self.menubar.EnableTop(option, state)
+            self.menubar.fileOpenConfig.Enable(state)
+            self.menubar.pref.Enable(state)
+            self.menubar.collection.Enable(state)
+            self.menubar.eqlQuery.Enable(state)
+            self.menubar.run.Enable(state)
+            self.menubar.installedDevices.Enable(state)
+            if not self.blueprintsEnabled:
+                self.menubar.clone.Enable(state)
+            else:
+                self.menubar.cloneBP.Enable(state)
+            self.menubar.command.Enable(state)
+            self.menubar.collectionSubMenu.Enable(state)
+            self.menubar.groupSubMenu.Enable(state)
+            self.menubar.setSaveMenuOptionsEnableState(state)
         else:
-            self.sidePanel.appChoice.Enable(state)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.runBtn.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.actionChoice.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.removeEndpointBtn.Enable, (state,)),
+            )
 
-        self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
+            if not self.sidePanel.appChoice.IsEnabled() and state:
+                action = self.sidePanel.actionChoice.GetValue()
+                clientData = None
+                if action in Globals.GENERAL_ACTIONS:
+                    clientData = Globals.GENERAL_ACTIONS[action]
+                elif action in Globals.GRID_ACTIONS:
+                    clientData = Globals.GRID_ACTIONS[action]
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.setAppChoiceState, (clientData,)),
+                )
+            else:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.appChoice.Enable, (state,)),
+                )
 
-        # Toggle Menu Bar Items
-        self.menubar.fileOpenAuth.Enable(state)
-        for option in self.menubar.sensitiveMenuOptions:
-            self.menubar.EnableTop(option, state)
-        self.menubar.fileOpenConfig.Enable(state)
-        self.menubar.pref.Enable(state)
-        self.menubar.collection.Enable(state)
-        self.menubar.eqlQuery.Enable(state)
-        self.menubar.run.Enable(state)
-        self.menubar.installedDevices.Enable(state)
-        if not self.blueprintsEnabled:
-            self.menubar.clone.Enable(state)
-        else:
-            self.menubar.cloneBP.Enable(state)
-        self.menubar.command.Enable(state)
-        self.menubar.collectionSubMenu.Enable(state)
-        self.menubar.groupSubMenu.Enable(state)
-        self.menubar.setSaveMenuOptionsEnableState(state)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.otool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.rtool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.cmdtool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
+            )
+
+            # Toggle Menu Bar Items
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.fileOpenAuth.Enable, (state,)),
+            )
+            for option in self.menubar.sensitiveMenuOptions:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.EnableTop, (option, state)),
+                )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.fileOpenConfig.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.pref.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.collection.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.eqlQuery.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.run.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.installedDevices.Enable, (state,)),
+            )
+            if not self.blueprintsEnabled:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.clone.Enable, (state,)),
+                )
+            else:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.cloneBP.Enable, (state,)),
+                )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.command.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.collectionSubMenu.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.groupSubMenu.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.setSaveMenuOptionsEnableState, (state,)),
+            )
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
