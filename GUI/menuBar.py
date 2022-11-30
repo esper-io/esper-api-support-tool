@@ -322,7 +322,7 @@ class ToolMenuBar(wx.MenuBar):
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
-        info.SetCopyright("No Copyright (C) 2021 Esper")
+        info.SetCopyright("No Copyright (C) 2022 Esper")
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
