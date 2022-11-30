@@ -31,11 +31,11 @@ def api_tool_decorator(locks=None):
                 result = func(*args, **kwargs)
                 logPlaceDone(func)
             except ApiException as e:
-                excpt = determineErrorDisplay(e)
                 logError(e)
+                excpt = determineErrorDisplay(e)
             except Exception as e:
-                excpt = determineErrorDisplay(e)
                 logError(e)
+                excpt = determineErrorDisplay(e)
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
