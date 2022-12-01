@@ -3957,6 +3957,8 @@ class NewFrameLayout(wx.Frame):
             return
 
         dirPath = Globals.SCHEDULE_LOCATION
+        if not os.path.exists(dirPath):
+            os.mkdir(dirPath)
         fileName = "%s_EAST-Report.%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), Globals.SCHEDULE_SAVE)
         filePath = os.path.join(dirPath, fileName)
 
