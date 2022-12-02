@@ -299,9 +299,9 @@ class PreferencesDialog(wx.Dialog):
                 Globals.MIN_SHEET_CHUNK_SIZE,
             ),
         )
-        self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE / 1000)
+        self.spin_ctrl_12.SetMin(int(Globals.MIN_SHEET_CHUNK_SIZE / 1000))
+        self.spin_ctrl_12.SetMax(int(Globals.MAX_SHEET_CHUNK_SIZE / 1000))
+        self.spin_ctrl_12.SetValue(int(Globals.SHEET_CHUNK_SIZE / 1000))
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
