@@ -60,4 +60,8 @@ setup(
     data_files=DATA_FILES,
     options={'py2app': OPTIONS},
     setup_requires=['py2app'],
+    version=Globals.VERSION,
+    long_description=Globals.DESCRIPTION,
+    name="Esper API Support Tool",
+    url="https://github.com/esper-io/esper-api-support-tool/",
 )
