@@ -1274,6 +1274,7 @@ class PreferencesDialog(wx.Dialog):
         elif inputObjType == wxadv.TimePickerCtrl:
             inputObj = wxadv.TimePickerCtrl(panel_2, id=wx.ID_ANY)
         if inputObj:
+            inputObj.SetToolTip(toolTip)
             grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         panel.SetSizer(sizer)
