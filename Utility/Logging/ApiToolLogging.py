@@ -73,7 +73,7 @@ class ApiToolLog:
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
             str(exc_type),
             str(exc_value),
-            "Esper Version: " + Globals.VERSION,
+            "Esper Tool Version: " + Globals.VERSION,
         ]
         for line in exc_traceback:
             content.append(line)
@@ -106,7 +106,7 @@ class ApiToolLog:
             "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type,
             "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value,
             "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
-            "Esper Version: " + Globals.VERSION,
+            "Esper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
         for line in exc_traceback:
