@@ -396,6 +396,9 @@ class ToolMenuBar(wx.MenuBar):
             )
         if msg and showDlg:
             wx.MessageBox(msg, style=icon)
+            if result:
+                openWebLinkInBrowser(result)
+                Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
