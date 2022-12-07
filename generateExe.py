@@ -8,6 +8,7 @@ import platform
 import os
 import re
 import shutil
+import sys
 import Common.Globals as Globals
 
 from Utility.Resource import isModuleInstalled, installRequiredModules
@@ -47,13 +48,10 @@ def updateFileVersionInfo(path="file_version_info.txt"):
         for line in newContent:
             file.write(line)
 
-
-if __name__ == "__main__":
-    Globals.IS_GENERATEING_EXE = True
-    curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
-    dispath = curDirPath + "/output"
+def obtainAppName():
     system = platform.system()
     bit = platform.machine()
+
     if bit.endswith("i686") or bit == "arm64":
         bit = "arm64"
     elif bit.endswith("x86_64"):
@@ -63,80 +61,98 @@ if __name__ == "__main__":
     elif bit.endswith("64"):
         bit = "x64"
 
-    app_name = "%s_%s_%s_EsperApiSupportTool.%s" % (
+    return "%s_%s_%s_EsperApiSupportTool.%s" % (
         system[0:3].lower() if system == "Windows" else "mac",
         bit,
         Globals.VERSION.replace(".", "-"),
         "exe" if system == "Windows" else "app",
     )
-    old_app_name = "EsperApiSupportTool.%s" % ("exe" if system == "Windows" else "app",)
 
-    if not isModuleInstalled("pyinstaller"):
-        installRequiredModules()
-        raise Exception("Required Modules Installed. Please rerun the script.")
+def getExecutableCommand(doFirst=True):
+    cmd = []
+    if platform.system() == "Windows":
+        if isModuleInstalled("pyinstaller"):
+            updateFileVersionInfo()
+            cmd = [
+                "pyinstaller",
+                "--noconfirm",
+                "--onefile",
+                "--windowed",
+                "--ascii",
+                "--clean",
+                "--name",
+                app_name,
+                "--distpath",
+                dispath,
+                "--version-file",
+                curDirPath + "/file_version_info.txt",
+                "--icon",
+                curDirPath + "/Images/icon.ico",
+                "--add-data",
+                curDirPath
+                + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+                "--add-data",
+                curDirPath
+                + "/Utility/Logging/token.json%s."
+                % (";" if platform.system() == "Windows" else ":"),
+                curDirPath + "/Main.py",
+            ]
+    else:
+        if isModuleInstalled("pyinstaller") and doFirst:
+            cmd = [
+                "pyinstaller",
+                "--noconfirm",
+                "--onefile",
+                "--windowed",
+                "--icon",
+                curDirPath + "/Images/icon.png",
+                "--ascii",
+                "--clean",
+                "--name",
+                app_name.replace(".app", ""),
+                "--osx-bundle-identifier",
+                "com.esper.esperapisupporttool",
+                "--distpath",
+                dispath,
+                "--add-data",
+                curDirPath
+                + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+                "--add-data",
+                curDirPath
+                + "/Utility/Logging/token.json%s."
+                % (";" if platform.system() == "Windows" else ":"),
+                curDirPath + "/Main.py",
+            ]
+        elif isModuleInstalled("py2app"):
+            cmd = [
+                sys.executable,
+                "setup.py",
+                "py2app"
+            ]
+    return cmd
+
+if __name__ == "__main__":
+    Globals.IS_GENERATEING_EXE = True
+    curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
+    dispath = curDirPath + "/output"
+    app_name = obtainAppName()
 
     if not os.path.exists(dispath):
         os.makedirs(dispath)
 
-    cmd = []
-    if platform.system() == "Windows":
-        updateFileVersionInfo()
-        cmd = [
-            "pyinstaller",
-            "--noconfirm",
-            "--onefile",
-            "--windowed",
-            "--ascii",
-            "--clean",
-            "--name",
-            app_name,
-            "--distpath",
-            dispath,
-            "--version-file",
-            curDirPath + "/file_version_info.txt",
-            "--icon",
-            curDirPath + "/Images/icon.ico",
-            "--add-data",
-            curDirPath
-            + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
-            "--add-data",
-            curDirPath
-            + "/Utility/Logging/token.json%s."
-            % (";" if platform.system() == "Windows" else ":"),
-            curDirPath + "/Main.py",
-        ]
-    else:
-        cmd = [
-            "pyinstaller",
-            "--noconfirm",
-            "--onefile",
-            "--windowed",
-            "--icon",
-            curDirPath + "/Images/icon.png",
-            "--ascii",
-            "--clean",
-            "--name",
-            app_name.replace(".app", ""),
-            "--osx-bundle-identifier",
-            "com.esper.esperapisupporttool",
-            "--distpath",
-            dispath,
-            "--add-data",
-            curDirPath
-            + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
-            "--add-data",
-            curDirPath
-            + "/Utility/Logging/token.json%s."
-            % (";" if platform.system() == "Windows" else ":"),
-            curDirPath + "/Main.py",
-        ]
+    cmd = getExecutableCommand()
+    if not cmd:
+        raise Exception("Required Modules Not Installed. Please install and rerun the script.")
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = test.communicate()
 
+    if not os.path.exists(os.path.join(dispath, app_name)) and platform.system() != "Windows":
+        cmd = getExecutableCommand(doFirst=False)
+        test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output, error = test.communicate()
+
     try:
         if os.path.exists(dispath + "/Main.exe"):
-            if os.path.exists(dispath + "/" + old_app_name):
-                os.remove(dispath + "/" + old_app_name)
             if os.path.exists(dispath + "/" + app_name):
                 os.remove(dispath + "/" + app_name)
             os.rename(
@@ -144,21 +160,6 @@ if __name__ == "__main__":
                 dispath + "/" + app_name,
             )
         elif os.path.exists(dispath + "/Main.app"):
-            if os.path.exists(dispath + "/" + old_app_name):
-                if os.path.isfile(dispath + "/" + old_app_name):
-                    os.remove(dispath + "/" + old_app_name)
-                else:
-                    shutil.rmtree(dispath + "/" + old_app_name)
-                if os.path.isfile(
-                    dispath + "/" + app_name,
-                ):
-                    os.remove(
-                        dispath + "/" + app_name,
-                    )
-                else:
-                    shutil.rmtree(
-                        dispath + "/" + app_name,
-                    )
             os.rename(
                 dispath + "/Main.app",
                 dispath + "/" + app_name,
