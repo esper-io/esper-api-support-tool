@@ -277,7 +277,9 @@ def processDeviceInDeviceList(
         indx,
     )
     if maxDevices:
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 15)) + 10)
+        postEventToFrame(
+            eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 15)) + 10
+        )
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
@@ -650,7 +652,14 @@ def populateDeviceInfoDictionaryComplieData(
             device["tags"] = []
 
     apps = (
-        apiCalls.createAppList(appData, obtainAppDictEntry=False, filterData=True if Globals.APP_COL_FILTER and not any('' in s for s in Globals.APP_COL_FILTER) else False)
+        apiCalls.createAppList(
+            appData,
+            obtainAppDictEntry=False,
+            filterData=True
+            if Globals.APP_COL_FILTER
+            and not any("" in s for s in Globals.APP_COL_FILTER)
+            else False,
+        )
         if appData
         else []
     )
@@ -1256,7 +1265,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             if Globals.frame.sidePanel.selectedGroupsList and not allDevices
             else " ",
             tolarance=tolarance,
-            timeout=3 * 60
+            timeout=3 * 60,
         )
         if api_response:
             if (
@@ -1312,7 +1321,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
                 getLatestEvents,
                 deviceList,
                 indx,
-                maxDevices=len(devices)
+                maxDevices=len(devices),
             )
         elif hasattr(device, "id"):
             Globals.THREAD_POOL.enqueue(
@@ -1323,13 +1332,15 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
                 getLatestEvents,
                 deviceList,
                 indx,
-                maxDevices=len(devices)
+                maxDevices=len(devices),
             )
         indx += 1
 
     Globals.THREAD_POOL.join(tolerance=tolarance)
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
-    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching extended device information")
+    postEventToFrame(
+        eventUtil.myEVT_LOG, "Finished fetching extended device information"
+    )
 
     return deviceList
 

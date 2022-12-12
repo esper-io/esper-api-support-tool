@@ -1104,7 +1104,9 @@ class PreferencesDialog(wx.Dialog):
 
         if "scheduleSaveType" in self.prefs and self.prefs["scheduleSaveType"]:
             Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
-            self.reportSaveType.SetSelection(self.reportSaveTypes.index(Globals.SCHEDULE_SAVE))
+            self.reportSaveType.SetSelection(
+                self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
+            )
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()

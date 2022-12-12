@@ -112,7 +112,13 @@ def get_all_devices_helper(
 
 
 def get_all_devices(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0, timeout=-1
+    groupToUse,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
@@ -129,7 +135,13 @@ def get_all_devices(
 
 
 def fetchDevicesFromGroup(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0, timeout=-1
+    groupToUse,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     api_response = None
     for group in groupToUse:
@@ -152,7 +164,13 @@ def fetchDevicesFromGroup(
 
 
 def fetchDevicesFromGroupHelper(
-    group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0, timeout=-1
+    group,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     api_response = None
     for _ in range(maxAttempt):

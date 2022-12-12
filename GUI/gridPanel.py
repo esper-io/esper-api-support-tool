@@ -1504,36 +1504,69 @@ class GridPanel(wx.Panel):
         if scrollPosPercentage >= 90:
             if platform.system() == "Windows":
                 self.populateGridRows(
-                    self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME, lock=Globals.grid1_lock
+                    self.grid_1,
+                    self.grid_1_contents,
+                    Globals.CSV_TAG_ATTR_NAME,
+                    lock=Globals.grid1_lock,
                 )
             else:
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.populateGridRows, (self.grid_1, self.grid_1_contents, Globals.CSV_TAG_ATTR_NAME, Globals.grid1_lock)),
+                    (
+                        self.populateGridRows,
+                        (
+                            self.grid_1,
+                            self.grid_1_contents,
+                            Globals.CSV_TAG_ATTR_NAME,
+                            Globals.grid1_lock,
+                        ),
+                    ),
                 )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_2)
         if scrollPosPercentage >= 90:
             if platform.system() == "Windows":
                 self.populateGridRows(
-                    self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME, lock=Globals.grid2_lock
+                    self.grid_2,
+                    self.grid_2_contents,
+                    Globals.CSV_NETWORK_ATTR_NAME,
+                    lock=Globals.grid2_lock,
                 )
             else:
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.populateGridRows, (self.grid_2, self.grid_2_contents, Globals.CSV_NETWORK_ATTR_NAME, Globals.grid2_lock)),
+                    (
+                        self.populateGridRows,
+                        (
+                            self.grid_2,
+                            self.grid_2_contents,
+                            Globals.CSV_NETWORK_ATTR_NAME,
+                            Globals.grid2_lock,
+                        ),
+                    ),
                 )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_3)
         if scrollPosPercentage >= 90:
             if platform.system() == "Windows":
                 self.populateGridRows(
-                    self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME, lock=Globals.grid3_lock
+                    self.grid_3,
+                    self.grid_3_contents,
+                    Globals.CSV_APP_ATTR_NAME,
+                    lock=Globals.grid3_lock,
                 )
             else:
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.populateGridRows, (self.grid_3, self.grid_3_contents, Globals.CSV_APP_ATTR_NAME, Globals.grid3_lock)),
+                    (
+                        self.populateGridRows,
+                        (
+                            self.grid_3,
+                            self.grid_3_contents,
+                            Globals.CSV_APP_ATTR_NAME,
+                            Globals.grid3_lock,
+                        ),
+                    ),
                 )
         if event:
             event.Skip()
@@ -1586,7 +1619,12 @@ class GridPanel(wx.Panel):
                 curNumRow = grid.GetNumberRows()
         if grid.IsFrozen():
             grid.Thaw()
-        if lock and hasattr(lock, "locked") and lock.locked() and hasattr(lock, "release"):
+        if (
+            lock
+            and hasattr(lock, "locked")
+            and lock.locked()
+            and hasattr(lock, "release")
+        ):
             lock.release()
         Globals.frame.setCursorDefault()
 

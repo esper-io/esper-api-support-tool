@@ -635,14 +635,18 @@ class NewFrameLayout(wx.Frame):
         return headers, deviceHeaders, networkHeaders
 
     @api_tool_decorator()
-    def saveAllFile(self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1):
+    def saveAllFile(
+        self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1
+    ):
         self.sleepInhibitor.inhibit()
         self.start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         self.Logging("Obtaining Device data....")
-        deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices, tolarance=tolarance)
+        deviceList = getAllDeviceInfo(
+            self, action=action, allDevices=allDevices, tolarance=tolarance
+        )
         gridDeviceData = []
 
         num = 1
@@ -653,7 +657,10 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.grid_3_contents += (
                     item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
                 )
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (int(num / len(deviceList.values())) * 35) + 50)
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE,
+                (int(num / len(deviceList.values())) * 35) + 50,
+            )
             num += 1
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
@@ -674,7 +681,7 @@ class NewFrameLayout(wx.Frame):
             gridDeviceData,
             action=action,
             showDlg=showDlg,
-            tolarance=tolarance
+            tolarance=tolarance,
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
@@ -690,7 +697,12 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         self.saveGridData(
-            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData, action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            inFile,
+            headers,
+            deviceHeaders,
+            networkHeaders,
+            gridDeviceData,
+            action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
@@ -870,7 +882,8 @@ class NewFrameLayout(wx.Frame):
                         or (
                             action
                             and action == GeneralActions.GENERATE_APP_REPORT.value
-                            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                            or action
+                            == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                         )
                     ):
                         baseSheetName = "Application"
@@ -2055,7 +2068,11 @@ class NewFrameLayout(wx.Frame):
             )
             return
 
-        if self.isBusy or not self.sidePanel.runBtn.IsEnabled() or self.scheduleReportRunning:
+        if (
+            self.isBusy
+            or not self.sidePanel.runBtn.IsEnabled()
+            or self.scheduleReportRunning
+        ):
             return
 
         end_time = time.time() + 120
@@ -3959,7 +3976,10 @@ class NewFrameLayout(wx.Frame):
         dirPath = Globals.SCHEDULE_LOCATION
         if not os.path.exists(dirPath):
             os.mkdir(dirPath)
-        fileName = "%s_EAST-Report.%s" % (datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), Globals.SCHEDULE_SAVE)
+        fileName = "%s_EAST-Report.%s" % (
+            datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+            Globals.SCHEDULE_SAVE,
+        )
         filePath = os.path.join(dirPath, fileName)
 
         if self.delayScheduleReport:
@@ -4006,13 +4026,15 @@ class NewFrameLayout(wx.Frame):
         self.stopOtherScheduledCalls()
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
-            (
-                self.startScheduleReportCall
-            ),
+            (self.startScheduleReportCall),
         )
 
     def startScheduleReportCall(self):
-        self.scheduleCallLater.append(wx.CallLater(Globals.SCHEDULE_INTERVAL * 3600000, self.handleScheduleReportPref))
+        self.scheduleCallLater.append(
+            wx.CallLater(
+                Globals.SCHEDULE_INTERVAL * 3600000, self.handleScheduleReportPref
+            )
+        )
 
     def stopOtherScheduledCalls(self):
         for entry in self.scheduleCallLater:

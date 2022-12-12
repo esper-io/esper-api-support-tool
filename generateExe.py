@@ -48,6 +48,7 @@ def updateFileVersionInfo(path="file_version_info.txt"):
         for line in newContent:
             file.write(line)
 
+
 def obtainAppName():
     system = platform.system()
     bit = platform.machine()
@@ -67,6 +68,7 @@ def obtainAppName():
         Globals.VERSION.replace(".", "-"),
         "exe" if system == "Windows" else "app",
     )
+
 
 def getExecutableCommand(doFirst=True):
     cmd = []
@@ -124,12 +126,9 @@ def getExecutableCommand(doFirst=True):
                 curDirPath + "/Main.py",
             ]
         elif isModuleInstalled("py2app"):
-            cmd = [
-                sys.executable,
-                "setup.py",
-                "py2app"
-            ]
+            cmd = [sys.executable, "setup.py", "py2app"]
     return cmd
+
 
 if __name__ == "__main__":
     Globals.IS_GENERATEING_EXE = True
@@ -142,11 +141,16 @@ if __name__ == "__main__":
 
     cmd = getExecutableCommand()
     if not cmd:
-        raise Exception("Required Modules Not Installed. Please install and rerun the script.")
+        raise Exception(
+            "Required Modules Not Installed. Please install and rerun the script."
+        )
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = test.communicate()
 
-    if not os.path.exists(os.path.join(dispath, app_name)) and platform.system() != "Windows":
+    if (
+        not os.path.exists(os.path.join(dispath, app_name))
+        and platform.system() != "Windows"
+    ):
         cmd = getExecutableCommand(doFirst=False)
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         output, error = test.communicate()

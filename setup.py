@@ -34,11 +34,8 @@ curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
 if system == "Windows":
     raise Exception("Py2app is not compatible with Windows")
 
-APP = ['Main.py']
-DATA_FILES = [
-    curDirPath + "/Utility/Logging/token.json",
-    curDirPath + "/Images"
-]
+APP = ["Main.py"]
+DATA_FILES = [curDirPath + "/Utility/Logging/token.json", curDirPath + "/Images"]
 OPTIONS = {
     "argv_emulation": True,
     "extension": ".app",
@@ -52,14 +49,14 @@ OPTIONS = {
         "CFBundleVersion": Globals.VERSION,
         "CFBundleShortVersionString": Globals.VERSION,
         "NSHumanReadableCopyright": "No Copyright © 2022",
-    }
+    },
 }
 
 setup(
     app=APP,
     data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app'],
+    options={"py2app": OPTIONS},
+    setup_requires=["py2app"],
     version=Globals.VERSION,
     long_description=Globals.DESCRIPTION,
     name="Esper API Support Tool",
