@@ -4,6 +4,7 @@ import csv
 import json
 import os
 
+import pandas as pd
 import wx
 import wx.grid
 
@@ -12,12 +13,8 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
-from Utility.Resource import (
-    correctSaveFileName,
-    createNewFile,
-    displayMessageBox,
-    postEventToFrame,
-)
+from Utility.Resource import (correctSaveFileName, createNewFile,
+                              displayMessageBox, postEventToFrame)
 
 
 class UserCreation(wx.Frame):
@@ -117,7 +114,7 @@ class UserCreation(wx.Frame):
         grid_sizer_5 = wx.FlexGridSizer(1, 2, 0, 0)
         sizer_1.Add(grid_sizer_5, 1, wx.EXPAND | wx.TOP, 5)
 
-        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Upload CSV:")
+        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Upload:")
         label_4.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -131,7 +128,7 @@ class UserCreation(wx.Frame):
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.button_2 = wx.Button(self.panel_2, wx.ID_ANY, "Upload")
-        self.button_2.SetToolTip("Upload User CSV")
+        self.button_2.SetToolTip("Upload User Spreedsheet")
         grid_sizer_5.Add(
             self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
@@ -298,8 +295,8 @@ class UserCreation(wx.Frame):
     def upload(self, event):
         with wx.FileDialog(
             self,
-            "Open User CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open User Spreadsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.lastFilePath),
         ) as fileDialog:
@@ -326,11 +323,28 @@ class UserCreation(wx.Frame):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         self.users = []
         data = None
-        with open(file, "r") as csvFile:
-            reader = csv.reader(
-                csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-            )
-            data = list(reader)
+        if file.endswith(".csv"):
+            with open(file, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+        elif file.endswith(".xlsx"):
+            dfs = None
+            try:
+                dfs = pd.read_excel(
+                    file, sheet_name=None, keep_default_na=False
+                )
+            except:
+                pass
+            if dfs:
+                if hasattr(dfs, "values"):
+                    data = dfs.values.tolist()
+                elif hasattr(dfs, "keys"):
+                    sheetKeys = dfs.keys()
+                    for sheet in sheetKeys:
+                        data = dfs[sheet].values.tolist()
+                        break
         invalidUsers = []
         if data:
             self.grid_1.Freeze()

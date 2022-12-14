@@ -2,6 +2,7 @@
 
 import csv
 
+import pandas as pd
 import wx
 import wx.grid
 
@@ -238,9 +239,9 @@ class WidgetPicker(wx.Dialog):
         result = None
         with wx.FileDialog(
             self,
-            message="Open Device Idenifier CSV",
+            message="Open Device Idenifier Spreadsheet",
             defaultFile="",
-            wildcard="*.csv",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN,
         ) as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
@@ -252,19 +253,39 @@ class WidgetPicker(wx.Dialog):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             fileData = None
             self.deviceList = []
-            with open(inFile, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                fileData = list(reader)
-            for entry in fileData:
-                identifer = entry[0]
-                if identifer and identifer not in self.deviceList:
-                    self.grid_1.AppendRows(1)
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1, 1, str(identifer)
+
+            if inFile.endswith(".csv"):
+                with open(inFile, "r") as csvFile:
+                    reader = csv.reader(
+                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
-                    self.deviceList.append(str(identifer))
+                    fileData = list(reader)
+                for entry in fileData:
+                    identifer = entry[0]
+                    if identifer and identifer not in self.deviceList:
+                        self.grid_1.AppendRows(1)
+                        self.grid_1.SetCellValue(
+                            self.grid_1.GetNumberRows() - 1, 1, str(identifer)
+                        )
+                        self.deviceList.append(str(identifer))
+            elif inFile.endswith(".xlsx"):
+                dfs = None
+                try:
+                    dfs = pd.read_excel(
+                        inFile, sheet_name=None, keep_default_na=False
+                    )
+                except:
+                    pass
+                if dfs:
+                    sheetKeys = dfs.keys()
+                    for sheet in sheetKeys:
+                        identifer = dfs[sheet].columns.values.tolist()[0]
+                        if identifer and identifer not in self.deviceList:
+                            self.grid_1.AppendRows(1)
+                            self.grid_1.SetCellValue(
+                                self.grid_1.GetNumberRows() - 1, 1, str(identifer)
+                            )
+                            self.deviceList.append(str(identifer))
         self.checkInput(event)
 
     def getInputs(self):
