@@ -850,7 +850,7 @@ class GroupManagement(wx.Dialog):
                 data = list(reader)
         self.processUploadData(data)
 
-    def uploadCSV(self, filePath):
+    def uploadXlsx(self, filePath):
         self.handlePreUploadActivity()
         data = None
         try:

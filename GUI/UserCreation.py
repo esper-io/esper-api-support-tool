@@ -323,6 +323,7 @@ class UserCreation(wx.Frame):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         self.users = []
         data = None
+        headers = []
         if file.endswith(".csv"):
             with open(file, "r") as csvFile:
                 reader = csv.reader(
@@ -342,11 +343,15 @@ class UserCreation(wx.Frame):
                     sheetKeys = dfs.keys()
                     for sheet in sheetKeys:
                         data = dfs[sheet].values.tolist()
+                        headers += list(dfs[sheet].columns.values)
                         break
+                newHeaders = []
+                for header in headers:
+                    newHeaders.append(header.replace(" ", "").lower())
+                headers = newHeaders
         invalidUsers = []
         if data:
             self.grid_1.Freeze()
-            headers = []
             for entry in data:
                 if "username" not in entry and "Username" not in entry:
                     if (
