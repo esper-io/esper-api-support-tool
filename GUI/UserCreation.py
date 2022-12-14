@@ -309,7 +309,7 @@ class UserCreation(wx.Frame):
                     self.lastFilePath = os.path.abspath(
                         os.path.join(self.lastFilePath, os.pardir)
                     )
-                self.processUpload(fileDialog.s())
+                self.processUpload(fileDialog.GetPath())
 
     @api_tool_decorator()
     def onFileDrop(self, event):
@@ -338,9 +338,7 @@ class UserCreation(wx.Frame):
             except:
                 pass
             if dfs:
-                if hasattr(dfs, "values"):
-                    data = dfs.values.tolist()
-                elif hasattr(dfs, "keys"):
+                if hasattr(dfs, "keys"):
                     sheetKeys = dfs.keys()
                     for sheet in sheetKeys:
                         data = dfs[sheet].values.tolist()

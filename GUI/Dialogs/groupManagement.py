@@ -855,9 +855,7 @@ class GroupManagement(wx.Dialog):
         data = None
         try:
             dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
-            if hasattr(dfs, "values"):
-                data = dfs.values.tolist()
-            elif hasattr(dfs, "keys"):
+            if hasattr(dfs, "keys"):
                 sheetKeys = dfs.keys()
                 for sheet in sheetKeys:
                     data = dfs[sheet].values.tolist()
