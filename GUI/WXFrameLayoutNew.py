@@ -13,19 +13,44 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import Common.ApiTracker as ApiTracker
-import Common.Globals as Globals
 import pandas as pd
-import Utility.API.EsperTemplateUtil as templateUtil
-import Utility.EventUtility as eventUtil
-import Utility.Threading.wxThread as wxThread
 import wx
 import wx.adv as wxadv
 import xlsxwriter
+from wx.core import TextEntryDialog
+
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
+import GUI.EnhancedStatusBar as ESB
+import Utility.API.EsperTemplateUtil as templateUtil
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, GeneralActions, GridActions
 from Common.SleepInhibitor import SleepInhibitor
+from GUI.ConfigureWidget import WidgetPicker
+from GUI.consoleWindow import Console
+from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
+from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
+from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from GUI.Dialogs.CommandDialog import CommandDialog
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from GUI.Dialogs.groupManagement import GroupManagement
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
+from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
+from GUI.Dialogs.PreferencesDialog import PreferencesDialog
+from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
+from GUI.Dialogs.TemplateDialog import TemplateDialog
+from GUI.gridPanel import GridPanel
+from GUI.menuBar import ToolMenuBar
+from GUI.sidePanel import SidePanel
+from GUI.toolBar import ToolsToolBar
+
 from Utility.API.AppUtilities import (
     getAllInstallableApps,
     getAppDictEntry,
@@ -43,7 +68,7 @@ from Utility.API.BlueprintUtility import (
     prepareBlueprintConversion,
     pushBlueprintUpdate,
 )
-from Utility.API.CommandUtility import createCommand
+from Utility.API.CommandUtility import createCommand, setWidget
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import (
     clearAppData,
@@ -83,29 +108,6 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
-from wx.core import TextEntryDialog
-
-import GUI.EnhancedStatusBar as ESB
-from GUI.consoleWindow import Console
-from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
-from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
-from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
-from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
-from GUI.Dialogs.CommandDialog import CommandDialog
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from GUI.Dialogs.groupManagement import GroupManagement
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
-from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
-from GUI.Dialogs.PreferencesDialog import PreferencesDialog
-from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
-from GUI.Dialogs.TemplateDialog import TemplateDialog
-from GUI.gridPanel import GridPanel
-from GUI.menuBar import ToolMenuBar
-from GUI.sidePanel import SidePanel
-from GUI.toolBar import ToolsToolBar
 
 
 class NewFrameLayout(wx.Frame):
@@ -4056,3 +4058,17 @@ class NewFrameLayout(wx.Frame):
             or Globals.OPEN_DIALOGS
         ):
             time.sleep(amountSleep)
+
+    @api_tool_decorator()
+    def onConfigureWidgets(self, event):
+        res == None
+        enable = className = deviceList = None
+        with WidgetPicker() as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            res = dlg.ShowModal()
+            enable, className, deviceList = dlg.getInputs()
+            Globals.OPEN_DIALOGS.remove(dlg)
+        if res == wx.ID_APPLY:
+            Globals.THREAD_POOL.enqueue(
+                setWidget, enable, widgetName=className, devices=deviceList
+            )

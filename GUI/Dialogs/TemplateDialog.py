@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import Utility.API.EsperTemplateUtil as templateUtil
-
-import Common.Globals as Globals
-import wx
-import wx.html as wxHtml
 import json
 
-from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
+import wx
+import wx.html as wxHtml
+
+import Common.Globals as Globals
+import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
+from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
 
 
 class TemplateDialog(wx.Dialog):

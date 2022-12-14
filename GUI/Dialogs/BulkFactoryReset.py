@@ -3,9 +3,10 @@
 import csv
 from pathlib import Path
 
-import Common.Globals as Globals
 import wx
 import wx.grid
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Resource import (
     correctSaveFileName,

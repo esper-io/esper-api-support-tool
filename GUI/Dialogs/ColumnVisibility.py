@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from Common.decorator import api_tool_decorator
 import wx
-from GUI.TabPanel import TabPanel
 
+from Common.decorator import api_tool_decorator
+from GUI.TabPanel import TabPanel
 from Utility.Resource import getStrRatioSimilarity
 
 

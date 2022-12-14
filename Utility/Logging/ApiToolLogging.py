@@ -9,10 +9,11 @@ import traceback
 from datetime import datetime
 from traceback import extract_tb, format_list, print_exc
 
-import Common.ApiTracker as ApiTracker
-import Common.Globals as Globals
 from esperclient.rest import ApiException
 from fuzzywuzzy import fuzz
+
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
 from Utility.Logging.IssueTracker import IssueTracker
 
 

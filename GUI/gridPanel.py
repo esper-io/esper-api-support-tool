@@ -1,8 +1,18 @@
 #!/usr/bin/env python
 
 import platform
+import re
 import time
+
+import wx
+import wx.grid as gridlib
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
+from Utility.deviceInfo import constructNetworkInfo
 from Utility.Resource import (
     acquireLocks,
     checkIfCurrentThreadStopped,
@@ -11,15 +21,6 @@ from Utility.Resource import (
     resourcePath,
     scale_bitmap,
 )
-import Common.Globals as Globals
-import re
-import wx
-import wx.grid as gridlib
-import Utility.EventUtility as eventUtil
-
-from Common.decorator import api_tool_decorator
-from Common.enum import Color
-from Utility.deviceInfo import constructNetworkInfo
 
 
 class GridPanel(wx.Panel):

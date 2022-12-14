@@ -5,17 +5,17 @@ import platform
 import time
 from datetime import datetime
 
-import Common.Globals as Globals
 import pytz
 import wx
-from Common.decorator import api_tool_decorator
-from Common.enum import DeviceState, GeneralActions
 from esperclient.models.v0_command_args import V0CommandArgs
 from esperclient.rest import ApiException
 
+import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
+from Common.decorator import api_tool_decorator
+from Common.enum import DeviceState, GeneralActions
 from Utility.API.AppUtilities import getDeviceAppsApiUrl, uploadApplication
 from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.API.DeviceUtility import (

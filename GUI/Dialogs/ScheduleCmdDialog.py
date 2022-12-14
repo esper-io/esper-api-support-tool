@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import wx
-
-import wx.adv
-
 from datetime import datetime, timedelta
+
+import wx
+import wx.adv
 
 
 class ScheduleCmdDialog(wx.Dialog):

@@ -2,8 +2,9 @@
 
 import time
 
-import Common.Globals as Globals
 import requests
+
+import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (

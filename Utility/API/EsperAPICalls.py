@@ -1,38 +1,35 @@
 #!/usr/bin/env python
 
 
-from datetime import datetime, timedelta
-import esperclient
+import json
 import string
 import time
-import json
+from datetime import datetime, timedelta
+
+import esperclient
+from esperclient.models.v0_command_args import V0CommandArgs
+from esperclient.rest import ApiException
 
 import Common.Globals as Globals
-from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 import Utility.EventUtility as eventUtil
-
 from Common.decorator import api_tool_decorator
-
-from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import (
     getCommandsApiInstance,
     postEsperCommand,
     waitForCommandToFinish,
 )
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
 )
-
-from esperclient.rest import ApiException
-from esperclient.models.v0_command_args import V0CommandArgs
 
 
 @api_tool_decorator()

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from Common.decorator import api_tool_decorator
-import Common.Globals as Globals
 import wx
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
 
 
 class LargeTextEntryDialog(wx.Dialog):

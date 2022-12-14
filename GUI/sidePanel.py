@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from Common.enum import GeneralActions, GridActions
-from Common.decorator import api_tool_decorator
 import csv
-import wx
-import Common.Globals as Globals
-from Utility import EventUtility
 
-from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
+import wx
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Common.enum import GeneralActions, GridActions
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
+from Utility import EventUtility
+from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 
 
 class SidePanel(wx.Panel):

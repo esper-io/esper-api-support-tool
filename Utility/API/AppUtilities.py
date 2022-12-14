@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
 import string
-import esperclient
 import time
+
+import esperclient
 import wx
-import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
-
-from Common.decorator import api_tool_decorator
-
 from esperclient.rest import ApiException
 
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.API.CommandUtility import (
-    executeCommandOnDevice,
-    executeCommandOnGroup,
-)
 from Utility.Resource import (
     displayMessageBox,
     enforceRateLimit,
@@ -23,7 +19,6 @@ from Utility.Resource import (
     logBadResponse,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,

@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
 import json
 import random
+from datetime import datetime
+
 import wx
 import wx.adv
-
-from datetime import datetime
 from dateutil import tz
-from Common.decorator import api_tool_decorator
-
 from esperclient.models.v0_command_args import V0CommandArgs
 from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
 
 
 class CommandDialog(wx.Dialog):

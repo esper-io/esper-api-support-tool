@@ -2,7 +2,6 @@
 
 import threading
 import time
-
 from queue import Queue
 from threading import Event, current_thread
 

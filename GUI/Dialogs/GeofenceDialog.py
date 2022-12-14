@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import wx
 import csv
-import Common.Globals as Globals
+
+import wx
 import wx.grid
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById

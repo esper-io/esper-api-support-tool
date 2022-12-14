@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import requests
-import Common.Globals as Globals
+import json
 import os
 import sys
-import json
+
+import requests
+
+import Common.Globals as Globals
 
 
 class IssueTracker:

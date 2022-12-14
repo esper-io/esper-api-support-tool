@@ -2,12 +2,7 @@
 
 import Common.Globals as Globals
 from Utility.API.GroupUtility import getAllGroups
-
-from Utility.Resource import (
-    getHeader,
-    isApiKey,
-)
-
+from Utility.Resource import getHeader, isApiKey
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performDeleteRequestWithRetry,
@@ -123,7 +118,9 @@ def getUsers(
         limit=limit,
         offset=offset,
     )
-    usersResp = performGetRequestWithRetry(url, headers=getHeader(), maxRetry=maxAttempt)
+    usersResp = performGetRequestWithRetry(
+        url, headers=getHeader(), maxRetry=maxAttempt
+    )
     resp = None
     if usersResp and hasattr(usersResp, "status_code") and usersResp.status_code < 300:
         resp = usersResp.json()

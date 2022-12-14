@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
+import os
 import platform
 import threading
-import os
 
 import esperclient
-from Utility.Threading.ThreadPoolQueue import Pool
 
 from Common.enum import GeneralActions, GridActions
+from Utility.Threading.ThreadPoolQueue import Pool
 
 configuration = esperclient.Configuration()
 enterprise_id = ""

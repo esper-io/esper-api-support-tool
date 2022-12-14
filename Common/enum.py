@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import wx
-
 from enum import Enum
+
+import wx
 
 
 class GeneralActions(Enum):

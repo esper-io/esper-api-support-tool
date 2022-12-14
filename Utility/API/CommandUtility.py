@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+import ast
+import json
+import time
+
+import esperclient
+import wx
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     enforceRateLimit,
@@ -8,18 +19,7 @@ from Utility.Resource import (
     postEventToFrame,
     splitListIntoChunks,
 )
-import ast
-import time
-import esperclient
-import json
-import wx
-
-import Common.Globals as Globals
 from Utility.Web.WebRequests import performPostRequestWithRetry
-import Utility.EventUtility as eventUtil
-
-from Common.decorator import api_tool_decorator
-from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
 
 @api_tool_decorator()
@@ -482,3 +482,26 @@ def postEsperCommand(command_data, useV0=True):
     except Exception as e:
         ApiToolLog().LogError(e, postIssue=False)
     return resp, json_resp
+
+
+def setWidget(enable, widgetName=None, devices=[], groups=[]):
+    if (not devices and not groups) or (enable and not widgetName):
+        return
+    command_arg = {"enable": enable, "widget_class_name": widgetName}
+    if devices:
+        executeCommandOnDevice(
+            Globals.frame,
+            command_arg,
+            command_type="SET_WIDGET",
+            deviceIds=devices,
+            postStatus=True,
+            combineRequests=True,
+        )
+    if groups:
+        executeCommandOnGroup(
+            Globals.frame,
+            command_arg,
+            command_type="SET_WIDGET",
+            postStatus=True,
+            combineRequests=True,
+        )

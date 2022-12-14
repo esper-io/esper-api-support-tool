@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
+import os
+
+import wx
+from esperclient import InlineResponse201
+
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
-import os
-import wx
-
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
 from Utility.API.AppUtilities import (
-    getAllAppVersionsForHost,
     getAllApplicationsForHost,
+    getAllAppVersionsForHost,
     uploadApplicationForHost,
 )
 from Utility.API.CommandUtility import postEsperCommand
@@ -26,14 +28,11 @@ from Utility.Resource import (
     getHeader,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,
     performPostRequestWithRetry,
 )
-
-from esperclient import InlineResponse201
 
 
 def checkBlueprintsIsEnabled():

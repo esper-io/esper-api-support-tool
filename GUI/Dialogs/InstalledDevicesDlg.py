@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import wx
-import Common.Globals as Globals
-from Utility.API.AppUtilities import getAppVersions
 
-from Utility.Resource import getStrRatioSimilarity
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.API.AppUtilities import getAppVersions
+from Utility.Resource import getStrRatioSimilarity
 
 
 class InstalledDevicesDlg(wx.Dialog):

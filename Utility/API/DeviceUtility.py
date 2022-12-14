@@ -2,9 +2,10 @@
 
 import time
 
+from esperclient.rest import ApiException
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from esperclient.rest import ApiException
 from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog

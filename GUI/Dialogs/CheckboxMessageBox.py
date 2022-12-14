@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from Common.decorator import api_tool_decorator
 import wx
+
+from Common.decorator import api_tool_decorator
 
 
 class CheckboxMessageBox(wx.Dialog):

@@ -1,37 +1,34 @@
 #!/usr/bin/env python
 
+from datetime import datetime
+
 import wx
+from esperclient import InlineResponse201
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
+from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import (
-    getAllAppVersionsForHost,
     getAllApplicationsForHost,
+    getAllAppVersionsForHost,
     uploadApplicationForHost,
 )
 from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 from Utility.API.WallpaperUtility import uploadWallpaper
-
-import Utility.Threading.wxThread as wxThread
-import Utility.EventUtility as eventUtil
-import Common.Globals as Globals
-
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
-    download,
     deleteFile,
+    download,
     getEsperConfig,
     joinThreadList,
+    postEventToFrame,
 )
-from Utility.Resource import postEventToFrame
 from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
 )
-
-from datetime import datetime
-
-from Common.decorator import api_tool_decorator
-
-from esperclient import InlineResponse201
 
 
 class EsperTemplateUtil:

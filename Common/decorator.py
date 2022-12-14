@@ -10,9 +10,9 @@ from traceback import extract_tb, format_list, print_exc
 
 import wx
 from esperclient.rest import ApiException
-from Utility.Logging.ApiToolLogging import ApiToolLog
 
 import Common.Globals as Globals
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def api_tool_decorator(locks=None):

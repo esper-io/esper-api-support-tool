@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
 import os
+
 import wx
 import wx.adv as wxadv
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 

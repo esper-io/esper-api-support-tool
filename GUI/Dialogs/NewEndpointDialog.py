@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re
+
 import wx
 import wx.html as wxHtml
 

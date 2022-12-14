@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import os
-import wx
-import Common.Globals as Globals
 
+import wx
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog

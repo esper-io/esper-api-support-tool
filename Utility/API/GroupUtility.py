@@ -3,20 +3,19 @@
 import json
 import time
 
+import esperclient
 from esperclient.rest import ApiException
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-import esperclient
-import Common.Globals as Globals
-
 from Utility.Resource import (
     enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,

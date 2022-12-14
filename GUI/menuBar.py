@@ -1,24 +1,25 @@
 #!/usr/bin/env python
 
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility import EventUtility
-from Utility.EastUtility import processCollectionDevices
-from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
-from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
-from Common.decorator import api_tool_decorator
-from GUI.UserCreation import UserCreation
-import wx
-import wx.adv as adv
-import Common.Globals as Globals
 import platform
 
+import wx
+import wx.adv as adv
 
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from GUI.Dialogs.CollectionsDlg import CollectionsDialog
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from GUI.UserCreation import UserCreation
+from Utility import EventUtility
+from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from Utility.EastUtility import processCollectionDevices
 from Utility.Logging.ApiToolLogging import ApiToolLog
-
 from Utility.Resource import (
-    downloadFileFromUrl,
     checkForUpdate,
+    downloadFileFromUrl,
+    openWebLinkInBrowser,
+    postEventToFrame,
+    resourcePath,
 )
 
 
@@ -182,6 +183,11 @@ class ToolMenuBar(wx.MenuBar):
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
+        widgetMenu = wx.MenuItem(runMenu, wx.ID_ANY, "&Configure Widgets\t")
+        self.configureWidgets = runMenu.Append(widgetMenu)
+
+        runMenu.Append(wx.ID_SEPARATOR)
+
         self.userSubMenu = wx.Menu()
         fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
@@ -312,6 +318,9 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
+        )
 
     @api_tool_decorator()
     def onAbout(self, event):

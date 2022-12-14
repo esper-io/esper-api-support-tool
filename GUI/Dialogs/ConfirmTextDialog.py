@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser
-from Common.decorator import api_tool_decorator
-import Common.Globals as Globals
 import wx
 import wx.html as wxHtml
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Utility.Resource import openWebLinkInBrowser
 
 
 class ConfirmTextDialog(wx.Dialog):

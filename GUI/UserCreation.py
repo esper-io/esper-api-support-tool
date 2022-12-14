@@ -4,11 +4,13 @@ import csv
 import json
 import os
 
-import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
 import wx
 import wx.grid
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
 from Utility.Resource import (
     correctSaveFileName,
@@ -16,8 +18,6 @@ from Utility.Resource import (
     displayMessageBox,
     postEventToFrame,
 )
-
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 
 
 class UserCreation(wx.Frame):

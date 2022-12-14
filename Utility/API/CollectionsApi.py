@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-from Utility.Resource import (
-    getHeader,
-    logBadResponse,
-)
-from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Utility.Resource import getHeader, logBadResponse
 from Utility.Web.WebRequests import (
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
