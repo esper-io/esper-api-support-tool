@@ -4061,7 +4061,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onConfigureWidgets(self, event):
-        res == None
+        res = None
         enable = className = deviceList = None
         with WidgetPicker() as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
