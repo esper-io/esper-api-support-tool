@@ -183,7 +183,7 @@ class ToolMenuBar(wx.MenuBar):
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
-        widgetMenu = wx.MenuItem(runMenu, wx.ID_ANY, "&Configure Widgets\t")
+        widgetMenu = wx.MenuItem(runMenu, wx.ID_ANY, "&Configure Widgets\tCtrl+Shift+W")
         self.configureWidgets = runMenu.Append(widgetMenu)
 
         runMenu.Append(wx.ID_SEPARATOR)
