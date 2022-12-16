@@ -4066,9 +4066,17 @@ class NewFrameLayout(wx.Frame):
         with WidgetPicker() as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
             res = dlg.ShowModal()
-            enable, className, deviceList = dlg.getInputs()
+            enable, className, commandTarget, deviceList = dlg.getInputs()
             Globals.OPEN_DIALOGS.remove(dlg)
         if res == wx.ID_APPLY:
-            Globals.THREAD_POOL.enqueue(
-                setWidget, enable, widgetName=className, devices=deviceList
-            )
+            self.statusBar.gauge.Pulse()
+            if commandTarget == 0:
+                self.Logging("Creating Widget Command for selected devices")
+                Globals.THREAD_POOL.enqueue(
+                    setWidget, enable, widgetName=className, devices=deviceList
+                )
+            else:
+                self.Logging("Creating Widget Command for selected groups")
+                Globals.THREAD_POOL.enqueue(
+                    setWidget, enable, widgetName=className, groups=deviceList
+                )

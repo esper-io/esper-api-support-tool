@@ -8,6 +8,8 @@ import esperclient
 import wx
 
 import Common.Globals as Globals
+from Utility.API.DeviceUtility import searchForDevice
+from Utility.API.GroupUtility import get_all_groups
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
@@ -489,19 +491,36 @@ def setWidget(enable, widgetName=None, devices=[], groups=[]):
         return
     command_arg = {"enable": enable, "widget_class_name": widgetName}
     if devices:
+        properDeviceList = []
+        for device in devices:
+            if len(device.split("-")) == 5:
+                properDeviceList.append(device)
+            else:
+                json_rsp = searchForDevice(search=device)
+                if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                    properDeviceList.append(json_rsp["results"][0]["id"])
         executeCommandOnDevice(
             Globals.frame,
             command_arg,
             command_type="SET_WIDGET",
-            deviceIds=devices,
+            deviceIds=properDeviceList,
             postStatus=True,
             combineRequests=True,
         )
     if groups:
+        properGroupList = []
+        for group in groups:
+            if len(group.split("-")) == 5:
+                properGroupList.append(group)
+            else:
+                json_rsp = get_all_groups(name=group)
+                if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                    properGroupList.append(json_rsp["results"][0]["id"])
         executeCommandOnGroup(
             Globals.frame,
             command_arg,
             command_type="SET_WIDGET",
             postStatus=True,
             combineRequests=True,
+            groupIds=properGroupList
         )

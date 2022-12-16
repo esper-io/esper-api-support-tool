@@ -12,10 +12,12 @@ from Common.decorator import api_tool_decorator
 
 class WidgetPicker(wx.Dialog):
     def __init__(self, *args, **kwds):
-        kwds["style"] = (
-            kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
+        super(WidgetPicker, self).__init__(
+            None,
+            wx.ID_ANY,
+            style=wx.DEFAULT_DIALOG_STYLE
+            | wx.RESIZE_BORDER,
         )
-        wx.Dialog.__init__(self, *args, **kwds)
         self.SetSize((700, 500))
         self.SetTitle("Confgire Widgets")
 
@@ -55,7 +57,7 @@ class WidgetPicker(wx.Dialog):
 
         grid_sizer_1 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Enable Widget:")
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Widget State:")
         label_1.SetFont(
             wx.Font(
                 11,
@@ -76,6 +78,7 @@ class WidgetPicker(wx.Dialog):
             majorDimension=1,
             style=wx.RA_SPECIFY_ROWS,
         )
+        self.radio_box_1.SetToolTip("Select whether a the Widget feature should be Enabled or Disabled on a device.")
         self.radio_box_1.SetSelection(1)
         grid_sizer_1.Add(
             self.radio_box_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
@@ -97,12 +100,14 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_4 = wx.GridSizer(1, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_4, 1, wx.EXPAND, 0)
 
+        self.default_text = "Example: com.android.alarmclock.AnalogAppWidgetProvider"
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_1,
             wx.ID_ANY,
-            "Example: com.android.alarmclock.AnalogAppWidgetProvider",
+            self.default_text,
             style=wx.TE_MULTILINE | wx.TE_WORDWRAP,
         )
+        self.text_ctrl_1.SetToolTip("Widget Package Name. %" % self.default_text)
         grid_sizer_4.Add(
             self.text_ctrl_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
         )
@@ -112,44 +117,35 @@ class WidgetPicker(wx.Dialog):
 
         grid_sizer_5 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        grid_sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
+        grid_sizer_3 = wx.FlexGridSizer(2, 2, 0, 0)
         grid_sizer_5.Add(grid_sizer_3, 0, wx.EXPAND, 0)
 
         label_4 = wx.StaticText(self.panel_3, wx.ID_ANY, "Apply To:")
-        label_4.SetFont(
-            wx.Font(
-                11,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_4.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
         grid_sizer_3.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
+        self.radio_box_2 = wx.RadioBox(self.panel_3, wx.ID_ANY, "", choices=["Device(s)", "Group(s)"], majorDimension=1, style=wx.RA_SPECIFY_ROWS)
+        self.radio_box_2.SetSelection(0)
+        grid_sizer_3.Add(self.radio_box_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.LEFT, 10)
+        self.radio_box_2.SetToolTip("Apply Command to the uploaded identifers that represent Devices or Groups.\n\nWARNING: If the ID is not provided we will attempt to search and apply the command to the closest match.")
+
         self.button_1 = wx.Button(self.panel_3, wx.ID_ANY, "Upload")
-        grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+        self.button_1.SetToolTip("Upload Identifers that should be targetted for the Widget Command.")
+        grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.BOTTOM | wx.LEFT, 10)
+
+        grid_sizer_3.Add((0, 0), 0, 0, 0)
 
         grid_sizer_6 = wx.FlexGridSizer(2, 1, 0, 0)
         grid_sizer_5.Add(grid_sizer_6, 1, wx.EXPAND, 0)
 
-        label_3 = wx.StaticText(self.panel_3, wx.ID_ANY, "Device Preview:")
-        label_3.SetFont(
-            wx.Font(
-                11,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_3 = wx.StaticText(self.panel_3, wx.ID_ANY, "Upload Preview:")
+        label_3.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
         grid_sizer_6.Add(label_3, 0, wx.ALL, 5)
 
         self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(0, 1)
-        self.grid_1.SetColLabelValue(0, "Device Identifier")
+        self.grid_1.CreateGrid(10, 1)
+        self.grid_1.SetColLabelValue(0, "Identifier")
+        self.grid_1.SetColSize(0, 200)
         grid_sizer_6.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 10)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -187,7 +183,7 @@ class WidgetPicker(wx.Dialog):
         self.Layout()
 
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
-        self.radio_box_1.Bind(wx.EVT_RADIOBUTTON, self.onRadioSelection)
+        self.radio_box_1.Bind(wx.EVT_RADIOBOX, self.onRadioSelection)
         self.text_ctrl_1.Bind(wx.EVT_CHAR_HOOK, self.checkInput)
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
@@ -213,7 +209,8 @@ class WidgetPicker(wx.Dialog):
     def checkInput(self, event=None):
         selection = self.radio_box_1.GetSelection()
         numRows = self.grid_1.GetNumberRows() - 1
-        if (selection == 0 and self.text_ctrl_1.GetValue() and numRows > 0) or (
+        textValue = self.text_ctrl_1.GetValue()
+        if (selection == 0 and textValue and textValue != self.default_text and numRows > 0) or (
             selection == 1 and numRows > 0
         ):
             self.button_APPLY.Enable(True)
@@ -239,7 +236,7 @@ class WidgetPicker(wx.Dialog):
         result = None
         with wx.FileDialog(
             self,
-            message="Open Device Idenifier Spreadsheet",
+            message="Open Idenifier Spreadsheet",
             defaultFile="",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN,
@@ -292,5 +289,6 @@ class WidgetPicker(wx.Dialog):
         return (
             self.radio_box_1.GetSelection(),
             self.text_ctrl_1.GetValue(),
+            self.radio_box_2.GetSelection(),
             self.deviceList,
         )
