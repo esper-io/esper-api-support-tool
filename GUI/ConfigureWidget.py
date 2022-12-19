@@ -107,7 +107,7 @@ class WidgetPicker(wx.Dialog):
             self.default_text,
             style=wx.TE_MULTILINE | wx.TE_WORDWRAP,
         )
-        self.text_ctrl_1.SetToolTip("Widget Package Name. %" % self.default_text)
+        self.text_ctrl_1.SetToolTip("Widget Package Name. %s" % self.default_text)
         grid_sizer_4.Add(
             self.text_ctrl_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
         )
@@ -143,7 +143,6 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_6.Add(label_3, 0, wx.ALL, 5)
 
         self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(10, 1)
         self.grid_1.SetColLabelValue(0, "Identifier")
         self.grid_1.SetColSize(0, 200)
         grid_sizer_6.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 10)

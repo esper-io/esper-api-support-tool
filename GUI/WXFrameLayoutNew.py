@@ -23,6 +23,7 @@ import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
 import Utility.API.EsperTemplateUtil as templateUtil
+from Utility.API.WidgetUtility import setWidget
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 
@@ -68,7 +69,7 @@ from Utility.API.BlueprintUtility import (
     prepareBlueprintConversion,
     pushBlueprintUpdate,
 )
-from Utility.API.CommandUtility import createCommand, setWidget
+from Utility.API.CommandUtility import createCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import (
     clearAppData,

@@ -327,3 +327,15 @@ def createDeviceGroupForHost(
         return api_response
     except Exception as e:
         raise e
+
+
+def getProperGroupId(groups):
+    properGroupList = []
+    for group in groups:
+        if len(group.split("-")) == 5:
+            properGroupList.append(group)
+        else:
+            json_rsp = get_all_groups(name=group)
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                properGroupList.append(json_rsp["results"][0]["id"])
+    return properGroupList

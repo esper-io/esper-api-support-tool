@@ -342,3 +342,15 @@ def searchForDevice(
             "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
         )
     return api_response
+
+
+def getProperDeviceId(devices):
+    properDeviceList = []
+    for device in devices:
+        if len(device.split("-")) == 5:
+            properDeviceList.append(device)
+        else:
+            json_rsp = searchForDevice(search=device)
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                properDeviceList.append(json_rsp["results"][0]["id"])
+    return devices
