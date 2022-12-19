@@ -12,7 +12,7 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
+from Utility.API.UserUtility import createNewUser, deleteUser, getAllUsers, modifyUser
 from Utility.Resource import (correctSaveFileName, createNewFile,
                               displayMessageBox, postEventToFrame)
 
@@ -567,6 +567,7 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
+            allUsers = getAllUsers()
             self.button_6.Enable(False)
             self.button_7.Enable(False)
             num = 0
@@ -592,7 +593,7 @@ class UserCreation(wx.Frame):
                     self.dialog.Update(self.dialog.GetRange())
                     self.dialog.Destroy()
                     break
-                resp = modifyUser(user)
+                resp = modifyUser(allUsers, user)
                 num += 1
                 logMsg = ""
                 if resp.status_code < 299:
@@ -699,6 +700,7 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
+            allUsers = getAllUsers()
             self.button_6.Enable(False)
             self.button_7.Enable(False)
             num = 0
@@ -724,7 +726,7 @@ class UserCreation(wx.Frame):
                     self.dialog.Update(self.dialog.GetRange())
                     self.dialog.Destroy()
                     break
-                resp = deleteUser(user)
+                resp = deleteUser(allUsers, user)
                 num += 1
                 logMsg = ""
                 if resp and resp.status_code < 299:

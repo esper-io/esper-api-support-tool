@@ -63,14 +63,12 @@ def createNewUser(user):
     return resp
 
 
-def modifyUser(user):
+def modifyUser(allUsers, user):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for usr in users["results"]:
+    for usr in allUsers["results"]:
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
@@ -84,14 +82,12 @@ def modifyUser(user):
     return resp
 
 
-def deleteUser(user):
+def deleteUser(allUsers, user):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for usr in users["results"]:
+    for usr in allUsers["results"]:
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
@@ -100,7 +96,7 @@ def deleteUser(user):
         url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
             tenant=tenant, id=userId
         )
-        resp = performDeleteRequestWithRetry(url, headers=getHeader())
+        # resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
 
 
