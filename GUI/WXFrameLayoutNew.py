@@ -2765,6 +2765,8 @@ class NewFrameLayout(wx.Frame):
             for window in Globals.OPEN_DIALOGS:
                 if window and hasattr(window, "Raise") and not self.isSaving:
                     window.Raise()
+                elif window and hasattr(window, "tryToMakeActive") and not self.isSaving:
+                    window.tryToMakeActive()
         if self.notification:
             self.notification.Close()
         self.Refresh()

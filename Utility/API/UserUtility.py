@@ -96,7 +96,7 @@ def deleteUser(allUsers, user):
         url = "https://{tenant}-api.esper.cloud/api/user/{id}/".format(
             tenant=tenant, id=userId
         )
-        # resp = performDeleteRequestWithRetry(url, headers=getHeader())
+        resp = performDeleteRequestWithRetry(url, headers=getHeader())
     return resp
 
 

@@ -262,6 +262,8 @@ class UserCreation(wx.Frame):
             )
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
+        if self in Globals.OPEN_DIALOGS:
+            Globals.OPEN_DIALOGS.remove(self)
         self.DestroyLater()
 
     def downloadTemplate(self, event):
