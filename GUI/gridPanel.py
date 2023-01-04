@@ -1456,10 +1456,15 @@ class GridPanel(wx.Panel):
         if apps and type(apps) == dict and "results" in apps:
             for app in apps["results"]:
                 if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
+                    esperName = ""
+                    if hasattr(device, "device_name"):
+                        esperName = device.device_name
+                    elif "device_name" in device:
+                        esperName = device["device_name"]
+                    elif "name" in device:
+                        esperName = device["name"]
                     info = {
-                        "Esper Name": device.device_name
-                        if hasattr(device, "device_name")
-                        else device["device_name"],
+                        "Esper Name": esperName,
                         "Group": deviceInfo["groups"],
                         "Application Name": app["app_name"],
                         "Application Type": app["app_type"],
