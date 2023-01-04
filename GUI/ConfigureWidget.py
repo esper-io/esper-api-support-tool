@@ -143,8 +143,10 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_6.Add(label_3, 0, wx.ALL, 5)
 
         self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
+        self.grid_1.CreateGrid(0, 1)
         self.grid_1.SetColLabelValue(0, "Identifier")
-        self.grid_1.SetColSize(0, 200)
+        if self.grid_1.GetNumberCols() > 0:
+            self.grid_1.SetColSize(0, 200)
         grid_sizer_6.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 10)
 
         sizer_2 = wx.StdDialogButtonSizer()
