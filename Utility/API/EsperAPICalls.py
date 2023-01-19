@@ -631,13 +631,13 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["version_name"][1 : len(app["version_name"])]
-                        if app["version_name"].startswith("v")
+                        if app["version_name"] and app["version_name"].startswith("v")
                         else app["version_name"]
                     )
                 else:
                     version = (
                         app["version_code"][1 : len(app["version_code"])]
-                        if app["version_code"].startswith("v")
+                        if app["version_code"] and app["version_code"].startswith("v")
                         else app["version_code"]
                     )
                 applist.append(
