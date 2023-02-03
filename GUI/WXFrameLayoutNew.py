@@ -1018,35 +1018,36 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAppInfoAsFile(self, inFile):
-        gridData = []
-        gridData.append(Globals.CSV_APP_ATTR_NAME)
-        createNewFile(inFile)
+        if self.gridPanel.grid_3_contents:
+            gridData = []
+            gridData.append(Globals.CSV_APP_ATTR_NAME)
+            createNewFile(inFile)
 
-        num = 1
-        for entry in self.gridPanel.grid_3_contents:
-            if type(entry) is dict:
-                gridData.append(list(entry.values()))
-            elif type(entry) is list:
-                for row in entry:
-                    gridData.append(list(row.values()))
-            val = (num / len(self.gridPanel.grid_3_contents)) * 100
-            if val <= 95:
-                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-            num += 1
+            num = 1
+            for entry in self.gridPanel.grid_3_contents:
+                if type(entry) is dict:
+                    gridData.append(list(entry.values()))
+                elif type(entry) is list:
+                    for row in entry:
+                        gridData.append(list(row.values()))
+                val = (num / len(self.gridPanel.grid_3_contents)) * 100
+                if val <= 95:
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
+                num += 1
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(gridData)
 
-        self.Logging("---> Info saved to csv file - " + inFile)
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
-        self.toggleEnabledState(True)
-        self.setCursorDefault()
-        self.gridPanel.enableGridProperties()
+            self.Logging("---> Info saved to csv file - " + inFile)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+            self.toggleEnabledState(True)
+            self.setCursorDefault()
+            self.gridPanel.enableGridProperties()
 
-        displayMessageBox(
-            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
-        )
+            displayMessageBox(
+                ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+            )
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
