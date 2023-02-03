@@ -561,7 +561,7 @@ class UserCreation(wx.Frame):
     def onModify(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to modify the previewed Users on "%s", are you sure?'
@@ -630,7 +630,7 @@ class UserCreation(wx.Frame):
     def onCreate(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to add the previewed Users to "%s", are you sure?'
@@ -694,7 +694,7 @@ class UserCreation(wx.Frame):
     def onDelete(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to delete the previewed Users on "%s", are you sure?'
