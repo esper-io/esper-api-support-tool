@@ -1082,6 +1082,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
+                self.toggleEnabledState(False)
                 if self.WINDOWS:
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
                 else:
@@ -1540,6 +1541,7 @@ class NewFrameLayout(wx.Frame):
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 threads = []
                 if Globals.HAS_INTERNET:
+                    self.toggleEnabledState(False)
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
@@ -1892,6 +1894,7 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.runBtn.Enable(True)
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+        self.toggleEnabledState(False)
         Globals.THREAD_POOL.enqueue(self.addDevicesToDeviceChoice, tolerance=2)
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
@@ -2513,6 +2516,7 @@ class NewFrameLayout(wx.Frame):
         if hasattr(self, "start_time"):
             print("Fetch Execution time: %s" % (time.time() - self.start_time))
         evtValue = event.GetValue()
+        self.toggleEnabledState(False)
         if evtValue:
             action = evtValue[0]
             entId = evtValue[1]
@@ -2933,6 +2937,7 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             return
+                        self.toggleEnabledState(False)
                         if self.WINDOWS:
                             Globals.THREAD_POOL.enqueue(
                                 self.processDeviceCSVUpload, data
@@ -2947,6 +2952,7 @@ class NewFrameLayout(wx.Frame):
                             self.processDeviceCSVUpload(data)
                             postEventToFrame(eventUtil.myEVT_COMPLETE, True)
             elif file.endswith(".xlxs"):
+                self.toggleEnabledState(False)
                 if self.WINDOWS:
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, file)
                     Globals.THREAD_POOL.enqueue(
