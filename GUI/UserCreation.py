@@ -527,10 +527,11 @@ class UserCreation(wx.Frame):
         elif self.choice_1.GetStringSelection() == "Delete":
             res, dlgMsg = self.onDelete()
         formattedRes = ""
-        try:
-            formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
-        except:
-            formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
+        if res:
+            try:
+                formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
+            except:
+                formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
         if formattedRes:
             formattedRes += "\n\n"
         with ConfirmTextDialog(
