@@ -114,6 +114,10 @@ class Pool:
         numActive = [i.is_set() for i in self.idles].count(False)
         return numActive <= tolarance
 
+    def getNumberOfActiveThreads(self):
+        numActive = [i.is_set() for i in self.idles].count(False)
+        return numActive
+
     # def done(self):
     #     """Returns True if no tasks are left to be completed"""
     #     return self.queue.empty()

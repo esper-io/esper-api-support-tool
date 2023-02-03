@@ -1428,6 +1428,7 @@ class GridPanel(wx.Panel):
         csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
         imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
         imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
+        id_index = self.grid1HeaderLabels.index("Esper Id")
         indx = self.grid1HeaderLabels.index("Group")
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
@@ -1436,17 +1437,20 @@ class GridPanel(wx.Panel):
                 cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
                 imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
                 imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
+                id_val = self.grid_1.GetCellValue(rowNum, id_index)
                 group = self.grid_1.GetCellValue(rowNum, indx)
-                if esperName:
+                if esperName and esperName != "None":
                     groupList[esperName] = group
-                if serialNum:
+                if serialNum and serialNum != "None":
                     groupList[serialNum] = group
-                if cusSerialNum:
+                if cusSerialNum and cusSerialNum != "None":
                     groupList[cusSerialNum] = group
-                if imei1:
+                if imei1 and imei1 != "None":
                     groupList[imei1] = group
-                if imei2:
+                if imei2 and imei2 != "None":
                     groupList[imei2] = group
+                if id_val and id_val != "None":
+                    groupList[id_val] = group
         releaseLocks([Globals.grid1_lock])
         return groupList
 
