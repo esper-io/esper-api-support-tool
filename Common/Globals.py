@@ -15,7 +15,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.19481"
+VERSION = "v0.19482"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -198,6 +198,7 @@ CSV_TAG_ATTR_NAME = {
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
+    "GPS State": "gpsState",
     "Location Coordinates (Alt, Lat., Long.)": "location_info",
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
