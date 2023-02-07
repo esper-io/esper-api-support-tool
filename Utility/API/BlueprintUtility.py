@@ -547,11 +547,11 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                             "version_codes" in app
                             and (
                                 version["version_code"] == app["version_codes"][0]
-                                or version["build_number"] == app["version_codes"][0]
+                                or version["build_number"] in app["version_codes"][0]
                             )
                         )
-                        or version["version_code"] == app["version_name"]
-                        or version["build_number"] == app["version_code"]
+                        or "version_name" in app and version["version_code"] == app["version_name"]
+                        or "version_code" in app and version["build_number"] == app["version_code"]
                     ):
                         if app["is_g_play"] and version["is_g_play"]:
                             # TODO: Add properly
