@@ -374,7 +374,7 @@ def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
             50,
             "Attempting to process wallpapers",
         )
-        if blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+        if blueprint and blueprint["latest_revision"]["display_branding"]["wallpapers"]:
             bgList = []
             numTotal = len(
                 blueprint["latest_revision"]["display_branding"]["wallpapers"]
