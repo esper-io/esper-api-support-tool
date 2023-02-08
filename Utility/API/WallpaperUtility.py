@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import os
-import wx
-import Common.Globals as Globals
 
+import wx
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -28,11 +29,15 @@ def uploadWallpaper(link, key, enterprise_id, bg):
                 "orientation": bg["orientation"],
                 "enterprise": enterprise_id,
             }
+            if not link.endswith("enterprise/"):
+                if not link.endswith("/"):
+                    link += "/enterprise/"
+                else:
+                    link += "enterprise/"
             if not link.endswith("/"):
                 link += "/"
             url = (
                 link
-                + "enterprise/"
                 + enterprise_id
                 + "/wallpaper/"
                 + "?limit={num}".format(num=Globals.limit)

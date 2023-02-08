@@ -10,9 +10,9 @@ from traceback import extract_tb, format_list, print_exc
 
 import wx
 from esperclient.rest import ApiException
-from Utility.Logging.ApiToolLogging import ApiToolLog
 
 import Common.Globals as Globals
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def api_tool_decorator(locks=None):
@@ -31,11 +31,11 @@ def api_tool_decorator(locks=None):
                 result = func(*args, **kwargs)
                 logPlaceDone(func)
             except ApiException as e:
-                excpt = determineErrorDisplay(e)
                 logError(e)
+                excpt = determineErrorDisplay(e)
             except Exception as e:
-                excpt = determineErrorDisplay(e)
                 logError(e)
+                excpt = determineErrorDisplay(e)
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
@@ -80,7 +80,7 @@ def api_tool_decorator(locks=None):
 
 def determineErrorDisplay(e):
     Globals.error_lock.acquire(timeout=10)
-    if str(e) in Globals.error_tracker:
+    if str(e) in Globals.error_tracker and str(e) not in Globals.EXCEPTION_MSGS:
         occurred = Globals.error_tracker[str(e)]
         timeDiff = datetime.now() - occurred
         minutes = timeDiff.total_seconds() / 60

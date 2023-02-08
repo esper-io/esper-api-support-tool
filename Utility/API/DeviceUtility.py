@@ -2,9 +2,10 @@
 
 import time
 
+from esperclient.rest import ApiException
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from esperclient.rest import ApiException
 from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -57,6 +58,7 @@ def getAllDevices(
     fetchAll=False,
     maxAttempt=Globals.MAX_RETRY,
     tolarance=0,
+    timeout=-1,
 ):
     """ Make a API call to get all Devices belonging to the Enterprise """
     if not limit:
@@ -69,11 +71,11 @@ def getAllDevices(
         api_response = None
         if type(groupToUse) == list:
             api_response = fetchDevicesFromGroup(
-                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance
+                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance, timeout
             )
         else:
             api_response = get_all_devices(
-                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance
+                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance, timeout
             )
         postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
@@ -85,8 +87,12 @@ def get_all_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
     extention = "device/?limit=%s&offset=%s" % (limit, offset)
-    if groupToUse:
-        extention = "device/?group=%s&limit=%s&offset=%s" % (groupToUse, limit, offset)
+    if groupToUse.strip():
+        extention = "device/?group=%s&limit=%s&offset=%s" % (
+            groupToUse.strip(),
+            limit,
+            offset,
+        )
     url = (
         Globals.BASE_REQUEST_URL.format(
             configuration_host=Globals.configuration.host,
@@ -107,11 +113,17 @@ def get_all_devices_helper(
 
 
 def get_all_devices(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
+    groupToUse,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
-        devices = getAllFromOffsetsRequests(response, None, tolarance)
+        devices = getAllFromOffsetsRequests(response, None, tolarance, timeout)
         if hasattr(response, "results"):
             response.results = response.results + devices
             response.next = None
@@ -124,12 +136,18 @@ def get_all_devices(
 
 
 def fetchDevicesFromGroup(
-    groupToUse, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
+    groupToUse,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     api_response = None
     for group in groupToUse:
         resp = fetchDevicesFromGroupHelper(
-            group, limit, offset, fetchAll, maxAttempt, tolarance
+            group, limit, offset, fetchAll, maxAttempt, tolarance, timeout
         )
 
         if not api_response:
@@ -147,12 +165,18 @@ def fetchDevicesFromGroup(
 
 
 def fetchDevicesFromGroupHelper(
-    group, limit, offset, fetchAll=False, maxAttempt=Globals.MAX_RETRY, tolarance=0
+    group,
+    limit,
+    offset,
+    fetchAll=False,
+    maxAttempt=Globals.MAX_RETRY,
+    tolarance=0,
+    timeout=-1,
 ):
     api_response = None
     for _ in range(maxAttempt):
         response = get_all_devices(
-            group, limit, offset, fetchAll, maxAttempt, tolarance
+            group, limit, offset, fetchAll, maxAttempt, tolarance, timeout
         )
         if api_response:
             for device in response.results:
@@ -242,3 +266,91 @@ def getDeviceByIdHelper(
 
 def setDeviceDisabled(deviceId):
     return patchInfo("", deviceId, jsonData={"state": 20})
+
+
+def searchForDevice(
+    search=None,
+    imei=None,
+    serial=None,
+    name=None,
+    group=None,
+    state=None,
+    brand=None,
+    gms=None,
+    tags=None,
+):
+    extention = "device/"
+
+    if search is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&search=%s" % (Globals.limit, search)
+        else:
+            extention += "&search=%s" % (search)
+    if imei is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&imei=%s" % (Globals.limit, imei)
+        else:
+            extention += "&imei=%s" % (imei)
+    if serial is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&serial=%s" % (Globals.limit, serial)
+        else:
+            extention += "&serial=%s" % (serial)
+    if name is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&name=%s" % (Globals.limit, name)
+        else:
+            extention += "&name=%s" % (name)
+    if group is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&group=%s" % (Globals.limit, group)
+        else:
+            extention += "&group=%s" % (group)
+    if state is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&state=%s" % (Globals.limit, state)
+        else:
+            extention += "&state=%s" % (state)
+    if brand is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&brand=%s" % (Globals.limit, brand)
+        else:
+            extention += "&brand=%s" % (brand)
+    if gms is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&is_gms=%s" % (Globals.limit, gms)
+        else:
+            extention += "&is_gms=%s" % (gms)
+    if tags is not None:
+        if "?limit=" not in extention:
+            extention += "?limit=%s&tags=%s" % (Globals.limit, tags)
+        else:
+            extention += "&tags=%s" % (tags)
+
+    url = (
+        Globals.BASE_REQUEST_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+        )
+        + extention
+    )
+    api_response = performGetRequestWithRetry(url, getHeader())
+    if api_response.status_code < 300:
+        api_response = api_response.json()
+    else:
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
+    return api_response
+
+
+def getProperDeviceId(devices):
+    properDeviceList = []
+    for device in devices:
+        if len(device.split("-")) == 5:
+            properDeviceList.append(device)
+        else:
+            json_rsp = searchForDevice(search=device)
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                properDeviceList.append(json_rsp["results"][0]["id"])
+    return devices

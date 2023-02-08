@@ -1,12 +1,13 @@
 # !/usr/bin/env python
 
-import time
-import Utility.EventUtility as eventUtil
 import math
-import Common.Globals as Globals
 import threading
+import time
+
 import wx
 
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
 from Utility.Resource import joinThreadList, postEventToFrame
@@ -232,6 +233,8 @@ class GUIThread(threading.Thread):
 
     def startWithRetry(self):
         for attempt in range(Globals.MAX_RETRY):
+            if self.isStopped():
+                return
             try:
                 return super().start()
             except Exception as e:

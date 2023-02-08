@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
-import wx
 import csv
-import Common.Globals as Globals
+
+import pandas as pd
+import wx
 import wx.grid
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
@@ -121,8 +124,8 @@ class GeofenceDialog(wx.Dialog):
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_3, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.button_1 = wx.Button(self, wx.ID_ANY, "Upload Devices (CSV)")
-        self.button_1.SetToolTip("Upload Device CSV")
+        self.button_1 = wx.Button(self, wx.ID_ANY, "Upload Devices")
+        self.button_1.SetToolTip("Upload Device Spreadheet")
         grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_RIGHT, 0)
 
         self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
@@ -210,11 +213,13 @@ class GeofenceDialog(wx.Dialog):
     def onUpload(self, event):
         with wx.FileDialog(
             self,
-            "Open Geofence CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open Geofence Spreadsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Clear list of devices
                 self.groups = []
@@ -228,11 +233,22 @@ class GeofenceDialog(wx.Dialog):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         # Read data from given CSV file
         data = None
-        with open(filePath, "r") as csvFile:
-            reader = csv.reader(
-                csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-            )
-            data = list(reader)
+        if filePath.endswith(".csv"):
+            with open(filePath, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+        elif filePath.endswith(".xlsx"):
+            try:
+                dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
+                if hasattr(dfs, "keys"):
+                    sheetKeys = dfs.keys()
+                    for sheet in sheetKeys:
+                        data = dfs[sheet].values.tolist()
+                        break
+            except:
+                pass
         if data:
             self.grid_1.Freeze()
             # Iterate through each row and populate grid

@@ -9,10 +9,11 @@ import traceback
 from datetime import datetime
 from traceback import extract_tb, format_list, print_exc
 
-import Common.ApiTracker as ApiTracker
-import Common.Globals as Globals
 from esperclient.rest import ApiException
 from fuzzywuzzy import fuzz
+
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
 from Utility.Logging.IssueTracker import IssueTracker
 
 
@@ -75,17 +76,21 @@ class ApiToolLog:
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
             str(exc_type),
             str(exc_value),
-            "Esper Version: " + Globals.VERSION,
+            "Esper Tool Version: " + Globals.VERSION,
         ]
         for line in exc_traceback:
             content.append(line)
 
         with open(self.logPath, "a") as myfile:
             for entry in content:
-                myfile.write(entry)
+                myfile.write("%s\n" % entry)
             myfile.write("\n")
 
-        self.postIssueToTrack(e, content)
+        if postIssue:
+            self.postIssueToTrack(e, content)
+
+        if Globals.frame:
+            Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str):
         with open(self.placePath, "a") as myfile:
@@ -93,7 +98,7 @@ class ApiToolLog:
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:
-            myfile.write(response)
+            myfile.write(response + "\n")
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -104,7 +109,7 @@ class ApiToolLog:
             "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type,
             "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value,
             "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
-            "Esper Version: " + Globals.VERSION,
+            "Esper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
         for line in exc_traceback:
@@ -112,10 +117,12 @@ class ApiToolLog:
         self.limitLogFileSizes()
         with open(self.logPath, "a") as myfile:
             for entry in content:
-                myfile.write(entry)
+                myfile.write("%s\n" % entry)
             myfile.write("\n")
 
         self.postIssueToTrack("%s %s" % (content[2], content[3]), content)
+
+        Globals.frame.Logging(str(content), True)
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():
@@ -203,6 +210,8 @@ class ApiToolLog:
             or "Bad Gateway" in str(excpt)
             or "Permission denied" in str(excpt)
             or "HTTP" in str(excpt)
+            or "Failed to load configuration" in str(excpt)
+            or "Read-only file system" in str(excpt)
             or type(excpt) is ApiException
         ):
             return
@@ -233,7 +242,7 @@ class ApiToolLog:
             match = False
             for issue in issues:
                 ratio = getStrRatioSimilarity(issue["title"], title, True)
-                if ratio > 90:
+                if ratio >= 90:
                     match = True
                     tracker.postIssueComment(issue["number"], content)
                     break

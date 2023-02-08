@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 import copy
+import math
+
+import wx
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
-import wx
-import math
-import Common.Globals as Globals
-
-from Common.decorator import api_tool_decorator
 
 
 class MultiSelectSearchDlg(wx.Dialog):

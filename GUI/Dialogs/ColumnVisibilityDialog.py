@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from Common.decorator import api_tool_decorator
-import Common.Globals as Globals
 import wx
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
 
 
 class ColumnVisibilityDialog(wx.Dialog):

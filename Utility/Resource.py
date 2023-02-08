@@ -13,14 +13,14 @@ import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 
-import Common.Globals as Globals
 import esperclient
 import requests
 import wx
-from Common.decorator import api_tool_decorator
 from fuzzywuzzy import fuzz
 from ratelimit import limits, sleep_and_retry
 
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -37,6 +37,7 @@ def resourcePath(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+@api_tool_decorator()
 def createNewFile(filePath, fileData=None):
     """ Create a new File to write in """
     if not os.path.exists(filePath):
@@ -247,28 +248,6 @@ def joinThreadList(threads):
                 thread.join()
 
 
-@api_tool_decorator(locks=[])
-def limitActiveThreads(
-    threads,
-    max_alive=(Globals.MAX_THREAD_COUNT / 2),
-    timeout=-1,
-    breakEnabled=True,
-):
-    if threads:
-        numAlive = 0
-        for thread in threads:
-            if thread.is_alive():
-                numAlive += 1
-        if numAlive >= max_alive:
-            for thread in threads:
-                if thread.is_alive():
-                    thread.join()
-                    if breakEnabled:
-                        if timeout > -1:
-                            time.sleep(timeout)
-                        break
-
-
 def ipv6Tomac(ipv6):
     # remove subnet info if given
     subnetIndex = ipv6.find("/")
@@ -319,7 +298,9 @@ def displayMessageBox(event):
     return res
 
 
-def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None):
+def splitListIntoChunks(
+    mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None
+):
     if maxThread <= 0:
         return mainList
     n = int(len(mainList) / maxThread)

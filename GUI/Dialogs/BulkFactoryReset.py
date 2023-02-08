@@ -3,15 +3,14 @@
 import csv
 from pathlib import Path
 
-import Common.Globals as Globals
+import pandas as pd
 import wx
 import wx.grid
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (
-    correctSaveFileName,
-    displayMessageBox,
-    openWebLinkInBrowser,
-)
+from Utility.Resource import (correctSaveFileName, displayMessageBox,
+                              openWebLinkInBrowser)
 
 
 class BulkFactoryReset(wx.Dialog):
@@ -131,17 +130,20 @@ class BulkFactoryReset(wx.Dialog):
         self.onClose(event)
 
     def downloadCSV(self, event):
-        dlg = wx.FileDialog(
+        result = None
+        inFile = ""
+        with wx.FileDialog(
             self,
             message="Save Bulk Factory Reset CSV as...",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             self.setCursorBusy()
@@ -178,21 +180,28 @@ class BulkFactoryReset(wx.Dialog):
         filePath = None
         with wx.FileDialog(
             self,
-            "Open CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open Spreadsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
                 filePath = fileDialog.GetPath()
-        if filePath:
+        if filePath and filePath.endswith(".csv"):
             self.uploadCSV(filePath)
+        elif filePath and filePath.endswith(".xlsx"):
+            self.uploadXlsx(filePath)
 
-    def uploadCSV(self, filePath):
+    def doPreUploadActivity(self):
         self.setCursorBusy()
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+
+    def uploadCSV(self, filePath):
+        self.doPreUploadActivity()
         data = None
         try:
             with open(filePath, "r", encoding="utf-8-sig") as csvFile:
@@ -206,20 +215,38 @@ class BulkFactoryReset(wx.Dialog):
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                 )
                 data = list(reader)
-        for row in data:
-            colNum = 0
-            for col in row:
-                if colNum > 0:
+        self.processUploadData(data)
+
+    def uploadXlsx(self, filePath):
+        self.doPreUploadActivity()
+        data = None
+        try:
+            dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
+            if hasattr(dfs, "keys"):
+                sheetKeys = dfs.keys()
+                for sheet in sheetKeys:
+                    data = dfs[sheet].values.tolist()
                     break
-                if col in self.expectedHeaders:
-                    break
-                else:
-                    self.grid_1.AppendRows(1)
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1, colNum, col
-                    )
-                    self.identifers.append(col)
-                colNum += 1
+        except:
+            pass
+        self.processUploadData(data)
+
+    def processUploadData(self, data):
+        if data:
+            for row in data:
+                colNum = 0
+                for col in row:
+                    if colNum > 0:
+                        break
+                    if col in self.expectedHeaders:
+                        break
+                    else:
+                        self.grid_1.AppendRows(1)
+                        self.grid_1.SetCellValue(
+                            self.grid_1.GetNumberRows() - 1, colNum, col
+                        )
+                        self.identifers.append(col)
+                    colNum += 1
         self.grid_1.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()

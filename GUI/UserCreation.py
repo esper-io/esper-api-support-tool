@@ -4,20 +4,17 @@ import csv
 import json
 import os
 
-import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
+import pandas as pd
 import wx
 import wx.grid
-from Common.decorator import api_tool_decorator
-from Utility.API.UserUtility import createNewUser, deleteUser, modifyUser
-from Utility.Resource import (
-    correctSaveFileName,
-    createNewFile,
-    displayMessageBox,
-    postEventToFrame,
-)
 
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+from Utility.API.UserUtility import createNewUser, deleteUser, getAllUsers, modifyUser
+from Utility.Resource import (correctSaveFileName, createNewFile,
+                              displayMessageBox, postEventToFrame)
 
 
 class UserCreation(wx.Frame):
@@ -117,7 +114,7 @@ class UserCreation(wx.Frame):
         grid_sizer_5 = wx.FlexGridSizer(1, 2, 0, 0)
         sizer_1.Add(grid_sizer_5, 1, wx.EXPAND | wx.TOP, 5)
 
-        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Upload CSV:")
+        label_4 = wx.StaticText(self.panel_2, wx.ID_ANY, "Upload:")
         label_4.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -131,7 +128,7 @@ class UserCreation(wx.Frame):
         grid_sizer_5.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.button_2 = wx.Button(self.panel_2, wx.ID_ANY, "Upload")
-        self.button_2.SetToolTip("Upload User CSV")
+        self.button_2.SetToolTip("Upload User Spreedsheet")
         grid_sizer_5.Add(
             self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
         )
@@ -265,20 +262,25 @@ class UserCreation(wx.Frame):
             )
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
+        if self in Globals.OPEN_DIALOGS:
+            Globals.OPEN_DIALOGS.remove(self)
         self.DestroyLater()
 
     def downloadTemplate(self, event):
-        dlg = wx.FileDialog(
+        inFile = ""
+        result = None
+        with wx.FileDialog(
             self,
             message="Save User Creation CSV Template",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             createNewFile(inFile)
@@ -295,19 +297,21 @@ class UserCreation(wx.Frame):
     def upload(self, event):
         with wx.FileDialog(
             self,
-            "Open User CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open User Spreadsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.lastFilePath),
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 self.lastFilePath = fileDialog.GetPath()
                 if not os.path.isdir(self.lastFilePath):
                     self.lastFilePath = os.path.abspath(
                         os.path.join(self.lastFilePath, os.pardir)
                     )
-                self.processUpload(fileDialog.s())
+                self.processUpload(fileDialog.GetPath())
 
     @api_tool_decorator()
     def onFileDrop(self, event):
@@ -321,15 +325,35 @@ class UserCreation(wx.Frame):
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         self.users = []
         data = None
-        with open(file, "r") as csvFile:
-            reader = csv.reader(
-                csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-            )
-            data = list(reader)
+        headers = []
+        if file.endswith(".csv"):
+            with open(file, "r") as csvFile:
+                reader = csv.reader(
+                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+                )
+                data = list(reader)
+        elif file.endswith(".xlsx"):
+            dfs = None
+            try:
+                dfs = pd.read_excel(
+                    file, sheet_name=None, keep_default_na=False
+                )
+            except:
+                pass
+            if dfs:
+                if hasattr(dfs, "keys"):
+                    sheetKeys = dfs.keys()
+                    for sheet in sheetKeys:
+                        data = dfs[sheet].values.tolist()
+                        headers += list(dfs[sheet].columns.values)
+                        break
+                newHeaders = []
+                for header in headers:
+                    newHeaders.append(header.replace(" ", "").lower())
+                headers = newHeaders
         invalidUsers = []
         if data:
             self.grid_1.Freeze()
-            headers = []
             for entry in data:
                 if "username" not in entry and "Username" not in entry:
                     if (
@@ -503,10 +527,11 @@ class UserCreation(wx.Frame):
         elif self.choice_1.GetStringSelection() == "Delete":
             res, dlgMsg = self.onDelete()
         formattedRes = ""
-        try:
-            formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
-        except:
-            formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
+        if res:
+            try:
+                formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
+            except:
+                formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
         if formattedRes:
             formattedRes += "\n\n"
         with ConfirmTextDialog(
@@ -516,7 +541,9 @@ class UserCreation(wx.Frame):
             formattedRes,
             parent=self,
         ) as dialog:
+            Globals.OPEN_DIALOGS.append(dialog)
             res = dialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dialog)
         if bool(self.dialog):
             self.dialog.Update(self.dialog.GetRange())
             self.dialog.Destroy()
@@ -534,7 +561,7 @@ class UserCreation(wx.Frame):
     def onModify(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to modify the previewed Users on "%s", are you sure?'
@@ -543,6 +570,7 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
+            allUsers = getAllUsers()
             self.button_6.Enable(False)
             self.button_7.Enable(False)
             num = 0
@@ -568,7 +596,7 @@ class UserCreation(wx.Frame):
                     self.dialog.Update(self.dialog.GetRange())
                     self.dialog.Destroy()
                     break
-                resp = modifyUser(user)
+                resp = modifyUser(allUsers, user)
                 num += 1
                 logMsg = ""
                 if resp.status_code < 299:
@@ -602,7 +630,7 @@ class UserCreation(wx.Frame):
     def onCreate(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to add the previewed Users to "%s", are you sure?'
@@ -666,7 +694,7 @@ class UserCreation(wx.Frame):
     def onDelete(self):
         if not self.grid_1.GetNumberRows() > 0:
             self.button_6.Enable(False)
-            return
+            return None, "No users uploaded!"
         res = displayMessageBox(
             (
                 'You are about to delete the previewed Users on "%s", are you sure?'
@@ -675,6 +703,7 @@ class UserCreation(wx.Frame):
             )
         )
         if res == wx.YES:
+            allUsers = getAllUsers()
             self.button_6.Enable(False)
             self.button_7.Enable(False)
             num = 0
@@ -700,7 +729,7 @@ class UserCreation(wx.Frame):
                     self.dialog.Update(self.dialog.GetRange())
                     self.dialog.Destroy()
                     break
-                resp = deleteUser(user)
+                resp = deleteUser(allUsers, user)
                 num += 1
                 logMsg = ""
                 if resp and resp.status_code < 299:

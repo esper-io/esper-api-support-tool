@@ -2,7 +2,6 @@
 
 import threading
 import time
-
 from queue import Queue
 from threading import Event, current_thread
 
@@ -84,6 +83,8 @@ class Pool:
                 isAbortSet = False
                 if hasattr(threading.current_thread(), "abort"):
                     isAbortSet = threading.current_thread().abort.is_set()
+                if hasattr(threading.current_thread(), "isStopped") and not isAbortSet:
+                    isAbortSet = threading.current_thread().isStopped()
                 if (
                     (timeout > 0 and time.perf_counter() - startTime >= timeout)
                     or self.isDoneWithinTolerance(queueTolerance=tolerance)
@@ -113,9 +114,13 @@ class Pool:
         numActive = [i.is_set() for i in self.idles].count(False)
         return numActive <= tolarance
 
-    def done(self):
-        """Returns True if not tasks are left to be completed"""
-        return self.queue.empty()
+    def getNumberOfActiveThreads(self):
+        numActive = [i.is_set() for i in self.idles].count(False)
+        return numActive
+
+    # def done(self):
+    #     """Returns True if no tasks are left to be completed"""
+    #     return self.queue.empty()
 
     def isDoneWithinTolerance(self, queueTolerance=0):
         return self.idle(queueTolerance)

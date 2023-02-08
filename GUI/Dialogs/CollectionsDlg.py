@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
-from Common.decorator import api_tool_decorator
-from Utility.Resource import resourcePath, scale_bitmap
-from Common.enum import Color
 import wx
-import Common.Globals as Globals
 
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Common.enum import Color
 from Utility.API.CollectionsApi import (
-    fetchCollectionList,
     createCollection,
-    updateCollection,
     deleteCollection,
+    fetchCollectionList,
+    updateCollection,
 )
+from Utility.Resource import resourcePath, scale_bitmap
 
 
 class CollectionsDialog(wx.Dialog):

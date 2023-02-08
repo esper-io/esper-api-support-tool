@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
-from Utility.API.AppUtilities import (
-    installAppOnDevices,
-    uninstallAppOnDevice,
-)
 import time
 
 import esperclient
-import Common.Globals as Globals
 
+import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-
-from Utility.Logging.ApiToolLogging import ApiToolLog
+from Common.decorator import api_tool_decorator
+from Common.enum import GridActions
+from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
+from Utility.API.GroupUtility import getAllGroups, moveGroup
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     enforceRateLimit,
     isApiKey,
@@ -21,10 +20,6 @@ from Utility.Resource import (
     splitListIntoChunks,
 )
 from Utility.Threading import wxThread
-from Utility.API.GroupUtility import getAllGroups, moveGroup
-
-from Common.decorator import api_tool_decorator
-from Common.enum import GridActions
 
 
 @api_tool_decorator()
@@ -441,7 +436,7 @@ def getDevicesFromGridHelper(
                 enforceRateLimit()
                 if type(entry) == dict:
                     if entry["id"]:
-                        devices.append(entry["id"])
+                        devices.append(entry)
                         deviceHadId = True
                         break
 
@@ -520,7 +515,7 @@ def getDevicesFromGridHelper(
 
 @api_tool_decorator()
 def relocateDeviceToNewGroup(frame):
-    devices = getDevicesFromGrid(tolerance=1)
+    devices = getDevicesFromGrid(tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads())
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
     splitResults = splitListIntoChunks(devices)
@@ -536,7 +531,7 @@ def relocateDeviceToNewGroup(frame):
         GridActions.MOVE_GROUP.value,
         -1,
         5,
-        tolerance=1,
+        tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads(),
     )
 
 
@@ -556,12 +551,20 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             deviceId = device.id
             hardware = device.hardware_info
             network = device.network_info
-        else:
-            deviceName = device["device_name"]
+        elif type(device) is dict:
             deviceId = device["id"]
-            hardware = device["hardwareInfo"]
+            if "device_name" in device:
+                deviceName = device["device_name"]
+            if "name" in device:
+                deviceName = device["name"]
+            if "hardwareInfo" in device:
+                hardware = device["hardwareInfo"]
+        elif type(device) is str:
+            deviceId = device
         if deviceName in groupListKeys:
             groupName = groupList[deviceName]
+        elif deviceId and deviceId in groupListKeys:
+            groupName = groupList[deviceId]
         elif "serialNumber" in hardware and hardware["serialNumber"] in groupListKeys:
             groupName = groupList[hardware["serialNumber"]]
         elif (
@@ -581,6 +584,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             and network["imei2"] in groupListKeys
         ):
             groupName = groupList[network["imei1"]]
+
         if groupName:
             if isApiKey(groupName):
                 resp = moveGroup(groupName, deviceId)
@@ -594,9 +598,36 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                     "Response": resp.json() if hasattr(resp, "json") else respText,
                 }
             else:
-                groups = getAllGroups(name=groupName, tolerance=tolerance).results
-                if groups:
-                    groupId = groups[0].id
+                # Look up group to see if we know it already, if we don't query it
+                groupId = None
+                for group in Globals.knownGroups.values():
+                    if type(group) is dict and "name" in group and groupName == group["name"]:
+                        groupId = group["id"]
+                        break
+                    elif hasattr(group, "name") and groupName == group.name:
+                        groupId = group.id
+                        break
+
+                if not groupId:
+                    groups = getAllGroups(name=groupName, tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads())
+                    if hasattr(groups, "results"):
+                        groups = groups.results
+                    elif type(groups) is dict and "results" in groups:
+                        groups = groups["results"]
+                    if groups:
+                        if hasattr(groups[0], "id"):
+                            groupId = groups[0].id
+                        elif type(groups[0]) is dict and "id" in groups[0]:
+                            groupId = groups[0]["id"]
+                    else:
+                        results[deviceName] = {
+                            "Device Name": deviceName,
+                            "Device Id": deviceId,
+                            "Error": "Invalid Group Name given, no matches found, '%s'"
+                            % groupName,
+                        }
+
+                if groupId:
                     resp = moveGroup(groupId, deviceId)
                     respText = resp.text if hasattr(resp, "text") else str(resp)
                     results[deviceName] = {
@@ -606,13 +637,6 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                         if hasattr(resp, "status_code")
                         else None,
                         "Response": resp.json() if hasattr(resp, "json") else respText,
-                    }
-                else:
-                    results[deviceName] = {
-                        "Device Name": deviceName,
-                        "Device Id": deviceId,
-                        "Error": "Invalid Group Name given, no matches found, '%s'"
-                        % groupName,
                     }
         else:
             results[deviceName] = {

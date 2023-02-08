@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-from Utility.Resource import (
-    getHeader,
-    logBadResponse,
-)
-from Common.decorator import api_tool_decorator
 import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Utility.Resource import getHeader, logBadResponse
 from Utility.Web.WebRequests import (
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -98,29 +95,29 @@ def createCollection(jsonData, returnJson=False):
         return resp
 
 
-@api_tool_decorator()
-def retrieveCollection(collectionId, returnJson=False):
-    # GET /api/v0/enterprise/{enterprise_id}/collection/<id>
-    headers = getHeader()
+# @api_tool_decorator()
+# def retrieveCollection(collectionId, returnJson=False):
+#     # GET /api/v0/enterprise/{enterprise_id}/collection/<id>
+#     headers = getHeader()
 
-    url = "https://{host}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/collection/{id}".format(
-        host=Globals.configuration.host.split("-api")[0].replace("https://", ""),
-        enterprise_id=Globals.enterprise_id,
-        id=collectionId,
-    )
+#     url = "https://{host}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/collection/{id}".format(
+#         host=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+#         enterprise_id=Globals.enterprise_id,
+#         id=collectionId,
+#     )
 
-    resp = performGetRequestWithRetry(url, headers=headers)
-    jsonResp = None
-    try:
-        jsonResp = resp.json()
-    except:
-        pass
-    logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+#     resp = performGetRequestWithRetry(url, headers=headers)
+#     jsonResp = None
+#     try:
+#         jsonResp = resp.json()
+#     except:
+#         pass
+#     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
 
-    if returnJson:
-        return jsonResp
-    else:
-        return resp
+#     if returnJson:
+#         return jsonResp
+#     else:
+#         return resp
 
 
 @api_tool_decorator()

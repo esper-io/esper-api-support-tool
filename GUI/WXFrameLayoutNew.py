@@ -13,19 +13,45 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import Common.ApiTracker as ApiTracker
-import Common.Globals as Globals
 import pandas as pd
-import Utility.API.EsperTemplateUtil as templateUtil
-import Utility.EventUtility as eventUtil
-import Utility.Threading.wxThread as wxThread
 import wx
 import wx.adv as wxadv
 import xlsxwriter
+from wx.core import TextEntryDialog
+
+import Common.ApiTracker as ApiTracker
+import Common.Globals as Globals
+import GUI.EnhancedStatusBar as ESB
+import Utility.API.EsperTemplateUtil as templateUtil
+from Utility.API.WidgetUtility import setWidget
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, GeneralActions, GridActions
 from Common.SleepInhibitor import SleepInhibitor
+from GUI.ConfigureWidget import WidgetPicker
+from GUI.consoleWindow import Console
+from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
+from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
+from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
+from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
+from GUI.Dialogs.CommandDialog import CommandDialog
+from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
+from GUI.Dialogs.GeofenceDialog import GeofenceDialog
+from GUI.Dialogs.groupManagement import GroupManagement
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
+from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
+from GUI.Dialogs.PreferencesDialog import PreferencesDialog
+from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
+from GUI.Dialogs.TemplateDialog import TemplateDialog
+from GUI.gridPanel import GridPanel
+from GUI.menuBar import ToolMenuBar
+from GUI.sidePanel import SidePanel
+from GUI.toolBar import ToolsToolBar
+
 from Utility.API.AppUtilities import (
     getAllInstallableApps,
     getAppDictEntry,
@@ -74,6 +100,7 @@ from Utility.Resource import (
     correctSaveFileName,
     createNewFile,
     displayMessageBox,
+    getStrRatioSimilarity,
     joinThreadList,
     openWebLinkInBrowser,
     postEventToFrame,
@@ -82,29 +109,6 @@ from Utility.Resource import (
     splitListIntoChunks,
     updateErrorTracker,
 )
-from wx.core import TextEntryDialog
-
-import GUI.EnhancedStatusBar as ESB
-from GUI.consoleWindow import Console
-from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
-from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
-from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
-from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
-from GUI.Dialogs.CommandDialog import CommandDialog
-from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
-from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from GUI.Dialogs.groupManagement import GroupManagement
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
-from GUI.Dialogs.NewEndpointDialog import NewEndpointDialog
-from GUI.Dialogs.PreferencesDialog import PreferencesDialog
-from GUI.Dialogs.ScheduleCmdDialog import ScheduleCmdDialog
-from GUI.Dialogs.TemplateDialog import TemplateDialog
-from GUI.gridPanel import GridPanel
-from GUI.menuBar import ToolMenuBar
-from GUI.sidePanel import SidePanel
-from GUI.toolBar import ToolsToolBar
 
 
 class NewFrameLayout(wx.Frame):
@@ -136,6 +140,13 @@ class NewFrameLayout(wx.Frame):
         self.previousGroupFetchThread = None
         self.firstRun = True
         self.changedBlueprints = []
+
+        self.scheduleReport = None
+        self.delayScheduleReport = True
+        self.scheduleReportRunning = False
+        self.scheduleCallLater = []
+
+        self.isSaving = False
 
         if platform.system() == "Windows":
             self.WINDOWS = True
@@ -339,13 +350,19 @@ class NewFrameLayout(wx.Frame):
                     )
             if child.GetChildren():
                 self.setFontSizeForLabels(parent=child)
-        self.Refresh()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def onLog(self, event):
         """ Event trying to log data """
         evtValue = event.GetValue()
-        self.Logging(evtValue)
+        if type(evtValue) is tuple:
+            self.Logging(evtValue[0], evtValue[1])
+        else:
+            self.Logging(evtValue)
 
     @api_tool_decorator()
     def Logging(self, entry, isError=False):
@@ -378,10 +395,11 @@ class NewFrameLayout(wx.Frame):
             with NewEndpointDialog(
                 errorMsg=errorMsg, name=name, host=host, entId=entId, key=key
             ) as dialog:
+                Globals.OPEN_DIALOGS.append(dialog)
                 res = dialog.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dialog)
                 if res == wx.ID_ADD:
                     try:
-                        Globals.THREAD_POOL.clearQueue()
                         name, host, entId, key, prefix = dialog.getInputValues()
                         csvRow = dialog.getCSVRowEntry()
                         isValid = self.addEndpointEntry(
@@ -512,46 +530,54 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
-        dlg = wx.FileDialog(
+        self.isSaving = True
+        inFile = ""
+        result = wx.ID_CANCEL
+        with wx.FileDialog(
             self,
             message="Save Reports as...",
             defaultFile="",
             wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
             Globals.THREAD_POOL.enqueue(self.saveFile, inFile)
-            dlg.DestroyLater()
             return True
         elif (
             result == wx.ID_CANCEL
         ):  # Either the cancel button was pressed or the window was closed
-            dlg.DestroyLater()
+            self.isSaving = False
             return False
 
     @api_tool_decorator()
     def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
-            dlg = wx.FileDialog(
+            self.isSaving = True
+            inFile = ""
+            result = wx.ID_CANCEL
+            with wx.FileDialog(
                 self,
                 message="Save Reports as...",
                 defaultFile="",
                 wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                 defaultDir=str(self.defaultDir),
                 style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-            )
-            result = dlg.ShowModal()
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
-            dlg.DestroyLater()
+            ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
+                result = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
+                inFile = dlg.GetPath()
+                correctSaveFileName(inFile)
 
             if result == wx.ID_OK:  # Save button was pressed
                 self.setCursorBusy()
@@ -564,6 +590,7 @@ class NewFrameLayout(wx.Frame):
             elif (
                 result == wx.ID_CANCEL
             ):  # Either the cancel button was pressed or the window was closed
+                self.isSaving = False
                 return False
         else:
             displayMessageBox(
@@ -611,25 +638,34 @@ class NewFrameLayout(wx.Frame):
         return headers, deviceHeaders, networkHeaders
 
     @api_tool_decorator()
-    def saveAllFile(self, inFile, action=None):
+    def saveAllFile(
+        self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1
+    ):
         self.sleepInhibitor.inhibit()
         self.start_time = time.time()
         headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
             visibleOnly=Globals.SAVE_VISIBILITY
         )
-        deviceList = getAllDeviceInfo(self, action=action)
-        self.Logging("Finished fetching information for CSV")
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+        self.Logging("Obtaining Device data....")
+        deviceList = getAllDeviceInfo(
+            self, action=action, allDevices=allDevices, tolarance=tolarance
+        )
         gridDeviceData = []
 
+        num = 1
+        self.Logging("Processing device information for file")
         for item in deviceList.values():
             if len(item) > 1 and item[1]:
                 gridDeviceData.append(item[1])
-
-        for device in gridDeviceData:
-            self.gridPanel.grid_3_contents += (
-                device["AppsEntry"] if "AppsEntry" in device else []
+                self.gridPanel.grid_3_contents += (
+                    item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
+                )
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE,
+                (int(num / len(deviceList.values())) * 35) + 50,
             )
+            num += 1
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
         if hasattr(Globals.frame, "start_time"):
             print(
@@ -637,8 +673,8 @@ class NewFrameLayout(wx.Frame):
                 % (time.time() - Globals.frame.start_time)
             )
 
-        self.Logging("Finished compiling information for CSV")
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 75)
+        self.Logging("Finished compiling information")
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
 
         self.saveGridData(
             inFile,
@@ -647,16 +683,13 @@ class NewFrameLayout(wx.Frame):
             networkHeaders,
             gridDeviceData,
             action=action,
+            showDlg=showDlg,
+            tolarance=tolarance,
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
         if hasattr(self, "start_time"):
             print("Execution time: %s" % (time.time() - self.start_time))
-
-    @api_tool_decorator()
-    def fetchAllGridData(self, chunk, gridDeviceData):
-        for entry in chunk:
-            gridDeviceData.append(self.gridPanel.getDeviceNetworkInfoListing(*entry))
 
     @api_tool_decorator()
     def saveFile(self, inFile):
@@ -667,7 +700,12 @@ class NewFrameLayout(wx.Frame):
             visibleOnly=Globals.SAVE_VISIBILITY
         )
         self.saveGridData(
-            inFile, headers, deviceHeaders, networkHeaders, gridDeviceData
+            inFile,
+            headers,
+            deviceHeaders,
+            networkHeaders,
+            gridDeviceData,
+            action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
@@ -689,6 +727,8 @@ class NewFrameLayout(wx.Frame):
         networkHeaders,
         gridDeviceData,
         action=None,
+        showDlg=True,
+        tolarance=1,
     ):
         if inFile.endswith(".csv"):
             threads = []
@@ -783,6 +823,8 @@ class NewFrameLayout(wx.Frame):
                                     **Globals.CSV_TAG_ATTR_NAME,
                                     **Globals.CSV_NETWORK_ATTR_NAME,
                                 },
+                                maxGauge=95,
+                                beginGauge=85,
                             )
                     else:
                         # Save Device Info
@@ -795,18 +837,23 @@ class NewFrameLayout(wx.Frame):
                                 my_wb,
                                 gridDeviceData,
                                 baseSheetName,
-                                deviceHeaders,
+                                list(deviceHeaders),
                                 Globals.CSV_TAG_ATTR_NAME,
+                                maxGauge=90,
+                                beginGauge=85,
                             )
                         else:
                             self.populateWorkSheet(
                                 my_wb,
                                 self.gridPanel.grid_1_contents,
                                 baseSheetName,
-                                deviceHeaders,
+                                list(deviceHeaders),
                                 Globals.CSV_TAG_ATTR_NAME,
+                                maxGauge=90,
+                                beginGauge=85,
                             )
                         # Save Network Info
+                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 90)
                         baseSheetName = "Network"
                         if gridDeviceData and (
                             not action
@@ -816,19 +863,32 @@ class NewFrameLayout(wx.Frame):
                                 my_wb,
                                 gridDeviceData,
                                 baseSheetName,
-                                networkHeaders,
+                                list(networkHeaders),
                                 Globals.CSV_NETWORK_ATTR_NAME,
+                                maxGauge=95,
+                                beginGauge=90,
                             )
                         else:
                             self.populateWorkSheet(
                                 my_wb,
                                 self.gridPanel.grid_2_contents,
                                 baseSheetName,
-                                networkHeaders,
+                                list(networkHeaders),
                                 Globals.CSV_NETWORK_ATTR_NAME,
+                                maxGauge=95,
+                                beginGauge=90,
                             )
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 95)
                     # Save App Info
-                    if self.gridPanel.grid_3_contents:
+                    if self.gridPanel.grid_3_contents and (
+                        not action
+                        or (
+                            action
+                            and action == GeneralActions.GENERATE_APP_REPORT.value
+                            or action
+                            == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                        )
+                    ):
                         baseSheetName = "Application"
                         self.populateWorkSheet(
                             my_wb,
@@ -836,6 +896,8 @@ class NewFrameLayout(wx.Frame):
                             baseSheetName,
                             Globals.CSV_APP_ATTR_NAME,
                             None,
+                            maxGauge=100,
+                            beginGauge=95,
                         )
                     my_wb.close()
                 except Exception as e:
@@ -848,30 +910,33 @@ class NewFrameLayout(wx.Frame):
                         continue
                 break
 
-        Globals.THREAD_POOL.join(tolerance=1)
+        Globals.THREAD_POOL.join(tolerance=tolarance)
 
         self.Logging("---> Info saved to file: " + inFile)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         self.gridPanel.enableGridProperties()
 
-        res = displayMessageBox(
-            (
-                "Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
-                % inFile,
-                wx.YES_NO | wx.ICON_INFORMATION,
+        if showDlg:
+            res = displayMessageBox(
+                (
+                    "Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                    % inFile,
+                    wx.YES_NO | wx.ICON_INFORMATION,
+                )
             )
-        )
-        if res == wx.YES:
-            parentDirectory = Path(inFile).parent.absolute()
-            if platform.system() == "Darwin":
-                parentDirectory = "file://" + os.path.realpath(parentDirectory)
-            openWebLinkInBrowser(parentDirectory)
+            if res == wx.YES:
+                parentDirectory = Path(inFile).parent.absolute()
+                if platform.system() == "Darwin":
+                    parentDirectory = "file://" + os.path.realpath(parentDirectory)
+                openWebLinkInBrowser(parentDirectory)
 
     def mergeDataSource(self, deviceList, networkList):
         newData = []
         networkIndx = {}
         indx = 0
         for network in networkList:
+            if "network_info" in network:
+                network = network["network_info"]
             name = network["Esper Name"]
             networkIndx[name] = indx
             indx += 1
@@ -884,13 +949,23 @@ class NewFrameLayout(wx.Frame):
                 newData.append(device)
         return newData
 
+    @api_tool_decorator()
     def populateWorkSheet(
-        self, workbook, dataSource, baseSheetName, headers, headerKeys
+        self,
+        workbook,
+        dataSource,
+        baseSheetName,
+        headers,
+        headerKeys,
+        maxGauge=100,
+        beginGauge=85,
     ):
         loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
         bold = workbook.add_format({"bold": True})
         bold.set_align("center")
         bold.set_align("vcenter")
+        numProcessed = 1
+        startTime = datetime.now()
         for num in range(loopNum):
             rowIndx = 0
             sheetName = baseSheetName
@@ -930,39 +1005,49 @@ class NewFrameLayout(wx.Frame):
                         maxColumnWidth[headers[colIndx]] = len(headers[colIndx])
                     colIndx += 1
                 rowIndx += 1
+                # Update Gauge every 2 seonds
+                if int((datetime.now() - startTime).total_seconds()) % 5 == 0:
+                    percent = (
+                        int((numProcessed / len(dataSource)) * (maxGauge - beginGauge))
+                        + beginGauge
+                    )
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
+                numProcessed += 1
             for num in range(len(headers)):
                 worksheet.set_column(num, num, maxColumnWidth[headers[num]])
 
+    @api_tool_decorator()
     def saveAppInfoAsFile(self, inFile):
-        gridData = []
-        gridData.append(Globals.CSV_APP_ATTR_NAME)
-        createNewFile(inFile)
+        if self.gridPanel.grid_3_contents:
+            gridData = []
+            gridData.append(Globals.CSV_APP_ATTR_NAME)
+            createNewFile(inFile)
 
-        num = 1
-        for entry in self.gridPanel.grid_3_contents:
-            if type(entry) is dict:
-                gridData.append(list(entry.values()))
-            elif type(entry) is list:
-                for row in entry:
-                    gridData.append(list(row.values()))
-            val = (num / len(self.gridPanel.grid_3_contents)) * 100
-            if val <= 95:
-                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-            num += 1
+            num = 1
+            for entry in self.gridPanel.grid_3_contents:
+                if type(entry) is dict:
+                    gridData.append(list(entry.values()))
+                elif type(entry) is list:
+                    for row in entry:
+                        gridData.append(list(row.values()))
+                val = (num / len(self.gridPanel.grid_3_contents)) * 100
+                if val <= 95:
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
+                num += 1
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(gridData)
 
-        self.Logging("---> Info saved to csv file - " + inFile)
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
-        self.toggleEnabledState(True)
-        self.setCursorDefault()
-        self.gridPanel.enableGridProperties()
+            self.Logging("---> Info saved to csv file - " + inFile)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+            self.toggleEnabledState(True)
+            self.setCursorDefault()
+            self.gridPanel.enableGridProperties()
 
-        displayMessageBox(
-            ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
-        )
+            displayMessageBox(
+                ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+            )
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
@@ -987,7 +1072,9 @@ class NewFrameLayout(wx.Frame):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.defaultDir),
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
                 csv_auth_path = fileDialog.GetPath()
@@ -995,6 +1082,7 @@ class NewFrameLayout(wx.Frame):
                 self.Logging(
                     "--->Attempting to load device data from %s" % csv_auth_path
                 )
+                self.toggleEnabledState(False)
                 if self.WINDOWS:
                     Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
                 else:
@@ -1125,6 +1213,7 @@ class NewFrameLayout(wx.Frame):
         len_reader = len(data)
         rowCount = 1
         num = 0
+        header = None
         for row in data:
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
@@ -1133,91 +1222,96 @@ class NewFrameLayout(wx.Frame):
             if not all("" == val or val.isspace() for val in row):
                 if num == 0:
                     header = row
+                    validHeader = False
+                    for colName in header:
+                        if colName in grid_headers:
+                            # Assume its valid if it has at least one valid entry
+                            validHeader = True
+                            break
+                    if not validHeader:
+                        raise Exception(
+                            "Not Able to Process CSV File! Missing HEADERS!"
+                        )
                     num += 1
                     continue
                 grid.AppendRows(1)
-                toolCol = 0
-                for expectedCol in headers.keys():
-                    fileCol = 0
-                    for colValue in row:
-                        colName = (
-                            str(header[fileCol]).replace(" ", "").lower()
-                            if len(header) > fileCol
-                            else ""
-                        )
-                        if colValue == "--":
-                            colValue = ""
-                        if colName == "storenumber":
-                            colName = "Alias"
-                            header[fileCol] = "Alias"
-                        if colName == "tag":
-                            colName = "Tags"
-                            header[fileCol] = "Tags"
-                        if (
-                            (
-                                expectedCol == "Device Name"
-                                or expectedCol == "Esper Name"
-                            )
-                            and colName == "espername"
-                            and grid == self.gridPanel.grid_2
-                        ):
-                            colName = "devicename"
-                        if expectedCol == "Esper Name" and colName == "devicename":
-                            colName = "devicename"
-                            expectedCol = "devicename"
-                        if (
-                            fileCol < len(header)
-                            and str(header[fileCol]).strip()
-                            in Globals.CSV_DEPRECATED_HEADER_LABEL
-                        ) or (
-                            fileCol < len(header)
-                            and str(header[fileCol]).strip() not in headers.keys()
-                            and colName != "devicename"
-                        ):
-                            fileCol += 1
-                            continue
-                        if colName == expectedCol.replace(" ", "").lower():
-                            if expectedCol == "Tags":
-                                try:
-                                    ast.literal_eval(colValue)
-                                except:
-                                    colValue = str(colValue)
-                                    if (
-                                        expectedCol == "Tags"
-                                        and "," in colValue
-                                        and (
-                                            (
-                                                colValue.count('"') % 2 != 0
-                                                or colValue.count("'") % 2 != 0
-                                                or colValue.count("’") % 2 != 0
-                                            )
-                                            or (
-                                                '"' not in colValue
-                                                and "'" not in colValue
-                                                and "’" not in colValue
-                                            )
-                                        )
-                                    ):
-                                        colValue = '"' + colValue + '"'
-                            grid.SetCellValue(
-                                grid.GetNumberRows() - 1,
-                                toolCol,
-                                str(colValue),
-                            )
-                            isEditable = True
-                            if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
-                                isEditable = False
-                            grid.SetReadOnly(
-                                grid.GetNumberRows() - 1,
-                                toolCol,
-                                isEditable,
-                            )
-                            fileCol += 1
-                            break
-                        fileCol += 1
-                    toolCol += 1
+                rowNum = grid.GetNumberRows() - 1
+                self.processCSVRow(row, rowNum, header, grid_headers, grid)
         if lock:
             lock.release()
+
+    def processCSVRow(self, row, rowNum, header, grid_headers, grid):
+        fileCol = 0
+        for colValue in row:
+            colName = self.getAndValidateColumnHeaderName(header, fileCol)
+            if colValue == "--":
+                colValue = ""
+            if (
+                fileCol < len(header)
+                and colName.strip() in Globals.CSV_DEPRECATED_HEADER_LABEL
+            ) or (
+                fileCol < len(header)
+                and colName.strip() not in grid_headers
+                and colName != "devicename"
+            ):
+                fileCol += 1
+                continue
+            expectedCol = ""
+            if colName in grid_headers:
+                expectedCol = colName
+            else:
+                for col in grid_headers:
+                    if getStrRatioSimilarity(colName, col) >= 95:
+                        expectedCol = col
+                        break
+            if expectedCol:
+                toolCol = grid_headers.index(expectedCol)
+                if expectedCol == "Tags":
+                    try:
+                        ast.literal_eval(colValue)
+                    except:
+                        colValue = str(colValue)
+                        if (
+                            expectedCol == "Tags"
+                            and "," in colValue
+                            and (
+                                (
+                                    colValue.count('"') % 2 != 0
+                                    or colValue.count("'") % 2 != 0
+                                    or colValue.count("’") % 2 != 0
+                                )
+                                or (
+                                    '"' not in colValue
+                                    and "'" not in colValue
+                                    and "’" not in colValue
+                                )
+                            )
+                        ):
+                            colValue = '"' + colValue + '"'
+                grid.SetCellValue(
+                    rowNum,
+                    toolCol,
+                    str(colValue),
+                )
+                isEditable = True
+                if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
+                    isEditable = False
+                grid.SetReadOnly(
+                    rowNum,
+                    toolCol,
+                    isEditable,
+                )
+                fileCol += 1
+
+    def getAndValidateColumnHeaderName(self, header, indx):
+        colName = (
+            str(header[indx]) if len(header) > indx else ""  # .replace(" ", "").lower()
+        )
+        if colName.lower() == "storenumber" or colName.lower() == "store number":
+            colName = "Alias"
+        if colName.lower() == "tag":
+            colName = "Tags"
+        return colName
 
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, event=None, getItemForName=None):
@@ -1347,6 +1441,7 @@ class NewFrameLayout(wx.Frame):
                 self.groupManage.Destroy()
         except:
             pass
+        # Reset Side Panel
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.groupDeviceCount = {}
@@ -1354,10 +1449,12 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
-        self.frame_toolbar.search.SetValue("")
-        self.sidePanel.clearStoredApps()
-        self.toggleEnabledState(False)
         self.sidePanel.notebook_1.SetSelection(0)
+        self.sidePanel.clearStoredApps()
+        # Clear Search Input
+        self.frame_toolbar.search.SetValue("")
+        # Disable other options
+        self.toggleEnabledState(False)
         self.setCursorBusy()
 
         self.firstRun = False
@@ -1444,6 +1541,7 @@ class NewFrameLayout(wx.Frame):
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 threads = []
                 if Globals.HAS_INTERNET:
+                    self.toggleEnabledState(False)
                     groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
@@ -1505,10 +1603,13 @@ class NewFrameLayout(wx.Frame):
                 "Please enter a new API Token for %s" % Globals.configuration.host,
                 "%s - API Token has expired!" % self.configMenuItem.GetItemLabelText(),
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 if dlg.ShowModal() == wx.ID_OK:
                     newToken = dlg.GetValue()
                 else:
+                    Globals.OPEN_DIALOGS.remove(dlg)
                     break
+                Globals.OPEN_DIALOGS.remove(dlg)
             newToken = newToken.strip()
             if newToken:
                 csvRow = [
@@ -1541,6 +1642,7 @@ class NewFrameLayout(wx.Frame):
             if len(evtVal) > 2:
                 action = evtVal[2]
         if threads == Globals.THREAD_POOL.threads:
+            time.sleep(3)
             Globals.THREAD_POOL.join(tolerance=tolerance)
         else:
             joinThreadList(threads)
@@ -1550,6 +1652,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.actionChoice.Enable(True)
             self.sidePanel.removeEndpointBtn.Enable(True)
+            self.handleScheduleReportPref()
         if source == 1:
             if not self.sidePanel.devices:
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")
@@ -1579,6 +1682,7 @@ class NewFrameLayout(wx.Frame):
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
+            self.isUploading = False
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
             if self.WINDOWS:
@@ -1597,7 +1701,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
-                    self.gridPanel.enableGridProperties,
+                    self.gridPanel.autoSizeGridsColumns,
                 )
                 postEventToFrame(
                     eventUtil.myEVT_PROCESS_FUNCTION,
@@ -1662,6 +1766,10 @@ class NewFrameLayout(wx.Frame):
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def PopulateGroups(self):
@@ -1760,6 +1868,10 @@ class NewFrameLayout(wx.Frame):
                 num += 1
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
 
     @api_tool_decorator()
     def PopulateDevices(self, event):
@@ -1782,6 +1894,7 @@ class NewFrameLayout(wx.Frame):
                 self.sidePanel.runBtn.Enable(True)
                 self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
         self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+        self.toggleEnabledState(False)
         Globals.THREAD_POOL.enqueue(self.addDevicesToDeviceChoice, tolerance=2)
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
@@ -1834,18 +1947,18 @@ class NewFrameLayout(wx.Frame):
         for device in chunk:
             name = ""
             if hasattr(device, "hardware_info"):
-                name = "%s %s %s %s" % (
+                name = "%s ~ %s ~ %s %s" % (
                     device.hardware_info["manufacturer"],
                     device.hardware_info["model"],
                     device.device_name,
-                    device.alias_name if device.alias_name else "",
+                    "~ %s" % device.alias_name if device.alias_name else "",
                 )
             else:
-                name = "%s %s %s %s" % (
+                name = "%s ~ %s ~ %s %s" % (
                     device["hardwareInfo"]["manufacturer"],
                     device["hardwareInfo"]["model"],
                     device["device_name"],
-                    device["alias_name"] if device["alias_name"] else "",
+                    "~ %s" % device["alias_name"] if device["alias_name"] else "",
                 )
             if name and name not in self.sidePanel.devices:
                 if hasattr(device, "id"):
@@ -1962,8 +2075,22 @@ class NewFrameLayout(wx.Frame):
             )
             return
 
-        if self.isBusy or not self.sidePanel.runBtn.IsEnabled():
+        if (
+            self.isBusy
+            or not self.sidePanel.runBtn.IsEnabled()
+            or self.scheduleReportRunning
+        ):
             return
+
+        end_time = time.time() + 120
+        while (
+            self.isRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+        ) and time.time() < end_time:
+            time.sleep(1)
         self.start_time = time.time()
         self.setCursorBusy()
         self.isRunning = True
@@ -1982,9 +2109,9 @@ class NewFrameLayout(wx.Frame):
 
         allDevicesSelected = (
             True
-            if hasattr(self.sidePanel.deviceResp, "count")
+            if self.sidePanel.deviceResp
             and len(self.sidePanel.selectedDevicesList)
-            == self.sidePanel.deviceResp.count
+            == len(self.sidePanel.deviceResp["results"])
             else False
         )
 
@@ -2050,7 +2177,9 @@ class NewFrameLayout(wx.Frame):
                 "Enter Wifi SSIDs you want whitelisted, as a comma seperated list:",
                 "Wifi Access Point Whitelist",
             ) as textDialog:
+                Globals.OPEN_DIALOGS.append(textDialog)
                 if textDialog.ShowModal() == wx.ID_OK:
+                    Globals.OPEN_DIALOGS.remove(textDialog)
                     apList = textDialog.GetValue()
                     whitelist = []
                     parts = apList.split(",")
@@ -2064,13 +2193,17 @@ class NewFrameLayout(wx.Frame):
                         "\n".join(Globals.WHITELIST_AP),
                         False,
                     ) as textDialog2:
+                        Globals.OPEN_DIALOGS.append(textDialog2)
                         if textDialog2.ShowModal() != wx.ID_OK:
+                            Globals.OPEN_DIALOGS.remove(textDialog2)
                             self.sleepInhibitor.uninhibit()
                             self.isRunning = False
                             self.setCursorDefault()
                             self.toggleEnabledState(True)
                             return
+                        Globals.OPEN_DIALOGS.remove(textDialog2)
                 else:
+                    Globals.OPEN_DIALOGS.remove(textDialog)
                     self.sleepInhibitor.uninhibit()
                     self.isRunning = False
                     self.setCursorDefault()
@@ -2096,7 +2229,9 @@ class NewFrameLayout(wx.Frame):
             with wx.SingleChoiceDialog(
                 self, "Select Device Mode:", "", ["Multi-App", "Kiosk"]
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     if dlg.GetStringSelection() == "Multi-App":
                         actionClientData = GeneralActions.SET_MULTI.value
@@ -2184,9 +2319,10 @@ class NewFrameLayout(wx.Frame):
                         "The %s will attempt to process the action on all devices in the Device Info grid.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!\n\nContinue?"
                         % (Globals.TITLE, Globals.MAX_TAGS),
                     )
-
+                    Globals.OPEN_DIALOGS.append(result)
                     if result.ShowModal() != wx.ID_OK:
                         runAction = False
+                    Globals.OPEN_DIALOGS.remove(result)
                 if result and result.getCheckBoxValue():
                     Globals.SHOW_GRID_DIALOG = False
                     self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
@@ -2285,7 +2421,9 @@ class NewFrameLayout(wx.Frame):
                 schArgs = None
                 schType = None
                 with CommandDialog("Enter JSON Command", value=value) as cmdDialog:
+                    Globals.OPEN_DIALOGS.append(cmdDialog)
                     result = cmdDialog.ShowModal()
+                    Globals.OPEN_DIALOGS.remove(cmdDialog)
                     if result == wx.ID_OK:
                         try:
                             (
@@ -2354,7 +2492,9 @@ class NewFrameLayout(wx.Frame):
                 "Command(s) have been fired.",
                 result,
             ) as dialog:
+                Globals.OPEN_DIALOGS.append(dialog)
                 res = dialog.ShowModal()
+                Globals.OPEN_DIALOGS.append(dialog)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
             (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
@@ -2376,6 +2516,7 @@ class NewFrameLayout(wx.Frame):
         if hasattr(self, "start_time"):
             print("Fetch Execution time: %s" % (time.time() - self.start_time))
         evtValue = event.GetValue()
+        self.toggleEnabledState(False)
         if evtValue:
             action = evtValue[0]
             entId = evtValue[1]
@@ -2597,6 +2738,8 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.notebook_2.SetSelection(0)
         elif action == GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.notebook_2.SetSelection(2)
+        if self.isSaving:
+            self.isSaving = False
         self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             postEventToFrame(
@@ -2612,6 +2755,10 @@ class NewFrameLayout(wx.Frame):
         self.Logging("---> Completed Action")
         self.displayNotification(title, msg)
         self.sleepInhibitor.uninhibit()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            self.Refresh,
+        )
         if hasattr(self, "start_time"):
             print("Run Execution time: %s" % (time.time() - self.start_time))
 
@@ -2619,6 +2766,12 @@ class NewFrameLayout(wx.Frame):
     def onActivate(self, event, skip=True):
         if not self.isRunning and not self.isUploading and not self.isBusy:
             wx.CallLater(3000, self.statusBar.setGaugeValue, 0)
+        if Globals.OPEN_DIALOGS:
+            for window in Globals.OPEN_DIALOGS:
+                if window and hasattr(window, "Raise") and not self.isSaving:
+                    window.Raise()
+                elif window and hasattr(window, "tryToMakeActive") and not self.isSaving:
+                    window.tryToMakeActive()
         if self.notification:
             self.notification.Close()
         self.Refresh()
@@ -2708,6 +2861,8 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning:
             return
         self.prefDialog.SetPrefs(self.preferences, onBoot=False)
+        self.prefDialog.appColFilter = Globals.APP_COL_FILTER
+        Globals.OPEN_DIALOGS.append(self.prefDialog)
         if self.prefDialog.ShowModal() == wx.ID_APPLY:
             self.isSavingPrefs = True
             Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
@@ -2716,6 +2871,8 @@ class NewFrameLayout(wx.Frame):
             if self.sidePanel.selectedDevicesList:
                 self.sidePanel.selectedDeviceApps = []
             self.setFontSizeForLabels()
+            self.handleScheduleReportPref()
+        Globals.OPEN_DIALOGS.remove(self.prefDialog)
         if self.preferences and self.preferences["enableDevice"]:
             self.sidePanel.deviceChoice.Enable(True)
         else:
@@ -2756,9 +2913,10 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning:
             return
 
+        self.isUploading = True
         for file in event.Files:
             if file.endswith(".csv"):
-                with open(file, "r") as csvFile:
+                with open(file, "r", encoding="utf-8") as csvFile:
                     reader = csv.reader(
                         csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                     )
@@ -2779,13 +2937,40 @@ class NewFrameLayout(wx.Frame):
                                 )
                             )
                             return
-                        self.processDeviceCSVUpload(data)
-                        self.gridPanel.grid_1.AutoSizeColumns()
+                        self.toggleEnabledState(False)
+                        if self.WINDOWS:
+                            Globals.THREAD_POOL.enqueue(
+                                self.processDeviceCSVUpload, data
+                            )
+                            Globals.THREAD_POOL.enqueue(
+                                self.waitForThreadsThenSetCursorDefault,
+                                Globals.THREAD_POOL.threads,
+                                2,
+                                tolerance=1,
+                            )
+                        else:
+                            self.processDeviceCSVUpload(data)
+                            postEventToFrame(eventUtil.myEVT_COMPLETE, True)
+            elif file.endswith(".xlxs"):
+                self.toggleEnabledState(False)
+                if self.WINDOWS:
+                    Globals.THREAD_POOL.enqueue(self.openDeviceCSV, file)
+                    Globals.THREAD_POOL.enqueue(
+                        self.waitForThreadsThenSetCursorDefault,
+                        Globals.THREAD_POOL.threads,
+                        2,
+                        tolerance=1,
+                    )
+                else:
+                    self.openDeviceCSV(file)
+                    postEventToFrame(eventUtil.myEVT_COMPLETE, True)
 
     @api_tool_decorator()
     def onClone(self, event):
         with TemplateDialog(self.sidePanel.configChoice, parent=self) as self.tmpDialog:
+            Globals.OPEN_DIALOGS.append(self.tmpDialog)
             result = self.tmpDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(self.tmpDialog)
             if result == wx.ID_OK:
                 self.prepareClone(self.tmpDialog)
             self.tmpDialog.DestroyLater()
@@ -2811,7 +2996,9 @@ class NewFrameLayout(wx.Frame):
                 "The %s will attempt to clone to template.\nThe following apps are missing: %s\n\nContinue?"
                 % (Globals.TITLE, missingApps if missingApps else None),
             )
+            Globals.OPEN_DIALOGS.append(result)
             res = result.ShowModal()
+            Globals.OPEN_DIALOGS.remove(result)
         else:
             res = wx.ID_OK
         if res == wx.ID_OK:
@@ -2837,7 +3024,9 @@ class NewFrameLayout(wx.Frame):
                 "The Template already exists on the destination tenant.\nThe following apps are missing: %s\n\nWould you like to update the template?"
                 % (missingApps if missingApps else None),
             )
+            Globals.OPEN_DIALOGS.append(result)
             res = result.ShowModal()
+            Globals.OPEN_DIALOGS.remove(result)
         else:
             res = wx.ID_OK
         if res == wx.ID_OK:
@@ -2976,42 +3165,157 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
-        self.sidePanel.runBtn.Enable(state)
-        self.sidePanel.actionChoice.Enable(state)
-        self.sidePanel.removeEndpointBtn.Enable(state)
+        if self.WINDOWS:
+            self.sidePanel.runBtn.Enable(state)
+            self.sidePanel.actionChoice.Enable(state)
+            self.sidePanel.removeEndpointBtn.Enable(state)
 
-        if not self.sidePanel.appChoice.IsEnabled() and state:
-            action = self.sidePanel.actionChoice.GetValue()
-            clientData = None
-            if action in Globals.GENERAL_ACTIONS:
-                clientData = Globals.GENERAL_ACTIONS[action]
-            elif action in Globals.GRID_ACTIONS:
-                clientData = Globals.GRID_ACTIONS[action]
-            self.sidePanel.setAppChoiceState(clientData)
+            if not self.sidePanel.appChoice.IsEnabled() and state:
+                action = self.sidePanel.actionChoice.GetValue()
+                clientData = None
+                if action in Globals.GENERAL_ACTIONS:
+                    clientData = Globals.GENERAL_ACTIONS[action]
+                elif action in Globals.GRID_ACTIONS:
+                    clientData = Globals.GRID_ACTIONS[action]
+                self.sidePanel.setAppChoiceState(clientData)
+            else:
+                self.sidePanel.appChoice.Enable(state)
+
+            self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
+            self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
+
+            # Toggle Menu Bar Items
+            self.menubar.fileOpenAuth.Enable(state)
+            for option in self.menubar.sensitiveMenuOptions:
+                self.menubar.EnableTop(option, state)
+            self.menubar.fileOpenConfig.Enable(state)
+            self.menubar.pref.Enable(state)
+            self.menubar.collection.Enable(state)
+            self.menubar.eqlQuery.Enable(state)
+            self.menubar.run.Enable(state)
+            self.menubar.installedDevices.Enable(state)
+            if not self.blueprintsEnabled:
+                self.menubar.clone.Enable(state)
+            else:
+                self.menubar.cloneBP.Enable(state)
+            self.menubar.command.Enable(state)
+            self.menubar.collectionSubMenu.Enable(state)
+            self.menubar.groupSubMenu.Enable(state)
+            self.menubar.setSaveMenuOptionsEnableState(state)
         else:
-            self.sidePanel.appChoice.Enable(state)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.runBtn.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.actionChoice.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.sidePanel.removeEndpointBtn.Enable, (state,)),
+            )
 
-        self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
+            if not self.sidePanel.appChoice.IsEnabled() and state:
+                action = self.sidePanel.actionChoice.GetValue()
+                clientData = None
+                if action in Globals.GENERAL_ACTIONS:
+                    clientData = Globals.GENERAL_ACTIONS[action]
+                elif action in Globals.GRID_ACTIONS:
+                    clientData = Globals.GRID_ACTIONS[action]
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.setAppChoiceState, (clientData,)),
+                )
+            else:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.sidePanel.appChoice.Enable, (state,)),
+                )
 
-        self.menubar.fileOpenAuth.Enable(state)
-        self.menubar.EnableTop(4, state)
-        self.menubar.fileOpenConfig.Enable(state)
-        self.menubar.pref.Enable(state)
-        self.menubar.collection.Enable(state)
-        self.menubar.eqlQuery.Enable(state)
-        self.menubar.run.Enable(state)
-        self.menubar.installedDevices.Enable(state)
-        if not self.blueprintsEnabled:
-            self.menubar.clone.Enable(state)
-        else:
-            self.menubar.cloneBP.Enable(state)
-        self.menubar.command.Enable(state)
-        self.menubar.collectionSubMenu.Enable(state)
-        self.menubar.groupSubMenu.Enable(state)
-        self.menubar.setSaveMenuOptionsEnableState(state)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.otool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.rtool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.cmdtool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
+            )
+
+            # Toggle Menu Bar Items
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.fileOpenAuth.Enable, (state,)),
+            )
+            for option in self.menubar.sensitiveMenuOptions:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.EnableTop, (option, state)),
+                )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.fileOpenConfig.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.pref.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.collection.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.eqlQuery.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.run.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.installedDevices.Enable, (state,)),
+            )
+            if not self.blueprintsEnabled:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.clone.Enable, (state,)),
+                )
+            else:
+                postEventToFrame(
+                    eventUtil.myEVT_PROCESS_FUNCTION,
+                    (self.menubar.cloneBP.Enable, (state,)),
+                )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.command.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.collectionSubMenu.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.groupSubMenu.Enable, (state,)),
+            )
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (self.menubar.setSaveMenuOptionsEnableState, (state,)),
+            )
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
@@ -3021,7 +3325,9 @@ class NewFrameLayout(wx.Frame):
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.toggleEnabledState(False)
             with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     app, version = dlg.getAppValues()
                     if app and version:
@@ -3095,8 +3401,9 @@ class NewFrameLayout(wx.Frame):
                 single=True,
                 resp=self.sidePanel.groupsResp,
             )
-
+            Globals.OPEN_DIALOGS.append(groupMultiDialog)
             if groupMultiDialog.ShowModal() == wx.ID_OK:
+                Globals.OPEN_DIALOGS.remove(groupMultiDialog)
                 selections = groupMultiDialog.GetSelections()
                 if selections:
                     selction = selections[0]
@@ -3118,6 +3425,7 @@ class NewFrameLayout(wx.Frame):
                 postEventToFrame(eventUtil.myEVT_COMPLETE, True)
                 return
             else:
+                Globals.OPEN_DIALOGS.remove(groupMultiDialog)
                 self.isRunning = False
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
@@ -3138,7 +3446,9 @@ class NewFrameLayout(wx.Frame):
         if not self.groupManage:
             self.groupManage = GroupManagement(self.groups)
         with self.groupManage as manage:
+            Globals.OPEN_DIALOGS.append(manage)
             manage.ShowModal()
+            Globals.OPEN_DIALOGS.remove(manage)
 
     @api_tool_decorator()
     def installApp(self, event):
@@ -3149,7 +3459,9 @@ class NewFrameLayout(wx.Frame):
                 title="Install Application",
                 showAllVersionsOption=False,
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     _, version, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
@@ -3180,7 +3492,9 @@ class NewFrameLayout(wx.Frame):
                 showAllVersionsOption=False,
                 showPkgTextInput=True,
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
             if res == wx.ID_OK:
                 _, _, pkg = dlg.getAppValues(returnPkgName=True)
             if pkg:
@@ -3251,7 +3565,9 @@ class NewFrameLayout(wx.Frame):
         with wx.SingleChoiceDialog(
             self, "Select App State:", "", ["DISABLE", "HIDE", "SHOW"]
         ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             res = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
             if res == wx.ID_OK:
                 self.AppState = dlg.GetStringSelection()
             else:
@@ -3266,7 +3582,9 @@ class NewFrameLayout(wx.Frame):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
             defaultDir=str(self.defaultDir),
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 apk_path = fileDialog.GetPath()
                 Globals.THREAD_POOL.enqueue(uploadAppToEndpoint, apk_path)
@@ -3278,7 +3596,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onBulkFactoryReset(self, event):
         with BulkFactoryReset() as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             res = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
 
             if res == wx.ID_OK:
                 self.statusBar.gauge.Pulse()
@@ -3288,12 +3608,16 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onGeofence(self, event):
         with GeofenceDialog() as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
 
     @api_tool_decorator()
     def onCloneBP(self, event):
         with BlueprintsDialog(self.sidePanel.configChoice, parent=self) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
             if result == wx.ID_OK:
                 prepareBlueprintClone(
                     dlg.getBlueprint(),
@@ -3323,17 +3647,22 @@ class NewFrameLayout(wx.Frame):
         defaultFileName = "%s_User-Report" % datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S"
         )
-        dlg = wx.FileDialog(
+        self.isSaving = True
+        inFile = ""
+        result = wx.ID_CANCEL
+        with wx.FileDialog(
             self,
             message="Save User Report as...",
             defaultFile=defaultFileName,
             wildcard="CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()
@@ -3397,6 +3726,7 @@ class NewFrameLayout(wx.Frame):
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )
             )
+            self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
@@ -3404,7 +3734,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onConvertTemplate(self, event):
         with BlueprintsConvertDialog(self.sidePanel.configChoice) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
             if result == wx.ID_OK:
                 prepareBlueprintConversion(
                     dlg.getTemplate(),
@@ -3420,17 +3752,20 @@ class NewFrameLayout(wx.Frame):
         defaultFileName = "%s_Group-Report" % datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S"
         )
-        dlg = wx.FileDialog(
+        self.isSaving = True
+        with wx.FileDialog(
             self,
             message="Save Group Report as...",
             defaultFile=defaultFileName,
             wildcard="CSV files (*.csv)|*.csv",
             defaultDir=str(self.defaultDir),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:  # Save button was pressed
             self.statusBar.gauge.Pulse()
@@ -3493,6 +3828,7 @@ class NewFrameLayout(wx.Frame):
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )
             )
+            self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory)
@@ -3509,7 +3845,9 @@ class NewFrameLayout(wx.Frame):
                 showAllVersionsOption=False,
                 showBlueprintInput=True,
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     selection, apps = dlg.getBlueprintInputs()
                     self.Logging("Fetching List of Blueprints...")
@@ -3546,13 +3884,14 @@ class NewFrameLayout(wx.Frame):
                 "",
                 options,
             ) as dlg:
+                Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
+                Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     opt = dlg.GetStringSelection()
                 else:
                     return None
 
-            pushSuccess = 0
             statusList = []
             if not opt or opt == options[2]:
                 return None
@@ -3561,8 +3900,6 @@ class NewFrameLayout(wx.Frame):
                 num = 1
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
-                    if updateResp and updateResp.status_code < 300:
-                        pushSuccess += 1
                     statusList.append(
                         {
                             "Blueprint Id": bp["id"],
@@ -3584,7 +3921,9 @@ class NewFrameLayout(wx.Frame):
                 schedule = None
                 scheduleType = "WINDOW"
                 with ScheduleCmdDialog() as dlg:
+                    Globals.OPEN_DIALOGS.append(dlg)
                     res = dlg.ShowModal()
+                    Globals.OPEN_DIALOGS.remove(dlg)
                     if res == wx.ID_OK:
                         if dlg.isRecurring():
                             scheduleType = "RECURRING"
@@ -3600,8 +3939,6 @@ class NewFrameLayout(wx.Frame):
                         schedule=schedule,
                         schedule_type=scheduleType,
                     )
-                    if updateResp and updateResp.status_code < 300:
-                        pushSuccess += 1
                     statusList.append(
                         {
                             "Blueprint Id": bp["id"],
@@ -3627,3 +3964,129 @@ class NewFrameLayout(wx.Frame):
                     wx.ICON_INFORMATION,
                 )
             )
+
+    def handleScheduleReportPref(self):
+        if Globals.SCHEDULE_ENABLED:
+            if self.scheduleReport:
+                # Stop exisiting report, just in case timing differs
+                self.scheduleReport.stop()
+                self.stopOtherScheduledCalls()
+            # Start scheduled report
+            self.scheduleReport = wxThread.GUIThread(
+                self, self.beginScheduledReport, None, name="ScheduledReportThread"
+            )
+            self.scheduleReport.startWithRetry()
+        elif self.scheduleReport:
+            # Stop report thread as it should be disabled
+            self.scheduleReport.stop()
+            self.stopOtherScheduledCalls()
+
+    def beginScheduledReport(self):
+        if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
+            return
+
+        dirPath = Globals.SCHEDULE_LOCATION
+        if not os.path.exists(dirPath):
+            os.mkdir(dirPath)
+        fileName = "%s_EAST-Report.%s" % (
+            datetime.now().strftime("%Y-%m-%d_%H-%M-%S"),
+            Globals.SCHEDULE_SAVE,
+        )
+        filePath = os.path.join(dirPath, fileName)
+
+        if self.delayScheduleReport:
+            time.sleep(60 * 5)
+        self.delayScheduleReport = False
+
+        self.waitUntilNotBusy()
+
+        if not Globals.SCHEDULE_ENABLED or checkIfCurrentThreadStopped():
+            return
+
+        self.Logging("Performing scheduled report")
+        correctSaveFileName(filePath)
+        self.setCursorBusy()
+        self.toggleEnabledState(False)
+        self.gridPanel.disableGridProperties()
+        self.Logging("Attempting to save scheduled report at %s" % filePath)
+        self.statusBar.gauge.Pulse()
+
+        reportAction = GeneralActions.GENERATE_INFO_REPORT.value
+        if Globals.SCHEDULE_TYPE == "Device":
+            reportAction = GeneralActions.GENERATE_DEVICE_REPORT.value
+        elif Globals.SCHEDULE_TYPE == "App":
+            reportAction = GeneralActions.GENERATE_APP_REPORT.value
+        elif Globals.SCHEDULE_TYPE == "All":
+            reportAction = GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+
+        self.scheduleReportRunning = True
+        Globals.THREAD_POOL.enqueue(
+            self.saveAllFile,
+            filePath,
+            action=reportAction,
+            showDlg=False,
+            allDevices=True,
+            tolarance=1,
+        )
+        Globals.THREAD_POOL.join()
+
+        # Schedule next occurrance of report
+        self.processScheduleCallLater()
+        self.scheduleReportRunning = False
+
+    def processScheduleCallLater(self):
+        self.stopOtherScheduledCalls()
+        postEventToFrame(
+            eventUtil.myEVT_PROCESS_FUNCTION,
+            (self.startScheduleReportCall),
+        )
+
+    def startScheduleReportCall(self):
+        self.scheduleCallLater.append(
+            wx.CallLater(
+                Globals.SCHEDULE_INTERVAL * 3600000, self.handleScheduleReportPref
+            )
+        )
+
+    def stopOtherScheduledCalls(self):
+        for entry in self.scheduleCallLater:
+            if hasattr(entry, "Stop"):
+                entry.Stop()
+                wx.CallAfter(entry.Notify)
+        self.scheduleCallLater = []
+
+    def waitUntilNotBusy(self, amountSleep=60):
+        # Pause until a minute after current task is complete
+        while (
+            self.isRunning
+            or self.scheduleReportRunning
+            or self.isRunningUpdate
+            or self.isSavingPrefs
+            or self.isUploading
+            or self.isBusy
+            or self.isSaving
+            or Globals.OPEN_DIALOGS
+        ):
+            time.sleep(amountSleep)
+
+    @api_tool_decorator()
+    def onConfigureWidgets(self, event):
+        res = None
+        enable = className = deviceList = None
+        with WidgetPicker() as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            res = dlg.ShowModal()
+            enable, className, commandTarget, deviceList = dlg.getInputs()
+            Globals.OPEN_DIALOGS.remove(dlg)
+        if res == wx.ID_APPLY:
+            self.statusBar.gauge.Pulse()
+            if commandTarget == 0:
+                self.Logging("Creating Widget Command for selected devices")
+                Globals.THREAD_POOL.enqueue(
+                    setWidget, enable, widgetName=className, devices=deviceList
+                )
+            else:
+                self.Logging("Creating Widget Command for selected groups")
+                Globals.THREAD_POOL.enqueue(
+                    setWidget, enable, widgetName=className, groups=deviceList
+                )

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import platform
+from subprocess import PIPE, Popen
+
 import Common.Globals as Globals
-from subprocess import Popen, PIPE
 
 
 class SleepInhibitor:

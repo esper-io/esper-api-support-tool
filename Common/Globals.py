@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import os
 import platform
 import threading
 
 import esperclient
-from Utility.Threading.ThreadPoolQueue import Pool
 
 from Common.enum import GeneralActions, GridActions
+from Utility.Threading.ThreadPoolQueue import Pool
 
 configuration = esperclient.Configuration()
 enterprise_id = ""
@@ -14,7 +15,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.19473"
+VERSION = "v0.19482"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -27,7 +28,7 @@ IS_TOKEN_VALID = False
 MAX_DEVICE_COUNT = 5000
 
 MAX_ERROR_TIME_DIFF = 2
-MAX_THREAD_COUNT = 24
+MAX_THREAD_COUNT = 20
 MAX_RETRY = 5
 RETRY_SLEEP = 3
 MAX_STATUS_CHAR = 80
@@ -39,8 +40,11 @@ SHEET_CHUNK_SIZE = 500000
 MIN_SHEET_CHUNK_SIZE = 50000
 MAX_SHEET_CHUNK_SIZE = 500000
 
-THREAD_POOL = Pool(MAX_THREAD_COUNT)
-THREAD_POOL.run()
+IS_GENERATEING_EXE = False
+
+THREAD_POOL = Pool(MAX_THREAD_COUNT) if not IS_GENERATEING_EXE else None
+if THREAD_POOL:
+    THREAD_POOL.run()
 
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently
@@ -63,6 +67,8 @@ token_lock = threading.Lock()
 
 # Known Group Var
 knownGroups = {}
+
+OPEN_DIALOGS = []
 
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
@@ -130,8 +136,6 @@ JSON_COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    # "INSTALL",
-    # "UNINSTALL",
     "SET_NEW_POLICY",
     "ADD_WIFI_AP",
     "REMOVE_WIFI_AP",
@@ -144,7 +148,7 @@ JSON_COMMAND_TYPES = [
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
-HELP_LINK = "https://docs.google.com/document/d/1WwDIQ-7CzQscVNFhiErbYtIwMyE34hGxE_MQWBqc9_k/edit#heading=h.50j8ygvoempc"
+HELP_LINK = "https://github.com/esper-io/esper-api-support-tool/wiki"
 LATEST_UPDATE_LINK = (
     "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
 )
@@ -157,8 +161,7 @@ DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTE
 DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
-CSV_DEPRECATED_HEADER_LABEL = ["Number"]
-CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
+
 CSV_TAG_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Alias": "Alias",
@@ -195,6 +198,7 @@ CSV_TAG_ATTR_NAME = {
     "Total Internal Storage (MB)": "totalInternalStorage",
     # "Audio Contraints": "audio_constraints",
     "Timezone": "timezone_string",
+    "GPS State": "gpsState",
     "Location Coordinates (Alt, Lat., Long.)": "location_info",
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
@@ -241,6 +245,7 @@ CSV_NETWORK_ATTR_NAME = {
     "Wifi Mac Id": "wifiMacAddress",
     "IPv6 Mac Address(es)": "macAddress",
     # "Signal Strength": "signalStrength",
+    "DNS": "dns",
     "Frequency": "frequency",
     "linkSpeed": "linkSpeed",
     "Data Speed Down": "dataSpeedDown",
@@ -259,16 +264,24 @@ CSV_APP_ATTR_NAME = [
     "Can Clear Data",
     "Can Uninstall",
 ]
+
+WHITELIST_AP = []
+
+""" Static Lists """
+CSV_DEPRECATED_HEADER_LABEL = ["Number"]
+CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
+
 BLACKLIST_PACKAGE_NAME = [
     "io.shoonya.shoonyadpc",
     "io.esper.remoteviewer",
     "io.shoonya.helper",
 ]
-WHITELIST_AP = []
 
 CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 
 APP_FILTER_TYPES = ["ALL", "SHOW", "HIDE", "DISABLE"]
+
+EXCEPTION_MSGS = ["Not Able to Process CSV File! Missing HEADERS!"]
 
 """ WxPython Frame """
 frame = None
@@ -314,12 +327,21 @@ APP_FILTER = "all"
 MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
+APP_COL_FILTER = []
 
 # Dialog Prefs
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
 
+# Schedule Report
+SCHEDULE_INTERVAL = 12
+MIN_SCHEDULE_INTERVAL = 4
+MAX_SCHEDULE_INTERVAL = 23
+SCHEDULE_TYPE = "Device & Network"
+SCHEDULE_ENABLED = False
+SCHEDULE_LOCATION = os.getcwd()
+SCHEDULE_SAVE = "xlsx"
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results

@@ -1,44 +1,40 @@
 #!/usr/bin/env python
 
+from datetime import datetime
+
 import wx
+from esperclient import InlineResponse201
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+import Utility.Threading.wxThread as wxThread
+from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import (
-    getAllAppVersionsForHost,
     getAllApplicationsForHost,
+    getAllAppVersionsForHost,
     uploadApplicationForHost,
 )
 from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
 from Utility.API.WallpaperUtility import uploadWallpaper
-
-import Utility.Threading.wxThread as wxThread
-import Utility.EventUtility as eventUtil
-import Common.Globals as Globals
-
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
-    download,
     deleteFile,
+    download,
     getEsperConfig,
     joinThreadList,
+    postEventToFrame,
 )
-from Utility.Resource import postEventToFrame
 from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
     performPostRequestWithRetry,
 )
 
-from datetime import datetime
-
-from Common.decorator import api_tool_decorator
-
-from esperclient import InlineResponse201
-
 
 class EsperTemplateUtil:
     def __init__(self, toInfo=None, templateName=None, parent=None):
         self.apiLink = "https://{tenant}-api.esper.cloud/api/v0/enterprise/"
         self.template_extension = "/devicetemplate/"
-        self.wallpaper_extension = "/wallpaper/"
         self.limit_extension = "?limit={num}"
         self.parent = parent
         self.toTenant = (
@@ -120,7 +116,9 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
-            getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
+            getEsperConfig(self.toApi, self.toKey), 
+            self.toEntId, 
+            tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
         )
         allDeviceGroupId = None
         found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
@@ -135,7 +133,9 @@ class EsperTemplateUtil:
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
-                    getEsperConfig(self.toApi, self.toKey), self.toEntId, tolerance=1
+                    getEsperConfig(self.toApi, self.toKey), 
+                    self.toEntId, 
+                    tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
                 )
                 _, templateFound, _ = self.checkDeviceGroup(
                     templateFound, toDeviceGroups, allDeviceGroupId
@@ -168,7 +168,8 @@ class EsperTemplateUtil:
                         newBg["orientations"] = bg["orientations"]
                         newBg["screen_types"] = bg["screen_types"]
                         bgList.append(newBg)
-                templateFound["template"]["brand"]["wallpapers"] = bgList
+                if bgList:
+                    templateFound["template"]["brand"]["wallpapers"] = bgList
         return templateFound
 
     def checkDeviceGroup(self, templateFound, toDeviceGroups, allDeviceGroupId):

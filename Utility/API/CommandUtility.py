@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+import ast
+import json
+import time
+
+import esperclient
+import wx
+
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     enforceRateLimit,
@@ -8,18 +19,7 @@ from Utility.Resource import (
     postEventToFrame,
     splitListIntoChunks,
 )
-import ast
-import time
-import esperclient
-import json
-import wx
-
-import Common.Globals as Globals
 from Utility.Web.WebRequests import performPostRequestWithRetry
-import Utility.EventUtility as eventUtil
-
-from Common.decorator import api_tool_decorator
-from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 
 
 @api_tool_decorator()
@@ -94,7 +94,9 @@ def confirmCommand(cmd, commandType, schedule, schType):
     with CmdConfirmDialog(
         commandType, cmdFormatted, schType, schFormatted, applyTo, label
     ) as dialog:
+        Globals.OPEN_DIALOGS.append(dialog)
         res = dialog.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dialog)
         if res == wx.ID_OK:
             modal = wx.YES
 

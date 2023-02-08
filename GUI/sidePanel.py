@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
-from Common.enum import GeneralActions, GridActions
-from Common.decorator import api_tool_decorator
 import csv
-import wx
-import Common.Globals as Globals
-from Utility import EventUtility
 
-from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
+import wx
+
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from Common.enum import GeneralActions, GridActions
+from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
+from Utility import EventUtility
+from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 
 
 class SidePanel(wx.Panel):
@@ -382,7 +383,14 @@ class SidePanel(wx.Panel):
             for choice in choices:
                 match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
                 if match:
-                    match = match[0]
+                    if len(match) == 1:
+                        match = match[0]
+                    else:
+                        for m in match:
+                            parts = m.split("/")
+                            if parts[-1] == choice:
+                                match = m
+                                break
                     newChoices.append(
                         "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
                     )
@@ -398,6 +406,7 @@ class SidePanel(wx.Panel):
                     resp=self.groupsResp,
                 )
 
+            Globals.OPEN_DIALOGS.append(self.groupMultiDialog)
             if self.groupMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
                 self.clearSelections()
@@ -415,7 +424,9 @@ class SidePanel(wx.Panel):
                             break
                         if groupId not in self.selectedGroupsList:
                             self.selectedGroupsList.append(groupId)
-
+            Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
+            if not Globals.frame.WINDOWS:
+                self.groupMultiDialog.DestroyLater()
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
@@ -426,6 +437,7 @@ class SidePanel(wx.Panel):
                 self.parentFrame.PopulateDevices(None)
             else:
                 self.parentFrame.menubar.enableConfigMenu()
+            Globals.frame.Refresh()
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):
@@ -441,6 +453,7 @@ class SidePanel(wx.Panel):
                     title="Select Device(s)",
                     resp=self.deviceResp,
                 )
+            Globals.OPEN_DIALOGS.append(self.deviceMultiDialog)
             if self.deviceMultiDialog.ShowModal() == wx.ID_OK:
                 self.parentFrame.menubar.disableConfigMenu()
                 self.selectedDevices.Clear()
@@ -458,6 +471,10 @@ class SidePanel(wx.Panel):
                         self.selectedDevices.Append(deviceName)
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
+            Globals.OPEN_DIALOGS.remove(self.deviceMultiDialog)
+            if not Globals.frame.WINDOWS:
+                self.deviceMultiDialog.DestroyLater()
+            Globals.frame.Refresh()
 
     def clearStoredApps(self):
         self.apps = []
@@ -544,7 +561,9 @@ class SidePanel(wx.Panel):
             showAllVersionsOption=False,
             showPkgTextInput=hideVersion,
         ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             res = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
             if res == wx.ID_OK:
                 app_id, version, pkg, app_name = dlg.getAppValues(
                     returnPkgName=True, returnAppName=True

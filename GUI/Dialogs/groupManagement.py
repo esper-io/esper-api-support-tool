@@ -3,27 +3,18 @@
 import csv
 from pathlib import Path
 
-import Common.Globals as Globals
+import pandas as pd
 import wx
 import wx.grid as gridlib
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.TabPanel import TabPanel
-from Utility.API.GroupUtility import (
-    createGroup,
-    deleteGroup,
-    fetchGroupName,
-    getAllGroups,
-    renameGroup,
-)
-from Utility.Resource import (
-    correctSaveFileName,
-    displayMessageBox,
-    isApiKey,
-    openWebLinkInBrowser,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.API.GroupUtility import (createGroup, deleteGroup, fetchGroupName,
+                                      getAllGroups, renameGroup)
+from Utility.Resource import (correctSaveFileName, displayMessageBox, isApiKey,
+                              openWebLinkInBrowser, resourcePath, scale_bitmap)
 
 
 class GroupManagement(wx.Dialog):
@@ -696,22 +687,6 @@ class GroupManagement(wx.Dialog):
             self.button_2.Enable(False)
             self.button_4.Enable(False)
 
-    def getSubGroups(self, groupId):
-        return self.getSubGroupsHelper(self.groupTree, groupId)
-
-    def getSubGroupsHelper(self, src, groupId):
-        for id, children in src.items():
-            if id == groupId:
-                childIds = []
-                self.getChildIds(children, childIds)
-                return childIds
-            else:
-                for child in children:
-                    childrenList = self.getSubGroupsHelper(child, groupId)
-                    if childrenList:
-                        return childrenList
-        return []
-
     def getChildIds(self, children, childIds):
         for childDict in children:
             childIds += list(childDict.keys())
@@ -843,27 +818,24 @@ class GroupManagement(wx.Dialog):
         filePath = None
         with wx.FileDialog(
             self,
-            "Open CSV File",
-            wildcard="CSV files (*.csv)|*.csv",
+            "Open Spreadsheet File",
+            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as fileDialog:
+            Globals.OPEN_DIALOGS.append(fileDialog)
             result = fileDialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(fileDialog)
             if result == wx.ID_OK:
                 # Proceed loading the file chosen by the user
                 filePath = fileDialog.GetPath()
-        if filePath:
+        if filePath and filePath.endswith(".csv"):
             self.uploadCSV(filePath)
+        elif filePath and filePath.endswith(".xlsx"):
+            self.uploadXlsx(filePath)
 
     def uploadCSV(self, filePath):
-        self.setCursorBusy()
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-        self.tree_ctrl_1.UnselectAll()
-        self.tree_ctrl_2.UnselectAll()
+        self.handlePreUploadActivity()
         data = None
-        for item in self.uploadCSVTreeItems:
-            self.tree_ctrl_2.Delete(item)
-        self.uploadCSVTreeItems = []
         try:
             with open(filePath, "r", encoding="utf-8-sig") as csvFile:
                 reader = csv.reader(
@@ -876,76 +848,104 @@ class GroupManagement(wx.Dialog):
                     csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
                 )
                 data = list(reader)
-        for row in data:
-            if row != self.expectedHeaders:
-                self.grid_1.AppendRows(1)
-                colNum = 0
-                rowEntry = []
-                for col in row:
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1, colNum, str(col)
-                    )
-                    if (colNum == 0 or colNum == 1) and not isApiKey(str(col)):
-                        groupId = None
-                        if str(col) in self.groupNameToId:
-                            groupId = self.groupNameToId[str(col)]
-                        if groupId:
-                            groupId = groupId[0]
-                            rowEntry.append(groupId)
+        self.processUploadData(data)
+
+    def uploadXlsx(self, filePath):
+        self.handlePreUploadActivity()
+        data = None
+        try:
+            dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
+            if hasattr(dfs, "keys"):
+                sheetKeys = dfs.keys()
+                for sheet in sheetKeys:
+                    data = dfs[sheet].values.tolist()
+                    break
+        except:
+            pass
+        self.processUploadData(data)
+
+    def handlePreUploadActivity(self):
+        self.setCursorBusy()
+        if self.grid_1.GetNumberRows() > 0:
+            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        self.tree_ctrl_1.UnselectAll()
+        self.tree_ctrl_2.UnselectAll()
+        for item in self.uploadCSVTreeItems:
+            self.tree_ctrl_2.Delete(item)
+        self.uploadCSVTreeItems = []
+
+    def processUploadData(self, data):
+        if data:
+            for row in data:
+                if row != self.expectedHeaders:
+                    self.grid_1.AppendRows(1)
+                    colNum = 0
+                    rowEntry = []
+                    for col in row:
+                        self.grid_1.SetCellValue(
+                            self.grid_1.GetNumberRows() - 1, colNum, str(col)
+                        )
+                        if (colNum == 0 or colNum == 1) and not isApiKey(str(col)):
+                            groupId = None
+                            if str(col) in self.groupNameToId:
+                                groupId = self.groupNameToId[str(col)]
+                            if groupId:
+                                groupId = groupId[0]
+                                rowEntry.append(groupId)
+                            else:
+                                rowEntry.append(str(col))
                         else:
                             rowEntry.append(str(col))
-                    else:
-                        rowEntry.append(str(col))
-                    colNum += 1
-                if rowEntry[0] in self.uploadTreeItems:
-                    item = self.uploadTreeItems[rowEntry[0]]
-                    self.tree_ctrl_2.SetItemFont(
-                        item,
-                        wx.Font(
-                            Globals.FONT_SIZE,
-                            wx.FONTFAMILY_DEFAULT,
-                            wx.FONTSTYLE_NORMAL,
-                            wx.FONTWEIGHT_BOLD,
-                            True,
-                            "NormalBold",
-                        ),
-                    )
-                    self.tree_ctrl_2.SetItemTextColour(item, Color.blue.value)
-                    name = rowEntry[0]
-                    if isApiKey(name) and rowEntry[0] in self.groupIdToName:
-                        name = self.groupIdToName[rowEntry[0]]
-                    if len(rowEntry) > 2 and rowEntry[2]:
-                        name = "%s (Deletable;Rename To: %s)" % (
-                            self.tree_ctrl_2.GetItemText(item),
-                            rowEntry[2],
+                        colNum += 1
+                    if rowEntry[0] in self.uploadTreeItems:
+                        item = self.uploadTreeItems[rowEntry[0]]
+                        self.tree_ctrl_2.SetItemFont(
+                            item,
+                            wx.Font(
+                                Globals.FONT_SIZE,
+                                wx.FONTFAMILY_DEFAULT,
+                                wx.FONTSTYLE_NORMAL,
+                                wx.FONTWEIGHT_BOLD,
+                                True,
+                                "NormalBold",
+                            ),
                         )
-                    else:
-                        name = "%s (Deletable)" % (self.tree_ctrl_2.GetItemText(item))
-                    self.tree_ctrl_2.SetItemText(item, name)
-                elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
-                    item = self.uploadTreeItems[rowEntry[1]]
-                    name = rowEntry[0]
-                    if isApiKey(name) and rowEntry[0] in self.groupIdToName:
-                        name = self.groupIdToName[rowEntry[0]]
-                    if len(rowEntry) > 2 and rowEntry[2]:
-                        name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
-                    else:
-                        name = "%s (To Add)" % (rowEntry[0])
-                    entry = self.tree_ctrl_2.AppendItem(item, name)
-                    self.tree_ctrl_2.SetItemFont(
-                        entry,
-                        wx.Font(
-                            Globals.FONT_SIZE,
-                            wx.FONTFAMILY_DEFAULT,
-                            wx.FONTSTYLE_NORMAL,
-                            wx.FONTWEIGHT_BOLD,
-                            True,
-                            "NormalBold",
-                        ),
-                    )
-                    self.tree_ctrl_2.SetItemTextColour(entry, Color.blue.value)
-                    self.uploadTreeItems[rowEntry[0]] = entry
-                    self.uploadTreeItems[name] = entry
+                        self.tree_ctrl_2.SetItemTextColour(item, Color.blue.value)
+                        name = rowEntry[0]
+                        if isApiKey(name) and rowEntry[0] in self.groupIdToName:
+                            name = self.groupIdToName[rowEntry[0]]
+                        if len(rowEntry) > 2 and rowEntry[2]:
+                            name = "%s (Deletable;Rename To: %s)" % (
+                                self.tree_ctrl_2.GetItemText(item),
+                                rowEntry[2],
+                            )
+                        else:
+                            name = "%s (Deletable)" % (self.tree_ctrl_2.GetItemText(item))
+                        self.tree_ctrl_2.SetItemText(item, name)
+                    elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
+                        item = self.uploadTreeItems[rowEntry[1]]
+                        name = rowEntry[0]
+                        if isApiKey(name) and rowEntry[0] in self.groupIdToName:
+                            name = self.groupIdToName[rowEntry[0]]
+                        if len(rowEntry) > 2 and rowEntry[2]:
+                            name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
+                        else:
+                            name = "%s (To Add)" % (rowEntry[0])
+                        entry = self.tree_ctrl_2.AppendItem(item, name)
+                        self.tree_ctrl_2.SetItemFont(
+                            entry,
+                            wx.Font(
+                                Globals.FONT_SIZE,
+                                wx.FONTFAMILY_DEFAULT,
+                                wx.FONTSTYLE_NORMAL,
+                                wx.FONTWEIGHT_BOLD,
+                                True,
+                                "NormalBold",
+                            ),
+                        )
+                        self.tree_ctrl_2.SetItemTextColour(entry, Color.blue.value)
+                        self.uploadTreeItems[rowEntry[0]] = entry
+                        self.uploadTreeItems[name] = entry
         self.tree_ctrl_2.ExpandAll()
         self.grid_1.AutoSizeColumns()
         self.checkActions()
@@ -962,17 +962,18 @@ class GroupManagement(wx.Dialog):
         event.Skip()
 
     def downloadCSV(self, event):
-        dlg = wx.FileDialog(
+        result = None
+        inFile = None
+        with wx.FileDialog(
             self,
             message="Save Group Manage CSV as...",
             defaultFile="",
             wildcard="*.csv",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        )
-        result = dlg.ShowModal()
-        inFile = dlg.GetPath()
-        correctSaveFileName(inFile)
-        dlg.DestroyLater()
+        ) as dlg:
+            result = dlg.ShowModal()
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
 
         if result == wx.ID_OK:
             self.setCursorBusy()

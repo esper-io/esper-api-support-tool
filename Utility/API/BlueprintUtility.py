@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
+import os
+
+import wx
+from esperclient import InlineResponse201
+
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
-import os
-import wx
-
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
 from Utility.API.AppUtilities import (
-    getAllAppVersionsForHost,
     getAllApplicationsForHost,
+    getAllAppVersionsForHost,
     uploadApplicationForHost,
 )
 from Utility.API.CommandUtility import postEsperCommand
@@ -26,14 +28,11 @@ from Utility.Resource import (
     getHeader,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,
     performPostRequestWithRetry,
 )
-
-from esperclient import InlineResponse201
 
 
 def checkBlueprintsIsEnabled():
@@ -129,70 +128,70 @@ def getBlueprint(id):
     return resp
 
 
-@api_tool_decorator()
-def getAllBlueprintFromHost(host, key, enterprise, id):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{id}".format(
-        baseUrl=host, enterprise_id=enterprise, id=id
-    )
-    resp = performGetRequestWithRetry(
-        url,
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-        },
-    )
-    return resp
+# @api_tool_decorator()
+# def getAllBlueprintFromHost(host, key, enterprise, id):
+#     url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{id}".format(
+#         baseUrl=host, enterprise_id=enterprise, id=id
+#     )
+#     resp = performGetRequestWithRetry(
+#         url,
+#         headers={
+#             "Authorization": f"Bearer {key}",
+#             "Content-Type": "application/json",
+#         },
+#     )
+#     return resp
 
 
-@api_tool_decorator()
-def getBlueprintRevisions(id):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{id}/revisions/".format(
-        baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id, id=id
-    )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
+# @api_tool_decorator()
+# def getBlueprintRevisions(id):
+#     url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{id}/revisions/".format(
+#         baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id, id=id
+#     )
+#     resp = performGetRequestWithRetry(url, headers=getHeader())
+#     return resp
 
 
-@api_tool_decorator()
-def getBlueprintRevision(blueprint_id, revision_id):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{blueprintId}/revisions/{revisionId}/".format(
-        baseUrl=Globals.configuration.host,
-        enterprise_id=Globals.enterprise_id,
-        blueprintId=blueprint_id,
-        revisionId=revision_id,
-    )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
+# @api_tool_decorator()
+# def getBlueprintRevision(blueprint_id, revision_id):
+#     url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{blueprintId}/revisions/{revisionId}/".format(
+#         baseUrl=Globals.configuration.host,
+#         enterprise_id=Globals.enterprise_id,
+#         blueprintId=blueprint_id,
+#         revisionId=revision_id,
+#     )
+#     resp = performGetRequestWithRetry(url, headers=getHeader())
+#     return resp
 
 
-@api_tool_decorator()
-def getGroupBlueprintRevision(groupId):
-    url = (
-        "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
-            baseUrl=Globals.configuration.host,
-            enterprise_id=Globals.enterprise_id,
-            group_id=groupId,
-        )
-    )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
+# @api_tool_decorator()
+# def getGroupBlueprintRevision(groupId):
+#     url = (
+#         "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
+#             baseUrl=Globals.configuration.host,
+#             enterprise_id=Globals.enterprise_id,
+#             group_id=groupId,
+#         )
+#     )
+#     resp = performGetRequestWithRetry(url, headers=getHeader())
+#     return resp
 
 
-@api_tool_decorator()
-def getGroupBlueprint(host, key, enterprise, groupId):
-    url = (
-        "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
-            baseUrl=host, enterprise_id=enterprise, group_id=groupId
-        )
-    )
-    resp = performGetRequestWithRetry(
-        url,
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-        },
-    )
-    return resp
+# @api_tool_decorator()
+# def getGroupBlueprint(host, key, enterprise, groupId):
+#     url = (
+#         "{baseUrl}/enterprise/{enterprise_id}/devicegroup/{group_id}/blueprint/".format(
+#             baseUrl=host, enterprise_id=enterprise, group_id=groupId
+#         )
+#     )
+#     resp = performGetRequestWithRetry(
+#         url,
+#         headers={
+#             "Authorization": f"Bearer {key}",
+#             "Content-Type": "application/json",
+#         },
+#     )
+#     return resp
 
 
 @api_tool_decorator()
@@ -285,7 +284,9 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                 missingContent if missingContent else None,
             ),
         )
+        Globals.OPEN_DIALOGS.append(result)
         res = result.ShowModal()
+        Globals.OPEN_DIALOGS.remove(result)
 
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
@@ -373,7 +374,7 @@ def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
             50,
             "Attempting to process wallpapers",
         )
-        if blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+        if blueprint and blueprint["latest_revision"]["display_branding"]["wallpapers"]:
             bgList = []
             numTotal = len(
                 blueprint["latest_revision"]["display_branding"]["wallpapers"]
@@ -546,11 +547,11 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                             "version_codes" in app
                             and (
                                 version["version_code"] == app["version_codes"][0]
-                                or version["build_number"] == app["version_codes"][0]
+                                or version["build_number"] in app["version_codes"][0]
                             )
                         )
-                        or version["version_code"] == app["version_name"]
-                        or version["build_number"] == app["version_code"]
+                        or "version_name" in app and version["version_code"] == app["version_name"]
+                        or "version_code" in app and version["build_number"] == app["version_code"]
                     ):
                         if app["is_g_play"] and version["is_g_play"]:
                             # TODO: Add properly

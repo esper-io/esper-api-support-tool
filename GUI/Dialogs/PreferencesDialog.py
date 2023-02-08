@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
+import os
+
 import wx
+import wx.adv as wxadv
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 
 
 class PreferencesDialog(wx.Dialog):
@@ -18,6 +23,7 @@ class PreferencesDialog(wx.Dialog):
         self.SetSize(self.size)
         self.SetMinSize(self.size)
         self.SetThemeEnabled(False)
+        self.file_location = os.getcwd()
 
         self.parent = parent
         self.prefs = {}
@@ -57,7 +63,14 @@ class PreferencesDialog(wx.Dialog):
             "appFilter",
             "maxSplitFileSize",
             "allowAutoIssuePost",
+            "appColFilter",
+            "scheduleSaveLocation",
+            "scheduleSaveType",
+            "scheduleEnabled",
+            "scheduleReportType",
+            "scheduleInterval",
         ]
+        self.appColFilter = Globals.APP_COL_FILTER
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -226,17 +239,6 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
         self.spin_ctrl_1.SetValue(Globals.limit)
 
-        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
-            self.report,
-            sizer_10,
-            "Load X Number of Devices in Grid",
-            wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
-        )
-        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
-        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
         # Display Options
         self.display = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.display.Hide()
@@ -299,9 +301,9 @@ class PreferencesDialog(wx.Dialog):
                 Globals.MIN_SHEET_CHUNK_SIZE,
             ),
         )
-        self.spin_ctrl_12.SetMin(Globals.MIN_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetMax(Globals.MAX_SHEET_CHUNK_SIZE / 1000)
-        self.spin_ctrl_12.SetValue(Globals.SHEET_CHUNK_SIZE / 1000)
+        self.spin_ctrl_12.SetMin(int(Globals.MIN_SHEET_CHUNK_SIZE / 1000))
+        self.spin_ctrl_12.SetMax(int(Globals.MAX_SHEET_CHUNK_SIZE / 1000))
+        self.spin_ctrl_12.SetValue(int(Globals.SHEET_CHUNK_SIZE / 1000))
 
         # Command Preferences
         self.command = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -400,12 +402,23 @@ class PreferencesDialog(wx.Dialog):
             "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
+        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
+            self.grid,
+            sizer_16,
+            "Load X Number of Devices in Grid",
+            wx.SpinCtrl,
+            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
+        )
+        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
+        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
+        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
+
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
         sizer_5.Add(self.app, 1, wx.EXPAND, 0)
 
-        sizer_9 = wx.FlexGridSizer(5, 1, 0, 0)
+        sizer_9 = wx.FlexGridSizer(6, 1, 0, 0)
 
         (_, _, self.checkbox_2,) = self.addPrefToPanel(
             self.app,
@@ -415,12 +428,12 @@ class PreferencesDialog(wx.Dialog):
             "Fetches all installed applications, including those that are hidden.\nDefault is Enterprise apps only.",
         )
 
-        (_, _, self.checkbox_4,) = self.addPrefToPanel(
-            self.app,
-            sizer_9,
-            "Show App's Package Name",
-            wx.CheckBox,
-            "Displays an Application's Package Name (e.g., In Tags or the Application input)",
+        static_line_6 = wx.StaticLine(self.app, wx.ID_ANY)
+        sizer_9.Add(
+            static_line_6,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
         )
 
         (_, _, self.checkbox_11,) = self.addPrefToPanel(
@@ -431,6 +444,22 @@ class PreferencesDialog(wx.Dialog):
             "Set App State to SHOW before setting the application as a Kiosk app on device.",
         )
 
+        static_line_7 = wx.StaticLine(self.app, wx.ID_ANY)
+        sizer_9.Add(
+            static_line_7,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.TOP,
+            5,
+        )
+
+        (_, _, self.checkbox_4,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Show App's Package Name",
+            wx.CheckBox,
+            "Displays an Application's Package Name (e.g., In Tags or the Application input)",
+        )
+
         (_, _, self.checkbox_22,) = self.addPrefToPanel(
             self.app,
             sizer_9,
@@ -438,6 +467,72 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Displays the App Version Name instead of the Version Code",
         )
+
+        (_, _, self.btn_appFilter,) = self.addPrefToPanel(
+            self.app,
+            sizer_9,
+            "Filter App Column",
+            wx.Button,
+            "Filter the Application Column to only show particular applications.",
+        )
+
+        # Schedule Preferences
+        self.schedule = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
+        self.schedule.Hide()
+        sizer_5.Add(self.schedule, 1, wx.EXPAND, 0)
+
+        sizer_20 = wx.FlexGridSizer(7, 1, 0, 0)
+
+        (_, _, self.checkbox_26,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Enable Schedule Report",
+            wx.CheckBox,
+            "Generates a report at the specified time (if the tool is open) and again some interval later."
+            + " If the tool is being used when the scheduled time arrives the report will be delayed until the task is done."
+            + " The report will be auto saved at the appointed location. Report will generate a report for the whole endpoint.",
+        )
+
+        (_, _, self.btn_save_report,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Report Location",
+            wx.Button,
+            "Where the report should be saved.",
+        )
+        self.btn_save_report.Bind(wx.EVT_BUTTON, self.reportSaveLocation)
+
+        self.reportSaveTypes = ["xlsx", "csv"]
+        (_, _, self.reportSaveType,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Save File Format",
+            wx.ComboBox,
+            "File type the report should be saved as.",
+            choice=self.reportSaveTypes,
+        )
+        self.reportSaveType.SetSelection(0)
+
+        (_, _, self.reportType,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Report Type",
+            wx.ComboBox,
+            "The type of report should be generated at the appointed time. Options: Device, Device & Network, App, All.",
+            choice=["Device", "Device & Network", "App", "All"],
+        )
+        self.reportType.SetSelection(1)
+
+        (_, _, self.spin_ctrl_13,) = self.addPrefToPanel(
+            self.schedule,
+            sizer_20,
+            "Schedule Interval",
+            wx.SpinCtrl,
+            "Schedule Interval when the report will be regenerated. Interval is in Hours.",
+        )
+        self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
+        self.spin_ctrl_13.SetMin(Globals.MIN_SCHEDULE_INTERVAL)
+        self.spin_ctrl_13.SetMax(Globals.MAX_SCHEDULE_INTERVAL)
 
         # Prompts Preferences
         self.prompts = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -470,6 +565,9 @@ class PreferencesDialog(wx.Dialog):
         sizer_2.AddButton(self.button_APPLY)
 
         sizer_2.Realize()
+
+        sizer_20.AddGrowableCol(0)
+        self.schedule.SetSizer(sizer_20)
 
         sizer_19.AddGrowableCol(0)
         self.prompts.SetSizer(sizer_19)
@@ -515,6 +613,7 @@ class PreferencesDialog(wx.Dialog):
             "Command": self.command,
             "Grid": self.grid,
             "Report": self.report,
+            "Schedule": self.schedule,
             "Prompts": self.prompts,
         }
         for key in self.sections.keys():
@@ -523,6 +622,7 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_LISTBOX, self.showMatchingPanel, self.list_box_1)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
+        self.btn_appFilter.Bind(wx.EVT_BUTTON, self.appFilterDlg)
 
         self.Fit()
 
@@ -601,6 +701,12 @@ class PreferencesDialog(wx.Dialog):
             "appFilter": self.combobox_2.GetValue(),
             "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
             "allowAutoIssuePost": self.checkbox_27.IsChecked(),
+            "appColFilter": self.appColFilter,
+            "scheduleSaveLocation": self.file_location,
+            "scheduleSaveType": self.reportSaveType.GetValue(),
+            "scheduleEnabled": self.checkbox_26.IsChecked(),
+            "scheduleReportType": self.reportType.GetValue(),
+            "scheduleInterval": self.spin_ctrl_13.GetValue(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -638,6 +744,13 @@ class PreferencesDialog(wx.Dialog):
         elif Globals.SHEET_CHUNK_SIZE > Globals.MAX_SHEET_CHUNK_SIZE:
             Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
+        Globals.APP_COL_FILTER = self.appColFilter
+
+        Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
+        Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
+        Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
+        Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
+        Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
 
         if Globals.APPS_IN_DEVICE_GRID:
             Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
@@ -956,6 +1069,47 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.AUTO_REPORT_ISSUES = False
 
+        if "appColFilter" in self.prefs and type(self.prefs["appColFilter"]) is list:
+            Globals.APP_COL_FILTER = self.prefs["appColFilter"]
+
+        if self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26):
+            Globals.SCHEDULE_ENABLED = True
+        else:
+            Globals.SCHEDULE_ENABLED = False
+
+        if "scheduleReportType" in self.prefs and self.prefs["scheduleReportType"]:
+            if isinstance(self.prefs["scheduleReportType"], str):
+                indx = self.reportType.GetItems().index(
+                    self.prefs["scheduleReportType"]
+                )
+                self.reportType.SetSelection(indx)
+            else:
+                self.reportType.SetSelection(self.prefs["scheduleReportType"])
+            Globals.SCHEDULE_TYPE = self.reportType.GetValue().lower()
+
+        if "scheduleInterval" in self.prefs and self.prefs["scheduleInterval"]:
+            try:
+                Globals.SCHEDULE_INTERVAL = int(self.prefs["scheduleInterval"])
+            except:
+                pass
+            if Globals.SCHEDULE_INTERVAL < Globals.MIN_SCHEDULE_INTERVAL:
+                Globals.SCHEDULE_INTERVAL = Globals.MIN_SCHEDULE_INTERVAL
+            if Globals.SCHEDULE_INTERVAL > Globals.MAX_SCHEDULE_INTERVAL:
+                Globals.SCHEDULE_INTERVAL = Globals.MAX_SCHEDULE_INTERVAL
+            self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
+
+        if "scheduleSaveLocation" in self.prefs and self.prefs["scheduleSaveLocation"]:
+            self.file_location = self.prefs["scheduleSaveLocation"]
+            Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
+        else:
+            self.file_location = Globals.SCHEDULE_LOCATION
+
+        if "scheduleSaveType" in self.prefs and self.prefs["scheduleSaveType"]:
+            Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
+            self.reportSaveType.SetSelection(
+                self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
+            )
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -979,6 +1133,9 @@ class PreferencesDialog(wx.Dialog):
     def GetPrefs(self):
         if not self.prefs:
             self.prefs = {}
+
+        self.prefs["windowPosition"] = self.getDefaultKeyValue("windowPosition")
+        self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
 
         for key in self.prefKeys:
             if key not in self.prefs.keys() or self.prefs[key] is None:
@@ -1061,6 +1218,18 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SHEET_CHUNK_SIZE
         elif key == "allowAutoIssuePost":
             return Globals.AUTO_REPORT_ISSUES
+        elif key == "appColFilter":
+            return Globals.APP_COL_FILTER
+        elif key == "scheduleSaveLocation":
+            return Globals.SCHEDULE_LOCATION
+        elif key == "scheduleSaveType":
+            return Globals.SCHEDULE_SAVE
+        elif key == "scheduleEnabled":
+            return Globals.SCHEDULE_ENABLED
+        elif key == "scheduleReportType":
+            return Globals.SCHEDULE_TYPE
+        elif key == "scheduleInterval":
+            return Globals.SCHEDULE_INTERVAL
         else:
             return None
 
@@ -1069,7 +1238,7 @@ class PreferencesDialog(wx.Dialog):
         event.Skip()
 
     def addPrefToPanel(
-        self, sourcePanel, sourceSizer, label, inputObjType, toolTip="", choice=[]
+        self, sourcePanel, sourceSizer, labelText, inputObjType, toolTip="", choice=[]
     ):
         panel = wx.Panel(sourcePanel, wx.ID_ANY)
         if sourceSizer.GetEffectiveRowsCount() >= sourceSizer.GetRows():
@@ -1081,7 +1250,7 @@ class PreferencesDialog(wx.Dialog):
         label = wx.StaticText(
             panel,
             wx.ID_ANY,
-            label,
+            labelText,
             style=wx.ST_ELLIPSIZE_END,
         )
         label.SetToolTip(toolTip)
@@ -1104,10 +1273,50 @@ class PreferencesDialog(wx.Dialog):
                 choices=choice,
                 style=wx.CB_DROPDOWN | wx.CB_READONLY,
             )
+        elif inputObjType == wx.Button:
+            inputObj = wx.Button(panel_2, id=wx.ID_ANY, label=labelText)
+        elif inputObjType == wxadv.TimePickerCtrl:
+            inputObj = wxadv.TimePickerCtrl(panel_2, id=wx.ID_ANY)
         if inputObj:
+            inputObj.SetToolTip(toolTip)
             grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
         panel.SetSizer(sizer)
         panel_2.SetSizer(grid_sizer)
 
         return panel, panel_2, inputObj
+
+    def appFilterDlg(self, event):
+        with LargeTextEntryDialog(
+            None,
+            "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
+            "App Column Filter",
+            textPlaceHolder=",".join(self.appColFilter)
+            if self.appColFilter
+            else ",".join(Globals.APP_COL_FILTER)
+            if Globals.APP_COL_FILTER
+            else "",
+        ) as textDialog:
+            Globals.OPEN_DIALOGS.append(textDialog)
+            if textDialog.ShowModal() == wx.ID_OK:
+                appList = textDialog.GetValue()
+                splitList = appList.split(",")
+                properAppList = []
+                for app in splitList:
+                    cleanPkgName = app.strip()
+                    if cleanPkgName:
+                        properAppList.append(cleanPkgName)
+                self.appColFilter = properAppList
+            Globals.OPEN_DIALOGS.remove(textDialog)
+
+    def reportSaveLocation(self, event):
+        dlg = wx.DirDialog(
+            self,
+            message="Report Save Location and File Type",
+            defaultPath=str(self.file_location),
+        )
+        Globals.OPEN_DIALOGS.append(dlg)
+        result = dlg.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dlg)
+        if result == wx.ID_OK:
+            self.file_location = dlg.GetPath()

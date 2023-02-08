@@ -3,20 +3,19 @@
 import json
 import time
 
+import esperclient
 from esperclient.rest import ApiException
+
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-import esperclient
-import Common.Globals as Globals
-
 from Utility.Resource import (
     enforceRateLimit,
     getHeader,
     logBadResponse,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,
@@ -179,11 +178,11 @@ def get_all_groups(
 ):
     response = getAllGroupsHelper(name, limit, offset, maxAttempt)
     groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
-    if hasattr(response, "results"):
+    if hasattr(response, "results") and groups:
         response.results = response.results + groups
         response.next = None
         response.prev = None
-    elif type(response) is dict and "results" in response:
+    elif type(response) is dict and "results" in response and groups:
         response["results"] = response["results"] + groups
         response["next"] = None
         response["prev"] = None
@@ -328,3 +327,15 @@ def createDeviceGroupForHost(
         return api_response
     except Exception as e:
         raise e
+
+
+def getProperGroupId(groups):
+    properGroupList = []
+    for group in groups:
+        if len(group.split("-")) == 5:
+            properGroupList.append(group)
+        else:
+            json_rsp = get_all_groups(name=group)
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+                properGroupList.append(json_rsp["results"][0]["id"])
+    return properGroupList

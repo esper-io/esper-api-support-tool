@@ -33,7 +33,7 @@ VSVersionInfo(
         StringStruct(u'FileDescription', u'Esper API Support Tool'),
         StringStruct(u'FileVersion', u'0.187'),
         StringStruct(u'InternalName', u'EAST'),
-        StringStruct(u'LegalCopyright', u'No Copyright © 2021'),
+        StringStruct(u'LegalCopyright', u'No Copyright © 2022'),
         StringStruct(u'OriginalFilename', u'Esper API Support Tool.exe'),
         StringStruct(u'ProductName', u'Esper API Support Tool'),
         StringStruct(u'ProductVersion', u'0.187')])

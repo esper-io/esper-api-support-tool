@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import json
+
 import wx
 import wx.html as wxHtml
-import Common.Globals as Globals
 
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import (
     checkBlueprintEnabled,
@@ -12,10 +13,7 @@ from Utility.API.BlueprintUtility import (
     getGroupBlueprintDetailForHost,
 )
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (
-    getEsperConfig,
-    openWebLinkInBrowser,
-)
+from Utility.Resource import getEsperConfig, openWebLinkInBrowser
 
 
 class BlueprintsDialog(wx.Dialog):

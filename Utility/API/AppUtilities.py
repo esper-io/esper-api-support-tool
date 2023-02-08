@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
 import string
-import esperclient
 import time
+
+import esperclient
 import wx
-import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
-
-from Common.decorator import api_tool_decorator
-
 from esperclient.rest import ApiException
 
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
+from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.API.CommandUtility import (
-    executeCommandOnDevice,
-    executeCommandOnGroup,
-)
 from Utility.Resource import (
     displayMessageBox,
     enforceRateLimit,
@@ -23,7 +19,6 @@ from Utility.Resource import (
     logBadResponse,
     postEventToFrame,
 )
-
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performGetRequestWithRetry,
@@ -412,21 +407,21 @@ def getAllAppVersionsForHost(
         )
 
 
-def getApplication(application_id):
-    api_instance = esperclient.ApplicationApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    enterprise_id = Globals.enterprise_id
-    try:
-        # Get application information
+# def getApplication(application_id):
+#     api_instance = esperclient.ApplicationApi(
+#         esperclient.ApiClient(Globals.configuration)
+#     )
+#     enterprise_id = Globals.enterprise_id
+#     try:
+#         # Get application information
 
-        api_response = api_instance.get_application(application_id, enterprise_id)
-        ApiToolLog().LogApiRequestOccurrence(
-            "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
-        )
-        return api_response
-    except ApiException as e:
-        print("Exception when calling ApplicationApi->get_application: %s\n" % e)
+#         api_response = api_instance.get_application(application_id, enterprise_id)
+#         ApiToolLog().LogApiRequestOccurrence(
+#             "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
+#         )
+#         return api_response
+#     except ApiException as e:
+#         print("Exception when calling ApplicationApi->get_application: %s\n" % e)
 
 
 def getAppVersions(

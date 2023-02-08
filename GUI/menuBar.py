@@ -1,24 +1,25 @@
 #!/usr/bin/env python
 
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility import EventUtility
-from Utility.EastUtility import processCollectionDevices
-from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
-from GUI.Dialogs.CollectionsDlg import CollectionsDialog
-from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
-from Common.decorator import api_tool_decorator
-from GUI.UserCreation import UserCreation
-import wx
-import wx.adv as adv
-import Common.Globals as Globals
 import platform
 
+import wx
+import wx.adv as adv
 
+import Common.Globals as Globals
+from Common.decorator import api_tool_decorator
+from GUI.Dialogs.CollectionsDlg import CollectionsDialog
+from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from GUI.UserCreation import UserCreation
+from Utility import EventUtility
+from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from Utility.EastUtility import processCollectionDevices
 from Utility.Logging.ApiToolLogging import ApiToolLog
-
 from Utility.Resource import (
-    downloadFileFromUrl,
     checkForUpdate,
+    downloadFileFromUrl,
+    openWebLinkInBrowser,
+    postEventToFrame,
+    resourcePath,
 )
 
 
@@ -182,6 +183,11 @@ class ToolMenuBar(wx.MenuBar):
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
+        widgetMenu = wx.MenuItem(runMenu, wx.ID_ANY, "&Configure Widgets\tCtrl+Shift+W")
+        self.configureWidgets = runMenu.Append(widgetMenu)
+
+        runMenu.Append(wx.ID_SEPARATOR)
+
         self.userSubMenu = wx.Menu()
         fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
@@ -243,6 +249,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.toggleCloneMenuOptions(False)
 
+        self.sensitiveMenuOptions = [0, 1, 2, 3, 4, 5]
         self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
         self.Append(editMenu, "&Edit")
@@ -311,6 +318,9 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
+        )
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -321,7 +331,7 @@ class ToolMenuBar(wx.MenuBar):
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
-        info.SetCopyright("No Copyright (C) 2021 Esper")
+        info.SetCopyright("No Copyright (C) 2022 Esper")
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
@@ -367,6 +377,7 @@ class ToolMenuBar(wx.MenuBar):
                         "Update",
                         wx.YES_NO | wx.ICON_QUESTION,
                     )
+                    Globals.OPEN_DIALOGS.append(dlg)
                     if dlg.ShowModal() == wx.ID_YES:
                         result = None
                         try:
@@ -384,6 +395,7 @@ class ToolMenuBar(wx.MenuBar):
                         else:
                             icon = wx.ICON_ERROR
                             msg = "An error occured while downloading the update. Please try again later."
+                    Globals.OPEN_DIALOGS.remove(dlg)
             else:
                 msg = "You are up-to-date!"
         else:
@@ -393,6 +405,9 @@ class ToolMenuBar(wx.MenuBar):
             )
         if msg and showDlg:
             wx.MessageBox(msg, style=icon)
+            if result:
+                openWebLinkInBrowser(result)
+                Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
@@ -420,6 +435,7 @@ class ToolMenuBar(wx.MenuBar):
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
         ) as textDialog:
+            Globals.OPEN_DIALOGS.append(textDialog)
             if textDialog.ShowModal() == wx.ID_OK:
                 eql = textDialog.GetValue()
                 if eql:
@@ -435,6 +451,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            Globals.OPEN_DIALOGS.remove(textDialog)
 
     @api_tool_decorator()
     def onCollection(self, event):
@@ -442,6 +459,7 @@ class ToolMenuBar(wx.MenuBar):
         self.parentFrame.setCursorBusy()
         self.parentFrame.onClearGrids(None)
         with CollectionsDialog(self.parentFrame) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
             if dlg.ShowModal() == wx.ID_EXECUTE:
                 eql = dlg.getSelectionEql()
                 if eql:
@@ -457,6 +475,7 @@ class ToolMenuBar(wx.MenuBar):
                     )
             else:
                 self.parentFrame.setCursorDefault()
+            Globals.OPEN_DIALOGS.remove(dlg)
             dlg.DestroyLater()
 
     @api_tool_decorator()
@@ -476,6 +495,7 @@ class ToolMenuBar(wx.MenuBar):
     def AddUser(self, event):
         if not self.uc:
             self.uc = UserCreation(self)
+            Globals.OPEN_DIALOGS.append(self.uc)
         self.parentFrame.toggleEnabledState(False)
         self.parentFrame.isRunning = True
         self.uc.Show()
@@ -525,7 +545,3 @@ class ToolMenuBar(wx.MenuBar):
             self.clone.Enable(enable=bool(not showBlueprint))
             self.cloneBP.Enable(enable=showBlueprint)
             self.newBlueprintApp.Enable(enable=showBlueprint)
-
-    def toggleAddTenantOptions(self, state):
-        self.defaultConfigVal.Enable(enable=state)
-        self.fileOpenAuth.Enable(enable=state)

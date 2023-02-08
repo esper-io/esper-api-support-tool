@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import platform
+
+import wx
+
 from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
-import wx
 
 
 class ToolsToolBar(wx.ToolBar):

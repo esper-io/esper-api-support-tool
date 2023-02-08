@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import requests
-import Common.Globals as Globals
+import json
 import os
 import sys
-import json
+
+import requests
+
+import Common.Globals as Globals
 
 
 class IssueTracker:
@@ -35,6 +37,7 @@ class IssueTracker:
             base_path = sys._MEIPASS
         except Exception:
             base_path = os.path.abspath(".")
+            base_path = os.path.join(base_path, "Utility", "Logging")
 
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
@@ -48,9 +51,15 @@ class IssueTracker:
             "https://api.github.com/repos/esper-io/esper-api-support-tool/issues/%s/comments"
             % issueNum
         )
-        body = {"body": body}
-        resp = self.performPostRequestWithRetry(url, json=body)
-        return resp
+        webBody = {"body": "\n".join(body)}
+        token = self.getAccessToken()
+        if token:
+            header = {
+                "Authorization": "Bearer %s" % token,
+                "Content-Type": "application/json",
+            }
+            resp = self.performPostRequestWithRetry(url, headers=header, json=webBody)
+            return resp
 
     def performGetRequestWithRetry(
         self, url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY

@@ -2,12 +2,7 @@
 
 import Common.Globals as Globals
 from Utility.API.GroupUtility import getAllGroups
-
-from Utility.Resource import (
-    getHeader,
-    isApiKey,
-)
-
+from Utility.Resource import getHeader, isApiKey
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performDeleteRequestWithRetry,
@@ -46,9 +41,12 @@ def getUserBody(user):
             groups.append(group)
         else:
             resp = getAllGroups(name=group)
-            if resp and resp.results:
+            if resp and hasattr(resp, "results") and resp.results:
                 for gp in resp.results:
                     groups.append(gp.id)
+            elif resp and type(resp) is dict and "results" in resp and resp["results"]:
+                for gp in resp["results"]:
+                    groups.append(gp["id"])
     body["profile"]["groups"] = groups
     body["profile"]["enterprise"] = Globals.enterprise_id
     body["profile"]["is_customer"] = True
@@ -65,14 +63,12 @@ def createNewUser(user):
     return resp
 
 
-def modifyUser(user):
+def modifyUser(allUsers, user):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for usr in users["results"]:
+    for usr in allUsers["results"]:
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
@@ -86,14 +82,12 @@ def modifyUser(user):
     return resp
 
 
-def deleteUser(user):
+def deleteUser(allUsers, user):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
-    users = performGetRequestWithRetry(url, headers=getHeader()).json()
     userId = ""
-    for usr in users["results"]:
+    for usr in allUsers["results"]:
         if usr["username"] == user["username"]:
             userId = usr["id"]
             break
@@ -107,7 +101,6 @@ def deleteUser(user):
 
 
 def getUsers(
-    userId=None,
     limit=Globals.limit,
     offset=0,
     maxAttempt=Globals.MAX_RETRY,
@@ -121,9 +114,11 @@ def getUsers(
         limit=limit,
         offset=offset,
     )
-    usersResp = performGetRequestWithRetry(url, headers=getHeader())
+    usersResp = performGetRequestWithRetry(
+        url, headers=getHeader(), maxRetry=maxAttempt
+    )
     resp = None
-    if usersResp.status_code < 300:
+    if usersResp and hasattr(usersResp, "status_code") and usersResp.status_code < 300:
         resp = usersResp.json()
     if resp and responses is not None:
         responses.append(resp)

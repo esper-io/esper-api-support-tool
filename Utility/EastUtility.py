@@ -5,18 +5,17 @@ import platform
 import time
 from datetime import datetime
 
-import Common.Globals as Globals
-import esperclient
 import pytz
 import wx
-from Common.decorator import api_tool_decorator
-from Common.enum import DeviceState, GeneralActions
 from esperclient.models.v0_command_args import V0CommandArgs
 from esperclient.rest import ApiException
 
+import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
+from Common.decorator import api_tool_decorator
+from Common.enum import DeviceState, GeneralActions
 from Utility.API.AppUtilities import getDeviceAppsApiUrl, uploadApplication
 from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.API.DeviceUtility import (
@@ -25,6 +24,7 @@ from Utility.API.DeviceUtility import (
     getDeviceDetail,
     getLatestEvent,
     getLatestEventApiUrl,
+    searchForDevice,
 )
 from Utility.API.GroupUtility import fetchGroupName
 from Utility.deviceInfo import constructNetworkInfo
@@ -257,7 +257,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
 
 def processDeviceInDeviceList(
-    device, deviceId, getApps, getLatestEvents, deviceList, indx
+    device, deviceId, getApps, getLatestEvents, deviceList, indx, maxDevices=None
 ):
     additionalInfo = {}
     getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, additionalInfo)
@@ -276,6 +276,10 @@ def processDeviceInDeviceList(
         deviceList,
         indx,
     )
+    if maxDevices:
+        postEventToFrame(
+            eventUtil.myEVT_UPDATE_GAUGE, (int(len(deviceList) / maxDevices * 15)) + 10
+        )
 
 
 def updateGaugeForObtainingDeviceInfo(processed, deviceList):
@@ -647,7 +651,18 @@ def populateDeviceInfoDictionaryComplieData(
         ):
             device["tags"] = []
 
-    apps = apiCalls.createAppList(appData, obtainAppDictEntry=False) if appData else []
+    apps = (
+        apiCalls.createAppList(
+            appData,
+            obtainAppDictEntry=False,
+            filterData=True
+            if Globals.APP_COL_FILTER
+            and not any("" in s for s in Globals.APP_COL_FILTER)
+            else False,
+        )
+        if appData
+        else []
+    )
     json = appData if appData else ""
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json
@@ -1226,12 +1241,11 @@ def clearKnownGroups():
     Globals.knownGroups.clear()
 
 
-def getAllDeviceInfo(frame, action=None):
+def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
     devices = []
-    if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
-        api_instance = esperclient.DeviceApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
+    if len(Globals.frame.sidePanel.selectedDevicesList) > 0 and len(
+        Globals.frame.sidePanel.selectedDevicesList
+    ) < len(frame.sidePanel.devices):
         labels = list(
             filter(
                 lambda key: frame.sidePanel.devices[key]
@@ -1240,25 +1254,18 @@ def getAllDeviceInfo(frame, action=None):
             )
         )
         for label in labels:
-            api_response = api_instance.get_all_devices(
-                Globals.enterprise_id,
-                search=label,
-                limit=Globals.limit,
-                offset=Globals.offset,
+            labelParts = label.split("~")
+            Globals.THREAD_POOL.enqueue(
+                searchForDeviceAndAppendToList, labelParts[2], devices
             )
-            if (
-                api_response
-                and hasattr(api_response, "results")
-                and api_response.results
-            ):
-                devices += api_response.results
-            elif type(api_response) is dict and "results" in api_response:
-                devices += api_response["results"]
-        if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(filter(filterDeviceList, api_response.results))
+        Globals.THREAD_POOL.join(tolerance=1, timeout=3 * 60)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         api_response = getAllDevices(
-            Globals.frame.sidePanel.selectedGroupsList, tolarance=1
+            Globals.frame.sidePanel.selectedGroupsList
+            if Globals.frame.sidePanel.selectedGroupsList and not allDevices
+            else " ",
+            tolarance=tolarance,
+            timeout=3 * 60,
         )
         if api_response:
             if (
@@ -1269,19 +1276,17 @@ def getAllDeviceInfo(frame, action=None):
                 devices += api_response.results
             elif type(api_response) is dict and "results" in api_response:
                 devices += api_response["results"]
-            getAllDevicesFromOffsets(api_response, devices, tolerance=1)
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to get devices",
             )
-        if not Globals.SHOW_DISABLED_DEVICES:
-            api_response["results"] = list(
-                filter(filterDeviceList, api_response["results"])
-            )
 
-    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
-    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching device information")
+    if not Globals.SHOW_DISABLED_DEVICES:
+        devices = list(filter(filterDeviceList, devices))
+
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 10)
+    postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching basic device information")
 
     if hasattr(Globals.frame, "start_time"):
         print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
@@ -1305,24 +1310,58 @@ def getAllDeviceInfo(frame, action=None):
     deviceList = {}
     indx = 0
 
-    for device in api_response["results"]:
-        Globals.THREAD_POOL.enqueue(
-            processDeviceInDeviceList,
-            device,
-            device["id"],
-            getApps,
-            getLatestEvents,
-            deviceList,
-            indx,
-        )
+    postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
+    for device in devices:
+        if type(device) is dict:
+            Globals.THREAD_POOL.enqueue(
+                processDeviceInDeviceList,
+                device,
+                device["id"],
+                getApps,
+                getLatestEvents,
+                deviceList,
+                indx,
+                maxDevices=len(devices),
+            )
+        elif hasattr(device, "id"):
+            Globals.THREAD_POOL.enqueue(
+                processDeviceInDeviceList,
+                device,
+                device.id,
+                getApps,
+                getLatestEvents,
+                deviceList,
+                indx,
+                maxDevices=len(devices),
+            )
         indx += 1
 
-    Globals.THREAD_POOL.join(tolerance=1)
+    Globals.THREAD_POOL.join(tolerance=tolarance)
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
+    postEventToFrame(
+        eventUtil.myEVT_LOG, "Finished fetching extended device information"
+    )
 
     return deviceList
 
 
-def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
+def searchForDeviceAndAppendToList(searchTerm, listToAppend):
+    api_response = searchForDevice(search=searchTerm)
+    if (
+        type(api_response) is dict
+        and "results" in api_response
+        and api_response["results"]
+    ):
+        if len(api_response["results"]) == 1:
+            listToAppend += api_response["results"]
+        else:
+            for device in api_response["results"]:
+                if device["device_name"] == searchTerm:
+                    listToAppend.append(device)
+                    break
+
+
+def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0, timeout=-1):
     count = None
     apiNext = None
     if hasattr(api_response, "count"):
@@ -1343,7 +1382,7 @@ def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0):
                 respOffset,
             )
             respOffsetInt += int(respLimit)
-        Globals.THREAD_POOL.join(tolerance=tolerance)
+        Globals.THREAD_POOL.join(tolerance=tolerance, timeout=timeout)
     res = Globals.THREAD_POOL.results()
     for thread in res:
         if hasattr(thread, "results"):

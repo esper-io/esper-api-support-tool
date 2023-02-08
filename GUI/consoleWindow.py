@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
-from Common.decorator import api_tool_decorator
+import platform
+
 import wx
 import wx.html as wxHtml
-import Common.Globals as Globals
-import platform
-import Utility.EventUtility as eventUtil
 
+import Common.Globals as Globals
+import Utility.EventUtility as eventUtil
+from Common.decorator import api_tool_decorator
 from Common.enum import Color
+from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
 
 
 class Console(wx.Frame):
