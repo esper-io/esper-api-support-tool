@@ -348,7 +348,6 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def updateCheck(self, showDlg=False):
-        icon = wx.ICON_INFORMATION
         msg = ""
         json = None
         try:
@@ -371,48 +370,55 @@ class ToolMenuBar(wx.MenuBar):
                         downloadURL = asset["browser_download_url"]
                         break
                 if downloadURL:
-                    dlg = wx.MessageDialog(
-                        None,
-                        "Update found! Do you want to update?",
-                        "Update",
-                        wx.YES_NO | wx.ICON_QUESTION,
+                    postEventToFrame(
+                        EventUtility.myEVT_PROCESS_FUNCTION,
+                        (self.displayUpdateOnMain, (downloadURL, name)),
                     )
-                    Globals.OPEN_DIALOGS.append(dlg)
-                    if dlg.ShowModal() == wx.ID_YES:
-                        result = None
-                        try:
-                            self.parentFrame.statusBar.gauge.Pulse()
-                            result = downloadFileFromUrl(downloadURL, name)
-                        except Exception as e:
-                            print(e)
-                            ApiToolLog().LogError(e)
-                        if result:
-                            showDlg = True
-                            msg = (
-                                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
-                                % result
-                            )
-                        else:
-                            icon = wx.ICON_ERROR
-                            msg = "An error occured while downloading the update. Please try again later."
-                    Globals.OPEN_DIALOGS.remove(dlg)
             else:
                 msg = "You are up-to-date!"
         else:
-            icon = wx.ICON_ERROR
             msg = (
                 "An error occured while downloading the update. Please try again later."
             )
-        if msg and showDlg:
-            wx.MessageBox(msg, style=icon)
-            if result:
-                openWebLinkInBrowser(result)
-                Globals.frame.OnQuit(None)
-        elif msg:
+        if msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
             )
         self.isCheckingForUpdates = False
+
+    def displayUpdateOnMain(self, downloadURL, name):
+        icon = wx.ICON_INFORMATION
+        msg = ""
+        dlg = wx.MessageDialog(
+            None,
+            "Update found! Do you want to update?",
+            "Update",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        Globals.OPEN_DIALOGS.append(dlg)
+        if dlg.ShowModal() == wx.ID_YES:
+            result = None
+            try:
+                self.parentFrame.statusBar.gauge.Pulse()
+                result = downloadFileFromUrl(downloadURL, name)
+            except Exception as e:
+                print(e)
+                ApiToolLog().LogError(e)
+            if result:
+                msg = (
+                    "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
+                    % result
+                )
+            else:
+                icon = wx.ICON_ERROR
+                msg = "An error occured while downloading the update. Please try again later."
+        Globals.OPEN_DIALOGS.remove(dlg)
+
+        if msg:
+            wx.MessageBox(msg, style=icon)
+            if result:
+                openWebLinkInBrowser(result)
+                Globals.frame.OnQuit(None)
 
     @api_tool_decorator()
     def uncheckConsole(self, event):
