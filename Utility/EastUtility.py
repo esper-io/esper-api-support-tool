@@ -697,6 +697,9 @@ def populateDeviceInfoDictionaryComplieData(
     deviceInfo["location_info"] = location_info
     deviceInfo["network_event"] = network_info
 
+    if "gpsState" not in deviceInfo or not deviceInfo["gpsState"]:
+        deviceInfo["gpsState"] = "No data available"
+
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:
             deviceInfo["last_seen"] = str(
@@ -1105,6 +1108,9 @@ def populateDeviceInfoDictionary(
 
     deviceInfo["location_info"] = location_info
     deviceInfo["network_event"] = network_info
+
+    if "gpsState" not in deviceInfo or not deviceInfo["gpsState"]:
+        deviceInfo["gpsState"] = "No data available"
 
     if network_info and "createTime" in network_info:
         if Globals.LAST_SEEN_AS_DATE:
