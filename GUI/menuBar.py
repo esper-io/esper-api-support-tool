@@ -372,7 +372,7 @@ class ToolMenuBar(wx.MenuBar):
                 if downloadURL:
                     postEventToFrame(
                         EventUtility.myEVT_PROCESS_FUNCTION,
-                        (self.displayUpdateOnMain, (downloadURL, name)),
+                        (self.displayUpdateOnMain, (downloadURL, name, showDlg)),
                     )
             else:
                 msg = "You are up-to-date!"
@@ -386,7 +386,7 @@ class ToolMenuBar(wx.MenuBar):
             )
         self.isCheckingForUpdates = False
 
-    def displayUpdateOnMain(self, downloadURL, name):
+    def displayUpdateOnMain(self, downloadURL, name, showDlg):
         icon = wx.ICON_INFORMATION
         msg = ""
         dlg = wx.MessageDialog(
@@ -414,11 +414,16 @@ class ToolMenuBar(wx.MenuBar):
                 msg = "An error occured while downloading the update. Please try again later."
         Globals.OPEN_DIALOGS.remove(dlg)
 
-        if msg:
+        if msg and showDlg:
             wx.MessageBox(msg, style=icon)
             if result:
                 openWebLinkInBrowser(result)
                 Globals.frame.OnQuit(None)
+        elif msg:
+            self.parentFrame.Logging(
+                msg, isError=True if "error" in msg.lower() else False
+            )
+        self.isCheckingForUpdates = False
 
     @api_tool_decorator()
     def uncheckConsole(self, event):
