@@ -13,6 +13,7 @@ from GUI.UserCreation import UserCreation
 from Utility import EventUtility
 from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from Utility.EastUtility import processCollectionDevices
+import Utility.Threading.wxThread as wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
     checkForUpdate,
@@ -387,8 +388,6 @@ class ToolMenuBar(wx.MenuBar):
         self.isCheckingForUpdates = False
 
     def displayUpdateOnMain(self, downloadURL, name, showDlg):
-        icon = wx.ICON_INFORMATION
-        msg = ""
         dlg = wx.MessageDialog(
             None,
             "Update found! Do you want to update?",
@@ -397,25 +396,31 @@ class ToolMenuBar(wx.MenuBar):
         )
         Globals.OPEN_DIALOGS.append(dlg)
         if dlg.ShowModal() == wx.ID_YES:
-            result = None
-            try:
-                self.parentFrame.statusBar.gauge.Pulse()
-                result = downloadFileFromUrl(downloadURL, name)
-            except Exception as e:
-                print(e)
-                ApiToolLog().LogError(e)
-            if result:
-                msg = (
-                    "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
-                    % result
-                )
-            else:
-                icon = wx.ICON_ERROR
-                msg = "An error occured while downloading the update. Please try again later."
+            self.parentFrame.statusBar.gauge.Pulse()
+            thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
+            thread.startWithRetry()
+            Globals.THREAD_POOL.enqueue(self.processUpdateResult, thread, showDlg)
         Globals.OPEN_DIALOGS.remove(dlg)
 
+    def processUpdateResult(self, thread, showDlg):
+        icon = wx.ICON_INFORMATION
+        msg = ""
+        thread.join()
+        result = thread.result
+        if result:
+            msg = (
+                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
+                % result
+            )
+        else:
+            icon = wx.ICON_ERROR
+            msg = "An error occured while downloading the update. Please try again later."
+
         if msg and showDlg:
-            wx.MessageBox(msg, style=icon)
+            postEventToFrame(
+                EventUtility.myEVT_MESSAGE_BOX,
+                (msg, icon),
+            )
             if result:
                 openWebLinkInBrowser(result)
                 Globals.frame.OnQuit(None)
