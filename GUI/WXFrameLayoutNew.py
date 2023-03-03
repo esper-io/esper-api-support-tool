@@ -270,7 +270,7 @@ class NewFrameLayout(wx.Frame):
             self, updateErrorTracker, None, name="updateErrorTracker"
         )
         self.errorTracker.startWithRetry()
-        self.menubar.onUpdateCheck(showDlg=False)
+        self.menubar.onUpdateCheck(showDlg=True)
 
     @api_tool_decorator()
     def tryToMakeActive(self):

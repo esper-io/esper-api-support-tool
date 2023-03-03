@@ -388,19 +388,16 @@ class ToolMenuBar(wx.MenuBar):
         self.isCheckingForUpdates = False
 
     def displayUpdateOnMain(self, downloadURL, name, showDlg):
-        dlg = wx.MessageDialog(
-            None,
+        dlg = wx.MessageBox(
             "Update found! Do you want to update?",
             "Update",
             wx.YES_NO | wx.ICON_QUESTION,
         )
-        Globals.OPEN_DIALOGS.append(dlg)
-        if dlg.ShowModal() == wx.ID_YES:
+        if dlg == wx.YES:
             self.parentFrame.statusBar.gauge.Pulse()
             thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
             thread.startWithRetry()
             Globals.THREAD_POOL.enqueue(self.processUpdateResult, thread, showDlg)
-        Globals.OPEN_DIALOGS.remove(dlg)
 
     def processUpdateResult(self, thread, showDlg):
         icon = wx.ICON_INFORMATION
