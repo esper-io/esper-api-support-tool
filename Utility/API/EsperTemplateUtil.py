@@ -472,7 +472,7 @@ class EsperTemplateUtil:
                 eventUtil.myEVT_LOG,
                 "Attempting to download %s to upload to tenant" % app["packageName"],
             )
-            file = "%s.apk" % app["applicationName"].replace("<", "").replace(">", "")
+            file = "%s.apk" % app["applicationName"].replace("<", "").replace(">", "").replace("\n","")
             deleteFile(file)
             download(app["downloadUrl"], file)
             ApiToolLog().LogApiRequestOccurrence(
@@ -504,9 +504,10 @@ class EsperTemplateUtil:
     def processDictKeyValuePairs(self, newTemplate, template):
         newTempKeys = newTemplate.keys()
         tempKeys = template.keys()
+        blacklist = ["id", "url", "customSettingsConfig"]
         for key in tempKeys:
             if key not in newTempKeys and (key != "id" and key != "url"):
-                if type(template[key]) is dict:
+                if type(template[key]) is dict and key not in blacklist:
                     newTemplate[key] = {}
                     newTemplate[key] = self.processDictKeyValuePairs(
                         newTemplate[key], template[key]
@@ -525,7 +526,7 @@ class EsperTemplateUtil:
             newKey = key
             for c in res:
                 newKey = newKey.replace(c, "_%s" % c.lower())
-            if type(dicton[key]) is dict:
+            if type(dicton[key]) is dict and key != "customSettingsConfig":
                 newDict[newKey] = self.processDictKeyNames(dicton[key])
             elif type(dicton[key]) is list:
                 newList = []
@@ -537,6 +538,7 @@ class EsperTemplateUtil:
                 newDict[newKey] = newList
             else:
                 newDict[newKey] = dicton[key]
+
             if newKey != key:
                 del newDict[key]
         return newDict
