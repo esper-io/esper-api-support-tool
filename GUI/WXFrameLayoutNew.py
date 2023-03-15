@@ -24,6 +24,7 @@ import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
 import Utility.API.EsperTemplateUtil as templateUtil
 from Utility.API.WidgetUtility import setWidget
+from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 
@@ -222,6 +223,8 @@ class NewFrameLayout(wx.Frame):
 
         self.notification = None
 
+        self.audit = AuditPosting()
+
         # Bound Events
         self.DragAcceptFiles(True)
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
@@ -241,6 +244,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
         self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(eventUtil.EVT_PROCESS_FUNCTION, processFunc)
+        self.Bind(eventUtil.EVT_AUDIT, self.audit.postOperation)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)

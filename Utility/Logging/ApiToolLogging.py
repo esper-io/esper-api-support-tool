@@ -90,6 +90,11 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame:
+            if Globals.frame.audit:
+                Globals.frame.audit.postOperation({
+                "operation": "ERROR: %s" % str(e),
+                "data": content
+            })
             Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str):
