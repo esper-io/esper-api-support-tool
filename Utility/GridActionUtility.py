@@ -83,6 +83,11 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                     "---> ERROR: Failed to find device with identifer: %s" % identifier,
                 )
 
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "ChangeAliasAndTags",
+        "data": {"tags":tagsFromGrid, "alias": aliasDic},
+    })
+
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
@@ -387,6 +392,15 @@ def setAllAppsState(frame, device, state):
                 package_name,
                 state="SHOW",
             )
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
+            "operation": "SetAppState",
+            "data": {
+                "id": deviceId,
+                "app": package_name,
+                "state": state
+            },
+            "resp": stateStatus
+        })
         if stateStatus and hasattr(stateStatus, "state"):
             entry = {
                 "Device Name": deviceName,
@@ -726,6 +740,10 @@ def uninstallApp(frame):
 
 def processBulkFactoryReset(devices, numDevices, processed):
     status = []
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "WIPE",
+        "data": devices,
+    })
     for device in devices:
         deviceId = None
         if hasattr(device, "device_name"):

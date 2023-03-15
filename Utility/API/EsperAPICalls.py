@@ -256,11 +256,6 @@ def setdevicename(
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
-    postEventToFrame(eventUtil.myEVT_AUDIT, {
-        "operation": "ChangeAlias",
-        "data": command,
-        "resp": response
-    })
     if response.results:
         status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
@@ -334,6 +329,15 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
         stateStatus = setAppState(deviceId, appToUse, state="SHOW", isGroup=isGroup)
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
+            "operation": "SetAppState",
+            "data": {
+                "id": deviceId,
+                "app": appToUse,
+                "state": "SHOW"
+            },
+            "resp": stateStatus
+        })
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )
@@ -517,11 +521,6 @@ def factoryResetDevice(
                 api_instance.create_command.__name__,
                 Globals.PRINT_API_LOGS,
             )
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "WIPE",
-                "data": command,
-                "resp": api_response
-            })
             break
         except Exception as e:
             if hasattr(e, "body") and "invalid device id" in e.body:
@@ -701,11 +700,6 @@ def setAppState(
                 ApiToolLog().LogApiRequestOccurrence(
                     "setAppState", api_instance.create_command, Globals.PRINT_API_LOGS
                 )
-                postEventToFrame(eventUtil.myEVT_AUDIT, {
-                    "operation": "SetAppState",
-                    "data": request,
-                    "resp": api_response
-                })
                 break
             except Exception as e:
                 if hasattr(e, "body") and (
