@@ -59,10 +59,13 @@ class AuditPosting():
         host = Globals.configuration.host.replace("https://", "").replace(
             "-api.esper.cloud/api", ""
         )
+        if not Globals.TOKEN_USER and Globals.frame:
+            Globals.frame.validateToken()
+
         if self.util.isReadyToSend():
             self.util.sendEmail(
                 "%s UTC %s: %s" % (now, host, str(operation)),
-                "Token: %s\n\n" % Globals.configuration.api_key["Authorization"]
+                "User: %s\n\n" % Globals.TOKEN_USER["username"] if Globals.TOKEN_USER else "Unknown"
                 + "Data:\n%s" % str(data)
                 + "Response: " + str(resp)
             )

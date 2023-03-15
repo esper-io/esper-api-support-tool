@@ -141,6 +141,30 @@ def getUsers(
     return resp
 
 
+def getSpecificUser(
+    id,
+    limit=Globals.limit,
+    offset=0,
+    maxAttempt=Globals.MAX_RETRY,
+):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/user/{user_id}/?limit={limit}&offset={offset}".format(
+        tenant=tenant,
+        user_id=id,
+        limit=limit,
+        offset=offset,
+    )
+    usersResp = performGetRequestWithRetry(
+        url, headers=getHeader(), maxRetry=maxAttempt
+    )
+    resp = None
+    if usersResp and hasattr(usersResp, "status_code") and usersResp.status_code < 300:
+        resp = usersResp.json()
+    return resp
+
+
 def getAllUsers():
     userResp = getUsers()
     users = getAllFromOffsetsRequests(userResp)

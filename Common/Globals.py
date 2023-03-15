@@ -24,6 +24,7 @@ MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
 IS_TOKEN_VALID = False
+TOKEN_USER = None
 
 MAX_DEVICE_COUNT = 5000
 

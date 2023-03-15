@@ -81,7 +81,7 @@ from Utility.API.EsperAPICalls import (
     validateConfiguration,
 )
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import getAllUsers
+from Utility.API.UserUtility import getAllUsers, getSpecificUser
 from Utility.crypto import crypto
 from Utility.EastUtility import (
     TakeAction,
@@ -1593,6 +1593,7 @@ class NewFrameLayout(wx.Frame):
                 (self.promptForNewToken),
             )
 
+        Globals.TOKEN_USER = getSpecificUser(res.user)
         if res and hasattr(res, "scope"):
             if "write" not in res.scope:
                 self.menubar.fileAddUser.Enable(False)
