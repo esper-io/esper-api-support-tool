@@ -45,7 +45,7 @@ def getLatestEvent(deviceId):
 def setdevicetags(deviceid, tags):
     """Pushes New Tag To Device"""
     json_resp = patchInfo(Globals.BASE_REQUEST_EXTENSION, deviceid, tags=tags)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "ChangeTags",
         "data": tags,
         "resp": json_resp

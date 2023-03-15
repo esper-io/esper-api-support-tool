@@ -338,7 +338,7 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
                 api_instance.create_command,
                 Globals.PRINT_API_LOGS,
             )
-            postEventToFrame(eventUtil.EVT_AUDIT, {
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
                 "operation": "Command (%s)" % request.command,
                 "data": request,
                 "resp": api_response
@@ -483,7 +483,7 @@ def postEsperCommand(command_data, useV0=True):
             )
         resp = performPostRequestWithRetry(url, headers=headers, json=command_data)
         json_resp = resp.json()
-        postEventToFrame(eventUtil.EVT_AUDIT, {
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
             "operation": "Command(%s)" % command_data["command"],
             "data": command_data,
             "resp": resp

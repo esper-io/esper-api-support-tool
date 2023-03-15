@@ -79,7 +79,7 @@ class ApiToolLog:
             "Esper Tool Version: " + Globals.VERSION,
         ]
         for line in exc_traceback:
-            content.append(line)
+            content.append(line.split('",')[1])
 
         with open(self.logPath, "a") as myfile:
             for entry in content:

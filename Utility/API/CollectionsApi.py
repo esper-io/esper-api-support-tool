@@ -89,7 +89,7 @@ def createCollection(jsonData, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "CreateCollection",
         "data": jsonData,
         "resp": resp
@@ -144,7 +144,7 @@ def updateCollection(collectionId, jsonData, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "UpdateCollection",
         "data": jsonData,
         "resp": resp
@@ -174,7 +174,7 @@ def deleteCollection(collectionId, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "DeleteCollection",
         "data": collectionId,
         "resp": resp

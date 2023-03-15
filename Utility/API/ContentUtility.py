@@ -48,7 +48,7 @@ def uploadContentToHost(host, enterprise, key, file):
         },
         files=file,
     )
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "UploadContent",
         "data": file,
         "resp": resp

@@ -601,7 +601,7 @@ class EsperTemplateUtil:
             }
             url = link + enterprise_id + self.template_extension
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
-            postEventToFrame(eventUtil.EVT_AUDIT, {
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
                 "operation": "CreateTemplate",
                 "data": template,
                 "resp": resp
@@ -627,7 +627,7 @@ class EsperTemplateUtil:
             url = link + enterprise_id + self.template_extension + str(template["id"])
             resp = performPatchRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
-            postEventToFrame(eventUtil.EVT_AUDIT, {
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
                 "operation": "UpdateTemplate",
                 "data": template,
                 "resp": json_resp

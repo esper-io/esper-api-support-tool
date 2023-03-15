@@ -230,7 +230,7 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                     api_instance.upload,
                     Globals.PRINT_API_LOGS,
                 )
-                postEventToFrame(eventUtil.EVT_AUDIT, {
+                postEventToFrame(eventUtil.myEVT_AUDIT, {
                     "operation": "UploadApp",
                     "data": file,
                     "resp": api_response
@@ -263,7 +263,7 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
             try:
                 enforceRateLimit()
                 api_response = api_instance.upload(enterprise_id, file)
-                postEventToFrame(eventUtil.EVT_AUDIT, {
+                postEventToFrame(eventUtil.myEVT_AUDIT, {
                     "operation": "UploadApp",
                     "data": file,
                     "resp": api_response

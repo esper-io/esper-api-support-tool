@@ -256,7 +256,7 @@ def setdevicename(
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
-    postEventToFrame(eventUtil.EVT_AUDIT, {
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
         "operation": "ChangeAlias",
         "data": command,
         "resp": response
@@ -517,7 +517,7 @@ def factoryResetDevice(
                 api_instance.create_command.__name__,
                 Globals.PRINT_API_LOGS,
             )
-            postEventToFrame(eventUtil.EVT_AUDIT, {
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
                 "operation": "WIPE",
                 "data": command,
                 "resp": api_response
@@ -701,7 +701,7 @@ def setAppState(
                 ApiToolLog().LogApiRequestOccurrence(
                     "setAppState", api_instance.create_command, Globals.PRINT_API_LOGS
                 )
-                postEventToFrame(eventUtil.EVT_AUDIT, {
+                postEventToFrame(eventUtil.myEVT_AUDIT, {
                     "operation": "SetAppState",
                     "data": request,
                     "resp": api_response

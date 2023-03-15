@@ -38,7 +38,7 @@ def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
     elif type(deviceList) == str:
         body = {"device_ids": [deviceList]}
         resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "moveGroup",
         "data": body,
         "resp": resp
@@ -72,7 +72,7 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
-        postEventToFrame(EventUtility.EVT_AUDIT, {
+        postEventToFrame(EventUtility.myEVT_AUDIT, {
             "operation": "createGroup",
             "data": data,
             "resp": api_response
@@ -107,7 +107,7 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
-        postEventToFrame(EventUtility.EVT_AUDIT, {
+        postEventToFrame(EventUtility.myEVT_AUDIT, {
             "operation": "moveGroup",
             "data": group_id,
             "resp": api_response
@@ -126,7 +126,7 @@ def renameGroup(groupId, newName):
     )
     body = {"name": newName}
     resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    postEventToFrame(EventUtility.EVT_AUDIT, {
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
         "operation": "renameGroup",
         "data": body,
         "resp": resp
