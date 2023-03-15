@@ -335,7 +335,7 @@ def setAppStateForAllAppsListed(state):
         deviceList = getDeviceIdFromGridDevices(devices)
 
         Globals.THREAD_POOL.enqueue(
-            setAllAppsState, Globals.frame, deviceList, Globals.frame.AppState
+            setAllAppsState, deviceList, Globals.frame.AppState
         )
 
         Globals.THREAD_POOL.enqueue(
@@ -349,7 +349,7 @@ def setAppStateForAllAppsListed(state):
 
 
 @api_tool_decorator()
-def setAllAppsState(frame, device, state):
+def setAllAppsState(device, state):
     stateStatuses = []
     deviceName = None
     deviceId = None

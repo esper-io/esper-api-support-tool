@@ -38,37 +38,3 @@ class EmailUtils:
                 elif type(self.to_addrs) == str:
                     sentMsg["To"] = self.to_addrs
                 server.send_message(sentMsg)
-
-    def sendEmailWithAttachment(self, subject, text, files=None):
-        msg = MIMEMultipart()
-        msg["From"] = self.login
-        if type(self.to_addrs) == list:
-            msg["To"] = ", ".join(self.to_addrs)
-        elif type(self.to_addrs) == str:
-            msg["To"] = self.to_addrs
-        msg["Date"] = formatdate(localtime=True)
-        msg["Subject"] = subject
-
-        msg.attach(MIMEText(text))
-
-        if type(files) == list:
-            for f in files or []:
-                with open(f, "rb") as fil:
-                    part = MIMEApplication(fil.read(), Name=basename(f))
-                # After the file is closed
-                part["Content-Disposition"] = 'attachment; filename="%s"' % basename(f)
-                msg.attach(part)
-        elif type(files) == str:
-            with open(files, "rb") as fil:
-                part = MIMEApplication(fil.read(), Name=basename(files))
-            # After the file is closed
-            part["Content-Disposition"] = 'attachment; filename="%s"' % basename(files)
-            msg.attach(part)
-
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com", self.port, context=self.context
-        ) as server:
-            server.login(self.login, self.password)
-            server.set_debuglevel(1)
-
-            server.sendmail(self.login, self.to_addrs, msg.as_string())
