@@ -2,7 +2,8 @@
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import getHeader, logBadResponse
+from Utility import EventUtility
+from Utility.Resource import getHeader, logBadResponse, postEventToFrame
 from Utility.Web.WebRequests import (
     performDeleteRequestWithRetry,
     performGetRequestWithRetry,
@@ -88,6 +89,11 @@ def createCollection(jsonData, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "CreateCollection",
+        "data": jsonData,
+        "resp": resp
+    })
 
     if returnJson:
         return jsonResp
@@ -138,6 +144,11 @@ def updateCollection(collectionId, jsonData, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "UpdateCollection",
+        "data": jsonData,
+        "resp": resp
+    })
 
     if returnJson:
         return jsonResp
@@ -163,6 +174,11 @@ def deleteCollection(collectionId, returnJson=False):
     except:
         pass
     logBadResponse(url, resp, jsonResp, displayMsgBox=True)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "DeleteCollection",
+        "data": collectionId,
+        "resp": resp
+    })
 
     if returnJson:
         return jsonResp

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import Common.Globals as Globals
+from Utility import EventUtility
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import getHeader, isApiKey
+from Utility.Resource import getHeader, isApiKey, postEventToFrame
 from Utility.Web.WebRequests import (
     getAllFromOffsetsRequests,
     performDeleteRequestWithRetry,
@@ -60,6 +61,11 @@ def createNewUser(user):
     url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
     body = getUserBody(user)
     resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "CreateUser",
+        "data": body,
+        "resp": resp
+    })
     return resp
 
 
@@ -79,6 +85,11 @@ def modifyUser(allUsers, user):
         )
         body = getUserBody(user)
         resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+        postEventToFrame(EventUtility.EVT_AUDIT, {
+            "operation": "ModifyUser",
+            "data": body,
+            "resp": resp
+        })
     return resp
 
 
@@ -97,6 +108,11 @@ def deleteUser(allUsers, user):
             tenant=tenant, id=userId
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
+        postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "DeleteUser",
+            "data": user,
+            "resp": resp
+        })
     return resp
 
 

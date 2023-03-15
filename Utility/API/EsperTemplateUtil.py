@@ -601,6 +601,11 @@ class EsperTemplateUtil:
             }
             url = link + enterprise_id + self.template_extension
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
+            postEventToFrame(eventUtil.EVT_AUDIT, {
+                "operation": "CreateTemplate",
+                "data": template,
+                "resp": resp
+            })
             json_resp = resp.json()
             if hasattr(resp, "status_code"):
                 if resp.status_code > 299 and level > 0:
@@ -622,6 +627,11 @@ class EsperTemplateUtil:
             url = link + enterprise_id + self.template_extension + str(template["id"])
             resp = performPatchRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
+            postEventToFrame(eventUtil.EVT_AUDIT, {
+                "operation": "UpdateTemplate",
+                "data": template,
+                "resp": json_resp
+            })
             return json_resp
         except Exception as e:
             raise e

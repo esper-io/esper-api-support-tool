@@ -256,6 +256,11 @@ def setdevicename(
                 time.sleep(
                     Globals.RETRY_SLEEP * 20 * (attempt + 1)
                 )  # Sleep for a minute * retry number
+    postEventToFrame(eventUtil.EVT_AUDIT, {
+        "operation": "ChangeAlias",
+        "data": command,
+        "resp": response
+    })
     if response.results:
         status = response.results[0].state
     status = waitForCommandToFinish(api_response.id, ignoreQueue, timeout)
@@ -512,6 +517,11 @@ def factoryResetDevice(
                 api_instance.create_command.__name__,
                 Globals.PRINT_API_LOGS,
             )
+            postEventToFrame(eventUtil.EVT_AUDIT, {
+                "operation": "WIPE",
+                "data": command,
+                "resp": api_response
+            })
             break
         except Exception as e:
             if hasattr(e, "body") and "invalid device id" in e.body:
@@ -691,6 +701,11 @@ def setAppState(
                 ApiToolLog().LogApiRequestOccurrence(
                     "setAppState", api_instance.create_command, Globals.PRINT_API_LOGS
                 )
+                postEventToFrame(eventUtil.EVT_AUDIT, {
+                    "operation": "SetAppState",
+                    "data": request,
+                    "resp": api_response
+                })
                 break
             except Exception as e:
                 if hasattr(e, "body") and (

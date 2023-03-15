@@ -31,13 +31,18 @@ def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
         tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
     )
     resp = None
-
+    body = None
     if type(deviceList) == list:
         body = {"device_ids": deviceList}
         resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
     elif type(deviceList) == str:
         body = {"device_ids": [deviceList]}
         resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "moveGroup",
+        "data": body,
+        "resp": resp
+    })
     return resp
 
 
@@ -67,6 +72,11 @@ def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
+        postEventToFrame(EventUtility.EVT_AUDIT, {
+            "operation": "createGroup",
+            "data": data,
+            "resp": api_response
+        })
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
@@ -97,6 +107,11 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                     time.sleep(
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
+        postEventToFrame(EventUtility.EVT_AUDIT, {
+            "operation": "moveGroup",
+            "data": group_id,
+            "resp": api_response
+        })
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
@@ -111,6 +126,11 @@ def renameGroup(groupId, newName):
     )
     body = {"name": newName}
     resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
+    postEventToFrame(EventUtility.EVT_AUDIT, {
+        "operation": "renameGroup",
+        "data": body,
+        "resp": resp
+    })
     return resp
 
 
