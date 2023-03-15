@@ -62,11 +62,19 @@ class AuditPosting():
         if not Globals.TOKEN_USER and Globals.frame:
             Globals.frame.validateToken()
 
+        content = None
+        if hasattr(resp, "content"):
+            content = str(resp.content.decode("utf-8"))
+        elif hasattr(resp, "results"):
+            content = resp.results
+        else:
+            content = str(resp)
+
         if self.util.isReadyToSend():
             self.util.sendEmail(
                 "%s UTC %s: %s" % (now, host, str(operation)),
                 "User: %s\n\n" % Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
                 + "Data:\n%s" % str(data)
-                + "Response Content: " + str(resp.content.decode("utf-8")) if hasattr(resp, "content") else str(resp)
+                + "Response Content: " + content
             )
 

@@ -776,11 +776,6 @@ def processSetDeviceDisabled(devices, numDevices, processed):
             deviceId = device["id"]
         if deviceId:
             resp = setDeviceDisabled(deviceId)
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "DisableDevice",
-                "data": deviceId,
-                "resp": resp
-            })
             status.append(resp)
             processed.append(device)
         value = int(len(processed) / numDevices * 100)
@@ -788,6 +783,10 @@ def processSetDeviceDisabled(devices, numDevices, processed):
             eventUtil.myEVT_UPDATE_GAUGE,
             value,
         )
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "DisableDevice(s)",
+        "data": devices,
+    })
     return status
 
 
