@@ -67,6 +67,6 @@ class AuditPosting():
                 "%s UTC %s: %s" % (now, host, str(operation)),
                 "User: %s\n\n" % Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
                 + "Data:\n%s" % str(data)
-                + "Response: " + str(resp)
+                + "Response Content: " + str(resp.content.decode("utf-8")) if hasattr(resp, "content") else str(resp)
             )
 
