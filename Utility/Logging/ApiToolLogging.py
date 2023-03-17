@@ -138,10 +138,11 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s Tenant: %s User: %s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s Tenant: %s User: %s (id: %s) Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(Globals.configuration.host),
-                str(Globals.TOKEN_USER),
+                str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
+                str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
                 str(api_func),
                 ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
@@ -180,11 +181,12 @@ class ApiToolLog:
         if writeToFile:
             if not strToWrite:
                 strToWrite = (
-                    "%s API Request orginated from Tenant: %s User: %s Function: %s, triggerring %s. Total Requests: %s\n"
+                    "%s API Request orginated from Tenant: %s User: %s (id: %s) Function: %s, triggerring %s. Total Requests: %s\n"
                     % (
                         datetime.now(),
                         str(Globals.configuration.host),
-                        str(Globals.TOKEN_USER),
+                        str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
+                        str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
                         str(src),
                         str(api_func)
                         if not hasattr(api_func, "__name__")
