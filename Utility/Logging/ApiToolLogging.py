@@ -138,8 +138,10 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s Tenant: %s User: %s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
                 datetime.now(),
+                str(Globals.configuration.host),
+                str(Globals.TOKEN_USER),
                 str(api_func),
                 ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
@@ -176,22 +178,30 @@ class ApiToolLog:
                     ApiTracker.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
         if writeToFile:
-            strToWrite = (
-                "%s API Request orginated from %s, triggerring %s. Total Requests: %s\n"
-                % (
-                    datetime.now(),
-                    str(src),
-                    str(api_func)
-                    if not hasattr(api_func, "__name__")
-                    else api_func.__name__,
-                    ApiTracker.API_REQUEST_SESSION_TRACKER,
+            if not strToWrite:
+                strToWrite = (
+                    "%s API Request orginated from Tenant: %s User: %s Function: %s, triggerring %s. Total Requests: %s\n"
+                    % (
+                        datetime.now(),
+                        str(Globals.configuration.host),
+                        str(Globals.TOKEN_USER),
+                        str(src),
+                        str(api_func)
+                        if not hasattr(api_func, "__name__")
+                        else api_func.__name__,
+                        ApiTracker.API_REQUEST_SESSION_TRACKER,
+                    )
                 )
-            )
             Globals.api_log_lock.acquire()
             self.limitLogFileSizes()
             try:
                 with open(self.logPath, "a") as myfile:
                     myfile.write(strToWrite)
+                if "Summary" in strToWrite and Globals.frame.audit:
+                    Globals.frame.audit.postOperation({
+                        "operation": "API Usage Summary",
+                        "data": strToWrite
+                    })
             except:
                 pass
             finally:
