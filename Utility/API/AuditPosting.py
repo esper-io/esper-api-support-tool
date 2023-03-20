@@ -20,6 +20,7 @@ class AuditPosting():
 
     def getEmailInfo(self):
         filePath = "token.json"
+        base_path = ""
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
             base_path = sys._MEIPASS
