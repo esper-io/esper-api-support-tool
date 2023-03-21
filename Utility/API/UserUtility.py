@@ -140,6 +140,29 @@ def getUsers(
         responses.append(resp)
     return resp
 
+def getPendingUsers(limit=Globals.limit,
+    offset=0,
+    maxAttempt=Globals.MAX_RETRY,
+    responses=[],):
+    tenant = Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )
+    url = "https://{tenant}-api.esper.cloud/api/authn2/v0/tenant/{enterprise_id}/invite?limit={limit}&offset={offset}&format=json&exclude_google_roles=true&email=&exclude_enterprise_device_role=true".format(
+        tenant=tenant,
+        enterprise_id=Globals.enterprise_id,
+        limit=limit,
+        offset=offset,
+    )
+    usersResp = performGetRequestWithRetry(
+        url, headers=getHeader(), maxRetry=maxAttempt
+    )
+    resp = None
+    if usersResp and hasattr(usersResp, "status_code") and usersResp.status_code < 300:
+        resp = usersResp.json()
+    if resp and responses is not None:
+        responses.append(resp)
+    return resp
+
 
 def getSpecificUser(
     id,
@@ -174,6 +197,15 @@ def getAllUsers():
         userResp.prev = None
     elif type(userResp) is dict and "results" in userResp:
         userResp["results"] = userResp["results"] + users
+        userResp["next"] = None
+        userResp["prev"] = None
+    return userResp
+
+def getAllPendingUsers():
+    userResp = getPendingUsers()
+    users = getAllFromOffsetsRequests(userResp)
+    if type(userResp) is dict and "userinvites" in userResp:
+        userResp["userinvites"] = userResp["userinvites"] + users
         userResp["next"] = None
         userResp["prev"] = None
     return userResp

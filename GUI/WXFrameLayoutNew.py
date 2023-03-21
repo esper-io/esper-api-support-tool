@@ -81,7 +81,7 @@ from Utility.API.EsperAPICalls import (
     validateConfiguration,
 )
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import getAllUsers, getSpecificUser
+from Utility.API.UserUtility import getAllPendingUsers, getAllUsers, getSpecificUser
 from Utility.crypto import crypto
 from Utility.EastUtility import (
     TakeAction,
@@ -3727,6 +3727,85 @@ class NewFrameLayout(wx.Frame):
             res = displayMessageBox(
                 (
                     "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                    % inFile,
+                    wx.YES_NO | wx.ICON_INFORMATION,
+                )
+            )
+            self.isSaving = False
+            if res == wx.YES:
+                parentDirectory = Path(inFile).parent.absolute()
+                openWebLinkInBrowser(parentDirectory)
+
+    @api_tool_decorator()
+    def onPendingUserReport(self, event):
+        defaultFileName = "%s_Pending-User-Report" % datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S"
+        )
+        self.isSaving = True
+        inFile = ""
+        result = wx.ID_CANCEL
+        with wx.FileDialog(
+            self,
+            message="Save User Report as...",
+            defaultFile=defaultFileName,
+            wildcard="CSV files (*.csv)|*.csv",
+            defaultDir=str(self.defaultDir),
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dlg:
+            Globals.OPEN_DIALOGS.append(dlg)
+            result = dlg.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dlg)
+            inFile = dlg.GetPath()
+            correctSaveFileName(inFile)
+
+        if result == wx.ID_OK:  # Save button was pressed
+            self.statusBar.gauge.Pulse()
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.gridPanel.disableGridProperties()
+            users = getAllPendingUsers()
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+            data = [
+                [
+                    "User Id",
+                    "Email",
+                    "Is Active",
+                    "Role",
+                    "Groups",
+                    "Created On",
+                    "Updated On",
+                ]
+            ]
+            num = 1
+            for user in users["userinvites"]:
+                entry = []
+                entry.append(user["id"])
+                entry.append(user["email"])
+                entry.append(user["meta"]["is_active"])
+                entry.append(user["meta"]["profile"]["role"])
+                entry.append(user["meta"]["profile"]["groups"])
+                entry.append(user["created_at"])
+                entry.append(user["updated_at"])
+                data.append(entry)
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(users["userinvites"]) * 90)
+                )
+                num += 1
+            createNewFile(inFile)
+
+            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+                writer.writerows(data)
+
+            self.Logging("---> Pending User Report saved to file: " + inFile)
+            self.setCursorDefault()
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+            self.toggleEnabledState(True)
+            self.gridPanel.enableGridProperties()
+
+            res = displayMessageBox(
+                (
+                    "Pending User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
                     % inFile,
                     wx.YES_NO | wx.ICON_INFORMATION,
                 )

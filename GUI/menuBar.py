@@ -198,6 +198,11 @@ class ToolMenuBar(wx.MenuBar):
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
         )
         self.userReportItem = self.userSubMenu.Append(userReport)
+        
+        pendingUserReport = wx.MenuItem(
+            self.userSubMenu, wx.ID_ANY, "&Get Pending User Report\tCtrl+Alt+U"
+        )
+        self.pendingUserReportItem = self.userSubMenu.Append(pendingUserReport)
 
         # View Menu
         viewMenu = wx.Menu()
@@ -319,6 +324,7 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onPendingUserReport, self.pendingUserReportItem)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
         )
