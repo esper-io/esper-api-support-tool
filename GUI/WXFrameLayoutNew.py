@@ -1462,6 +1462,18 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
 
         self.firstRun = False
+
+        if ApiTracker.API_REQUEST_SESSION_TRACKER > 0:
+            thread = ApiToolLog().LogApiRequestOccurrence(
+                None, ApiTracker.API_REQUEST_TRACKER, True
+            )
+            if thread:
+                thread.join()
+            resetDict = {}
+            for key in ApiTracker.API_REQUEST_TRACKER.keys():
+                resetDict[key] = 0
+            ApiTracker.API_REQUEST_TRACKER = resetDict
+            ApiTracker.API_REQUEST_SESSION_TRACKER = 0
         try:
             self.Logging(
                 "--->Attempting to load configuration: %s."

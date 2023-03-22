@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import os
 import platform
 import sys
@@ -89,11 +90,11 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame:
-            if Globals.frame.audit:
-                Globals.frame.audit.postOperation({
-                "operation": "ERROR: %s" % str(e),
-                "data": content
-            })
+            # if Globals.frame.audit:
+            #     Globals.frame.audit.postOperation({
+            #     "operation": "ERROR: %s" % str(e),
+            #     "data": content
+            # })
             Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str):
@@ -137,12 +138,12 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s Tenant: %s User: %s (id: %s) Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s Tenant: %s User: %s (id: %s)\n\nSession API Summary:\t%s\nTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(Globals.configuration.host),
                 str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
                 str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
-                str(api_func),
+                str(api_func) if api_func != ApiTracker.API_REQUEST_TRACKER else json.dumps(ApiTracker.API_REQUEST_TRACKER, indent=4),
                 ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
         else:
@@ -180,7 +181,7 @@ class ApiToolLog:
         if writeToFile:
             if not strToWrite:
                 strToWrite = (
-                    "%s API Request orginated from Tenant: %s User: %s (id: %s) Function: %s, triggerring %s. Total Requests: %s\n"
+                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\nFunction: %s, triggerring %s.\n\nTotal Requests: %s\n"
                     % (
                         datetime.now(),
                         str(Globals.configuration.host),

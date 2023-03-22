@@ -80,10 +80,11 @@ class AuditPosting():
         if self.util.isReadyToSend():
             userStr = "User (id: %s): %s\n\n" % (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
                 Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown")
+            contentStr = "Response Content: " + content if content else ""
             self.util.sendEmail(
                 "%s UTC %s: %s" % (now, host, str(operation)),
                 userStr
                 + "Data:\n%s" % str(data)
-                + "Response Content: " + content if content else ""
+                + contentStr
             )
 
