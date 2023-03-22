@@ -74,9 +74,8 @@ class ApiToolLog:
         self.limitLogFileSizes()
         content = [
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
-            str(exc_type),
-            str(exc_value),
-            "Esper Tool Version: " + Globals.VERSION,
+            "%s\t%s\n" % (str(exc_type), str(exc_value)),
+            "Esper Tool Version: %s\n" % Globals.VERSION,
         ]
         for line in exc_traceback:
             content.append(line.split('",')[1])

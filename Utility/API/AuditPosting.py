@@ -71,11 +71,19 @@ class AuditPosting():
         else:
             content = str(resp)
 
+        if type(data) is list:
+            compoundStr = ""
+            for line in data:
+                compoundStr += line
+            data = compoundStr
+
         if self.util.isReadyToSend():
+            userStr = "User (id: %s): %s\n\n" % (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
+                Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown")
             self.util.sendEmail(
                 "%s UTC %s: %s" % (now, host, str(operation)),
-                "User: %s\n\n" % Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
+                userStr
                 + "Data:\n%s" % str(data)
-                + "Response Content: " + content
+                + "Response Content: " + content if content else ""
             )
 
