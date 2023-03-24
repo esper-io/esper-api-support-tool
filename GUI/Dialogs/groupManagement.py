@@ -372,7 +372,7 @@ class GroupManagement(wx.Dialog):
             self.uploadTreeItems = {}
             self.uploadCSVTreeItems = []
             self.createRootNodes()
-            self.groups = getAllGroups().results
+            self.groups = getAllGroups(tolerance=1).results
             self.createTreeLayout()
             self.tree_ctrl_1.ExpandAll()
             self.tree_ctrl_2.ExpandAll()
