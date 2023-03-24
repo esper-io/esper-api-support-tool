@@ -81,10 +81,12 @@ class AuditPosting():
             userStr = "User (id: %s): %s\n\n" % (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
                 Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown")
             contentStr = "Response Content: " + content if content else ""
+            if hasattr(data, "to_dict"):
+                data = data.to_dict()
             if type(data) is dict:
                 data = json.dumps(data, indent=4)
             self.util.sendEmail(
-                "%s UTC %s: %s" % (now, host, str(operation)),
+                "%s UTC %s : %s" % (now, host, str(operation)),
                 userStr
                 + "Data:\n%s" % str(data)
                 + contentStr
