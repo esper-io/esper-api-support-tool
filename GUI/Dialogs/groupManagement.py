@@ -372,7 +372,13 @@ class GroupManagement(wx.Dialog):
             self.uploadTreeItems = {}
             self.uploadCSVTreeItems = []
             self.createRootNodes()
-            self.groups = getAllGroups(tolerance=1).results
+            groupResp = getAllGroups(tolerance=1)
+            if hasattr(groupResp, "results"):
+                self.groups = groupResp.results
+            elif type(groupResp) is dict and "results" in groupResp:
+                self.groups = groupResp["results"]
+            else:
+                self.groups = None
             self.createTreeLayout()
             self.tree_ctrl_1.ExpandAll()
             self.tree_ctrl_2.ExpandAll()
