@@ -138,7 +138,7 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s Tenant: %s User: %s (id: %s)\n\nSession API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s\nTenant: %s\nUser: %s (id: %s)\n\nSession API Summary:\t%s\n\nTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(Globals.configuration.host),
                 str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
