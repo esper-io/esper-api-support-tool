@@ -108,7 +108,7 @@ def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
         postEventToFrame(EventUtility.myEVT_AUDIT, {
-            "operation": "moveGroup",
+            "operation": "deleteGroup",
             "data": group_id,
             "resp": api_response
         })
