@@ -8,6 +8,7 @@ import wx.adv as adv
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
+from GUI.Dialogs.HtmlDialog import HtmlDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from GUI.UserCreation import UserCreation
 from Utility import EventUtility
@@ -249,6 +250,9 @@ class ToolMenuBar(wx.MenuBar):
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
+        tnc = helpMenu.Append(wx.ID_HELP, "Terms and Conditions", "&Terms and Conditions")
+        self.Bind(wx.EVT_MENU, self.onTnC, tnc)
+
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
@@ -342,6 +346,13 @@ class ToolMenuBar(wx.MenuBar):
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
+
+    @api_tool_decorator()
+    def onTnC(self, event):
+        with HtmlDialog() as dialog:
+            Globals.OPEN_DIALOGS.append(dialog)
+            dialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dialog)
 
     @api_tool_decorator()
     def onHelp(self, event):
