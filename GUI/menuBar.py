@@ -251,7 +251,7 @@ class ToolMenuBar(wx.MenuBar):
         helpMenu.Append(wx.ID_SEPARATOR)
 
         tnc = helpMenu.Append(wx.ID_HELP, "Terms and Conditions", "&Terms and Conditions")
-        self.Bind(wx.EVT_MENU, self.onTnC, tnc)
+        self.Bind(wx.EVT_MENU, self.onDisclaimer, tnc)
 
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
@@ -348,11 +348,15 @@ class ToolMenuBar(wx.MenuBar):
         adv.AboutBox(info)
 
     @api_tool_decorator()
-    def onTnC(self, event):
-        with HtmlDialog() as dialog:
+    def onDisclaimer(self, event=None, showCheckBox=False):
+        showDisclaimer = True
+        with HtmlDialog(showCheckbox=showCheckBox) as dialog:
             Globals.OPEN_DIALOGS.append(dialog)
             dialog.ShowModal()
             Globals.OPEN_DIALOGS.remove(dialog)
+
+            showDisclaimer = bool(not dialog.isCheckboxChecked())
+        return showDisclaimer
 
     @api_tool_decorator()
     def onHelp(self, event):

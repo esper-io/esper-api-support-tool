@@ -276,6 +276,11 @@ class NewFrameLayout(wx.Frame):
         self.errorTracker.startWithRetry()
         self.menubar.onUpdateCheck(showDlg=True)
 
+        # Display disclaimer unless they have opt'd out.
+        if Globals.SHOW_DISCLAIMER:
+            self.preferences["showDisclaimer"] = self.menubar.onDisclaimer(showCheckBox=True)
+            Globals.SHOW_DISCLAIMER = self.preferences["showDisclaimer"]
+
     @api_tool_decorator()
     def tryToMakeActive(self):
         self.Raise()
