@@ -475,8 +475,8 @@ class GroupManagement(wx.Dialog):
                         )
             displayMessageBox("%s Groups should be deleted" % (numSuccess))
             self.refreshTree(forceRefresh=True)
-            self.setActionButtonState(True)
-            self.isBusy = False
+        self.setActionButtonState(True)
+        self.isBusy = False
 
     def fetchGroupsThenDelete(self, oldName, parent, numSuccess):
         matchingGroups = getAllGroups(name=oldName)
@@ -772,8 +772,8 @@ class GroupManagement(wx.Dialog):
                 "%s out of %s Groups have been renamed!"
                 % (numSuccess, self.grid_1.GetNumberRows())
             )
-            self.setActionButtonState(True)
-            self.isBusy = False
+        self.setActionButtonState(True)
+        self.isBusy = False
 
     def attemptGroupFetchThenRename(self, oldName, parent, newName, numSuccess):
         matchingGroups = getAllGroups(name=oldName)
