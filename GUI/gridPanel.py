@@ -1085,6 +1085,7 @@ class GridPanel(wx.Panel):
             for device in self.grid_1_contents:
                 if device["EsperName"] not in aliasList:
                     aliasList[device["EsperName"]] = device["Alias"]
+                    aliasList[device["id"]] = device["Alias"]
         else:
             aliasList = self.getDeviceAliasFromGrid()
         return aliasList
