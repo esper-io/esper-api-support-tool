@@ -944,12 +944,12 @@ class PreferencesDialog(wx.Dialog):
                 self.combobox_2.SetSelection(self.prefs["appFilter"])
             Globals.APP_FILTER = self.combobox_1.GetValue().lower()
 
-        if self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5):
+        if self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5, True):
             Globals.REACH_QUEUED_ONLY = True
         else:
             Globals.REACH_QUEUED_ONLY = False
 
-        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13):
+        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13, True):
             Globals.MATCH_SCROLL_POS = True
         else:
             Globals.MATCH_SCROLL_POS = False
@@ -1125,7 +1125,7 @@ class PreferencesDialog(wx.Dialog):
             )
 
         if self.checkBooleanValuePrefAndSet(
-            "showDisclaimer", self.checkbox_28
+            "showDisclaimer", self.checkbox_28, True
         ):
             Globals.SHOW_DISCLAIMER = True
         else:
@@ -1135,8 +1135,8 @@ class PreferencesDialog(wx.Dialog):
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
 
-    def checkBooleanValuePrefAndSet(self, key, checkbox):
-        isEnabled = False
+    def checkBooleanValuePrefAndSet(self, key, checkbox, default=False):
+        isEnabled = default
         if key in self.prefs:
             if (
                 isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true"
@@ -1146,7 +1146,10 @@ class PreferencesDialog(wx.Dialog):
             else:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)
         else:
-            checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+            if not default:
+                checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+            else:
+                checkbox.Set3StateValue(wx.CHK_CHECKED)
 
         return isEnabled
 
