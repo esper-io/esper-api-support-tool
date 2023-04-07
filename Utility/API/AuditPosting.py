@@ -8,6 +8,8 @@ import Common.Globals as Globals
 
 from datetime import datetime
 
+from Utility.Logging.ApiToolLogging import ApiToolLog
+
 class AuditPosting():
     def __init__(self):
         self.login = ""
@@ -35,8 +37,10 @@ class AuditPosting():
                 tokenJson = json.load(file)
             if "email_to" in tokenJson:
                 self.to_addr = tokenJson["email_to"]
+                ApiToolLog().LogResponse("Sent To Email: " + str(self.to_addr))
             if "email_login" in tokenJson:
                 self.login = tokenJson["email_login"]
+                ApiToolLog().LogResponse("Sent From Email: " + self.login)
             if "email_to" in tokenJson:
                 self.pw = tokenJson["email_pw"]
 
