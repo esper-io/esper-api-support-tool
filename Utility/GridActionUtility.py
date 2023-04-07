@@ -136,7 +136,7 @@ def processDeviceModificationForList(
     for entry in aliasStatus:
         match = list(
             filter(
-                lambda x: x["Device Name"] == entry["Device Name"],
+                lambda x: x["Device Name"] == entry["Device Name"] if entry["Device Name"] else x["Device Id"] == entry["Device Id"],
                 tagStatus,
             )
         )
