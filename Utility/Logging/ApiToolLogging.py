@@ -97,13 +97,13 @@ class ApiToolLog:
             # })
             Globals.frame.Logging(str(e), True)
 
-    def LogPlace(self, str):
+    def LogPlace(self, str_place):
         with open(self.placePath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), str))
+            myfile.write("%s\t: %s\n" % (datetime.now(), str_place))
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:
-            myfile.write(response + "\n")
+            myfile.write("%s\t: %s\n" % (datetime.now(), response))
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
