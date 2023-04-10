@@ -449,6 +449,28 @@ def processFunc(event):
             fun[0](fun[1])
 
 
+@api_tool_decorator()
+def determineDoHereorMainThread(func, *args, **kwargs):
+    if not callable(func):
+        return
+
+    if platform.system() == "Windows":
+        # do here
+        if args and kwargs:
+            func(*args, **kwargs)
+        elif not args and kwargs:
+            func(**kwargs)
+        elif args and not kwargs:
+            func(*args)
+        else:
+            func()
+    else:
+        # do on main thread
+        postEventToFrame(
+            EventUtility.myEVT_PROCESS_FUNCTION,
+            (func, *args),
+        )
+
 def checkIfCurrentThreadStopped():
     isAbortSet = False
     if hasattr(threading.current_thread(), "abort"):
@@ -466,19 +488,22 @@ def installSslCerts():
     # will work on next run (hopefully) if not configured already
     base_path = os.path.abspath(".")
     if platform.system() != "Windows":
-        STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-             | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
-             | stat.S_IROTH |                stat.S_IXOTH )
-        openssl_dir, openssl_cafile = os.path.split(
-            ssl.get_default_verify_paths().openssl_cafile)
-        import certifi
-        # change working directory to the default SSL directory
-        os.chdir(openssl_dir)
-        relpath_to_certifi_cafile = os.path.relpath(certifi.where())
         try:
-            os.remove(openssl_cafile)
-        except FileNotFoundError:
-            pass
-        os.symlink(relpath_to_certifi_cafile, openssl_cafile)
-        os.chmod(openssl_cafile, STAT_0o775)
+            STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+                | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
+                | stat.S_IROTH |                stat.S_IXOTH )
+            openssl_dir, openssl_cafile = os.path.split(
+                ssl.get_default_verify_paths().openssl_cafile)
+            import certifi
+            # change working directory to the default SSL directory
+            os.chdir(openssl_dir)
+            relpath_to_certifi_cafile = os.path.relpath(certifi.where())
+            try:
+                os.remove(openssl_cafile)
+            except FileNotFoundError:
+                pass
+            os.symlink(relpath_to_certifi_cafile, openssl_cafile)
+            os.chmod(openssl_cafile, STAT_0o775)
+        except Exception as e:
+            ApiToolLog().LogError(e)
         os.chdir(base_path)

@@ -100,6 +100,7 @@ from Utility.Resource import (
     checkIfCurrentThreadStopped,
     correctSaveFileName,
     createNewFile,
+    determineDoHereorMainThread,
     displayMessageBox,
     getStrRatioSimilarity,
     joinThreadList,
@@ -361,10 +362,7 @@ class NewFrameLayout(wx.Frame):
                     )
             if child.GetChildren():
                 self.setFontSizeForLabels(parent=child)
-        postEventToFrame(
-            eventUtil.myEVT_PROCESS_FUNCTION,
-            self.Refresh,
-        )
+        determineDoHereorMainThread(self.Refresh)
 
     @api_tool_decorator()
     def onLog(self, event):
@@ -431,7 +429,6 @@ class NewFrameLayout(wx.Frame):
                         isValid = True
                     if not self.IsShown():
                         isValid = True
-                        self.OnQuit(None)
                 dialog.DestroyLater()
 
     def addEndpointEntry(self, name, host, entId, key, prefix, csvRow):
@@ -1418,7 +1415,7 @@ class NewFrameLayout(wx.Frame):
             self.Bind(wx.EVT_MENU, self.AddEndpoint, defaultConfigVal)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
-            (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
+            (wx.CallLater, (300, self.statusBar.setGaugeValue, 0)),
         )
         return returnItem
 
@@ -1597,20 +1594,14 @@ class NewFrameLayout(wx.Frame):
             Globals.IS_TOKEN_VALID = True
             if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
                 Globals.IS_TOKEN_VALID = False
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.promptForNewToken),
-                )
+                determineDoHereorMainThread(self.promptForNewToken)
         elif (
             res
             and hasattr(res, "body")
             and "Authentication credentials were not provided" in res.body
         ):
             Globals.IS_TOKEN_VALID = False
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.promptForNewToken),
-            )
+            determineDoHereorMainThread(self.promptForNewToken)
 
         Globals.TOKEN_USER = getSpecificUser(res.user)
         if res and hasattr(res, "scope"):
@@ -1709,32 +1700,11 @@ class NewFrameLayout(wx.Frame):
             self.isUploading = False
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
-            if self.WINDOWS:
-                self.gridPanel.enableGridProperties()
-                self.gridPanel.autoSizeGridsColumns()
-                self.sidePanel.groupChoice.Enable(True)
-                self.sidePanel.deviceChoice.Enable(True)
-                self.gridPanel.thawGridsIfFrozen()
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION, self.gridPanel.thawGridsIfFrozen
-                )
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    self.gridPanel.enableGridProperties,
-                )
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    self.gridPanel.autoSizeGridsColumns,
-                )
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.sidePanel.groupChoice.Enable, True),
-                )
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.sidePanel.deviceChoice.Enable, True),
-                )
+            determineDoHereorMainThread(self.gridPanel.thawGridsIfFrozen)
+            determineDoHereorMainThread(self.gridPanel.enableGridProperties)
+            determineDoHereorMainThread(self.gridPanel.autoSizeGridsColumns)
+            determineDoHereorMainThread(self.sidePanel.groupChoice.Enable, True)
+            determineDoHereorMainThread(self.sidePanel.deviceChoice.Enable, True)
         if source == 3:
             cmdResults = []
             if (
@@ -3189,157 +3159,45 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
-        if self.WINDOWS:
-            self.sidePanel.runBtn.Enable(state)
-            self.sidePanel.actionChoice.Enable(state)
-            self.sidePanel.removeEndpointBtn.Enable(state)
+        determineDoHereorMainThread(self.sidePanel.runBtn.Enable, state)
+        determineDoHereorMainThread(self.sidePanel.actionChoice.Enable, state)
+        determineDoHereorMainThread(self.sidePanel.removeEndpointBtn.Enable, state)
 
-            if not self.sidePanel.appChoice.IsEnabled() and state:
-                action = self.sidePanel.actionChoice.GetValue()
-                clientData = None
-                if action in Globals.GENERAL_ACTIONS:
-                    clientData = Globals.GENERAL_ACTIONS[action]
-                elif action in Globals.GRID_ACTIONS:
-                    clientData = Globals.GRID_ACTIONS[action]
-                self.sidePanel.setAppChoiceState(clientData)
-            else:
-                self.sidePanel.appChoice.Enable(state)
-
-            self.frame_toolbar.EnableTool(self.frame_toolbar.otool.Id, state)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, state)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, state)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.atool.Id, state)
-
-            # Toggle Menu Bar Items
-            self.menubar.fileOpenAuth.Enable(state)
-            for option in self.menubar.sensitiveMenuOptions:
-                self.menubar.EnableTop(option, state)
-            self.menubar.fileOpenConfig.Enable(state)
-            self.menubar.pref.Enable(state)
-            self.menubar.collection.Enable(state)
-            self.menubar.eqlQuery.Enable(state)
-            self.menubar.run.Enable(state)
-            self.menubar.installedDevices.Enable(state)
-            if not self.blueprintsEnabled:
-                self.menubar.clone.Enable(state)
-            else:
-                self.menubar.cloneBP.Enable(state)
-            self.menubar.command.Enable(state)
-            self.menubar.collectionSubMenu.Enable(state)
-            self.menubar.groupSubMenu.Enable(state)
-            self.menubar.setSaveMenuOptionsEnableState(state)
+        if not self.sidePanel.appChoice.IsEnabled() and state:
+            action = self.sidePanel.actionChoice.GetValue()
+            clientData = None
+            if action in Globals.GENERAL_ACTIONS:
+                clientData = Globals.GENERAL_ACTIONS[action]
+            elif action in Globals.GRID_ACTIONS:
+                clientData = Globals.GRID_ACTIONS[action]
+            determineDoHereorMainThread(self.sidePanel.setAppChoiceState, clientData)
         else:
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.sidePanel.runBtn.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.sidePanel.actionChoice.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.sidePanel.removeEndpointBtn.Enable, (state,)),
-            )
+            determineDoHereorMainThread(self.sidePanel.appChoice.Enable, state)
+        
+        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.otool.Id, state)
+        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.rtool.Id, state)
+        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.cmdtool.Id, state)
+        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.atool.Id, state)
 
-            if not self.sidePanel.appChoice.IsEnabled() and state:
-                action = self.sidePanel.actionChoice.GetValue()
-                clientData = None
-                if action in Globals.GENERAL_ACTIONS:
-                    clientData = Globals.GENERAL_ACTIONS[action]
-                elif action in Globals.GRID_ACTIONS:
-                    clientData = Globals.GRID_ACTIONS[action]
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.sidePanel.setAppChoiceState, (clientData,)),
-                )
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.sidePanel.appChoice.Enable, (state,)),
-                )
+        # Toggle Menu Bar Items
+        determineDoHereorMainThread(self.menubar.fileOpenAuth.Enable, state)
+        for option in self.menubar.sensitiveMenuOptions:
+            determineDoHereorMainThread(self.menubar.EnableTop, option, state)
+        determineDoHereorMainThread(self.menubar.fileOpenConfig.Enable, state)
+        determineDoHereorMainThread(self.menubar.pref.Enable, state)
+        determineDoHereorMainThread(self.menubar.collection.Enable, state)
+        determineDoHereorMainThread(self.menubar.eqlQuery.Enable, state)
+        determineDoHereorMainThread(self.menubar.run.Enable, state)
+        determineDoHereorMainThread(self.menubar.installedDevices.Enable, state)
+        determineDoHereorMainThread(self.menubar.command.Enable, state)
+        determineDoHereorMainThread(self.menubar.collectionSubMenu.Enable, state)
+        determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
+        determineDoHereorMainThread(self.menubar.setSaveMenuOptionsEnableState, state)
 
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.frame_toolbar.EnableTool, (self.frame_toolbar.otool.Id, state)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.frame_toolbar.EnableTool, (self.frame_toolbar.rtool.Id, state)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.frame_toolbar.EnableTool, (self.frame_toolbar.cmdtool.Id, state)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
-            )
-
-            # Toggle Menu Bar Items
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.frame_toolbar.EnableTool, (self.frame_toolbar.atool.Id, state)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.fileOpenAuth.Enable, (state,)),
-            )
-            for option in self.menubar.sensitiveMenuOptions:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.menubar.EnableTop, (option, state)),
-                )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.fileOpenConfig.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.pref.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.collection.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.eqlQuery.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.run.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.installedDevices.Enable, (state,)),
-            )
-            if not self.blueprintsEnabled:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.menubar.clone.Enable, (state,)),
-                )
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (self.menubar.cloneBP.Enable, (state,)),
-                )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.command.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.collectionSubMenu.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.groupSubMenu.Enable, (state,)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (self.menubar.setSaveMenuOptionsEnableState, (state,)),
-            )
+        if not self.blueprintsEnabled:
+            determineDoHereorMainThread(self.menubar.clone.Enable, state)
+        else:
+            determineDoHereorMainThread(self.menubar.cloneBP.Enable, state)
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
