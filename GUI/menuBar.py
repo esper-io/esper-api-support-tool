@@ -244,6 +244,9 @@ class ToolMenuBar(wx.MenuBar):
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
+        tnc = helpMenu.Append(wx.ID_ANY, "Terms and Conditions", "&Terms and Conditions")
+        self.Bind(wx.EVT_MENU, self.onDisclaimer, tnc)
+
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
