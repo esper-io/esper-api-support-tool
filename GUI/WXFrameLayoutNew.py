@@ -2616,7 +2616,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToNetworkGrid(device, deviceInfo)
+                    determineDoHereorMainThread(self.gridPanel.addDeviceToNetworkGrid, device, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     Globals.THREAD_POOL.enqueue(
@@ -2629,7 +2629,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.addDeviceToDeviceGrid(deviceInfo)
+                    determineDoHereorMainThread(self.gridPanel.addDeviceToDeviceGrid, deviceInfo)
                 else:
                     # construct and add info to grid contents
                     Globals.THREAD_POOL.enqueue(
@@ -2641,9 +2641,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    self.gridPanel.populateAppGrid(
-                        device, deviceInfo, deviceInfo["appObj"]
-                    )
+                    determineDoHereorMainThread(self.gridPanel.populateAppGrid, device, deviceInfo, deviceInfo["appObj"])
                 else:
                     Globals.THREAD_POOL.enqueue(
                         self.gridPanel.constructAppGridContent,
