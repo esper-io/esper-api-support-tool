@@ -427,9 +427,7 @@ class NewFrameLayout(wx.Frame):
                     self.readAuthCSV()
                     if self.auth_data:
                         isValid = True
-                    if not self.IsShown():
-                        isValid = True
-                dialog.DestroyLater()
+                determineDoHereorMainThread(dialog.DestroyLater)
 
     def addEndpointEntry(self, name, host, entId, key, prefix, csvRow):
         isValid = validateConfiguration(host, entId, key, prefix=prefix)
