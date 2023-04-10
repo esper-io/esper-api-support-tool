@@ -599,7 +599,7 @@ class UserCreation(wx.Frame):
                 resp = modifyUser(allUsers, user)
                 num += 1
                 logMsg = ""
-                if resp.status_code < 299:
+                if resp and resp.status_code < 299:
                     logMsg = "Successfully modified user account: %s" % username
                     numCreated += 1
                 else:

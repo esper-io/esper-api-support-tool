@@ -911,12 +911,14 @@ class GridPanel(wx.Panel):
             deviceName = (
                 device.device_name
                 if hasattr(device, "device_name")
-                else device["device_name"]
+                else device["device_name"] if type(device) is dict else ""
             )
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
                 esperName = self.grid_1.GetCellValue(rowNum, 0)
-                if (device and esperName == deviceName) or applyAll:
+                id_index = self.grid1HeaderLabels.index("Esper Id")
+                esperId = self.grid_1.GetCellValue(rowNum, id_index)
+                if (device and (esperName == deviceName or esperId == device)) or applyAll:
                     for colNum in range(self.grid_1.GetNumberCols()):
                         if (
                             colNum < self.grid_1.GetNumberCols()
@@ -1085,6 +1087,7 @@ class GridPanel(wx.Panel):
             for device in self.grid_1_contents:
                 if device["EsperName"] not in aliasList:
                     aliasList[device["EsperName"]] = device["Alias"]
+                    aliasList[device["id"]] = device["Alias"]
         else:
             aliasList = self.getDeviceAliasFromGrid()
         return aliasList

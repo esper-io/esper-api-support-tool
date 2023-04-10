@@ -8,6 +8,7 @@ import wx.adv as adv
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
+from GUI.Dialogs.HtmlDialog import HtmlDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from GUI.UserCreation import UserCreation
 from Utility import EventUtility
@@ -198,6 +199,11 @@ class ToolMenuBar(wx.MenuBar):
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
         )
         self.userReportItem = self.userSubMenu.Append(userReport)
+        
+        pendingUserReport = wx.MenuItem(
+            self.userSubMenu, wx.ID_ANY, "&Get Pending User Report\tCtrl+Alt+U"
+        )
+        self.pendingUserReportItem = self.userSubMenu.Append(pendingUserReport)
 
         # View Menu
         viewMenu = wx.Menu()
@@ -243,6 +249,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.onUpdateCheck, checkUpdate)
 
         helpMenu.Append(wx.ID_SEPARATOR)
+
+        tnc = helpMenu.Append(wx.ID_HELP, "Terms and Conditions", "&Terms and Conditions")
+        self.Bind(wx.EVT_MENU, self.onDisclaimer, tnc)
 
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
@@ -319,6 +328,7 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
+        self.Bind(wx.EVT_MENU, self.parentFrame.onPendingUserReport, self.pendingUserReportItem)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
         )
@@ -336,6 +346,17 @@ class ToolMenuBar(wx.MenuBar):
         info.SetWebSite(Globals.ESPER_LINK)
 
         adv.AboutBox(info)
+
+    @api_tool_decorator()
+    def onDisclaimer(self, event=None, showCheckBox=False):
+        showDisclaimer = True
+        with HtmlDialog(showCheckbox=showCheckBox) as dialog:
+            Globals.OPEN_DIALOGS.append(dialog)
+            dialog.ShowModal()
+            Globals.OPEN_DIALOGS.remove(dialog)
+
+            showDisclaimer = bool(not dialog.isCheckboxChecked())
+        return showDisclaimer
 
     @api_tool_decorator()
     def onHelp(self, event):

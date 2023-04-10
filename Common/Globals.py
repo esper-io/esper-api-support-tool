@@ -15,7 +15,7 @@ enterprise_id = ""
 IS_DEBUG = False
 
 """ Constants """
-VERSION = "v0.19484"
+VERSION = "v0.19485"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -24,6 +24,7 @@ MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}
 IS_TOKEN_VALID = False
+TOKEN_USER = None
 
 MAX_DEVICE_COUNT = 5000
 
@@ -49,6 +50,18 @@ if THREAD_POOL:
 DESCRIPTION = """Esper API Support Tool makes use of Esper's APIs to programmatically control and monitor
 your enterprise's Android-based Dedicated Devices providing features that are not currently
 available on the Esper Console Dashboard."""
+
+TERMS_AND_CONDITIONS = """
+<html><body><p>This Beta Services Addendum (“<strong>Beta Terms</strong>”) describes your rights and responsibilities when accessing the Beta Services. By using a Beta Service, you:</p>
+<ul><li><p>agree to the following terms on behalf of the Esper customer with which you are employed, affiliated or associated (“<strong>Customer</strong>”),</p></li>
+<li><p>represent that you have the authority to bind Customer to these Beta Terms, and</p></li>
+<li><p>represent that you are an Authorized User under the Terms of Service found at https://www.esper.io/terms-of-service or other written agreement between Esper and Customer governing provision and use of the Solution, Services, or other similar operative term for Esper service (as referenced herein, the “<strong>Services</strong>”) (the “<strong>Agreement</strong>”).</p></li></ul>
+<p>If you do not have such authority or do not agree to these Beta Terms, you may not use the Beta Services. These Beta Terms are an addendum to and form a part of the Agreement. To the extent of any conflict or inconsistency between the provisions in these Beta Terms and the Agreement, these Beta Terms shall control. Capitalized terms used but not defined herein shall have the meaning ascribed in the Agreement.</p>
+<ol><li><p><strong>Beta Services.</strong> From time to time, Esper may make certain Services, features or functionality available to Customer, at no charge, which may be designated by Esper as a beta, pilot, limited release, developer preview, non-production, evaluation, or by a similar description, to be used in conjunction with or separate from the Services, as applicable (each, a “<strong>Beta Service</strong>” and collectively, the “<strong>Beta Services</strong>”). Pursuant to the terms hereof, Esper agrees to allow Customer to use the Beta Services and Customer may choose to use such Beta Services or not in its sole discretion. Beta Services are not generally available, may contain bugs and errors, and may be subject to additional terms as set forth in any associated documentation.</p></li>
+<li><p><strong>No Performance or Uptime Warranties.</strong> NOTWITHSTANDING ANYTHING TO THE CONTRARY IN THE AGREEMENT, CUSTOMER ACKNOWLEDGES AND AGREES THAT THE BETA SERVICES ARE PROVIDED “AS-IS” WITH RESPECT TO THEIR PERFORMANCE, SPEED, FUNCTIONALITY, SUPPORT, AND AVAILABILITY AND ESPER WILL HAVE NO LIABILITY OR OBLIGATION FOR ANY HARM OR DAMAGE ARISING FROM DEFICIENCIES THEREWITH OR RESULTING FROM ANY USE OF BETA SERVICES.</p></li>
+<li><p><strong>Confidentiality.</strong> Customer agrees that any associated functionality or product information; any features or functions that are disclosed by Esper to Customer and are not publicly available including, without limitation, non-public or pre-release tools, products, environments or APIs and any associated documentation, and any and all data or information contained therein (“<strong>Esper Proprietary Elements</strong>”); and Customer’s participation in the Beta Services program constitute Esper’s Confidential Information, as defined in the Agreement. This “Confidentiality” section shall survive termination of these Beta Terms and shall continue to apply to the Esper Proprietary Elements unless and until the Esper Proprietary Elements become generally available to the public without restriction and through no fault of Customer or any of its Affiliates, agents, consultants or employees.</p></li>
+<li><p><strong>Term and Termination.</strong> Notwithstanding anything to the contrary in the Agreement, these Beta Terms commence on the date you indicate your acceptance to the Beta Terms, or enable or use a Beta Service, whichever is earliest. Customer acknowledges and agrees that Esper may discontinue making any particular Beta Service available to Customer at any time in its sole discretion, and may never make the Beta Service generally available as part of, or an add-on to, the Services, and that its decision to purchase the Services was not and is not contingent on the delivery of any future functionality or features within the Beta Services.</p></li></ol></body></html>
+"""
 
 HAS_INTERNET = None
 
@@ -297,6 +310,7 @@ FONT_SIZE = 11
 HEADER_FONT_SIZE = FONT_SIZE + 7
 CHECK_PRERELEASES = False
 AUTO_REPORT_ISSUES = False
+SHOW_DISCLAIMER = True
 
 # Save Prefs
 SAVE_VISIBILITY = False

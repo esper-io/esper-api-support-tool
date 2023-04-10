@@ -69,6 +69,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleEnabled",
             "scheduleReportType",
             "scheduleInterval",
+            "showDisclaimer",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -134,6 +135,17 @@ class PreferencesDialog(wx.Dialog):
             "Allow Auto-Posting of Issues",
             wx.CheckBox,
             "Allow EAST to automatically report issues raised and relayed back to the user (most Error dialogs).",
+        )
+
+        (_, _, self.checkbox_28,) = self.addPrefToPanel(
+            self.general,
+            sizer_6,
+            "Display Terms on Launch",
+            wx.CheckBox,
+            "Display our Terms for tool use on launch",
+        )
+        self.checkbox_28.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.SHOW_DISCLAIMER else wx.CHK_CHECKED
         )
 
         # Report Options
@@ -707,6 +719,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleEnabled": self.checkbox_26.IsChecked(),
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
+            "showDisclaimer": self.checkbox_28.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -745,6 +758,7 @@ class PreferencesDialog(wx.Dialog):
             Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
         Globals.APP_COL_FILTER = self.appColFilter
+        Globals.SHOW_DISCLAIMER = self.prefs["showDisclaimer"]
 
         Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
         Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
@@ -930,12 +944,12 @@ class PreferencesDialog(wx.Dialog):
                 self.combobox_2.SetSelection(self.prefs["appFilter"])
             Globals.APP_FILTER = self.combobox_1.GetValue().lower()
 
-        if self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5):
+        if self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5, True):
             Globals.REACH_QUEUED_ONLY = True
         else:
             Globals.REACH_QUEUED_ONLY = False
 
-        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13):
+        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13, True):
             Globals.MATCH_SCROLL_POS = True
         else:
             Globals.MATCH_SCROLL_POS = False
@@ -1110,12 +1124,19 @@ class PreferencesDialog(wx.Dialog):
                 self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
             )
 
+        if self.checkBooleanValuePrefAndSet(
+            "showDisclaimer", self.checkbox_28, True
+        ):
+            Globals.SHOW_DISCLAIMER = True
+        else:
+            Globals.SHOW_DISCLAIMER = False
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
 
-    def checkBooleanValuePrefAndSet(self, key, checkbox):
-        isEnabled = False
+    def checkBooleanValuePrefAndSet(self, key, checkbox, default=False):
+        isEnabled = default
         if key in self.prefs:
             if (
                 isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true"
@@ -1125,7 +1146,10 @@ class PreferencesDialog(wx.Dialog):
             else:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)
         else:
-            checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+            if not default:
+                checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+            else:
+                checkbox.Set3StateValue(wx.CHK_CHECKED)
 
         return isEnabled
 
@@ -1230,6 +1254,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SCHEDULE_TYPE
         elif key == "scheduleInterval":
             return Globals.SCHEDULE_INTERVAL
+        elif key == "showDisclaimer":
+            return Globals.SHOW_DISCLAIMER
         else:
             return None
 

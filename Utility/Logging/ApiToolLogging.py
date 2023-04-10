@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import os
 import platform
 import sys
@@ -74,12 +75,11 @@ class ApiToolLog:
         self.limitLogFileSizes()
         content = [
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
-            str(exc_type),
-            str(exc_value),
-            "Esper Tool Version: " + Globals.VERSION,
+            "%s\t%s\n" % (str(exc_type), str(exc_value)),
+            "Esper Tool Version: %s\n" % Globals.VERSION,
         ]
         for line in exc_traceback:
-            content.append(line)
+            content.append(line.split('",')[1])
 
         with open(self.logPath, "a") as myfile:
             for entry in content:
@@ -90,15 +90,20 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame:
+            # if Globals.frame.audit:
+            #     Globals.frame.audit.postOperation({
+            #     "operation": "ERROR: %s" % str(e),
+            #     "data": content
+            # })
             Globals.frame.Logging(str(e), True)
 
-    def LogPlace(self, str):
+    def LogPlace(self, str_place):
         with open(self.placePath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), str))
+            myfile.write("%s\t: %s\n" % (datetime.now(), str_place))
 
     def LogResponse(self, response):
         with open(self.logPath, "a") as myfile:
-            myfile.write(response + "\n")
+            myfile.write("%s\t: %s\n" % (datetime.now(), response))
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -133,9 +138,12 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s Session API Summary:\t%s\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s\nTenant: %s\nUser: %s (id: %s)\n\nSession API Summary:\t%s\n\nTotal Requests: %s\n\n" % (
                 datetime.now(),
-                str(api_func),
+                str(Globals.configuration.host),
+                str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
+                str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
+                str(api_func) if api_func != ApiTracker.API_REQUEST_TRACKER else json.dumps(ApiTracker.API_REQUEST_TRACKER, indent=4),
                 ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
         else:
@@ -171,22 +179,31 @@ class ApiToolLog:
                     ApiTracker.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
         if writeToFile:
-            strToWrite = (
-                "%s API Request orginated from %s, triggerring %s. Total Requests: %s\n"
-                % (
-                    datetime.now(),
-                    str(src),
-                    str(api_func)
-                    if not hasattr(api_func, "__name__")
-                    else api_func.__name__,
-                    ApiTracker.API_REQUEST_SESSION_TRACKER,
+            if not strToWrite:
+                strToWrite = (
+                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\nFunction: %s, triggerring %s.\n\nTotal Requests: %s\n"
+                    % (
+                        datetime.now(),
+                        str(Globals.configuration.host),
+                        str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
+                        str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
+                        str(src),
+                        str(api_func)
+                        if not hasattr(api_func, "__name__")
+                        else api_func.__name__,
+                        ApiTracker.API_REQUEST_SESSION_TRACKER,
+                    )
                 )
-            )
             Globals.api_log_lock.acquire()
             self.limitLogFileSizes()
             try:
                 with open(self.logPath, "a") as myfile:
                     myfile.write(strToWrite)
+                if "Summary" in strToWrite and Globals.frame.audit:
+                    Globals.frame.audit.postOperation({
+                        "operation": "API Usage Summary",
+                        "data": strToWrite
+                    })
             except:
                 pass
             finally:
