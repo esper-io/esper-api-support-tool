@@ -463,6 +463,7 @@ def correctSaveFileName(inFile):
 
 @api_tool_decorator()
 def installSslCerts():
+    base_path = os.path.abspath(".")
     if platform.system() != "Windows":
         STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
              | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
@@ -479,3 +480,4 @@ def installSslCerts():
             pass
         os.symlink(relpath_to_certifi_cafile, openssl_cafile)
         os.chmod(openssl_cafile, STAT_0o775)
+        os.chdir(base_path)
