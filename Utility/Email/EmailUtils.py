@@ -2,6 +2,8 @@ import smtplib, ssl
 
 from email.message import EmailMessage
 
+from Utility.Resource import installSslCerts
+
 
 class EmailUtils:
     def __init__(self, login, password, to_addrs):
@@ -12,6 +14,8 @@ class EmailUtils:
 
         # Create a secure SSL context
         self.context = ssl.create_default_context()
+
+        installSslCerts()
 
     def isReadyToSend(self):
         return self.password and self.login and self.to_addrs
