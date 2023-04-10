@@ -463,6 +463,7 @@ def correctSaveFileName(inFile):
 
 @api_tool_decorator()
 def installSslCerts():
+    # will work on next run (hopefully) if not configured already
     base_path = os.path.abspath(".")
     if platform.system() != "Windows":
         STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
