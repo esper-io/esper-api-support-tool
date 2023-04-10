@@ -13,10 +13,11 @@ class EmailUtils:
         self.login = login
         self.to_addrs = to_addrs
 
+        installSslCerts()
+
         # Create a secure SSL context
         self.context = ssl.create_default_context()
 
-        installSslCerts()
 
     def isReadyToSend(self):
         return self.password and self.login and self.to_addrs
