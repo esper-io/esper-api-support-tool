@@ -465,7 +465,7 @@ class ToolMenuBar(wx.MenuBar):
     def onEqlQuery(self, event):
         postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids(None)
+        self.parentFrame.onClearGrids()
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
         ) as textDialog:
@@ -491,7 +491,7 @@ class ToolMenuBar(wx.MenuBar):
     def onCollection(self, event):
         postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids(None)
+        self.parentFrame.onClearGrids()
         with CollectionsDialog(self.parentFrame) as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
             if dlg.ShowModal() == wx.ID_EXECUTE:

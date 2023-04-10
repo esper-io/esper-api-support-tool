@@ -16,6 +16,7 @@ from Utility.deviceInfo import constructNetworkInfo
 from Utility.Resource import (
     acquireLocks,
     checkIfCurrentThreadStopped,
+    determineDoHereorMainThread,
     postEventToFrame,
     releaseLocks,
     resourcePath,
@@ -207,13 +208,7 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        if platform.system() == "Windows":
-            self.grid_1.AutoSizeColumns()
-        else:
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                self.grid_1.AutoSizeColumns,
-            )
+        determineDoHereorMainThread(self.grid_1.AutoSizeColumns)
 
     def deleteAppColInDeviceGrid(self):
         numCols = self.grid_1.GetNumberCols()
@@ -248,13 +243,7 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        if platform.system() == "Windows":
-            self.grid_2.AutoSizeColumns()
-        else:
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                self.grid_2.AutoSizeColumns,
-            )
+        determineDoHereorMainThread(self.grid_2.AutoSizeColumns)
 
     @api_tool_decorator()
     def fillAppGridHeaders(self):
@@ -269,13 +258,7 @@ class GridPanel(wx.Panel):
                     num += 1
         except:
             pass
-        if platform.system() == "Windows":
-            self.grid_3.AutoSizeColumns()
-        else:
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                self.grid_3.AutoSizeColumns,
-            )
+        determineDoHereorMainThread(self.grid_3.AutoSizeColumns)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def emptyDeviceGrid(self, emptyContents=True):
@@ -335,13 +318,7 @@ class GridPanel(wx.Panel):
         self.userEdited.append((event.Row, event.Col))
         editor = self.grid_1.GetCellEditor(event.Row, event.Col)
         if not editor.IsCreated():
-            if platform.system() == "Windows":
-                self.grid_1.AutoSizeColumns()
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    self.grid_1.AutoSizeColumns,
-                )
+            determineDoHereorMainThread(self.grid_1.AutoSizeColumns)
         self.onCellEdit(event)
         releaseLocks([Globals.grid1_lock])
 
@@ -605,23 +582,9 @@ class GridPanel(wx.Panel):
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (0))
 
     def repopulateGridUIChanges(self, grid, column):
-        if platform.system() == "Windows":
-            grid.AutoSizeColumns()
-            grid.MakeCellVisible(0, column)
-            grid.Thaw()
-        else:
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                grid.AutoSizeColumns,
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (grid.MakeCellVisible, (0, column)),
-            )
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                grid.Thaw,
-            )
+        determineDoHereorMainThread(grid.AutoSizeColumns)
+        determineDoHereorMainThread(grid.MakeCellVisible, 0, column)
+        determineDoHereorMainThread(grid.Thaw)
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
@@ -1515,72 +1478,33 @@ class GridPanel(wx.Panel):
     def onScroll(self, event):
         scrollPosPercentage = self.getScrollpercentage(self.grid_1)
         if scrollPosPercentage >= 90:
-            if platform.system() == "Windows":
-                self.populateGridRows(
-                    self.grid_1,
-                    self.grid_1_contents,
-                    Globals.CSV_TAG_ATTR_NAME,
-                    lock=Globals.grid1_lock,
-                )
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (
-                        self.populateGridRows,
-                        (
-                            self.grid_1,
-                            self.grid_1_contents,
-                            Globals.CSV_TAG_ATTR_NAME,
-                            Globals.grid1_lock,
-                        ),
-                    ),
-                )
+            determineDoHereorMainThread(
+                self.populateGridRows,
+                self.grid_1,
+                self.grid_1_contents,
+                Globals.CSV_TAG_ATTR_NAME,
+                Globals.grid1_lock,
+            )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_2)
         if scrollPosPercentage >= 90:
-            if platform.system() == "Windows":
-                self.populateGridRows(
-                    self.grid_2,
-                    self.grid_2_contents,
-                    Globals.CSV_NETWORK_ATTR_NAME,
-                    lock=Globals.grid2_lock,
-                )
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (
-                        self.populateGridRows,
-                        (
-                            self.grid_2,
-                            self.grid_2_contents,
-                            Globals.CSV_NETWORK_ATTR_NAME,
-                            Globals.grid2_lock,
-                        ),
-                    ),
-                )
+            determineDoHereorMainThread(
+                self.populateGridRows,
+                self.grid_2,
+                self.grid_2_contents,
+                Globals.CSV_NETWORK_ATTR_NAME,
+                Globals.grid2_lock,
+            )
 
         scrollPosPercentage = self.getScrollpercentage(self.grid_3)
         if scrollPosPercentage >= 90:
-            if platform.system() == "Windows":
-                self.populateGridRows(
-                    self.grid_3,
-                    self.grid_3_contents,
-                    Globals.CSV_APP_ATTR_NAME,
-                    lock=Globals.grid3_lock,
-                )
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_PROCESS_FUNCTION,
-                    (
-                        self.populateGridRows,
-                        (
-                            self.grid_3,
-                            self.grid_3_contents,
-                            Globals.CSV_APP_ATTR_NAME,
-                            Globals.grid3_lock,
-                        ),
-                    ),
-                )
+            determineDoHereorMainThread(
+                self.populateGridRows,
+                self.grid_3,
+                self.grid_3_contents,
+                Globals.CSV_APP_ATTR_NAME,
+                Globals.grid3_lock,
+            )
         if event:
             event.Skip()
 

@@ -1440,7 +1440,7 @@ class NewFrameLayout(wx.Frame):
         self.configMenuItem = self.menubar.configMenu.FindItemById(event.Id)
         if not self.firstRun:
             Globals.THREAD_POOL.clearQueue()
-        self.onClearGrids(None)
+        self.onClearGrids()
         clearKnownGroups()
         try:
             if self.groupManage:
@@ -2156,7 +2156,7 @@ class NewFrameLayout(wx.Frame):
                 )
             )
             if res == wx.YES:
-                self.onClearGrids(None)
+                self.onClearGrids()
                 self.gridPanel.grid_1_contents = []
                 self.gridPanel.grid_2_contents = []
                 self.gridPanel.grid_3_contents = []
@@ -2602,10 +2602,10 @@ class NewFrameLayout(wx.Frame):
     ):
         for entry in deviceList:
             if entId != Globals.enterprise_id:
-                self.onClearGrids(None)
+                self.onClearGrids()
                 break
             if checkIfCurrentThreadStopped():
-                self.onClearGrids(None)
+                self.onClearGrids()
                 break
             device = entry[0]
             deviceInfo = entry[1]
@@ -2771,11 +2771,13 @@ class NewFrameLayout(wx.Frame):
             event.Skip()
 
     @api_tool_decorator()
-    def onClearGrids(self, event):
+    def onClearGrids(self, event=None):
         """ Empty Grids """
         self.gridPanel.emptyDeviceGrid()
         self.gridPanel.emptyNetworkGrid()
         self.gridPanel.emptyAppGrid()
+        if event and hasattr(event, "Skip"):
+            event.Skip()
 
     @api_tool_decorator()
     def readAuthCSV(self):
@@ -3211,7 +3213,7 @@ class NewFrameLayout(wx.Frame):
                 if res == wx.ID_OK:
                     app, version = dlg.getAppValues()
                     if app and version:
-                        self.onClearGrids(None)
+                        self.onClearGrids()
                         self.statusBar.gauge.Pulse()
                         self.setCursorBusy()
                         self.isRunning = True
