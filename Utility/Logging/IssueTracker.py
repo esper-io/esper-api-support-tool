@@ -41,6 +41,7 @@ class IssueTracker:
 
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
+            tokenJson = {}
             with open(filePath, "r") as file:
                 tokenJson = json.load(file)
             if "pat" in tokenJson:

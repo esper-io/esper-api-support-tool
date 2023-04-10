@@ -58,7 +58,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
         entry = rowTaglist[row]
         identifier = entry
 
-        if "id" in entry.keys():
+        if "id" in entry.keys() and entry["id"]:
             identifier = entry["id"]
             devices.append(identifier)
         else:
@@ -82,6 +82,11 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                     eventUtil.myEVT_LOG,
                     "---> ERROR: Failed to find device with identifer: %s" % identifier,
                 )
+
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "ChangeAliasAndTags",
+        "data": {"tags":tagsFromGrid, "alias": aliasDic},
+    })
 
     splitResults = splitListIntoChunks(devices)
 
@@ -131,7 +136,7 @@ def processDeviceModificationForList(
     for entry in aliasStatus:
         match = list(
             filter(
-                lambda x: x["Device Name"] == entry["Device Name"],
+                lambda x: x["Device Name"] == entry["Device Name"] if entry["Device Name"] else x["Device Id"] == entry["Device Id"],
                 tagStatus,
             )
         )
@@ -145,7 +150,7 @@ def processDeviceModificationForList(
     for entry in tagStatus:
         match = list(
             filter(
-                lambda x: x["Device Name"] == entry["Device Name"],
+                lambda x: x["Device Name"] == entry["Device Name"] if entry["Device Name"] else x["Device Id"] == entry["Device Id"],
                 tmp,
             )
         )
@@ -207,7 +212,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
         elif deviceId in aliasDic:
             newName = aliasDic[deviceId]
         logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
-        if not newName and not aliasName:
+        if not newName:
             status = {
                 "Device Name": deviceName,
                 "Device Id": deviceId,
@@ -222,6 +227,8 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
                 status = apiCalls.setdevicename(frame, deviceId, newName, ignoreQueued)
             except Exception as e:
                 ApiToolLog().LogError(e)
+            if hasattr(status, "to_dict"):
+                status = status.to_dict()
             if "Success" in str(status):
                 logString = logString + " <success>"
                 succeeded += 1
@@ -248,13 +255,22 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             int(frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
-    if type(status) != dict:
-        status = {
-            "Device Name": deviceName,
-            "Device Id": deviceId,
-            "Alias Status": status if status else "No alias to set",
+    statusResp = {
+        "Device Name": deviceName,
+        "Device Id": deviceId,
+        "Alias Status": status if status else "No alias to set",
+    }
+    if status:
+        statusResp["Alias Status"] = {
+            "id": status["id"],
+            "request": status["request"],
+            "device": status["device"],
+            "state": status["state"],
+            "reason": status["reason"],
         }
-    return (numNewName, succeeded, status)
+    else:
+        statusResp["Alias Status"] = "No alias to set"
+    return (numNewName, succeeded, statusResp)
 
 
 @api_tool_decorator()
@@ -330,7 +346,7 @@ def setAppStateForAllAppsListed(state):
         deviceList = getDeviceIdFromGridDevices(devices)
 
         Globals.THREAD_POOL.enqueue(
-            setAllAppsState, Globals.frame, deviceList, Globals.frame.AppState
+            setAllAppsState, deviceList, Globals.frame.AppState
         )
 
         Globals.THREAD_POOL.enqueue(
@@ -344,7 +360,7 @@ def setAppStateForAllAppsListed(state):
 
 
 @api_tool_decorator()
-def setAllAppsState(frame, device, state):
+def setAllAppsState(device, state):
     stateStatuses = []
     deviceName = None
     deviceId = None
@@ -387,6 +403,15 @@ def setAllAppsState(frame, device, state):
                 package_name,
                 state="SHOW",
             )
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
+            "operation": "SetAppState",
+            "data": {
+                "id": deviceId,
+                "app": package_name,
+                "state": state
+            },
+            "resp": stateStatus
+        })
         if stateStatus and hasattr(stateStatus, "state"):
             entry = {
                 "Device Name": deviceName,
@@ -726,6 +751,10 @@ def uninstallApp(frame):
 
 def processBulkFactoryReset(devices, numDevices, processed):
     status = []
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "WIPE",
+        "data": devices,
+    })
     for device in devices:
         deviceId = None
         if hasattr(device, "device_name"):
@@ -783,6 +812,10 @@ def processSetDeviceDisabled(devices, numDevices, processed):
             eventUtil.myEVT_UPDATE_GAUGE,
             value,
         )
+    postEventToFrame(eventUtil.myEVT_AUDIT, {
+        "operation": "DisableDevice(s)",
+        "data": devices,
+    })
     return status
 
 

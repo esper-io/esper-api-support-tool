@@ -141,6 +141,7 @@ if __name__ == "__main__":
 
     cmd = getExecutableCommand()
     if not cmd:
+        installRequiredModules()
         raise Exception(
             "Required Modules Not Installed. Please install and rerun the script."
         )

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from Common.decorator import api_tool_decorator
+from Utility import EventUtility
+from Utility.Resource import postEventToFrame
 from Utility.Web.WebRequests import (
     performGetRequestWithRetry,
     performPostRequestWithRetry,
@@ -46,4 +48,9 @@ def uploadContentToHost(host, enterprise, key, file):
         },
         files=file,
     )
+    postEventToFrame(EventUtility.myEVT_AUDIT, {
+        "operation": "UploadContent",
+        "data": file,
+        "resp": resp
+    })
     return resp
