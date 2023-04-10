@@ -256,6 +256,8 @@ class NewFrameLayout(wx.Frame):
 
         self.prefDialog = PreferencesDialog(parent=self)
 
+        Globals.frame = self
+
         self.loadPref()
         self.__set_properties()
         self.Layout()
