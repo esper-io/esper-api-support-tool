@@ -356,6 +356,8 @@ class ToolMenuBar(wx.MenuBar):
             Globals.OPEN_DIALOGS.remove(dialog)
 
             showDisclaimer = bool(not dialog.isCheckboxChecked())
+        if Globals.frame:
+            Globals.frame.savePrefs(Globals.frame.prefDialog)
         return showDisclaimer
 
     @api_tool_decorator()
