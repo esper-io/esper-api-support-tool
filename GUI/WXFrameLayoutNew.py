@@ -1004,7 +1004,7 @@ class NewFrameLayout(wx.Frame):
                         type(value) is not bool
                         and value is not None
                         and headers[colIndx] in maxColumnWidth
-                        and maxColumnWidth[headers[colIndx]] < len(value)
+                        and maxColumnWidth[headers[colIndx]] < len(str(value))
                     ):
                         maxColumnWidth[headers[colIndx]] = len(value) + 5
                     elif type(value) is bool or value is None or not value:
