@@ -400,6 +400,7 @@ class InstalledDevicesDlg(wx.Dialog):
             queryString = self.search.GetValue()
         self.list_box_1.Clear()
 
+        self.list_box_1.Freeze()
         if queryString:
             sortedList = list(
                 filter(
@@ -415,6 +416,7 @@ class InstalledDevicesDlg(wx.Dialog):
             for item in self.appNameList:
                 self.list_box_1.Append(item)
             self.isFiltered = False
+        self.list_box_1.Thaw()
 
     def onOtherPkgInput(self, event):
         input = self.otherPkgInput.GetValue()
