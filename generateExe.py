@@ -131,7 +131,7 @@ def getExecutableCommand(doFirst=True):
 
 
 if __name__ == "__main__":
-    Globals.IS_GENERATEING_EXE = True
+    Globals.THREAD_POOL.abort()
     curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
     app_name = obtainAppName()

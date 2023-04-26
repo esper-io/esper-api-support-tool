@@ -41,9 +41,7 @@ SHEET_CHUNK_SIZE = 500000
 MIN_SHEET_CHUNK_SIZE = 50000
 MAX_SHEET_CHUNK_SIZE = 500000
 
-IS_GENERATEING_EXE = False
-
-THREAD_POOL = Pool(MAX_THREAD_COUNT) if not IS_GENERATEING_EXE else None
+THREAD_POOL = Pool(MAX_THREAD_COUNT)
 if THREAD_POOL:
     THREAD_POOL.run()
 
@@ -359,3 +357,6 @@ SCHEDULE_SAVE = "xlsx"
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
+
+
+GET_DEVICE_LANGUAGE = True
