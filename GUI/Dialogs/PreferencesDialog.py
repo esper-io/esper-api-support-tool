@@ -1145,11 +1145,14 @@ class PreferencesDialog(wx.Dialog):
                 isEnabled = True
             else:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+                isEnabled = False
         else:
             if not default:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+                isEnabled = False
             else:
                 checkbox.Set3StateValue(wx.CHK_CHECKED)
+                isEnabled = True
 
         return isEnabled
 
