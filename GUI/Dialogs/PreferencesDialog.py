@@ -70,6 +70,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleReportType",
             "scheduleInterval",
             "showDisclaimer",
+            "getTemplateLanguage"
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -187,6 +188,17 @@ class PreferencesDialog(wx.Dialog):
         )
         self.checkbox_18.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+        )
+
+        (_, _, self.checkbox_29,) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Get Template Language",
+            wx.CheckBox,
+            "Fetches Language from the Initial Template used to provision the device.\nWill increase report generation speed.\nNot appliciable for Blueprint Tenants.",
+        )
+        self.checkbox_29.Set3StateValue(
+            wx.CHK_UNCHECKED if not Globals.GET_DEVICE_LANGUAGE else wx.CHK_CHECKED
         )
 
         (_, _, self.combobox_2,) = self.addPrefToPanel(
@@ -720,6 +732,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
             "showDisclaimer": self.checkbox_28.IsChecked(),
+            "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
@@ -759,6 +772,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
         Globals.APP_COL_FILTER = self.appColFilter
         Globals.SHOW_DISCLAIMER = self.prefs["showDisclaimer"]
+        Globals.GET_DEVICE_LANGUAGE = self.prefs["getTemplateLanguage"]
 
         Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
         Globals.SCHEDULE_INTERVAL = self.prefs["scheduleInterval"]
@@ -1131,6 +1145,14 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.SHOW_DISCLAIMER = False
 
+        if self.checkBooleanValuePrefAndSet(
+            "getTemplateLanguage", self.checkbox_29
+        ):
+            Globals.GET_DEVICE_LANGUAGE = True
+        else:
+            Globals.GET_DEVICE_LANGUAGE = False
+        
+
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
         self.parent.gridPanel.repopulateApplicationField()
@@ -1259,6 +1281,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SCHEDULE_INTERVAL
         elif key == "showDisclaimer":
             return Globals.SHOW_DISCLAIMER
+        elif key == "getTemplateLanguage":
+            return Globals.GET_DEVICE_LANGUAGE
         else:
             return None
 

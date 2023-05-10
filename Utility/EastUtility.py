@@ -27,7 +27,7 @@ from Utility.API.DeviceUtility import (
     searchForDevice,
 )
 from Utility.API.GroupUtility import fetchGroupName
-from Utility.deviceInfo import constructNetworkInfo
+from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (
@@ -535,6 +535,25 @@ def populateDeviceInfoDictionaryComplieData(
             deviceInfo["groups"] = ""
         else:
             deviceInfo["groups"] = groupNames
+
+    isTemplate = True
+    if Globals.frame:
+        isTemplate = not Globals.frame.blueprintsEnabled
+
+    if Globals.GET_DEVICE_LANGUAGE and isTemplate:
+        deviceInfo["templateDeviceLocale"] = "N/A"
+        resp = getDeviceInitialTemplate(deviceId)
+        if "template" in resp:
+            if "device_locale" in resp["template"]["settings"]:
+                deviceInfo["templateDeviceLocale"] = resp["template"]["settings"]["device_locale"]
+            else:
+                deviceInfo["templateDeviceLocale"] = "N/A"
+        else:
+            deviceInfo["templateDeviceLocale"] = "N/A"
+    elif not isTemplate:
+        deviceInfo["templateDeviceLocale"] = "Not Fetched/Incompatible Field"
+    else:
+        deviceInfo["templateDeviceLocale"] = "Not Fetched"
 
     if bool(deviceAlias):
         deviceInfo["Alias"] = deviceAlias

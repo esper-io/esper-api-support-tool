@@ -186,6 +186,7 @@ CSV_TAG_ATTR_NAME = {
     "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
     "Template": "template_name",
+    "Template Device Language": "templateDeviceLocale",
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
@@ -318,6 +319,7 @@ COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
+GET_DEVICE_LANGUAGE = False
 
 # Grid Prefs
 MAX_GRID_LOAD = 100
@@ -359,4 +361,3 @@ limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
 
 
-GET_DEVICE_LANGUAGE = True
