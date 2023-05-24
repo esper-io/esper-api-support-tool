@@ -2484,6 +2484,7 @@ class NewFrameLayout(wx.Frame):
                 else "",
                 "Command(s) have been fired.",
                 result,
+                parent=self
             ) as dialog:
                 Globals.OPEN_DIALOGS.append(dialog)
                 res = dialog.ShowModal()
