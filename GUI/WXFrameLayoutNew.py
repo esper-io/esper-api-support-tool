@@ -3694,7 +3694,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onConvertTemplate(self, event):
-        with BlueprintsConvertDialog(self.sidePanel.configChoice) as dlg:
+        with BlueprintsConvertDialog(self.sidePanel.configChoice, parent=self) as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
             result = dlg.ShowModal()
             Globals.OPEN_DIALOGS.remove(dlg)

@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 
+import Common.Globals as Globals
 import wx
 import wx.adv
 
@@ -9,7 +10,7 @@ import wx.adv
 class ScheduleCmdDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         super(ScheduleCmdDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )

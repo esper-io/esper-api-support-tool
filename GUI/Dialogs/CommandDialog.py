@@ -17,7 +17,7 @@ from Common.decorator import api_tool_decorator
 class CommandDialog(wx.Dialog):
     def __init__(self, title, value="{\n\n}"):
         super(CommandDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=(400, 200),
             style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL | wx.RESIZE_BORDER,

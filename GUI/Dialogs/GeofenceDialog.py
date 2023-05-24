@@ -17,7 +17,7 @@ from Utility.Web.WebRequests import performPostRequestWithRetry
 class GeofenceDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         super(GeofenceDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=(650, 500),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
