@@ -468,7 +468,7 @@ def determineDoHereorMainThread(func, *args, **kwargs):
         # do on main thread
         postEventToFrame(
             EventUtility.myEVT_PROCESS_FUNCTION,
-            (func, *args),
+            (func, args),
         )
 
 def checkIfCurrentThreadStopped():
