@@ -19,7 +19,7 @@ class InstalledDevicesDlg(wx.Dialog):
         showBlueprintInput=False,
     ):
         super(InstalledDevicesDlg, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
