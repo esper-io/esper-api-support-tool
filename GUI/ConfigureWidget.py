@@ -205,6 +205,7 @@ class WidgetPicker(wx.Dialog):
             )
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
+        self.EndModal(wx.EVT_CLOSE.typeId)
         self.DestroyLater()
 
     def checkInput(self, event=None):
