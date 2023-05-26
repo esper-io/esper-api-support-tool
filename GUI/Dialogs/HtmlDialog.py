@@ -6,7 +6,7 @@ import Common.Globals as Globals
 class HtmlDialog(wx.Dialog):
     def __init__(self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds):
         super(HtmlDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=Globals.MIN_SIZE,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
