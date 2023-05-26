@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import pytz
+import platform
 
 import Common.Globals as Globals
 
@@ -86,8 +87,11 @@ class AuditPosting():
             data = compoundStr
 
         if self.util.isReadyToSend():
-            userStr = "User (id: %s): %s\n\n" % (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
-                Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown")
+            userStr = "User (id: %s) [OS: %s]: %s\n\n" % (
+                Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
+                platform.system(),
+                Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
+            )
             contentStr = "\nResponse Content: " + content if content else ""
             if hasattr(data, "to_dict"):
                 data = data.to_dict()
