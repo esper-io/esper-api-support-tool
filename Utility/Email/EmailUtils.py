@@ -3,7 +3,6 @@ import smtplib, ssl
 from email.message import EmailMessage
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
-from Utility.Resource import installSslCerts
 
 
 class EmailUtils:
@@ -14,12 +13,7 @@ class EmailUtils:
         self.login = login
         self.to_addrs = to_addrs
         self.do_ssl = None
-
-        installSslCerts()
-
-        # Create a secure SSL context
-        self.context = ssl.create_default_context()
-
+        self.context = ssl._create_unverified_context()
 
     def isReadyToSend(self):
         return self.password and self.login and self.to_addrs

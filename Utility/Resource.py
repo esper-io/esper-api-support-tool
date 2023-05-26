@@ -482,29 +482,3 @@ def checkIfCurrentThreadStopped():
 
 def correctSaveFileName(inFile):
     return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)
-
-@api_tool_decorator()
-def installSslCerts():
-    # will work on next run (hopefully) if not configured already
-    base_path = os.path.abspath(".")
-    if platform.system() != "Windows":
-        try:
-            STAT_0o775 = ( stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
-                | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP
-                | stat.S_IROTH | stat.S_IXOTH )
-            openssl_dir, openssl_cafile = os.path.split(
-                ssl.get_default_verify_paths().openssl_cafile)
-            if os.path.exists(openssl_dir):
-                import certifi
-                # change working directory to the default SSL directory
-                os.chdir(openssl_dir)
-                relpath_to_certifi_cafile = os.path.relpath(certifi.where())
-                try:
-                    os.remove(openssl_cafile)
-                except FileNotFoundError:
-                    pass
-                os.symlink(relpath_to_certifi_cafile, openssl_cafile)
-                os.chmod(openssl_cafile, STAT_0o775)
-        except Exception as e:
-            ApiToolLog().LogError(e)
-        os.chdir(base_path)
