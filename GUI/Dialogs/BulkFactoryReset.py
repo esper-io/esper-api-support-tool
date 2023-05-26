@@ -16,7 +16,7 @@ from Utility.Resource import (correctSaveFileName, displayMessageBox,
 class BulkFactoryReset(wx.Dialog):
     def __init__(self):
         super(BulkFactoryReset, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE,
         )

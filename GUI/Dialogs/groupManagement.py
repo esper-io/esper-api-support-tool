@@ -38,7 +38,7 @@ class GroupManagement(wx.Dialog):
         self.root = None
 
         super(GroupManagement, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER,
         )

@@ -13,7 +13,7 @@ from Common.decorator import api_tool_decorator
 class WidgetPicker(wx.Dialog):
     def __init__(self, *args, **kwds):
         super(WidgetPicker, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE
             | wx.RESIZE_BORDER,

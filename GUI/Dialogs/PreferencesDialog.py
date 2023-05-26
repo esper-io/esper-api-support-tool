@@ -13,7 +13,7 @@ from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 class PreferencesDialog(wx.Dialog):
     def __init__(self, parent=None):
         super(PreferencesDialog, self).__init__(
-            None,
+            parent,
             wx.ID_ANY,
             size=(800, 500),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,

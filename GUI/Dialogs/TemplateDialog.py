@@ -15,7 +15,7 @@ class TemplateDialog(wx.Dialog):
     def __init__(self, configMenuOpt, parent=None):
 
         super(TemplateDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
