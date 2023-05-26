@@ -374,61 +374,62 @@ def setAllAppsState(device, state):
         deviceName = device
         deviceId = device
     _, resp = apiCalls.getdeviceapps(deviceId, False, Globals.USE_ENTERPRISE_APP)
-    for app in resp["results"]:
-        stateStatus = None
-        package_name = None
-        if "application" in app:
-            package_name = app["application"]["package_name"]
-            if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
-                continue
-        else:
-            package_name = app["package_name"]
-            if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
-                continue
-        if state == "DISABLE":
-            stateStatus = apiCalls.setAppState(
-                deviceId,
-                package_name,
-                state="DISABLE",
-            )
-        if state == "HIDE":
-            stateStatus = apiCalls.setAppState(
-                deviceId,
-                package_name,
-                state="HIDE",
-            )
-        if state == "SHOW":
-            stateStatus = apiCalls.setAppState(
-                deviceId,
-                package_name,
-                state="SHOW",
-            )
-        postEventToFrame(eventUtil.myEVT_AUDIT, {
-            "operation": "SetAppState",
-            "data": {
-                "id": deviceId,
-                "app": package_name,
-                "state": state
-            },
-            "resp": stateStatus
-        })
-        if stateStatus and hasattr(stateStatus, "state"):
-            entry = {
-                "Device Name": deviceName,
-                "Device id": deviceId,
-                "State Status": stateStatus.state,
-            }
-            if hasattr(stateStatus, "reason"):
-                entry["Reason"] = stateStatus.reason
-            stateStatuses.append(entry)
-        else:
-            stateStatuses.append(
-                {
+    if resp and "results" in resp:
+        for app in resp["results"]:
+            stateStatus = None
+            package_name = None
+            if "application" in app:
+                package_name = app["application"]["package_name"]
+                if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
+            else:
+                package_name = app["package_name"]
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
+                    continue
+            if state == "DISABLE":
+                stateStatus = apiCalls.setAppState(
+                    deviceId,
+                    package_name,
+                    state="DISABLE",
+                )
+            if state == "HIDE":
+                stateStatus = apiCalls.setAppState(
+                    deviceId,
+                    package_name,
+                    state="HIDE",
+                )
+            if state == "SHOW":
+                stateStatus = apiCalls.setAppState(
+                    deviceId,
+                    package_name,
+                    state="SHOW",
+                )
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
+                "operation": "SetAppState",
+                "data": {
+                    "id": deviceId,
+                    "app": package_name,
+                    "state": state
+                },
+                "resp": stateStatus
+            })
+            if stateStatus and hasattr(stateStatus, "state"):
+                entry = {
                     "Device Name": deviceName,
                     "Device id": deviceId,
-                    "State Status": stateStatus,
+                    "State Status": stateStatus.state,
                 }
-            )
+                if hasattr(stateStatus, "reason"):
+                    entry["Reason"] = stateStatus.reason
+                stateStatuses.append(entry)
+            else:
+                stateStatuses.append(
+                    {
+                        "Device Name": deviceName,
+                        "Device id": deviceId,
+                        "State Status": stateStatus,
+                    }
+                )
     return stateStatuses
 
 
