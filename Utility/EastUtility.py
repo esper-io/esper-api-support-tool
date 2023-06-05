@@ -968,6 +968,25 @@ def populateDeviceInfoDictionary(
         else:
             deviceInfo["groups"] = groupNames
 
+    isTemplate = True
+    if Globals.frame:
+        isTemplate = not Globals.frame.blueprintsEnabled
+
+    if Globals.GET_DEVICE_LANGUAGE and isTemplate:
+        deviceInfo["templateDeviceLocale"] = "N/A"
+        resp = getDeviceInitialTemplate(deviceId)
+        if "template" in resp:
+            if "device_locale" in resp["template"]["settings"]:
+                deviceInfo["templateDeviceLocale"] = resp["template"]["settings"]["device_locale"]
+            else:
+                deviceInfo["templateDeviceLocale"] = "N/A"
+        else:
+            deviceInfo["templateDeviceLocale"] = "N/A"
+    elif not isTemplate:
+        deviceInfo["templateDeviceLocale"] = "Not Fetched/Incompatible Field"
+    else:
+        deviceInfo["templateDeviceLocale"] = "Not Fetched"
+
     if action == GeneralActions.GENERATE_APP_REPORT.value:
         return deviceInfo
 
