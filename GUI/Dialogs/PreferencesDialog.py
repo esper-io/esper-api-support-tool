@@ -195,7 +195,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_10,
             "Get Template Language",
             wx.CheckBox,
-            "Fetches Language from the Initial Template used to provision the device.\nWill increase report generation speed.\nNot appliciable for Blueprint Tenants.",
+            "Fetches Language from the Initial Template used to provision the device.\nWill increase report generation speed.\nNot applicable for Blueprint Tenants.",
         )
         self.checkbox_29.Set3StateValue(
             wx.CHK_UNCHECKED if not Globals.GET_DEVICE_LANGUAGE else wx.CHK_CHECKED
