@@ -149,6 +149,7 @@ class EsperTemplateUtil:
                 wx.MessageBox(
                     "Failed to recreate Device Group, using All Device group!",
                     style=wx.OK | wx.ICON_ERROR,
+                    parent=Globals.frame
                 )
         return templateFound
 

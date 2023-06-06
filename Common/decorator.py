@@ -109,6 +109,7 @@ def displayApiExcpetionMsg(e):
     wx.MessageBox(
         "%s %s: %s" % (e.reason, e.status, bodyMsg),
         style=wx.OK | wx.ICON_ERROR,
+        parent=Globals.frame
     )
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
@@ -117,7 +118,9 @@ def displayApiExcpetionMsg(e):
 
 def displayGenericErrorMsg(e):
     Globals.msg_lock.acquire(timeout=10)
-    wx.MessageBox("An Error has occured: \n\n%s" % e, style=wx.OK | wx.ICON_ERROR)
+    wx.MessageBox("An Error has occured: \n\n%s" % e,
+                   style=wx.OK | wx.ICON_ERROR,
+                   parent=Globals.frame)
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
     return e

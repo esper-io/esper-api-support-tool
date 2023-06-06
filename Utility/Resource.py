@@ -294,7 +294,7 @@ def displayMessageBox(event):
     res = None
     Globals.msg_lock.acquire()
     if msg:
-        res = wx.MessageBox(msg, style=sty)
+        res = wx.MessageBox(msg, style=sty, parent=Globals.frame)
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
     return res

@@ -415,6 +415,7 @@ class ToolMenuBar(wx.MenuBar):
             "Update found! Do you want to update?",
             "Update",
             wx.YES_NO | wx.ICON_QUESTION,
+            parent=Globals.frame
         )
         if dlg == wx.YES:
             self.parentFrame.statusBar.gauge.Pulse()
