@@ -14,6 +14,8 @@ enterprise_id = ""
 
 IS_DEBUG = False
 
+API_LOGGER = None
+
 """ Constants """
 VERSION = "v0.19487"
 TITLE = "Esper API Support Tool"

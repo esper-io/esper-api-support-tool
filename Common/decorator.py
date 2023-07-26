@@ -27,6 +27,8 @@ def api_tool_decorator(locks=None):
             result = None
             excpt = None
             logPlace(func)
+            if not Globals.API_LOGGER:
+                Globals.API_LOGGER = ApiToolLog()
             try:
                 result = func(*args, **kwargs)
                 logPlaceDone(func)
