@@ -3,6 +3,7 @@
 import asyncio
 import ctypes
 from threading import Thread
+import Common.Globals as Globals
 
 
 # class for workers
@@ -42,7 +43,9 @@ class Worker(Thread):
                     self.results.put(result)
             except Exception as e:
                 # so we move on and handle it in whatever way the caller wanted
-                print(e)
+                print(e.with_traceback())
+                if Globals.API_LOGGER and hasattr(Globals.API_LOGGER, "LogError"):
+                    Globals.API_LOGGER.LogError(e)
             finally:
                 # task complete no matter what happened
                 self.queue.task_done()
