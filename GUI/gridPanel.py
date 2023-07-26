@@ -32,6 +32,9 @@ class GridPanel(wx.Panel):
         self.grid_1_contents = []
         self.grid_2_contents = []
         self.grid_3_contents = []
+        self.grid_1_id_content = []
+        self.grid_2_id_contents = []
+        self.grid_3_id_contents = []
 
         self.deviceDescending = False
         self.networkDescending = False
@@ -773,8 +776,12 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock])
 
     def constructDeviceGridContent(self, device_info):
-        if device_info not in self.grid_1_contents:
+        identifier = device_info
+        if "id" in device_info and device_info["id"]:
+            identifier = device_info["id"]
+        if identifier not in self.grid_1_id_content:
             self.grid_1_contents.append(device_info)
+            self.grid_1_id_content.append(identifier)
 
     def getDeviceNetworkInfoListing(self, device, device_info):
         device = {}
@@ -861,8 +868,12 @@ class GridPanel(wx.Panel):
             self.grid_2_contents.append(networkInfo)
 
     def constructNetworkGridContent(self, device, deviceInfo):
-        if deviceInfo not in self.grid_2_contents:
+        identifier = deviceInfo
+        if "id" in deviceInfo and deviceInfo["id"]:
+            identifier = deviceInfo["id"]
+        if identifier not in self.grid_2_id_contents:
             self.grid_2_contents.append(deviceInfo)
+            self.grid_2_id_contents.append(identifier)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
