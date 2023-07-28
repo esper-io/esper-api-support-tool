@@ -112,7 +112,8 @@ GRID_ACTIONS = {
     + "* " * NUM_STARS
     + "Grid Actions "
     + "* " * NUM_STARS: -1,
-    "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
+    "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
+    "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,

@@ -169,7 +169,6 @@ def toggleKioskMode(
 
 @api_tool_decorator()
 def setdevicename(
-    frame,
     deviceid,
     devicename,
     ignoreQueue,

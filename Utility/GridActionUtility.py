@@ -25,8 +25,10 @@ from Utility.Threading import wxThread
 @api_tool_decorator()
 def iterateThroughGridRows(frame, action):
     """Iterates Through Each Device in the Displayed Grid And Performs A Specified Action"""
-    if action == GridActions.MODIFY_ALIAS_AND_TAGS.value:
-        modifyDevice(frame)
+    if action == GridActions.MODIFY_ALIAS.value:
+        modifyDevice(frame, GridActions.MODIFY_ALIAS.value)
+    if action == GridActions.MODIFY_TAGS.value:
+        modifyDevice(frame, GridActions.MODIFY_TAGS.value)
     if action == GridActions.MOVE_GROUP.value:
         relocateDeviceToNewGroup(frame)
     if action == GridActions.SET_APP_STATE.value:
@@ -40,16 +42,19 @@ def iterateThroughGridRows(frame, action):
 
 
 @api_tool_decorator()
-def modifyDevice(frame):
+def modifyDevice(frame, action):
     """ Start a thread that will attempt to modify device data """
-    Globals.THREAD_POOL.enqueue(executeDeviceModification, frame)
+    Globals.THREAD_POOL.enqueue(executeDeviceModification, frame, action)
 
 
 @api_tool_decorator()
-def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
+def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
-    tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
-    aliasDic = frame.gridPanel.getDeviceAliasFromList()
+    tagsFromGrid = rowTaglist = aliasDic = None
+    if action == GridActions.MODIFY_TAGS.value:
+        tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
+    else:
+        aliasDic = frame.gridPanel.getDeviceAliasFromList()
     frame.statusBar.gauge.SetValue(1)
     maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
 
@@ -84,8 +89,8 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
                 )
 
     postEventToFrame(eventUtil.myEVT_AUDIT, {
-        "operation": "ChangeAliasAndTags",
-        "data": {"tags":tagsFromGrid, "alias": aliasDic},
+        "operation": "ChangeTags" if action == GridActions.MODIFY_TAGS.value else "ChangeAlias",
+        "data": {"tags":tagsFromGrid} if action == GridActions.MODIFY_TAGS.value else {"alias": aliasDic},
     })
 
     splitResults = splitListIntoChunks(devices)
@@ -93,7 +98,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(
             processDeviceModificationForList,
-            frame,
+            action,
             chunk,
             tagsFromGrid,
             aliasDic,
@@ -112,7 +117,7 @@ def executeDeviceModification(frame, maxAttempt=Globals.MAX_RETRY):
 
 @api_tool_decorator()
 def processDeviceModificationForList(
-    frame, chunk, tagsFromGrid, aliasDic, maxGaugeAction
+    action, chunk, tagsFromGrid, aliasDic, maxGaugeAction
 ):
     changeSucceeded = 0
     succeeded = 0
@@ -121,12 +126,14 @@ def processDeviceModificationForList(
     aliasStatus = []
     tagStatus = []
     for device in chunk:
-        numSucceeded, tagStatusMsg = changeTagsForDevice(
-            device, tagsFromGrid, frame, maxGaugeAction
-        )
-        numNameChanged, numSuccess, aliasStatusMsg = changeAliasForDevice(
-            device, aliasDic, frame, maxGaugeAction
-        )
+        if action == GridActions.MODIFY_TAGS.value:
+            numSucceeded, tagStatusMsg = changeTagsForDevice(
+                device, tagsFromGrid, maxGaugeAction
+            )
+        else:
+            numNameChanged, numSuccess, aliasStatusMsg = changeAliasForDevice(
+                device, aliasDic, maxGaugeAction
+            )
         changeSucceeded += numSucceeded
         tagStatus.append(tagStatusMsg)
         numNewName += numNameChanged
@@ -165,7 +172,7 @@ def processDeviceModificationForList(
 
 
 @api_tool_decorator()
-def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
+def changeAliasForDevice(device, aliasDic, maxGaugeAction):
     numNewName = 0
     succeeded = 0
     logString = ""
@@ -224,7 +231,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             status = ""
             try:
                 ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-                status = apiCalls.setdevicename(frame, deviceId, newName, ignoreQueued)
+                status = apiCalls.setdevicename(deviceId, newName, ignoreQueued)
             except Exception as e:
                 ApiToolLog().LogError(e)
             if hasattr(status, "to_dict"):
@@ -252,7 +259,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
             postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
+            int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
     statusResp = {
@@ -274,7 +281,7 @@ def changeAliasForDevice(device, aliasDic, frame, maxGaugeAction):
 
 
 @api_tool_decorator()
-def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
+def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
     deviceName = None
@@ -328,7 +335,7 @@ def changeTagsForDevice(device, tagsFromGrid, frame, maxGaugeAction):
         postEventToFrame(eventUtil.myEVT_UPDATE_TAG_CELL, (deviceName, tags))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
+            int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
     status = {
         "Device Name": deviceName,
