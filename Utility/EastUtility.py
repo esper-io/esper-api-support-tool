@@ -468,23 +468,6 @@ def populateDeviceInfoDictionaryComplieData(
         deviceHardware = device["hardwareInfo"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
-    else:
-        # Handles response from Python API
-        deviceId = device.id
-        deviceName = device.device_name
-        deviceGroups = device.groups
-        deviceAlias = device.alias_name
-        deviceStatus = device.status
-        # Device is disabled return
-        if (
-            not Globals.SHOW_DISABLED_DEVICES
-            and deviceStatus == DeviceState.DISABLED.value
-        ):
-            return
-        deviceHardware = device.hardware_info
-        deviceTags = device.tags
-        deviceDict = device.__dict__
-        unpackageDict(deviceInfo, deviceDict)
     latestEvent = None
     deviceInfo["EsperName"] = deviceName
 
@@ -796,7 +779,7 @@ def populateDeviceInfoDictionaryComplieData(
         deviceInfo["provisioned_on"] = str(provisionedOnDate)
 
     if "eeaVersion" not in deviceInfo:
-        deviceInfo["eeaVersion"] = "NON EEA"
+        deviceInfo["eeaVersion"] = "Non-Foundation"
 
     if "emm_device" not in deviceInfo:
         deviceInfo["emm_device"] = None
@@ -894,23 +877,6 @@ def populateDeviceInfoDictionary(
             deviceHardware = device["hardware"]
         deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
-    else:
-        # Handles response from Python API
-        deviceId = device.id
-        deviceName = device.device_name
-        deviceGroups = device.groups
-        deviceAlias = device.alias_name
-        deviceStatus = device.status
-        # Device is disabled return
-        if (
-            not Globals.SHOW_DISABLED_DEVICES
-            and deviceStatus == DeviceState.DISABLED.value
-        ):
-            return
-        deviceHardware = device.hardware_info
-        deviceTags = device.tags
-        deviceDict = device.__dict__
-        unpackageDict(deviceInfo, deviceDict)
     appThread = None
     if getApps:
         appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
@@ -1227,7 +1193,7 @@ def populateDeviceInfoDictionary(
         deviceInfo["provisioned_on"] = str(provisionedOnDate)
 
     if "eeaVersion" not in deviceInfo:
-        deviceInfo["eeaVersion"] = "NON EEA"
+        deviceInfo["eeaVersion"] = "Non-Founation"
 
     if "emm_device" not in deviceInfo:
         deviceInfo["emm_device"] = None
