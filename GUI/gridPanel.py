@@ -1451,7 +1451,7 @@ class GridPanel(wx.Panel):
                         esperName = device["name"]
                     info = {
                         "Esper Name": esperName,
-                        "Group": deviceInfo["groups"],
+                        "Group": deviceInfo["groups"] if "groups" in deviceInfo else "",
                         "Application Name": app["app_name"],
                         "Application Type": app["app_type"],
                         "Application Version Code": app["version_code"],

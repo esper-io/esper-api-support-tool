@@ -438,7 +438,11 @@ def populateDeviceInfoDictionaryComplieData(
     return deviceInfo
 
 def compileDeviceGroupData(deviceInfo):
-    deviceGroups = deviceInfo["groups"]
+    deviceGroups = None
+    if "groups" in deviceInfo:
+        deviceGroups = deviceInfo["groups"]
+    elif "group" in deviceInfo:
+        deviceGroups = deviceInfo["group"]
     if deviceGroups:
         groupNames = []
         if type(deviceGroups) == list:
@@ -582,11 +586,26 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
 
 def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     deviceId = device["id"]
-    deviceAlias = device["alias_name"]
     deviceStatus = device["status"]
-    deviceHardware = device["hardwareInfo"]
     deviceTags = device["tags"]
-    deviceInfo["EsperName"] = device["device_name"]
+
+    deviceAlias = None
+    if "alias_name" in device:
+        deviceAlias = device["alias_name"]
+    elif "alias" in device:
+        deviceAlias = device["alias"]
+
+    deviceHardware = None
+    if "hardwareInfo" in device:
+        deviceHardware = device["hardwareInfo"]
+    elif "alias" in device:
+        deviceHardware = device["hardware"]
+
+    if "device_name" in device:
+        deviceInfo["EsperName"] = device["device_name"]
+    elif "alias" in device:
+        deviceInfo["EsperName"] = device["name"]
+
 
     isTemplate = True
     if Globals.frame:
