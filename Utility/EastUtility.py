@@ -392,32 +392,6 @@ def fillInDeviceInfoDict(chunk, number_of_devices, getApps=True, getLatestEvent=
 
 
 @api_tool_decorator()
-def processDevices(
-    chunk,
-    number_of_devices,
-    action,
-    getApps=True,
-    getLatestEvents=True,
-):
-    """ Try to obtain more device info for a given device """
-    deviceList = {}
-
-    for device in chunk:
-        if checkIfCurrentThreadStopped():
-            return
-        deviceInfo = {}
-        deviceInfo = populateDeviceInfoDictionary(
-            device, deviceInfo, getApps, getLatestEvents, action
-        )
-        if deviceInfo:
-            number_of_devices = number_of_devices + 1
-            deviceInfo["num"] = number_of_devices
-            deviceList[number_of_devices] = [device, deviceInfo]
-
-    return (action, deviceList)
-
-
-@api_tool_decorator()
 def unpackageDict(deviceInfo, deviceDict):
     """ Try to merge dicts into one dict, in a single layer """
     if not deviceDict:
@@ -446,7 +420,6 @@ def populateDeviceInfoDictionaryComplieData(
     device, deviceInfo, appData, latestEventData
 ):
     """Populates Device Info Dictionary"""
-    # Handle response from Collections API
     if type(device) == dict:
         deviceStatus = device["status"]
         if (
