@@ -446,33 +446,26 @@ def populateDeviceInfoDictionaryComplieData(
     device, deviceInfo, appData, latestEventData
 ):
     """Populates Device Info Dictionary"""
-    deviceId = None
-    deviceName = None
-    deviceGroups = None
-    deviceAlias = None
-    deviceStatus = None
-    deviceHardware = None
-    deviceTags = None
     # Handle response from Collections API
     if type(device) == dict:
-        deviceId = device["id"]
-        deviceName = device["device_name"]
-        deviceGroups = device["groups"]
-        deviceAlias = device["alias_name"]
         deviceStatus = device["status"]
         if (
             not Globals.SHOW_DISABLED_DEVICES
             and deviceStatus == DeviceState.DISABLED.value
         ):
             return
-        deviceHardware = device["hardwareInfo"]
-        deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
-    latestEvent = None
-    deviceInfo["EsperName"] = deviceName
 
-    deviceInfo["id"] = deviceId
+    deviceInfo = compileDeviceGroupData(deviceInfo)
+    deviceInfo = compileDeviceHardwareData(device, deviceInfo, latestEventData)
+    deviceInfo = compileDeviceAppData(deviceInfo, appData)
+    deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
+    deviceInfo = enforceGridData(device, deviceInfo, latestEventData, appData)
 
+    return deviceInfo
+
+def compileDeviceGroupData(deviceInfo):
+    deviceGroups = deviceInfo["groups"]
     if deviceGroups:
         groupNames = []
         if type(deviceGroups) == list:
@@ -518,6 +511,103 @@ def populateDeviceInfoDictionaryComplieData(
             deviceInfo["groups"] = ""
         else:
             deviceInfo["groups"] = groupNames
+
+    return deviceInfo
+
+def compileDeviceNetworkData(device, deviceInfo, latestEvent):
+    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
+    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
+    unpackageDict(deviceInfo, latestEvent)
+
+    if location_info:
+        if (
+            "n/a" not in location_info["locationAlts"].lower()
+            and "n/a" not in location_info["locationLats"].lower()
+            and "n/a" not in location_info["locationLongs"].lower()
+        ):
+            location_info = "%s, %s, %s" % (
+                location_info["locationAlts"],
+                location_info["locationLats"],
+                location_info["locationLongs"],
+            )
+        else:
+            location_info = "Unknown"
+    else:
+        location_info = "Unknown"
+
+    deviceInfo["location_info"] = location_info
+    deviceInfo["network_event"] = network_info
+
+    if "gpsState" not in deviceInfo or not deviceInfo["gpsState"]:
+        deviceInfo["gpsState"] = "No data available"
+
+    if network_info and "createTime" in network_info:
+        if Globals.LAST_SEEN_AS_DATE:
+            deviceInfo["last_seen"] = str(
+                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            )
+        else:
+            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
+            utc_date_time = dt.astimezone(pytz.utc)
+            updatedOnDate = utc_to_local(utc_date_time)
+
+            time_delta = utc_to_local(datetime.now()) - updatedOnDate
+            total_seconds = time_delta.total_seconds()
+            minutes = total_seconds / 60
+            if minutes < 0:
+                deviceInfo["last_seen"] = "Less than 1 minute ago"
+            elif minutes > 0 and minutes < 60:
+                deviceInfo["last_seen"] = "%s minute ago" % minutes
+            elif minutes > 60 and minutes < 1440:
+                hours = int(math.ceil(minutes / 60))
+                deviceInfo["last_seen"] = "%s hours ago" % hours
+            elif minutes > 1440:
+                days = int(math.ceil(minutes / 1440))
+                deviceInfo["last_seen"] = "%s days ago" % days
+    else:
+        deviceInfo["last_seen"] = "No data available"
+
+    deviceInfo["macAddress"] = []
+    ipKey = None
+    if "ipAddress" in deviceInfo:
+        ipKey = "ipAddress"
+    elif "ip_address" in deviceInfo:
+        ipKey = "ip_address"
+    if ipKey:
+        deviceInfo["ipv4Address"] = []
+        deviceInfo["ipv6Address"] = []
+        if ipKey in deviceInfo and deviceInfo[ipKey]:
+            for ip in deviceInfo[ipKey]:
+                if ":" not in ip:
+                    deviceInfo["ipv4Address"].append(ip)
+                else:
+                    deviceInfo["ipv6Address"].append(ip)
+                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
+
+    if "bluetooth_state" in deviceInfo:
+        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
+    if "paired_devices" in deviceInfo:
+        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
+    if "connected_devices" in deviceInfo:
+        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
+    if "mac_address" in deviceInfo:
+        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
+
+    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
+        for event in deviceInfo["memoryEvents"]:
+            if "eventType" in event and "countInMb" in event:
+                deviceInfo[event["eventType"]] = event["countInMb"]
+
+    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
+
+    return deviceInfo
+
+def compileDeviceHardwareData(device, deviceInfo, latestEventData):
+    deviceId = device["id"]
+    deviceAlias = device["alias_name"]
+    deviceStatus = device["status"]
+    deviceHardware = device["hardwareInfo"]
+    deviceTags = device["tags"]
 
     isTemplate = True
     if Globals.frame:
@@ -653,106 +743,11 @@ def populateDeviceInfoDictionaryComplieData(
         ):
             device["tags"] = []
 
-    apps = (
-        apiCalls.createAppList(
-            appData,
-            obtainAppDictEntry=False,
-            filterData=True
-            if Globals.APP_COL_FILTER
-            and not any("" in s for s in Globals.APP_COL_FILTER)
-            else False,
-        )
-        if appData
-        else []
-    )
-    json = appData if appData else ""
-    deviceInfo["Apps"] = str(apps)
-    deviceInfo["appObj"] = json
-
-    latestEvent = latestEventData
     if kioskMode == 0:
-        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
+        kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
         deviceInfo["KioskApp"] = str(kioskModeApp)
     else:
         deviceInfo["KioskApp"] = ""
-
-    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
-    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
-    unpackageDict(deviceInfo, latestEvent)
-
-    if location_info:
-        if (
-            "n/a" not in location_info["locationAlts"].lower()
-            and "n/a" not in location_info["locationLats"].lower()
-            and "n/a" not in location_info["locationLongs"].lower()
-        ):
-            location_info = "%s, %s, %s" % (
-                location_info["locationAlts"],
-                location_info["locationLats"],
-                location_info["locationLongs"],
-            )
-        else:
-            location_info = "Unknown"
-    else:
-        location_info = "Unknown"
-
-    deviceInfo["location_info"] = location_info
-    deviceInfo["network_event"] = network_info
-
-    if "gpsState" not in deviceInfo or not deviceInfo["gpsState"]:
-        deviceInfo["gpsState"] = "No data available"
-
-    if network_info and "createTime" in network_info:
-        if Globals.LAST_SEEN_AS_DATE:
-            deviceInfo["last_seen"] = str(
-                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            )
-        else:
-            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            utc_date_time = dt.astimezone(pytz.utc)
-            updatedOnDate = utc_to_local(utc_date_time)
-
-            time_delta = utc_to_local(datetime.now()) - updatedOnDate
-            total_seconds = time_delta.total_seconds()
-            minutes = total_seconds / 60
-            if minutes < 0:
-                deviceInfo["last_seen"] = "Less than 1 minute ago"
-            elif minutes > 0 and minutes < 60:
-                deviceInfo["last_seen"] = "%s minute ago" % minutes
-            elif minutes > 60 and minutes < 1440:
-                hours = int(math.ceil(minutes / 60))
-                deviceInfo["last_seen"] = "%s hours ago" % hours
-            elif minutes > 1440:
-                days = int(math.ceil(minutes / 1440))
-                deviceInfo["last_seen"] = "%s days ago" % days
-    else:
-        deviceInfo["last_seen"] = "No data available"
-
-    deviceInfo["macAddress"] = []
-    ipKey = None
-    if "ipAddress" in deviceInfo:
-        ipKey = "ipAddress"
-    elif "ip_address" in deviceInfo:
-        ipKey = "ip_address"
-    if ipKey:
-        deviceInfo["ipv4Address"] = []
-        deviceInfo["ipv6Address"] = []
-        if ipKey in deviceInfo and deviceInfo[ipKey]:
-            for ip in deviceInfo[ipKey]:
-                if ":" not in ip:
-                    deviceInfo["ipv4Address"].append(ip)
-                else:
-                    deviceInfo["ipv6Address"].append(ip)
-                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
-
-    if "bluetooth_state" in deviceInfo:
-        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
-    if "paired_devices" in deviceInfo:
-        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
-    if "connected_devices" in deviceInfo:
-        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
-    if "mac_address" in deviceInfo:
-        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
 
     if "lockdown_state" in deviceInfo:
         deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
@@ -769,11 +764,6 @@ def populateDeviceInfoDictionaryComplieData(
                 elif audio["ringerMode"] == 2:
                     deviceInfo["ringerMode"] = "Normal"
 
-    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
-        for event in deviceInfo["memoryEvents"]:
-            if "eventType" in event and "countInMb" in event:
-                deviceInfo[event["eventType"]] = event["countInMb"]
-
     if device and hasattr(device, "provisioned_on") and device.provisioned_on:
         provisionedOnDate = utc_to_local(device.provisioned_on)
         deviceInfo["provisioned_on"] = str(provisionedOnDate)
@@ -789,8 +779,28 @@ def populateDeviceInfoDictionaryComplieData(
         if deviceInfo["user"]:
             deviceInfo["is_emm"] = True
 
-    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
+    return deviceInfo
 
+def compileDeviceAppData(deviceInfo, appData):
+    apps = (
+        apiCalls.createAppList(
+            appData,
+            obtainAppDictEntry=False,
+            filterData=True
+            if Globals.APP_COL_FILTER
+            and not any("" in s for s in Globals.APP_COL_FILTER)
+            else False,
+        )
+        if appData
+        else []
+    )
+    json = appData if appData else ""
+    deviceInfo["Apps"] = str(apps)
+    deviceInfo["appObj"] = json
+
+    return deviceInfo
+
+def enforceGridData(device, deviceInfo, latestEventData, appData):
     for attribute in Globals.CSV_TAG_ATTR_NAME:
         value = (
             deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]]
@@ -833,49 +843,21 @@ def populateDeviceInfoDictionaryComplieData(
 
     return deviceInfo
 
-
 @api_tool_decorator()
 def populateDeviceInfoDictionary(
     device, deviceInfo, getApps=True, getLatestEvents=True, action=None
 ):
     """Populates Device Info Dictionary"""
     deviceId = None
-    deviceName = None
-    deviceGroups = None
-    deviceAlias = None
-    deviceStatus = None
-    deviceHardware = None
-    deviceTags = None
     # Handle response from Collections API
     if type(device) == dict:
         deviceId = device["id"]
-        deviceName = ""
-        if "device_name" in device:
-            deviceName = device["device_name"]
-        elif "name" in device:
-            deviceName = device["name"]
-        deviceGroups = ""
-        if "groups" in device:
-            deviceGroups = device["groups"]
-        elif "group" in device:
-            deviceGroups = device["group"]
-        deviceAlias = ""
-        if "alias_name" in device:
-            deviceAlias = device["alias_name"]
-        elif "alias" in device:
-            deviceAlias = device["alias"]
         deviceStatus = device["status"]
         if (
             not Globals.SHOW_DISABLED_DEVICES
             and deviceStatus == DeviceState.DISABLED.value
         ):
             return
-        deviceHardware = ""
-        if "hardwareInfo" in device:
-            deviceHardware = device["hardwareInfo"]
-        elif "hardware" in device:
-            deviceHardware = device["hardware"]
-        deviceTags = device["tags"]
         unpackageDict(deviceInfo, device)
     appThread = None
     if getApps:
@@ -883,185 +865,20 @@ def populateDeviceInfoDictionary(
     eventThread = None
     if getLatestEvents:
         eventThread = getLatestEvent(deviceId)
-    latestEvent = None
-    deviceInfo["EsperName"] = deviceName
 
-    deviceInfo["id"] = deviceId
+    deviceInfo = compileDeviceGroupData(deviceInfo)
 
-    if deviceGroups:
-        groupNames = []
-        if type(deviceGroups) == list:
-            for groupURL in deviceGroups:
-                group = None
-                groupName = None
-                groupId = groupURL.split("/")[-2]
-                deviceInfo["groupId"] = groupId
-                if groupId in Globals.knownGroups:
-                    group = Globals.knownGroups[groupId]
-                else:
-                    groupName = fetchGroupName(groupURL, True)
-                    Globals.knownGroups[groupId] = groupName
-                    groupName = groupName["name"]
-
-                if type(group) == list and len(group) == 1:
-                    groupName = group[0]
-                elif Globals.SHOW_GROUP_PATH and type(group) == dict:
-                    groupName = group["path"]
-                elif type(group) == dict:
-                    groupName = group["name"]
-                elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
-                    groupName = group.path
-                elif hasattr(group, "name"):
-                    groupName = group.name
-
-                if groupName:
-                    groupNames.append(groupName)
-        elif (
-            type(deviceGroups) == dict
-            and Globals.SHOW_GROUP_PATH
-            and "name" in deviceGroups
-        ):
-            groupNames.append(deviceGroups["path"])
-        elif type(deviceGroups) == dict and "name" in deviceGroups:
-            groupNames.append(deviceGroups["name"])
-        if len(groupNames) == 1:
-            if type(groupNames[0]) == list:
-                deviceInfo["groups"] = groupNames[0][0]
-            else:
-                deviceInfo["groups"] = groupNames[0]
-        elif len(groupNames) == 0:
-            deviceInfo["groups"] = ""
-        else:
-            deviceInfo["groups"] = groupNames
-
-    isTemplate = True
-    if Globals.frame:
-        isTemplate = not Globals.frame.blueprintsEnabled
-
-    if Globals.GET_DEVICE_LANGUAGE and isTemplate:
-        deviceInfo["templateDeviceLocale"] = "N/A"
-        resp = getDeviceInitialTemplate(deviceId)
-        if "template" in resp:
-            if "device_locale" in resp["template"]["settings"]:
-                deviceInfo["templateDeviceLocale"] = resp["template"]["settings"]["device_locale"]
-            else:
-                deviceInfo["templateDeviceLocale"] = "N/A"
-        else:
-            deviceInfo["templateDeviceLocale"] = "N/A"
-    elif not isTemplate:
-        deviceInfo["templateDeviceLocale"] = "Not Fetched/Incompatible Field"
+    latestEventData = None
+    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
+        eventThread.join()
+    if hasattr(eventThread, "result"):
+        latestEventData = eventThread.result
     else:
-        deviceInfo["templateDeviceLocale"] = "Not Fetched"
+        latestEventData = eventThread
+    deviceInfo = compileDeviceHardwareData(device, deviceInfo, latestEventData)
 
     if action == GeneralActions.GENERATE_APP_REPORT.value:
         return deviceInfo
-
-    if bool(deviceAlias):
-        deviceInfo["Alias"] = deviceAlias
-    else:
-        deviceInfo["Alias"] = ""
-
-    if isinstance(deviceStatus, str):
-        if deviceStatus.lower() == "online":
-            deviceInfo["Status"] = "Online"
-        elif "unspecified" in deviceStatus.lower():
-            deviceInfo["Status"] = "Unspecified"
-        elif "provisioning" in deviceStatus.lower():
-            deviceInfo["Status"] = "Provisioning"
-        elif deviceStatus.lower() == "offline":
-            deviceInfo["Status"] = "Offline"
-        elif "wipe" in deviceStatus.lower():
-            deviceInfo["Status"] = "Wipe In-Progress"
-        elif deviceStatus.lower() == "disabled":
-            deviceInfo["Status"] = "Disabled"
-        else:
-            deviceInfo["Status"] = "Unknown"
-    else:
-        if (
-            not Globals.SHOW_DISABLED_DEVICES
-            and deviceStatus == DeviceState.DISABLED.value
-        ):
-            return
-
-        if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
-            deviceInfo["Status"] = "Unspecified"
-        elif deviceStatus == DeviceState.ACTIVE.value:
-            deviceInfo["Status"] = "Online"
-        elif deviceStatus == DeviceState.DISABLED.value:
-            deviceInfo["Status"] = "Disabled"
-        elif (
-            deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
-            and deviceStatus < DeviceState.INACTIVE.value
-        ):
-            deviceInfo["Status"] = "Provisioning"
-        elif deviceStatus == DeviceState.INACTIVE.value:
-            deviceInfo["Status"] = "Offline"
-        elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
-            deviceInfo["Status"] = "Wipe In-Progress"
-        else:
-            deviceInfo["Status"] = "Unknown"
-
-    kioskMode = None
-    if "current_app_mode" in deviceInfo:
-        kioskMode = deviceInfo["current_app_mode"]
-        if kioskMode == 0:
-            deviceInfo["Mode"] = "Kiosk"
-        else:
-            deviceInfo["Mode"] = "Multi"
-
-    hdwareKey = None
-    if "serial_number" in deviceHardware:
-        hdwareKey = "serial_number"
-    elif "serialNumber" in deviceHardware:
-        hdwareKey = "serialNumber"
-
-    custHdwareKey = None
-    if "custom_serial_number" in deviceHardware:
-        custHdwareKey = "custom_serial_number"
-    elif "customSerialNumber" in deviceHardware:
-        custHdwareKey = "customSerialNumber"
-
-    if Globals.REPLACE_SERIAL:
-        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
-            deviceInfo["Serial"] = str(deviceHardware[custHdwareKey])
-        elif hdwareKey and bool(deviceHardware[hdwareKey]):
-            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
-        else:
-            deviceInfo["Serial"] = ""
-    else:
-        if hdwareKey and bool(deviceHardware[hdwareKey]):
-            deviceInfo["Serial"] = str(deviceHardware[hdwareKey])
-        else:
-            deviceInfo["Serial"] = ""
-
-    if Globals.REPLACE_SERIAL:
-        deviceInfo["Custom Serial"] = ""
-    else:
-        if custHdwareKey and bool(deviceHardware[custHdwareKey]):
-            deviceInfo["Custom Serial"] = str(deviceHardware[custHdwareKey])
-        else:
-            deviceInfo["Custom Serial"] = ""
-
-    if bool(deviceTags):
-        # Add Functionality For Modifying Multiple Tags
-        deviceInfo["Tags"] = deviceTags
-    else:
-        deviceInfo["Tags"] = ""
-
-        if hasattr(device, "tags") and (
-            device.tags is None or (type(device.tags) is list and not device.tags)
-        ):
-            device.tags = []
-        elif (
-            device
-            and hasattr(device, "__iter__")
-            and "tags" in device
-            and (
-                device["tags"] is None
-                or (type(device["tags"]) is list and not device["tags"])
-            )
-        ):
-            device["tags"] = []
 
     if hasattr(appThread, "is_alive") and appThread.is_alive():
         appThread.join()
@@ -1074,136 +891,7 @@ def populateDeviceInfoDictionary(
     deviceInfo["Apps"] = str(apps)
     deviceInfo["appObj"] = json
 
-    if hasattr(eventThread, "is_alive") and eventThread.is_alive():
-        eventThread.join()
-    if kioskMode == 0:
-        if hasattr(eventThread, "result"):
-            latestEvent = eventThread.result
-        else:
-            latestEvent = eventThread
-        kioskModeApp = getValueFromLatestEvent(latestEvent, "kioskAppName")
-        deviceInfo["KioskApp"] = str(kioskModeApp)
-    else:
-        deviceInfo["KioskApp"] = ""
-
-    if hasattr(eventThread, "result"):
-        latestEvent = eventThread.result
-    else:
-        latestEvent = eventThread
-    location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
-    network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
-    unpackageDict(deviceInfo, latestEvent)
-
-    if location_info:
-        if (
-            "n/a" not in location_info["locationAlts"].lower()
-            and "n/a" not in location_info["locationLats"].lower()
-            and "n/a" not in location_info["locationLongs"].lower()
-        ):
-            location_info = "%s, %s, %s" % (
-                location_info["locationAlts"],
-                location_info["locationLats"],
-                location_info["locationLongs"],
-            )
-        else:
-            location_info = "Unknown"
-    else:
-        location_info = "Unknown"
-
-    deviceInfo["location_info"] = location_info
-    deviceInfo["network_event"] = network_info
-
-    if "gpsState" not in deviceInfo or not deviceInfo["gpsState"]:
-        deviceInfo["gpsState"] = "No data available"
-
-    if network_info and "createTime" in network_info:
-        if Globals.LAST_SEEN_AS_DATE:
-            deviceInfo["last_seen"] = str(
-                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            )
-        else:
-            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            utc_date_time = dt.astimezone(pytz.utc)
-            updatedOnDate = utc_to_local(utc_date_time)
-
-            time_delta = utc_to_local(datetime.now()) - updatedOnDate
-            total_seconds = time_delta.total_seconds()
-            minutes = total_seconds / 60
-            if minutes < 0:
-                deviceInfo["last_seen"] = "Less than 1 minute ago"
-            elif minutes > 0 and minutes < 60:
-                deviceInfo["last_seen"] = "%s minute ago" % minutes
-            elif minutes > 60 and minutes < 1440:
-                hours = int(math.ceil(minutes / 60))
-                deviceInfo["last_seen"] = "%s hours ago" % hours
-            elif minutes > 1440:
-                days = int(math.ceil(minutes / 1440))
-                deviceInfo["last_seen"] = "%s days ago" % days
-    else:
-        deviceInfo["last_seen"] = "No data available"
-
-    deviceInfo["macAddress"] = []
-    ipKey = None
-    if "ipAddress" in deviceInfo:
-        ipKey = "ipAddress"
-    elif "ip_address" in deviceInfo:
-        ipKey = "ip_address"
-    if ipKey:
-        deviceInfo["ipv4Address"] = []
-        deviceInfo["ipv6Address"] = []
-        if ipKey in deviceInfo and deviceInfo[ipKey]:
-            for ip in deviceInfo[ipKey]:
-                if ":" not in ip:
-                    deviceInfo["ipv4Address"].append(ip)
-                else:
-                    deviceInfo["ipv6Address"].append(ip)
-                    deviceInfo["macAddress"].append(ipv6Tomac(ip))
-
-    if "bluetooth_state" in deviceInfo:
-        deviceInfo["bluetoothState"] = deviceInfo["bluetooth_state"]
-    if "paired_devices" in deviceInfo:
-        deviceInfo["pairedDevices"] = deviceInfo["paired_devices"]
-    if "connected_devices" in deviceInfo:
-        deviceInfo["connectedDevices"] = deviceInfo["connected_devices"]
-    if "mac_address" in deviceInfo:
-        deviceInfo["wifiMacAddress"] = deviceInfo["mac_address"]
-
-    if "lockdown_state" in deviceInfo:
-        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
-
-    if "audioSettings" in deviceInfo:
-        for audio in deviceInfo["audioSettings"]:
-            if "audioStream" in audio and "volumeLevel" in audio:
-                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
-            elif "ringerMode" in audio:
-                if audio["ringerMode"] == 0:
-                    deviceInfo["ringerMode"] = "Silent"
-                elif audio["ringerMode"] == 1:
-                    deviceInfo["ringerMode"] = "Vibrate"
-                elif audio["ringerMode"] == 2:
-                    deviceInfo["ringerMode"] = "Normal"
-
-    if "memoryEvents" in deviceInfo and deviceInfo["memoryEvents"]:
-        for event in deviceInfo["memoryEvents"]:
-            if "eventType" in event and "countInMb" in event:
-                deviceInfo[event["eventType"]] = event["countInMb"]
-
-    if device and hasattr(device, "provisioned_on") and device.provisioned_on:
-        provisionedOnDate = utc_to_local(device.provisioned_on)
-        deviceInfo["provisioned_on"] = str(provisionedOnDate)
-
-    if "eeaVersion" not in deviceInfo:
-        deviceInfo["eeaVersion"] = "Non-Founation"
-
-    if "emm_device" not in deviceInfo:
-        deviceInfo["emm_device"] = None
-
-    deviceInfo["is_emm"] = False
-    if "user" in deviceInfo:
-        if deviceInfo["user"]:
-            deviceInfo["is_emm"] = True
-
-    deviceInfo["network_info"] = constructNetworkInfo(device, deviceInfo)
+    deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
 
     return deviceInfo
 
