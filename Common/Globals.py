@@ -225,7 +225,6 @@ CSV_TAG_ATTR_NAME = {
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
     "Screen Timeout (ms)": "screenOffTimeout",
-    "Ringer Mode": "ringerMode",
     "Music Volume": "STREAM_MUSIC",
     "Ring Volume": "STREAM_RING",
     "Alarm Volume": "STREAM_ALARM",

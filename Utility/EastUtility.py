@@ -492,6 +492,11 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
 
+    if "audioSettings" in deviceInfo:
+        for audio in deviceInfo["audioSettings"]:
+            if "audioStream" in audio and "volumeLevel" in audio:
+                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
+
     if location_info:
         if (
             "n/a" not in location_info["locationAlts"].lower()
@@ -581,6 +586,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     deviceStatus = device["status"]
     deviceHardware = device["hardwareInfo"]
     deviceTags = device["tags"]
+    deviceInfo["EsperName"] = device["device_name"]
 
     isTemplate = True
     if Globals.frame:
@@ -724,18 +730,6 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
 
     if "lockdown_state" in deviceInfo:
         deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
-
-    if "audioSettings" in deviceInfo:
-        for audio in deviceInfo["audioSettings"]:
-            if "audioStream" in audio and "volumeLevel" in audio:
-                deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
-            elif "ringerMode" in audio:
-                if audio["ringerMode"] == 0:
-                    deviceInfo["ringerMode"] = "Silent"
-                elif audio["ringerMode"] == 1:
-                    deviceInfo["ringerMode"] = "Vibrate"
-                elif audio["ringerMode"] == 2:
-                    deviceInfo["ringerMode"] = "Normal"
 
     if device and hasattr(device, "provisioned_on") and device.provisioned_on:
         provisionedOnDate = utc_to_local(device.provisioned_on)

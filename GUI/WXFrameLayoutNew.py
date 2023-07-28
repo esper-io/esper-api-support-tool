@@ -2241,7 +2241,7 @@ class NewFrameLayout(wx.Frame):
             and (not self.sidePanel.selectedDevicesList or allDevicesSelected)
             and actionSelection > 0
             and actionClientData > 0
-            and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
+            and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
             # run action on group
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
@@ -2269,7 +2269,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.selectedDevicesList
             and actionSelection > 0
             and actionClientData > 0
-            and actionClientData < GridActions.MODIFY_ALIAS_AND_TAGS.value
+            and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
             # run action on device
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
@@ -2301,7 +2301,7 @@ class NewFrameLayout(wx.Frame):
                 actionClientData,
                 True,
             )
-        elif actionClientData >= GridActions.MODIFY_ALIAS_AND_TAGS.value:
+        elif actionClientData >= GridActions.MODIFY_ALIAS.value:
             # run grid action
             if self.gridPanel.grid_1.GetNumberRows() > 0:
                 runAction = True
