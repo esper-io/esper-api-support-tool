@@ -325,7 +325,7 @@ class SidePanel(wx.Panel):
                     "Are you sure you want to remove the configuration with the Enterprise Id of: %s?\nThis action cannot be undone once accepted."
                     % value,
                     style=wx.YES_NO | wx.ICON_WARNING,
-                    parent=Globals.frame
+                    parent=Globals.frame,
                 )
                 if res == wx.YES:
                     if result in self.parentFrame.auth_data:
@@ -351,7 +351,7 @@ class SidePanel(wx.Panel):
                     wx.MessageBox(
                         "The configuration has been removed.",
                         style=wx.OK | wx.ICON_INFORMATION,
-                        parent=Globals.frame
+                        parent=Globals.frame,
                     )
 
     @api_tool_decorator()

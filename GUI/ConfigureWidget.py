@@ -15,8 +15,7 @@ class WidgetPicker(wx.Dialog):
         super(WidgetPicker, self).__init__(
             Globals.frame,
             wx.ID_ANY,
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetSize((700, 500))
         self.SetTitle("Confgire Widgets")
@@ -78,7 +77,9 @@ class WidgetPicker(wx.Dialog):
             majorDimension=1,
             style=wx.RA_SPECIFY_ROWS,
         )
-        self.radio_box_1.SetToolTip("Select whether a the Widget feature should be Enabled or Disabled on a device.")
+        self.radio_box_1.SetToolTip(
+            "Select whether a the Widget feature should be Enabled or Disabled on a device."
+        )
         self.radio_box_1.SetSelection(1)
         grid_sizer_1.Add(
             self.radio_box_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
@@ -121,17 +122,47 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_5.Add(grid_sizer_3, 0, wx.EXPAND, 0)
 
         label_4 = wx.StaticText(self.panel_3, wx.ID_ANY, "Apply To:")
-        label_4.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_4.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_3.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
-        self.radio_box_2 = wx.RadioBox(self.panel_3, wx.ID_ANY, "", choices=["Device(s)", "Group(s)"], majorDimension=1, style=wx.RA_SPECIFY_ROWS)
+        self.radio_box_2 = wx.RadioBox(
+            self.panel_3,
+            wx.ID_ANY,
+            "",
+            choices=["Device(s)", "Group(s)"],
+            majorDimension=1,
+            style=wx.RA_SPECIFY_ROWS,
+        )
         self.radio_box_2.SetSelection(0)
-        grid_sizer_3.Add(self.radio_box_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.LEFT, 10)
-        self.radio_box_2.SetToolTip("Apply Command to the uploaded identifers that represent Devices or Groups.\n\nWARNING: If the ID is not provided we will attempt to search and apply the command to the closest match.")
+        grid_sizer_3.Add(
+            self.radio_box_2,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.EXPAND | wx.LEFT,
+            10,
+        )
+        self.radio_box_2.SetToolTip(
+            "Apply Command to the uploaded identifers that represent Devices or Groups.\n\nWARNING: If the ID is not provided we will attempt to search and apply the command to the closest match."
+        )
 
         self.button_1 = wx.Button(self.panel_3, wx.ID_ANY, "Upload")
-        self.button_1.SetToolTip("Upload Identifers that should be targetted for the Widget Command.")
-        grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.BOTTOM | wx.LEFT, 10)
+        self.button_1.SetToolTip(
+            "Upload Identifers that should be targetted for the Widget Command."
+        )
+        grid_sizer_3.Add(
+            self.button_1,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.BOTTOM | wx.LEFT,
+            10,
+        )
 
         grid_sizer_3.Add((0, 0), 0, 0, 0)
 
@@ -139,7 +170,16 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_5.Add(grid_sizer_6, 1, wx.EXPAND, 0)
 
         label_3 = wx.StaticText(self.panel_3, wx.ID_ANY, "Upload Preview:")
-        label_3.SetFont(wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""))
+        label_3.SetFont(
+            wx.Font(
+                11,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
+            )
+        )
         grid_sizer_6.Add(label_3, 0, wx.ALL, 5)
 
         self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
@@ -212,9 +252,12 @@ class WidgetPicker(wx.Dialog):
         selection = self.radio_box_1.GetSelection()
         numRows = self.grid_1.GetNumberRows() - 1
         textValue = self.text_ctrl_1.GetValue()
-        if (selection == 0 and textValue and textValue != self.default_text and numRows > 0) or (
-            selection == 1 and numRows > 0
-        ):
+        if (
+            selection == 0
+            and textValue
+            and textValue != self.default_text
+            and numRows > 0
+        ) or (selection == 1 and numRows > 0):
             self.button_APPLY.Enable(True)
         else:
             self.button_APPLY.Enable(False)
@@ -270,9 +313,7 @@ class WidgetPicker(wx.Dialog):
             elif inFile.endswith(".xlsx"):
                 dfs = None
                 try:
-                    dfs = pd.read_excel(
-                        inFile, sheet_name=None, keep_default_na=False
-                    )
+                    dfs = pd.read_excel(inFile, sheet_name=None, keep_default_na=False)
                 except:
                     pass
                 if dfs:

@@ -59,6 +59,7 @@ EVT_PROCESS_FUNCTION = wx.PyEventBinder(myEVT_PROCESS_FUNCTION, 1)
 myEVT_AUDIT = wx.NewEventType()
 EVT_AUDIT = wx.PyEventBinder(myEVT_AUDIT, 1)
 
+
 class CustomEvent(wx.PyCommandEvent):
     """Event to signal that a count value is ready"""
 

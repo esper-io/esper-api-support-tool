@@ -3,8 +3,11 @@ import wx.html as html
 
 import Common.Globals as Globals
 
+
 class HtmlDialog(wx.Dialog):
-    def __init__(self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds):
+    def __init__(
+        self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds
+    ):
         super(HtmlDialog, self).__init__(
             Globals.frame,
             wx.ID_ANY,
@@ -18,10 +21,11 @@ class HtmlDialog(wx.Dialog):
 
         sizer_1 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        self.htmlWin = html.HtmlWindow(self,
-                                  name="Terms And Conditions",
-                                  style=html.HW_SCROLLBAR_AUTO,
-                                  size=Globals.MIN_SIZE
+        self.htmlWin = html.HtmlWindow(
+            self,
+            name="Terms And Conditions",
+            style=html.HW_SCROLLBAR_AUTO,
+            size=Globals.MIN_SIZE,
         )
         if "gtk2" in wx.PlatformInfo:
             self.htmlWin.SetStandardFonts()

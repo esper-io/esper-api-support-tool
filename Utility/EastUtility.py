@@ -437,6 +437,7 @@ def populateDeviceInfoDictionaryComplieData(
 
     return deviceInfo
 
+
 def compileDeviceGroupData(deviceInfo):
     deviceGroups = None
     if "groups" in deviceInfo:
@@ -490,6 +491,7 @@ def compileDeviceGroupData(deviceInfo):
             deviceInfo["groups"] = groupNames
 
     return deviceInfo
+
 
 def compileDeviceNetworkData(device, deviceInfo, latestEvent):
     location_info = getValueFromLatestEvent(latestEvent, "locationEvent")
@@ -584,6 +586,7 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
 
     return deviceInfo
 
+
 def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     deviceId = device["id"]
     deviceStatus = device["status"]
@@ -606,7 +609,6 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     elif "alias" in device:
         deviceInfo["EsperName"] = device["name"]
 
-
     isTemplate = True
     if Globals.frame:
         isTemplate = not Globals.frame.blueprintsEnabled
@@ -616,7 +618,9 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         resp = getDeviceInitialTemplate(deviceId)
         if "template" in resp:
             if "device_locale" in resp["template"]["settings"]:
-                deviceInfo["templateDeviceLocale"] = resp["template"]["settings"]["device_locale"]
+                deviceInfo["templateDeviceLocale"] = resp["template"]["settings"][
+                    "device_locale"
+                ]
             else:
                 deviceInfo["templateDeviceLocale"] = "N/A"
         else:
@@ -767,6 +771,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
 
     return deviceInfo
 
+
 def compileDeviceAppData(deviceInfo, appData):
     apps = (
         apiCalls.createAppList(
@@ -785,6 +790,7 @@ def compileDeviceAppData(deviceInfo, appData):
     deviceInfo["appObj"] = json
 
     return deviceInfo
+
 
 def enforceGridData(device, deviceInfo, latestEventData, appData):
     for attribute in Globals.CSV_TAG_ATTR_NAME:
@@ -828,6 +834,7 @@ def enforceGridData(device, deviceInfo, latestEventData, appData):
                 deviceInfo["AppsEntry"].append(info)
 
     return deviceInfo
+
 
 @api_tool_decorator()
 def populateDeviceInfoDictionary(

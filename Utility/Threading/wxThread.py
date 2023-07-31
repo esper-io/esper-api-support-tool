@@ -82,10 +82,10 @@ def waitTillThreadsFinish(
                 % (changeSucceeded, len(devices), Globals.MAX_TAGS)
             )
         else:
-            msg = (
-            "Successfully changed aliases for %s of %s devices."
-            % (succeeded, numNewName)
-        )
+            msg = "Successfully changed aliases for %s of %s devices." % (
+                succeeded,
+                numNewName,
+            )
         postEventToFrame(eventUtil.myEVT_LOG, msg)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
     if source == 3:

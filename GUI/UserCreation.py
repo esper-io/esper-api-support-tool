@@ -13,8 +13,12 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 from Utility.API.UserUtility import createNewUser, deleteUser, getAllUsers, modifyUser
-from Utility.Resource import (correctSaveFileName, createNewFile,
-                              displayMessageBox, postEventToFrame)
+from Utility.Resource import (
+    correctSaveFileName,
+    createNewFile,
+    displayMessageBox,
+    postEventToFrame,
+)
 
 
 class UserCreation(wx.Frame):
@@ -335,9 +339,7 @@ class UserCreation(wx.Frame):
         elif file.endswith(".xlsx"):
             dfs = None
             try:
-                dfs = pd.read_excel(
-                    file, sheet_name=None, keep_default_na=False
-                )
+                dfs = pd.read_excel(file, sheet_name=None, keep_default_na=False)
             except:
                 pass
             if dfs:

@@ -157,7 +157,7 @@ def getDeviceInitialTemplate(deviceId):
     url = "{tenant}/enterprise/{enterprise_id}/device/{device_id}/initialtemplate/".format(
         tenant=Globals.configuration.host,
         enterprise_id=Globals.enterprise_id,
-        device_id=deviceId
+        device_id=deviceId,
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
     return resp.json()

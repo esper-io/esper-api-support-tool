@@ -368,5 +368,3 @@ SCHEDULE_SAVE = "xlsx"
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
-
-

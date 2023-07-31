@@ -31,5 +31,5 @@ class CmdConfirmDialog(ConfirmTextDialog):
             label,
             "Commnd Confirmation",
             (cmdFormatted + "\n\n" + schFormatted),
-            parent=Globals.frame
+            parent=Globals.frame,
         )

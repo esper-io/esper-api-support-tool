@@ -88,10 +88,17 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
                     "---> ERROR: Failed to find device with identifer: %s" % identifier,
                 )
 
-    postEventToFrame(eventUtil.myEVT_AUDIT, {
-        "operation": "ChangeTags" if action == GridActions.MODIFY_TAGS.value else "ChangeAlias",
-        "data": {"tags":tagsFromGrid} if action == GridActions.MODIFY_TAGS.value else {"alias": aliasDic},
-    })
+    postEventToFrame(
+        eventUtil.myEVT_AUDIT,
+        {
+            "operation": "ChangeTags"
+            if action == GridActions.MODIFY_TAGS.value
+            else "ChangeAlias",
+            "data": {"tags": tagsFromGrid}
+            if action == GridActions.MODIFY_TAGS.value
+            else {"alias": aliasDic},
+        },
+    )
 
     splitResults = splitListIntoChunks(devices)
 
@@ -143,7 +150,9 @@ def processDeviceModificationForList(
     for entry in aliasStatus:
         match = list(
             filter(
-                lambda x: x["Device Name"] == entry["Device Name"] if entry["Device Name"] else x["Device Id"] == entry["Device Id"],
+                lambda x: x["Device Name"] == entry["Device Name"]
+                if entry["Device Name"]
+                else x["Device Id"] == entry["Device Id"],
                 tagStatus,
             )
         )
@@ -157,7 +166,9 @@ def processDeviceModificationForList(
     for entry in tagStatus:
         match = list(
             filter(
-                lambda x: x["Device Name"] == entry["Device Name"] if entry["Device Name"] else x["Device Id"] == entry["Device Id"],
+                lambda x: x["Device Name"] == entry["Device Name"]
+                if entry["Device Name"]
+                else x["Device Id"] == entry["Device Id"],
                 tmp,
             )
         )
@@ -352,9 +363,7 @@ def setAppStateForAllAppsListed(state):
     if devices:
         deviceList = getDeviceIdFromGridDevices(devices)
 
-        Globals.THREAD_POOL.enqueue(
-            setAllAppsState, deviceList, Globals.frame.AppState
-        )
+        Globals.THREAD_POOL.enqueue(setAllAppsState, deviceList, Globals.frame.AppState)
 
         Globals.THREAD_POOL.enqueue(
             wxThread.waitTillThreadsFinish,
@@ -411,15 +420,14 @@ def setAllAppsState(device, state):
                     package_name,
                     state="SHOW",
                 )
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "SetAppState",
-                "data": {
-                    "id": deviceId,
-                    "app": package_name,
-                    "state": state
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "SetAppState",
+                    "data": {"id": deviceId, "app": package_name, "state": state},
+                    "resp": stateStatus,
                 },
-                "resp": stateStatus
-            })
+            )
             if stateStatus and hasattr(stateStatus, "state"):
                 entry = {
                     "Device Name": deviceName,
@@ -548,7 +556,9 @@ def getDevicesFromGridHelper(
 
 @api_tool_decorator()
 def relocateDeviceToNewGroup(frame):
-    devices = getDevicesFromGrid(tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads())
+    devices = getDevicesFromGrid(
+        tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
+    )
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
 
     splitResults = splitListIntoChunks(devices)
@@ -634,7 +644,11 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                 # Look up group to see if we know it already, if we don't query it
                 groupId = None
                 for group in Globals.knownGroups.values():
-                    if type(group) is dict and "name" in group and groupName == group["name"]:
+                    if (
+                        type(group) is dict
+                        and "name" in group
+                        and groupName == group["name"]
+                    ):
                         groupId = group["id"]
                         break
                     elif hasattr(group, "name") and groupName == group.name:
@@ -642,7 +656,10 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                         break
 
                 if not groupId:
-                    groups = getAllGroups(name=groupName, tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads())
+                    groups = getAllGroups(
+                        name=groupName,
+                        tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads(),
+                    )
                     if hasattr(groups, "results"):
                         groups = groups.results
                     elif type(groups) is dict and "results" in groups:
@@ -759,10 +776,13 @@ def uninstallApp(frame):
 
 def processBulkFactoryReset(devices, numDevices, processed):
     status = []
-    postEventToFrame(eventUtil.myEVT_AUDIT, {
-        "operation": "WIPE",
-        "data": devices,
-    })
+    postEventToFrame(
+        eventUtil.myEVT_AUDIT,
+        {
+            "operation": "WIPE",
+            "data": devices,
+        },
+    )
     for device in devices:
         deviceId = None
         if hasattr(device, "device_name"):
@@ -820,10 +840,13 @@ def processSetDeviceDisabled(devices, numDevices, processed):
             eventUtil.myEVT_UPDATE_GAUGE,
             value,
         )
-    postEventToFrame(eventUtil.myEVT_AUDIT, {
-        "operation": "DisableDevice(s)",
-        "data": devices,
-    })
+    postEventToFrame(
+        eventUtil.myEVT_AUDIT,
+        {
+            "operation": "DisableDevice(s)",
+            "data": devices,
+        },
+    )
     return status
 
 

@@ -11,7 +11,8 @@ from datetime import datetime
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
-class AuditPosting():
+
+class AuditPosting:
     def __init__(self):
         self.login = ""
         self.pw = ""
@@ -54,9 +55,7 @@ class AuditPosting():
         if Globals.IS_DEBUG:
             return
 
-        if (type(values) is dict 
-            and "operation" in values 
-            and "data" in values):
+        if type(values) is dict and "operation" in values and "data" in values:
             if "resp" in values:
                 self.emailOperation(values["operation"], values["data"], values["resp"])
             else:
@@ -86,9 +85,13 @@ class AuditPosting():
 
         if self.util.isReadyToSend():
             userStr = "User (id: %s) [OS: %s]: %s\n\n" % (
-                Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
+                Globals.TOKEN_USER["id"]
+                if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                else "Unknown",
                 platform.system(),
-                Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
+                Globals.TOKEN_USER["username"]
+                if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
+                else "Unknown",
             )
             contentStr = "\nResponse Content: " + content if content else ""
             if hasattr(data, "to_dict"):
@@ -97,8 +100,5 @@ class AuditPosting():
                 data = json.dumps(data, indent=4)
             self.util.sendEmail(
                 "%s UTC %s : %s" % (now, host, str(operation)),
-                userStr
-                + "Data:\n%s" % str(data)
-                + contentStr
+                userStr + "Data:\n%s" % str(data) + contentStr,
             )
-

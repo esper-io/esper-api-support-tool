@@ -471,6 +471,7 @@ def determineDoHereorMainThread(func, *args, **kwargs):
             (func, args),
         )
 
+
 def checkIfCurrentThreadStopped():
     isAbortSet = False
     if hasattr(threading.current_thread(), "abort"):

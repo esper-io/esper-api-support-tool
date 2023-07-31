@@ -351,6 +351,10 @@ def getProperDeviceId(devices):
             properDeviceList.append(device)
         else:
             json_rsp = searchForDevice(search=device)
-            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+            if (
+                "results" in json_rsp
+                and json_rsp["results"]
+                and "id" in json_rsp["results"][0]["id"]
+            ):
                 properDeviceList.append(json_rsp["results"][0]["id"])
     return devices

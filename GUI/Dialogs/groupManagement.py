@@ -11,10 +11,21 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.TabPanel import TabPanel
-from Utility.API.GroupUtility import (createGroup, deleteGroup, fetchGroupName,
-                                      getAllGroups, renameGroup)
-from Utility.Resource import (correctSaveFileName, displayMessageBox, isApiKey,
-                              openWebLinkInBrowser, resourcePath, scale_bitmap)
+from Utility.API.GroupUtility import (
+    createGroup,
+    deleteGroup,
+    fetchGroupName,
+    getAllGroups,
+    renameGroup,
+)
+from Utility.Resource import (
+    correctSaveFileName,
+    displayMessageBox,
+    isApiKey,
+    openWebLinkInBrowser,
+    resourcePath,
+    scale_bitmap,
+)
 
 
 class GroupManagement(wx.Dialog):
@@ -926,7 +937,9 @@ class GroupManagement(wx.Dialog):
                                 rowEntry[2],
                             )
                         else:
-                            name = "%s (Deletable)" % (self.tree_ctrl_2.GetItemText(item))
+                            name = "%s (Deletable)" % (
+                                self.tree_ctrl_2.GetItemText(item)
+                            )
                         self.tree_ctrl_2.SetItemText(item, name)
                     elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
                         item = self.uploadTreeItems[rowEntry[1]]
@@ -934,7 +947,10 @@ class GroupManagement(wx.Dialog):
                         if isApiKey(name) and rowEntry[0] in self.groupIdToName:
                             name = self.groupIdToName[rowEntry[0]]
                         if len(rowEntry) > 2 and rowEntry[2]:
-                            name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
+                            name = "%s (To Add;Rename To: %s)" % (
+                                rowEntry[0],
+                                rowEntry[2],
+                            )
                         else:
                             name = "%s (To Add)" % (rowEntry[0])
                         entry = self.tree_ctrl_2.AppendItem(item, name)

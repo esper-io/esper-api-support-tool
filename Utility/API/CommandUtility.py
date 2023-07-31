@@ -338,11 +338,14 @@ def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
                 api_instance.create_command,
                 Globals.PRINT_API_LOGS,
             )
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "Command (%s)" % request.command,
-                "data": request,
-                "resp": api_response
-            })
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "Command (%s)" % request.command,
+                    "data": request,
+                    "resp": api_response,
+                },
+            )
             break
         except Exception as e:
             if hasattr(e, "body") and (
@@ -483,11 +486,14 @@ def postEsperCommand(command_data, useV0=True):
             )
         resp = performPostRequestWithRetry(url, headers=headers, json=command_data)
         json_resp = resp.json()
-        postEventToFrame(eventUtil.myEVT_AUDIT, {
-            "operation": "Command(%s)" % command_data["command"],
-            "data": command_data,
-            "resp": resp
-        })
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "Command(%s)" % command_data["command"],
+                "data": command_data,
+                "resp": resp,
+            },
+        )
         logBadResponse(url, resp, json_resp)
     except Exception as e:
         ApiToolLog().LogError(e, postIssue=False)

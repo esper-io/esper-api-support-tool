@@ -281,7 +281,9 @@ class NewFrameLayout(wx.Frame):
 
         # Display disclaimer unless they have opt'd out.
         if Globals.SHOW_DISCLAIMER:
-            self.preferences["showDisclaimer"] = self.menubar.onDisclaimer(showCheckBox=True)
+            self.preferences["showDisclaimer"] = self.menubar.onDisclaimer(
+                showCheckBox=True
+            )
             Globals.SHOW_DISCLAIMER = self.preferences["showDisclaimer"]
 
     @api_tool_decorator()
@@ -2485,7 +2487,7 @@ class NewFrameLayout(wx.Frame):
                 else "",
                 "Command(s) have been fired.",
                 result,
-                parent=self
+                parent=self,
             ) as dialog:
                 Globals.OPEN_DIALOGS.append(dialog)
                 res = dialog.ShowModal()
@@ -2619,7 +2621,9 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    determineDoHereorMainThread(self.gridPanel.addDeviceToNetworkGrid, device, deviceInfo)
+                    determineDoHereorMainThread(
+                        self.gridPanel.addDeviceToNetworkGrid, device, deviceInfo
+                    )
                 else:
                     # construct and add info to grid contents
                     Globals.THREAD_POOL.enqueue(
@@ -2632,7 +2636,9 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    determineDoHereorMainThread(self.gridPanel.addDeviceToDeviceGrid, deviceInfo)
+                    determineDoHereorMainThread(
+                        self.gridPanel.addDeviceToDeviceGrid, deviceInfo
+                    )
                 else:
                     # construct and add info to grid contents
                     Globals.THREAD_POOL.enqueue(
@@ -2644,7 +2650,12 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    determineDoHereorMainThread(self.gridPanel.populateAppGrid, device, deviceInfo, deviceInfo["appObj"])
+                    determineDoHereorMainThread(
+                        self.gridPanel.populateAppGrid,
+                        device,
+                        deviceInfo,
+                        deviceInfo["appObj"],
+                    )
                 else:
                     Globals.THREAD_POOL.enqueue(
                         self.gridPanel.constructAppGridContent,
@@ -2763,7 +2774,9 @@ class NewFrameLayout(wx.Frame):
             for window in Globals.OPEN_DIALOGS:
                 if window and hasattr(window, "Raise") and not self.isSaving:
                     window.Raise()
-                elif window and hasattr(window, "tryToMakeActive") and not self.isSaving:
+                elif (
+                    window and hasattr(window, "tryToMakeActive") and not self.isSaving
+                ):
                     window.tryToMakeActive()
         if self.notification:
             self.notification.Close()
@@ -3174,11 +3187,19 @@ class NewFrameLayout(wx.Frame):
             determineDoHereorMainThread(self.sidePanel.setAppChoiceState, clientData)
         else:
             determineDoHereorMainThread(self.sidePanel.appChoice.Enable, state)
-        
-        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.otool.Id, state)
-        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.rtool.Id, state)
-        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.cmdtool.Id, state)
-        determineDoHereorMainThread(self.frame_toolbar.EnableTool, self.frame_toolbar.atool.Id, state)
+
+        determineDoHereorMainThread(
+            self.frame_toolbar.EnableTool, self.frame_toolbar.otool.Id, state
+        )
+        determineDoHereorMainThread(
+            self.frame_toolbar.EnableTool, self.frame_toolbar.rtool.Id, state
+        )
+        determineDoHereorMainThread(
+            self.frame_toolbar.EnableTool, self.frame_toolbar.cmdtool.Id, state
+        )
+        determineDoHereorMainThread(
+            self.frame_toolbar.EnableTool, self.frame_toolbar.atool.Id, state
+        )
 
         # Toggle Menu Bar Items
         determineDoHereorMainThread(self.menubar.fileOpenAuth.Enable, state)
@@ -3666,7 +3687,8 @@ class NewFrameLayout(wx.Frame):
                 entry.append(user["updated_at"])
                 data.append(entry)
                 postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(users["userinvites"]) * 90)
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    int(num / len(users["userinvites"]) * 90),
                 )
                 num += 1
             createNewFile(inFile)

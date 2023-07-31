@@ -4,7 +4,6 @@ from email.message import EmailMessage
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
-
 class EmailUtils:
     def __init__(self, login, password, to_addrs):
         self.ssl_port = 465  # For SSL
@@ -41,9 +40,7 @@ class EmailUtils:
 
     def _sendEmailViaTls(self, subject, msg):
         try:
-            with smtplib.SMTP(
-                "smtp.gmail.com", self.tls_port
-            ) as server:
+            with smtplib.SMTP("smtp.gmail.com", self.tls_port) as server:
                 server.starttls()
                 self._sendEmailFromServer(server, subject, msg)
         except Exception as e:

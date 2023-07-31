@@ -70,7 +70,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleReportType",
             "scheduleInterval",
             "showDisclaimer",
-            "getTemplateLanguage"
+            "getTemplateLanguage",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -958,7 +958,9 @@ class PreferencesDialog(wx.Dialog):
                 self.combobox_2.SetSelection(self.prefs["appFilter"])
             Globals.APP_FILTER = self.combobox_1.GetValue().lower()
 
-        if self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5, True):
+        if self.checkBooleanValuePrefAndSet(
+            "reachQueueStateOnly", self.checkbox_5, True
+        ):
             Globals.REACH_QUEUED_ONLY = True
         else:
             Globals.REACH_QUEUED_ONLY = False
@@ -1138,20 +1140,15 @@ class PreferencesDialog(wx.Dialog):
                 self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
             )
 
-        if self.checkBooleanValuePrefAndSet(
-            "showDisclaimer", self.checkbox_28, True
-        ):
+        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_28, True):
             Globals.SHOW_DISCLAIMER = True
         else:
             Globals.SHOW_DISCLAIMER = False
 
-        if self.checkBooleanValuePrefAndSet(
-            "getTemplateLanguage", self.checkbox_29
-        ):
+        if self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29):
             Globals.GET_DEVICE_LANGUAGE = True
         else:
             Globals.GET_DEVICE_LANGUAGE = False
-        
 
         self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
         self.parent.gridPanel.fillDeviceGridHeaders()
