@@ -305,7 +305,6 @@ class BlueprintsConvertDialog(wx.Dialog):
             and self.combo_box_2.GetValue()
             and self.combo_box_3.GetValue()
             and self.combo_box_4.GetValue()
-            and self.combo_box_1.GetValue() != self.combo_box_3.GetValue()
             and self.chosenTemplate
         ):
             self.button_OK.Enable(True)
