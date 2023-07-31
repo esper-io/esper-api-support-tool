@@ -10,6 +10,7 @@ from Common.enum import GeneralActions, GridActions
 from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from Utility import EventUtility
+from Utility.FileUtility import write_data_to_csv
 from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
 
 
@@ -341,9 +342,7 @@ class SidePanel(wx.Panel):
                             num += 1
                         if authEntry not in data:
                             data.append(authEntry)
-                    with open(self.parentFrame.authPath, "w", newline="") as csvfile:
-                        writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                        writer.writerows(data)
+                    write_data_to_csv(self.parentFrame.authPath, data)
                     for child in self.parentFrame.menubar.configMenu.GetMenuItems():
                         if value in self.configChoice[child.GetItemLabel()].values():
                             self.parentFrame.menubar.configMenu.Delete(child)

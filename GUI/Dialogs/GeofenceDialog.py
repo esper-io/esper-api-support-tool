@@ -10,6 +10,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
+from Utility.FileUtility import read_data_from_csv
 from Utility.Resource import displayMessageBox, getHeader
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
@@ -234,11 +235,7 @@ class GeofenceDialog(wx.Dialog):
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
-            with open(filePath, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
+            data = read_data_from_csv(filePath)
         elif filePath.endswith(".xlsx"):
             try:
                 dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)

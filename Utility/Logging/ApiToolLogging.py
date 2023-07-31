@@ -15,6 +15,7 @@ from fuzzywuzzy import fuzz
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
+from Utility.FileUtility import write_content_to_file
 from Utility.Logging.IssueTracker import IssueTracker
 
 
@@ -44,14 +45,12 @@ class ApiToolLog:
             parentPath = os.path.abspath(os.path.join(self.logPath, os.pardir))
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
-            with open(self.logPath, "w"):
-                pass
+            write_content_to_file(self.logPath, "")
         if not os.path.exists(self.placePath) and Globals.RECORD_PLACE:
             parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
-            with open(self.placePath, "w"):
-                pass
+            write_content_to_file(self.placePath, "")
 
     def limitLogFileSizes(self):
         self.limitFileSize(self.logPath)
@@ -62,8 +61,7 @@ class ApiToolLog:
             os.path.exists(file)
             and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb
         ):
-            with open(file, "w"):
-                pass
+            write_content_to_file(file, "")
 
     def LogError(
         self, e, exc_type=None, exc_value=None, exc_traceback=None, postIssue=True
@@ -98,12 +96,10 @@ class ApiToolLog:
             Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str_place):
-        with open(self.placePath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), str_place))
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), str_place), "a")
 
     def LogResponse(self, response):
-        with open(self.logPath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), response))
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), response), "a")
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -204,8 +200,7 @@ class ApiToolLog:
             Globals.api_log_lock.acquire()
             self.limitLogFileSizes()
             try:
-                with open(self.logPath, "a") as myfile:
-                    myfile.write(strToWrite)
+                write_content_to_file(self.logPath, strToWrite, "a")
                 if "Summary" in strToWrite and Globals.frame.audit:
                     Globals.frame.audit.postOperation(
                         {"operation": "API Usage Summary", "data": strToWrite}

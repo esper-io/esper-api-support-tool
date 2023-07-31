@@ -25,6 +25,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
+from Utility.FileUtility import write_content_to_file
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
@@ -46,9 +47,7 @@ def createNewFile(filePath, fileData=None):
         parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
         if not os.path.exists(parentPath):
             os.makedirs(parentPath)
-        with open(filePath, "w") as outfile:
-            if fileData:
-                outfile.write(fileData)
+        write_content_to_file(filePath, fileData)
 
 
 def scale_bitmap(bitmap, width, height):

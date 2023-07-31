@@ -8,6 +8,7 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.FileUtility import read_data_from_csv
 
 
 class WidgetPicker(wx.Dialog):
@@ -297,11 +298,7 @@ class WidgetPicker(wx.Dialog):
             self.deviceList = []
 
             if inFile.endswith(".csv"):
-                with open(inFile, "r") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    fileData = list(reader)
+                fileData = read_data_from_csv(inFile)
                 for entry in fileData:
                     identifer = entry[0]
                     if identifer and identifer not in self.deviceList:

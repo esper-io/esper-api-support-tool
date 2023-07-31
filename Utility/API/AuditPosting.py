@@ -8,6 +8,7 @@ import platform
 import Common.Globals as Globals
 
 from datetime import datetime
+from Utility.FileUtility import read_json_file
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
@@ -35,8 +36,7 @@ class AuditPosting:
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
             tokenJson = {}
-            with open(filePath, "r") as file:
-                tokenJson = json.load(file)
+            tokenJson = read_json_file(filePath)
             if "email_to" in tokenJson:
                 self.to_addr = tokenJson["email_to"]
             if "email_login" in tokenJson:

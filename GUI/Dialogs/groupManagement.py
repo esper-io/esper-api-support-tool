@@ -18,6 +18,7 @@ from Utility.API.GroupUtility import (
     getAllGroups,
     renameGroup,
 )
+from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
@@ -852,19 +853,7 @@ class GroupManagement(wx.Dialog):
 
     def uploadCSV(self, filePath):
         self.handlePreUploadActivity()
-        data = None
-        try:
-            with open(filePath, "r", encoding="utf-8-sig") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-        except:
-            with open(filePath, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
+        data = read_data_from_csv(filePath)
         self.processUploadData(data)
 
     def uploadXlsx(self, filePath):
@@ -1007,9 +996,7 @@ class GroupManagement(wx.Dialog):
         gridData.append(self.expectedHeaders)
         self.getGroupCSV(self.groupTree, None, gridData)
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+        write_data_to_csv(inFile, gridData)
         res = displayMessageBox(
             (
                 "Group Template CSV Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"

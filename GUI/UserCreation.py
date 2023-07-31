@@ -13,6 +13,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 from Utility.API.UserUtility import createNewUser, deleteUser, getAllUsers, modifyUser
+from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     createNewFile,
@@ -291,9 +292,7 @@ class UserCreation(wx.Frame):
 
             gridData = []
             gridData.append(self.fileHeaders)
-            with open(inFile, "w", newline="") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(gridData)
+            write_data_to_csv(inFile, gridData)
             return True
         return False
 
@@ -331,11 +330,7 @@ class UserCreation(wx.Frame):
         data = None
         headers = []
         if file.endswith(".csv"):
-            with open(file, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
+            data = read_data_from_csv(file)
         elif file.endswith(".xlsx"):
             dfs = None
             try:

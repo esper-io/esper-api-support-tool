@@ -26,6 +26,7 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Utility.API.WidgetUtility import setWidget
 from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
+from Utility.FileUtility import read_data_from_csv, read_json_file, write_data_to_csv, write_json_file
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -448,12 +449,7 @@ class NewFrameLayout(wx.Frame):
             if (
                 not self.auth_data or csvRow not in self.auth_data
             ) and not matchingConfig:
-                with open(self.authPath, "a", newline="") as csvfile:
-                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    if type(csvRow) is dict:
-                        writer.writerow(list(csvRow.values()))
-                    else:
-                        writer.writerow(csvRow)
+                write_data_to_csv(self.authPath, csvRow)
                 Globals.csv_auth_path = self.authPath
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
@@ -478,9 +474,7 @@ class NewFrameLayout(wx.Frame):
                         indx += 1
                     if authEntry not in tmp:
                         tmp.append(authEntry)
-                with open(self.authPath, "w", newline="") as csvfile:
-                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerows(tmp)
+                write_data_to_csv(self.authPath, tmp)
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
                 displayMessageBox(("Tenant has been added", wx.ICON_INFORMATION))
@@ -780,9 +774,7 @@ class NewFrameLayout(wx.Frame):
                     if val <= 95:
                         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
                     num += 1
-                with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                    writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                    writer.writerows(gridData)
+                write_data_to_csv(inFile, gridData)
             if (
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -1044,9 +1036,7 @@ class NewFrameLayout(wx.Frame):
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
                 num += 1
 
-            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(gridData)
+            write_data_to_csv(inFile, gridData)
 
             self.Logging("---> Info saved to csv file - " + inFile)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
@@ -1109,20 +1099,8 @@ class NewFrameLayout(wx.Frame):
     def openDeviceCSV(self, csv_auth_path):
         self.isUploading = True
         if csv_auth_path.endswith(".csv"):
-            try:
-                with open(csv_auth_path, "r", encoding="utf-8-sig") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-                    self.processDeviceCSVUpload(data)
-            except:
-                with open(csv_auth_path, "r") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-                    self.processDeviceCSVUpload(data)
+            data = read_data_from_csv(csv_auth_path)
+            self.processDeviceCSVUpload(data)
         elif csv_auth_path.endswith(".xlsx"):
             try:
                 dfs = pd.read_excel(
@@ -2798,9 +2776,7 @@ class NewFrameLayout(wx.Frame):
         if os.path.exists(Globals.csv_auth_path):
             if self.key and crypto().isFileEncrypt(Globals.csv_auth_path, self.key):
                 crypto().decrypt(Globals.csv_auth_path, self.key, True)
-            with open(Globals.csv_auth_path, "r") as csvFile:
-                auth_csv_reader = csv.DictReader(csvFile)
-                self.auth_data = list(auth_csv_reader)
+            self.auth_data = read_data_from_csv(Globals.csv_auth_path)
             if self.auth_data:
                 self.auth_data = sorted(
                     self.auth_data,
@@ -2821,11 +2797,7 @@ class NewFrameLayout(wx.Frame):
             if self.kill:
                 return
             createNewFile(self.authPath)
-            with open(self.authPath, "w", newline="") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerow(
-                    ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
-                )
+            write_data_to_csv(self.authPath, ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"])
             self.AddEndpoint(None)
 
         if self.kill:
@@ -2837,16 +2809,14 @@ class NewFrameLayout(wx.Frame):
             and os.access(self.prefPath, os.R_OK)
         ):
             if os.path.getsize(self.prefPath) > 2:
-                with open(self.prefPath) as jsonFile:
-                    if jsonFile:
-                        try:
-                            self.preferences = json.load(jsonFile)
-                        except Exception as e:
-                            ApiToolLog().LogError(e)
-                            self.Logging(
-                                "Preference file possibly has been corrupted and is malformed!",
-                                isError=True,
-                            )
+                try:
+                    self.preferences = read_json_file(self.prefPath)
+                except Exception as e:
+                    ApiToolLog().LogError(e)
+                    self.Logging(
+                        "Preference file possibly has been corrupted and is malformed!",
+                        isError=True,
+                    )
                 self.prefDialog.SetPrefs(self.preferences)
             else:
                 self.Logging("Missing or empty preference file!", isError=True)
@@ -2859,8 +2829,7 @@ class NewFrameLayout(wx.Frame):
     def savePrefs(self, dialog):
         """ Save Preferences """
         self.preferences = dialog.GetPrefs()
-        with open(self.prefPath, "w") as outfile:
-            json.dump(self.preferences, outfile)
+        write_json_file(self.prefPath, self.preferences)
         postEventToFrame(eventUtil.myEVT_LOG, "---> Preferences' Saved")
 
     @api_tool_decorator()
@@ -2924,41 +2893,37 @@ class NewFrameLayout(wx.Frame):
         self.isUploading = True
         for file in event.Files:
             if file.endswith(".csv"):
-                with open(file, "r", encoding="utf-8") as csvFile:
-                    reader = csv.reader(
-                        csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                    )
-                    data = list(reader)
-                    if (
-                        "apiHost" in data[0]
-                        and "apiKey" in data[0]
-                        and "apiPrefix" in data[0]
-                        and "enterprise" in data[0]
-                    ):
-                        self.PopulateConfig(auth=file)
+                data = read_data_from_csv(file)
+                if (
+                    "apiHost" in data[0]
+                    and "apiKey" in data[0]
+                    and "apiPrefix" in data[0]
+                    and "enterprise" in data[0]
+                ):
+                    self.PopulateConfig(auth=file)
+                else:
+                    if not Globals.enterprise_id:
+                        displayMessageBox(
+                            (
+                                "Please load a configuration first!",
+                                wx.OK | wx.ICON_ERROR,
+                            )
+                        )
+                        return
+                    self.toggleEnabledState(False)
+                    if self.WINDOWS:
+                        Globals.THREAD_POOL.enqueue(
+                            self.processDeviceCSVUpload, data
+                        )
+                        Globals.THREAD_POOL.enqueue(
+                            self.waitForThreadsThenSetCursorDefault,
+                            Globals.THREAD_POOL.threads,
+                            2,
+                            tolerance=1,
+                        )
                     else:
-                        if not Globals.enterprise_id:
-                            displayMessageBox(
-                                (
-                                    "Please load a configuration first!",
-                                    wx.OK | wx.ICON_ERROR,
-                                )
-                            )
-                            return
-                        self.toggleEnabledState(False)
-                        if self.WINDOWS:
-                            Globals.THREAD_POOL.enqueue(
-                                self.processDeviceCSVUpload, data
-                            )
-                            Globals.THREAD_POOL.enqueue(
-                                self.waitForThreadsThenSetCursorDefault,
-                                Globals.THREAD_POOL.threads,
-                                2,
-                                tolerance=1,
-                            )
-                        else:
-                            self.processDeviceCSVUpload(data)
-                            postEventToFrame(eventUtil.myEVT_COMPLETE, True)
+                        self.processDeviceCSVUpload(data)
+                        postEventToFrame(eventUtil.myEVT_COMPLETE, True)
             elif file.endswith(".xlxs"):
                 self.toggleEnabledState(False)
                 if self.WINDOWS:
@@ -3613,9 +3578,7 @@ class NewFrameLayout(wx.Frame):
                 num += 1
             createNewFile(inFile)
 
-            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(data)
+            write_data_to_csv(inFile, data)
 
             self.Logging("---> User Report saved to file: " + inFile)
             self.setCursorDefault()
@@ -3693,9 +3656,7 @@ class NewFrameLayout(wx.Frame):
                 num += 1
             createNewFile(inFile)
 
-            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(data)
+            write_data_to_csv(inFile, data)
 
             self.Logging("---> Pending User Report saved to file: " + inFile)
             self.setCursorDefault()
@@ -3795,9 +3756,7 @@ class NewFrameLayout(wx.Frame):
                 num += 1
             createNewFile(inFile)
 
-            with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-                writer.writerows(data)
+            write_data_to_csv(inFile, data)
 
             self.Logging("---> User Report saved to file: " + inFile)
             self.setCursorDefault()
