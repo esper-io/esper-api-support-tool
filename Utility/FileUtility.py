@@ -40,6 +40,14 @@ def read_data_from_csv(filePath: str) -> list:
             fileData = __read_data_from_csv_helper__(filePath, "utf-8")
     return fileData
 
+def read_data_from_csv_as_dict(filePath: str) -> list:
+    fileData = None
+    if filePath.endswith("csv"):
+        with open(filePath, "r") as csvFile:
+            csv_reader = csv.DictReader(csvFile)
+            fileData = list(csv_reader)
+    return fileData
+
 def __read_data_from_csv_helper__(filePath, encoding, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True):
     fileData = None
     with open(filePath, "r", encoding=encoding) as csvFile:
