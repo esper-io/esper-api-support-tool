@@ -24,6 +24,8 @@ def write_json_file(filePath, data: dict):
         json.dump(data, outfile)
 
 def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
+    if "b"in mode:
+        encoding = None
     with open(filePath, mode, encoding=encoding) as file:
         if type(data) is list:
             for line in data:
