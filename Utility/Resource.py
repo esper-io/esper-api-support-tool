@@ -7,8 +7,6 @@ import re
 import shlex
 import subprocess
 import sys
-import ssl
-import stat
 import threading
 import time
 import webbrowser

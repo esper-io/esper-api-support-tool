@@ -34,7 +34,6 @@ class GridPanel(wx.Panel):
         self.grid_3_contents = []
         self.grid_1_id_content = []
         self.grid_2_id_contents = []
-        self.grid_3_id_contents = []
 
         self.deviceDescending = False
         self.networkDescending = False
@@ -782,28 +781,6 @@ class GridPanel(wx.Panel):
         if identifier not in self.grid_1_id_content:
             self.grid_1_contents.append(device_info)
             self.grid_1_id_content.append(identifier)
-
-    def getDeviceNetworkInfoListing(self, device, device_info):
-        device = {}
-        for attribute in Globals.CSV_TAG_ATTR_NAME.keys():
-            value = (
-                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                else ""
-            )
-            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-        networkInfo = (
-            device_info["network_info"]
-            if "network_info" in device_info
-            else constructNetworkInfo(device, device_info)
-        )
-        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = networkInfo[attribute] if attribute in networkInfo else ""
-            device[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
-        self.grid_3_contents += (
-            device_info["AppsEntry"] if "AppsEntry" in device_info else []
-        )
-        return device
 
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
     def setStatusCellColor(self, value, rowNum, colNum):

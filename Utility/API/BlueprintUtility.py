@@ -87,11 +87,7 @@ def getAllBlueprints():
 def getAllBlueprintsFromHost(host, key, enterprise):
     response = getAllBlueprintsFromHostHelper(host, key, enterprise, Globals.limit, 0)
     blueprints = getAllFromOffsetsRequests(response, tolarance=1)
-    if hasattr(response, "results"):
-        response.results = response.results + blueprints
-        response.next = None
-        response.prev = None
-    elif type(response) is dict and "results" in response:
+    if type(response) is dict and "results" in response:
         response["results"] = response["results"] + blueprints
         response["next"] = None
         response["prev"] = None

@@ -191,11 +191,7 @@ def getSpecificUser(
 def getAllUsers():
     userResp = getUsers()
     users = getAllFromOffsetsRequests(userResp)
-    if hasattr(userResp, "results"):
-        userResp.results = userResp.results + users
-        userResp.next = None
-        userResp.prev = None
-    elif type(userResp) is dict and "results" in userResp:
+    if type(userResp) is dict and "results" in userResp:
         userResp["results"] = userResp["results"] + users
         userResp["next"] = None
         userResp["prev"] = None

@@ -11,8 +11,6 @@ import Common.Globals as Globals
 
 from setuptools import setup
 
-Globals.IS_GENERATEING_EXE = True
-
 system = platform.system()
 bit = platform.machine()
 if bit.endswith("i686") or bit == "arm64":
