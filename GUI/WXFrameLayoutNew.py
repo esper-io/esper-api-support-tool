@@ -449,7 +449,7 @@ class NewFrameLayout(wx.Frame):
             if (
                 not self.auth_data or csvRow not in self.auth_data
             ) and not matchingConfig:
-                write_data_to_csv(self.authPath, csvRow)
+                write_data_to_csv(self.authPath, csvRow, "a")
                 Globals.csv_auth_path = self.authPath
                 self.readAuthCSV()
                 isValid = self.PopulateConfig(auth=self.authPath, getItemForName=name)
@@ -1292,7 +1292,7 @@ class NewFrameLayout(wx.Frame):
 
     def getAndValidateColumnHeaderName(self, header, indx):
         colName = (
-            str(header[indx]) if len(header) > indx else ""  # .replace(" ", "").lower()
+            str(header[indx]) if len(header) > indx else ""
         )
         if colName.lower() == "storenumber" or colName.lower() == "store number":
             colName = "Alias"
@@ -1301,7 +1301,7 @@ class NewFrameLayout(wx.Frame):
         return colName
 
     @api_tool_decorator()
-    def PopulateConfig(self, auth=None, event=None, getItemForName=None):
+    def PopulateConfig(self, auth=None, getItemForName=None):
         """Populates Configuration From CSV"""
         self.Logging("--->Loading Tenants from %s" % Globals.csv_auth_path)
         if auth:
