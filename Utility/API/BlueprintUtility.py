@@ -341,7 +341,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                 )
                 respJson = resp.json()
                 postEventToFrame(
-                    eventUtil.EVT_AUDIT,
+                    eventUtil.myEVT_AUDIT,
                     {"operation": "CloneBlueprint", "data": blueprint, "resp": resp},
                 )
 
