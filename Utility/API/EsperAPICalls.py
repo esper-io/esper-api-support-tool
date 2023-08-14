@@ -169,7 +169,6 @@ def toggleKioskMode(
 
 @api_tool_decorator()
 def setdevicename(
-    frame,
     deviceid,
     devicename,
     ignoreQueue,
@@ -329,15 +328,14 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
     timeout = Globals.COMMAND_TIMEOUT
     if Globals.SET_APP_STATE_AS_SHOW:
         stateStatus = setAppState(deviceId, appToUse, state="SHOW", isGroup=isGroup)
-        postEventToFrame(eventUtil.myEVT_AUDIT, {
-            "operation": "SetAppState",
-            "data": {
-                "id": deviceId,
-                "app": appToUse,
-                "state": "SHOW"
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "SetAppState",
+                "data": {"id": deviceId, "app": appToUse, "state": "SHOW"},
+                "resp": stateStatus,
             },
-            "resp": stateStatus
-        })
+        )
         timeout = (
             Globals.COMMAND_TIMEOUT if "Command Success" in str(stateStatus) else 0
         )

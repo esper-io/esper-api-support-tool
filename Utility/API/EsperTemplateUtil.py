@@ -116,9 +116,9 @@ class EsperTemplateUtil:
     @api_tool_decorator()
     def processDeviceGroup(self, templateFound):
         toDeviceGroups = getDeviceGroupsForHost(
-            getEsperConfig(self.toApi, self.toKey), 
-            self.toEntId, 
-            tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
+            getEsperConfig(self.toApi, self.toKey),
+            self.toEntId,
+            tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads(),
         )
         allDeviceGroupId = None
         found, templateFound, allDeviceGroupId = self.checkDeviceGroup(
@@ -133,9 +133,9 @@ class EsperTemplateUtil:
             )
             if res:
                 toDeviceGroups = getDeviceGroupsForHost(
-                    getEsperConfig(self.toApi, self.toKey), 
-                    self.toEntId, 
-                    tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
+                    getEsperConfig(self.toApi, self.toKey),
+                    self.toEntId,
+                    tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads(),
                 )
                 _, templateFound, _ = self.checkDeviceGroup(
                     templateFound, toDeviceGroups, allDeviceGroupId
@@ -149,6 +149,7 @@ class EsperTemplateUtil:
                 wx.MessageBox(
                     "Failed to recreate Device Group, using All Device group!",
                     style=wx.OK | wx.ICON_ERROR,
+                    parent=Globals.frame,
                 )
         return templateFound
 
@@ -472,7 +473,9 @@ class EsperTemplateUtil:
                 eventUtil.myEVT_LOG,
                 "Attempting to download %s to upload to tenant" % app["packageName"],
             )
-            file = "%s.apk" % app["applicationName"].replace("<", "").replace(">", "").replace("\n","")
+            file = "%s.apk" % app["applicationName"].replace("<", "").replace(
+                ">", ""
+            ).replace("\n", "")
             deleteFile(file)
             download(app["downloadUrl"], file)
             ApiToolLog().LogApiRequestOccurrence(
@@ -601,11 +604,10 @@ class EsperTemplateUtil:
             }
             url = link + enterprise_id + self.template_extension
             resp = performPostRequestWithRetry(url, headers=headers, json=template)
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "CreateTemplate",
-                "data": template,
-                "resp": resp
-            })
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {"operation": "CreateTemplate", "data": template, "resp": resp},
+            )
             json_resp = resp.json()
             if hasattr(resp, "status_code"):
                 if resp.status_code > 299 and level > 0:
@@ -627,11 +629,10 @@ class EsperTemplateUtil:
             url = link + enterprise_id + self.template_extension + str(template["id"])
             resp = performPatchRequestWithRetry(url, headers=headers, json=template)
             json_resp = resp.json()
-            postEventToFrame(eventUtil.myEVT_AUDIT, {
-                "operation": "UpdateTemplate",
-                "data": template,
-                "resp": json_resp
-            })
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {"operation": "UpdateTemplate", "data": template, "resp": json_resp},
+            )
             return json_resp
         except Exception as e:
             raise e

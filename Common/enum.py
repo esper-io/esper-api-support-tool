@@ -25,13 +25,14 @@ class GeneralActions(Enum):
 
 
 class GridActions(Enum):
-    MODIFY_ALIAS_AND_TAGS = 200
+    MODIFY_ALIAS = 200
     SET_APP_STATE = 201
     MOVE_GROUP = 202
     INSTALL_APP = 203
     UNINSTALL_APP = 204
     FACTORY_RESET = 207
     SET_DEVICE_DISABLED = 208
+    MODIFY_TAGS = 209
 
 
 class DeviceState(Enum):

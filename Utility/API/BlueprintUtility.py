@@ -87,11 +87,7 @@ def getAllBlueprints():
 def getAllBlueprintsFromHost(host, key, enterprise):
     response = getAllBlueprintsFromHostHelper(host, key, enterprise, Globals.limit, 0)
     blueprints = getAllFromOffsetsRequests(response, tolarance=1)
-    if hasattr(response, "results"):
-        response.results = response.results + blueprints
-        response.next = None
-        response.prev = None
-    elif type(response) is dict and "results" in response:
+    if type(response) is dict and "results" in response:
         response["results"] = response["results"] + blueprints
         response["next"] = None
         response["prev"] = None
@@ -344,11 +340,10 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
                     blueprint,
                 )
                 respJson = resp.json()
-                postEventToFrame(eventUtil.EVT_AUDIT, {
-                    "operation": "CloneBlueprint",
-                    "data": blueprint,
-                    "resp": resp
-                })
+                postEventToFrame(
+                    eventUtil.myEVT_AUDIT,
+                    {"operation": "CloneBlueprint", "data": blueprint, "resp": resp},
+                )
 
             cloneResult = (
                 "Success"
@@ -555,8 +550,10 @@ def checkFromMissingApps(blueprint, toConfig, fromConfig):
                                 or version["build_number"] in app["version_codes"][0]
                             )
                         )
-                        or "version_name" in app and version["version_code"] == app["version_name"]
-                        or "version_code" in app and version["build_number"] == app["version_code"]
+                        or "version_name" in app
+                        and version["version_code"] == app["version_name"]
+                        or "version_code" in app
+                        and version["build_number"] == app["version_code"]
                     ):
                         if app["is_g_play"] and version["is_g_play"]:
                             # TODO: Add properly

@@ -4,6 +4,7 @@ from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnG
 from Utility.API.DeviceUtility import getProperDeviceId
 from Utility.API.GroupUtility import getProperGroupId
 
+
 def setWidget(enable, widgetName=None, devices=[], groups=[]):
     if (not devices and not groups) or (enable and not widgetName):
         return
@@ -26,5 +27,5 @@ def setWidget(enable, widgetName=None, devices=[], groups=[]):
             command_type="SET_WIDGET",
             postStatus=True,
             combineRequests=True,
-            groupIds=properGroupList
+            groupIds=properGroupList,
         )

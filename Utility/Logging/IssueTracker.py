@@ -7,6 +7,7 @@ import sys
 import requests
 
 import Common.Globals as Globals
+from Utility.FileUtility import read_json_file
 
 
 class IssueTracker:
@@ -41,9 +42,7 @@ class IssueTracker:
 
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
-            tokenJson = {}
-            with open(filePath, "r") as file:
-                tokenJson = json.load(file)
+            tokenJson = read_json_file(filePath)
             if "pat" in tokenJson:
                 return tokenJson["pat"]
 

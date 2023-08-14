@@ -199,7 +199,7 @@ class ToolMenuBar(wx.MenuBar):
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
         )
         self.userReportItem = self.userSubMenu.Append(userReport)
-        
+
         pendingUserReport = wx.MenuItem(
             self.userSubMenu, wx.ID_ANY, "&Get Pending User Report\tCtrl+Alt+U"
         )
@@ -250,7 +250,9 @@ class ToolMenuBar(wx.MenuBar):
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
-        tnc = helpMenu.Append(wx.ID_ANY, "Terms and Conditions", "&Terms and Conditions")
+        tnc = helpMenu.Append(
+            wx.ID_ANY, "Terms and Conditions", "&Terms and Conditions"
+        )
         self.Bind(wx.EVT_MENU, self.onDisclaimer, tnc)
 
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
@@ -328,7 +330,11 @@ class ToolMenuBar(wx.MenuBar):
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onPendingUserReport, self.pendingUserReportItem)
+        self.Bind(
+            wx.EVT_MENU,
+            self.parentFrame.onPendingUserReport,
+            self.pendingUserReportItem,
+        )
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
         )
@@ -356,6 +362,8 @@ class ToolMenuBar(wx.MenuBar):
             Globals.OPEN_DIALOGS.remove(dialog)
 
             showDisclaimer = bool(not dialog.isCheckboxChecked())
+        if Globals.frame:
+            Globals.frame.savePrefs(Globals.frame.prefDialog)
         return showDisclaimer
 
     @api_tool_decorator()
@@ -413,6 +421,7 @@ class ToolMenuBar(wx.MenuBar):
             "Update found! Do you want to update?",
             "Update",
             wx.YES_NO | wx.ICON_QUESTION,
+            parent=Globals.frame,
         )
         if dlg == wx.YES:
             self.parentFrame.statusBar.gauge.Pulse()
@@ -432,7 +441,9 @@ class ToolMenuBar(wx.MenuBar):
             )
         else:
             icon = wx.ICON_ERROR
-            msg = "An error occured while downloading the update. Please try again later."
+            msg = (
+                "An error occured while downloading the update. Please try again later."
+            )
 
         if msg and showDlg:
             postEventToFrame(
@@ -440,7 +451,7 @@ class ToolMenuBar(wx.MenuBar):
                 (msg, icon),
             )
             if result:
-                openWebLinkInBrowser(result)
+                openWebLinkInBrowser(result, isfile=True)
                 Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(
@@ -465,7 +476,7 @@ class ToolMenuBar(wx.MenuBar):
     def onEqlQuery(self, event):
         postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids(None)
+        self.parentFrame.onClearGrids()
         with LargeTextEntryDialog(
             self.parentFrame, "Enter EQL Query:", "EQL Query"
         ) as textDialog:
@@ -491,7 +502,7 @@ class ToolMenuBar(wx.MenuBar):
     def onCollection(self, event):
         postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
         self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids(None)
+        self.parentFrame.onClearGrids()
         with CollectionsDialog(self.parentFrame) as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
             if dlg.ShowModal() == wx.ID_EXECUTE:

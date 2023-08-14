@@ -9,14 +9,18 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (correctSaveFileName, displayMessageBox,
-                              openWebLinkInBrowser)
+from Utility.FileUtility import read_data_from_csv, write_data_to_csv
+from Utility.Resource import (
+    correctSaveFileName,
+    displayMessageBox,
+    openWebLinkInBrowser,
+)
 
 
 class BulkFactoryReset(wx.Dialog):
     def __init__(self):
         super(BulkFactoryReset, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE,
         )
@@ -159,9 +163,7 @@ class BulkFactoryReset(wx.Dialog):
         gridData.append(["<esper_device_name>"])
         gridData.append(["<esper_device_id>"])
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+        write_data_to_csv(inFile, gridData)
 
         res = displayMessageBox(
             (
@@ -172,7 +174,7 @@ class BulkFactoryReset(wx.Dialog):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
-            openWebLinkInBrowser(parentDirectory)
+            openWebLinkInBrowser(parentDirectory, isfile=True)
         self.button_OK.Enable(True)
         self.setCursorDefault()
 
@@ -202,19 +204,7 @@ class BulkFactoryReset(wx.Dialog):
 
     def uploadCSV(self, filePath):
         self.doPreUploadActivity()
-        data = None
-        try:
-            with open(filePath, "r", encoding="utf-8-sig") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-        except:
-            with open(filePath, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
+        data = read_data_from_csv(filePath)
         self.processUploadData(data)
 
     def uploadXlsx(self, filePath):

@@ -14,8 +14,10 @@ enterprise_id = ""
 
 IS_DEBUG = False
 
+API_LOGGER = None
+
 """ Constants """
-VERSION = "v0.19485"
+VERSION = "v0.19488"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -41,9 +43,7 @@ SHEET_CHUNK_SIZE = 500000
 MIN_SHEET_CHUNK_SIZE = 50000
 MAX_SHEET_CHUNK_SIZE = 500000
 
-IS_GENERATEING_EXE = False
-
-THREAD_POOL = Pool(MAX_THREAD_COUNT) if not IS_GENERATEING_EXE else None
+THREAD_POOL = Pool(MAX_THREAD_COUNT)
 if THREAD_POOL:
     THREAD_POOL.run()
 
@@ -112,7 +112,8 @@ GRID_ACTIONS = {
     + "* " * NUM_STARS
     + "Grid Actions "
     + "* " * NUM_STARS: -1,
-    "Action -> Modify Device Alias & Tags": GridActions.MODIFY_ALIAS_AND_TAGS.value,
+    "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
+    "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
     "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
     "Action -> Install Selected App": GridActions.INSTALL_APP.value,
@@ -188,6 +189,7 @@ CSV_TAG_ATTR_NAME = {
     "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
     "Template": "template_name",
+    "Template Device Language": "templateDeviceLocale",
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
@@ -195,6 +197,13 @@ CSV_TAG_ATTR_NAME = {
     "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
+    "Phone Number 1": "phoneNumber1",
+    "Phone Number 2": "phoneNumber2",
+    "ICCID 1": "iccid1",
+    "ICCID 2": "iccid2",
+    "Is Knox Active": "isKnoxActive",
+    "Is CSDK Active": "isCSDKActive",
+    "Is Supervisor Plugin Active": "isSupervisorPluginActive",
     "Tags": "Tags",
     "Applications": "Apps",
     "Pinned App": "KioskApp",
@@ -216,7 +225,6 @@ CSV_TAG_ATTR_NAME = {
     "Rotation": "rotationState",
     "Brightness": "brightnessScale",
     "Screen Timeout (ms)": "screenOffTimeout",
-    "Ringer Mode": "ringerMode",
     "Music Volume": "STREAM_MUSIC",
     "Ring Volume": "STREAM_RING",
     "Alarm Volume": "STREAM_ALARM",
@@ -320,6 +328,7 @@ COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
+GET_DEVICE_LANGUAGE = False
 
 # Grid Prefs
 MAX_GRID_LOAD = 100

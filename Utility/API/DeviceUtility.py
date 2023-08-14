@@ -124,11 +124,7 @@ def get_all_devices(
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
     if Globals.GROUP_FETCH_ALL or fetchAll:
         devices = getAllFromOffsetsRequests(response, None, tolarance, timeout)
-        if hasattr(response, "results"):
-            response.results = response.results + devices
-            response.next = None
-            response.prev = None
-        elif type(response) is dict and "results" in response:
+        if type(response) is dict and "results" in response:
             response["next"] = None
             response["prev"] = None
             response["results"] = response["results"] + devices
@@ -351,6 +347,10 @@ def getProperDeviceId(devices):
             properDeviceList.append(device)
         else:
             json_rsp = searchForDevice(search=device)
-            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
+            if (
+                "results" in json_rsp
+                and json_rsp["results"]
+                and "id" in json_rsp["results"][0]["id"]
+            ):
                 properDeviceList.append(json_rsp["results"][0]["id"])
     return devices

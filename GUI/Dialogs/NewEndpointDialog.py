@@ -4,6 +4,7 @@ import re
 
 import wx
 import wx.html as wxHtml
+import Common.Globals as Globals
 
 from Common.decorator import api_tool_decorator
 from Utility.Resource import openWebLinkInBrowser
@@ -12,7 +13,7 @@ from Utility.Resource import openWebLinkInBrowser
 class NewEndpointDialog(wx.Dialog):
     def __init__(self, errorMsg=None, name=None, host=None, entId=None, key=None):
         super(NewEndpointDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=(400, 200),
             style=wx.DEFAULT_DIALOG_STYLE,

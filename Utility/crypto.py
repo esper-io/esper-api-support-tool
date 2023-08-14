@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from cryptography.fernet import Fernet
+from Utility.FileUtility import read_from_file, write_content_to_file
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
@@ -11,8 +12,7 @@ class crypto:
         Generates a key and save it into a file
         """
         key = Fernet.generate_key()
-        with open(path, "wb") as key_file:
-            key_file.write(key)
+        write_content_to_file(path, key, "wb")
         return key
 
     def load_key(self, path):
@@ -26,14 +26,12 @@ class crypto:
         Given a filename (str) and key (bytes), it encrypts the file and write it
         """
         f = Fernet(key)
-        with open(filename, "rb") as file:
-            # read all file data
-            file_data = file.read()
+        # read all file data
+        file_data = read_from_file(filename, "rb")
         # encrypt data
         encrypted_data = f.encrypt(file_data)
         # write the encrypted file
-        with open(filename, "wb") as file:
-            file.write(encrypted_data)
+        write_content_to_file(filename, encrypted_data, "wb")
 
     def encryptToFile(self, file_data, filename, key):
         """
@@ -45,15 +43,12 @@ class crypto:
             file_data = bytes(file_data)
         encrypted_data = f.encrypt(file_data)
         # write the encrypted file
-        with open(filename, "wb") as file:
-            file.write(encrypted_data)
+        write_content_to_file(filename, encrypted_data, "wb")
 
     def isFileDecrypt(self, filename, key):
         f = Fernet(key)
-        encrypted_data = None
-        with open(filename, "rb") as file:
-            # read the encrypted data
-            encrypted_data = file.read()
+        # read the encrypted data
+        encrypted_data = read_from_file(filename, "rb")
 
         if encrypted_data:
             try:
@@ -66,10 +61,8 @@ class crypto:
 
     def isFileEncrypt(self, filename, key):
         f = Fernet(key)
-        encrypted_data = None
-        with open(filename, "rb") as file:
-            # read the encrypted data
-            encrypted_data = file.read()
+        # read the encrypted data
+        encrypted_data = read_from_file(filename, "rb")
 
         if encrypted_data:
             try:
@@ -85,9 +78,8 @@ class crypto:
         Given a filename (str) and key (bytes), it decrypts the file and write it
         """
         f = Fernet(key)
-        with open(filename, "rb") as file:
-            # read the encrypted data
-            encrypted_data = file.read()
+        # read the encrypted data
+        encrypted_data = read_from_file(filename, "rb")
 
         decrypted_data = None
         try:
@@ -98,7 +90,6 @@ class crypto:
 
         if writeDecrypt and decrypted_data:
             # write the original file
-            with open(filename, "wb") as file:
-                file.write(decrypted_data)
+            write_content_to_file(filename, decrypted_data, "wb")
 
         return decrypted_data

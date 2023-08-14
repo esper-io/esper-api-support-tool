@@ -27,6 +27,8 @@ def api_tool_decorator(locks=None):
             result = None
             excpt = None
             logPlace(func)
+            if not Globals.API_LOGGER:
+                Globals.API_LOGGER = ApiToolLog()
             try:
                 result = func(*args, **kwargs)
                 logPlaceDone(func)
@@ -109,6 +111,7 @@ def displayApiExcpetionMsg(e):
     wx.MessageBox(
         "%s %s: %s" % (e.reason, e.status, bodyMsg),
         style=wx.OK | wx.ICON_ERROR,
+        parent=Globals.frame,
     )
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
@@ -117,7 +120,11 @@ def displayApiExcpetionMsg(e):
 
 def displayGenericErrorMsg(e):
     Globals.msg_lock.acquire(timeout=10)
-    wx.MessageBox("An Error has occured: \n\n%s" % e, style=wx.OK | wx.ICON_ERROR)
+    wx.MessageBox(
+        "An Error has occured: \n\n%s" % e,
+        style=wx.OK | wx.ICON_ERROR,
+        parent=Globals.frame,
+    )
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
     return e

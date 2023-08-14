@@ -11,10 +11,22 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.TabPanel import TabPanel
-from Utility.API.GroupUtility import (createGroup, deleteGroup, fetchGroupName,
-                                      getAllGroups, renameGroup)
-from Utility.Resource import (correctSaveFileName, displayMessageBox, isApiKey,
-                              openWebLinkInBrowser, resourcePath, scale_bitmap)
+from Utility.API.GroupUtility import (
+    createGroup,
+    deleteGroup,
+    fetchGroupName,
+    getAllGroups,
+    renameGroup,
+)
+from Utility.FileUtility import read_data_from_csv, write_data_to_csv
+from Utility.Resource import (
+    correctSaveFileName,
+    displayMessageBox,
+    isApiKey,
+    openWebLinkInBrowser,
+    resourcePath,
+    scale_bitmap,
+)
 
 
 class GroupManagement(wx.Dialog):
@@ -38,7 +50,7 @@ class GroupManagement(wx.Dialog):
         self.root = None
 
         super(GroupManagement, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER,
         )
@@ -841,19 +853,7 @@ class GroupManagement(wx.Dialog):
 
     def uploadCSV(self, filePath):
         self.handlePreUploadActivity()
-        data = None
-        try:
-            with open(filePath, "r", encoding="utf-8-sig") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
-        except:
-            with open(filePath, "r") as csvFile:
-                reader = csv.reader(
-                    csvFile, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-                )
-                data = list(reader)
+        data = read_data_from_csv(filePath)
         self.processUploadData(data)
 
     def uploadXlsx(self, filePath):
@@ -926,7 +926,9 @@ class GroupManagement(wx.Dialog):
                                 rowEntry[2],
                             )
                         else:
-                            name = "%s (Deletable)" % (self.tree_ctrl_2.GetItemText(item))
+                            name = "%s (Deletable)" % (
+                                self.tree_ctrl_2.GetItemText(item)
+                            )
                         self.tree_ctrl_2.SetItemText(item, name)
                     elif len(rowEntry) > 1 and rowEntry[1] in self.uploadTreeItems:
                         item = self.uploadTreeItems[rowEntry[1]]
@@ -934,7 +936,10 @@ class GroupManagement(wx.Dialog):
                         if isApiKey(name) and rowEntry[0] in self.groupIdToName:
                             name = self.groupIdToName[rowEntry[0]]
                         if len(rowEntry) > 2 and rowEntry[2]:
-                            name = "%s (To Add;Rename To: %s)" % (rowEntry[0], rowEntry[2])
+                            name = "%s (To Add;Rename To: %s)" % (
+                                rowEntry[0],
+                                rowEntry[2],
+                            )
                         else:
                             name = "%s (To Add)" % (rowEntry[0])
                         entry = self.tree_ctrl_2.AppendItem(item, name)
@@ -991,9 +996,7 @@ class GroupManagement(wx.Dialog):
         gridData.append(self.expectedHeaders)
         self.getGroupCSV(self.groupTree, None, gridData)
 
-        with open(inFile, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-            writer.writerows(gridData)
+        write_data_to_csv(inFile, gridData)
         res = displayMessageBox(
             (
                 "Group Template CSV Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
@@ -1003,7 +1006,7 @@ class GroupManagement(wx.Dialog):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
-            openWebLinkInBrowser(parentDirectory)
+            openWebLinkInBrowser(parentDirectory, isfile=True)
         self.button_7.Enable(True)
         self.setCursorDefault()
 

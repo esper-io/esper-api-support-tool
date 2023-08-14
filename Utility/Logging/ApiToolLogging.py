@@ -15,7 +15,9 @@ from fuzzywuzzy import fuzz
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
+from Utility.FileUtility import write_content_to_file
 from Utility.Logging.IssueTracker import IssueTracker
+from Utility.FileUtility import getToolDataPath
 
 
 class ApiToolLog:
@@ -24,34 +26,19 @@ class ApiToolLog:
         self.placePath = ""
         self.tracker_lock = threading.Lock()
 
-        if platform.system() == "Windows":
-            self.logPath = (
-                "%s\\EsperApiTool\\ApiTool.log"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-            self.placePath = (
-                "%s\\EsperApiTool\\ApiToolPlace.log"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-        else:
-            self.logPath = "%s/EsperApiTool/ApiTool.log" % os.path.expanduser(
-                "~/Desktop/"
-            )
-            self.placePath = "%s/EsperApiTool/ApiToolPlace.log" % os.path.expanduser(
-                "~/Desktop/"
-            )
+        basePath = getToolDataPath()
+        self.logPath = "%s/ApiTool.log" % basePath
+        self.placePath = "%s/ApiToolPlace.log" % basePath
         if not os.path.exists(self.logPath):
             parentPath = os.path.abspath(os.path.join(self.logPath, os.pardir))
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
-            with open(self.logPath, "w"):
-                pass
+            write_content_to_file(self.logPath, "")
         if not os.path.exists(self.placePath) and Globals.RECORD_PLACE:
             parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
-            with open(self.placePath, "w"):
-                pass
+            write_content_to_file(self.placePath, "")
 
     def limitLogFileSizes(self):
         self.limitFileSize(self.logPath)
@@ -62,8 +49,7 @@ class ApiToolLog:
             os.path.exists(file)
             and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb
         ):
-            with open(file, "w"):
-                pass
+            write_content_to_file(file, "")
 
     def LogError(
         self, e, exc_type=None, exc_value=None, exc_traceback=None, postIssue=True
@@ -98,12 +84,10 @@ class ApiToolLog:
             Globals.frame.Logging(str(e), True)
 
     def LogPlace(self, str_place):
-        with open(self.placePath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), str_place))
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), str_place), "a")
 
     def LogResponse(self, response):
-        with open(self.logPath, "a") as myfile:
-            myfile.write("%s\t: %s\n" % (datetime.now(), response))
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), response), "a")
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -141,9 +125,15 @@ class ApiToolLog:
             strToWrite = "%s\nTenant: %s\nUser: %s (id: %s)\n\nSession API Summary:\t%s\n\nTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(Globals.configuration.host),
-                str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
-                str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
-                str(api_func) if api_func != ApiTracker.API_REQUEST_TRACKER else json.dumps(ApiTracker.API_REQUEST_TRACKER, indent=4),
+                str(Globals.TOKEN_USER["username"])
+                if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
+                else "Unknown",
+                str(Globals.TOKEN_USER["id"])
+                if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                else "Unknown",
+                str(api_func)
+                if api_func != ApiTracker.API_REQUEST_TRACKER
+                else json.dumps(ApiTracker.API_REQUEST_TRACKER, indent=4),
                 ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
         else:
@@ -180,30 +170,29 @@ class ApiToolLog:
                     writeToFile = True
         if writeToFile:
             if not strToWrite:
-                strToWrite = (
-                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\nFunction: %s, triggerring %s.\n\nTotal Requests: %s\n"
-                    % (
-                        datetime.now(),
-                        str(Globals.configuration.host),
-                        str(Globals.TOKEN_USER["username"]) if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown",
-                        str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
-                        str(src),
-                        str(api_func)
-                        if not hasattr(api_func, "__name__")
-                        else api_func.__name__,
-                        ApiTracker.API_REQUEST_SESSION_TRACKER,
-                    )
+                strToWrite = "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\nFunction: %s, triggerring %s.\n\nTotal Requests: %s\n" % (
+                    datetime.now(),
+                    str(Globals.configuration.host),
+                    str(Globals.TOKEN_USER["username"])
+                    if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
+                    else "Unknown",
+                    str(Globals.TOKEN_USER["id"])
+                    if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                    else "Unknown",
+                    str(src),
+                    str(api_func)
+                    if not hasattr(api_func, "__name__")
+                    else api_func.__name__,
+                    ApiTracker.API_REQUEST_SESSION_TRACKER,
                 )
             Globals.api_log_lock.acquire()
             self.limitLogFileSizes()
             try:
-                with open(self.logPath, "a") as myfile:
-                    myfile.write(strToWrite)
+                write_content_to_file(self.logPath, strToWrite, "a")
                 if "Summary" in strToWrite and Globals.frame.audit:
-                    Globals.frame.audit.postOperation({
-                        "operation": "API Usage Summary",
-                        "data": strToWrite
-                    })
+                    Globals.frame.audit.postOperation(
+                        {"operation": "API Usage Summary", "data": strToWrite}
+                    )
             except:
                 pass
             finally:

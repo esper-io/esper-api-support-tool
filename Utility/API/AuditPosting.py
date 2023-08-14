@@ -3,14 +3,17 @@ import sys
 import os
 import json
 import pytz
+import platform
 
 import Common.Globals as Globals
 
 from datetime import datetime
+from Utility.FileUtility import read_json_file
 
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
-class AuditPosting():
+
+class AuditPosting:
     def __init__(self):
         self.login = ""
         self.pw = ""
@@ -33,14 +36,11 @@ class AuditPosting():
         filePath = os.path.join(base_path, filePath)
         if os.path.exists(filePath):
             tokenJson = {}
-            with open(filePath, "r") as file:
-                tokenJson = json.load(file)
+            tokenJson = read_json_file(filePath)
             if "email_to" in tokenJson:
                 self.to_addr = tokenJson["email_to"]
-                ApiToolLog().LogResponse("Sent To Email: " + str(self.to_addr))
             if "email_login" in tokenJson:
                 self.login = tokenJson["email_login"]
-                ApiToolLog().LogResponse("Sent From Email: " + self.login)
             if "email_to" in tokenJson:
                 self.pw = tokenJson["email_pw"]
 
@@ -55,9 +55,7 @@ class AuditPosting():
         if Globals.IS_DEBUG:
             return
 
-        if (type(values) is dict 
-            and "operation" in values 
-            and "data" in values):
+        if type(values) is dict and "operation" in values and "data" in values:
             if "resp" in values:
                 self.emailOperation(values["operation"], values["data"], values["resp"])
             else:
@@ -86,8 +84,15 @@ class AuditPosting():
             data = compoundStr
 
         if self.util.isReadyToSend():
-            userStr = "User (id: %s): %s\n\n" % (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown",
-                Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown")
+            userStr = "User (id: %s) [OS: %s]: %s\n\n" % (
+                Globals.TOKEN_USER["id"]
+                if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                else "Unknown",
+                platform.system(),
+                Globals.TOKEN_USER["username"]
+                if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
+                else "Unknown",
+            )
             contentStr = "\nResponse Content: " + content if content else ""
             if hasattr(data, "to_dict"):
                 data = data.to_dict()
@@ -95,8 +100,5 @@ class AuditPosting():
                 data = json.dumps(data, indent=4)
             self.util.sendEmail(
                 "%s UTC %s : %s" % (now, host, str(operation)),
-                userStr
-                + "Data:\n%s" % str(data)
-                + contentStr
+                userStr + "Data:\n%s" % str(data) + contentStr,
             )
-

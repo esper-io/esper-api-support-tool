@@ -57,12 +57,14 @@ def uploadWallpaper(link, key, enterprise_id, bg):
                 wx.MessageBox(
                     "Wallpaper upload Failed! Source: %s" % bg["url"],
                     style=wx.OK | wx.ICON_ERROR,
+                    parent=Globals.frame,
                 )
                 resp.raise_for_status()
         else:
             wx.MessageBox(
                 "Failed to download wallpaper for uploading",
                 style=wx.OK | wx.ICON_ERROR,
+                parent=Globals.frame,
             )
     except Exception as e:
         raise e

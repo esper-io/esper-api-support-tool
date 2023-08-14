@@ -19,7 +19,7 @@ class InstalledDevicesDlg(wx.Dialog):
         showBlueprintInput=False,
     ):
         super(InstalledDevicesDlg, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
@@ -400,6 +400,7 @@ class InstalledDevicesDlg(wx.Dialog):
             queryString = self.search.GetValue()
         self.list_box_1.Clear()
 
+        self.list_box_1.Freeze()
         if queryString:
             sortedList = list(
                 filter(
@@ -415,6 +416,7 @@ class InstalledDevicesDlg(wx.Dialog):
             for item in self.appNameList:
                 self.list_box_1.Append(item)
             self.isFiltered = False
+        self.list_box_1.Thaw()
 
     def onOtherPkgInput(self, event):
         input = self.otherPkgInput.GetValue()

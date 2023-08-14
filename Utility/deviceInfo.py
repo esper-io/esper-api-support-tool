@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import Common.Globals as Globals
+from Utility.Resource import getHeader
+from Utility.Web.WebRequests import performGetRequestWithRetry
 
 
 def getSecurityPatch(device, deviceInfo=None):
@@ -149,3 +151,13 @@ def getDeviceName(device):
     elif type(device) is dict and "device_name" in device:
         device_name = device["device_name"]
     return device_name
+
+
+def getDeviceInitialTemplate(deviceId):
+    url = "{tenant}/enterprise/{enterprise_id}/device/{device_id}/initialtemplate/".format(
+        tenant=Globals.configuration.host,
+        enterprise_id=Globals.enterprise_id,
+        device_id=deviceId,
+    )
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    return resp.json()

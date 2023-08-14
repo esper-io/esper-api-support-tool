@@ -17,7 +17,7 @@ class BlueprintsConvertDialog(wx.Dialog):
     def __init__(self, configMenuOpt, parent=None, *args, **kwds):
         sizeTuple = (600, 400)
         super(BlueprintsConvertDialog, self).__init__(
-            None,
+            parent,
             wx.ID_ANY,
             size=sizeTuple,
             style=wx.DEFAULT_DIALOG_STYLE
@@ -305,7 +305,6 @@ class BlueprintsConvertDialog(wx.Dialog):
             and self.combo_box_2.GetValue()
             and self.combo_box_3.GetValue()
             and self.combo_box_4.GetValue()
-            and self.combo_box_1.GetValue() != self.combo_box_3.GetValue()
             and self.chosenTemplate
         ):
             self.button_OK.Enable(True)

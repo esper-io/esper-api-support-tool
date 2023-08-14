@@ -17,7 +17,7 @@ from Utility.Resource import resourcePath, scale_bitmap
 class CollectionsDialog(wx.Dialog):
     def __init__(self, parent, *args, **kwds):
         super(CollectionsDialog, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=(583, 407),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,

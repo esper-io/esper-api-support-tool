@@ -2,6 +2,7 @@
 
 import copy
 import math
+import platform
 
 import wx
 
@@ -28,6 +29,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.originalChoices = [choices]
         self.selected = []
+        self.onBoxCalledPrior = False
         self.isFiltered = False
         self.label = label
         self.page = 0
@@ -222,6 +224,11 @@ class MultiSelectSearchDlg(wx.Dialog):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
         checked = list(self.check_list_box_1.GetCheckedItems())
+        if self.onBoxCalledPrior and platform.system() != "Windows":
+            self.onBoxCalledPrior = False
+            self.check_list_box_1.Deselect(selection)
+            return
+        self.onBoxCalledPrior = False
         if selection in checked:
             checked.remove(selection)
             if selectionStr in self.selected:
@@ -245,6 +252,7 @@ class MultiSelectSearchDlg(wx.Dialog):
     def OnBoxSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
+        self.onBoxCalledPrior = True
         if selectionStr in self.selected:
             self.selected.remove(selectionStr)
         elif selectionStr not in self.selected:

@@ -61,11 +61,10 @@ def createNewUser(user):
     url = "https://{tenant}-api.esper.cloud/api/user/".format(tenant=tenant)
     body = getUserBody(user)
     resp = performPostRequestWithRetry(url, headers=getHeader(), json=body)
-    postEventToFrame(EventUtility.myEVT_AUDIT, {
-        "operation": "CreateUser",
-        "data": body,
-        "resp": resp
-    })
+    postEventToFrame(
+        EventUtility.myEVT_AUDIT,
+        {"operation": "CreateUser", "data": body, "resp": resp},
+    )
     return resp
 
 
@@ -85,11 +84,10 @@ def modifyUser(allUsers, user):
         )
         body = getUserBody(user)
         resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-        postEventToFrame(EventUtility.myEVT_AUDIT, {
-            "operation": "ModifyUser",
-            "data": body,
-            "resp": resp
-        })
+        postEventToFrame(
+            EventUtility.myEVT_AUDIT,
+            {"operation": "ModifyUser", "data": body, "resp": resp},
+        )
     return resp
 
 
@@ -108,11 +106,10 @@ def deleteUser(allUsers, user):
             tenant=tenant, id=userId
         )
         resp = performDeleteRequestWithRetry(url, headers=getHeader())
-        postEventToFrame(EventUtility.myEVT_AUDIT, {
-        "operation": "DeleteUser",
-            "data": user,
-            "resp": resp
-        })
+        postEventToFrame(
+            EventUtility.myEVT_AUDIT,
+            {"operation": "DeleteUser", "data": user, "resp": resp},
+        )
     return resp
 
 
@@ -140,10 +137,13 @@ def getUsers(
         responses.append(resp)
     return resp
 
-def getPendingUsers(limit=Globals.limit,
+
+def getPendingUsers(
+    limit=Globals.limit,
     offset=0,
     maxAttempt=Globals.MAX_RETRY,
-    responses=[],):
+    responses=[],
+):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
@@ -191,15 +191,12 @@ def getSpecificUser(
 def getAllUsers():
     userResp = getUsers()
     users = getAllFromOffsetsRequests(userResp)
-    if hasattr(userResp, "results"):
-        userResp.results = userResp.results + users
-        userResp.next = None
-        userResp.prev = None
-    elif type(userResp) is dict and "results" in userResp:
+    if type(userResp) is dict and "results" in userResp:
         userResp["results"] = userResp["results"] + users
         userResp["next"] = None
         userResp["prev"] = None
     return userResp
+
 
 def getAllPendingUsers():
     userResp = getPendingUsers()

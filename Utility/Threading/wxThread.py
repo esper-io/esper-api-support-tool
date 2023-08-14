@@ -75,10 +75,17 @@ def waitTillThreadsFinish(
                     numNewName += thread.result[2]
                     devices += thread._args[1]
                     statuses += thread.result[4]
-        msg = (
-            "Successfully changed tags for %s of %s devices and aliases for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
-            % (changeSucceeded, len(devices), succeeded, numNewName, Globals.MAX_TAGS)
-        )
+        msg = ""
+        if action == GridActions.MODIFY_TAGS.value:
+            msg = (
+                "Successfully changed tags for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
+                % (changeSucceeded, len(devices), Globals.MAX_TAGS)
+            )
+        else:
+            msg = "Successfully changed aliases for %s of %s devices." % (
+                succeeded,
+                numNewName,
+            )
         postEventToFrame(eventUtil.myEVT_LOG, msg)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
     if source == 3:

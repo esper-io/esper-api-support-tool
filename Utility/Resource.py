@@ -23,6 +23,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
+from Utility.FileUtility import write_content_to_file
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
@@ -44,9 +45,7 @@ def createNewFile(filePath, fileData=None):
         parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
         if not os.path.exists(parentPath):
             os.makedirs(parentPath)
-        with open(filePath, "w") as outfile:
-            if fileData:
-                outfile.write(fileData)
+        write_content_to_file(filePath, fileData)
 
 
 def scale_bitmap(bitmap, width, height):
@@ -292,7 +291,7 @@ def displayMessageBox(event):
     res = None
     Globals.msg_lock.acquire()
     if msg:
-        res = wx.MessageBox(msg, style=sty)
+        res = wx.MessageBox(msg, style=sty, parent=Globals.frame)
     if Globals.msg_lock.locked():
         Globals.msg_lock.release()
     return res
@@ -340,9 +339,11 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
 
-def openWebLinkInBrowser(link):
+def openWebLinkInBrowser(link, isfile=False):
     if hasattr(link, "GetLinkInfo"):
         link = link.GetLinkInfo().GetHref()
+    if platform.system() == "Darwin" and isfile:
+        link = "file://" + os.path.realpath(link)
     webbrowser.open(link)
 
 
@@ -445,6 +446,29 @@ def processFunc(event):
             fun[0](*fun[1])
         else:
             fun[0](fun[1])
+
+
+@api_tool_decorator()
+def determineDoHereorMainThread(func, *args, **kwargs):
+    if not callable(func):
+        return
+
+    if platform.system() == "Windows":
+        # do here
+        if args and kwargs:
+            func(*args, **kwargs)
+        elif not args and kwargs:
+            func(**kwargs)
+        elif args and not kwargs:
+            func(*args)
+        else:
+            func()
+    else:
+        # do on main thread
+        postEventToFrame(
+            EventUtility.myEVT_PROCESS_FUNCTION,
+            (func, args),
+        )
 
 
 def checkIfCurrentThreadStopped():

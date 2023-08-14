@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import Common.Globals as Globals
 import wx
 
 from Common.decorator import api_tool_decorator
@@ -8,7 +9,7 @@ from Common.decorator import api_tool_decorator
 class CheckboxMessageBox(wx.Dialog):
     def __init__(self, title, caption):
         super(CheckboxMessageBox, self).__init__(
-            None,
+            Globals.frame,
             wx.ID_ANY,
             size=(400, 200),
             style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL,
