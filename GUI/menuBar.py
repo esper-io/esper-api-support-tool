@@ -451,7 +451,7 @@ class ToolMenuBar(wx.MenuBar):
                 (msg, icon),
             )
             if result:
-                openWebLinkInBrowser(result)
+                openWebLinkInBrowser(result, isfile=True)
                 Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(

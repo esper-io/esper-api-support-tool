@@ -339,9 +339,11 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
 
-def openWebLinkInBrowser(link):
+def openWebLinkInBrowser(link, isfile=False):
     if hasattr(link, "GetLinkInfo"):
         link = link.GetLinkInfo().GetHref()
+    if platform.system() == "Darwin" and isfile:
+        link = "file://" + os.path.realpath(link)
     webbrowser.open(link)
 
 

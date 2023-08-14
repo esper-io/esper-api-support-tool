@@ -1006,7 +1006,7 @@ class GroupManagement(wx.Dialog):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
-            openWebLinkInBrowser(parentDirectory)
+            openWebLinkInBrowser(parentDirectory, isfile=True)
         self.button_7.Enable(True)
         self.setCursorDefault()
 

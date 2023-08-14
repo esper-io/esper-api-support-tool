@@ -174,7 +174,7 @@ class BulkFactoryReset(wx.Dialog):
         )
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
-            openWebLinkInBrowser(parentDirectory)
+            openWebLinkInBrowser(parentDirectory, isfile=True)
         self.button_OK.Enable(True)
         self.setCursorDefault()
 

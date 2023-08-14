@@ -927,9 +927,7 @@ class NewFrameLayout(wx.Frame):
             )
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
-                if platform.system() == "Darwin":
-                    parentDirectory = "file://" + os.path.realpath(parentDirectory)
-                openWebLinkInBrowser(parentDirectory)
+                openWebLinkInBrowser(parentDirectory, isfile=True)
 
     def mergeDataSource(self, deviceList, networkList):
         newData = []
@@ -3596,7 +3594,7 @@ class NewFrameLayout(wx.Frame):
             self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
-                openWebLinkInBrowser(parentDirectory)
+                openWebLinkInBrowser(parentDirectory, isfile=True)
 
     @api_tool_decorator()
     def onPendingUserReport(self, event):
@@ -3674,7 +3672,7 @@ class NewFrameLayout(wx.Frame):
             self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
-                openWebLinkInBrowser(parentDirectory)
+                openWebLinkInBrowser(parentDirectory, isfile=True)
 
     @api_tool_decorator()
     def onConvertTemplate(self, event):
@@ -3774,7 +3772,7 @@ class NewFrameLayout(wx.Frame):
             self.isSaving = False
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
-                openWebLinkInBrowser(parentDirectory)
+                openWebLinkInBrowser(parentDirectory, isfile=True)
 
     def onNewBlueprintApp(self, event):
         reset = True
