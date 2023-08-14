@@ -17,6 +17,7 @@ import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 from Utility.FileUtility import write_content_to_file
 from Utility.Logging.IssueTracker import IssueTracker
+from Utility.FileUtility import getToolDataPath
 
 
 class ApiToolLog:
@@ -25,22 +26,9 @@ class ApiToolLog:
         self.placePath = ""
         self.tracker_lock = threading.Lock()
 
-        if platform.system() == "Windows":
-            self.logPath = (
-                "%s\\EsperApiTool\\ApiTool.log"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-            self.placePath = (
-                "%s\\EsperApiTool\\ApiToolPlace.log"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-        else:
-            self.logPath = "%s/EsperApiTool/ApiTool.log" % os.path.expanduser(
-                "~/Desktop/"
-            )
-            self.placePath = "%s/EsperApiTool/ApiToolPlace.log" % os.path.expanduser(
-                "~/Desktop/"
-            )
+        basePath = getToolDataPath()
+        self.logPath = "%s/ApiTool.log" % basePath
+        self.placePath = "%s/ApiToolPlace.log" % basePath
         if not os.path.exists(self.logPath):
             parentPath = os.path.abspath(os.path.join(self.logPath, os.pardir))
             if not os.path.exists(parentPath):

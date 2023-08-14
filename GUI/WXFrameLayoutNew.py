@@ -26,7 +26,7 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Utility.API.WidgetUtility import setWidget
 from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
-from Utility.FileUtility import read_data_from_csv, read_data_from_csv_as_dict, read_json_file, write_data_to_csv, write_json_file
+from Utility.FileUtility import getToolDataPath, read_data_from_csv, read_data_from_csv_as_dict, read_json_file, write_data_to_csv, write_json_file
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -151,28 +151,14 @@ class NewFrameLayout(wx.Frame):
 
         self.isSaving = False
 
+        basePath = getToolDataPath()
         if platform.system() == "Windows":
             self.WINDOWS = True
-            self.prefPath = (
-                "%s\\EsperApiTool\\prefs.json"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-            self.authPath = (
-                "%s\\EsperApiTool\\auth.csv"
-                % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
-            )
-            self.keyPath = "%s\\EsperApiTool\\east.key" % tempfile.gettempdir().replace(
-                "Local", "Roaming"
-            ).replace("Temp", "")
         else:
             self.WINDOWS = False
-            self.prefPath = "%s/EsperApiTool/prefs.json" % os.path.expanduser(
-                "~/Desktop/"
-            )
-            self.authPath = "%s/EsperApiTool/auth.csv" % os.path.expanduser(
-                "~/Desktop/"
-            )
-            self.keyPath = "%s/EsperApiTool/east.key" % os.path.expanduser("~/Desktop/")
+        self.prefPath = "%s/prefs.json" % basePath
+        self.authPath = "%s/auth.csv" % basePath
+        self.keyPath = "%s/east.key" % basePath
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize(Globals.MIN_SIZE)
