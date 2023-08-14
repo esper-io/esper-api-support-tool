@@ -51,42 +51,14 @@ def modifyDevice(frame, action):
 def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
     tagsFromGrid = rowTaglist = aliasDic = None
+    maxGaugeAction = 0
     if action == GridActions.MODIFY_TAGS.value:
         tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
+        maxGaugeAction = len(tagsFromGrid.keys())
     else:
         aliasDic = frame.gridPanel.getDeviceAliasFromList()
+        maxGaugeAction = len(aliasDic.keys())
     frame.statusBar.gauge.SetValue(1)
-    maxGaugeAction = len(tagsFromGrid.keys()) + len(aliasDic.keys())
-
-    devices = []
-    for row in rowTaglist.keys():
-        entry = rowTaglist[row]
-        identifier = entry
-
-        if "id" in entry.keys() and entry["id"]:
-            identifier = entry["id"]
-            devices.append(identifier)
-        else:
-            if "esperName" in entry.keys():
-                identifier = entry["esperName"]
-            elif "sn" in entry.keys():
-                identifier = entry["sn"]
-            elif "csn" in entry.keys():
-                identifier = entry["csn"]
-            elif "imei1" in entry.keys():
-                identifier = entry["imei1"]
-            elif "imei2" in entry.keys():
-                identifier = entry["imei2"]
-
-            api_response = apiCalls.searchForMatchingDevices(entry)
-            if api_response:
-                devices += api_response.results
-                api_response = None
-            else:
-                postEventToFrame(
-                    eventUtil.myEVT_LOG,
-                    "---> ERROR: Failed to find device with identifer: %s" % identifier,
-                )
 
     postEventToFrame(
         eventUtil.myEVT_AUDIT,
@@ -99,7 +71,7 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
             else {"alias": aliasDic},
         },
     )
-
+    devices = obtainEsperDeviceEntriesFromList(rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasDic)
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
@@ -115,11 +87,49 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     Globals.THREAD_POOL.enqueue(
         wxThread.waitTillThreadsFinish,
         Globals.THREAD_POOL.threads,
-        -1,
+        action,
         -1,
         2,
         tolerance=1,
     )
+
+
+def obtainEsperDeviceEntriesFromList(iterList):
+    devices = []
+    for row in iterList.keys():
+        entry = iterList[row]
+        identifier = entry
+
+        if type(entry) is dict:
+            if "id" in entry.keys() and entry["id"]:
+                identifier = entry["id"]
+                devices.append(identifier)
+                continue
+            else:
+                if "esperName" in entry.keys():
+                    identifier = entry["esperName"]
+                elif "sn" in entry.keys():
+                    identifier = entry["sn"]
+                elif "csn" in entry.keys():
+                    identifier = entry["csn"]
+                elif "imei1" in entry.keys():
+                    identifier = entry["imei1"]
+                elif "imei2" in entry.keys():
+                    identifier = entry["imei2"]
+        else:
+            entry = {}
+            entry["esperName"] = row
+        
+        api_response = apiCalls.searchForMatchingDevices(entry)
+        if api_response:
+            devices += api_response.results
+            api_response = None
+        else:
+            postEventToFrame(
+                eventUtil.myEVT_LOG,
+                "---> ERROR: Failed to find device with identifer: %s" % identifier,
+            )
+    return devices
 
 
 @api_tool_decorator()
@@ -137,50 +147,21 @@ def processDeviceModificationForList(
             numSucceeded, tagStatusMsg = changeTagsForDevice(
                 device, tagsFromGrid, maxGaugeAction
             )
+            changeSucceeded += numSucceeded
+            tagStatus.append(tagStatusMsg)
         else:
             numNameChanged, numSuccess, aliasStatusMsg = changeAliasForDevice(
                 device, aliasDic, maxGaugeAction
             )
-        changeSucceeded += numSucceeded
-        tagStatus.append(tagStatusMsg)
-        numNewName += numNameChanged
-        succeeded += numSuccess
-        aliasStatus.append(aliasStatusMsg)
-    tmp = []
-    for entry in aliasStatus:
-        match = list(
-            filter(
-                lambda x: x["Device Name"] == entry["Device Name"]
-                if entry["Device Name"]
-                else x["Device Id"] == entry["Device Id"],
-                tagStatus,
-            )
-        )
-        newEntry = {}
-        for m in match:
-            newEntry.update(m)
-        newEntry.update(entry)
-        if newEntry not in tmp:
-            tmp.append(newEntry)
+            numNewName += numNameChanged
+            succeeded += numSuccess
+            aliasStatus.append(aliasStatusMsg)
 
-    for entry in tagStatus:
-        match = list(
-            filter(
-                lambda x: x["Device Name"] == entry["Device Name"]
-                if entry["Device Name"]
-                else x["Device Id"] == entry["Device Id"],
-                tmp,
-            )
-        )
-        newEntry = {}
-        for m in match:
-            newEntry.update(m)
-        newEntry.update(entry)
-        if newEntry not in status:
-            status.append(newEntry)
-
+    tmp = tagStatus if action == GridActions.MODIFY_TAGS.value else aliasStatus
+    for stat in tmp:
+        if stat not in status:
+            status.append(stat)
     return (changeSucceeded, succeeded, numNewName, chunk, status)
-
 
 @api_tool_decorator()
 def changeAliasForDevice(device, aliasDic, maxGaugeAction):
