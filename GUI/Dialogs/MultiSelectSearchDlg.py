@@ -2,6 +2,7 @@
 
 import copy
 import math
+import platform
 
 import wx
 
@@ -223,10 +224,11 @@ class MultiSelectSearchDlg(wx.Dialog):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
         checked = list(self.check_list_box_1.GetCheckedItems())
-        if self.onBoxCalledPrior:
+        if self.onBoxCalledPrior and platform.system() != "Windows":
             self.onBoxCalledPrior = False
             self.check_list_box_1.Deselect(selection)
             return
+        self.onBoxCalledPrior = False
         if selection in checked:
             checked.remove(selection)
             if selectionStr in self.selected:
