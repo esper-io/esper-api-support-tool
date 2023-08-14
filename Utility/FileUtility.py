@@ -21,7 +21,8 @@ def read_json_file(filePath) -> dict:
 
 def write_json_file(filePath, data: dict):
     with open(filePath, "w") as outfile:
-        json.dump(data, outfile)
+        if data:
+            json.dump(data, outfile)
 
 def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
     if "b"in mode:
@@ -30,7 +31,7 @@ def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
         if type(data) is list:
             for line in data:
                 file.write(line)
-        else:
+        elif data:
             file.write(data)
 
 def read_data_from_csv(filePath: str) -> list:
@@ -65,4 +66,5 @@ def write_data_to_csv(filePath: str, data: list, mode="w", encoding="utf-8", new
         if type(data) is dict:
             writer.writerow(list(data.values()))
         else:
-            writer.writerows(data)
+            if data:
+                writer.writerows(data)
