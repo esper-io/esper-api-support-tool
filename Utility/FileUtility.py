@@ -1,5 +1,8 @@
 import csv
 import json
+import tempfile
+import platform
+import os
 
 def read_from_file(filePath, mode="r") -> list:
     content = None
@@ -68,3 +71,11 @@ def write_data_to_csv(filePath: str, data: list, mode="w", encoding="utf-8", new
         else:
             if data:
                 writer.writerows(data)
+
+def getToolDataPath():
+    basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+
+    if platform.system() != "Windows":
+        basePath = "%s/EsperApiTool/" % os.path.expanduser("~/Desktop/")
+    
+    return basePath
