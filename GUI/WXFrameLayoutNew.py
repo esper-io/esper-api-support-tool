@@ -1941,7 +1941,7 @@ class NewFrameLayout(wx.Frame):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
         if Globals.IS_TOKEN_VALID:
-            resp = getAllInstallableApps()
+            resp = getAllInstallableApps(tolerance=1)
             self.addAppsToAppChoice(resp)
 
     def addAppstoAppChoiceThread(self, event):
@@ -1999,17 +1999,13 @@ class NewFrameLayout(wx.Frame):
 
         if results and len(results):
             for app in results:
-                self.addAppToAppList(app)
-
-    @api_tool_decorator()
-    def addAppToAppList(self, app):
-        entry = getAppDictEntry(app)
-        if (
-            entry
-            and entry not in self.sidePanel.enterpriseApps
-            and ("isValid" in entry and entry["isValid"])
-        ):
-            self.sidePanel.enterpriseApps.append(entry)
+                entry = getAppDictEntry(app)
+                if (
+                    entry
+                    and entry not in self.sidePanel.enterpriseApps
+                    and ("isValid" in entry and entry["isValid"])
+                ):
+                    self.sidePanel.enterpriseApps.append(entry)
 
     @api_tool_decorator()
     def getAppDataForRun(self):
