@@ -240,6 +240,7 @@ class InstalledDevicesDlg(wx.Dialog):
             self.list_box_1.Bind(wx.EVT_LISTBOX, self.onAppSelect)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
+        self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.search.Bind(wx.EVT_SEARCH, self.onSearch)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         self.search.Bind(wx.EVT_CHAR, self.onKey)
