@@ -12,6 +12,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
+from Utility.GridUtilities import constructDeviceAppRowEntry
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.Resource import (
     acquireLocks,
@@ -736,6 +737,7 @@ class GridPanel(wx.Panel):
         num = 0
         device = {}
         self.grid_1.AppendRows(1)
+        rowNum = self.grid_1.GetNumberRows() - 1
         esperName = ""
         for attribute in Globals.CSV_TAG_ATTR_NAME:
             value = (
@@ -749,17 +751,17 @@ class GridPanel(wx.Panel):
             if checkIfCurrentThreadStopped():
                 releaseLocks([Globals.grid1_lock])
                 return
-            self.grid_1.SetCellValue(self.grid_1.GetNumberRows() - 1, num, str(value))
+            self.grid_1.SetCellValue(rowNum, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
-            self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, num, isEditable)
+            self.grid_1.SetReadOnly(rowNum, num, isEditable)
             if attribute == "Status":
-                self.setStatusCellColor(value, self.grid_1.GetNumberRows() - 1, num)
+                self.setStatusCellColor(value, rowNum, num)
             self.setAlteredCellColor(
                 self.grid_1,
                 device_info,
-                self.grid_1.GetNumberRows() - 1,
+                rowNum,
                 attribute,
                 num,
             )
@@ -836,10 +838,11 @@ class GridPanel(wx.Panel):
         """ Add info to the network grid """
         num = 0
         self.grid_2.AppendRows(1)
+        rowNum = self.grid_2.GetNumberRows() - 1
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
             value = networkInfo[attribute] if attribute in networkInfo else ""
-            self.grid_2.SetCellValue(self.grid_2.GetNumberRows() - 1, num, str(value))
-            self.grid_2.SetReadOnly(self.grid_2.GetNumberRows() - 1, num, True)
+            self.grid_2.SetCellValue(rowNum, num, str(value))
+            self.grid_2.SetReadOnly(rowNum, num, True)
             num += 1
         if networkInfo not in self.grid_2_contents:
             self.grid_2_contents.append(networkInfo)
@@ -1427,46 +1430,30 @@ class GridPanel(wx.Panel):
     @api_tool_decorator(locks=[Globals.grid3_lock])
     def populateAppGrid(self, device, deviceInfo, apps):
         acquireLocks([Globals.grid3_lock])
-        if apps and type(apps) == dict and "results" in apps:
-            for app in apps["results"]:
-                if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
-                    esperName = ""
-                    if hasattr(device, "device_name"):
-                        esperName = device.device_name
-                    elif "device_name" in device:
-                        esperName = device["device_name"]
-                    elif "name" in device:
-                        esperName = device["name"]
-                    info = {
-                        "Esper Name": esperName,
-                        "Group": deviceInfo["groups"] if "groups" in deviceInfo else "",
-                        "Application Name": app["app_name"],
-                        "Application Type": app["app_type"],
-                        "Application Version Code": app["version_code"],
-                        "Application Version Name": app["version_name"],
-                        "Package Name": app["package_name"],
-                        "State": app["state"],
-                        "Whitelisted": app["whitelisted"],
-                        "Can Clear Data": app["is_data_clearable"],
-                        "Can Uninstall": app["is_uninstallable"],
-                    }
-                    self.addApptoAppGrid(info)
+        info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
+        if info and info not in self.grid_3_contents:
+            if type(info) is list:
+                for entry in info:
+                    self.addApptoAppGrid(entry)
+            else:
+                self.addApptoAppGrid(info)
         releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator()
     def addApptoAppGrid(self, info):
         num = 0
         self.grid_3.AppendRows(1)
+        rowNum = self.grid_3.GetNumberRows() - 1
         for attribute in Globals.CSV_APP_ATTR_NAME:
             value = info[attribute] if attribute in info else ""
             if checkIfCurrentThreadStopped():
                 releaseLocks([Globals.grid3_lock])
                 return
-            self.grid_3.SetCellValue(self.grid_3.GetNumberRows() - 1, num, str(value))
+            self.grid_3.SetCellValue(rowNum, num, str(value))
             isEditable = True
             if attribute in Globals.CSV_EDITABLE_COL:
                 isEditable = False
-            self.grid_3.SetReadOnly(self.grid_3.GetNumberRows() - 1, num, isEditable)
+            self.grid_3.SetReadOnly(rowNum, num, isEditable)
             num += 1
         if info and info not in self.grid_3_contents:
             self.grid_3_contents.append(info)
