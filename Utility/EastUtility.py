@@ -868,7 +868,9 @@ def populateDeviceInfoDictionary(
 
     deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
 
-    deviceInfo = enforceGridData(device, deviceInfo, latestEventData, deviceInfo["appObj"])
+    deviceInfo = enforceGridData(
+        device, deviceInfo, latestEventData, deviceInfo["appObj"]
+    )
 
     return deviceInfo
 

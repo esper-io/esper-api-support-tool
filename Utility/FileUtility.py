@@ -4,11 +4,13 @@ import tempfile
 import platform
 import os
 
+
 def read_from_file(filePath, mode="r") -> list:
     content = None
     with open(filePath, mode) as file:
         content = file.read()
     return content
+
 
 def read_lines_from_file(filePath, mode="r") -> list:
     content = None
@@ -16,19 +18,22 @@ def read_lines_from_file(filePath, mode="r") -> list:
         content = file.readlines()
     return content
 
+
 def read_json_file(filePath) -> dict:
     content = None
     with open(filePath, "r") as file:
         content = json.load(file)
     return content
 
+
 def write_json_file(filePath, data: dict):
     with open(filePath, "w") as outfile:
         if data:
             json.dump(data, outfile)
 
+
 def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
-    if "b"in mode:
+    if "b" in mode:
         encoding = None
     with open(filePath, mode, encoding=encoding) as file:
         if type(data) is list:
@@ -36,6 +41,7 @@ def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
                 file.write(line)
         elif data:
             file.write(data)
+
 
 def read_data_from_csv(filePath: str) -> list:
     fileData = None
@@ -46,6 +52,7 @@ def read_data_from_csv(filePath: str) -> list:
             fileData = __read_data_from_csv_helper__(filePath, "utf-8")
     return fileData
 
+
 def read_data_from_csv_as_dict(filePath: str) -> list:
     fileData = None
     if filePath.endswith("csv"):
@@ -54,16 +61,20 @@ def read_data_from_csv_as_dict(filePath: str) -> list:
             fileData = list(csv_reader)
     return fileData
 
-def __read_data_from_csv_helper__(filePath, encoding, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True):
+
+def __read_data_from_csv_helper__(
+    filePath, encoding, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
+):
     fileData = None
     with open(filePath, "r", encoding=encoding) as csvFile:
-        reader = csv.reader(
-            csvFile, quoting=quoting, skipinitialspace=skipinitialspace
-        )
+        reader = csv.reader(csvFile, quoting=quoting, skipinitialspace=skipinitialspace)
         fileData = list(reader)
     return fileData
 
-def write_data_to_csv(filePath: str, data: list, mode="w", encoding="utf-8", newline="") -> None:
+
+def write_data_to_csv(
+    filePath: str, data: list, mode="w", encoding="utf-8", newline=""
+) -> None:
     with open(filePath, mode, newline=newline, encoding=encoding) as csvfile:
         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
         if type(data) is dict:
@@ -72,10 +83,13 @@ def write_data_to_csv(filePath: str, data: list, mode="w", encoding="utf-8", new
             if data:
                 writer.writerows(data)
 
+
 def getToolDataPath():
-    basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
+    basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace(
+        "Local", "Roaming"
+    ).replace("Temp", "")
 
     if platform.system() != "Windows":
         basePath = "%s/EsperApiTool/" % os.path.expanduser("~/Desktop/")
-    
+
     return basePath

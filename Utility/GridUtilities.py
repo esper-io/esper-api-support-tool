@@ -1,5 +1,6 @@
 import Common.Globals as Globals
 
+
 def constructDeviceAppRowEntry(device, deviceInfo):
     if deviceInfo["appObj"] and "results" in deviceInfo["appObj"]:
         deviceInfo["AppsEntry"] = []

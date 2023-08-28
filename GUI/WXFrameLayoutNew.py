@@ -26,7 +26,14 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Utility.API.WidgetUtility import setWidget
 from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
-from Utility.FileUtility import getToolDataPath, read_data_from_csv, read_data_from_csv_as_dict, read_json_file, write_data_to_csv, write_json_file
+from Utility.FileUtility import (
+    getToolDataPath,
+    read_data_from_csv,
+    read_data_from_csv_as_dict,
+    read_json_file,
+    write_data_to_csv,
+    write_json_file,
+)
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -1275,9 +1282,7 @@ class NewFrameLayout(wx.Frame):
                 fileCol += 1
 
     def getAndValidateColumnHeaderName(self, header, indx):
-        colName = (
-            str(header[indx]) if len(header) > indx else ""
-        )
+        colName = str(header[indx]) if len(header) > indx else ""
         if colName.lower() == "storenumber" or colName.lower() == "store number":
             colName = "Alias"
         if colName.lower() == "tag":
@@ -2777,7 +2782,9 @@ class NewFrameLayout(wx.Frame):
             if self.kill:
                 return
             createNewFile(self.authPath)
-            write_data_to_csv(self.authPath, ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"])
+            write_data_to_csv(
+                self.authPath, ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
+            )
             self.AddEndpoint(None)
 
         if self.kill:
@@ -2892,9 +2899,7 @@ class NewFrameLayout(wx.Frame):
                         return
                     self.toggleEnabledState(False)
                     if self.WINDOWS:
-                        Globals.THREAD_POOL.enqueue(
-                            self.processDeviceCSVUpload, data
-                        )
+                        Globals.THREAD_POOL.enqueue(self.processDeviceCSVUpload, data)
                         Globals.THREAD_POOL.enqueue(
                             self.waitForThreadsThenSetCursorDefault,
                             Globals.THREAD_POOL.threads,
