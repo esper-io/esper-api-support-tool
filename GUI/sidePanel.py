@@ -315,7 +315,9 @@ class SidePanel(wx.Panel):
             event.GetEventType() == wx.EVT_BUTTON.typeId and event.Id == wx.ID_DELETE
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
-            value = value.split("\n")[3].replace("Enterprise = ", "")
+            value = value.split("\n")
+            if len(value) > 2:
+                value = value[3].replace("Enterprise = ", "")
             result = list(
                 filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data)
             )

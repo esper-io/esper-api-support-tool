@@ -79,6 +79,8 @@ def write_data_to_csv(
         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
         if type(data) is dict:
             writer.writerow(list(data.values()))
+        elif type(data) is list:
+            writer.writerow(data)
         else:
             if data:
                 writer.writerows(data)
