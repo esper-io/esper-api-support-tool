@@ -35,6 +35,7 @@ class GridPanel(wx.Panel):
         self.grid_3_contents = []
         self.grid_1_id_content = []
         self.grid_2_id_contents = []
+        self.grid_3_id_contents = []
 
         self.deviceDescending = False
         self.networkDescending = False
@@ -269,6 +270,7 @@ class GridPanel(wx.Panel):
         acquireLocks([Globals.grid1_lock])
         if emptyContents:
             self.grid_1_contents = []
+            self.grid_1_id_contents = []
         if self.grid_1.GetNumberRows() > 0:
             self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
         self.grid_1.SetScrollLineX(15)
@@ -282,6 +284,7 @@ class GridPanel(wx.Panel):
         acquireLocks([Globals.grid2_lock])
         if emptyContents:
             self.grid_2_contents = []
+            self.grid_2_id_contents = []
         if self.grid_2.GetNumberRows() > 0:
             self.grid_2.DeleteRows(0, self.grid_2.GetNumberRows())
         self.grid_2.SetScrollLineX(15)
@@ -294,6 +297,7 @@ class GridPanel(wx.Panel):
         acquireLocks([Globals.grid3_lock])
         if emptyContents:
             self.grid_3_contents = []
+            self.grid_3_id_contents = []
         if self.grid_3.GetNumberRows() > 0:
             self.grid_3.DeleteRows(0, self.grid_3.GetNumberRows())
         self.grid_3.SetScrollLineX(15)
@@ -1436,13 +1440,13 @@ class GridPanel(wx.Panel):
         if info and info not in self.grid_3_contents:
             if type(info) is list:
                 for entry in info:
-                    self.addApptoAppGrid(entry)
+                    self.addApptoAppGrid(entry, deviceInfo)
             else:
-                self.addApptoAppGrid(info)
+                self.addApptoAppGrid(info, deviceInfo)
         releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator()
-    def addApptoAppGrid(self, info):
+    def addApptoAppGrid(self, info, deviceInfo):
         num = 0
         self.grid_3.AppendRows(1)
         rowNum = self.grid_3.GetNumberRows() - 1
@@ -1457,14 +1461,17 @@ class GridPanel(wx.Panel):
                 isEditable = False
             self.grid_3.SetReadOnly(rowNum, num, isEditable)
             num += 1
-        if info and info not in self.grid_3_contents:
+        if deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
+            self.grid_3_id_contents.append(deviceInfo["id"])
             self.grid_3_contents.append(info)
 
     def constructAppGridContent(self, device, deviceInfo, apps):
         info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
-        if info and info not in self.grid_3_contents:
+        if deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
+            self.grid_3_id_contents.append(deviceInfo["id"])
             if type(info) is list:
-                self.grid_3_contents.extend(info)
+                for entry in info:
+                    self.grid_3_contents.append(entry)
             else:
                 self.grid_3_contents.append(info)
 
