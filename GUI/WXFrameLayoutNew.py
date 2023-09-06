@@ -423,6 +423,10 @@ class NewFrameLayout(wx.Frame):
                     self.readAuthCSV()
                     if self.auth_data:
                         isValid = True
+                    elif res == wx.ID_CANCEL and not self.IsShown():
+                        self.OnQuit(event)
+                    elif  res == wx.ID_CANCEL:
+                        break
         if event and hasattr(event, "Skip"):
             event.Skip()
 
