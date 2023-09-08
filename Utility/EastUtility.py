@@ -13,6 +13,7 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
+from Utility.GridUtilities import constructDeviceAppRowEntry
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
@@ -812,26 +813,7 @@ def enforceGridData(device, deviceInfo, latestEventData, appData):
 
     if appData and "results" in deviceInfo["appObj"]:
         deviceInfo["AppsEntry"] = []
-        info = {}
-        for app in deviceInfo["appObj"]["results"]:
-            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
-                info = {
-                    "Esper Name": device.device_name
-                    if hasattr(device, "device_name")
-                    else device["device_name"],
-                    "Group": deviceInfo["groups"],
-                    "Application Name": app["app_name"],
-                    "Application Type": app["app_type"],
-                    "Application Version Code": app["version_code"],
-                    "Application Version Name": app["version_name"],
-                    "Package Name": app["package_name"],
-                    "State": app["state"],
-                    "Whitelisted": app["whitelisted"],
-                    "Can Clear Data": app["is_data_clearable"],
-                    "Can Uninstall": app["is_uninstallable"],
-                }
-            if info and info not in deviceInfo["AppsEntry"]:
-                deviceInfo["AppsEntry"].append(info)
+        constructDeviceAppRowEntry(device, deviceInfo)
 
     return deviceInfo
 
@@ -885,6 +867,10 @@ def populateDeviceInfoDictionary(
     deviceInfo["appObj"] = json
 
     deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
+
+    deviceInfo = enforceGridData(
+        device, deviceInfo, latestEventData, deviceInfo["appObj"]
+    )
 
     return deviceInfo
 

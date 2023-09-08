@@ -71,7 +71,9 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
             else {"alias": aliasDic},
         },
     )
-    devices = obtainEsperDeviceEntriesFromList(rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasDic)
+    devices = obtainEsperDeviceEntriesFromList(
+        rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasDic
+    )
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
@@ -119,7 +121,7 @@ def obtainEsperDeviceEntriesFromList(iterList):
         else:
             entry = {}
             entry["esperName"] = row
-        
+
         api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
             devices += api_response.results
@@ -162,6 +164,7 @@ def processDeviceModificationForList(
         if stat not in status:
             status.append(stat)
     return (changeSucceeded, succeeded, numNewName, chunk, status)
+
 
 @api_tool_decorator()
 def changeAliasForDevice(device, aliasDic, maxGaugeAction):

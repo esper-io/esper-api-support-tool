@@ -160,7 +160,7 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
 
 
 @api_tool_decorator()
-def getAllInstallableApps():
+def getAllInstallableApps(tolerance=0):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
@@ -168,32 +168,16 @@ def getAllInstallableApps():
         "https://%s-api.esper.cloud/api/v1/enterprise/%s/application/?limit=%s&without_download_url=true&format=json&is_hidden=false"
         % (tenant, Globals.enterprise_id, Globals.limit)
     )
-    appsResp = performGetRequestWithRetry(url, headers=getHeader())
-    appsRespJson = None
-    if appsResp:
-        appsRespJson = appsResp.json()
-
-        if appsRespJson and "next" in appsRespJson and appsRespJson["next"]:
-            appsRespJson = getAllInstallableAppsOffsets(
-                appsRespJson, appsRespJson["next"]
-            )
-
-    return appsRespJson
-
-
-def getAllInstallableAppsOffsets(respJson, url):
-    appsResp = performGetRequestWithRetry(url, headers=getHeader())
-    appsRespJson = None
-    if appsResp:
-        appsRespJson = appsResp.json()
-
-        if appsRespJson and "results" in appsRespJson:
-            respJson["results"] = respJson["results"] + appsRespJson["results"]
-
-        if appsRespJson and "next" in appsRespJson and appsRespJson["next"]:
-            respJson = getAllInstallableAppsOffsets(respJson, appsRespJson["next"])
-
-    return respJson
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        respJson = resp.json()
+        appsResp = getAllFromOffsetsRequests(respJson, tolarance=tolerance)
+        if type(appsResp) is dict and "results" in appsResp:
+            respJson["results"] = respJson["results"] + appsResp["results"]
+            respJson["next"] = None
+            respJson["prev"] = None
+        return respJson
+    return resp
 
 
 def constructAppPkgVerStr(appName, pkgName, version):

@@ -293,7 +293,8 @@ class WidgetPicker(wx.Dialog):
             inFile = dlg.GetPath()
 
         if result == wx.ID_OK:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+            if self.grid_1.GetNumberRows() > 0:
+                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             fileData = None
             self.deviceList = []
 
