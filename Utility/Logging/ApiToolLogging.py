@@ -22,8 +22,6 @@ from Utility.FileUtility import getToolDataPath
 
 class ApiToolLog:
     def __init__(self):
-        self.logPath = ""
-        self.placePath = ""
         self.tracker_lock = threading.Lock()
 
         basePath = getToolDataPath()
