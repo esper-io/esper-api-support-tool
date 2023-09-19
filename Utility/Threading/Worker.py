@@ -43,7 +43,6 @@ class Worker(Thread):
                     self.results.put(result)
             except Exception as e:
                 # so we move on and handle it in whatever way the caller wanted
-                print(e.with_traceback())
                 if Globals.API_LOGGER and hasattr(Globals.API_LOGGER, "LogError"):
                     Globals.API_LOGGER.LogError(e)
             finally:
