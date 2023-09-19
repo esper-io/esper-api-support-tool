@@ -94,9 +94,9 @@ from Utility.crypto import crypto
 from Utility.EastUtility import (
     TakeAction,
     clearKnownGroups,
+    fetchInstalledDevices,
     filterDeviceList,
     getAllDeviceInfo,
-    processInstallDevices,
     removeNonWhitelisted,
     uploadAppToEndpoint,
 )
@@ -110,6 +110,7 @@ from Utility.Resource import (
     createNewFile,
     determineDoHereorMainThread,
     displayMessageBox,
+    displaySaveDialog,
     getStrRatioSimilarity,
     joinThreadList,
     openWebLinkInBrowser,
@@ -531,31 +532,18 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onSaveBoth(self, event):
         self.isSaving = True
-        inFile = ""
-        result = wx.ID_CANCEL
-        with wx.FileDialog(
-            self,
-            message="Save Reports as...",
-            defaultFile="",
-            wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
-            defaultDir=str(self.defaultDir),
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        inFile = displaySaveDialog(
+            "Save Reports as...",
+            "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv"
+        )
 
-        if result == wx.ID_OK:  # Save button was pressed
+        if inFile:  # Save button was pressed
             self.setCursorBusy()
             self.toggleEnabledState(False)
             self.gridPanel.disableGridProperties()
             Globals.THREAD_POOL.enqueue(self.saveFile, inFile)
             return True
-        elif (
-            result == wx.ID_CANCEL
-        ):  # Either the cancel button was pressed or the window was closed
+        else:  # Either the cancel button was pressed or the window was closed
             self.isSaving = False
             return False
 
@@ -563,23 +551,12 @@ class NewFrameLayout(wx.Frame):
     def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             self.isSaving = True
-            inFile = ""
-            result = wx.ID_CANCEL
-            with wx.FileDialog(
-                self,
-                message="Save Reports as...",
-                defaultFile="",
-                wildcard="Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
-                defaultDir=str(self.defaultDir),
-                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-            ) as dlg:
-                Globals.OPEN_DIALOGS.append(dlg)
-                result = dlg.ShowModal()
-                Globals.OPEN_DIALOGS.remove(dlg)
-                inFile = dlg.GetPath()
-                correctSaveFileName(inFile)
+            inFile = displaySaveDialog(
+                "Save Reports as...", 
+                "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv"
+            )
 
-            if result == wx.ID_OK:  # Save button was pressed
+            if inFile:  # Save button was pressed
                 self.setCursorBusy()
                 self.toggleEnabledState(False)
                 self.gridPanel.disableGridProperties()
@@ -587,9 +564,7 @@ class NewFrameLayout(wx.Frame):
                 self.statusBar.gauge.Pulse()
                 Globals.THREAD_POOL.enqueue(self.saveAllFile, inFile, action=action)
                 return True
-            elif (
-                result == wx.ID_CANCEL
-            ):  # Either the cancel button was pressed or the window was closed
+            else:  # Either the cancel button was pressed or the window was closed
                 self.isSaving = False
                 return False
         else:
@@ -651,7 +626,6 @@ class NewFrameLayout(wx.Frame):
             self, action=action, allDevices=allDevices, tolarance=tolarance
         )
         gridDeviceData = []
-
         num = 1
         self.Logging("Processing device information for file")
         for item in deviceList.values():
@@ -728,6 +702,8 @@ class NewFrameLayout(wx.Frame):
         gridDeviceData,
         action=None,
         showDlg=True,
+        showAppDlg=True,
+        renameAppCsv=True,
         tolarance=1,
     ):
         if inFile.endswith(".csv"):
@@ -775,7 +751,8 @@ class NewFrameLayout(wx.Frame):
             if (
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
+                or action == GeneralActions.GENERATE_APP_REPORT.value
+            ) and renameAppCsv:
                 if inFile.endswith(".csv"):
                     inFile = inFile[:-4]
                 inFile += "_app-report.csv"
@@ -785,7 +762,7 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
             ):
-                self.saveAppInfoAsFile(inFile)
+                self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
         elif inFile.endswith(".xlsx"):
             for attempt in range(Globals.MAX_RETRY):
                 try:
@@ -1013,7 +990,7 @@ class NewFrameLayout(wx.Frame):
                 worksheet.set_column(num, num, maxColumnWidth[headers[num]])
 
     @api_tool_decorator()
-    def saveAppInfoAsFile(self, inFile):
+    def saveAppInfoAsFile(self, inFile, showAppDlg=True):
         if self.gridPanel.grid_3_contents:
             gridData = []
             gridData.append(Globals.CSV_APP_ATTR_NAME)
@@ -1039,9 +1016,10 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
             self.gridPanel.enableGridProperties()
 
-            displayMessageBox(
-                ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
-            )
+            if showAppDlg:
+                displayMessageBox(
+                    ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
+                )
 
     @api_tool_decorator()
     def onUploadCSV(self, event):
@@ -3189,17 +3167,29 @@ class NewFrameLayout(wx.Frame):
                 if res == wx.ID_OK:
                     app, version = dlg.getAppValues()
                     if app and version:
-                        self.onClearGrids()
-                        self.statusBar.gauge.Pulse()
-                        self.setCursorBusy()
-                        self.isRunning = True
-                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-                        self.toggleEnabledState(False)
-                        self.sleepInhibitor.inhibit()
-                        reset = False
-                        Globals.THREAD_POOL.enqueue(
-                            self.fetchInstalledDevices, app, version
+                        defaultFileName = "%s_%s_installed_devices.xlsx" % (
+                            dlg.selectedAppName.strip().replace(" ", "-").lower(),
+                            str(dlg.selectedVersion) if not "All" in dlg.selectedVersion else "all-versions",
                         )
+                        inFile = displaySaveDialog(
+                            "Save Installed Devices to CSV",
+                            "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
+                            defaultFile=defaultFileName,
+                        )
+                        if inFile:
+                            self.onClearGrids()
+                            self.statusBar.gauge.Pulse()
+                            self.setCursorBusy()
+                            self.isRunning = True
+                            self.toggleEnabledState(False)
+                            self.sleepInhibitor.inhibit()
+                            reset = False
+                            Globals.THREAD_POOL.enqueue(
+                                fetchInstalledDevices, app, version, inFile
+                            )
+                        else:
+                            self.setCursorDefault()
+                            self.toggleEnabledState(True)
                     else:
                         displayMessageBox(
                             (
@@ -3219,30 +3209,6 @@ class NewFrameLayout(wx.Frame):
                 )
             )
         if reset:
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
-            self.setCursorDefault()
-            self.toggleEnabledState(True)
-
-    def fetchInstalledDevices(self, app, version):
-        resp = getInstallDevices(version, app, tolarance=1)
-        res = []
-        for r in resp.results:
-            if r and hasattr(r, "to_dict"):
-                res.append(r.to_dict())
-            elif r and type(r) is dict:
-                res.append(r)
-        postEventToFrame(
-            eventUtil.myEVT_LOG, "---> Get Installed Devices API Request Finished"
-        )
-        if res:
-            Globals.THREAD_POOL.enqueue(processInstallDevices, res)
-        else:
-            displayMessageBox(
-                (
-                    "No devices with the selected app version(s) found",
-                    wx.ICON_INFORMATION,
-                )
-            )
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
             self.setCursorDefault()
             self.toggleEnabledState(True)
@@ -3506,23 +3472,13 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        inFile = ""
-        result = wx.ID_CANCEL
-        with wx.FileDialog(
-            self,
-            message="Save User Report as...",
+        inFile = displaySaveDialog(
+            "Save User Report as...",
+            "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,
-            wildcard="CSV files (*.csv)|*.csv",
-            defaultDir=str(self.defaultDir),
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        )
 
-        if result == wx.ID_OK:  # Save button was pressed
+        if inFile:  # Save button was pressed
             self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)
@@ -3593,23 +3549,13 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        inFile = ""
-        result = wx.ID_CANCEL
-        with wx.FileDialog(
-            self,
-            message="Save User Report as...",
+        inFile = displaySaveDialog(
+            "Save Pending User Report as...",
+            "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,
-            wildcard="CSV files (*.csv)|*.csv",
-            defaultDir=str(self.defaultDir),
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        )
 
-        if result == wx.ID_OK:  # Save button was pressed
+        if inFile:  # Save button was pressed
             self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)
@@ -3687,21 +3633,13 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        with wx.FileDialog(
-            self,
-            message="Save Group Report as...",
+        inFile = displaySaveDialog(
+            "Save Group Report as...",
+            "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,
-            wildcard="CSV files (*.csv)|*.csv",
-            defaultDir=str(self.defaultDir),
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        )
 
-        if result == wx.ID_OK:  # Save button was pressed
+        if inFile:  # Save button was pressed
             self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)

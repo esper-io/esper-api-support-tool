@@ -28,6 +28,8 @@ class InstalledDevicesDlg(wx.Dialog):
         self.newBluePrintApp = []
         self.radio_box_2 = None
         self.otherPkgInput = None
+        self.selectedAppName = None
+        self.selectedVersion = None
         self.apps = apps
         for app in self.apps:
             self.appNameList.append(app["appPkgName"])
@@ -255,9 +257,9 @@ class InstalledDevicesDlg(wx.Dialog):
             self.Close()
 
     def onAppSelect(self, event):
-        val = event.String
+        self.selectedAppName = event.String
         event.Skip()
-        wx.CallAfter(self.processAppSelect, val)
+        wx.CallAfter(self.processAppSelect, self.selectedAppName)
 
     def processAppSelect(self, val):
         self.list_box_1.Enable(False)
@@ -426,9 +428,9 @@ class InstalledDevicesDlg(wx.Dialog):
         event.Skip()
 
     def onVersionSelect(self, event):
-        val = event.String
+        self.selectedVersion = event.String
         event.Skip()
-        wx.CallAfter(self.processVersionSelect, val)
+        wx.CallAfter(self.processVersionSelect, self.selectedVersion)
 
     def processVersionSelect(self, val):
         selections = self.list_box_2.GetSelections()

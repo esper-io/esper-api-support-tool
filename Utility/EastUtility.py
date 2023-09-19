@@ -17,7 +17,7 @@ from Utility.GridUtilities import constructDeviceAppRowEntry
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import getDeviceAppsApiUrl, uploadApplication
+from Utility.API.AppUtilities import getDeviceAppsApiUrl, getInstallDevices, uploadApplication
 from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
 from Utility.API.DeviceUtility import (
     getAllDevices,
@@ -307,6 +307,97 @@ def filterDeviceList(device):
     return True
 
 
+def fetchInstalledDevices(app, version, inFile):
+        Globals.THREAD_POOL.results() # reset results to ensure no additional data is processed
+        resp = getInstallDevices(version, app, tolarance=1)
+        res = []
+        for r in resp.results:
+            if r and hasattr(r, "to_dict"):
+                res.append(r.to_dict())
+            elif r and type(r) is dict:
+                res.append(r)
+        postEventToFrame(
+            eventUtil.myEVT_LOG, "---> Get Installed Devices API Request Finished. Gathering Device Info..."
+        )
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 20)
+        if res:
+            # Get Basic Device Info
+            newDeviceList = processInstallDevices(res)
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 40)
+            if newDeviceList:
+                maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
+                splitResults = splitListIntoChunks(
+                    newDeviceList, maxThread=maxThread
+                )
+                # Get Extended Device Info & Compile
+                if splitResults:
+                    number_of_devices = 0
+                    postEventToFrame(
+                        eventUtil.myEVT_LOG, "---> Gathering Device's Network and App Info"
+                    )
+                    for chunk in splitResults:
+                        Globals.THREAD_POOL.enqueue(
+                            fillInDeviceInfoDict, chunk, number_of_devices, True, False
+                        )
+                        number_of_devices += len(chunk)
+                Globals.THREAD_POOL.join(tolerance=1)
+                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 60)
+                # Write to CSV
+                deviceList = Globals.THREAD_POOL.results()
+                if deviceList:
+                    flat_list = []
+                    for row in deviceList:
+                        if isinstance(row, dict):
+                            vals = row.values()
+                            for item in vals:
+                                flat_list += item
+                    deviceList = flat_list
+                    headers, deviceHeaders, networkHeaders = Globals.frame.getCSVHeaders(
+                        visibleOnly=Globals.SAVE_VISIBILITY
+                    )
+                    gridDeviceData = []
+                    for item in deviceList:
+                        if item:
+                            gridDeviceData.append(item)
+                            Globals.frame.gridPanel.grid_3_contents += (
+                                item["AppsEntry"] if "AppsEntry" in item else []
+                            )
+
+                    if hasattr(Globals.frame, "start_time"):
+                        print(
+                            "Fetch deviceinfo list time: %s"
+                            % (time.time() - Globals.frame.start_time)
+                        )
+
+                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 80)
+                    Globals.frame.saveGridData(
+                        inFile,
+                        headers,
+                        deviceHeaders,
+                        networkHeaders,
+                        gridDeviceData,
+                        action=GeneralActions.GENERATE_APP_REPORT.value,
+                        tolarance=1,
+                        showAppDlg=False,
+                        renameAppCsv=False,
+                    )
+                    Globals.frame.sleepInhibitor.uninhibit()
+                    postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
+                    if hasattr(Globals.frame, "start_time"):
+                        print("Execution time: %s" % (time.time() - Globals.frame.start_time))
+            
+        else:
+            displayMessageBox(
+                (
+                    "No devices with the selected app version(s) found",
+                    wx.ICON_INFORMATION,
+                )
+            )
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+            Globals.frame.setCursorDefault()
+            Globals.frame.toggleEnabledState(True)
+
+
 def processInstallDevices(deviceList):
     postEventToFrame(
         eventUtil.myEVT_LOG, "---> Getting Device Info for Installed Devices"
@@ -323,7 +414,8 @@ def processInstallDevices(deviceList):
         eventUtil.myEVT_LOG, "---> Gathered Basic Device Info for Installed Devices"
     )
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-    processCollectionDevices({"results": newDeviceList})
+    # processCollectionDevices({"results": newDeviceList})
+    return newDeviceList
 
 
 def processInstallDevicesHelper(device, newDeviceList, tolerance=1):

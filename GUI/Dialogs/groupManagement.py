@@ -22,6 +22,7 @@ from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
+    displaySaveDialog,
     isApiKey,
     openWebLinkInBrowser,
     resourcePath,
@@ -973,20 +974,12 @@ class GroupManagement(wx.Dialog):
         event.Skip()
 
     def downloadCSV(self, event):
-        result = None
-        inFile = None
-        with wx.FileDialog(
-            self,
-            message="Save Group Manage CSV as...",
-            defaultFile="",
-            wildcard="*.csv",
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            result = dlg.ShowModal()
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        inFile = displaySaveDialog(
+            "Save Group Manage CSV as...",
+            "CSV files (*.csv)|*.csv",
+        )
 
-        if result == wx.ID_OK:
+        if inFile:
             self.setCursorBusy()
             self.button_7.Enable(False)
             Globals.THREAD_POOL.enqueue(self.saveGroupCSV, inFile)

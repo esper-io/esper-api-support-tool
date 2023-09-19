@@ -73,12 +73,14 @@ def __read_data_from_csv_helper__(
 
 
 def write_data_to_csv(
-    filePath: str, data: list, mode="w", encoding="utf-8", newline=""
+    filePath: str, data, mode="w", encoding="utf-8", newline=""
 ) -> None:
     with open(filePath, mode, newline=newline, encoding=encoding) as csvfile:
         writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
         if type(data) is dict:
             writer.writerow(list(data.values()))
+        elif any(isinstance(el, list) for el in data):
+            writer.writerows(data)
         elif type(data) is list:
             writer.writerow(data)
         else:

@@ -9,6 +9,7 @@ import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.FileUtility import read_data_from_csv
+from Utility.Resource import displaySaveDialog
 
 
 class WidgetPicker(wx.Dialog):
@@ -278,21 +279,12 @@ class WidgetPicker(wx.Dialog):
 
     @api_tool_decorator()
     def onUpload(self, event):
-        inFile = ""
-        result = None
-        with wx.FileDialog(
-            self,
-            message="Open Idenifier Spreadsheet",
-            defaultFile="",
-            wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
-            style=wx.FD_OPEN,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
+        inFile = displaySaveDialog(
+            "Open Idenifier Spreadsheet",
+            "Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx"
+        )
 
-        if result == wx.ID_OK:
+        if inFile:
             if self.grid_1.GetNumberRows() > 0:
                 self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
             fileData = None

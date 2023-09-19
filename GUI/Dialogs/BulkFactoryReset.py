@@ -13,6 +13,7 @@ from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
+    displaySaveDialog,
     openWebLinkInBrowser,
 )
 
@@ -135,21 +136,12 @@ class BulkFactoryReset(wx.Dialog):
 
     def downloadCSV(self, event):
         result = None
-        inFile = ""
-        with wx.FileDialog(
-            self,
-            message="Save Bulk Factory Reset CSV as...",
-            defaultFile="",
-            wildcard="*.csv",
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        inFile = displaySaveDialog(
+            "Save Bulk Factory Reset CSV as...",
+            "CSV files (*.csv)|*.csv",
+        )
 
-        if result == wx.ID_OK:
+        if inFile:
             self.setCursorBusy()
             self.button_OK.Enable(False)
             Globals.THREAD_POOL.enqueue(self.saveGroupCSV, inFile)

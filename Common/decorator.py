@@ -26,12 +26,12 @@ def api_tool_decorator(locks=None):
                 pass
             result = None
             excpt = None
-            logPlace(func)
+            logPlace(func, *args, **kwargs)
             if not Globals.API_LOGGER:
                 Globals.API_LOGGER = ApiToolLog()
             try:
                 result = func(*args, **kwargs)
-                logPlaceDone(func)
+                logPlaceDone(func, *args, **kwargs)
             except ApiException as e:
                 logError(e)
                 excpt = determineErrorDisplay(e)
@@ -137,33 +137,50 @@ def logError(e):
     ApiToolLog().LogError(e, exc_type, exc_value, exc_traceback)
 
 
-def logPlace(func):
+def logPlace(func, *args, **kwargs):
     try:
         if Globals.RECORD_PLACE:
-            place = ""
-            currThread = threading.current_thread()
-            if func.__name__ and func.__doc__:
-                place = str(
-                    func.__name__ + "\t:\t" + func.__doc__ + "\t:\t" + currThread.name
-                )
-            elif func.__name__:
-                place = str(func.__name__ + "\t:\t" + currThread.name)
+            place = construct_log_place_str("Starting", func, *args, **kwargs)
             ApiToolLog().LogPlace(place)
     except Exception as e:
         ApiToolLog().LogError(e)
 
 
-def logPlaceDone(func):
+def logPlaceDone(func, *args, **kwargs):
     try:
         if Globals.RECORD_PLACE:
-            place = "Finshed "
-            currThread = threading.current_thread()
-            if func.__name__ and func.__doc__:
-                place += str(
-                    func.__name__ + "\t:\t" + func.__doc__ + "\t:\t" + currThread.name
-                )
-            elif func.__name__:
-                place += str(func.__name__ + "\t:\t" + currThread.name)
+            place = "Finshed"
+            place = construct_log_place_str(place, func, *args, **kwargs)
             ApiToolLog().LogPlace(place)
     except Exception as e:
         ApiToolLog().LogError(e)
+
+def construct_log_place_str(prefix, func, *args, **kwargs):
+    currThread = threading.current_thread()
+    place = "%s\t:\t%s" % (currThread.name, prefix + " " if not prefix.endswith(" ") else prefix)
+    if func.__name__ and func.__doc__:
+        place += str(
+            func.__name__ + "\t:\t" + func.__doc__
+        )
+    elif func.__name__:
+        place += str(func.__name__)
+    else:
+        place += str(func)
+
+    # argStrList = "\tArguements: "
+    # if args:
+    #     for x in args:
+    #         if isinstance(x) is dict:
+    #             argStrList += type(x) + ", "
+    #         else:
+    #             argStrList += str(x) + ", "
+
+    # kwargStrList = "\tKeyword Arguements: "
+    # if kwargs:
+    #     for key, val in kwargs.items():
+    #         if isinstance(val) is dict:
+    #             kwargStrList += "%s:%s, " % (str(key), str(type(dict)))
+    #         else:
+    #             kwargStrList += "%s:%s, " % (str(key), str(val))
+
+    return place # + argStrList + kwargStrList

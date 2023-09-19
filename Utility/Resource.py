@@ -482,3 +482,25 @@ def checkIfCurrentThreadStopped():
 
 def correctSaveFileName(inFile):
     return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)
+
+def displaySaveDialog(msg, wildcard, defaultFile=""):
+    Globals.frame.isSaving = True
+    inFile = ""
+    result = wx.ID_CANCEL
+    with wx.FileDialog(
+        Globals.frame,
+        message=msg,
+        defaultFile=defaultFile,
+        wildcard=wildcard,
+        defaultDir=str(Globals.frame.defaultDir),
+        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+    ) as dlg:
+        Globals.OPEN_DIALOGS.append(dlg)
+        result = dlg.ShowModal()
+        Globals.OPEN_DIALOGS.remove(dlg)
+        inFile = dlg.GetPath()
+        correctSaveFileName(inFile)
+
+    if result == wx.ID_OK:  # Save button was pressed
+        return inFile
+    return None

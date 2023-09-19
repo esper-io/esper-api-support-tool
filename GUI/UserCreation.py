@@ -18,6 +18,7 @@ from Utility.Resource import (
     correctSaveFileName,
     createNewFile,
     displayMessageBox,
+    displaySaveDialog,
     postEventToFrame,
 )
 
@@ -272,22 +273,12 @@ class UserCreation(wx.Frame):
         self.DestroyLater()
 
     def downloadTemplate(self, event):
-        inFile = ""
-        result = None
-        with wx.FileDialog(
-            self,
-            message="Save User Creation CSV Template",
-            defaultFile="",
-            wildcard="*.csv",
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            result = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            inFile = dlg.GetPath()
-            correctSaveFileName(inFile)
+        inFile = displaySaveDialog(
+            "Save User Creation CSV Template",
+            "CSV Files (*.csv)|*.csv"
+        )
 
-        if result == wx.ID_OK:
+        if inFile:
             createNewFile(inFile)
 
             gridData = []
