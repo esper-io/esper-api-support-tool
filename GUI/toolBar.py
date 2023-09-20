@@ -32,7 +32,7 @@ class ToolsToolBar(wx.ToolBar):
 
         open_icon = scale_bitmap(resourcePath("Images/open.png"), *size)
         self.otool = self.AddTool(
-            wx.ID_ANY, "Open Device CSV", open_icon, "Open Device CSV"
+            wx.ID_ANY, "Open Device Spreadsheet", open_icon, "Open Device Spreadsheet"
         )
         self.AddSeparator()
 
