@@ -563,7 +563,7 @@ class PreferencesDialog(wx.Dialog):
         self.prompts.Hide()
         sizer_5.Add(self.prompts, 1, wx.EXPAND, 0)
 
-        sizer_19 = wx.FlexGridSizer(2, 1, 0, 0)
+        sizer_19 = wx.FlexGridSizer(3, 1, 0, 0)
 
         (_, _, self.checkbox_8,) = self.addPrefToPanel(
             self.prompts,
@@ -579,6 +579,14 @@ class PreferencesDialog(wx.Dialog):
             "Template Confirmation Prompt",
             wx.CheckBox,
             "Template Confirmation Prompt",
+        )
+
+        (_, _, self.checkbox_30,) = self.addPrefToPanel(
+            self.prompts,
+            sizer_19,
+            "Show Terms & Conditions",
+            wx.CheckBox,
+            "Show Terms & Conditions",
         )
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -1142,8 +1150,10 @@ class PreferencesDialog(wx.Dialog):
 
         if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_28, True):
             Globals.SHOW_DISCLAIMER = True
+            self.checkbox_30.Set3StateValue(wx.CHK_CHECKED)
         else:
             Globals.SHOW_DISCLAIMER = False
+            self.checkbox_30.Set3StateValue(wx.CHK_UNCHECKED)
 
         if self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29):
             Globals.GET_DEVICE_LANGUAGE = True
