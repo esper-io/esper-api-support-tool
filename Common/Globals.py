@@ -77,6 +77,7 @@ grid2_lock = threading.Lock()
 grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
+join_lock = threading.Lock()
 
 # Known Group Var
 knownGroups = {}
