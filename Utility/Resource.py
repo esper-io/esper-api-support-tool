@@ -240,11 +240,15 @@ def runOsPOpen(cmd):
     return output, error
 
 
+@api_tool_decorator(locks=[Globals.join_lock])
 def joinThreadList(threads):
     if threads:
+        Globals.join_lock.acquire()
         for thread in threads:
             if thread and thread.is_alive():
                 thread.join()
+    if Globals.join_lock.locked():
+        Globals.join_lock.release()
 
 
 def ipv6Tomac(ipv6):
