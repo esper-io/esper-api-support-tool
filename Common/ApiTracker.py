@@ -4,11 +4,13 @@ API_REQUEST_SESSION_TRACKER = 0
 
 API_REQUEST_TRACKER = {
     "/application": 0,
+    "/blueprint": 0,
     "/collection": 0,
     "/command": 0,
     "/content": 0,
     "/device/": 0,
     "/devicegroup": 0,
+    "directory_record": 0,
     "/v1/enterprise": 0,
     "/policy": 0,
     "/geofence": 0,
@@ -16,6 +18,7 @@ API_REQUEST_TRACKER = {
     "/subscription": 0,
     "/token": 0,
     "/user": 0,
+    "/wallpaper": 0,
     "OtherAPI": 0,
     "/devicetemplate": 0,
 }
