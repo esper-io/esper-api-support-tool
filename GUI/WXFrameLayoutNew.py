@@ -568,6 +568,8 @@ class NewFrameLayout(wx.Frame):
                 self.isSaving = False
                 self.setCursorDefault()
                 self.toggleEnabledState(True)
+                if self.isRunning:
+                    self.isRunning = False
                 return False
         else:
             displayMessageBox(
