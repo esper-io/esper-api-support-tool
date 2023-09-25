@@ -135,7 +135,6 @@ class BulkFactoryReset(wx.Dialog):
         self.onClose(event)
 
     def downloadCSV(self, event):
-        result = None
         inFile = displaySaveDialog(
             "Save Bulk Factory Reset CSV as...",
             "CSV files (*.csv)|*.csv",
