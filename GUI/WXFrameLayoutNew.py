@@ -566,6 +566,8 @@ class NewFrameLayout(wx.Frame):
                 return True
             else:  # Either the cancel button was pressed or the window was closed
                 self.isSaving = False
+                self.setCursorDefault()
+                self.toggleEnabledState(True)
                 return False
         else:
             displayMessageBox(
@@ -2100,17 +2102,19 @@ class NewFrameLayout(wx.Frame):
         ):
             res = displayMessageBox(
                 (
-                    "Would you like to save directly to a file?\n\nRecommened for reports with large amounts of devices.",
-                    wx.ICON_INFORMATION | wx.YES_NO,
+                    "Looks like you are generating a report for a large subset of devices.\n\nWe will save the info directly to a file.",
+                    wx.ICON_INFORMATION | wx.CENTRE | wx.OK,
                 )
             )
-            if res == wx.YES:
+            if res == wx.OK:
                 self.onClearGrids()
                 self.gridPanel.grid_1_contents = []
                 self.gridPanel.grid_2_contents = []
                 self.gridPanel.grid_3_contents = []
                 self.gridPanel.userEdited = []
                 return self.onSaveBothAll(None, action=actionClientData)
+            else:
+                return
 
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
