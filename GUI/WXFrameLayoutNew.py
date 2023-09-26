@@ -1097,8 +1097,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.deviceChoice.Enable(True)
         self.gridPanel.enableGridProperties()
-        self.gridPanel.grid_1.Thaw()
-        self.gridPanel.grid_2.Thaw()
+        self.gridPanel.thawGridsIfFrozen()
         self.isUploading = False
 
     def processXlsxUpload(self, data):
@@ -1107,8 +1106,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
-        self.gridPanel.grid_1.Freeze()
-        self.gridPanel.grid_2.Freeze()
+        self.gridPanel.freezeGrids()
         dataList = []
         sheets = data.keys()
         for sheet in sheets:
@@ -1154,8 +1152,7 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groupChoice.Enable(False)
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
-        self.gridPanel.grid_1.Freeze()
-        self.gridPanel.grid_2.Freeze()
+        self.gridPanel.freezeGrids()
         self.processCsvDataByGrid(
             self.gridPanel.grid_1,
             data,

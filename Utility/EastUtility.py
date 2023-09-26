@@ -76,9 +76,7 @@ def TakeAction(frame, input, action, isDevice=False):
         frame.gridPanel.emptyAppGrid()
         frame.gridPanel.disableGridProperties()
         if platform.system() == "Windows":
-            frame.gridPanel.grid_1.Freeze()
-            frame.gridPanel.grid_2.Freeze()
-            frame.gridPanel.grid_3.Freeze()
+            frame.gridPanel.freezeGrids()
         frame.CSVUploaded = False
 
     if action in Globals.GRID_ACTIONS:

@@ -1572,3 +1572,8 @@ class GridPanel(wx.Panel):
             self.grid_2.Thaw()
         if self.grid_3.IsFrozen():
             self.grid_3.Thaw()
+
+    def freezeGrids(self):
+        self.grid_1.Freeze()
+        self.grid_2.Freeze()
+        self.grid_3.Freeze()
