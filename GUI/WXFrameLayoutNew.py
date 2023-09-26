@@ -2096,8 +2096,11 @@ class NewFrameLayout(wx.Frame):
                             ]
 
         if (
-            actionClientData <= GeneralActions.GENERATE_APP_REPORT.value
+            actionClientData < GeneralActions.GENERATE_APP_REPORT.value
             and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT
+        ) or (
+            actionClientData == GeneralActions.GENERATE_APP_REPORT.value
+            and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
             res = displayMessageBox(
                 (
