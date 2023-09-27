@@ -57,7 +57,8 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
         maxGaugeAction = len(tagsFromGrid.keys())
     else:
         aliasDic = frame.gridPanel.getDeviceAliasFromList()
-        maxGaugeAction = len(aliasDic.keys())
+        if aliasDic:
+            maxGaugeAction = len(aliasDic.keys())
     frame.statusBar.gauge.SetValue(1)
 
     postEventToFrame(
@@ -246,9 +247,11 @@ def changeAliasForDevice(device, aliasDic, maxGaugeAction):
         else:
             logString = logString + " (Alias Name already set)"
             status = {
-                "Device Name": deviceName,
-                "Device Id": deviceId,
-                "Alias Status": "Alias Name already set",
+                "device": deviceName,
+                "id": deviceId,
+                "reason": "Alias Name already set",
+                "request": None,
+                "state": None,
             }
         if "Success" in logString or "Queued" in logString:
             postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
