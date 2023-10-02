@@ -1110,17 +1110,15 @@ class NewFrameLayout(wx.Frame):
         dataList = []
         sheets = data.keys()
         for sheet in sheets:
-            if "Device & Network" in sheet or "Device and Network" in sheet:
-                dataList.append(data[sheet].columns.values.tolist())
+            dataList.append(data[sheet].columns.values.tolist())
                 dataList += data[sheet].values.tolist()
+            if "Device & Network" in sheet or "Device and Network" in sheet:
                 self.processCsvDataByGrid(
                     self.gridPanel.grid_1,
                     dataList,
                     Globals.CSV_TAG_ATTR_NAME,
                     Globals.grid1_lock,
                 )
-                dataList.append(data[sheet].columns.values.tolist())
-                dataList += data[sheet].values.tolist()
                 self.processCsvDataByGrid(
                     self.gridPanel.grid_2,
                     dataList,
@@ -1128,8 +1126,6 @@ class NewFrameLayout(wx.Frame):
                     Globals.grid2_lock,
                 )
             elif "Device" in sheet:
-                dataList.append(data[sheet].columns.values.tolist())
-                dataList += data[sheet].values.tolist()
                 self.processCsvDataByGrid(
                     self.gridPanel.grid_1,
                     dataList,
@@ -1137,8 +1133,6 @@ class NewFrameLayout(wx.Frame):
                     Globals.grid1_lock,
                 )
             elif "Network" in sheet:
-                dataList.append(data[sheet].columns.values.tolist())
-                dataList += data[sheet].values.tolist()
                 self.processCsvDataByGrid(
                     self.gridPanel.grid_2,
                     dataList,
