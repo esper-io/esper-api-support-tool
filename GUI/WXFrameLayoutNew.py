@@ -1111,7 +1111,7 @@ class NewFrameLayout(wx.Frame):
         sheets = data.keys()
         for sheet in sheets:
             dataList.append(data[sheet].columns.values.tolist())
-                dataList += data[sheet].values.tolist()
+            dataList += data[sheet].values.tolist()
             if "Device & Network" in sheet or "Device and Network" in sheet:
                 self.processCsvDataByGrid(
                     self.gridPanel.grid_1,
