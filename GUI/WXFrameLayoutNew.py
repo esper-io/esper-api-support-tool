@@ -2602,6 +2602,9 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
                 if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
+                    # To avoid adding to many app entries, add the app entry to the contents
+                    # ahead of time, and then populate the grid
+                    self.gridPanel.add_app_entry_to_contents(deviceInfo)
                     determineDoHereorMainThread(
                         self.gridPanel.populateAppGrid,
                         device,

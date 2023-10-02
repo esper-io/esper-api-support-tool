@@ -59,16 +59,13 @@ class ApiToolLog:
         self.limitLogFileSizes()
         content = [
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
-            "%s\t%s\n" % (str(exc_type), str(exc_value)),
-            "Esper Tool Version: %s\n" % Globals.VERSION,
+            "\t%s\t%s\n" % (str(exc_type), str(exc_value)),
+            "\tEsper Tool Version: %s\n" % Globals.VERSION,
         ]
         for line in exc_traceback:
             content.append(line.split('",')[1])
 
-        with open(self.logPath, "a") as myfile:
-            for entry in content:
-                myfile.write("%s\n" % entry)
-            myfile.write("\n")
+        self.Log(content)
 
         if postIssue:
             self.postIssueToTrack(e, content)
@@ -80,6 +77,15 @@ class ApiToolLog:
             #     "data": content
             # })
             Globals.frame.Logging(str(e), True)
+
+    def Log(self, msg):
+        with open(self.logPath, "a") as myfile:
+            if type(msg) == list:
+                for entry in msg:
+                    myfile.write("%s\n" % entry)
+                myfile.write("\n")
+            else:
+                myfile.write("%s\n" % msg)
 
     def LogPlace(self, str_place):
         write_content_to_file(
@@ -97,10 +103,10 @@ class ApiToolLog:
         content = [
             "\n%s\tUncaught exception:\n" % datetime.now(),
             "".join(traceback.format_exception(type, value, tb)),
-            "Exc Type: %s\n" % str(exc_type) if str(exc_type) else type,
-            "Exc Value: %s\n" % str(exc_value) if str(exc_value) else value,
-            "Exc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
-            "Esper Tool Version: " + Globals.VERSION,
+            "\tExc Type: %s\n" % str(exc_type) if str(exc_type) else type,
+            "\tExc Value: %s\n" % str(exc_value) if str(exc_value) else value,
+            "\tExc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
+            "\tEsper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
         for line in exc_traceback:
@@ -124,7 +130,7 @@ class ApiToolLog:
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s\nTenant: %s\nUser: %s (id: %s)\n\nSession API Summary:\t%s\n\nTotal Requests: %s\n\n" % (
+            strToWrite = "%s\tTenant: %s\n\tUser: %s (id: %s)\n\n\tSession API Summary:\t%s\n\n\tTotal Requests: %s\n\n" % (
                 datetime.now(),
                 str(Globals.configuration.host),
                 str(Globals.TOKEN_USER["username"])
@@ -172,7 +178,7 @@ class ApiToolLog:
                     writeToFile = True
         if writeToFile:
             if not strToWrite:
-                strToWrite = "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\nFunction: %s, triggerring %s.\n\nTotal Requests: %s\n" % (
+                strToWrite = "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\n\tFunction: %s, triggerring %s.\n\n\tTotal Requests: %s\n" % (
                     datetime.now(),
                     str(Globals.configuration.host),
                     str(Globals.TOKEN_USER["username"])

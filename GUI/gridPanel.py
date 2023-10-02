@@ -13,6 +13,7 @@ from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from Utility.GridUtilities import constructDeviceAppRowEntry
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.Resource import (
     acquireLocks,
@@ -39,6 +40,7 @@ class GridPanel(wx.Panel):
 
         self.deviceDescending = False
         self.networkDescending = False
+        self.appDescending = False
 
         self.parentFrame = parentFrame
         self.disableProperties = False
@@ -521,8 +523,8 @@ class GridPanel(wx.Panel):
 
         curSortCol = self.grid_3.GetSortingColumn()
         if curSortCol == col and hasattr(event, "Col"):
-            self.networkDescending = not self.networkDescending
-        self.grid_3.SetSortingColumn(col, bool(not self.networkDescending))
+            self.appDescending = not self.appDescending
+        self.grid_3.SetSortingColumn(col, bool(not self.appDescending))
         if self.grid_3_contents and all(
             s[keyName].isdigit() if type(s) == str else False
             for s in self.grid_3_contents
@@ -530,7 +532,7 @@ class GridPanel(wx.Panel):
             self.grid_3_contents = sorted(
                 self.grid_3_contents,
                 key=lambda i: i[keyName] and int(i[keyName]),
-                reverse=self.networkDescending,
+                reverse=self.appDescending,
             )
         else:
             self.grid_3_contents = sorted(
@@ -538,11 +540,11 @@ class GridPanel(wx.Panel):
                 key=lambda i: i[keyName].lower()
                 if type(i[keyName]) == str
                 else i[keyName],
-                reverse=self.networkDescending,
+                reverse=self.appDescending,
             )
         self.parentFrame.Logging(
             "---> Sorting App Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if self.networkDescending else "Ascending")
+            % (keyName, "Descending" if self.appDescending else "Ascending")
         )
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         self.emptyAppGrid(emptyContents=False)
@@ -572,7 +574,7 @@ class GridPanel(wx.Panel):
                 )
                 num += 1
             elif action == "App":
-                self.addApptoAppGrid(info)
+                self.addApptoAppGrid(info, None)
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
                     int(num / len(self.grid_3_contents) * 100),
@@ -1434,12 +1436,11 @@ class GridPanel(wx.Panel):
     def populateAppGrid(self, device, deviceInfo, apps):
         acquireLocks([Globals.grid3_lock])
         info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
-        if info and info not in self.grid_3_contents:
-            if type(info) is list:
-                for entry in info:
-                    self.addApptoAppGrid(entry, deviceInfo)
-            else:
-                self.addApptoAppGrid(info, deviceInfo)
+        if type(info) is list:
+            for entry in info:
+                self.addApptoAppGrid(entry, deviceInfo)
+        else:
+            self.addApptoAppGrid(info, deviceInfo)
         releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator()
@@ -1448,23 +1449,38 @@ class GridPanel(wx.Panel):
         self.grid_3.AppendRows(1)
         rowNum = self.grid_3.GetNumberRows() - 1
         for attribute in Globals.CSV_APP_ATTR_NAME:
-            value = info[attribute] if attribute in info else ""
-            if checkIfCurrentThreadStopped():
-                releaseLocks([Globals.grid3_lock])
-                return
-            self.grid_3.SetCellValue(rowNum, num, str(value))
-            isEditable = True
-            if attribute in Globals.CSV_EDITABLE_COL:
-                isEditable = False
-            self.grid_3.SetReadOnly(rowNum, num, isEditable)
+            try:
+                value = info[attribute] if attribute in info else ""
+                if checkIfCurrentThreadStopped():
+                    releaseLocks([Globals.grid3_lock])
+                    return
+                if (
+                        self.grid_3.GetNumberRows() > rowNum
+                    ):
+                    self.grid_3.SetCellValue(rowNum, num, str(value))
+                    isEditable = True
+                    if attribute in Globals.CSV_EDITABLE_COL:
+                        isEditable = False
+                    self.grid_3.SetReadOnly(rowNum, num, isEditable)
+            except Exception as e:
+                ApiToolLog().LogError(e)
             num += 1
-        if deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
-            self.grid_3_id_contents.append(deviceInfo["id"])
-            self.grid_3_contents.append(info)
+        self.add_app_entry_to_contents(deviceInfo)
 
+    @api_tool_decorator(locks=[Globals.grid3_lock])
     def constructAppGridContent(self, device, deviceInfo, apps):
-        info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
-        if deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
+        try:
+            Globals.grid3_lock.acquire()
+            self.add_app_entry_to_contents(deviceInfo)
+        except Exception as e:
+            ApiToolLog().LogError(e)
+        finally:
+            if Globals.grid3_lock.locked():
+                Globals.grid3_lock.release()
+
+    def add_app_entry_to_contents(self, deviceInfo):
+        info = deviceInfo["AppsEntry"] if deviceInfo and type(deviceInfo) is dict and "AppsEntry" in deviceInfo else []
+        if deviceInfo and deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
             self.grid_3_id_contents.append(deviceInfo["id"])
             if type(info) is list:
                 for entry in info:
