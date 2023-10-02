@@ -109,13 +109,14 @@ class Console(wx.Frame):
     @api_tool_decorator()
     def Logging(self, entry):
         """Logs Infromation To Frame UI"""
-        self.loggingList.AppendText(entry)
-        self.loggingList.AppendText("\n\n")
-        self.totalPosition = len(entry + "\n\n")
-        if self.WINDOWS:
-            position = int((self.totalPosition) * 0.75)
-            position = 0 if position < 0 else position
-            self.loggingList.ShowPosition(position)
+        if self.loggingList:
+            self.loggingList.AppendText(entry)
+            self.loggingList.AppendText("\n\n")
+            self.totalPosition = len(entry + "\n\n")
+            if self.WINDOWS:
+                position = int((self.totalPosition) * 0.75)
+                position = 0 if position < 0 else position
+                self.loggingList.ShowPosition(position)
         if entry:
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)
