@@ -11,6 +11,7 @@ API_REQUEST_TRACKER = {
     "/device/": 0,
     "/devicegroup": 0,
     "directory_record": 0,
+    "/feature-flags": 0,
     "/v1/enterprise": 0,
     "/policy": 0,
     "/geofence": 0,
