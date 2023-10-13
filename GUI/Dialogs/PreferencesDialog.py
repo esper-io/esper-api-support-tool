@@ -658,10 +658,6 @@ class PreferencesDialog(wx.Dialog):
 
         self.Fit()
 
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
-
     @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
@@ -787,15 +783,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
         Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
-
-        if Globals.APPS_IN_DEVICE_GRID:
-            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
-        else:
-            Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
-            self.parent.gridPanel.deleteAppColInDeviceGrid()
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -1049,16 +1036,12 @@ class PreferencesDialog(wx.Dialog):
             ) or self.prefs["appsInDeviceGrid"] is True:
                 self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
                 Globals.APPS_IN_DEVICE_GRID = True
-                Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
             else:
                 self.checkbox_20.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.APPS_IN_DEVICE_GRID = False
-                Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
-                self.parent.gridPanel.deleteAppColInDeviceGrid()
         else:
             self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
             Globals.APPS_IN_DEVICE_GRID = True
-            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
 
         if self.checkBooleanValuePrefAndSet("inhibitSleep", self.checkbox_21):
             Globals.INHIBIT_SLEEP = True
@@ -1159,10 +1142,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.GET_DEVICE_LANGUAGE = True
         else:
             Globals.GET_DEVICE_LANGUAGE = False
-
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
 
     def checkBooleanValuePrefAndSet(self, key, checkbox, default=False):
         isEnabled = default

@@ -287,6 +287,10 @@ CSV_APP_ATTR_NAME = [
     "Can Uninstall",
 ]
 
+NUMERIC_COLUMNS = [
+    "Android Version",
+]
+
 WHITELIST_AP = []
 
 """ Static Lists """
@@ -330,12 +334,12 @@ GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
 GET_DEVICE_LANGUAGE = False
+APPS_IN_DEVICE_GRID = True
 
 # Grid Prefs
 MAX_GRID_LOAD = 100
 REPLACE_SERIAL = True
 LAST_SEEN_AS_DATE = True
-APPS_IN_DEVICE_GRID = True
 VERSON_NAME_INSTEAD_OF_CODE = False
 SHOW_GROUP_PATH = False
 
