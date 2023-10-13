@@ -1062,9 +1062,9 @@ class NewFrameLayout(wx.Frame):
                 )
                 self.toggleEnabledState(False)
                 if self.WINDOWS:
-                    Globals.THREAD_POOL.enqueue(self.openDeviceCSV, csv_auth_path)
+                    Globals.THREAD_POOL.enqueue(self.openDeviceSpreadsheet, csv_auth_path)
                 else:
-                    self.openDeviceCSV(csv_auth_path)
+                    self.openDeviceSpreadsheet(csv_auth_path)
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     Globals.THREAD_POOL.threads,
@@ -1075,7 +1075,7 @@ class NewFrameLayout(wx.Frame):
                 self.setCursorDefault()
                 return  # the user changed their mind
 
-    def openDeviceCSV(self, csv_auth_path):
+    def openDeviceSpreadsheet(self, csv_auth_path):
         self.isUploading = True
         self.Logging("Reading Spreadsheet file: %s" % csv_auth_path)
         if csv_auth_path.endswith(".csv"):
@@ -2886,7 +2886,7 @@ class NewFrameLayout(wx.Frame):
             elif file.endswith(".xlxs"):
                 self.toggleEnabledState(False)
                 if self.WINDOWS:
-                    Globals.THREAD_POOL.enqueue(self.openDeviceCSV, file)
+                    Globals.THREAD_POOL.enqueue(self.openDeviceSpreadsheet, file)
                     Globals.THREAD_POOL.enqueue(
                         self.waitForThreadsThenSetCursorDefault,
                         Globals.THREAD_POOL.threads,
@@ -2894,7 +2894,7 @@ class NewFrameLayout(wx.Frame):
                         tolerance=1,
                     )
                 else:
-                    self.openDeviceCSV(file)
+                    self.openDeviceSpreadsheet(file)
                     postEventToFrame(eventUtil.myEVT_COMPLETE, True)
 
     @api_tool_decorator()
