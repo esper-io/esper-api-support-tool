@@ -12,7 +12,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
-from Utility.GridUtilities import constructDeviceAppRowEntry
+from Utility.GridUtilities import addColToGridRow, constructDeviceAppRowEntry
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.deviceInfo import constructNetworkInfo
 from Utility.Resource import (
@@ -1312,6 +1312,7 @@ class GridPanel(wx.Panel):
             Globals.MATCH_SCROLL_POS
             and gridOne.GetSortingColumn() < 0
             and gridTwo.GetSortingColumn() < 0
+            and gridTwo.GetScrollRange(wx.VERTICAL) > gridOne.GetScrollPos(wx.VERTICAL)
         ):
             gridTwo.Scroll(
                 gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
@@ -1550,11 +1551,10 @@ class GridPanel(wx.Panel):
                         value = entry[fields[attr]] if fields[attr] in entry else ""
                     if type(fields) == list or not value:
                         value = entry[attr] if attr in entry else ""
-                    grid.SetCellValue(gridRow, col, str(value))
                     isEditable = True
                     if attr in Globals.CSV_EDITABLE_COL:
                         isEditable = False
-                    grid.SetReadOnly(gridRow, col, isEditable)
+                    addColToGridRow(grid, gridRow, col, str(value), isEditable)
                     if attr == "Status":
                         self.setStatusCellColor(value, gridRow, col)
                     self.setAlteredCellColor(

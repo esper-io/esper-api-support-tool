@@ -12,6 +12,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
+import openpyxl
 
 import pandas as pd
 import wx
@@ -34,6 +35,7 @@ from Utility.FileUtility import (
     write_data_to_csv,
     write_json_file,
 )
+from Utility.GridUtilities import addColToGridRow
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -1075,16 +1077,16 @@ class NewFrameLayout(wx.Frame):
 
     def openDeviceCSV(self, csv_auth_path):
         self.isUploading = True
+        self.Logging("Reading Spreadsheet file: %s" % csv_auth_path)
         if csv_auth_path.endswith(".csv"):
             data = read_data_from_csv(csv_auth_path)
             self.processDeviceCSVUpload(data)
         elif csv_auth_path.endswith(".xlsx"):
             try:
-                dfs = pd.read_excel(
-                    csv_auth_path, sheet_name=None, keep_default_na=False
-                )
+                dfs = self.read_excel_via_openpyxl(csv_auth_path)
                 self.processXlsxUpload(dfs)
-            except:
+            except Exception as e:
+                print(e)
                 pass
         self.gridPanel.notebook_2.SetSelection(0)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
@@ -1100,6 +1102,25 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         self.isUploading = False
 
+    def read_excel_via_openpyxl(self, path: str) -> pd.DataFrame:
+        # Load the Excel file
+        # start = time.time()
+        workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        # print("openpyxl load time: %s" % (time.time() - start))
+        df = None
+        rows = []
+        for sheet in workbook.sheetnames:
+            if "Device & Network" in sheet or "Device and Network" in sheet or "Device" in sheet:
+                # Select the worksheet
+                worksheet = workbook[sheet]
+                # Extract the data
+                for row in worksheet.iter_rows(values_only=True):
+                    rows.append(row)
+        # Convert to pandas dataframe
+        df = pd.DataFrame(rows[1:], columns=rows[0])
+        # print("openpyxl process time: %s" % (time.time() - start))
+        return df
+
     def processXlsxUpload(self, data):
         self.CSVUploaded = True
         self.toggleEnabledState(False)
@@ -1107,38 +1128,15 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
         self.gridPanel.freezeGrids()
-        dataList = []
-        sheets = data.keys()
-        for sheet in sheets:
-            dataList.append(data[sheet].columns.values.tolist())
-            dataList += data[sheet].values.tolist()
-            if "Device & Network" in sheet or "Device and Network" in sheet:
-                self.processCsvDataByGrid(
-                    self.gridPanel.grid_1,
-                    dataList,
-                    Globals.CSV_TAG_ATTR_NAME,
-                    Globals.grid1_lock,
-                )
-                self.processCsvDataByGrid(
-                    self.gridPanel.grid_2,
-                    dataList,
-                    Globals.CSV_NETWORK_ATTR_NAME,
-                    Globals.grid2_lock,
-                )
-            elif "Device" in sheet:
-                self.processCsvDataByGrid(
-                    self.gridPanel.grid_1,
-                    dataList,
-                    Globals.CSV_TAG_ATTR_NAME,
-                    Globals.grid1_lock,
-                )
-            elif "Network" in sheet:
-                self.processCsvDataByGrid(
-                    self.gridPanel.grid_2,
-                    dataList,
-                    Globals.CSV_NETWORK_ATTR_NAME,
-                    Globals.grid2_lock,
-                )
+        dataList = data.values.tolist()
+        dataList.insert(0, list(data.keys()))
+        self.Logging("Processing Spreadsheet data...")
+        self.processSpreadsheetDataByGrid(
+            self.gridPanel.grid_1,
+            dataList,
+            Globals.CSV_TAG_ATTR_NAME,
+            Globals.grid1_lock,
+        )
 
     def processDeviceCSVUpload(self, data):
         self.CSVUploaded = True
@@ -1147,60 +1145,55 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
         self.gridPanel.freezeGrids()
-        self.processCsvDataByGrid(
+        self.Logging("Processing Spreadsheet data...")
+        self.processSpreadsheetDataByGrid(
             self.gridPanel.grid_1,
             data,
             Globals.CSV_TAG_ATTR_NAME,
             Globals.grid1_lock,
         )
-        self.processCsvDataByGrid(
-            self.gridPanel.grid_2,
-            data,
-            Globals.CSV_NETWORK_ATTR_NAME,
-            Globals.grid2_lock,
-        )
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
-    def processCsvDataByGrid(self, grid, data, headers, lock=None):
+    def processSpreadsheetDataByGrid(self, grid, data, headers, lock=None):
         if lock:
             lock.acquire()
         grid_headers = list(headers.keys())
         len_reader = len(data)
         rowCount = 1
-        num = 0
-        header = None
-        for row in data:
+        header = data[0]
+        validHeader = False
+        for colName in header:
+            if colName in grid_headers:
+                # Assume its valid if it has at least one valid entry
+                validHeader = True
+                break
+        if not validHeader:
+            raise Exception(
+                "Not Able to Process Spreadsheet File! Missing HEADERS!"
+            )
+        grid.AppendRows(len(data) - 1)
+        rowNum = 0
+        for row in data[1:]:
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
             )
             rowCount += 1
             if not all("" == val or val.isspace() for val in row):
-                if num == 0:
-                    header = row
-                    validHeader = False
-                    for colName in header:
-                        if colName in grid_headers:
-                            # Assume its valid if it has at least one valid entry
-                            validHeader = True
-                            break
-                    if not validHeader:
-                        raise Exception(
-                            "Not Able to Process CSV File! Missing HEADERS!"
-                        )
-                    num += 1
-                    continue
-                grid.AppendRows(1)
-                rowNum = grid.GetNumberRows() - 1
-                self.processCSVRow(row, rowNum, header, grid_headers, grid)
+                self.processSpreadsheetRow(row, rowNum, header, grid_headers, grid)
+                rowNum += 1
+            else:
+                grid.DeleteRows(0, grid.GetNumberRows() - 1)
         if lock:
             lock.release()
 
-    def processCSVRow(self, row, rowNum, header, grid_headers, grid):
+    def processSpreadsheetRow(self, row, rowNum, header, grid_headers, grid):
         fileCol = 0
         for colValue in row:
+            # Get Column name from header
             colName = self.getAndValidateColumnHeaderName(header, fileCol)
             if colValue == "--":
                 colValue = ""
+            # Skip column if 1) Column name is not in the grid headers 2) Column name is in the deprecated headers
             if (
                 fileCol < len(header)
                 and colName.strip() in Globals.CSV_DEPRECATED_HEADER_LABEL
@@ -1212,15 +1205,19 @@ class NewFrameLayout(wx.Frame):
                 fileCol += 1
                 continue
             expectedCol = ""
+            # Check to see if Column Name is exact match
             if colName in grid_headers:
                 expectedCol = colName
             else:
+                # If not try to find close match
                 for col in grid_headers:
                     if getStrRatioSimilarity(colName, col) >= 95:
                         expectedCol = col
                         break
+            # Proceed if we have a valid Column name
             if expectedCol:
                 toolCol = grid_headers.index(expectedCol)
+                # Attempt to process Tag column value into proper value
                 if expectedCol == "Tags":
                     try:
                         ast.literal_eval(colValue)
@@ -1243,19 +1240,10 @@ class NewFrameLayout(wx.Frame):
                             )
                         ):
                             colValue = '"' + colValue + '"'
-                grid.SetCellValue(
-                    rowNum,
-                    toolCol,
-                    str(colValue),
-                )
                 isEditable = True
                 if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
                     isEditable = False
-                grid.SetReadOnly(
-                    rowNum,
-                    toolCol,
-                    isEditable,
-                )
+                addColToGridRow(grid, rowNum, toolCol, str(colValue), isEditable)
                 fileCol += 1
 
     def getAndValidateColumnHeaderName(self, header, indx):

@@ -304,6 +304,7 @@ class EnhancedStatusBar(wx.StatusBar):
             if value < 0:
                 value = 0
             if value >= 0 and value <= maxValue:
+                self.gauge.SetToolTip(f"Progress ({int(value)}%): {str(value)} / {str(maxValue)}")
                 self.gauge.SetValue(value)
         if Globals.gauge_lock.locked():
             Globals.gauge_lock.release()

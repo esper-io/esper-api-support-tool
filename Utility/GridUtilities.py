@@ -1,5 +1,6 @@
 import Common.Globals as Globals
 
+from wx.grid import Grid
 
 def constructDeviceAppRowEntry(device, deviceInfo):
     if deviceInfo["appObj"] and "results" in deviceInfo["appObj"]:
@@ -29,3 +30,8 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 }
             if info and info not in deviceInfo["AppsEntry"]:
                 deviceInfo["AppsEntry"].append(info)
+
+
+def addColToGridRow(grid: Grid, rowNum:int, colNum:int, colValue:str, isEditable:bool=True):
+    grid.SetCellValue(rowNum, colNum, colValue)
+    grid.SetReadOnly(rowNum, colNum, isEditable)
