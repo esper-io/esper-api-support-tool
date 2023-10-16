@@ -3,6 +3,9 @@ import json
 import tempfile
 import platform
 import os
+import pandas as pd
+import openpyxl
+import Common.Globals as Globals
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -97,3 +100,78 @@ def getToolDataPath():
         basePath = "%s/EsperApiTool/" % os.path.expanduser("~/Desktop/")
 
     return basePath
+
+
+def read_excel_via_openpyxl(path: str) -> pd.DataFrame:
+    # Load the Excel file
+    # start = time.time()
+    workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    # print("openpyxl load time: %s" % (time.time() - start))
+    df = None
+    rows = []
+    for sheet in workbook.sheetnames:
+        if (
+            "Device & Network" in sheet
+            or "Device and Network" in sheet
+            or "Device" in sheet
+        ):
+            # Select the worksheet
+            worksheet = workbook[sheet]
+            # Extract the data
+            for row in worksheet.iter_rows(values_only=True):
+                rows.append(row)
+    # Convert to pandas dataframe
+    df = pd.DataFrame(rows[1:], columns=rows[0])
+    # print("openpyxl process time: %s" % (time.time() - start))
+    return df
+
+
+def read_csv_via_pandas(path: str) -> pd.DataFrame:
+    return pd.read_csv(path, sep=",", header=0, keep_default_na=False)
+
+
+def save_excel_pandas_xlxswriter(path, df_dict: dict):
+    writer = pd.ExcelWriter(
+        path,
+        engine="xlsxwriter",
+    )
+    for sheet, df in df_dict.items():
+        try:
+            sheetNames = []
+            if len(df) > Globals.SHEET_CHUNK_SIZE:
+                for i in range(0, len(df), Globals.SHEET_CHUNK_SIZE):
+                    sheetName = "{} Part {}".format(sheet, i)
+                    df[i : i + Globals.SHEET_CHUNK_SIZE].to_excel(
+                        writer,
+                        sheet_name=sheetName,
+                        index=False,
+                    )
+                    sheetNames.append(sheetName)
+            else:
+                sheetNames.append(sheet)
+                df.to_excel(writer, sheet_name=sheet, index=False)
+            for s in sheetNames:
+                worksheet = writer.sheets[s]
+                for idx, col in enumerate(df):  # loop through all columns
+                    series = df[col]
+                    max_len = (
+                        max(
+                            (
+                                series.astype(str)
+                                .map(len)
+                                .max(),  # len of largest item
+                                len(str(series.name)),  # len of column name/header
+                            )
+                        )
+                        + 1
+                    )  # adding a little extra space
+                    worksheet.set_column(idx, idx, max_len)  # set column width
+        except Exception as e:
+            print(e)
+    writer.save()
+
+
+def save_csv_pandas(path, df):
+    df.to_csv(
+        path, sep=",", index=False, encoding="utf-8", quoting=csv.QUOTE_NONNUMERIC
+    )
