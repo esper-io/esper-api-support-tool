@@ -1,6 +1,8 @@
+import pandas as pd
 import Common.Globals as Globals
 
 from wx.grid import Grid
+
 
 def constructDeviceAppRowEntry(device, deviceInfo):
     if deviceInfo["appObj"] and "results" in deviceInfo["appObj"]:
@@ -32,6 +34,28 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 deviceInfo["AppsEntry"].append(info)
 
 
-def addColToGridRow(grid: Grid, rowNum:int, colNum:int, colValue:str, isEditable:bool=True):
+def addColToGridRow(
+    grid: Grid, rowNum: int, colNum: int, colValue: str, isEditable: bool = True
+):
     grid.SetCellValue(rowNum, colNum, colValue)
     grid.SetReadOnly(rowNum, colNum, isEditable)
+
+
+def createDataFrameFromDict(headerList, sourceData):
+    newData = {}
+    for header in headerList:
+        newData[header] = []
+    for row in sourceData:
+        if type(headerList) is dict:
+            for columnName, key in headerList.items():
+                value = ""
+                if key in row:
+                    value = row[key]
+                newData[columnName].append(value)
+        elif type(headerList) is list:
+            for header in headerList:
+                value = ""
+                if header in row:
+                    value = row[header]
+                newData[header].append(value)
+    return pd.DataFrame(newData)
