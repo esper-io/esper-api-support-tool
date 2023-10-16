@@ -658,12 +658,7 @@ class NewFrameLayout(wx.Frame):
 
         self.saveGridData(
             inFile,
-            headers,
-            deviceHeaders,
-            networkHeaders,
-            gridDeviceData,
             action=action,
-            showDlg=showDlg,
             tolarance=tolarance,
         )
         self.sleepInhibitor.uninhibit()
@@ -681,10 +676,6 @@ class NewFrameLayout(wx.Frame):
         )
         self.saveGridData(
             inFile,
-            headers,
-            deviceHeaders,
-            networkHeaders,
-            gridDeviceData,
             action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
@@ -702,13 +693,8 @@ class NewFrameLayout(wx.Frame):
     def saveGridData(
         self,
         inFile,
-        headers,
-        deviceHeaders,
-        networkHeaders,
-        gridDeviceData,
         action=None,
         showDlg=True,
-        showAppDlg=True,
         renameAppCsv=True,
         tolarance=1,
     ):

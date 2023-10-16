@@ -13,7 +13,7 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-from Utility.GridUtilities import constructDeviceAppRowEntry
+from Utility.GridUtilities import constructDeviceAppRowEntry, createDataFrameFromDict
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
@@ -344,23 +344,19 @@ def fetchInstalledDevices(app, version, inFile):
             # Write to CSV
             deviceList = Globals.THREAD_POOL.results()
             if deviceList:
-                flat_list = []
-                for row in deviceList:
-                    if isinstance(row, dict):
-                        vals = row.values()
-                        for item in vals:
-                            flat_list += item
-                deviceList = flat_list
-                headers, deviceHeaders, networkHeaders = Globals.frame.getCSVHeaders(
-                    visibleOnly=Globals.SAVE_VISIBILITY
+                # Populate device grid
+                df = createDataFrameFromDict(
+                    Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                 )
-                gridDeviceData = []
-                for item in deviceList:
-                    if item:
-                        gridDeviceData.append(item)
-                        Globals.frame.gridPanel.grid_3_contents += (
-                            item["AppsEntry"] if "AppsEntry" in item else []
-                        )
+                Globals.frame.gridPanel.grid_1.applyNewDataFrame(df)
+                Globals.frame.gridPanel.grid_1_contents = df.copy(deep=True)
+                # Populate app grid
+                input = []
+                for data in deviceList.values():
+                    input.extend(data["AppsEntry"])
+                df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+                Globals.frame.gridPanel.grid_3.applyNewDataFrame(df)
+                Globals.frame.gridPanel.grid_3_contents = df.copy(deep=True)
 
                 if hasattr(Globals.frame, "start_time"):
                     print(
@@ -371,13 +367,8 @@ def fetchInstalledDevices(app, version, inFile):
                 postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 80)
                 Globals.frame.saveGridData(
                     inFile,
-                    headers,
-                    deviceHeaders,
-                    networkHeaders,
-                    gridDeviceData,
                     action=GeneralActions.GENERATE_APP_REPORT.value,
                     tolarance=1,
-                    showAppDlg=False,
                     renameAppCsv=False,
                 )
                 Globals.frame.sleepInhibitor.uninhibit()
@@ -386,7 +377,6 @@ def fetchInstalledDevices(app, version, inFile):
                     print(
                         "Execution time: %s" % (time.time() - Globals.frame.start_time)
                     )
-
     else:
         displayMessageBox(
             (
@@ -477,7 +467,7 @@ def fillInDeviceInfoDict(chunk, number_of_devices, getApps=True, getLatestEvent=
                 device, deviceInfo, getApps, getLatestEvent
             )
             if deviceInfo:
-                deviceList[number_of_devices] = [device, deviceInfo]
+                deviceList[number_of_devices] = deviceInfo
                 number_of_devices += 1
         except Exception as e:
             print(e)
