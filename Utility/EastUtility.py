@@ -344,16 +344,10 @@ def fetchInstalledDevices(app, version, inFile):
             # Write to CSV
             deviceList = Globals.THREAD_POOL.results()
             if deviceList:
-                # Populate device grid
                 devices = {}
                 for num in range(len(deviceList)):
                     devices.update(deviceList[num])
                 deviceList = devices
-                # df = createDataFrameFromDict(
-                #     Globals.CSV_TAG_ATTR_NAME, deviceList.values()
-                # )
-                # Globals.frame.gridPanel.grid_1.applyNewDataFrame(df)
-                # Globals.frame.gridPanel.grid_1_contents = df.copy(deep=True)
                 # Populate app grid
                 input = []
                 for data in deviceList.values():
