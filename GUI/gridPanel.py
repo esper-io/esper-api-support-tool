@@ -953,3 +953,6 @@ class GridPanel(wx.Panel):
         self.grid_1.EmptyGrid()
         self.grid_2.EmptyGrid()
         self.grid_3.EmptyGrid()
+        self.grid_1_contents = None
+        self.grid_2_contents = None
+        self.grid_3_contents = None
