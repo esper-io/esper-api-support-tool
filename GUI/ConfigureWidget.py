@@ -281,7 +281,7 @@ class WidgetPicker(wx.Dialog):
     def onUpload(self, event):
         inFile = displaySaveDialog(
             "Open Idenifier Spreadsheet",
-            "Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx"
+            "Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
         )
 
         if inFile:

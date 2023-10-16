@@ -274,8 +274,7 @@ class UserCreation(wx.Frame):
 
     def downloadTemplate(self, event):
         inFile = displaySaveDialog(
-            "Save User Creation CSV Template",
-            "CSV Files (*.csv)|*.csv"
+            "Save User Creation CSV Template", "CSV Files (*.csv)|*.csv"
         )
 
         if inFile:

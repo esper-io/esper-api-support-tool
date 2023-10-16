@@ -487,6 +487,7 @@ def checkIfCurrentThreadStopped():
 def correctSaveFileName(inFile):
     return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)
 
+
 def displaySaveDialog(msg, wildcard, defaultFile=""):
     Globals.frame.isSaving = True
     inFile = ""

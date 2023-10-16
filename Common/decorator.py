@@ -155,13 +155,15 @@ def logPlaceDone(func, *args, **kwargs):
     except Exception as e:
         ApiToolLog().LogError(e)
 
+
 def construct_log_place_str(prefix, func, *args, **kwargs):
     currThread = threading.current_thread()
-    place = "%s\t:\t%s" % (currThread.name, prefix + " " if not prefix.endswith(" ") else prefix)
+    place = "%s\t:\t%s" % (
+        currThread.name,
+        prefix + " " if not prefix.endswith(" ") else prefix,
+    )
     if func.__name__ and func.__doc__:
-        place += str(
-            func.__name__ + "\t:\t" + func.__doc__
-        )
+        place += str(func.__name__ + "\t:\t" + func.__doc__)
     elif func.__name__:
         place += str(func.__name__)
     else:
@@ -183,4 +185,4 @@ def construct_log_place_str(prefix, func, *args, **kwargs):
     #         else:
     #             kwargStrList += "%s:%s, " % (str(key), str(val))
 
-    return place # + argStrList + kwargStrList
+    return place  # + argStrList + kwargStrList
