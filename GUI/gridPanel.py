@@ -8,6 +8,7 @@ import wx
 import wx.grid as gridlib
 
 import Common.Globals as Globals
+from GUI.GridTable import GridTable
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
@@ -31,16 +32,9 @@ class GridPanel(wx.Panel):
         super().__init__(*args, **kw)
 
         self.userEdited = []
-        self.grid_1_contents = []
-        self.grid_2_contents = []
-        self.grid_3_contents = []
-        self.grid_1_id_content = []
-        self.grid_2_id_contents = []
-        self.grid_3_id_contents = []
-
-        self.deviceDescending = False
-        self.networkDescending = False
-        self.appDescending = False
+        self.grid_1_contents = None
+        self.grid_2_contents = None
+        self.grid_3_contents = None
 
         self.parentFrame = parentFrame
         self.disableProperties = False
@@ -96,15 +90,14 @@ class GridPanel(wx.Panel):
 
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_1 = gridlib.Grid(self.panel_14, wx.ID_ANY, size=(1, 1))
+        self.grid_1 = GridTable(self.panel_14, headers=self.grid1HeaderLabels)
         sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
 
         self.panel_15 = wx.Panel(self.notebook_2, wx.ID_ANY)
         self.notebook_2.AddPage(self.panel_15, "Network Information")
 
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
-
-        self.grid_2 = gridlib.Grid(self.panel_15, wx.ID_ANY, size=(1, 1))
+        self.grid_2 = GridTable(self.panel_15, headers=self.grid2HeaderLabels)
         sizer_7.Add(self.grid_2, 1, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.notebook_2, wx.ID_ANY)
@@ -112,7 +105,7 @@ class GridPanel(wx.Panel):
 
         sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_3 = gridlib.Grid(self.panel_16, wx.ID_ANY, size=(1, 1))
+        self.grid_3 = GridTable(self.panel_16, headers=self.grid3HeaderLabels)
         sizer_8.Add(self.grid_3, 1, wx.EXPAND, 0)
 
         self.panel_16.SetSizer(sizer_8)
@@ -148,164 +141,21 @@ class GridPanel(wx.Panel):
 
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 
-        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onDeviceGridSort)
-        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onNetworkGridSort)
-        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.onAppGridSort)
+        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_1.SortColumn)
+        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_2.SortColumn)
+        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_3.SortColumn)
 
         self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
         self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
         self.grid_3.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
         self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
-        self.grid_1.Bind(wx.EVT_SCROLLWIN, self.onGrid1Scroll)
-        self.grid_2.Bind(wx.EVT_SCROLLWIN, self.onGrid2Scroll)
-        self.grid_3.Bind(wx.EVT_SCROLLWIN, self.onGrid3Scroll)
         self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.grid_2.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.grid_1.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.grid_2.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
 
-        self.grid_3.CreateGrid(0, len(Globals.CSV_APP_ATTR_NAME))
-        self.grid_2.CreateGrid(0, len(Globals.CSV_NETWORK_ATTR_NAME.keys()))
-        self.grid_1.CreateGrid(0, len(Globals.CSV_TAG_ATTR_NAME.keys()))
-        self.setupGrid(self.grid_1)
-        self.setupGrid(self.grid_2)
-        self.setupGrid(self.grid_3)
         self.enableGridProperties()
-        self.fillDeviceGridHeaders()
-        self.fillNetworkGridHeaders()
-        self.fillAppGridHeaders()
-
-    def setupGrid(self, grid):
-        grid.UseNativeColHeader()
-        grid.DisableDragRowSize()
-        grid.EnableDragColMove(True)
-        grid.SetLabelFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        grid.SetDefaultCellFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
-
-    @api_tool_decorator()
-    def fillDeviceGridHeaders(self):
-        """ Populate Device Grid Headers """
-        num = 0
-        try:
-            for head in self.grid1HeaderLabels:
-                if head:
-                    if self.grid_1.GetNumberCols() < len(self.grid1HeaderLabels):
-                        self.grid_1.AppendCols(1)
-                    self.grid_1.SetColLabelValue(num, head)
-                    num += 1
-        except:
-            pass
-        determineDoHereorMainThread(self.grid_1.AutoSizeColumns)
-
-    def deleteAppColInDeviceGrid(self):
-        numCols = self.grid_1.GetNumberCols()
-        for num in range(numCols):
-            header = self.grid_1.GetColLabelValue(num)
-            if header == "Applications":
-                self.grid_1.DeleteCols(num)
-                break
-
-    def repopulateApplicationField(self):
-        if "Applications" in self.grid1HeaderLabels:
-            numRows = self.grid_1.GetNumberRows()
-            indx = self.grid1HeaderLabels.index("Applications")
-            for row in range(numRows):
-                if (
-                    self.grid_1.GetNumberRows() > row
-                    and len(self.grid_1_contents) > row
-                ):
-                    data = self.grid_1_contents[row]
-                    self.grid_1.SetCellValue(row, indx, str(data["Apps"]))
-
-    @api_tool_decorator()
-    def fillNetworkGridHeaders(self):
-        """ Populate Network Grid Headers """
-        num = 0
-        try:
-            for head in self.grid2HeaderLabels:
-                if head:
-                    if self.grid_2.GetNumberCols() < len(self.grid2HeaderLabels):
-                        self.grid_2.AppendCols(1)
-                    self.grid_2.SetColLabelValue(num, head)
-                    num += 1
-        except:
-            pass
-        determineDoHereorMainThread(self.grid_2.AutoSizeColumns)
-
-    @api_tool_decorator()
-    def fillAppGridHeaders(self):
-        """ Populate Device Grid Headers """
-        num = 0
-        try:
-            for head in self.grid3HeaderLabels:
-                if head:
-                    if self.grid_3.GetNumberCols() < len(self.grid3HeaderLabels):
-                        self.grid_3.AppendCols(1)
-                    self.grid_3.SetColLabelValue(num, head)
-                    num += 1
-        except:
-            pass
-        determineDoHereorMainThread(self.grid_3.AutoSizeColumns)
-
-    @api_tool_decorator(locks=[Globals.grid1_lock])
-    def emptyDeviceGrid(self, emptyContents=True):
-        """ Empty Device Grid """
-        acquireLocks([Globals.grid1_lock])
-        if emptyContents:
-            self.grid_1_contents = []
-            self.grid_1_id_contents = []
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-        self.grid_1.SetScrollLineX(15)
-        self.grid_1.SetScrollLineY(15)
-        self.fillDeviceGridHeaders()
-        releaseLocks([Globals.grid1_lock])
-
-    @api_tool_decorator(locks=[Globals.grid2_lock])
-    def emptyNetworkGrid(self, emptyContents=True):
-        """ Empty Network Grid """
-        acquireLocks([Globals.grid2_lock])
-        if emptyContents:
-            self.grid_2_contents = []
-            self.grid_2_id_contents = []
-        if self.grid_2.GetNumberRows() > 0:
-            self.grid_2.DeleteRows(0, self.grid_2.GetNumberRows())
-        self.grid_2.SetScrollLineX(15)
-        self.grid_2.SetScrollLineY(15)
-        self.fillNetworkGridHeaders()
-        releaseLocks([Globals.grid2_lock])
-
-    @api_tool_decorator(locks=[Globals.grid3_lock])
-    def emptyAppGrid(self, emptyContents=True):
-        acquireLocks([Globals.grid3_lock])
-        if emptyContents:
-            self.grid_3_contents = []
-            self.grid_3_id_contents = []
-        if self.grid_3.GetNumberRows() > 0:
-            self.grid_3.DeleteRows(0, self.grid_3.GetNumberRows())
-        self.grid_3.SetScrollLineX(15)
-        self.grid_3.SetScrollLineY(15)
-        self.fillAppGridHeaders()
-        releaseLocks([Globals.grid3_lock])
 
     @api_tool_decorator(
         locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock]
@@ -337,263 +187,27 @@ class GridPanel(wx.Panel):
         indx2 = self.grid1HeaderLabels.index("Alias")
         indx3 = self.grid1HeaderLabels.index("Group")
         x, y = self.grid_1.GetGridCursorCoords()
-        esperName = self.grid_1.GetCellValue(x, 0)
-        deviceListing = list(
-            filter(
-                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
-                self.grid_1_contents,
-            )
-        )
-        if deviceListing:
-            self.onCellEditHelper(
-                deviceListing, event, indx1, "OriginalTags", "Tags", x, y
-            )
-            self.onCellEditHelper(
-                deviceListing, event, indx2, "OriginalAlias", "Alias", x, y
-            )
-            self.onCellEditHelper(
-                deviceListing, event, indx3, "OriginalGroup", "Group", x, y
-            )
+        esperName = self.grid_1.GetCellValue(x, 1)
+        originalListing = self.grid_1_contents.loc[
+            self.grid_1_contents["Esper Name"] == esperName
+        ].values.tolist()
+        deviceListing = self.grid_1.Table.data.loc[
+            self.grid_1_contents["Esper Name"] == esperName
+        ].values.tolist()
+        if originalListing and deviceListing:
+            self.onCellEditHelper(deviceListing[0], originalListing[0], indx1, x, y)
+            self.onCellEditHelper(deviceListing[0], originalListing[0], indx2, x, y)
+            self.onCellEditHelper(deviceListing[0], originalListing[0], indx3, x, y)
         event.Skip()
 
-    def onCellEditHelper(
-        self, deviceListing, event, indx, orginalFieldName, AlteredfieldName, x, y
-    ):
-        if (
-            y == indx
-            and orginalFieldName not in deviceListing[0]
-            and deviceListing[0][Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]]
-            != self.grid_1.GetCellValue(x, y)
-        ) or (
-            y == indx
-            and orginalFieldName in deviceListing[0]
-            and deviceListing[0][orginalFieldName] != self.grid_1.GetCellValue(x, y)
-        ):
-            self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
-            if y == indx:
-                deviceListing[0][
-                    Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]
-                ] = self.grid_1.GetCellValue(x, y)
-            if y == indx and orginalFieldName not in deviceListing[0]:
-                deviceListing[0][orginalFieldName] = event.GetString()
-        else:
-            if (
-                y == indx
-                and orginalFieldName in deviceListing[0]
-                and deviceListing[0][orginalFieldName] == self.grid_1.GetCellValue(x, y)
-            ):
-                deviceListing[0][
-                    Globals.CSV_TAG_ATTR_NAME[AlteredfieldName]
-                ] = self.grid_1.GetCellValue(x, y)
-            if y == indx:
+    def onCellEditHelper(self, deviceListing, originalListing, indx, x, y):
+        deviceValue = deviceListing[indx]
+        originalValue = originalListing[indx]
+        if y == indx + 1:
+            if deviceValue == originalValue:
                 self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
-
-    @api_tool_decorator()
-    def onDeviceGridSort(self, event):
-        """ Sort Device Grid """
-        if (
-            self.parentFrame.isRunning
-            or (
-                self.parentFrame.statusBar.gauge.GetValue()
-                != self.parentFrame.statusBar.gauge.GetRange()
-                and self.parentFrame.statusBar.gauge.GetValue() != 0
-            )
-            or self.parentFrame.CSVUploaded
-            or self.disableProperties
-        ):
-            return
-        if hasattr(event, "Col"):
-            col = event.Col
-        else:
-            col = event
-        keyName = list(Globals.CSV_TAG_ATTR_NAME.values())[col]
-
-        curSortCol = self.grid_1.GetSortingColumn()
-        if curSortCol == col and hasattr(event, "Col"):
-            self.deviceDescending = not self.deviceDescending
-        self.grid_1.SetSortingColumn(col, bool(not self.deviceDescending))
-
-        if keyName == "androidVersion":
-            self.grid_1_contents = sorted(
-                self.grid_1_contents,
-                key=lambda i: list(map(int, i[keyName].split("."))),
-                reverse=self.deviceDescending,
-            )
-        else:
-            if self.grid_1_contents and all(
-                s[keyName].isdigit() for s in self.grid_1_contents
-            ):
-                self.grid_1_contents = sorted(
-                    self.grid_1_contents,
-                    key=lambda i: i[keyName] and int(i[keyName]),
-                    reverse=self.deviceDescending,
-                )
             else:
-                self.grid_1_contents = sorted(
-                    self.grid_1_contents,
-                    key=lambda i: i[keyName].lower()
-                    if type(i[keyName]) == str
-                    else i[keyName],
-                    reverse=self.deviceDescending,
-                )
-        self.parentFrame.Logging(
-            "---> Sorting Device Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if self.deviceDescending else "Ascending")
-        )
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-        self.emptyDeviceGrid(emptyContents=False)
-        self.grid_1.Freeze()
-        if platform.system() == "Windows":
-            Globals.THREAD_POOL.enqueue(self.repopulateGrid, self.grid_1_contents, col)
-        else:
-            self.repopulateGrid(self.grid_1_contents, col)
-
-    @api_tool_decorator()
-    def onNetworkGridSort(self, event):
-        """ Sort the network grid """
-        if (
-            self.parentFrame.isRunning
-            or (
-                self.parentFrame.statusBar.gauge.GetValue()
-                != self.parentFrame.statusBar.gauge.GetRange()
-                and self.parentFrame.statusBar.gauge.GetValue() != 0
-            )
-            or self.parentFrame.CSVUploaded
-            or self.disableProperties
-        ):
-            return
-        if hasattr(event, "Col"):
-            col = event.Col
-        else:
-            col = event
-        keyName = list(Globals.CSV_NETWORK_ATTR_NAME.keys())[col]
-
-        curSortCol = self.grid_2.GetSortingColumn()
-        if curSortCol == col and hasattr(event, "Col"):
-            self.networkDescending = not self.networkDescending
-        self.grid_2.SetSortingColumn(col, bool(not self.networkDescending))
-        if self.grid_2_contents and all(
-            s[keyName].isdigit() for s in self.grid_2_contents
-        ):
-            self.grid_2_contents = sorted(
-                self.grid_2_contents,
-                key=lambda i: i[keyName] and int(i[keyName]),
-                reverse=self.networkDescending,
-            )
-        else:
-            self.grid_2_contents = sorted(
-                self.grid_2_contents,
-                key=lambda i: i[keyName].lower()
-                if type(i[keyName]) == str
-                else i[keyName],
-                reverse=self.networkDescending,
-            )
-        self.parentFrame.Logging(
-            "---> Sorting Network Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if self.networkDescending else "Ascending")
-        )
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-        self.emptyNetworkGrid(emptyContents=False)
-        self.grid_2.Freeze()
-        if platform.system() == "Windows":
-            Globals.THREAD_POOL.enqueue(
-                self.repopulateGrid, self.grid_2_contents, col, "Network"
-            )
-        else:
-            self.repopulateGrid(self.grid_2_contents, col, "Network")
-
-    @api_tool_decorator()
-    def onAppGridSort(self, event):
-        if (
-            self.parentFrame.isRunning
-            or (
-                self.parentFrame.statusBar.gauge.GetValue()
-                != self.parentFrame.statusBar.gauge.GetRange()
-                and self.parentFrame.statusBar.gauge.GetValue() != 0
-            )
-            or self.parentFrame.CSVUploaded
-            or self.disableProperties
-        ):
-            return
-        if hasattr(event, "Col"):
-            col = event.Col
-        else:
-            col = event
-        keyName = Globals.CSV_APP_ATTR_NAME[col]
-
-        curSortCol = self.grid_3.GetSortingColumn()
-        if curSortCol == col and hasattr(event, "Col"):
-            self.appDescending = not self.appDescending
-        self.grid_3.SetSortingColumn(col, bool(not self.appDescending))
-        if self.grid_3_contents and all(
-            s[keyName].isdigit() if type(s) == str else False
-            for s in self.grid_3_contents
-        ):
-            self.grid_3_contents = sorted(
-                self.grid_3_contents,
-                key=lambda i: i[keyName] and int(i[keyName]),
-                reverse=self.appDescending,
-            )
-        else:
-            self.grid_3_contents = sorted(
-                self.grid_3_contents,
-                key=lambda i: i[keyName].lower()
-                if type(i[keyName]) == str
-                else i[keyName],
-                reverse=self.appDescending,
-            )
-        self.parentFrame.Logging(
-            "---> Sorting App Grid on Column: %s Order: %s"
-            % (keyName, "Descending" if self.appDescending else "Ascending")
-        )
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-        self.emptyAppGrid(emptyContents=False)
-        self.grid_3.Freeze()
-        if platform.system() == "Windows":
-            Globals.THREAD_POOL.enqueue(
-                self.repopulateGrid, self.grid_3_contents, col, "App"
-            )
-        else:
-            self.repopulateGrid(self.grid_3_contents, col, "App"),
-
-    def repopulateGrid(self, content, col, action="Device"):
-        num = 1
-        for info in content:
-            if action == "Device":
-                self.addDeviceToDeviceGrid(info)
-                postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE,
-                    int(num / len(self.grid_1_contents) * 100),
-                )
-                num += 1
-            elif action == "Network":
-                self.addToNetworkGrid(info)
-                postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE,
-                    int(num / len(self.grid_2_contents) * 100),
-                )
-                num += 1
-            elif action == "App":
-                self.addApptoAppGrid(info, None)
-                postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE,
-                    int(num / len(self.grid_3_contents) * 100),
-                )
-                num += 1
-        if action == "Device":
-            self.repopulateGridUIChanges(self.grid_1, col)
-        elif action == "Network":
-            self.repopulateGridUIChanges(self.grid_2, col)
-        elif action == "App":
-            self.repopulateGridUIChanges(self.grid_3, col)
-        self.parentFrame.onSearch(self.parentFrame.frame_toolbar.search.GetValue())
-        time.sleep(3)
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, (0))
-
-    def repopulateGridUIChanges(self, grid, column):
-        determineDoHereorMainThread(grid.AutoSizeColumns)
-        determineDoHereorMainThread(grid.MakeCellVisible, 0, column)
-        determineDoHereorMainThread(grid.Thaw)
+                self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
@@ -736,60 +350,6 @@ class GridPanel(wx.Panel):
                     indx, showState=self.grid3ColVisibility[col]
                 )
 
-    @api_tool_decorator(locks=[Globals.grid1_lock])
-    def addDeviceToDeviceGrid(self, device_info, isUpdate=False):
-        """ Add device info to Device Grid """
-        acquireLocks([Globals.grid1_lock])
-        num = 0
-        device = {}
-        self.grid_1.AppendRows(1)
-        rowNum = self.grid_1.GetNumberRows() - 1
-        esperName = ""
-        for attribute in Globals.CSV_TAG_ATTR_NAME:
-            value = (
-                device_info[Globals.CSV_TAG_ATTR_NAME[attribute]]
-                if Globals.CSV_TAG_ATTR_NAME[attribute] in device_info
-                else ""
-            )
-            if "Esper Name" == attribute:
-                esperName = value
-            device[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
-            if checkIfCurrentThreadStopped():
-                releaseLocks([Globals.grid1_lock])
-                return
-            self.grid_1.SetCellValue(rowNum, num, str(value))
-            isEditable = True
-            if attribute in Globals.CSV_EDITABLE_COL:
-                isEditable = False
-            self.grid_1.SetReadOnly(rowNum, num, isEditable)
-            if attribute == "Status":
-                self.setStatusCellColor(value, rowNum, num)
-            self.setAlteredCellColor(
-                self.grid_1,
-                device_info,
-                rowNum,
-                attribute,
-                num,
-            )
-            num += 1
-        deviceListing = list(
-            filter(
-                lambda x: (x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == esperName),
-                self.grid_1_contents,
-            )
-        )
-        if device not in self.grid_1_contents and not deviceListing:
-            self.grid_1_contents.append(device)
-        releaseLocks([Globals.grid1_lock])
-
-    def constructDeviceGridContent(self, device_info):
-        identifier = device_info
-        if "id" in device_info and device_info["id"]:
-            identifier = device_info["id"]
-        if identifier not in self.grid_1_id_content:
-            self.grid_1_contents.append(device_info)
-            self.grid_1_id_content.append(identifier)
-
     @api_tool_decorator(locks=[Globals.grid1_status_lock])
     def setStatusCellColor(self, value, rowNum, colNum):
         acquireLocks(Globals.grid1_status_lock)
@@ -830,36 +390,6 @@ class GridPanel(wx.Panel):
                 (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
             )
         # releaseLocks([Globals.grid_color_lock])
-
-    @api_tool_decorator(locks=[Globals.grid2_lock])
-    def addDeviceToNetworkGrid(self, device, deviceInfo, isUpdate=False):
-        """ Construct network info and add to grid """
-        acquireLocks([Globals.grid2_lock])
-        networkInfo = deviceInfo["network_info"]
-        self.addToNetworkGrid(networkInfo, isUpdate, device_info=deviceInfo)
-        releaseLocks([Globals.grid2_lock])
-
-    @api_tool_decorator()
-    def addToNetworkGrid(self, networkInfo, isUpdate=False, device_info=None):
-        """ Add info to the network grid """
-        num = 0
-        self.grid_2.AppendRows(1)
-        rowNum = self.grid_2.GetNumberRows() - 1
-        for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = networkInfo[attribute] if attribute in networkInfo else ""
-            self.grid_2.SetCellValue(rowNum, num, str(value))
-            self.grid_2.SetReadOnly(rowNum, num, True)
-            num += 1
-        if networkInfo not in self.grid_2_contents:
-            self.grid_2_contents.append(networkInfo)
-
-    def constructNetworkGridContent(self, device, deviceInfo):
-        identifier = deviceInfo
-        if "id" in deviceInfo and deviceInfo["id"]:
-            identifier = deviceInfo["id"]
-        if identifier not in self.grid_2_id_contents:
-            self.grid_2_contents.append(deviceInfo)
-            self.grid_2_id_contents.append(identifier)
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
@@ -1291,33 +821,6 @@ class GridPanel(wx.Panel):
                 self.parentFrame.fetchData(False)
         event.Skip()
 
-    def onGrid1Scroll(self, event):
-        event.Skip()
-        wx.CallAfter(self.setBothGridPositionsAndLoad, self.grid_1, self.grid_2)
-
-    def onGrid2Scroll(self, event):
-        event.Skip()
-        wx.CallAfter(self.setBothGridPositionsAndLoad, self.grid_2, self.grid_1)
-
-    def onGrid3Scroll(self, event):
-        event.Skip()
-        wx.CallAfter(self.onScroll, None)
-
-    def setBothGridPositionsAndLoad(self, gridOne, gridTwo):
-        self.onScroll(None)
-        self.setBothGridVSCrollPositions(gridOne, gridTwo)
-
-    def setBothGridVSCrollPositions(self, gridOne, gridTwo):
-        if (
-            Globals.MATCH_SCROLL_POS
-            and gridOne.GetSortingColumn() < 0
-            and gridTwo.GetSortingColumn() < 0
-            and gridTwo.GetScrollRange(wx.VERTICAL) > gridOne.GetScrollPos(wx.VERTICAL)
-        ):
-            gridTwo.Scroll(
-                gridTwo.GetScrollPos(wx.HORIZONTAL), gridOne.GetScrollPos(wx.VERTICAL)
-            )
-
     @api_tool_decorator()
     def onKey(self, event):
         keycode = event.GetKeyCode()
@@ -1433,151 +936,6 @@ class GridPanel(wx.Panel):
         releaseLocks([Globals.grid1_lock])
         return groupList
 
-    @api_tool_decorator(locks=[Globals.grid3_lock])
-    def populateAppGrid(self, device, deviceInfo, apps):
-        acquireLocks([Globals.grid3_lock])
-        info = deviceInfo["AppsEntry"] if "AppsEntry" in deviceInfo else []
-        if type(info) is list:
-            for entry in info:
-                self.addApptoAppGrid(entry, deviceInfo)
-        else:
-            self.addApptoAppGrid(info, deviceInfo)
-        releaseLocks([Globals.grid3_lock])
-
-    @api_tool_decorator()
-    def addApptoAppGrid(self, info, deviceInfo):
-        num = 0
-        self.grid_3.AppendRows(1)
-        rowNum = self.grid_3.GetNumberRows() - 1
-        for attribute in Globals.CSV_APP_ATTR_NAME:
-            try:
-                value = info[attribute] if attribute in info else ""
-                if checkIfCurrentThreadStopped():
-                    releaseLocks([Globals.grid3_lock])
-                    return
-                if (
-                        self.grid_3.GetNumberRows() > rowNum
-                    ):
-                    self.grid_3.SetCellValue(rowNum, num, str(value))
-                    isEditable = True
-                    if attribute in Globals.CSV_EDITABLE_COL:
-                        isEditable = False
-                    self.grid_3.SetReadOnly(rowNum, num, isEditable)
-            except Exception as e:
-                ApiToolLog().LogError(e)
-            num += 1
-        self.add_app_entry_to_contents(deviceInfo)
-
-    @api_tool_decorator(locks=[Globals.grid3_lock])
-    def constructAppGridContent(self, device, deviceInfo, apps):
-        try:
-            Globals.grid3_lock.acquire()
-            self.add_app_entry_to_contents(deviceInfo)
-        except Exception as e:
-            ApiToolLog().LogError(e)
-        finally:
-            if Globals.grid3_lock.locked():
-                Globals.grid3_lock.release()
-
-    def add_app_entry_to_contents(self, deviceInfo):
-        info = deviceInfo["AppsEntry"] if deviceInfo and type(deviceInfo) is dict and "AppsEntry" in deviceInfo else []
-        if deviceInfo and deviceInfo["id"] and deviceInfo["id"] not in self.grid_3_id_contents:
-            self.grid_3_id_contents.append(deviceInfo["id"])
-            if type(info) is list:
-                for entry in info:
-                    self.grid_3_contents.append(entry)
-            else:
-                self.grid_3_contents.append(info)
-
-    def onScroll(self, event):
-        scrollPosPercentage = self.getScrollpercentage(self.grid_1)
-        if scrollPosPercentage >= 90:
-            determineDoHereorMainThread(
-                self.populateGridRows,
-                self.grid_1,
-                self.grid_1_contents,
-                Globals.CSV_TAG_ATTR_NAME,
-                Globals.grid1_lock,
-            )
-
-        scrollPosPercentage = self.getScrollpercentage(self.grid_2)
-        if scrollPosPercentage >= 90:
-            determineDoHereorMainThread(
-                self.populateGridRows,
-                self.grid_2,
-                self.grid_2_contents,
-                Globals.CSV_NETWORK_ATTR_NAME,
-                Globals.grid2_lock,
-            )
-
-        scrollPosPercentage = self.getScrollpercentage(self.grid_3)
-        if scrollPosPercentage >= 90:
-            determineDoHereorMainThread(
-                self.populateGridRows,
-                self.grid_3,
-                self.grid_3_contents,
-                Globals.CSV_APP_ATTR_NAME,
-                Globals.grid3_lock,
-            )
-        if event:
-            event.Skip()
-
-    def getScrollpercentage(self, grid):
-        numerator = grid.GetScrollThumb(wx.VERTICAL) + grid.GetScrollPos(wx.VERTICAL)
-        denominator = grid.GetScrollRange(wx.VERTICAL)
-        scrollPosPercentage = 0
-        if denominator > 0:
-            scrollPosPercentage = numerator / denominator * 100
-        return scrollPosPercentage
-
-    def populateGridRows(self, grid, content, fields, lock=None):
-        if lock and hasattr(lock, "acquire"):
-            lock.acquire()
-        if content:
-            curNumRow = grid.GetNumberRows()
-            num = curNumRow
-            limit = curNumRow + Globals.MAX_GRID_LOAD
-            if curNumRow < len(content) and num != limit:
-                grid.Freeze()
-                Globals.frame.setCursorBusy()
-            while curNumRow < len(content) and num != limit:
-                grid.AppendRows(1)
-                entry = content[num]
-                col = 0
-                gridRow = grid.GetNumberRows() - 1
-                for attr in fields:
-                    value = None
-                    if type(fields) == dict:
-                        value = entry[fields[attr]] if fields[attr] in entry else ""
-                    if type(fields) == list or not value:
-                        value = entry[attr] if attr in entry else ""
-                    isEditable = True
-                    if attr in Globals.CSV_EDITABLE_COL:
-                        isEditable = False
-                    addColToGridRow(grid, gridRow, col, str(value), isEditable)
-                    if attr == "Status":
-                        self.setStatusCellColor(value, gridRow, col)
-                    self.setAlteredCellColor(
-                        grid,
-                        entry,
-                        gridRow,
-                        attr,
-                        col,
-                    )
-                    col += 1
-                num += 1
-                curNumRow = grid.GetNumberRows()
-        if grid.IsFrozen():
-            grid.Thaw()
-        if (
-            lock
-            and hasattr(lock, "locked")
-            and lock.locked()
-            and hasattr(lock, "release")
-        ):
-            lock.release()
-        Globals.frame.setCursorDefault()
-
     def thawGridsIfFrozen(self):
         if self.grid_1.IsFrozen():
             self.grid_1.Thaw()
@@ -1590,3 +948,8 @@ class GridPanel(wx.Panel):
         self.grid_1.Freeze()
         self.grid_2.Freeze()
         self.grid_3.Freeze()
+
+    def EmptyGrids(self):
+        self.grid_1.EmptyGrid()
+        self.grid_2.EmptyGrid()
+        self.grid_3.EmptyGrid()
