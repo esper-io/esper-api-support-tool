@@ -132,7 +132,8 @@ class ColumnVisibility(wx.Dialog):
                 colLabel = grid.GetColLabelValue(num)
                 if colLabel in exemptCols:
                     continue
-                choice.append(colLabel)
+                if colLabel != "Index":
+                    choice.append(colLabel)
             self.choiceDataDict[label] = choice
         check_list_box = wx.CheckListBox(notebook_panel, wx.ID_ANY, choices=choice)
         sizer.Add(check_list_box, 0, wx.ALL | wx.EXPAND, 3)
