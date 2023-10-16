@@ -7,13 +7,10 @@ import math
 import os.path
 import platform
 import sys
-import tempfile
 import threading
 import time
 from datetime import datetime
 from pathlib import Path
-import openpyxl
-
 import pandas as pd
 import wx
 import wx.adv as wxadv
@@ -29,13 +26,17 @@ from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
 from Utility.FileUtility import (
     getToolDataPath,
+    read_csv_via_pandas,
     read_data_from_csv,
     read_data_from_csv_as_dict,
+    read_excel_via_openpyxl,
     read_json_file,
+    save_csv_pandas,
+    save_excel_pandas_xlxswriter,
     write_data_to_csv,
     write_json_file,
 )
-from Utility.GridUtilities import addColToGridRow
+from Utility.GridUtilities import addColToGridRow, createDataFrameFromDict
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -66,7 +67,6 @@ from GUI.toolBar import ToolsToolBar
 from Utility.API.AppUtilities import (
     getAllInstallableApps,
     getAppDictEntry,
-    getInstallDevices,
     installAppOnDevices,
     installAppOnGroups,
     uninstallAppOnDevice,
@@ -142,7 +142,7 @@ class NewFrameLayout(wx.Frame):
         self.isRunningUpdate = False
         self.isUploading = False
         self.kill = False
-        self.CSVUploaded = False
+        self.SpreadsheetUploaded = False
         self.defaultDir = os.getcwd()
         self.gridArrowState = {"next": False, "prev": False}
         self.groups = None
@@ -428,7 +428,7 @@ class NewFrameLayout(wx.Frame):
                         isValid = True
                     elif res == wx.ID_CANCEL and not self.IsShown():
                         self.OnQuit(event)
-                    elif  res == wx.ID_CANCEL:
+                    elif res == wx.ID_CANCEL:
                         break
         if event and hasattr(event, "Skip"):
             event.Skip()
@@ -536,7 +536,7 @@ class NewFrameLayout(wx.Frame):
         self.isSaving = True
         inFile = displaySaveDialog(
             "Save Reports as...",
-            "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv"
+            "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
         )
 
         if inFile:  # Save button was pressed
@@ -554,8 +554,8 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             self.isSaving = True
             inFile = displaySaveDialog(
-                "Save Reports as...", 
-                "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv"
+                "Save Reports as...",
+                "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
             )
 
             if inFile:  # Save button was pressed
@@ -713,47 +713,13 @@ class NewFrameLayout(wx.Frame):
         tolarance=1,
     ):
         if inFile.endswith(".csv"):
-            threads = []
-            num = 1
-            for device in self.gridPanel.grid_1_contents:
-                self.mergeDeviceAndNetworkInfo(device, gridDeviceData)
-                val = (num / (len(gridDeviceData) * 2)) * 100
-                if val <= 50:
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-                num += 1
-            joinThreadList(threads)
-
-            gridData = []
-            gridData.append(headers)
-
-            createNewFile(inFile)
-
-            num = len(gridDeviceData)
-            if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value:
-                for deviceData in gridDeviceData:
-                    rowValues = []
-                    for header in headers:
-                        value = ""
-                        if header in deviceData:
-                            value = deviceData[header]
-                        else:
-                            if header in deviceHeaders:
-                                if Globals.CSV_TAG_ATTR_NAME[header] in deviceData:
-                                    value = deviceData[
-                                        Globals.CSV_TAG_ATTR_NAME[header]
-                                    ]
-                            if header in networkHeaders:
-                                if Globals.CSV_NETWORK_ATTR_NAME[header] in deviceData:
-                                    value = deviceData[
-                                        Globals.CSV_NETWORK_ATTR_NAME[header]
-                                    ]
-                        rowValues.append(value)
-                    gridData.append(rowValues)
-                    val = (num / (len(gridDeviceData) * 2)) * 100
-                    if val <= 95:
-                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-                    num += 1
-                write_data_to_csv(inFile, gridData)
+            result = pd.merge(
+                self.gridPanel.grid_1.Table.data,
+                self.gridPanel.grid_2.Table.data,
+                on=["Esper Name", "Group"],
+            )
+            result.dropna()
+            save_csv_pandas(inFile, result)
             if (
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -768,128 +734,33 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
             ):
-                self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
+                # self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
+                save_csv_pandas(inFile, self.gridPanel.grid_3.Table.data)
         elif inFile.endswith(".xlsx"):
-            for attempt in range(Globals.MAX_RETRY):
-                try:
-                    my_wb = xlsxwriter.Workbook(inFile, {"constant_memory": True})
-                    # Save Device & Network information, if selected
-                    if (
-                        not action
-                        or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
-                        and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
-                    ):
-                        baseSheetName = "Device & Network"
-                        if gridDeviceData:
-                            self.populateWorkSheet(
-                                my_wb,
-                                gridDeviceData,
-                                baseSheetName,
-                                list(deviceHeaders) + list(networkHeaders)[2:],
-                                {
-                                    **Globals.CSV_TAG_ATTR_NAME,
-                                    **Globals.CSV_NETWORK_ATTR_NAME,
-                                },
-                            )
-                        else:
-                            self.populateWorkSheet(
-                                my_wb,
-                                self.mergeDataSource(
-                                    self.gridPanel.grid_1_contents,
-                                    self.gridPanel.grid_2_contents,
-                                ),
-                                baseSheetName,
-                                list(deviceHeaders) + list(networkHeaders)[2:],
-                                {
-                                    **Globals.CSV_TAG_ATTR_NAME,
-                                    **Globals.CSV_NETWORK_ATTR_NAME,
-                                },
-                                maxGauge=95,
-                                beginGauge=85,
-                            )
-                    else:
-                        # Save Device Info
-                        baseSheetName = "Device"
-                        if gridDeviceData and (
-                            not action
-                            or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
-                        ):
-                            self.populateWorkSheet(
-                                my_wb,
-                                gridDeviceData,
-                                baseSheetName,
-                                list(deviceHeaders),
-                                Globals.CSV_TAG_ATTR_NAME,
-                                maxGauge=90,
-                                beginGauge=85,
-                            )
-                        else:
-                            self.populateWorkSheet(
-                                my_wb,
-                                self.gridPanel.grid_1_contents,
-                                baseSheetName,
-                                list(deviceHeaders),
-                                Globals.CSV_TAG_ATTR_NAME,
-                                maxGauge=90,
-                                beginGauge=85,
-                            )
-                        # Save Network Info
-                        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 90)
-                        baseSheetName = "Network"
-                        if gridDeviceData and (
-                            not action
-                            or action <= GeneralActions.GENERATE_INFO_REPORT.value
-                        ):
-                            self.populateWorkSheet(
-                                my_wb,
-                                gridDeviceData,
-                                baseSheetName,
-                                list(networkHeaders),
-                                Globals.CSV_NETWORK_ATTR_NAME,
-                                maxGauge=95,
-                                beginGauge=90,
-                            )
-                        else:
-                            self.populateWorkSheet(
-                                my_wb,
-                                self.gridPanel.grid_2_contents,
-                                baseSheetName,
-                                list(networkHeaders),
-                                Globals.CSV_NETWORK_ATTR_NAME,
-                                maxGauge=95,
-                                beginGauge=90,
-                            )
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 95)
-                    # Save App Info
-                    if self.gridPanel.grid_3_contents and (
-                        not action
-                        or (
-                            action
-                            and action == GeneralActions.GENERATE_APP_REPORT.value
-                            or action
-                            == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                        )
-                    ):
-                        baseSheetName = "Application"
-                        self.populateWorkSheet(
-                            my_wb,
-                            self.gridPanel.grid_3_contents,
-                            baseSheetName,
-                            Globals.CSV_APP_ATTR_NAME,
-                            None,
-                            maxGauge=100,
-                            beginGauge=95,
-                        )
-                    my_wb.close()
-                except Exception as e:
-                    if attempt == Globals.MAX_RETRY - 1:
-                        raise e
-                    else:
-                        ApiToolLog().LogError(e)
-                        time.sleep(15)
-                        self.Logging("Retrying save: %s" % str(e))
-                        continue
-                break
+            df_dict = {}
+            if (
+                not action
+                or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
+                and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
+            ):
+                result = pd.merge(
+                    self.gridPanel.grid_1.Table.data,
+                    self.gridPanel.grid_2.Table.data,
+                    on=["Esper Name", "Group"],
+                )
+                result.dropna()
+                df_dict["Device & Network"] = result
+            else:
+                df_dict["Device"] = self.gridPanel.grid_1.Table.data
+                if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
+                    df_dict["Network"] = self.gridPanel.grid_2.Table.data
+            if not action or (
+                action
+                and action == GeneralActions.GENERATE_APP_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                df_dict["Application"] = self.gridPanel.grid_3.Table.data
+            save_excel_pandas_xlxswriter(inFile, df_dict)
 
         Globals.THREAD_POOL.join(tolerance=tolarance)
 
@@ -1028,7 +899,7 @@ class NewFrameLayout(wx.Frame):
                 )
 
     @api_tool_decorator()
-    def onUploadCSV(self, event):
+    def onUploadSpreadsheet(self, event):
         """ Upload device CSV to the device Grid """
         if not Globals.enterprise_id:
             displayMessageBox(
@@ -1040,8 +911,7 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.setCursorBusy()
-        self.gridPanel.emptyDeviceGrid()
-        self.gridPanel.emptyNetworkGrid()
+        self.gridPanel.EmptyGrids()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         with wx.FileDialog(
             self,
@@ -1062,7 +932,9 @@ class NewFrameLayout(wx.Frame):
                 )
                 self.toggleEnabledState(False)
                 if self.WINDOWS:
-                    Globals.THREAD_POOL.enqueue(self.openDeviceSpreadsheet, csv_auth_path)
+                    Globals.THREAD_POOL.enqueue(
+                        self.openDeviceSpreadsheet, csv_auth_path
+                    )
                 else:
                     self.openDeviceSpreadsheet(csv_auth_path)
                 Globals.THREAD_POOL.enqueue(
@@ -1077,17 +949,20 @@ class NewFrameLayout(wx.Frame):
 
     def openDeviceSpreadsheet(self, csv_auth_path):
         self.isUploading = True
+        self.statusBar.gauge.Pulse()
         self.Logging("Reading Spreadsheet file: %s" % csv_auth_path)
+        dfs = None
         if csv_auth_path.endswith(".csv"):
-            data = read_data_from_csv(csv_auth_path)
-            self.processDeviceCSVUpload(data)
+            # data = read_data_from_csv(csv_auth_path)
+            dfs = read_csv_via_pandas(csv_auth_path)
         elif csv_auth_path.endswith(".xlsx"):
             try:
-                dfs = self.read_excel_via_openpyxl(csv_auth_path)
-                self.processXlsxUpload(dfs)
+                dfs = read_excel_via_openpyxl(csv_auth_path)
             except Exception as e:
                 print(e)
                 pass
+        if dfs is not None:
+            self.processSpreadsheetUpload(dfs)
         self.gridPanel.notebook_2.SetSelection(0)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
         postEventToFrame(
@@ -1102,157 +977,16 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         self.isUploading = False
 
-    def read_excel_via_openpyxl(self, path: str) -> pd.DataFrame:
-        # Load the Excel file
-        # start = time.time()
-        workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
-        # print("openpyxl load time: %s" % (time.time() - start))
-        df = None
-        rows = []
-        for sheet in workbook.sheetnames:
-            if "Device & Network" in sheet or "Device and Network" in sheet or "Device" in sheet:
-                # Select the worksheet
-                worksheet = workbook[sheet]
-                # Extract the data
-                for row in worksheet.iter_rows(values_only=True):
-                    rows.append(row)
-        # Convert to pandas dataframe
-        df = pd.DataFrame(rows[1:], columns=rows[0])
-        # print("openpyxl process time: %s" % (time.time() - start))
-        return df
-
-    def processXlsxUpload(self, data):
-        self.CSVUploaded = True
-        self.toggleEnabledState(False)
-        self.sidePanel.groupChoice.Enable(False)
-        self.sidePanel.deviceChoice.Enable(False)
-        self.gridPanel.disableGridProperties()
-        self.gridPanel.freezeGrids()
-        dataList = data.values.tolist()
-        dataList.insert(0, list(data.keys()))
-        self.Logging("Processing Spreadsheet data...")
-        self.processSpreadsheetDataByGrid(
-            self.gridPanel.grid_1,
-            dataList,
-            Globals.CSV_TAG_ATTR_NAME,
-            Globals.grid1_lock,
-        )
-
-    def processDeviceCSVUpload(self, data):
-        self.CSVUploaded = True
+    def processSpreadsheetUpload(self, data):
+        self.SpreadsheetUploaded = True
         self.toggleEnabledState(False)
         self.sidePanel.groupChoice.Enable(False)
         self.sidePanel.deviceChoice.Enable(False)
         self.gridPanel.disableGridProperties()
         self.gridPanel.freezeGrids()
         self.Logging("Processing Spreadsheet data...")
-        self.processSpreadsheetDataByGrid(
-            self.gridPanel.grid_1,
-            data,
-            Globals.CSV_TAG_ATTR_NAME,
-            Globals.grid1_lock,
-        )
-
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
-    def processSpreadsheetDataByGrid(self, grid, data, headers, lock=None):
-        if lock:
-            lock.acquire()
-        grid_headers = list(headers.keys())
-        len_reader = len(data)
-        rowCount = 1
-        header = data[0]
-        validHeader = False
-        for colName in header:
-            if colName in grid_headers:
-                # Assume its valid if it has at least one valid entry
-                validHeader = True
-                break
-        if not validHeader:
-            raise Exception(
-                "Not Able to Process Spreadsheet File! Missing HEADERS!"
-            )
-        grid.AppendRows(len(data) - 1)
-        rowNum = 0
-        for row in data[1:]:
-            postEventToFrame(
-                eventUtil.myEVT_UPDATE_GAUGE, int(float((rowCount) / len_reader) * 100)
-            )
-            rowCount += 1
-            if not all("" == val or val.isspace() for val in row):
-                self.processSpreadsheetRow(row, rowNum, header, grid_headers, grid)
-                rowNum += 1
-            else:
-                grid.DeleteRows(0, grid.GetNumberRows() - 1)
-        if lock:
-            lock.release()
-
-    def processSpreadsheetRow(self, row, rowNum, header, grid_headers, grid):
-        fileCol = 0
-        for colValue in row:
-            # Get Column name from header
-            colName = self.getAndValidateColumnHeaderName(header, fileCol)
-            if colValue == "--":
-                colValue = ""
-            # Skip column if 1) Column name is not in the grid headers 2) Column name is in the deprecated headers
-            if (
-                fileCol < len(header)
-                and colName.strip() in Globals.CSV_DEPRECATED_HEADER_LABEL
-            ) or (
-                fileCol < len(header)
-                and colName.strip() not in grid_headers
-                and colName != "devicename"
-            ):
-                fileCol += 1
-                continue
-            expectedCol = ""
-            # Check to see if Column Name is exact match
-            if colName in grid_headers:
-                expectedCol = colName
-            else:
-                # If not try to find close match
-                for col in grid_headers:
-                    if getStrRatioSimilarity(colName, col) >= 95:
-                        expectedCol = col
-                        break
-            # Proceed if we have a valid Column name
-            if expectedCol:
-                toolCol = grid_headers.index(expectedCol)
-                # Attempt to process Tag column value into proper value
-                if expectedCol == "Tags":
-                    try:
-                        ast.literal_eval(colValue)
-                    except:
-                        colValue = str(colValue)
-                        if (
-                            expectedCol == "Tags"
-                            and "," in colValue
-                            and (
-                                (
-                                    colValue.count('"') % 2 != 0
-                                    or colValue.count("'") % 2 != 0
-                                    or colValue.count("’") % 2 != 0
-                                )
-                                or (
-                                    '"' not in colValue
-                                    and "'" not in colValue
-                                    and "’" not in colValue
-                                )
-                            )
-                        ):
-                            colValue = '"' + colValue + '"'
-                isEditable = True
-                if grid_headers[toolCol] in Globals.CSV_EDITABLE_COL:
-                    isEditable = False
-                addColToGridRow(grid, rowNum, toolCol, str(colValue), isEditable)
-                fileCol += 1
-
-    def getAndValidateColumnHeaderName(self, header, indx):
-        colName = str(header[indx]) if len(header) > indx else ""
-        if colName.lower() == "storenumber" or colName.lower() == "store number":
-            colName = "Alias"
-        if colName.lower() == "tag":
-            colName = "Tags"
-        return colName
+        self.gridPanel.grid_1.applyNewDataFrame(data)
+        self.gridPanel.grid_1_contents = data.copy(deep=True)
 
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, getItemForName=None):
@@ -2081,8 +1815,10 @@ class NewFrameLayout(wx.Frame):
             actionClientData < GeneralActions.GENERATE_APP_REPORT.value
             and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT
         ) or (
-            (actionClientData == GeneralActions.GENERATE_APP_REPORT.value
-            or actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value)
+            (
+                actionClientData == GeneralActions.GENERATE_APP_REPORT.value
+                or actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
             res = displayMessageBox(
@@ -2465,11 +2201,7 @@ class NewFrameLayout(wx.Frame):
         if self.sidePanel.selectedAppEntry:
             appToUse = self.sidePanel.selectedAppEntry["pkgName"]
             appVersion = self.sidePanel.selectedAppEntry["version"]
-        if (
-            action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            or action == GeneralActions.GENERATE_APP_REPORT.value
-            or action == GeneralActions.GENERATE_INFO_REPORT.value
-        ):
+        if action <= GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.disableGridProperties()
         num = len(deviceList)
         num = num + (num - Globals.MAX_GRID_LOAD + 1)
@@ -2505,28 +2237,41 @@ class NewFrameLayout(wx.Frame):
                 uninstallAppOnDevice, appToUse, deviceList, isGroup=isGroup
             )
         else:
-            # populate visiable devices first
-            gridDisplayData = list(deviceList.values())[: Globals.MAX_GRID_LOAD]
-
-            # let worker threads process rest of data
-            workerData = list(deviceList.values())[Globals.MAX_GRID_LOAD :]
-            splitWorkerData = splitListIntoChunks(
-                workerData, maxThread=((Globals.MAX_THREAD_COUNT * 2) / 3)
-            )
-            self.processDeviceListForGrid(
-                entId, gridDisplayData, action, maxGauge, updateGauge, num
-            )
-
-            for chunk in splitWorkerData:
-                Globals.THREAD_POOL.enqueue(
-                    self.processDeviceListForGrid,
-                    entId,
-                    chunk,
-                    action,
-                    maxGauge,
-                    updateGauge,
-                    num,
+            # Populate Network sheet
+            if (
+                action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                input = []
+                for data in deviceList.values():
+                    input.append(data["network_info"])
+                df = createDataFrameFromDict(
+                    Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
+                self.gridPanel.grid_2.applyNewDataFrame(df)
+                self.gridPanel.grid_2_contents = df.copy(deep=True)
+            # Populate Device sheet
+            if (
+                action == GeneralActions.GENERATE_DEVICE_REPORT.value
+                or action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                df = createDataFrameFromDict(
+                    Globals.CSV_TAG_ATTR_NAME, deviceList.values()
+                )
+                self.gridPanel.grid_1.applyNewDataFrame(df)
+                self.gridPanel.grid_1_contents = df.copy(deep=True)
+            # Populate App sheet
+            if (
+                action == GeneralActions.GENERATE_APP_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+                input = []
+                for data in deviceList.values():
+                    input.extend(data["AppsEntry"])
+                df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+                self.gridPanel.grid_3.applyNewDataFrame(df)
+                self.gridPanel.grid_3_contents = df.copy(deep=True)
 
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
@@ -2535,75 +2280,6 @@ class NewFrameLayout(wx.Frame):
             action,
             tolerance=1,
         )
-
-    def processDeviceListForGrid(
-        self, entId, deviceList, action, maxGauge, updateGauge, num
-    ):
-        for entry in deviceList:
-            if entId != Globals.enterprise_id:
-                self.onClearGrids()
-                break
-            if checkIfCurrentThreadStopped():
-                self.onClearGrids()
-                break
-            device = entry[0]
-            deviceInfo = entry[1]
-
-            # Populate Network sheet
-            if (
-                action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_1_contents) < Globals.MAX_GRID_LOAD + 1:
-                    determineDoHereorMainThread(
-                        self.gridPanel.addDeviceToNetworkGrid, device, deviceInfo
-                    )
-                else:
-                    # construct and add info to grid contents
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructNetworkGridContent, device, deviceInfo
-                    )
-            # Populate Device sheet
-            if (
-                action == GeneralActions.GENERATE_DEVICE_REPORT.value
-                or action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_1_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    determineDoHereorMainThread(
-                        self.gridPanel.addDeviceToDeviceGrid, deviceInfo
-                    )
-                else:
-                    # construct and add info to grid contents
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructDeviceGridContent, deviceInfo
-                    )
-            # Populate App sheet
-            if (
-                action == GeneralActions.GENERATE_APP_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-                if len(self.gridPanel.grid_3_contents) <= Globals.MAX_GRID_LOAD + 1:
-                    # To avoid adding to many app entries, add the app entry to the contents
-                    # ahead of time, and then populate the grid
-                    self.gridPanel.add_app_entry_to_contents(deviceInfo)
-                    determineDoHereorMainThread(
-                        self.gridPanel.populateAppGrid,
-                        device,
-                        deviceInfo,
-                        deviceInfo["appObj"],
-                    )
-                else:
-                    Globals.THREAD_POOL.enqueue(
-                        self.gridPanel.constructAppGridContent,
-                        device,
-                        deviceInfo,
-                        deviceInfo["appObj"],
-                    )
-            value = int(num / maxGauge * 100)
-            if updateGauge and value <= 99:
-                num += 1
-                postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, value)
 
     @api_tool_decorator()
     def MacReopenApp(self, event):
@@ -2724,9 +2400,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onClearGrids(self, event=None):
         """ Empty Grids """
-        self.gridPanel.emptyDeviceGrid()
-        self.gridPanel.emptyNetworkGrid()
-        self.gridPanel.emptyAppGrid()
+        self.gridPanel.EmptyGrids()
         if event and hasattr(event, "Skip"):
             event.Skip()
 
@@ -3161,7 +2835,9 @@ class NewFrameLayout(wx.Frame):
                     if app and version:
                         defaultFileName = "%s_%s_installed_devices.xlsx" % (
                             dlg.selectedAppName.strip().replace(" ", "-").lower(),
-                            str(dlg.selectedVersion) if not "All" in dlg.selectedVersion else "all-versions",
+                            str(dlg.selectedVersion)
+                            if not "All" in dlg.selectedVersion
+                            else "all-versions",
                         )
                         inFile = displaySaveDialog(
                             "Save Installed Devices to CSV",
