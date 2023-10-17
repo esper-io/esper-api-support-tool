@@ -6,6 +6,10 @@ from Common.decorator import api_tool_decorator
 
 from GUI.GridDataTable import GridDataTable
 from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
+from Common.decorator import api_tool_decorator
+
+from Common.enum import Color
+from Utility.Resource import acquireLocks, releaseLocks
 
 
 class GridTable(gridlib.Grid):
@@ -13,6 +17,7 @@ class GridTable(gridlib.Grid):
         gridlib.Grid.__init__(self, parent, wx.ID_ANY, size=(1, 1))
 
         self.headersLabels = headers
+        self.disableProperties = False
 
         if data is None:
             data = pd.DataFrame(columns=self.headersLabels)
@@ -52,6 +57,13 @@ class GridTable(gridlib.Grid):
         self.fillGridHeaders()
         self.HideCol(0)
         self.AutoSizeColumns()
+
+        self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
+        self.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
+        self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
+
+        self.SetStatusCellColor()
 
     def applyNewDataFrame(self, data):
         if data is None:
@@ -105,7 +117,7 @@ class GridTable(gridlib.Grid):
         try:
             for head in self.headersLabels:
                 if head:
-                    if self.GetNumberCols() < len(self.grid1HeaderLabels):
+                    if self.GetNumberCols() < len(self.headersLabels):
                         self.AppendCols(1)
                     self.SetColLabelValue(num, head)
                     num += 1
@@ -141,3 +153,116 @@ class GridTable(gridlib.Grid):
                 self.GetColLabelValue(col), ascending=self.sortAcesnding
             )
             self.applyNewDataFrame(df)
+
+    @api_tool_decorator()
+    def toogleViewMenuItem(self, event):
+        """
+        Disable native headers ability to hide columns when clicking an entry from the context menu
+        """
+        return
+
+    @api_tool_decorator()
+    def onKey(self, event):
+        keycode = event.GetKeyCode()
+        # CTRL + C or CTRL + Insert
+        if event.ControlDown() and keycode in [67, 322]:
+            self.on_copy(event)
+        # CTRL + V
+        elif event.ControlDown() and keycode == 86:
+            self.on_paste(event)
+        else:
+            event.Skip()
+
+    @api_tool_decorator()
+    def on_copy(self, event):
+        widget = self.FindFocus()
+        if self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
+            data = wx.TextDataObject()
+            data.SetText(
+                widget.GetCellValue(
+                    self.currentlySelectedCell[0], self.currentlySelectedCell[1]
+                )
+            )
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(data)
+                wx.TheClipboard.Close()
+            widget.SetFocus()
+
+    @api_tool_decorator()
+    def on_paste(self, event):
+        widget = self.FindFocus()
+        success = False
+        data = wx.TextDataObject()
+        if wx.TheClipboard.Open():
+            success = wx.TheClipboard.GetData(data)
+            wx.TheClipboard.Close()
+        if (
+            success
+            and self.currentlySelectedCell[0] >= 0
+            and self.currentlySelectedCell[1] >= 0
+            and not widget.IsReadOnly(
+                self.currentlySelectedCell[0], self.currentlySelectedCell[1]
+            )
+        ):
+            widget.SetCellValue(
+                self.currentlySelectedCell[0],
+                self.currentlySelectedCell[1],
+                data.GetText(),
+            )
+        widget.SetFocus()
+
+    
+    @api_tool_decorator()
+    def onGridMotion(self, event):
+        if self.disableProperties:
+            event.Skip()
+            return
+        validIndexes = [
+            self.headersLabels.index(col)
+            for col in Globals.CSV_EDITABLE_COL
+            if col in self.headersLabels
+        ]
+
+        grid_win = self.GetTargetWindow()
+
+        x, y = self.CalcUnscrolledPosition(event.GetX(), event.GetY())
+        coords = self.XYToCell(x, y)
+        col = coords[1]
+
+        if col in validIndexes:
+            grid_win.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        elif Globals.frame.isBusy:
+            self.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
+        else:
+            self.setGridsCursor(wx.Cursor(wx.CURSOR_ARROW))
+        event.Skip()
+
+    def setGridsCursor(self, icon):
+        grid_win = self.GetTargetWindow()
+        grid_win.SetCursor(icon)
+
+    @api_tool_decorator()
+    def SetStatusCellColor(self):
+        # Check to see if rows exsist
+        if self.GetNumberRows() > 0 and "Status" in self.headersLabels and not Globals.frame.SpreadsheetUploaded:
+            colNum = self.headersLabels.index("Status") + 1
+            for rowNum in range(self.GetNumberRows() - 1):
+                value = self.GetCellValue(rowNum, colNum)
+                if value == "Offline":
+                    self.SetCellTextColour(rowNum, colNum, Color.red.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
+                elif value == "Online":
+                    self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                elif value == "Unspecified":
+                    self.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
+                elif value == "Provisioning" or value == "Onboarding":
+                    self.SetCellTextColour(rowNum, colNum, Color.orange.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
+                elif value == "Wipe In-Progress":
+                    self.SetCellTextColour(rowNum, colNum, Color.purple.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
+                elif value == "Unknown":
+                    self.SetCellTextColour(rowNum, colNum, Color.black.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.white.value)

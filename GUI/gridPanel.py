@@ -35,9 +35,9 @@ class GridPanel(wx.Panel):
         self.grid_1_contents = None
         self.grid_2_contents = None
         self.grid_3_contents = None
+        self.disableProperties = False
 
         self.parentFrame = parentFrame
-        self.disableProperties = False
         self.currentlySelectedCell = (-1, -1)
 
         self.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
@@ -141,19 +141,9 @@ class GridPanel(wx.Panel):
 
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 
-        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_1.SortColumn)
-        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_2.SortColumn)
-        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.grid_3.SortColumn)
-
-        self.grid_1.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
-        self.grid_2.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
-        self.grid_3.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
-
-        self.grid_1.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
         self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.grid_2.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.grid_1.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
-        self.grid_2.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
+        self.grid_3.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
 
         self.enableGridProperties()
 
@@ -210,49 +200,8 @@ class GridPanel(wx.Panel):
                 self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
 
     @api_tool_decorator()
-    def toogleViewMenuItem(self, event):
-        """
-        Disable native headers ability to hide columns when clicking an entry from the context menu
-        """
-        return
-
-    @api_tool_decorator()
-    def onGridMotion(self, event):
-        if self.disableProperties:
-            event.Skip()
-            return
-        validIndexes = [
-            self.grid1HeaderLabels.index(col)
-            for col in Globals.CSV_EDITABLE_COL
-            if col in self.grid1HeaderLabels
-        ]
-
-        grid_win = self.grid_1.GetTargetWindow()
-
-        x, y = self.grid_1.CalcUnscrolledPosition(event.GetX(), event.GetY())
-        coords = self.grid_1.XYToCell(x, y)
-        col = coords[1]
-
-        if col in validIndexes:
-            grid_win.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        elif self.parentFrame.isBusy:
-            self.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
-        else:
-            self.setGridsCursor(wx.Cursor(wx.CURSOR_ARROW))
-        event.Skip()
-
-    def setGridsCursor(self, icon):
-        grid_win = self.grid_1.GetTargetWindow()
-        grid_win2 = self.grid_2.GetTargetWindow()
-        grid_win.SetCursor(icon)
-        grid_win2.SetCursor(icon)
-
-    @api_tool_decorator()
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
-        statusIndex = self.grid1HeaderLabels.index("Status")
-        if grid != self.grid_1:
-            statusIndex = -1
         for rowNum in range(grid.GetNumberRows()):
             if checkIfCurrentThreadStopped():
                 return
@@ -268,7 +217,6 @@ class GridPanel(wx.Panel):
                     for colNum in range(grid.GetNumberCols()):
                         if (
                             colNum < grid.GetNumberCols()
-                            and colNum != statusIndex
                             and (
                                 grid.GetCellBackgroundColour(rowNum, colNum)
                                 == Color.white.value
@@ -280,6 +228,8 @@ class GridPanel(wx.Panel):
                             )
                         ):
                             grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
+                        else:
+                            print("skip")
         grid.ForceRefresh()
 
     @api_tool_decorator()
@@ -705,6 +655,9 @@ class GridPanel(wx.Panel):
             self.grid_1.DisableDragColMove()
             self.grid_2.DisableDragColMove()
         self.disableProperties = True
+        self.grid_1.disableProperties = True
+        self.grid_2.disableProperties = True
+        self.grid_3.disableProperties = True
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock])
 
     @api_tool_decorator(
@@ -727,6 +680,9 @@ class GridPanel(wx.Panel):
             self.grid_2.EnableDragColMove()
             self.grid_3.EnableDragColMove()
         self.disableProperties = False
+        self.grid_1.disableProperties = self.disableProperties
+        self.grid_2.disableProperties = self.disableProperties
+        self.grid_3.disableProperties = self.disableProperties
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
@@ -821,55 +777,7 @@ class GridPanel(wx.Panel):
                 self.parentFrame.fetchData(False)
         event.Skip()
 
-    @api_tool_decorator()
-    def onKey(self, event):
-        keycode = event.GetKeyCode()
-        # CTRL + C or CTRL + Insert
-        if event.ControlDown() and keycode in [67, 322]:
-            self.on_copy(event)
-        # CTRL + V
-        elif event.ControlDown() and keycode == 86:
-            self.on_paste(event)
-        else:
-            event.Skip()
-
-    @api_tool_decorator()
-    def on_copy(self, event):
-        widget = self.FindFocus()
-        if self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
-            data = wx.TextDataObject()
-            data.SetText(
-                widget.GetCellValue(
-                    self.currentlySelectedCell[0], self.currentlySelectedCell[1]
-                )
-            )
-            if wx.TheClipboard.Open():
-                wx.TheClipboard.SetData(data)
-                wx.TheClipboard.Close()
-            widget.SetFocus()
-
-    @api_tool_decorator()
-    def on_paste(self, event):
-        widget = self.FindFocus()
-        success = False
-        data = wx.TextDataObject()
-        if wx.TheClipboard.Open():
-            success = wx.TheClipboard.GetData(data)
-            wx.TheClipboard.Close()
-        if (
-            success
-            and self.currentlySelectedCell[0] >= 0
-            and self.currentlySelectedCell[1] >= 0
-            and not widget.IsReadOnly(
-                self.currentlySelectedCell[0], self.currentlySelectedCell[1]
-            )
-        ):
-            widget.SetCellValue(
-                self.currentlySelectedCell[0],
-                self.currentlySelectedCell[1],
-                data.GetText(),
-            )
-        widget.SetFocus()
+    
 
     def onSingleSelect(self, event):
         """
@@ -950,9 +858,16 @@ class GridPanel(wx.Panel):
         self.grid_3.Freeze()
 
     def EmptyGrids(self):
+        Globals.frame.SpreadsheetUploaded = False
         self.grid_1.EmptyGrid()
         self.grid_2.EmptyGrid()
         self.grid_3.EmptyGrid()
+        self.userEdited = []
         self.grid_1_contents = None
         self.grid_2_contents = None
         self.grid_3_contents = None
+
+    def UnsetSortingColumns(self):
+        self.grid_1.UnsetSortingColumn()
+        self.grid_2.UnsetSortingColumn()
+        self.grid_3.UnsetSortingColumn()
