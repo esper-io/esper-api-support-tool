@@ -579,54 +579,11 @@ class NewFrameLayout(wx.Frame):
             )
 
     @api_tool_decorator()
-    def getCSVHeaders(self, visibleOnly=False):
-        headers = []
-        deviceHeaders = Globals.CSV_TAG_ATTR_NAME.keys()
-        networkHeaders = Globals.CSV_NETWORK_ATTR_NAME.keys()
-        headers.extend(deviceHeaders)
-        headers.extend(networkHeaders)
-        headersNoDup = []
-        [headersNoDup.append(x) for x in headers if x not in headersNoDup]
-        headers = headersNoDup
-
-        headersNoDup = []
-        for header in headers:
-            if visibleOnly:
-                if (
-                    header in deviceHeaders
-                    and self.gridPanel.grid_1.GetColSize(
-                        list(deviceHeaders).index(header)
-                    )
-                    > 0
-                    and header not in headersNoDup
-                ):
-                    headersNoDup.append(header)
-                if (
-                    header in networkHeaders
-                    and self.gridPanel.grid_2.GetColSize(
-                        list(networkHeaders).index(header)
-                    )
-                    > 0
-                    and header not in headersNoDup
-                ):
-                    headersNoDup.append(header)
-            else:
-                if header in deviceHeaders and header not in headersNoDup:
-                    headersNoDup.append(header)
-                if header in networkHeaders and header not in headersNoDup:
-                    headersNoDup.append(header)
-        headers = headersNoDup
-        return headers, deviceHeaders, networkHeaders
-
-    @api_tool_decorator()
     def saveAllFile(
         self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1
     ):
         self.sleepInhibitor.inhibit()
         self.start_time = time.time()
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
-            visibleOnly=Globals.SAVE_VISIBILITY
-        )
         self.Logging("Obtaining Device data....")
         deviceList = getAllDeviceInfo(
             self, action=action, allDevices=allDevices, tolarance=tolarance
@@ -670,10 +627,6 @@ class NewFrameLayout(wx.Frame):
     def saveFile(self, inFile):
         self.Logging("Preparing to save data to: %s" % inFile)
         self.defaultDir = Path(inFile).parent
-        gridDeviceData = []
-        headers, deviceHeaders, networkHeaders = self.getCSVHeaders(
-            visibleOnly=Globals.SAVE_VISIBILITY
-        )
         self.saveGridData(
             inFile,
             action=GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
@@ -1743,9 +1696,7 @@ class NewFrameLayout(wx.Frame):
         self.AppState = None
         self.sleepInhibitor.inhibit()
 
-        self.gridPanel.grid_1.UnsetSortingColumn()
-        self.gridPanel.grid_2.UnsetSortingColumn()
-        self.gridPanel.grid_3.UnsetSortingColumn()
+        self.gridPanel.UnsetSortingColumns()
 
         appSelection, appLabel = self.getAppDataForRun()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
@@ -1815,10 +1766,6 @@ class NewFrameLayout(wx.Frame):
             )
             if res == wx.OK:
                 self.onClearGrids()
-                self.gridPanel.grid_1_contents = []
-                self.gridPanel.grid_2_contents = []
-                self.gridPanel.grid_3_contents = []
-                self.gridPanel.userEdited = []
                 return self.onSaveBothAll(None, action=actionClientData)
             else:
                 return
@@ -1905,10 +1852,7 @@ class NewFrameLayout(wx.Frame):
             # run action on group
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
-            self.gridPanel.grid_1_contents = []
-            self.gridPanel.grid_2_contents = []
-            self.gridPanel.grid_3_contents = []
-            self.gridPanel.userEdited = []
+            self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
 
             groupLabel = ""
@@ -1933,10 +1877,7 @@ class NewFrameLayout(wx.Frame):
             # run action on device
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
-            self.gridPanel.grid_1_contents = []
-            self.gridPanel.grid_2_contents = []
-            self.gridPanel.grid_3_contents = []
-            self.gridPanel.userEdited = []
+            self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
             for deviceId in self.sidePanel.selectedDevicesList:
                 deviceLabel = None
@@ -2387,6 +2328,7 @@ class NewFrameLayout(wx.Frame):
     def onClearGrids(self, event=None):
         """ Empty Grids """
         self.gridPanel.EmptyGrids()
+        self.ToolBar.search.SetValue("")
         if event and hasattr(event, "Skip"):
             event.Skip()
 
@@ -2481,7 +2423,7 @@ class NewFrameLayout(wx.Frame):
     def onFail(self, event):
         """ Try to showcase rows in the grid on which an action failed on """
         failed = event.GetValue()
-        if self.gridPanel.grid_1_contents and self.gridPanel.grid_2_contents:
+        if self.gridPanel.grid_1_contents is not None and self.gridPanel.grid_2_contents  is not None:
             if type(failed) == list:
                 for device in failed:
                     if "Queued" in device or "Scheduled" in device:
