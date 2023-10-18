@@ -612,38 +612,18 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceGroupFromGrid(self):
-        acquireLocks([Globals.grid1_lock])
-        groupList = {}
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        id_index = self.grid1HeaderLabels.index("Esper Id")
-        indx = self.grid1HeaderLabels.index("Group")
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                id_val = self.grid_1.GetCellValue(rowNum, id_index)
-                group = self.grid_1.GetCellValue(rowNum, indx)
-                if esperName and esperName != "None":
-                    groupList[esperName] = group
-                if serialNum and serialNum != "None":
-                    groupList[serialNum] = group
-                if cusSerialNum and cusSerialNum != "None":
-                    groupList[cusSerialNum] = group
-                if imei1 and imei1 != "None":
-                    groupList[imei1] = group
-                if imei2 and imei2 != "None":
-                    groupList[imei2] = group
-                if id_val and id_val != "None":
-                    groupList[id_val] = group
-        releaseLocks([Globals.grid1_lock])
-        return groupList
+        if len(self.grid_1_contents) > 0:
+            columns = [
+                "Esper Name",
+                "Esper Id",
+                "Group",
+                "IMEI 1",
+                "IMEI 2",
+                "Serial Number",
+                "Custom Serial Number"
+            ]
+            return self.getDeviceRowsSpecificCols(columns)
+        return []
 
     def thawGridsIfFrozen(self):
         if self.grid_1.IsFrozen():

@@ -456,7 +456,6 @@ def relocateDeviceToNewGroup(frame):
 def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
     groupId = None
     results = {}
-    groupListKeys = groupList.keys()
     for device in deviceChunk:
         groupName = None
         deviceName = None
@@ -468,39 +467,30 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             deviceId = device.id
             hardware = device.hardware_info
             network = device.network_info
+            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+            imei1 = network["imei1"] if "imei1" in network else None
+            imei2 = network["imei2"] if "imei2" in network else None
         elif type(device) is dict:
-            deviceId = device["id"]
-            if "device_name" in device:
-                deviceName = device["device_name"]
-            if "name" in device:
-                deviceName = device["name"]
-            if "hardwareInfo" in device:
-                hardware = device["hardwareInfo"]
+            deviceName = device["device_name"] if "device_name" in device else ""
+            deviceId = device["id"] if "id" in device else ""
+            hardware = device["hardware_info"] if "hardware_info" in device else ""
+            network = device["network_info"] if "network_info" in device else ""
+            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+            imei1 = network["imei1"] if "imei1" in network else None
+            imei2 = network["imei2"] if "imei2" in network else None
         elif type(device) is str:
             deviceId = device
-        if deviceName in groupListKeys:
-            groupName = groupList[deviceName]
-        elif deviceId and deviceId in groupListKeys:
-            groupName = groupList[deviceId]
-        elif "serialNumber" in hardware and hardware["serialNumber"] in groupListKeys:
-            groupName = groupList[hardware["serialNumber"]]
-        elif (
-            "customSerialNumber" in hardware
-            and hardware["customSerialNumber"] in groupListKeys
-        ):
-            groupName = groupList[hardware["customSerialNumber"]]
-        elif (
-            hasattr(device, "network_info")
-            and "imei1" in network
-            and network["imei1"] in groupListKeys
-        ):
-            groupName = groupList[network["imei1"]]
-        elif (
-            hasattr(device, "network_info")
-            and "imei2" in network
-            and network["imei2"] in groupListKeys
-        ):
-            groupName = groupList[network["imei1"]]
+
+        match = list(filter(lambda x: 
+                        x["Esper Name"] == deviceName 
+                        or x["Esper Id"] == deviceId
+                        or x["Serial Number"] == serial
+                        or x["Custom Serial Number"] == serial
+                        or x["IMEI 1"] == imei1
+                        or x["IMEI 2"] == imei2, groupList))
+        if match:
+            match = match[0]
+            groupName = match["Group"]
 
         if groupName:
             if isApiKey(groupName):
