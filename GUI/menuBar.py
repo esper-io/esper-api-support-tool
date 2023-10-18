@@ -194,6 +194,7 @@ class ToolMenuBar(wx.MenuBar):
         fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = self.userSubMenu.Append(fou)
+        self.fileAddUser.Enable(False)
 
         userReport = wx.MenuItem(
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
