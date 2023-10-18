@@ -8,10 +8,11 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
-from Utility.FileUtility import read_data_from_csv
-from Utility.Resource import displayMessageBox, getHeader
+from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
+from Utility.Resource import displayFileDialog, displayMessageBox, getHeader
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -129,8 +130,7 @@ class GeofenceDialog(wx.Dialog):
         self.button_1.SetToolTip("Upload Device Spreadheet")
         grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_RIGHT, 0)
 
-        self.geofence_grid = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        self.geofence_grid.CreateGrid(0, 0)
+        self.geofence_grid = GridTable(self, headers=self.gridHeaderLabels)
         grid_sizer_3.Add(self.geofence_grid, 1, wx.EXPAND | wx.TOP, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -179,9 +179,11 @@ class GeofenceDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
-        self.fillGridHeaders()
+        self.applyGridSettings()
+
+    def applyGridSettings(self):
         self.geofence_grid.UseNativeColHeader()
-        self.geofence_grid.HideCol(2)
+        self.geofence_grid.AutoSizeColumns()
         self.geofence_grid.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
     @api_tool_decorator()
@@ -196,107 +198,59 @@ class GeofenceDialog(wx.Dialog):
         self.DestroyLater()
 
     @api_tool_decorator()
-    def fillGridHeaders(self):
-        """ Populate Grid Headers """
-        num = 0
-        try:
-            for head in self.gridHeaderLabels:
-                if head:
-                    if self.geofence_grid.GetNumberCols() < len(self.gridHeaderLabels):
-                        self.geofence_grid.AppendCols(1)
-                    self.geofence_grid.SetColLabelValue(num, head)
-                    num += 1
-        except:
-            pass
-        self.geofence_grid.AutoSizeColumns()
-
-    @api_tool_decorator()
     def onUpload(self, event):
-        with wx.FileDialog(
-            self,
-            "Open Geofence Spreadsheet File",
+        filePath = displayFileDialog(
+            "Open Spreadsheet File",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-        ) as fileDialog:
-            Globals.OPEN_DIALOGS.append(fileDialog)
-            result = fileDialog.ShowModal()
-            Globals.OPEN_DIALOGS.remove(fileDialog)
-            if result == wx.ID_OK:
-                # Clear list of devices
-                self.groups = []
-                filePath = fileDialog.GetPath()
-                # Clear grid on previous content
-                Globals.THREAD_POOL.enqueue(self.processUpload, filePath)
+            styles=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        )
+        Globals.THREAD_POOL.enqueue(self.processUpload, filePath)
 
     @api_tool_decorator()
     def processUpload(self, filePath):
         if self.geofence_grid.GetNumberRows() > 0:
-            self.geofence_grid.DeleteRows(0, self.geofence_grid.GetNumberRows())
+            df = pd.DataFrame(columns=self.gridHeaderLabels)
+            self.reset_grid.applyNewDataFrame(df)
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
-            data = read_data_from_csv(filePath)
+            data = read_csv_via_pandas(filePath)
         elif filePath.endswith(".xlsx"):
-            try:
-                dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
-                if hasattr(dfs, "keys"):
-                    sheetKeys = dfs.keys()
-                    for sheet in sheetKeys:
-                        data = dfs[sheet].values.tolist()
-                        break
-            except:
-                pass
-        if data:
+            data = read_excel_via_openpyxl(filePath, readAnySheet=True)
+        if data is not None:
             self.geofence_grid.Freeze()
+            self.groups = data = data.iloc[:, 0]
+            expandedGroupData = {
+                self.gridHeaderLabels[0]: [],
+                self.gridHeaderLabels[1]: [],
+                self.gridHeaderLabels[2]: [],
+            }
             # Iterate through each row and populate grid
             for entry in data:
-                self.geofence_grid.AppendRows()
-                self.geofence_grid.SetCellValue(
-                    self.geofence_grid.GetNumberRows() - 1,
-                    0,
-                    str(entry[0]),
-                )
-                self.groups.append(entry[0])
-                # Add identifier to list of devices
+                expandedGroupData[self.gridHeaderLabels[0]].append(entry)
+
                 group = None
                 if len(entry[0].split("-")) == 5:
-                    self.geofence_grid.SetCellValue(
-                        self.geofence_grid.GetNumberRows() - 1,
-                        2,
-                        str(entry[0]),
-                    )
+                    expandedGroupData[self.gridHeaderLabels[2]].append(entry)
                     group = getGroupById(str(entry[0]))
                 else:
-                    groups = getAllGroups(name=entry[0])
+                    groups = getAllGroups(name=entry, maxAttempt=2, tolerance=1)
                     if groups:
-                        for groupRes in groups.results:
-                            if groupRes.name == str(entry[0]) or groupRes.path == str(
-                                entry[0]
+                        for groupRes in groups["results"]:
+                            if groupRes["name"] == str(entry) or groupRes["path"] == str(
+                                entry
                             ):
                                 group = groupRes
                                 break
-                    if group:
-                        self.geofence_grid.SetCellValue(
-                            self.geofence_grid.GetNumberRows() - 1,
-                            2,
-                            group.id,
-                        )
                 if group:
-                    self.geofence_grid.SetCellValue(
-                        self.geofence_grid.GetNumberRows() - 1,
-                        1,
-                        group.path,
-                    )
+                    expandedGroupData[self.gridHeaderLabels[1]].append(group["path"])
+                    expandedGroupData[self.gridHeaderLabels[2]].append(group["id"])
                 else:
-                    self.geofence_grid.SetCellValue(
-                        self.geofence_grid.GetNumberRows() - 1,
-                        1,
-                        "<Could Not Find Group>",
-                    )
-                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 0)
-                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 1)
-                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 2)
-            self.geofence_grid.AutoSizeColumns()
+                    expandedGroupData[self.gridHeaderLabels[1]].append("<Could Not Find Group>")
+                    expandedGroupData[self.gridHeaderLabels[2]].append("")
+            data = pd.DataFrame(expandedGroupData, columns=self.gridHeaderLabels)
+            self.geofence_grid.applyNewDataFrame(data)
+            self.applyGridSettings()
             if self.geofence_grid.IsFrozen():
                 self.geofence_grid.Thaw()
 
