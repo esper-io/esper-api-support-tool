@@ -55,7 +55,8 @@ class GridTable(gridlib.Grid):
             )
         )
         self.fillGridHeaders()
-        self.HideCol(0)
+        if self.GetNumberCols() > 1:
+            self.HideCol(0)
         self.AutoSizeColumns()
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
@@ -64,6 +65,7 @@ class GridTable(gridlib.Grid):
         self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
 
         self.SetStatusCellColor()
+        self.ForceRefresh()
 
     def applyNewDataFrame(self, data):
         if data is None:
@@ -142,7 +144,7 @@ class GridTable(gridlib.Grid):
         else:
             col = event
 
-        if col:
+        if col and col > 0:
             if self.sortedColumn != col:
                 self.sortAcesnding = True
             else:
