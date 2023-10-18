@@ -424,7 +424,7 @@ def getDevicesFromGridHelper(
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "---> ERROR: Failed to find device with identifer: %s" % identifier,
+                "---> ERROR: Failed to find device with identifer: %s" % entry,
             )
 
 
