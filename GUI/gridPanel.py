@@ -254,20 +254,33 @@ class GridPanel(wx.Panel):
                     for label, isChecked in selected[page].items():
                         if page == "Device":
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
-                            self.toggleColVisibilityInGridOne(indx, showState=isChecked)
+                            self.toggleColVisibilityInGrid(
+                                indx,
+                                self.grid_1,
+                                Globals.grid1_lock,
+                                showState=isChecked
+                            )
                             self.grid1ColVisibility[label] = isChecked
                         elif page == "Network":
                             indx = list(Globals.CSV_NETWORK_ATTR_NAME.keys()).index(
                                 label
                             )
-                            self.toggleColVisibilityInGridTwo(indx, showState=isChecked)
+                            self.toggleColVisibilityInGrid(
+                                indx,
+                                self.grid_2,
+                                Globals.grid2_lock,
+                                showState=isChecked
+                            )
                             self.grid2ColVisibility[label] = isChecked
                         elif page == "Application":
                             indx = Globals.CSV_APP_ATTR_NAME.index(label)
-                            self.toggleColVisibilityInGridThree(
-                                indx, showState=isChecked
+                            self.toggleColVisibilityInGrid(
+                                indx,
+                                self.grid_3,
+                                Globals.grid3_lock,
+                                showState=isChecked
                             )
-                            self.grid2ColVisibility[label] = isChecked
+                            self.grid3ColVisibility[label] = isChecked
 
         self.parentFrame.prefDialog.colVisibilty = (
             self.grid1ColVisibility,
@@ -282,25 +295,33 @@ class GridPanel(wx.Panel):
         for col in grid1Cols:
             if col in self.grid1HeaderLabels:
                 indx = self.grid1HeaderLabels.index(col)
-                self.toggleColVisibilityInGridOne(
-                    indx, showState=self.grid1ColVisibility[col]
+                self.toggleColVisibilityInGrid(
+                    indx,
+                    self.grid_1,
+                    Globals.grid1_lock,
+                    showState=self.grid1ColVisibility[col]
                 )
         for col in grid2Cols:
             if col in self.grid2HeaderLabels:
                 indx = self.grid2HeaderLabels.index(col)
-                self.toggleColVisibilityInGridTwo(
-                    indx, showState=self.grid2ColVisibility[col]
+                self.toggleColVisibilityInGrid(
+                    indx,
+                    self.grid_2,
+                    Globals.grid2_lock,
+                    showState=self.grid2ColVisibility[col]
                 )
         for col in grid3Cols:
             if col in self.grid3HeaderLabels:
                 indx = self.grid3HeaderLabels.index(col)
-                self.toggleColVisibilityInGridThree(
-                    indx, showState=self.grid3ColVisibility[col]
+                self.toggleColVisibilityInGrid(
+                    indx,
+                    self.grid_3,
+                    Globals.grid3_lock,
+                    showState=self.grid3ColVisibility[col]
                 )
 
-    @api_tool_decorator(locks=[Globals.grid_color_lock])
+    @api_tool_decorator()
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
-        # acquireLocks([Globals.grid_color_lock])
         if (
             attribute == "Alias"
             and "OriginalAlias" in device_info
@@ -314,7 +335,6 @@ class GridPanel(wx.Panel):
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 (grid.SetCellBackgroundColour, (rowNum, indx, Color.lightBlue.value)),
             )
-        # releaseLocks([Globals.grid_color_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
@@ -419,68 +439,26 @@ class GridPanel(wx.Panel):
             returnList.append(entry)
         return returnList
 
-    @api_tool_decorator(locks=[Globals.grid1_lock])
-    def toggleColVisibilityInGridOne(self, event, showState=None):
+    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
+    def toggleColVisibilityInGrid(self, event, grid, lock, showState=None):
         """ Toggle Column Visibility in Device Grid """
-        acquireLocks([Globals.grid1_lock])
+        acquireLocks([lock])
         index = None
         if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
             index = event
-        if index and index < self.grid_1.GetNumberCols():
+        if index and index < grid.GetNumberCols():
             if type(showState) == bool:
                 if not showState:
-                    self.grid_1.HideCol(index)
+                    grid.HideCol(index)
                 else:
-                    self.grid_1.ShowCol(index)
+                    grid.ShowCol(index)
             else:
-                isShown = self.grid_1.IsColShown(index)
+                isShown = grid.IsColShown(index)
                 if isShown:
-                    self.grid_1.HideCol(index)
+                    grid.HideCol(index)
                 else:
-                    self.grid_1.ShowCol(index)
-        releaseLocks([Globals.grid1_lock])
-
-    @api_tool_decorator(locks=[Globals.grid2_lock])
-    def toggleColVisibilityInGridTwo(self, event, showState):
-        """ Toggle Column Visibility in Network Grid """
-        acquireLocks([Globals.grid2_lock])
-        index = None
-        if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
-            index = event
-        if index and index < self.grid_2.GetNumberCols():
-            if type(showState) == bool:
-                if not showState:
-                    self.grid_2.HideCol(index)
-                else:
-                    self.grid_2.ShowCol(index)
-            else:
-                isShown = self.grid_2.IsColShown(index)
-                if isShown:
-                    self.grid_2.HideCol(index)
-                else:
-                    self.grid_2.ShowCol(index)
-        releaseLocks([Globals.grid2_lock])
-
-    @api_tool_decorator(locks=[Globals.grid3_lock])
-    def toggleColVisibilityInGridThree(self, event, showState):
-        """ Toggle Column Visibility in Network Grid """
-        acquireLocks([Globals.grid3_lock])
-        index = None
-        if isinstance(event, (int, float, complex)) and not isinstance(event, bool):
-            index = event
-        if index and index < self.grid_3.GetNumberCols():
-            if type(showState) == bool:
-                if not showState:
-                    self.grid_3.HideCol(index)
-                else:
-                    self.grid_3.ShowCol(index)
-            else:
-                isShown = self.grid_3.IsColShown(index)
-                if isShown:
-                    self.grid_3.HideCol(index)
-                else:
-                    self.grid_3.ShowCol(index)
-        releaseLocks([Globals.grid3_lock])
+                    grid.ShowCol(index)
+        releaseLocks([lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def disableGridProperties(
