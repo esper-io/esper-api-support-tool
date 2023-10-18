@@ -175,6 +175,8 @@ def getAllGroupsHelper(
             lim=limit,
             page=offset,
         )
+        if name:
+            url += "&name={}".format(name)
         api_response = performGetRequestWithRetry(url, getHeader())
         if api_response and api_response.status_code < 300:
             api_response = api_response.json()
