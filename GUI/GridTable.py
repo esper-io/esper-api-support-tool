@@ -9,7 +9,6 @@ from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
 from Common.decorator import api_tool_decorator
 
 from Common.enum import Color
-from Utility.Resource import acquireLocks, releaseLocks
 
 
 class GridTable(gridlib.Grid):
@@ -55,8 +54,6 @@ class GridTable(gridlib.Grid):
             )
         )
         self.fillGridHeaders()
-        if self.GetNumberCols() > 1:
-            self.HideCol(0)
         self.AutoSizeColumns()
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
@@ -108,7 +105,7 @@ class GridTable(gridlib.Grid):
             editor = self.GetCellEditor(0, self.headersLabels.index(header))
             attr = gridlib.GridCellAttr()
             attr.SetReadOnly(isReadOnly)
-            self.SetColAttr(self.headersLabels.index(header) + 1, attr)
+            self.SetColAttr(self.headersLabels.index(header), attr)
 
         self.ApplyGridStyle()
 
@@ -213,7 +210,6 @@ class GridTable(gridlib.Grid):
             )
         widget.SetFocus()
 
-    
     @api_tool_decorator()
     def onGridMotion(self, event):
         if self.disableProperties:
@@ -246,9 +242,10 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def SetStatusCellColor(self):
         # Check to see if rows exsist
-        if self.GetNumberRows() > 0 and "Status" in self.headersLabels and not Globals.frame.SpreadsheetUploaded:
-            colNum = self.headersLabels.index("Status") + 1
-            for rowNum in range(self.GetNumberRows() - 1):
+        numRows = self.GetNumberRows()
+        if numRows > 0 and "Status" in self.headersLabels and not Globals.frame.SpreadsheetUploaded:
+            colNum = self.headersLabels.index("Status")
+            for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
                 if value == "Offline":
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
