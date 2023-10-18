@@ -102,11 +102,8 @@ def getToolDataPath():
     return basePath
 
 
-def read_excel_via_openpyxl(path: str) -> pd.DataFrame:
-    # Load the Excel file
-    # start = time.time()
+def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    # print("openpyxl load time: %s" % (time.time() - start))
     df = None
     rows = []
     for sheet in workbook.sheetnames:
@@ -114,15 +111,14 @@ def read_excel_via_openpyxl(path: str) -> pd.DataFrame:
             "Device & Network" in sheet
             or "Device and Network" in sheet
             or "Device" in sheet
+            or readAnySheet
         ):
             # Select the worksheet
             worksheet = workbook[sheet]
             # Extract the data
             for row in worksheet.iter_rows(values_only=True):
                 rows.append(row)
-    # Convert to pandas dataframe
     df = pd.DataFrame(rows[1:], columns=rows[0])
-    # print("openpyxl process time: %s" % (time.time() - start))
     return df
 
 
