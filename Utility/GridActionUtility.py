@@ -313,7 +313,8 @@ def setAppStateForAllAppsListed(state):
     if devices:
         deviceList = getDeviceIdFromGridDevices(devices)
 
-        Globals.THREAD_POOL.enqueue(setAllAppsState, deviceList, Globals.frame.AppState)
+        for device in deviceList:
+            Globals.THREAD_POOL.enqueue(setAllAppsState, device, Globals.frame.AppState)
 
         Globals.THREAD_POOL.enqueue(
             wxThread.waitTillThreadsFinish,
@@ -395,6 +396,14 @@ def setAllAppsState(device, state):
                         "State Status": stateStatus,
                     }
                 )
+    else:
+        stateStatuses.append(
+            {
+                "Device Name": deviceName,
+                "Device id": deviceId,
+                "State Status": "Failed to obtain device apps: %s" % resp,
+            }
+        )
     return stateStatuses
 
 
