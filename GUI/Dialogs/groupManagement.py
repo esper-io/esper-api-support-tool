@@ -22,7 +22,7 @@ from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
-    displaySaveDialog,
+    displayFileDialog,
     isApiKey,
     openWebLinkInBrowser,
     resourcePath,
@@ -201,13 +201,13 @@ class GroupManagement(wx.Dialog):
 
         sizer_5 = wx.GridSizer(1, 1, 0, 0)
 
-        self.grid_1 = gridlib.Grid(self.notebook_2_pane_2, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(0, 3)
-        self.grid_1.EnableDragGridSize(0)
-        self.grid_1.SetColLabelValue(0, "Group Name")
-        self.grid_1.SetColLabelValue(1, "Parent Group Identifier")
-        self.grid_1.SetColLabelValue(2, "New Group Name")
-        sizer_5.Add(self.grid_1, 1, wx.EXPAND, 0)
+        self.group_grid = gridlib.Grid(self.notebook_2_pane_2, wx.ID_ANY, size=(1, 1))
+        self.group_grid.CreateGrid(0, 3)
+        self.group_grid.EnableDragGridSize(0)
+        self.group_grid.SetColLabelValue(0, "Group Name")
+        self.group_grid.SetColLabelValue(1, "Parent Group Identifier")
+        self.group_grid.SetColLabelValue(2, "New Group Name")
+        sizer_5.Add(self.group_grid, 1, wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -241,7 +241,7 @@ class GroupManagement(wx.Dialog):
 
         self.Layout()
 
-        self.grid_1.AutoSizeColumns()
+        self.group_grid.AutoSizeColumns()
 
         self.button_2.Enable(False)
         self.button_1.Enable(False)
@@ -396,8 +396,8 @@ class GroupManagement(wx.Dialog):
             self.tree_ctrl_1.ExpandAll()
             self.tree_ctrl_2.ExpandAll()
             self.setCursorDefault()
-        if self.grid_1.GetNumberRows() > 0 and forceRefresh:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.group_grid.GetNumberRows() > 0 and forceRefresh:
+            self.group_grid.DeleteRows(0, self.group_grid.GetNumberRows())
 
     @api_tool_decorator()
     def setCursorDefault(self):
@@ -406,8 +406,8 @@ class GroupManagement(wx.Dialog):
             self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
-            self.grid_1.GetGridWindow().SetCursor(myCursor)
-            self.grid_1.GetTargetWindow().SetCursor(myCursor)
+            self.group_grid.GetGridWindow().SetCursor(myCursor)
+            self.group_grid.GetTargetWindow().SetCursor(myCursor)
         except:
             pass
 
@@ -417,8 +417,8 @@ class GroupManagement(wx.Dialog):
         self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
-        self.grid_1.GetGridWindow().SetCursor(myCursor)
-        self.grid_1.GetTargetWindow().SetCursor(myCursor)
+        self.group_grid.GetGridWindow().SetCursor(myCursor)
+        self.group_grid.GetTargetWindow().SetCursor(myCursor)
 
     def deleteGroup(self, event):
         if not self.isBusy:
@@ -443,11 +443,11 @@ class GroupManagement(wx.Dialog):
                     )
                     self.refreshTree(forceRefresh=True)
                     self.setCursorDefault()
-        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
+        elif self.group_grid.GetNumberRows() > 0 and self.current_page.name == "Bulk":
             numSuccess = 0
-            for row in range(self.grid_1.GetNumberRows()):
-                oldName = self.grid_1.GetCellValue(row, 0)
-                parent = self.grid_1.GetCellValue(row, 1)
+            for row in range(self.group_grid.GetNumberRows()):
+                oldName = self.group_grid.GetCellValue(row, 0)
+                parent = self.group_grid.GetCellValue(row, 1)
                 treeItem = None
                 groupId = oldName
                 if oldName in self.groupNameToId:
@@ -548,12 +548,12 @@ class GroupManagement(wx.Dialog):
                     else:
                         displayMessageBox("%s has been created" % groupName)
                         self.refreshTree(forceRefresh=True)
-        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
+        elif self.group_grid.GetNumberRows() > 0 and self.current_page.name == "Bulk":
             numSuccess = 0
             numAlreadyExists = 0
-            for row in range(self.grid_1.GetNumberRows()):
-                oldName = self.grid_1.GetCellValue(row, 0)
-                parent = self.grid_1.GetCellValue(row, 1)
+            for row in range(self.group_grid.GetNumberRows()):
+                oldName = self.group_grid.GetCellValue(row, 0)
+                parent = self.group_grid.GetCellValue(row, 1)
                 treeItem = None
                 groupId = oldName
                 if oldName in self.groupNameToId:
@@ -626,7 +626,7 @@ class GroupManagement(wx.Dialog):
                             )
             displayMessageBox(
                 "%s out of %s Groups have been created! %s already exists."
-                % (numSuccess, self.grid_1.GetNumberRows(), numAlreadyExists)
+                % (numSuccess, self.group_grid.GetNumberRows(), numAlreadyExists)
             )
         self.setActionButtonState(True)
         self.isBusy = False
@@ -697,7 +697,7 @@ class GroupManagement(wx.Dialog):
                 self.button_1.Enable(False)
                 self.button_2.Enable(False)
                 self.button_4.Enable(False)
-        elif self.grid_1.GetNumberRows() > 0:
+        elif self.group_grid.GetNumberRows() > 0:
             self.button_1.Enable(True)
             self.button_2.Enable(True)
             self.button_4.Enable(True)
@@ -748,12 +748,12 @@ class GroupManagement(wx.Dialog):
                         displayMessageBox("%s has been renamed" % groupName)
                         self.refreshTree(forceRefresh=True)
                 self.setCursorDefault()
-        elif self.grid_1.GetNumberRows() > 0 and self.current_page.name == "Bulk":
+        elif self.group_grid.GetNumberRows() > 0 and self.current_page.name == "Bulk":
             numSuccess = 0
-            for row in range(self.grid_1.GetNumberRows()):
-                oldName = self.grid_1.GetCellValue(row, 0)
-                parent = self.grid_1.GetCellValue(row, 1)
-                newName = self.grid_1.GetCellValue(row, 2)
+            for row in range(self.group_grid.GetNumberRows()):
+                oldName = self.group_grid.GetCellValue(row, 0)
+                parent = self.group_grid.GetCellValue(row, 1)
+                newName = self.group_grid.GetCellValue(row, 2)
 
                 treeItem = None
                 groupId = oldName
@@ -783,7 +783,7 @@ class GroupManagement(wx.Dialog):
                         )
             displayMessageBox(
                 "%s out of %s Groups have been renamed!"
-                % (numSuccess, self.grid_1.GetNumberRows())
+                % (numSuccess, self.group_grid.GetNumberRows())
             )
         self.setActionButtonState(True)
         self.isBusy = False
@@ -873,8 +873,8 @@ class GroupManagement(wx.Dialog):
 
     def handlePreUploadActivity(self):
         self.setCursorBusy()
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.group_grid.GetNumberRows() > 0:
+            self.group_grid.DeleteRows(0, self.group_grid.GetNumberRows())
         self.tree_ctrl_1.UnselectAll()
         self.tree_ctrl_2.UnselectAll()
         for item in self.uploadCSVTreeItems:
@@ -885,12 +885,12 @@ class GroupManagement(wx.Dialog):
         if data:
             for row in data:
                 if row != self.expectedHeaders:
-                    self.grid_1.AppendRows(1)
+                    self.group_grid.AppendRows(1)
                     colNum = 0
                     rowEntry = []
                     for col in row:
-                        self.grid_1.SetCellValue(
-                            self.grid_1.GetNumberRows() - 1, colNum, str(col)
+                        self.group_grid.SetCellValue(
+                            self.group_grid.GetNumberRows() - 1, colNum, str(col)
                         )
                         if (colNum == 0 or colNum == 1) and not isApiKey(str(col)):
                             groupId = None
@@ -959,7 +959,7 @@ class GroupManagement(wx.Dialog):
                         self.uploadTreeItems[rowEntry[0]] = entry
                         self.uploadTreeItems[name] = entry
         self.tree_ctrl_2.ExpandAll()
-        self.grid_1.AutoSizeColumns()
+        self.group_grid.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()
 
@@ -968,13 +968,13 @@ class GroupManagement(wx.Dialog):
             self.current_page = self.notebook_1.GetPage(event.GetSelection())
             if self.current_page.name == "Single":
                 self.refreshTree()
-            elif self.grid_1.GetNumberRows() > 0:
+            elif self.group_grid.GetNumberRows() > 0:
                 self.notebook_2.SetSelection(0)
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+                self.group_grid.DeleteRows(0, self.group_grid.GetNumberRows())
         event.Skip()
 
     def downloadCSV(self, event):
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Group Manage CSV as...",
             "CSV files (*.csv)|*.csv",
         )

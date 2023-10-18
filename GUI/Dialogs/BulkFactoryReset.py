@@ -13,7 +13,7 @@ from Utility.FileUtility import read_data_from_csv, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
-    displaySaveDialog,
+    displayFileDialog,
     openWebLinkInBrowser,
 )
 
@@ -80,12 +80,12 @@ class BulkFactoryReset(wx.Dialog):
         self.button_6.SetToolTip("Upload CSV file")
         sizer_4.Add(self.button_6, 0, wx.BOTTOM | wx.RIGHT, 5)
 
-        self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(10, 1)
-        self.grid_1.EnableDragGridSize(0)
-        self.grid_1.SetColLabelValue(0, "Device Identifiers")
-        self.grid_1.SetColSize(0, 132)
-        grid_sizer_4.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 5)
+        self.reset_grid = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
+        self.reset_grid.CreateGrid(10, 1)
+        self.reset_grid.EnableDragGridSize(0)
+        self.reset_grid.SetColLabelValue(0, "Device Identifiers")
+        self.reset_grid.SetColSize(0, 132)
+        grid_sizer_4.Add(self.reset_grid, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -135,7 +135,7 @@ class BulkFactoryReset(wx.Dialog):
         self.onClose(event)
 
     def downloadCSV(self, event):
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Bulk Factory Reset CSV as...",
             "CSV files (*.csv)|*.csv",
         )
@@ -190,8 +190,8 @@ class BulkFactoryReset(wx.Dialog):
 
     def doPreUploadActivity(self):
         self.setCursorBusy()
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.reset_grid.GetNumberRows() > 0:
+            self.reset_grid.DeleteRows(0, self.reset_grid.GetNumberRows())
 
     def uploadCSV(self, filePath):
         self.doPreUploadActivity()
@@ -222,18 +222,18 @@ class BulkFactoryReset(wx.Dialog):
                     if col in self.expectedHeaders:
                         break
                     else:
-                        self.grid_1.AppendRows(1)
-                        self.grid_1.SetCellValue(
-                            self.grid_1.GetNumberRows() - 1, colNum, col
+                        self.reset_grid.AppendRows(1)
+                        self.reset_grid.SetCellValue(
+                            self.reset_grid.GetNumberRows() - 1, colNum, col
                         )
                         self.identifers.append(col)
                     colNum += 1
-        self.grid_1.AutoSizeColumns()
+        self.reset_grid.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()
 
     def checkActions(self):
-        if self.grid_1.GetNumberRows() > 0:
+        if self.reset_grid.GetNumberRows() > 0:
             self.button_OK.Enable(True)
         else:
             self.button_OK.Enable(False)
@@ -245,8 +245,8 @@ class BulkFactoryReset(wx.Dialog):
             self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
-            self.grid_1.GetGridWindow().SetCursor(myCursor)
-            self.grid_1.GetTargetWindow().SetCursor(myCursor)
+            self.reset_grid.GetGridWindow().SetCursor(myCursor)
+            self.reset_grid.GetTargetWindow().SetCursor(myCursor)
         except:
             pass
 
@@ -256,8 +256,8 @@ class BulkFactoryReset(wx.Dialog):
         self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
-        self.grid_1.GetGridWindow().SetCursor(myCursor)
-        self.grid_1.GetTargetWindow().SetCursor(myCursor)
+        self.reset_grid.GetGridWindow().SetCursor(myCursor)
+        self.reset_grid.GetTargetWindow().SetCursor(myCursor)
 
     def getIdentifiers(self):
         return self.identifers

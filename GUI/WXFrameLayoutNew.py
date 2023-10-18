@@ -112,7 +112,7 @@ from Utility.Resource import (
     createNewFile,
     determineDoHereorMainThread,
     displayMessageBox,
-    displaySaveDialog,
+    displayFileDialog,
     getStrRatioSimilarity,
     joinThreadList,
     openWebLinkInBrowser,
@@ -532,7 +532,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onSaveBoth(self, event):
         self.isSaving = True
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Reports as...",
             "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
         )
@@ -551,7 +551,7 @@ class NewFrameLayout(wx.Frame):
     def onSaveBothAll(self, event, action=None):
         if self.sidePanel.selectedDevicesList or self.sidePanel.selectedGroupsList:
             self.isSaving = True
-            inFile = displaySaveDialog(
+            inFile = displayFileDialog(
                 "Save Reports as...",
                 "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
             )
@@ -2725,7 +2725,7 @@ class NewFrameLayout(wx.Frame):
                             if not "All" in dlg.selectedVersion
                             else "all-versions",
                         )
-                        inFile = displaySaveDialog(
+                        inFile = displayFileDialog(
                             "Save Installed Devices to CSV",
                             "Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv",
                             defaultFile=defaultFileName,
@@ -3026,7 +3026,7 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save User Report as...",
             "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,
@@ -3103,7 +3103,7 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Pending User Report as...",
             "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,
@@ -3187,7 +3187,7 @@ class NewFrameLayout(wx.Frame):
             "%Y-%m-%d_%H-%M-%S"
         )
         self.isSaving = True
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Group Report as...",
             "CSV files (*.csv)|*.csv",
             defaultFile=defaultFileName,

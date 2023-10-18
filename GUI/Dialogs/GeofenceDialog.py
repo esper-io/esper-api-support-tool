@@ -129,9 +129,9 @@ class GeofenceDialog(wx.Dialog):
         self.button_1.SetToolTip("Upload Device Spreadheet")
         grid_sizer_3.Add(self.button_1, 0, wx.ALIGN_RIGHT, 0)
 
-        self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(0, 0)
-        grid_sizer_3.Add(self.grid_1, 1, wx.EXPAND | wx.TOP, 5)
+        self.geofence_grid = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
+        self.geofence_grid.CreateGrid(0, 0)
+        grid_sizer_3.Add(self.geofence_grid, 1, wx.EXPAND | wx.TOP, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -180,9 +180,9 @@ class GeofenceDialog(wx.Dialog):
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
         self.fillGridHeaders()
-        self.grid_1.UseNativeColHeader()
-        self.grid_1.HideCol(2)
-        self.grid_1.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.geofence_grid.UseNativeColHeader()
+        self.geofence_grid.HideCol(2)
+        self.geofence_grid.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -202,13 +202,13 @@ class GeofenceDialog(wx.Dialog):
         try:
             for head in self.gridHeaderLabels:
                 if head:
-                    if self.grid_1.GetNumberCols() < len(self.gridHeaderLabels):
-                        self.grid_1.AppendCols(1)
-                    self.grid_1.SetColLabelValue(num, head)
+                    if self.geofence_grid.GetNumberCols() < len(self.gridHeaderLabels):
+                        self.geofence_grid.AppendCols(1)
+                    self.geofence_grid.SetColLabelValue(num, head)
                     num += 1
         except:
             pass
-        self.grid_1.AutoSizeColumns()
+        self.geofence_grid.AutoSizeColumns()
 
     @api_tool_decorator()
     def onUpload(self, event):
@@ -230,8 +230,8 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def processUpload(self, filePath):
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.geofence_grid.GetNumberRows() > 0:
+            self.geofence_grid.DeleteRows(0, self.geofence_grid.GetNumberRows())
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
@@ -247,12 +247,12 @@ class GeofenceDialog(wx.Dialog):
             except:
                 pass
         if data:
-            self.grid_1.Freeze()
+            self.geofence_grid.Freeze()
             # Iterate through each row and populate grid
             for entry in data:
-                self.grid_1.AppendRows()
-                self.grid_1.SetCellValue(
-                    self.grid_1.GetNumberRows() - 1,
+                self.geofence_grid.AppendRows()
+                self.geofence_grid.SetCellValue(
+                    self.geofence_grid.GetNumberRows() - 1,
                     0,
                     str(entry[0]),
                 )
@@ -260,8 +260,8 @@ class GeofenceDialog(wx.Dialog):
                 # Add identifier to list of devices
                 group = None
                 if len(entry[0].split("-")) == 5:
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1,
+                    self.geofence_grid.SetCellValue(
+                        self.geofence_grid.GetNumberRows() - 1,
                         2,
                         str(entry[0]),
                     )
@@ -276,29 +276,29 @@ class GeofenceDialog(wx.Dialog):
                                 group = groupRes
                                 break
                     if group:
-                        self.grid_1.SetCellValue(
-                            self.grid_1.GetNumberRows() - 1,
+                        self.geofence_grid.SetCellValue(
+                            self.geofence_grid.GetNumberRows() - 1,
                             2,
                             group.id,
                         )
                 if group:
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1,
+                    self.geofence_grid.SetCellValue(
+                        self.geofence_grid.GetNumberRows() - 1,
                         1,
                         group.path,
                     )
                 else:
-                    self.grid_1.SetCellValue(
-                        self.grid_1.GetNumberRows() - 1,
+                    self.geofence_grid.SetCellValue(
+                        self.geofence_grid.GetNumberRows() - 1,
                         1,
                         "<Could Not Find Group>",
                     )
-                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 0)
-                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 1)
-                self.grid_1.SetReadOnly(self.grid_1.GetNumberRows() - 1, 2)
-            self.grid_1.AutoSizeColumns()
-            if self.grid_1.IsFrozen():
-                self.grid_1.Thaw()
+                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 0)
+                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 1)
+                self.geofence_grid.SetReadOnly(self.geofence_grid.GetNumberRows() - 1, 2)
+            self.geofence_grid.AutoSizeColumns()
+            if self.geofence_grid.IsFrozen():
+                self.geofence_grid.Thaw()
 
     @api_tool_decorator()
     def createGeofence(self, event):
@@ -317,8 +317,8 @@ class GeofenceDialog(wx.Dialog):
             actionsList.append("lock_down")
 
         properGroupIdList = []
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            identifier = self.grid_1.GetCellValue(rowNum, 2)
+        for rowNum in range(self.geofence_grid.GetNumberRows()):
+            identifier = self.geofence_grid.GetCellValue(rowNum, 2)
             if len(identifier.split("-")) == 5:
                 properGroupIdList.append(identifier)
 
