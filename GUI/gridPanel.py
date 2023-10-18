@@ -228,8 +228,6 @@ class GridPanel(wx.Panel):
                             )
                         ):
                             grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
-                        else:
-                            print("skip")
         grid.ForceRefresh()
 
     @api_tool_decorator()
@@ -300,29 +298,6 @@ class GridPanel(wx.Panel):
                     indx, showState=self.grid3ColVisibility[col]
                 )
 
-    @api_tool_decorator(locks=[Globals.grid1_status_lock])
-    def setStatusCellColor(self, value, rowNum, colNum):
-        acquireLocks(Globals.grid1_status_lock)
-        if value == "Offline":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.red.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
-        elif value == "Online":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.green.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
-        elif value == "Unspecified":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
-        elif value == "Provisioning" or value == "Onboarding":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.orange.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
-        elif value == "Wipe In-Progress":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.purple.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
-        elif value == "Unknown":
-            self.grid_1.SetCellTextColour(rowNum, colNum, Color.black.value)
-            self.grid_1.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
-        releaseLocks([Globals.grid1_status_lock])
-
     @api_tool_decorator(locks=[Globals.grid_color_lock])
     def setAlteredCellColor(self, grid, device_info, rowNum, attribute, indx):
         # acquireLocks([Globals.grid_color_lock])
@@ -357,8 +332,8 @@ class GridPanel(wx.Panel):
             )
         for rowNum in range(self.grid_1.GetNumberRows()):
             if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, 0)
-                id_index = self.grid1HeaderLabels.index("Esper Id")
+                esperName = self.grid_1.GetCellValue(rowNum, 1)
+                id_index = self.grid1HeaderLabels.index("Esper Id") + 1
                 esperId = self.grid_1.GetCellValue(rowNum, id_index)
                 if (
                     device and (esperName == deviceName or esperId == device)
@@ -376,176 +351,73 @@ class GridPanel(wx.Panel):
         self.grid_1.ForceRefresh()
         releaseLocks([Globals.grid1_lock])
 
-    @api_tool_decorator(locks=[Globals.grid1_lock])
+    @api_tool_decorator()
     def getDeviceTagsFromGrid(self):
         """ Return the tags from Grid """
-        acquireLocks([Globals.grid1_lock])
-        tagList = {}
-        rowTagList = {}
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        id_index = self.grid1HeaderLabels.index("Esper Id")
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                indx = self.grid1HeaderLabels.index("Tags")
-                tags = self.grid_1.GetCellValue(rowNum, indx)
-                id = self.grid_1.GetCellValue(rowNum, id_index)
-                properTagList = []
-                for r in re.findall(
-                    r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
-                    tags,
-                ):
-                    processedTag = r.strip()
-                    while (
-                        processedTag.startswith('"')
-                        or processedTag.startswith("'")
-                        or processedTag.startswith("[")
-                        or processedTag.startswith("’")
-                    ):
-                        processedTag = processedTag[1 : len(processedTag)]
-                    while (
-                        processedTag.endswith('"')
-                        or processedTag.endswith("'")
-                        or processedTag.endswith("]")
-                        or processedTag.endswith("’")
-                    ):
-                        processedTag = processedTag[0 : len(processedTag) - 1]
-                    if processedTag:
-                        properTagList.append(processedTag.strip())
-                    if len(properTagList) >= Globals.MAX_TAGS:
-                        break
-                if esperName:
-                    if len(properTagList) <= 5:
-                        tagList[esperName] = properTagList
-                    else:
-                        tagList[esperName] = properTagList[: Globals.MAX_TAGS]
-                    rowTagList[rowNum] = {"esperName": esperName, "tags": properTagList}
-                if serialNum:
-                    if len(properTagList) <= 5:
-                        tagList[serialNum] = properTagList
-                    else:
-                        tagList[serialNum] = properTagList[: Globals.MAX_TAGS]
-                    if rowNum in rowTagList.keys():
-                        rowTagList[rowNum]["sn"] = serialNum
-                    else:
-                        rowTagList[rowNum] = {"sn": serialNum, "tags": properTagList}
-                if cusSerialNum:
-                    if len(properTagList) <= 5:
-                        tagList[cusSerialNum] = properTagList
-                    else:
-                        tagList[cusSerialNum] = properTagList[: Globals.MAX_TAGS]
-                    if rowNum in rowTagList.keys():
-                        rowTagList[rowNum]["csn"] = cusSerialNum
-                    else:
-                        rowTagList[rowNum] = {
-                            "csn": cusSerialNum,
-                            "tags": properTagList,
-                        }
-                if imei1:
-                    if len(properTagList) <= 5:
-                        tagList[imei1] = properTagList
-                    else:
-                        tagList[imei1] = properTagList[: Globals.MAX_TAGS]
-                    if rowNum in rowTagList.keys():
-                        rowTagList[rowNum]["imei1"] = imei1
-                    else:
-                        rowTagList[rowNum] = {
-                            "imei1": imei1,
-                            "tags": properTagList,
-                        }
-                if imei2:
-                    if len(properTagList) <= 5:
-                        tagList[imei2] = properTagList
-                    else:
-                        tagList[imei2] = properTagList[: Globals.MAX_TAGS]
-                    if rowNum in rowTagList.keys():
-                        rowTagList[rowNum]["imei2"] = imei2
-                    else:
-                        rowTagList[rowNum] = {
-                            "imei2": imei2,
-                            "tags": properTagList,
-                        }
-                if id:
-                    if len(properTagList) <= 5:
-                        tagList[id] = properTagList
-                    else:
-                        tagList[id] = properTagList[: Globals.MAX_TAGS]
-                    if rowNum in rowTagList.keys():
-                        rowTagList[rowNum]["id"] = id
-                    else:
-                        rowTagList[rowNum] = {
-                            "id": id,
-                            "tags": properTagList,
-                        }
-        releaseLocks([Globals.grid1_lock])
-        return tagList, rowTagList
-
-    @api_tool_decorator(locks=[Globals.grid1_lock])
-    def getDeviceAliasFromGrid(self):
-        """ Return a list of Aliases from the Grid """
-        acquireLocks([Globals.grid1_lock])
-        aliasList = {}
-        indx = self.grid1HeaderLabels.index("Alias")
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        id_indx = self.grid1HeaderLabels.index("Esper Id")
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                id = self.grid_1.GetCellValue(rowNum, id_indx)
-                alias = self.grid_1.GetCellValue(rowNum, indx)
-                if esperName and esperName not in aliasList.keys():
-                    aliasList[esperName] = alias
-                if serialNum and serialNum not in aliasList.keys():
-                    aliasList[serialNum] = alias
-                if cusSerialNum and cusSerialNum not in aliasList.keys():
-                    aliasList[cusSerialNum] = alias
-                if imei1 and imei1 not in aliasList.keys():
-                    aliasList[imei1] = alias
-                if imei2 and imei2 not in aliasList.keys():
-                    aliasList[imei2] = alias
-                if id and id not in aliasList.keys():
-                    aliasList[id] = alias
-        releaseLocks([Globals.grid1_lock])
-        return aliasList
+        if len(self.grid_1_contents) > 0:
+            columns = [
+                "Esper Name",
+                "Tags",
+                "Esper Id",
+                "IMEI 1",
+                "IMEI 2",
+                "Serial Number",
+                "Custom Serial Number"
+            ]
+            return self.getDeviceRowsSpecificCols(columns)
+        return []
 
     @api_tool_decorator()
     def getDeviceAliasFromList(self):
-        aliasList = {}
-        if self.grid_1_contents:
-            for device in self.grid_1_contents:
-                if device["EsperName"] not in aliasList:
-                    aliasList[device["EsperName"]] = device["Alias"]
-                    aliasList[device["id"]] = device["Alias"]
-                    if "networkInfo" in device and device["networkInfo"]:
-                        aliasList[device["networkInfo"]["imei1"]] = device["Alias"]
-                        aliasList[device["networkInfo"]["imei2"]] = device["Alias"]
-                    if "hardwareInfo" in device and device["hardwareInfo"]:
-                        aliasList[device["hardwareInfo"]["serialNumber"]] = device[
-                            "Alias"
-                        ]
-                        if "customSerialNumber" in device["hardwareInfo"]:
-                            aliasList[
-                                device["hardwareInfo"]["customSerialNumber"]
-                            ] = device["Alias"]
-        else:
-            aliasList = self.getDeviceAliasFromGrid()
-        return aliasList
+        if len(self.grid_1_contents) > 0:
+            columns = [
+                "Esper Name",
+                "Alias",
+                "Esper Id",
+                "IMEI 1",
+                "IMEI 2",
+                "Serial Number",
+                "Custom Serial Number"
+            ]
+            return self.getDeviceRowsSpecificCols(columns)
+        return []
+
+    def getDeviceRowsSpecificCols(self, columns) -> list:
+        returnList = []
+        deviceName_identifers = self.grid_1.Table.data[columns].values.tolist()
+        for row in deviceName_identifers:
+            entry = {}
+            for col in columns:
+                if col == "Tags":
+                    properTagList = []
+                    for r in re.findall(
+                        r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
+                        row[columns.index(col)],
+                    ):
+                        processedTag = r.strip()
+                        while (
+                            processedTag.startswith('"')
+                            or processedTag.startswith("'")
+                            or processedTag.startswith("[")
+                            or processedTag.startswith("’")
+                        ):
+                            processedTag = processedTag[1 : len(processedTag)]
+                        while (
+                            processedTag.endswith('"')
+                            or processedTag.endswith("'")
+                            or processedTag.endswith("]")
+                            or processedTag.endswith("’")
+                        ):
+                            processedTag = processedTag[0 : len(processedTag) - 1]
+                        if processedTag:
+                            properTagList.append(processedTag.strip())
+                        if len(properTagList) >= Globals.MAX_TAGS:
+                            properTagList = properTagList[0 : Globals.MAX_TAGS]
+                        entry[col] = properTagList
+                else:
+                    entry[col] = row[columns.index(col)]
+            returnList.append(entry)
+        return returnList
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def toggleColVisibilityInGridOne(self, event, showState=None):
@@ -610,36 +482,6 @@ class GridPanel(wx.Panel):
                     self.grid_3.ShowCol(index)
         releaseLocks([Globals.grid3_lock])
 
-    @api_tool_decorator()
-    def updateTagCell(self, name, tags=None):
-        """ Update the Tag Column in the Device Grid """
-        if platform.system() == "Windows":
-            Globals.THREAD_POOL.enqueue(self.processUpdateTagCell, name, tags)
-        else:
-            self.processUpdateTagCell(name, tags)
-
-    @api_tool_decorator(locks=[Globals.grid1_lock])
-    def processUpdateTagCell(self, name, tags=None):
-        acquireLocks([Globals.grid1_lock])
-        self.disableGridProperties()
-        name = tags = None
-        if hasattr(name, "GetValue"):
-            tple = name.GetValue()
-            name = tple[0]
-            tags = tple[1]
-        if name and tags:
-            for rowNum in range(self.grid_1.GetNumberRows()):
-                if rowNum < self.grid_1.GetNumberRows():
-                    esperName = self.grid_1.GetCellValue(rowNum, 0)
-                    if name == esperName:
-                        indx = self.grid1HeaderLabels.index("Tags")
-                        if not all("" == s or s.isspace() for s in tags):
-                            self.grid_1.SetCellValue(rowNum, indx, str(tags))
-                        else:
-                            self.grid_1.SetCellValue(rowNum, indx, "")
-        self.enableGridProperties()
-        releaseLocks([Globals.grid1_lock])
-
     @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock])
     def disableGridProperties(
         self, disableGrid=True, disableColSize=True, disableColMove=True
@@ -685,58 +527,19 @@ class GridPanel(wx.Panel):
         self.grid_3.disableProperties = self.disableProperties
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
-    @api_tool_decorator(locks=[Globals.grid1_lock])
+    @api_tool_decorator()
     def getDeviceIdentifersFromGrid(self, tolerance=0):
-        acquireLocks([Globals.grid1_lock])
-        identifers = []
-        numRows = self.grid_1.GetNumberRows()
-        numRowsPerChunk = (
-            int(numRows / Globals.MAX_THREAD_COUNT)
-            if numRows > Globals.MAX_THREAD_COUNT
-            else numRows
-        )
-        num = 0
-        while num < numRows:
-            Globals.THREAD_POOL.enqueue(
-                self.getDeviceIdentifiersHelper, num, numRowsPerChunk, identifers
-            )
-            num += numRowsPerChunk
-        Globals.THREAD_POOL.join(tolerance)
-        Globals.THREAD_POOL.results()
-
-        releaseLocks([Globals.grid1_lock])
-        return identifers
-
-    def getDeviceIdentifiersHelper(self, start, limit, identifers):
-        en_indx = self.grid1HeaderLabels.index("Esper Name")
-        sn_indx = self.grid1HeaderLabels.index("Serial Number")
-        csn_indx = self.grid1HeaderLabels.index("Custom Serial Number")
-        imei1_indx = self.grid1HeaderLabels.index("IMEI 1")
-        imei2_indx = self.grid1HeaderLabels.index("IMEI 2")
-        id_indx = self.grid1HeaderLabels.index("Esper Id")
-        rowNum = start
-        while (rowNum - start) < limit:
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, en_indx)
-                serialNum = self.grid_1.GetCellValue(rowNum, sn_indx)
-                cusSerialNum = self.grid_1.GetCellValue(rowNum, csn_indx)
-                imei1 = self.grid_1.GetCellValue(rowNum, imei1_indx)
-                imei2 = self.grid_1.GetCellValue(rowNum, imei2_indx)
-                id = self.grid_1.GetCellValue(rowNum, id_indx)
-                identifers.append(
-                    {
-                        "name": esperName,
-                        "serial": serialNum,
-                        "custom": cusSerialNum,
-                        "imei1": imei1,
-                        "imei2": imei2,
-                        "id": id,
-                    }
-                )
-            else:
-                break
-            rowNum += 1
-        return identifers
+        if len(self.grid_1_contents) > 0:
+            columns = [
+                "Esper Name",
+                "Esper Id",
+                "IMEI 1",
+                "IMEI 2",
+                "Serial Number",
+                "Custom Serial Number"
+            ]
+            return self.getDeviceRowsSpecificCols(columns)
+        return []
 
     def updateGridContent(self, event):
         evtVal = event.GetValue()
@@ -776,8 +579,6 @@ class GridPanel(wx.Panel):
             if self.parentFrame and hasattr(self.parentFrame, "fetchData"):
                 self.parentFrame.fetchData(False)
         event.Skip()
-
-    
 
     def onSingleSelect(self, event):
         """

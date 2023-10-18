@@ -50,15 +50,15 @@ def modifyDevice(frame, action):
 @api_tool_decorator()
 def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     """ Attempt to modify device data according to what has been changed in the Grid """
-    tagsFromGrid = rowTaglist = aliasDic = None
+    rowTaglist = aliasList = None
     maxGaugeAction = 0
     if action == GridActions.MODIFY_TAGS.value:
-        tagsFromGrid, rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
-        maxGaugeAction = len(tagsFromGrid.keys())
+        rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
+        maxGaugeAction = len(rowTaglist)
     else:
-        aliasDic = frame.gridPanel.getDeviceAliasFromList()
-        if aliasDic:
-            maxGaugeAction = len(aliasDic.keys())
+        aliasList = frame.gridPanel.getDeviceAliasFromList()
+        if aliasList:
+            maxGaugeAction = len(aliasList)
     frame.statusBar.gauge.SetValue(1)
 
     postEventToFrame(
@@ -67,13 +67,13 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
             "operation": "ChangeTags"
             if action == GridActions.MODIFY_TAGS.value
             else "ChangeAlias",
-            "data": {"tags": tagsFromGrid}
+            "data": {"tags": rowTaglist}
             if action == GridActions.MODIFY_TAGS.value
-            else {"alias": aliasDic},
+            else {"alias": aliasList},
         },
     )
     devices = obtainEsperDeviceEntriesFromList(
-        rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasDic
+        rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasList
     )
     splitResults = splitListIntoChunks(devices)
 
@@ -82,8 +82,8 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
             processDeviceModificationForList,
             action,
             chunk,
-            tagsFromGrid,
-            aliasDic,
+            rowTaglist,
+            aliasList,
             maxGaugeAction,
         )
 
@@ -99,38 +99,19 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
 
 def obtainEsperDeviceEntriesFromList(iterList):
     devices = []
-    for row in iterList.keys():
-        entry = iterList[row]
-        identifier = entry
+    for row in iterList:
+        if type(row) is dict and "Esper Id" in row.keys() and row["Esper Id"]:
+            devices.append(row["Esper Id"])
+            continue
 
-        if type(entry) is dict:
-            if "id" in entry.keys() and entry["id"]:
-                identifier = entry["id"]
-                devices.append(identifier)
-                continue
-            else:
-                if "esperName" in entry.keys():
-                    identifier = entry["esperName"]
-                elif "sn" in entry.keys():
-                    identifier = entry["sn"]
-                elif "csn" in entry.keys():
-                    identifier = entry["csn"]
-                elif "imei1" in entry.keys():
-                    identifier = entry["imei1"]
-                elif "imei2" in entry.keys():
-                    identifier = entry["imei2"]
-        else:
-            entry = {}
-            entry["esperName"] = row
-
-        api_response = apiCalls.searchForMatchingDevices(entry)
+        api_response = apiCalls.searchForMatchingDevices(row)
         if api_response:
             devices += api_response.results
             api_response = None
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "---> ERROR: Failed to find device with identifer: %s" % identifier,
+                "---> ERROR: Failed to find device with these details: %s" % row,
             )
     return devices
 
@@ -168,61 +149,57 @@ def processDeviceModificationForList(
 
 
 @api_tool_decorator()
-def changeAliasForDevice(device, aliasDic, maxGaugeAction):
+def changeAliasForDevice(device, aliasList, maxGaugeAction):
     numNewName = 0
     succeeded = 0
     logString = ""
-    status = None
-    deviceName = None
-    deviceId = None
-    aliasName = None
-    hardware = None
+    status = deviceName = deviceId = aliasName = serial = imei1 = imei2 = None
     if hasattr(device, "device_name"):
-        aliasName = device.alias_name
         deviceName = device.device_name
         deviceId = device.id
+        aliasName = device.alias_name
         hardware = device.hardware_info
+        network = device.network_info
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+        imei1 = network["imei1"] if "imei1" in network else None
+        imei2 = network["imei2"] if "imei2" in network else None
     elif type(device) is dict:
         deviceName = device["device_name"]
         deviceId = device["id"]
         aliasName = device["alias_name"]
-        hardware = device["hardwareInfo"]
-    else:
-        deviceName = ""
-        deviceId = device
-        aliasName = ""
-        hardware = ""
+        hardware = device["hardware_info"]
+        network = device["network_info"]
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+        imei1 = network["imei1"] if "imei1" in network else None
+        imei2 = network["imei2"] if "imei2" in network else None
+
+    match = list(filter(lambda x: 
+                        x["Esper Name"] == deviceName 
+                        or x["Esper Id"] == device
+                        or x["Serial Number"] == serial
+                        or x["Custom Serial Number"] == serial
+                        or x["IMEI 1"] == imei1
+                        or x["IMEI 2"] == imei2
+                        , aliasList))
     # Alias modification
-    if (
-        deviceName in aliasDic.keys()
-        or ("serialNumber" in hardware and hardware["serialNumber"] in aliasDic.keys())
-        or (
-            "customSerialNumber" in hardware
-            and hardware["customSerialNumber"] in aliasDic.keys()
-        )
-        or deviceId in aliasDic.keys()
-    ):
-        newName = None
-        if deviceName in aliasDic:
-            newName = aliasDic[deviceName]
-        elif "serialNumber" in hardware and hardware["serialNumber"] in aliasDic:
-            newName = aliasDic[hardware["serialNumber"]]
-        elif (
-            "customSerialNumber" in hardware
-            and hardware["customSerialNumber"] in aliasDic
-        ):
-            newName = aliasDic[hardware["customSerialNumber"]]
-        elif deviceId in aliasDic:
-            newName = aliasDic[deviceId]
+    if match:
+        match = match[0]
+        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
+        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        newName = match["Alias"] if "Alias" in match else ""
+
         logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
         if not newName:
+            # Return if no alias specified
             status = {
                 "Device Name": deviceName,
                 "Device Id": deviceId,
                 "Alias Status": "No alias to set",
             }
             return (numNewName, succeeded, status)
+
         if newName != str(aliasName):
+            # Change alias if it differs than what is already set (as retrieved by API)
             numNewName += 1
             status = ""
             try:
@@ -237,13 +214,10 @@ def changeAliasForDevice(device, aliasDic, maxGaugeAction):
                 succeeded += 1
             elif "Queued" in str(status):
                 logString = logString + " <Queued> Make sure device is online."
-                postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
             elif "Scheduled" in str(status):
                 logString = logString + " <Scheduled> Make sure device is online."
-                postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Scheduled"))
             else:
                 logString = logString + " <failed>"
-                postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
         else:
             logString = logString + " (Alias Name already set)"
             status = {
@@ -282,55 +256,44 @@ def changeAliasForDevice(device, aliasDic, maxGaugeAction):
 def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction):
     # Tag modification
     changeSucceeded = 0
-    deviceName = None
-    deviceId = None
-    hardware = None
+    status = deviceName = deviceId = serial = imei1 = imei2 = None
     if hasattr(device, "device_name"):
         deviceName = device.device_name
         deviceId = device.id
         hardware = device.hardware_info
+        network = device.network_info
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+        imei1 = network["imei1"] if "imei1" in network else None
+        imei2 = network["imei2"] if "imei2" in network else None
     elif type(device) is dict:
         deviceName = device["device_name"]
         deviceId = device["id"]
-        hardware = device["hardwareInfo"]
-    else:
-        deviceName = ""
-        deviceId = device
-        hardware = ""
-    if (
-        deviceName in tagsFromGrid.keys()
-        or (
-            "serialNumber" in hardware
-            and hardware["serialNumber"] in tagsFromGrid.keys()
-        )
-        or (
-            "customSerialNumber" in hardware
-            and hardware["customSerialNumber"] in tagsFromGrid.keys()
-        )
-        or (deviceId in tagsFromGrid.keys())
-    ):
-        tagsFromCell = None
-        key = None
-        if deviceName in tagsFromGrid:
-            key = deviceName
-        elif "serialNumber" in hardware and hardware["serialNumber"] in tagsFromGrid:
-            key = hardware["serialNumber"]
-        elif (
-            "customSerialNumber" in hardware
-            and hardware["customSerialNumber"] in tagsFromGrid
-        ):
-            key = hardware["customSerialNumber"]
-        elif deviceId in tagsFromGrid:
-            key = deviceId
-        tagsFromCell = tagsFromGrid[key]
+        hardware = device["hardware_info"]
+        network = device["network_info"]
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
+        imei1 = network["imei1"] if "imei1" in network else None
+        imei2 = network["imei2"] if "imei2" in network else None
+
+    match = list(filter(lambda x: 
+                        x["Esper Name"] == deviceName 
+                        or x["Esper Id"] == device
+                        or x["Serial Number"] == serial
+                        or x["Custom Serial Number"] == serial
+                        or x["IMEI 1"] == imei1
+                        or x["IMEI 2"] == imei2, tagsFromGrid))
+    if match:
+        match = match[0]
+        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
+        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        tagsFromCell = match["Tags"] if "Tags" in match else []
+
         try:
             tags = setdevicetags(deviceId, tagsFromCell)
         except Exception as e:
             ApiToolLog().LogError(e)
-        if tags == tagsFromGrid[key]:
+        if tags == tagsFromCell:
             changeSucceeded += 1
         postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
-        postEventToFrame(eventUtil.myEVT_UPDATE_TAG_CELL, (deviceName, tags))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
             int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
@@ -442,99 +405,23 @@ def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
             tolerance=tolerance
         )
     devices = []
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     splitResults = splitListIntoChunks(deviceIdentifers)
     for chunk in splitResults:
         Globals.THREAD_POOL.enqueue(
-            getDevicesFromGridHelper, chunk, api_instance, devices
+            getDevicesFromGridHelper, chunk, devices
         )
     Globals.THREAD_POOL.join(tolerance)
     return devices
 
 
 def getDevicesFromGridHelper(
-    deviceIdentifers, api_instance, devices, maxAttempt=Globals.MAX_RETRY
+    deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY
 ):
     for entry in deviceIdentifers:
-        api_response = None
-        identifier = None
-        deviceHadId = False
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                if type(entry) == dict:
-                    if entry["id"]:
-                        devices.append(entry)
-                        deviceHadId = True
-                        break
-
-                    if entry["name"]:
-                        identifier = entry["name"]
-                        api_response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            name=identifier,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
-                        )
-                    elif entry["serial"]:
-                        identifier = entry["serial"]
-                        api_response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            serial=identifier,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
-                        )
-                    elif entry["custom"]:
-                        identifier = entry["custom"]
-                        api_response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            search=identifier,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
-                        )
-                    elif entry["imei1"]:
-                        identifier = entry["imei1"]
-                        api_response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            imei=identifier,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
-                        )
-                    elif entry["imei2"]:
-                        identifier = entry["imei2"]
-                        api_response = api_instance.get_all_devices(
-                            Globals.enterprise_id,
-                            imei=identifier,
-                            limit=Globals.limit,
-                            offset=Globals.offset,
-                        )
-                elif type(entry) == str:
-                    api_response = api_instance.get_all_devices(
-                        Globals.enterprise_id,
-                        search=entry,
-                        limit=Globals.limit,
-                        offset=Globals.offset,
-                    )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllDevices",
-                    api_instance.get_all_devices,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e, postIssue=False)
-                    raise e
-                if "429" not in str(e) and "Too Many Requests" not in str(e):
-                    time.sleep(Globals.RETRY_SLEEP)
-                else:
-                    time.sleep(
-                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                    )  # Sleep for a minute * retry number
+        api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
             devices += api_response.results
-            api_response = None
-        elif not deviceHadId:
+        else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
                 "---> ERROR: Failed to find device with identifer: %s" % identifier,

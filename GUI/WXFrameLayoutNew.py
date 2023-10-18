@@ -233,10 +233,8 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
-        self.Bind(eventUtil.EVT_UPDATE_TAG_CELL, self.gridPanel.updateTagCell)
         self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
         self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
-        self.Bind(eventUtil.EVT_ON_FAILED, self.onFail)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
@@ -633,15 +631,6 @@ class NewFrameLayout(wx.Frame):
         )
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
 
-    def mergeDeviceAndNetworkInfo(self, device, gridDeviceData):
-        tempDict = {}
-        tempDict.update(device)
-        for entry in self.gridPanel.grid_2_contents:
-            if entry["Device Name"] == device[Globals.CSV_TAG_ATTR_NAME["Esper Name"]]:
-                tempDict.update(entry)
-                break
-        gridDeviceData.append(tempDict)
-
     @api_tool_decorator()
     def saveGridData(
         self,
@@ -656,6 +645,7 @@ class NewFrameLayout(wx.Frame):
                 self.gridPanel.grid_1.Table.data,
                 self.gridPanel.grid_2.Table.data,
                 on=["Esper Name", "Group"],
+                how="outer"
             )
             result.dropna()
             save_csv_pandas(inFile, result)
@@ -672,7 +662,7 @@ class NewFrameLayout(wx.Frame):
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
-            ):
+            ) and len(self.gridPanel.grid_3.Table.data) > 0:
                 # self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
                 save_csv_pandas(inFile, self.gridPanel.grid_3.Table.data)
         elif inFile.endswith(".xlsx"):
@@ -686,6 +676,7 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.grid_1.Table.data,
                     self.gridPanel.grid_2.Table.data,
                     on=["Esper Name", "Group"],
+                    how="outer"
                 )
                 result.dropna()
                 df_dict["Device & Network"] = result
@@ -697,7 +688,7 @@ class NewFrameLayout(wx.Frame):
                 action
                 and action == GeneralActions.GENERATE_APP_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
+            ) and len(self.gridPanel.grid_3.Table.data) > 0:
                 df_dict["Application"] = self.gridPanel.grid_3.Table.data
             save_excel_pandas_xlxswriter(inFile, df_dict)
 
@@ -1920,10 +1911,6 @@ class NewFrameLayout(wx.Frame):
                     Globals.SHOW_GRID_DIALOG = False
                     self.preferences["gridDialog"] = Globals.SHOW_GRID_DIALOG
                 if runAction:
-                    if self.checkAppRequirement(
-                        actionClientData, appSelection, appLabel
-                    ):
-                        appSelection, appLabel = self.getAppDataForRun()
                     self.Logging(
                         '---> Attempting to run grid action, "%s".' % actionLabel
                     )
@@ -2418,35 +2405,6 @@ class NewFrameLayout(wx.Frame):
         else:
             self.sidePanel.deviceChoice.Enable(False)
         self.isSavingPrefs = False
-
-    @api_tool_decorator()
-    def onFail(self, event):
-        """ Try to showcase rows in the grid on which an action failed on """
-        failed = event.GetValue()
-        if self.gridPanel.grid_1_contents is not None and self.gridPanel.grid_2_contents  is not None:
-            if type(failed) == list:
-                for device in failed:
-                    if "Queued" in device or "Scheduled" in device:
-                        self.gridPanel.applyTextColorToDevice(
-                            device[0], Color.orange.value, bgColor=Color.warnBg.value
-                        )
-                    else:
-                        self.gridPanel.applyTextColorToDevice(
-                            device, Color.red.value, bgColor=Color.errorBg.value
-                        )
-            elif type(failed) == tuple:
-                if "Queued" in failed or "Scheduled" in failed:
-                    self.gridPanel.applyTextColorToDevice(
-                        failed[0], Color.orange.value, bgColor=Color.warnBg.value
-                    )
-                else:
-                    self.gridPanel.applyTextColorToDevice(
-                        failed, Color.red.value, bgColor=Color.errorBg.value
-                    )
-            elif failed:
-                self.gridPanel.applyTextColorToDevice(
-                    failed, Color.red.value, bgColor=Color.errorBg.value
-                )
 
     @api_tool_decorator()
     def onFileDrop(self, event):

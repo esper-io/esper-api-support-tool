@@ -26,14 +26,8 @@ EVT_UPDATE_GAUGE = wx.PyEventBinder(myEVT_UPDATE_GAUGE, 1)
 myEVT_UPDATE_GAUGE_LATER = wx.NewEventType()
 EVT_UPDATE_GAUGE_LATER = wx.PyEventBinder(myEVT_UPDATE_GAUGE_LATER, 1)
 
-myEVT_UPDATE_TAG_CELL = wx.NewEventType()
-EVT_UPDATE_TAG_CELL = wx.PyEventBinder(myEVT_UPDATE_TAG_CELL, 1)
-
 myEVT_UNCHECK_CONSOLE = wx.NewEventType()
 EVT_UNCHECK_CONSOLE = wx.PyEventBinder(myEVT_UNCHECK_CONSOLE, 1)
-
-myEVT_ON_FAILED = wx.NewEventType()
-EVT_ON_FAILED = wx.PyEventBinder(myEVT_ON_FAILED, 1)
 
 myEVT_CONFIRM_CLONE = wx.NewEventType()
 EVT_CONFIRM_CLONE = wx.PyEventBinder(myEVT_CONFIRM_CLONE, 1)
