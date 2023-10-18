@@ -9,7 +9,7 @@ import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.FileUtility import read_data_from_csv
-from Utility.Resource import displaySaveDialog
+from Utility.Resource import displayFileDialog
 
 
 class WidgetPicker(wx.Dialog):
@@ -184,12 +184,12 @@ class WidgetPicker(wx.Dialog):
         )
         grid_sizer_6.Add(label_3, 0, wx.ALL, 5)
 
-        self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(0, 1)
-        self.grid_1.SetColLabelValue(0, "Identifier")
-        if self.grid_1.GetNumberCols() > 0:
-            self.grid_1.SetColSize(0, 200)
-        grid_sizer_6.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 10)
+        self.device_widget_grid = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
+        self.device_widget_grid.CreateGrid(0, 1)
+        self.device_widget_grid.SetColLabelValue(0, "Identifier")
+        if self.device_widget_grid.GetNumberCols() > 0:
+            self.device_widget_grid.SetColSize(0, 200)
+        grid_sizer_6.Add(self.device_widget_grid, 1, wx.ALL | wx.EXPAND, 10)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -252,7 +252,7 @@ class WidgetPicker(wx.Dialog):
 
     def checkInput(self, event=None):
         selection = self.radio_box_1.GetSelection()
-        numRows = self.grid_1.GetNumberRows() - 1
+        numRows = self.device_widget_grid.GetNumberRows() - 1
         textValue = self.text_ctrl_1.GetValue()
         if (
             selection == 0
@@ -279,44 +279,50 @@ class WidgetPicker(wx.Dialog):
 
     @api_tool_decorator()
     def onUpload(self, event):
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Open Idenifier Spreadsheet",
             "Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         )
 
         if inFile:
-            if self.grid_1.GetNumberRows() > 0:
-                self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
-            fileData = None
-            self.deviceList = []
+            if self.device_widget_grid.GetNumberRows() > 0:
+                self.device_widget_grid.DeleteRows(0, self.device_widget_grid.GetNumberRows())
+            self.button_1.Enable(False)
+            Globals.THREAD_POOL.enqueue(self.onUploadHelper, inFile)
 
-            if inFile.endswith(".csv"):
-                fileData = read_data_from_csv(inFile)
-                for entry in fileData:
-                    identifer = entry[0]
+    def onUploadHelper(self, inFile):
+        fileData = None
+        self.deviceList = []
+
+        if inFile.endswith(".csv"):
+            fileData = read_data_from_csv(inFile)
+            for entry in fileData:
+                identifer = entry[0]
+                if identifer and identifer not in self.deviceList:
+                    self.device_widget_grid.AppendRows(1)
+                    self.device_widget_grid.SetCellValue(
+                        self.device_widget_grid.GetNumberRows() - 1, 1, str(identifer)
+                    )
+                    self.deviceList.append(str(identifer))
+        elif inFile.endswith(".xlsx"):
+            dfs = None
+            try:
+                dfs = pd.read_excel(inFile, sheet_name=None, keep_default_na=False)
+            except:
+                pass
+            if dfs:
+                sheetKeys = dfs.keys()
+                for sheet in sheetKeys:
+                    identifer = dfs[sheet].columns.values.tolist()[0]
                     if identifer and identifer not in self.deviceList:
-                        self.grid_1.AppendRows(1)
-                        self.grid_1.SetCellValue(
-                            self.grid_1.GetNumberRows() - 1, 1, str(identifer)
+                        self.device_widget_grid.AppendRows(1)
+                        self.device_widget_grid.SetCellValue(
+                            self.device_widget_grid.GetNumberRows() - 1, 1, str(identifer)
                         )
                         self.deviceList.append(str(identifer))
-            elif inFile.endswith(".xlsx"):
-                dfs = None
-                try:
-                    dfs = pd.read_excel(inFile, sheet_name=None, keep_default_na=False)
-                except:
-                    pass
-                if dfs:
-                    sheetKeys = dfs.keys()
-                    for sheet in sheetKeys:
-                        identifer = dfs[sheet].columns.values.tolist()[0]
-                        if identifer and identifer not in self.deviceList:
-                            self.grid_1.AppendRows(1)
-                            self.grid_1.SetCellValue(
-                                self.grid_1.GetNumberRows() - 1, 1, str(identifer)
-                            )
-                            self.deviceList.append(str(identifer))
-        self.checkInput(event)
+        self.button_1.Enable(True)
+        self.checkInput()
 
     def getInputs(self):
         return (
