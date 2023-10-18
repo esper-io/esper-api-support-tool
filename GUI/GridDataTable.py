@@ -1,13 +1,8 @@
-import Common.Globals as Globals
+
 import pandas as pd
 
 import wx
 import wx.grid
-from Common.decorator import api_tool_decorator
-
-from Common.enum import Color
-from Utility.Resource import acquireLocks, releaseLocks
-
 
 class GridDataTable(wx.grid.GridTableBase):
     def __init__(self, data=None):
@@ -40,6 +35,10 @@ class GridDataTable(wx.grid.GridTableBase):
         return str(self.data.columns[col - 1])
 
     def GetTypeName(self, row, col):
+        if self.data[self.data.columns[0]].count() > 0:
+            value = self.data.iloc[row, col - 1]
+            if type(value) is int:
+                return wx.grid.GRID_VALUE_NUMBER
         return wx.grid.GRID_VALUE_STRING
 
     def GetAttr(self, row, col, prop):
