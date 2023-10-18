@@ -132,13 +132,6 @@ class GridPanel(wx.Panel):
     @api_tool_decorator()
     def __set_properties(self):
         self.SetThemeEnabled(False)
-        self.grid_1.SetThemeEnabled(False)
-        self.grid_2.SetThemeEnabled(False)
-        self.grid_3.SetThemeEnabled(False)
-        self.grid_1.GetGridWindow().SetThemeEnabled(False)
-        self.grid_2.GetGridWindow().SetThemeEnabled(False)
-        self.grid_3.GetGridWindow().SetThemeEnabled(False)
-
         self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 
         self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
