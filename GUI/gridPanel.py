@@ -617,3 +617,8 @@ class GridPanel(wx.Panel):
         self.device_grid.UnsetSortingColumn()
         self.network_grid.UnsetSortingColumn()
         self.app_grid.UnsetSortingColumn()
+
+    def setGridsCursor(self, cursorType):
+        self.device_grid.SetCursor(cursorType)
+        self.network_grid.SetCursor(cursorType)
+        self.app_grid.SetCursor(cursorType)
