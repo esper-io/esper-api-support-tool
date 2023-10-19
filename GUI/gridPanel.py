@@ -27,9 +27,9 @@ class GridPanel(wx.Panel):
         super().__init__(*args, **kw)
 
         self.userEdited = []
-        self.grid_1_contents = None
-        self.grid_2_contents = None
-        self.grid_3_contents = None
+        self.device_grid_contents = None
+        self.network_grid_contents = None
+        self.app_grid_contents = None
         self.disableProperties = False
 
         self.parentFrame = parentFrame
@@ -85,23 +85,23 @@ class GridPanel(wx.Panel):
 
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_1 = GridTable(self.panel_14, headers=self.grid1HeaderLabels)
-        sizer_6.Add(self.grid_1, 1, wx.EXPAND, 0)
+        self.device_grid = GridTable(self.panel_14, headers=self.grid1HeaderLabels)
+        sizer_6.Add(self.device_grid, 1, wx.EXPAND, 0)
 
         self.panel_15 = wx.Panel(self.notebook_2, wx.ID_ANY)
         self.notebook_2.AddPage(self.panel_15, "Network Information")
 
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
-        self.grid_2 = GridTable(self.panel_15, headers=self.grid2HeaderLabels)
-        sizer_7.Add(self.grid_2, 1, wx.EXPAND, 0)
+        self.network_grid = GridTable(self.panel_15, headers=self.grid2HeaderLabels)
+        sizer_7.Add(self.network_grid, 1, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.notebook_2, wx.ID_ANY)
         self.notebook_2.AddPage(self.panel_16, "Application Information")
 
         sizer_8 = wx.BoxSizer(wx.VERTICAL)
 
-        self.grid_3 = GridTable(self.panel_16, headers=self.grid3HeaderLabels)
-        sizer_8.Add(self.grid_3, 1, wx.EXPAND, 0)
+        self.app_grid = GridTable(self.panel_16, headers=self.grid3HeaderLabels)
+        sizer_8.Add(self.app_grid, 1, wx.EXPAND, 0)
 
         self.panel_16.SetSizer(sizer_8)
 
@@ -127,11 +127,11 @@ class GridPanel(wx.Panel):
     @api_tool_decorator()
     def __set_properties(self):
         self.SetThemeEnabled(False)
-        self.grid_1.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
+        self.device_grid.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
 
-        self.grid_1.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.grid_2.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.grid_3.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
+        self.device_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
+        self.network_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
+        self.app_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
 
         self.enableGridProperties()
 
@@ -140,12 +140,12 @@ class GridPanel(wx.Panel):
     )
     def autoSizeGridsColumns(self, event=None):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
-        self.grid_1.AutoSizeColumns()
-        self.grid_2.AutoSizeColumns()
-        self.grid_3.AutoSizeColumns()
-        self.grid_1.ForceRefresh()
-        self.grid_2.ForceRefresh()
-        self.grid_3.ForceRefresh()
+        self.device_grid.AutoSizeColumns()
+        self.network_grid.AutoSizeColumns()
+        self.app_grid.AutoSizeColumns()
+        self.device_grid.ForceRefresh()
+        self.network_grid.ForceRefresh()
+        self.app_grid.ForceRefresh()
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
@@ -153,9 +153,9 @@ class GridPanel(wx.Panel):
         """ Try to Auto size Columns on change """
         acquireLocks([Globals.grid1_lock])
         self.userEdited.append((event.Row, event.Col))
-        editor = self.grid_1.GetCellEditor(event.Row, event.Col)
+        editor = self.device_grid.GetCellEditor(event.Row, event.Col)
         if not editor.IsCreated():
-            determineDoHereorMainThread(self.grid_1.AutoSizeColumns)
+            determineDoHereorMainThread(self.device_grid.AutoSizeColumns)
         self.onCellEdit(event)
         releaseLocks([Globals.grid1_lock])
 
@@ -164,13 +164,13 @@ class GridPanel(wx.Panel):
         indx1 = self.grid1HeaderLabels.index("Tags")
         indx2 = self.grid1HeaderLabels.index("Alias")
         indx3 = self.grid1HeaderLabels.index("Group")
-        x, y = self.grid_1.GetGridCursorCoords()
-        esperName = self.grid_1.GetCellValue(x, 0)
-        originalListing = self.grid_1_contents.loc[
-            self.grid_1_contents["Esper Name"] == esperName
+        x, y = self.device_grid.GetGridCursorCoords()
+        esperName = self.device_grid.GetCellValue(x, 0)
+        originalListing = self.device_grid_contents.loc[
+            self.device_grid_contents["Esper Name"] == esperName
         ].values.tolist()
-        deviceListing = self.grid_1.Table.data.loc[
-            self.grid_1_contents["Esper Name"] == esperName
+        deviceListing = self.device_grid.Table.data.loc[
+            self.device_grid_contents["Esper Name"] == esperName
         ].values.tolist()
         if originalListing and deviceListing:
             self.onCellEditHelper(deviceListing[0], originalListing[0], indx1, x, y)
@@ -183,9 +183,9 @@ class GridPanel(wx.Panel):
         originalValue = originalListing[indx]
         if y == indx:
             if deviceValue == originalValue:
-                self.grid_1.SetCellBackgroundColour(x, y, Color.white.value)
+                self.device_grid.SetCellBackgroundColour(x, y, Color.white.value)
             else:
-                self.grid_1.SetCellBackgroundColour(x, y, Color.lightBlue.value)
+                self.device_grid.SetCellBackgroundColour(x, y, Color.lightBlue.value)
 
     @api_tool_decorator()
     def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
@@ -221,9 +221,9 @@ class GridPanel(wx.Panel):
     @api_tool_decorator()
     def onColumnVisibility(self, event):
         pageGridDict = {
-            "Device": self.grid_1,
-            "Network": self.grid_2,
-            "Application": self.grid_3,
+            "Device": self.device_grid,
+            "Network": self.network_grid,
+            "Application": self.app_grid,
         }
         exemptedLabels = ["Esper Name", "Esper Id", "Device Name"]
         colLabelException = {
@@ -244,7 +244,7 @@ class GridPanel(wx.Panel):
                             indx = list(Globals.CSV_TAG_ATTR_NAME.keys()).index(label)
                             self.toggleColVisibilityInGrid(
                                 indx,
-                                self.grid_1,
+                                self.device_grid,
                                 Globals.grid1_lock,
                                 showState=isChecked
                             )
@@ -255,7 +255,7 @@ class GridPanel(wx.Panel):
                             )
                             self.toggleColVisibilityInGrid(
                                 indx,
-                                self.grid_2,
+                                self.network_grid,
                                 Globals.grid2_lock,
                                 showState=isChecked
                             )
@@ -264,7 +264,7 @@ class GridPanel(wx.Panel):
                             indx = Globals.CSV_APP_ATTR_NAME.index(label)
                             self.toggleColVisibilityInGrid(
                                 indx,
-                                self.grid_3,
+                                self.app_grid,
                                 Globals.grid3_lock,
                                 showState=isChecked
                             )
@@ -285,7 +285,7 @@ class GridPanel(wx.Panel):
                 indx = self.grid1HeaderLabels.index(col)
                 self.toggleColVisibilityInGrid(
                     indx,
-                    self.grid_1,
+                    self.device_grid,
                     Globals.grid1_lock,
                     showState=self.grid1ColVisibility[col]
                 )
@@ -294,7 +294,7 @@ class GridPanel(wx.Panel):
                 indx = self.grid2HeaderLabels.index(col)
                 self.toggleColVisibilityInGrid(
                     indx,
-                    self.grid_2,
+                    self.network_grid,
                     Globals.grid2_lock,
                     showState=self.grid2ColVisibility[col]
                 )
@@ -303,7 +303,7 @@ class GridPanel(wx.Panel):
                 indx = self.grid3HeaderLabels.index(col)
                 self.toggleColVisibilityInGrid(
                     indx,
-                    self.grid_3,
+                    self.app_grid,
                     Globals.grid3_lock,
                     showState=self.grid3ColVisibility[col]
                 )
@@ -338,31 +338,31 @@ class GridPanel(wx.Panel):
                 if type(device) is dict
                 else ""
             )
-        for rowNum in range(self.grid_1.GetNumberRows()):
-            if rowNum < self.grid_1.GetNumberRows():
-                esperName = self.grid_1.GetCellValue(rowNum, 0)
+        for rowNum in range(self.device_grid.GetNumberRows()):
+            if rowNum < self.device_grid.GetNumberRows():
+                esperName = self.device_grid.GetCellValue(rowNum, 0)
                 id_index = self.grid1HeaderLabels.index("Esper Id")
-                esperId = self.grid_1.GetCellValue(rowNum, id_index)
+                esperId = self.device_grid.GetCellValue(rowNum, id_index)
                 if (
                     device and (esperName == deviceName or esperId == device)
                 ) or applyAll:
-                    for colNum in range(self.grid_1.GetNumberCols()):
+                    for colNum in range(self.device_grid.GetNumberCols()):
                         if (
-                            colNum < self.grid_1.GetNumberCols()
+                            colNum < self.device_grid.GetNumberCols()
                             and colNum != statusIndex
                         ):
-                            self.grid_1.SetCellTextColour(rowNum, colNum, color)
+                            self.device_grid.SetCellTextColour(rowNum, colNum, color)
                             if bgColor:
-                                self.grid_1.SetCellBackgroundColour(
+                                self.device_grid.SetCellBackgroundColour(
                                     rowNum, colNum, bgColor
                                 )
-        self.grid_1.ForceRefresh()
+        self.device_grid.ForceRefresh()
         releaseLocks([Globals.grid1_lock])
 
     @api_tool_decorator()
     def getDeviceTagsFromGrid(self):
         """ Return the tags from Grid """
-        if len(self.grid_1_contents) > 0:
+        if len(self.device_grid_contents) > 0:
             columns = [
                 "Esper Name",
                 "Tags",
@@ -377,7 +377,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator()
     def getDeviceAliasFromList(self):
-        if len(self.grid_1_contents) > 0:
+        if len(self.device_grid_contents) > 0:
             columns = [
                 "Esper Name",
                 "Alias",
@@ -392,7 +392,7 @@ class GridPanel(wx.Panel):
 
     def getDeviceRowsSpecificCols(self, columns) -> list:
         returnList = []
-        deviceName_identifers = self.grid_1.Table.data[columns].values.tolist()
+        deviceName_identifers = self.device_grid.Table.data[columns].values.tolist()
         for row in deviceName_identifers:
             entry = {}
             for col in columns:
@@ -454,18 +454,18 @@ class GridPanel(wx.Panel):
     ):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock])
         if disableGrid:
-            self.grid_1.Enable(False)
-            self.grid_2.Enable(False)
+            self.device_grid.Enable(False)
+            self.network_grid.Enable(False)
         if disableColSize:
-            self.grid_1.DisableDragColSize()
-            self.grid_2.DisableDragColSize()
+            self.device_grid.DisableDragColSize()
+            self.network_grid.DisableDragColSize()
         if disableColMove:
-            self.grid_1.DisableDragColMove()
-            self.grid_2.DisableDragColMove()
+            self.device_grid.DisableDragColMove()
+            self.network_grid.DisableDragColMove()
         self.disableProperties = True
-        self.grid_1.disableProperties = True
-        self.grid_2.disableProperties = True
-        self.grid_3.disableProperties = True
+        self.device_grid.disableProperties = True
+        self.network_grid.disableProperties = True
+        self.app_grid.disableProperties = True
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock])
 
     @api_tool_decorator(
@@ -476,26 +476,26 @@ class GridPanel(wx.Panel):
     ):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
         if enableGrid:
-            self.grid_1.Enable(True)
-            self.grid_2.Enable(True)
-            self.grid_3.Enable(True)
+            self.device_grid.Enable(True)
+            self.network_grid.Enable(True)
+            self.app_grid.Enable(True)
         if enableColSize:
-            self.grid_1.EnableDragColSize()
-            self.grid_2.EnableDragColSize()
-            self.grid_3.EnableDragColSize()
+            self.device_grid.EnableDragColSize()
+            self.network_grid.EnableDragColSize()
+            self.app_grid.EnableDragColSize()
         if enableColMove:
-            self.grid_1.EnableDragColMove()
-            self.grid_2.EnableDragColMove()
-            self.grid_3.EnableDragColMove()
+            self.device_grid.EnableDragColMove()
+            self.network_grid.EnableDragColMove()
+            self.app_grid.EnableDragColMove()
         self.disableProperties = False
-        self.grid_1.disableProperties = self.disableProperties
-        self.grid_2.disableProperties = self.disableProperties
-        self.grid_3.disableProperties = self.disableProperties
+        self.device_grid.disableProperties = self.disableProperties
+        self.network_grid.disableProperties = self.disableProperties
+        self.app_grid.disableProperties = self.disableProperties
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator()
     def getDeviceIdentifersFromGrid(self, tolerance=0):
-        if len(self.grid_1_contents) > 0:
+        if len(self.device_grid_contents) > 0:
             columns = [
                 "Esper Name",
                 "Esper Id",
@@ -509,7 +509,7 @@ class GridPanel(wx.Panel):
 
     def updateGridContent(self, event):
         evtVal = event.GetValue()
-        if self.grid_1_contents:
+        if self.device_grid_contents:
             device = evtVal[0]
             modified = evtVal[1]
             deviceListing = list(
@@ -521,16 +521,16 @@ class GridPanel(wx.Panel):
                         if type(device) is dict
                         else device
                     ),
-                    self.grid_1_contents,
+                    self.device_grid_contents,
                 )
             )
             for listing in deviceListing:
-                indx = self.grid_1_contents.index(listing)
+                indx = self.device_grid_contents.index(listing)
                 if modified == "alias":
                     listing["OriginalAlias"] = listing["Alias"]
                 elif modified == "tags":
                     listing["OriginalTags"] = listing["Tags"]
-                self.grid_1_contents[indx] = listing
+                self.device_grid_contents[indx] = listing
 
     def decrementOffset(self, event):
         if not self.parentFrame.isRunning:
@@ -559,8 +559,8 @@ class GridPanel(wx.Panel):
             headerLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
             headerLabels2 = list(Globals.CSV_NETWORK_ATTR_NAME.keys())
             colNum = 0
-            grid1Sizes = self.grid_1.GetColSizes()
-            grid2Sizes = self.grid_2.GetColSizes()
+            grid1Sizes = self.device_grid.GetColSizes()
+            grid2Sizes = self.network_grid.GetColSizes()
             for header in headerLabels2:
                 if grid2Sizes.GetSize(colNum) > 0:
                     self.grid2ColVisibility[str(header)] = True
@@ -578,7 +578,7 @@ class GridPanel(wx.Panel):
 
     @api_tool_decorator(locks=[Globals.grid1_lock])
     def getDeviceGroupFromGrid(self):
-        if len(self.grid_1_contents) > 0:
+        if len(self.device_grid_contents) > 0:
             columns = [
                 "Esper Name",
                 "Esper Id",
@@ -592,29 +592,29 @@ class GridPanel(wx.Panel):
         return []
 
     def thawGridsIfFrozen(self):
-        if self.grid_1.IsFrozen():
-            self.grid_1.Thaw()
-        if self.grid_2.IsFrozen():
-            self.grid_2.Thaw()
-        if self.grid_3.IsFrozen():
-            self.grid_3.Thaw()
+        if self.device_grid.IsFrozen():
+            self.device_grid.Thaw()
+        if self.network_grid.IsFrozen():
+            self.network_grid.Thaw()
+        if self.app_grid.IsFrozen():
+            self.app_grid.Thaw()
 
     def freezeGrids(self):
-        self.grid_1.Freeze()
-        self.grid_2.Freeze()
-        self.grid_3.Freeze()
+        self.device_grid.Freeze()
+        self.network_grid.Freeze()
+        self.app_grid.Freeze()
 
     def EmptyGrids(self):
         Globals.frame.SpreadsheetUploaded = False
-        self.grid_1.EmptyGrid()
-        self.grid_2.EmptyGrid()
-        self.grid_3.EmptyGrid()
+        self.device_grid.EmptyGrid()
+        self.network_grid.EmptyGrid()
+        self.app_grid.EmptyGrid()
         self.userEdited = []
-        self.grid_1_contents = None
-        self.grid_2_contents = None
-        self.grid_3_contents = None
+        self.device_grid_contents = None
+        self.network_grid_contents = None
+        self.app_grid_contents = None
 
     def UnsetSortingColumns(self):
-        self.grid_1.UnsetSortingColumn()
-        self.grid_2.UnsetSortingColumn()
-        self.grid_3.UnsetSortingColumn()
+        self.device_grid.UnsetSortingColumn()
+        self.network_grid.UnsetSortingColumn()
+        self.app_grid.UnsetSortingColumn()

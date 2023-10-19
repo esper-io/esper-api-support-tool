@@ -353,8 +353,8 @@ def fetchInstalledDevices(app, version, inFile):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                Globals.frame.gridPanel.grid_3.applyNewDataFrame(df)
-                Globals.frame.gridPanel.grid_3_contents = df.copy(deep=True)
+                Globals.frame.gridPanel.app_grid.applyNewDataFrame(df)
+                Globals.frame.gridPanel.app_grid_contents = df.copy(deep=True)
 
                 if hasattr(Globals.frame, "start_time"):
                     print(

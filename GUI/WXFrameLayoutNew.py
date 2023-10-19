@@ -592,7 +592,7 @@ class NewFrameLayout(wx.Frame):
         for item in deviceList.values():
             if len(item) > 1 and item[1]:
                 gridDeviceData.append(item[1])
-                self.gridPanel.grid_3_contents += (
+                self.gridPanel.app_grid_contents += (
                     item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
                 )
             postEventToFrame(
@@ -642,8 +642,8 @@ class NewFrameLayout(wx.Frame):
     ):
         if inFile.endswith(".csv"):
             result = pd.merge(
-                self.gridPanel.grid_1.Table.data,
-                self.gridPanel.grid_2.Table.data,
+                self.gridPanel.device_grid.Table.data,
+                self.gridPanel.network_grid.Table.data,
                 on=["Esper Name", "Group"],
                 how="outer"
             )
@@ -662,9 +662,9 @@ class NewFrameLayout(wx.Frame):
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
-            ) and len(self.gridPanel.grid_3.Table.data) > 0:
+            ) and len(self.gridPanel.app_grid.Table.data) > 0:
                 # self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
-                save_csv_pandas(inFile, self.gridPanel.grid_3.Table.data)
+                save_csv_pandas(inFile, self.gridPanel.app_grid.Table.data)
         elif inFile.endswith(".xlsx"):
             df_dict = {}
             if (
@@ -673,23 +673,23 @@ class NewFrameLayout(wx.Frame):
                 and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
             ):
                 result = pd.merge(
-                    self.gridPanel.grid_1.Table.data,
-                    self.gridPanel.grid_2.Table.data,
+                    self.gridPanel.device_grid.Table.data,
+                    self.gridPanel.network_grid.Table.data,
                     on=["Esper Name", "Group"],
                     how="outer"
                 )
                 result.dropna()
                 df_dict["Device & Network"] = result
             else:
-                df_dict["Device"] = self.gridPanel.grid_1.Table.data
+                df_dict["Device"] = self.gridPanel.device_grid.Table.data
                 if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
-                    df_dict["Network"] = self.gridPanel.grid_2.Table.data
+                    df_dict["Network"] = self.gridPanel.network_grid.Table.data
             if not action or (
                 action
                 and action == GeneralActions.GENERATE_APP_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ) and len(self.gridPanel.grid_3.Table.data) > 0:
-                df_dict["Application"] = self.gridPanel.grid_3.Table.data
+            ) and len(self.gridPanel.app_grid.Table.data) > 0:
+                df_dict["Application"] = self.gridPanel.app_grid.Table.data
             save_excel_pandas_xlxswriter(inFile, df_dict)
 
         Globals.THREAD_POOL.join(tolerance=tolarance)
@@ -798,19 +798,19 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def saveAppInfoAsFile(self, inFile, showAppDlg=True):
-        if self.gridPanel.grid_3_contents:
+        if self.gridPanel.app_grid_contents:
             gridData = []
             gridData.append(Globals.CSV_APP_ATTR_NAME)
             createNewFile(inFile)
 
             num = 1
-            for entry in self.gridPanel.grid_3_contents:
+            for entry in self.gridPanel.app_grid_contents:
                 if type(entry) is dict:
                     gridData.append(list(entry.values()))
                 elif type(entry) is list:
                     for row in entry:
                         gridData.append(list(row.values()))
-                val = (num / len(self.gridPanel.grid_3_contents)) * 100
+                val = (num / len(self.gridPanel.app_grid_contents)) * 100
                 if val <= 95:
                     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
                 num += 1
@@ -915,8 +915,8 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.disableGridProperties()
         self.gridPanel.freezeGrids()
         self.Logging("Processing Spreadsheet data...")
-        self.gridPanel.grid_1.applyNewDataFrame(data)
-        self.gridPanel.grid_1_contents = data.copy(deep=True)
+        self.gridPanel.device_grid.applyNewDataFrame(data)
+        self.gridPanel.device_grid_contents = data.copy(deep=True)
 
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, getItemForName=None):
@@ -1894,7 +1894,7 @@ class NewFrameLayout(wx.Frame):
             )
         elif actionClientData >= GridActions.MODIFY_ALIAS.value:
             # run grid action
-            if self.gridPanel.grid_1.GetNumberRows() > 0:
+            if self.gridPanel.device_grid.GetNumberRows() > 0:
                 runAction = True
                 result = None
                 if Globals.SHOW_GRID_DIALOG:
@@ -2162,8 +2162,8 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.grid_2.applyNewDataFrame(df)
-                self.gridPanel.grid_2_contents = df.copy(deep=True)
+                self.gridPanel.network_grid.applyNewDataFrame(df)
+                self.gridPanel.network_grid_contents = df.copy(deep=True)
             # Populate Device sheet
             if (
                 action == GeneralActions.GENERATE_DEVICE_REPORT.value
@@ -2173,8 +2173,8 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.grid_1.applyNewDataFrame(df)
-                self.gridPanel.grid_1_contents = df.copy(deep=True)
+                self.gridPanel.device_grid.applyNewDataFrame(df)
+                self.gridPanel.device_grid_contents = df.copy(deep=True)
             # Populate App sheet
             if (
                 action == GeneralActions.GENERATE_APP_REPORT.value
@@ -2184,8 +2184,8 @@ class NewFrameLayout(wx.Frame):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                self.gridPanel.grid_3.applyNewDataFrame(df)
-                self.gridPanel.grid_3_contents = df.copy(deep=True)
+                self.gridPanel.app_grid.applyNewDataFrame(df)
+                self.gridPanel.app_grid_contents = df.copy(deep=True)
 
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
@@ -2646,13 +2646,13 @@ class NewFrameLayout(wx.Frame):
 
     def applySearchColor(self, queryString, color, applyAll=False):
         self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.grid_1, queryString, color, applyAll
+            self.gridPanel.device_grid, queryString, color, applyAll
         )
         self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.grid_2, queryString, color, applyAll
+            self.gridPanel.network_grid, queryString, color, applyAll
         )
         self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.grid_3, queryString, color, applyAll
+            self.gridPanel.app_grid, queryString, color, applyAll
         )
 
     @api_tool_decorator()
