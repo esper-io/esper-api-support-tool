@@ -10,6 +10,7 @@ import wx.grid as gridlib
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
+from GUI.GridTable import GridTable
 from GUI.TabPanel import TabPanel
 from Utility.API.GroupUtility import (
     createGroup,
@@ -18,7 +19,7 @@ from Utility.API.GroupUtility import (
     getAllGroups,
     renameGroup,
 )
-from Utility.FileUtility import read_data_from_csv, write_data_to_csv
+from Utility.FileUtility import read_csv_via_pandas, read_data_from_csv, read_excel_via_openpyxl, write_data_to_csv
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
@@ -201,12 +202,7 @@ class GroupManagement(wx.Dialog):
 
         sizer_5 = wx.GridSizer(1, 1, 0, 0)
 
-        self.group_grid = gridlib.Grid(self.notebook_2_pane_2, wx.ID_ANY, size=(1, 1))
-        self.group_grid.CreateGrid(0, 3)
-        self.group_grid.EnableDragGridSize(0)
-        self.group_grid.SetColLabelValue(0, "Group Name")
-        self.group_grid.SetColLabelValue(1, "Parent Group Identifier")
-        self.group_grid.SetColLabelValue(2, "New Group Name")
+        self.group_grid = GridTable(self.notebook_2_pane_2, headers=self.expectedHeaders)
         sizer_5.Add(self.group_grid, 1, wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -253,7 +249,7 @@ class GroupManagement(wx.Dialog):
         self.button_4.Bind(wx.EVT_BUTTON, self.renameGroup)
         self.button_2.Bind(wx.EVT_BUTTON, self.deleteGroup)
         self.button_1.Bind(wx.EVT_BUTTON, self.addSubGroup)
-        self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
+        self.button_6.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
         self.button_5.Bind(wx.EVT_BUTTON, self.refreshTree)
         self.tree_ctrl_1.Bind(wx.EVT_TREE_SEL_CHANGED, self.checkActions)
@@ -397,7 +393,8 @@ class GroupManagement(wx.Dialog):
             self.tree_ctrl_2.ExpandAll()
             self.setCursorDefault()
         if self.group_grid.GetNumberRows() > 0 and forceRefresh:
-            self.group_grid.DeleteRows(0, self.group_grid.GetNumberRows())
+            df = pd.DataFrame(columns=self.expectedHeaders)
+            self.group_grid.applyNewDataFrame(df)
 
     @api_tool_decorator()
     def setCursorDefault(self):
@@ -833,65 +830,52 @@ class GroupManagement(wx.Dialog):
         elif treeItem:
             self.tree_ctrl_2.SetItemTextColour(treeItem, Color.red.value)
 
-    def openCSV(self, event):
-        filePath = None
-        with wx.FileDialog(
-            self,
+    def onUpload(self, event):
+        filePath = displayFileDialog(
             "Open Spreadsheet File",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-        ) as fileDialog:
-            Globals.OPEN_DIALOGS.append(fileDialog)
-            result = fileDialog.ShowModal()
-            Globals.OPEN_DIALOGS.remove(fileDialog)
-            if result == wx.ID_OK:
-                # Proceed loading the file chosen by the user
-                filePath = fileDialog.GetPath()
+            styles=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        )
+        
         if filePath and filePath.endswith(".csv"):
-            self.uploadCSV(filePath)
+            Globals.THREAD_POOL.enqueue(self.uploadCSV, filePath)
         elif filePath and filePath.endswith(".xlsx"):
-            self.uploadXlsx(filePath)
+            Globals.THREAD_POOL.enqueue(self.uploadXlsx, filePath)
 
     def uploadCSV(self, filePath):
         self.handlePreUploadActivity()
-        data = read_data_from_csv(filePath)
+        data = read_csv_via_pandas(filePath)
         self.processUploadData(data)
 
     def uploadXlsx(self, filePath):
         self.handlePreUploadActivity()
-        data = None
-        try:
-            dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
-            if hasattr(dfs, "keys"):
-                sheetKeys = dfs.keys()
-                for sheet in sheetKeys:
-                    data = dfs[sheet].values.tolist()
-                    break
-        except:
-            pass
+        data = read_excel_via_openpyxl(filePath, readAnySheet=True)
         self.processUploadData(data)
 
     def handlePreUploadActivity(self):
         self.setCursorBusy()
         if self.group_grid.GetNumberRows() > 0:
-            self.group_grid.DeleteRows(0, self.group_grid.GetNumberRows())
+            df = pd.DataFrame(columns=self.expectedHeaders)
+            self.group_grid.applyNewDataFrame(df)
         self.tree_ctrl_1.UnselectAll()
         self.tree_ctrl_2.UnselectAll()
         for item in self.uploadCSVTreeItems:
             self.tree_ctrl_2.Delete(item)
         self.uploadCSVTreeItems = []
 
+    @api_tool_decorator()
     def processUploadData(self, data):
-        if data:
-            for row in data:
+        if data is not None:
+            if data.columns.tolist() != self.expectedHeaders:
+                raise Exception("Invalid Spreadsheet File: Headers don't match")
+            
+            self.group_grid.applyNewDataFrame(data)
+            dataList = data.values.tolist()
+            for row in dataList:
                 if row != self.expectedHeaders:
-                    self.group_grid.AppendRows(1)
                     colNum = 0
                     rowEntry = []
                     for col in row:
-                        self.group_grid.SetCellValue(
-                            self.group_grid.GetNumberRows() - 1, colNum, str(col)
-                        )
                         if (colNum == 0 or colNum == 1) and not isApiKey(str(col)):
                             groupId = None
                             if str(col) in self.groupNameToId:

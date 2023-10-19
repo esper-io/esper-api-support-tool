@@ -112,7 +112,7 @@ class BulkFactoryReset(wx.Dialog):
         self.button_OK.Enable(False)
 
         self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
-        self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
+        self.button_6.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_OK.Bind(wx.EVT_BUTTON, self.onReset)
 
@@ -166,7 +166,7 @@ class BulkFactoryReset(wx.Dialog):
         self.button_OK.Enable(True)
         self.setCursorDefault()
 
-    def openCSV(self, event):
+    def onUpload(self, event):
         filePath = displayFileDialog(
             "Open Spreadsheet File",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
