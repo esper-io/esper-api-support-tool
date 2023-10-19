@@ -488,7 +488,9 @@ def correctSaveFileName(inFile):
     return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)
 
 
-def displayFileDialog(msg, wildcard, defaultFile="", styles=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT):
+def displayFileDialog(
+    msg, wildcard, defaultFile="", styles=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+):
     Globals.frame.isSaving = True
     inFile = ""
     result = wx.ID_CANCEL

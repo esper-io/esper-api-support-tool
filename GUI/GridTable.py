@@ -243,7 +243,11 @@ class GridTable(gridlib.Grid):
     def SetStatusCellColor(self):
         # Check to see if rows exsist
         numRows = self.GetNumberRows()
-        if numRows > 0 and "Status" in self.headersLabels and not Globals.frame.SpreadsheetUploaded:
+        if (
+            numRows > 0
+            and "Status" in self.headersLabels
+            and not Globals.frame.SpreadsheetUploaded
+        ):
             colNum = self.headersLabels.index("Status")
             for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
@@ -258,10 +262,14 @@ class GridTable(gridlib.Grid):
                     self.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
                 elif value == "Provisioning" or value == "Onboarding":
                     self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightOrange.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightOrange.value
+                    )
                 elif value == "Wipe In-Progress":
                     self.SetCellTextColour(rowNum, colNum, Color.purple.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightPurple.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightPurple.value
+                    )
                 elif value == "Unknown":
                     self.SetCellTextColour(rowNum, colNum, Color.black.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.white.value)

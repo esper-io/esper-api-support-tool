@@ -1,8 +1,8 @@
-
 import pandas as pd
 
 import wx
 import wx.grid
+
 
 class GridDataTable(wx.grid.GridTableBase):
     def __init__(self, data=None):

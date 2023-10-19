@@ -22,7 +22,9 @@ class WidgetPicker(wx.Dialog):
         self.SetTitle("Confgire Widgets")
 
         self.deviceList = []
-        self.gridHeader = ["Device/Group Identifier",]
+        self.gridHeader = [
+            "Device/Group Identifier",
+        ]
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -317,7 +319,7 @@ class WidgetPicker(wx.Dialog):
         finally:
             self.button_1.Enable(True)
             self.checkInput()
-    
+
     def addIdToDeviceList(self, identifers, gridTableData):
         for id in identifers:
             if id and id not in self.deviceList:

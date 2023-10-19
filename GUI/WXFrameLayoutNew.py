@@ -641,14 +641,21 @@ class NewFrameLayout(wx.Frame):
         tolarance=1,
     ):
         if inFile.endswith(".csv"):
-            result = pd.merge(
-                self.gridPanel.device_grid.Table.data,
-                self.gridPanel.network_grid.Table.data,
-                on=["Esper Name", "Group"],
-                how="outer"
-            )
-            result.dropna()
-            save_csv_pandas(inFile, result)
+            if (
+                self.gridPanel.device_grid.Table.data is not None
+                and len(self.gridPanel.device_grid.Table.data) > 0
+            ) or (
+                self.gridPanel.network_grid.Table.data is not None
+                and len(self.gridPanel.network_grid.Table.data) > 0
+            ):
+                result = pd.merge(
+                    self.gridPanel.device_grid.Table.data,
+                    self.gridPanel.network_grid.Table.data,
+                    on=["Esper Name", "Group"],
+                    how="outer",
+                )
+                result.dropna()
+                save_csv_pandas(inFile, result)
             if (
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -676,19 +683,26 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.device_grid.Table.data,
                     self.gridPanel.network_grid.Table.data,
                     on=["Esper Name", "Group"],
-                    how="outer"
+                    how="outer",
                 )
                 result.dropna()
                 df_dict["Device & Network"] = result
-            else:
+            elif (
+                self.gridPanel.device_grid.Table.data is not None
+                and len(self.gridPanel.device_grid.Table.data) > 0
+            ):
                 df_dict["Device"] = self.gridPanel.device_grid.Table.data
                 if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
                     df_dict["Network"] = self.gridPanel.network_grid.Table.data
-            if not action or (
-                action
-                and action == GeneralActions.GENERATE_APP_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ) and len(self.gridPanel.app_grid.Table.data) > 0:
+            if (
+                not action
+                or (
+                    action
+                    and action == GeneralActions.GENERATE_APP_REPORT.value
+                    or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                )
+                and len(self.gridPanel.app_grid.Table.data) > 0
+            ):
                 df_dict["Application"] = self.gridPanel.app_grid.Table.data
             save_excel_pandas_xlxswriter(inFile, df_dict)
 

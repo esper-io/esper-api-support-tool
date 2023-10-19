@@ -173,19 +173,28 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction):
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
 
-    match = list(filter(lambda x: 
-                        x["Esper Name"] == deviceName 
-                        or x["Esper Id"] == device
-                        or x["Serial Number"] == serial
-                        or x["Custom Serial Number"] == serial
-                        or x["IMEI 1"] == imei1
-                        or x["IMEI 2"] == imei2
-                        , aliasList))
+    match = list(
+        filter(
+            lambda x: x["Esper Name"] == deviceName
+            or x["Esper Id"] == device
+            or x["Serial Number"] == serial
+            or x["Custom Serial Number"] == serial
+            or x["IMEI 1"] == imei1
+            or x["IMEI 2"] == imei2,
+            aliasList,
+        )
+    )
     # Alias modification
     if match:
         match = match[0]
-        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
-        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        deviceName = (
+            match["Esper Name"]
+            if "Esper Name" in match and match["Esper Name"]
+            else deviceName
+        )
+        deviceId = (
+            match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        )
         newName = match["Alias"] if "Alias" in match else ""
 
         logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
@@ -274,17 +283,27 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction):
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
 
-    match = list(filter(lambda x: 
-                        x["Esper Name"] == deviceName 
-                        or x["Esper Id"] == device
-                        or x["Serial Number"] == serial
-                        or x["Custom Serial Number"] == serial
-                        or x["IMEI 1"] == imei1
-                        or x["IMEI 2"] == imei2, tagsFromGrid))
+    match = list(
+        filter(
+            lambda x: x["Esper Name"] == deviceName
+            or x["Esper Id"] == device
+            or x["Serial Number"] == serial
+            or x["Custom Serial Number"] == serial
+            or x["IMEI 1"] == imei1
+            or x["IMEI 2"] == imei2,
+            tagsFromGrid,
+        )
+    )
     if match:
         match = match[0]
-        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
-        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        deviceName = (
+            match["Esper Name"]
+            if "Esper Name" in match and match["Esper Name"]
+            else deviceName
+        )
+        deviceId = (
+            match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
+        )
         tagsFromCell = match["Tags"] if "Tags" in match else []
 
         try:
@@ -416,16 +435,12 @@ def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     devices = []
     splitResults = splitListIntoChunks(deviceIdentifers)
     for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(
-            getDevicesFromGridHelper, chunk, devices
-        )
+        Globals.THREAD_POOL.enqueue(getDevicesFromGridHelper, chunk, devices)
     Globals.THREAD_POOL.join(tolerance)
     return devices
 
 
-def getDevicesFromGridHelper(
-    deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY
-):
+def getDevicesFromGridHelper(deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY):
     for entry in deviceIdentifers:
         api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
@@ -490,13 +505,17 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
         elif type(device) is str:
             deviceId = device
 
-        match = list(filter(lambda x: 
-                        x["Esper Name"] == deviceName 
-                        or x["Esper Id"] == deviceId
-                        or x["Serial Number"] == serial
-                        or x["Custom Serial Number"] == serial
-                        or x["IMEI 1"] == imei1
-                        or x["IMEI 2"] == imei2, groupList))
+        match = list(
+            filter(
+                lambda x: x["Esper Name"] == deviceName
+                or x["Esper Id"] == deviceId
+                or x["Serial Number"] == serial
+                or x["Custom Serial Number"] == serial
+                or x["IMEI 1"] == imei1
+                or x["IMEI 2"] == imei2,
+                groupList,
+            )
+        )
         if match:
             match = match[0]
             groupName = match["Group"]

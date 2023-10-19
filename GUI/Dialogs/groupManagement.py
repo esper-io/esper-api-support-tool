@@ -19,7 +19,12 @@ from Utility.API.GroupUtility import (
     getAllGroups,
     renameGroup,
 )
-from Utility.FileUtility import read_csv_via_pandas, read_data_from_csv, read_excel_via_openpyxl, write_data_to_csv
+from Utility.FileUtility import (
+    read_csv_via_pandas,
+    read_data_from_csv,
+    read_excel_via_openpyxl,
+    write_data_to_csv,
+)
 from Utility.Resource import (
     correctSaveFileName,
     displayMessageBox,
@@ -202,7 +207,9 @@ class GroupManagement(wx.Dialog):
 
         sizer_5 = wx.GridSizer(1, 1, 0, 0)
 
-        self.group_grid = GridTable(self.notebook_2_pane_2, headers=self.expectedHeaders)
+        self.group_grid = GridTable(
+            self.notebook_2_pane_2, headers=self.expectedHeaders
+        )
         sizer_5.Add(self.group_grid, 1, wx.EXPAND, 0)
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -836,7 +843,7 @@ class GroupManagement(wx.Dialog):
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
             styles=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         )
-        
+
         if filePath and filePath.endswith(".csv"):
             Globals.THREAD_POOL.enqueue(self.uploadCSV, filePath)
         elif filePath and filePath.endswith(".xlsx"):
@@ -868,7 +875,7 @@ class GroupManagement(wx.Dialog):
         if data is not None:
             if data.columns.tolist() != self.expectedHeaders:
                 raise Exception("Invalid Spreadsheet File: Headers don't match")
-            
+
             self.group_grid.applyNewDataFrame(data)
             dataList = data.values.tolist()
             for row in dataList:

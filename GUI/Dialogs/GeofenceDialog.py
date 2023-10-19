@@ -184,7 +184,9 @@ class GeofenceDialog(wx.Dialog):
     def applyGridSettings(self):
         self.geofence_grid.UseNativeColHeader()
         self.geofence_grid.AutoSizeColumns()
-        self.geofence_grid.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.geofence_grid.Bind(
+            wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem
+        )
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -237,16 +239,18 @@ class GeofenceDialog(wx.Dialog):
                     groups = getAllGroups(name=entry, maxAttempt=2, tolerance=1)
                     if groups:
                         for groupRes in groups["results"]:
-                            if groupRes["name"] == str(entry) or groupRes["path"] == str(
-                                entry
-                            ):
+                            if groupRes["name"] == str(entry) or groupRes[
+                                "path"
+                            ] == str(entry):
                                 group = groupRes
                                 break
                 if group:
                     expandedGroupData[self.gridHeaderLabels[1]].append(group["path"])
                     expandedGroupData[self.gridHeaderLabels[2]].append(group["id"])
                 else:
-                    expandedGroupData[self.gridHeaderLabels[1]].append("<Could Not Find Group>")
+                    expandedGroupData[self.gridHeaderLabels[1]].append(
+                        "<Could Not Find Group>"
+                    )
                     expandedGroupData[self.gridHeaderLabels[2]].append("")
             data = pd.DataFrame(expandedGroupData, columns=self.gridHeaderLabels)
             self.geofence_grid.applyNewDataFrame(data)

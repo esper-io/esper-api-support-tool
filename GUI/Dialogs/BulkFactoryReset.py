@@ -10,7 +10,12 @@ import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.GridTable import GridTable
-from Utility.FileUtility import read_csv_via_pandas, read_data_from_csv, read_excel_via_openpyxl, write_data_to_csv
+from Utility.FileUtility import (
+    read_csv_via_pandas,
+    read_data_from_csv,
+    read_excel_via_openpyxl,
+    write_data_to_csv,
+)
 from Utility.Resource import (
     displayMessageBox,
     displayFileDialog,
@@ -196,8 +201,8 @@ class BulkFactoryReset(wx.Dialog):
     def processUploadData(self, data):
         if data is not None:
             gridTableData = {
-                    self.expectedHeaders[0]: [],
-                }
+                self.expectedHeaders[0]: [],
+            }
             identifers = data[data.columns.values.tolist()[0]].tolist()
             for id in identifers:
                 if id and id not in self.identifers:

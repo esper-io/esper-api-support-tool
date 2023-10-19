@@ -203,16 +203,13 @@ class GridPanel(wx.Panel):
                 ]
                 if match or applyAll:
                     for colNum in range(grid.GetNumberCols()):
-                        if (
-                            colNum < grid.GetNumberCols()
-                            and (
-                                grid.GetCellBackgroundColour(rowNum, colNum)
-                                == Color.white.value
-                                or (
-                                    applyAll
-                                    and grid.GetCellBackgroundColour(rowNum, colNum)
-                                    == Color.lightYellow.value
-                                )
+                        if colNum < grid.GetNumberCols() and (
+                            grid.GetCellBackgroundColour(rowNum, colNum)
+                            == Color.white.value
+                            or (
+                                applyAll
+                                and grid.GetCellBackgroundColour(rowNum, colNum)
+                                == Color.lightYellow.value
                             )
                         ):
                             grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
@@ -246,7 +243,7 @@ class GridPanel(wx.Panel):
                                 indx,
                                 self.device_grid,
                                 Globals.grid1_lock,
-                                showState=isChecked
+                                showState=isChecked,
                             )
                             self.grid1ColVisibility[label] = isChecked
                         elif page == "Network":
@@ -257,7 +254,7 @@ class GridPanel(wx.Panel):
                                 indx,
                                 self.network_grid,
                                 Globals.grid2_lock,
-                                showState=isChecked
+                                showState=isChecked,
                             )
                             self.grid2ColVisibility[label] = isChecked
                         elif page == "Application":
@@ -266,7 +263,7 @@ class GridPanel(wx.Panel):
                                 indx,
                                 self.app_grid,
                                 Globals.grid3_lock,
-                                showState=isChecked
+                                showState=isChecked,
                             )
                             self.grid3ColVisibility[label] = isChecked
 
@@ -287,7 +284,7 @@ class GridPanel(wx.Panel):
                     indx,
                     self.device_grid,
                     Globals.grid1_lock,
-                    showState=self.grid1ColVisibility[col]
+                    showState=self.grid1ColVisibility[col],
                 )
         for col in grid2Cols:
             if col in self.grid2HeaderLabels:
@@ -296,7 +293,7 @@ class GridPanel(wx.Panel):
                     indx,
                     self.network_grid,
                     Globals.grid2_lock,
-                    showState=self.grid2ColVisibility[col]
+                    showState=self.grid2ColVisibility[col],
                 )
         for col in grid3Cols:
             if col in self.grid3HeaderLabels:
@@ -305,7 +302,7 @@ class GridPanel(wx.Panel):
                     indx,
                     self.app_grid,
                     Globals.grid3_lock,
-                    showState=self.grid3ColVisibility[col]
+                    showState=self.grid3ColVisibility[col],
                 )
 
     @api_tool_decorator()
@@ -370,7 +367,7 @@ class GridPanel(wx.Panel):
                 "IMEI 1",
                 "IMEI 2",
                 "Serial Number",
-                "Custom Serial Number"
+                "Custom Serial Number",
             ]
             return self.getDeviceRowsSpecificCols(columns)
         return []
@@ -385,7 +382,7 @@ class GridPanel(wx.Panel):
                 "IMEI 1",
                 "IMEI 2",
                 "Serial Number",
-                "Custom Serial Number"
+                "Custom Serial Number",
             ]
             return self.getDeviceRowsSpecificCols(columns)
         return []
@@ -427,7 +424,9 @@ class GridPanel(wx.Panel):
             returnList.append(entry)
         return returnList
 
-    @api_tool_decorator(locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
+    @api_tool_decorator(
+        locks=[Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock]
+    )
     def toggleColVisibilityInGrid(self, event, grid, lock, showState=None):
         """ Toggle Column Visibility in Device Grid """
         acquireLocks([lock])
@@ -502,7 +501,7 @@ class GridPanel(wx.Panel):
                 "IMEI 1",
                 "IMEI 2",
                 "Serial Number",
-                "Custom Serial Number"
+                "Custom Serial Number",
             ]
             return self.getDeviceRowsSpecificCols(columns)
         return []
@@ -586,7 +585,7 @@ class GridPanel(wx.Panel):
                 "IMEI 1",
                 "IMEI 2",
                 "Serial Number",
-                "Custom Serial Number"
+                "Custom Serial Number",
             ]
             return self.getDeviceRowsSpecificCols(columns)
         return []
