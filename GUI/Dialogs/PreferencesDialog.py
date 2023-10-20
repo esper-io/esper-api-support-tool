@@ -138,17 +138,6 @@ class PreferencesDialog(wx.Dialog):
             "Allow EAST to automatically report issues raised and relayed back to the user (most Error dialogs).",
         )
 
-        (_, _, self.checkbox_28,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Display Terms on Launch",
-            wx.CheckBox,
-            "Display our Terms for tool use on launch",
-        )
-        self.checkbox_28.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SHOW_DISCLAIMER else wx.CHK_CHECKED
-        )
-
         # Report Options
         self.report = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.report.Hide()
@@ -584,9 +573,9 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_30,) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
-            "Show Terms & Conditions",
+            "Show Terms and Conditions",
             wx.CheckBox,
-            "Show Terms & Conditions",
+            "Show Terms and Conditions",
         )
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -735,7 +724,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleEnabled": self.checkbox_26.IsChecked(),
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
-            "showDisclaimer": self.checkbox_28.IsChecked(),
+            "showDisclaimer": self.checkbox_30.IsChecked(),
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
@@ -1131,7 +1120,7 @@ class PreferencesDialog(wx.Dialog):
                 self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
             )
 
-        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_28, True):
+        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, True):
             Globals.SHOW_DISCLAIMER = True
             self.checkbox_30.Set3StateValue(wx.CHK_CHECKED)
         else:
