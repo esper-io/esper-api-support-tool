@@ -3,7 +3,6 @@ import pandas as pd
 import wx
 import wx.grid
 
-
 class GridDataTable(wx.grid.GridTableBase):
     def __init__(self, data=None):
         wx.grid.GridTableBase.__init__(self)
@@ -35,12 +34,3 @@ class GridDataTable(wx.grid.GridTableBase):
 
     def GetAttr(self, row, col, prop):
         return super().GetAttr(row, col, prop)
-
-    def AppendRows(self, numRows=1):
-        beforeIndx = len(self.data.index)
-        newRow = []
-        for _ in range(len(self.data.columns)):
-            newRow.append("")
-        for _ in range(numRows):
-            self.data.loc[len(self.data.index)] = newRow
-        return beforeIndx + numRows == len(self.data.index)

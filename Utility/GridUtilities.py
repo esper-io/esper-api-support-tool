@@ -34,13 +34,6 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 deviceInfo["AppsEntry"].append(info)
 
 
-def addColToGridRow(
-    grid: Grid, rowNum: int, colNum: int, colValue: str, isEditable: bool = True
-):
-    grid.SetCellValue(rowNum, colNum, colValue)
-    grid.SetReadOnly(rowNum, colNum, isEditable)
-
-
 def createDataFrameFromDict(headerList, sourceData):
     newData = {}
     for header in headerList:

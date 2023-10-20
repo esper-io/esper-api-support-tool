@@ -145,8 +145,6 @@ def populateDeviceList(device, deviceInfo, appData, latestData, deviceList, indx
 @api_tool_decorator()
 def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
-    if hasattr(Globals.frame, "start_time"):
-        print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
     if api_response:
         if hasattr(api_response, "next"):
             if api_response.next:
@@ -353,14 +351,8 @@ def fetchInstalledDevices(app, version, inFile):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                Globals.frame.gridPanel.app_grid.applyNewDataFrame(df)
+                Globals.frame.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False)
                 Globals.frame.gridPanel.app_grid_contents = df.copy(deep=True)
-
-                if hasattr(Globals.frame, "start_time"):
-                    print(
-                        "Fetch deviceinfo list time: %s"
-                        % (time.time() - Globals.frame.start_time)
-                    )
 
                 postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 80)
                 Globals.frame.saveGridData(
@@ -371,10 +363,6 @@ def fetchInstalledDevices(app, version, inFile):
                 )
                 Globals.frame.sleepInhibitor.uninhibit()
                 postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
-                if hasattr(Globals.frame, "start_time"):
-                    print(
-                        "Execution time: %s" % (time.time() - Globals.frame.start_time)
-                    )
     else:
         displayMessageBox(
             (
@@ -1045,9 +1033,6 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 10)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching basic device information")
-
-    if hasattr(Globals.frame, "start_time"):
-        print("Fetch Device time: %s" % (time.time() - Globals.frame.start_time))
 
     getApps = False
     getLatestEvents = True

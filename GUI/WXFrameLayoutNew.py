@@ -36,7 +36,7 @@ from Utility.FileUtility import (
     write_data_to_csv,
     write_json_file,
 )
-from Utility.GridUtilities import addColToGridRow, createDataFrameFromDict
+from Utility.GridUtilities import createDataFrameFromDict
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -581,7 +581,6 @@ class NewFrameLayout(wx.Frame):
         self, inFile, action=None, showDlg=True, allDevices=False, tolarance=1
     ):
         self.sleepInhibitor.inhibit()
-        self.start_time = time.time()
         self.Logging("Obtaining Device data....")
         deviceList = getAllDeviceInfo(
             self, action=action, allDevices=allDevices, tolarance=tolarance
@@ -602,12 +601,6 @@ class NewFrameLayout(wx.Frame):
             num += 1
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
-        if hasattr(Globals.frame, "start_time"):
-            print(
-                "Fetch deviceinfo list time: %s"
-                % (time.time() - Globals.frame.start_time)
-            )
-
         self.Logging("Finished compiling information")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
 
@@ -618,8 +611,6 @@ class NewFrameLayout(wx.Frame):
         )
         self.sleepInhibitor.uninhibit()
         postEventToFrame(eventUtil.myEVT_COMPLETE, (True, -1))
-        if hasattr(self, "start_time"):
-            print("Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def saveFile(self, inFile):
@@ -2108,8 +2099,6 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def onFetch(self, event):
-        if hasattr(self, "start_time"):
-            print("Fetch Execution time: %s" % (time.time() - self.start_time))
         evtValue = event.GetValue()
         self.toggleEnabledState(False)
         if evtValue:
@@ -2176,7 +2165,7 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.network_grid.applyNewDataFrame(df)
+                self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False)
                 self.gridPanel.network_grid_contents = df.copy(deep=True)
             # Populate Device sheet
             if (
@@ -2187,7 +2176,7 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.device_grid.applyNewDataFrame(df)
+                self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False)
                 self.gridPanel.device_grid_contents = df.copy(deep=True)
             # Populate App sheet
             if (
@@ -2198,7 +2187,7 @@ class NewFrameLayout(wx.Frame):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                self.gridPanel.app_grid.applyNewDataFrame(df)
+                self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False)
                 self.gridPanel.app_grid_contents = df.copy(deep=True)
 
         Globals.THREAD_POOL.enqueue(
@@ -2304,8 +2293,6 @@ class NewFrameLayout(wx.Frame):
             eventUtil.myEVT_PROCESS_FUNCTION,
             self.Refresh,
         )
-        if hasattr(self, "start_time"):
-            print("Run Execution time: %s" % (time.time() - self.start_time))
 
     @api_tool_decorator()
     def onActivate(self, event, skip=True):

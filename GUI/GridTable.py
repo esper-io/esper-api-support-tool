@@ -21,7 +21,7 @@ class GridTable(gridlib.Grid):
         if data is None:
             data = pd.DataFrame(columns=self.headersLabels)
         self.CreateGrid(len(data), len(data.columns))
-        self.applyNewDataFrame(data)
+        self.applyNewDataFrame(data, checkColumns=False)
 
         self.sortedColumn = None
         self.sortAcesnding = True
@@ -63,29 +63,29 @@ class GridTable(gridlib.Grid):
 
         self.SetStatusCellColor()
         self.ForceRefresh()
-
-    def applyNewDataFrame(self, data):
+    def applyNewDataFrame(self, data, checkColumns=True):
         if data is None:
             data = pd.DataFrame(columns=self.headersLabels)
         else:
-            dropColumns = []
-            renameColumns = {}
-            matchingColumns = []
-            for column in data.columns:
-                matchFound = False
-                for expectedCol in self.headersLabels:
-                    if getStrRatioSimilarity(column, expectedCol) >= 95:
-                        renameColumns[column] = expectedCol
-                        matchingColumns.append(expectedCol)
-                        matchFound = True
-                        break
-                if not matchFound:
-                    dropColumns.append(column)
-            missingColumns = list(set(self.headersLabels) - set(matchingColumns))
-            for missingColumn in missingColumns:
-                data[missingColumn] = ""
-            data = data.drop(columns=dropColumns, axis=1)
-            data = data.rename(columns=renameColumns)
+            if checkColumns:
+                dropColumns = []
+                renameColumns = {}
+                matchingColumns = []
+                for column in data.columns:
+                    matchFound = False
+                    for expectedCol in self.headersLabels:
+                        if getStrRatioSimilarity(column, expectedCol) >= 95:
+                            renameColumns[column] = expectedCol
+                            matchingColumns.append(expectedCol)
+                            matchFound = True
+                            break
+                    if not matchFound:
+                        dropColumns.append(column)
+                missingColumns = list(set(self.headersLabels) - set(matchingColumns))
+                for missingColumn in missingColumns:
+                    data[missingColumn] = ""
+                data = data.drop(columns=dropColumns, axis=1)
+                data = data.rename(columns=renameColumns)
 
         for header in Globals.NUMERIC_COLUMNS:
             if header in data.columns:
@@ -124,15 +124,12 @@ class GridTable(gridlib.Grid):
             pass
         determineDoHereorMainThread(self.AutoSizeColumns)
 
-    def AppendRows(self, numRows=1, updateLabels=True):
-        return self.table.AppendRows(numRows)
-
     def SetCellValue(self, *args, **kw):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
         data = pd.DataFrame(columns=self.headersLabels)
-        self.applyNewDataFrame(data)
+        self.applyNewDataFrame(data, checkColumns=False)
 
     def SortColumn(self, event):
         col = None
@@ -151,7 +148,7 @@ class GridTable(gridlib.Grid):
             df = self.table.data.sort_values(
                 self.GetColLabelValue(col), ascending=self.sortAcesnding
             )
-            self.applyNewDataFrame(df)
+            self.applyNewDataFrame(df, checkColumns=False)
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
