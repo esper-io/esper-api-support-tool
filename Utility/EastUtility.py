@@ -73,8 +73,6 @@ def TakeAction(frame, input, action, isDevice=False):
         or action == GeneralActions.GENERATE_INFO_REPORT.value
         or action == GeneralActions.GENERATE_DEVICE_REPORT.value
     ):
-        frame.gridPanel.button_2.Enable(False)
-        frame.gridPanel.button_1.Enable(False)
         frame.gridPanel.EmptyGrids()
         frame.gridPanel.disableGridProperties()
         if platform.system() == "Windows":
@@ -145,32 +143,6 @@ def populateDeviceList(device, deviceInfo, appData, latestData, deviceList, indx
 @api_tool_decorator()
 def iterateThroughDeviceList(frame, action, api_response, entId):
     """Iterates Through Each Device And Performs A Specified Action"""
-    if api_response:
-        if hasattr(api_response, "next"):
-            if api_response.next:
-                frame.gridArrowState["next"] = True
-            else:
-                frame.gridArrowState["next"] = False
-        elif type(api_response) is dict and "next" in api_response:
-            if api_response["next"]:
-                frame.gridArrowState["next"] = True
-            else:
-                frame.gridArrowState["next"] = False
-        else:
-            frame.gridArrowState["next"] = False
-        if hasattr(api_response, "previous"):
-            if api_response.previous:
-                frame.gridArrowState["prev"] = True
-            else:
-                frame.gridArrowState["prev"] = False
-        elif type(api_response) is dict and "previous" in api_response:
-            if api_response["previous"]:
-                frame.gridArrowState["prev"] = True
-            else:
-                frame.gridArrowState["prev"] = False
-        else:
-            frame.gridArrowState["prev"] = False
-
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
 
     getApps = (

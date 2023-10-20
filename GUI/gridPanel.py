@@ -47,24 +47,6 @@ class GridPanel(wx.Panel):
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_2.Add(sizer_3, 1, wx.ALIGN_RIGHT | wx.BOTTOM | wx.EXPAND, 5)
 
-        prev_icon = scale_bitmap(resourcePath("Images/prev.png"), 20, 20)
-        self.button_1 = wx.BitmapButton(
-            self,
-            wx.ID_BACKWARD,
-            prev_icon,
-        )
-        self.button_1.SetToolTip("Load previous page of devices.")
-        sizer_3.Add(self.button_1, 0, wx.RIGHT, 5)
-
-        next_icon = scale_bitmap(resourcePath("Images/next.png"), 20, 20)
-        self.button_2 = wx.BitmapButton(
-            self,
-            wx.ID_FORWARD,
-            next_icon,
-        )
-        self.button_2.SetToolTip("Load next page of devices.")
-        sizer_3.Add(self.button_2, 0, wx.LEFT, 5)
-
         self.notebook_2 = wx.Notebook(self, wx.ID_ANY)
         self.notebook_2.SetThemeEnabled(False)
         grid_sizer_2.Add(self.notebook_2, 1, wx.EXPAND, 0)
@@ -112,13 +94,6 @@ class GridPanel(wx.Panel):
         grid_sizer_2.AddGrowableRow(1)
         grid_sizer_2.AddGrowableCol(0)
         self.SetSizer(grid_sizer_2)
-
-        self.Layout()
-
-        self.button_1.Bind(wx.EVT_BUTTON, self.decrementOffset)
-        self.button_2.Bind(wx.EVT_BUTTON, self.incrementOffset)
-        self.button_1.Enable(False)
-        self.button_2.Enable(False)
 
         self.Layout()
 
@@ -420,7 +395,7 @@ class GridPanel(wx.Panel):
                             properTagList = properTagList[0 : Globals.MAX_TAGS]
                         entry[col] = properTagList
                 else:
-                    entry[col] = row[columns.index(col)]
+                    entry[col] = row[columns.index(col)].strip()
             returnList.append(entry)
         return returnList
 
@@ -530,20 +505,6 @@ class GridPanel(wx.Panel):
                 elif modified == "tags":
                     listing["OriginalTags"] = listing["Tags"]
                 self.device_grid_contents[indx] = listing
-
-    def decrementOffset(self, event):
-        if not self.parentFrame.isRunning:
-            Globals.offset = Globals.offset - Globals.limit
-            if self.parentFrame and hasattr(self.parentFrame, "fetchData"):
-                self.parentFrame.fetchData(False)
-        event.Skip()
-
-    def incrementOffset(self, event):
-        if not self.parentFrame.isRunning:
-            Globals.offset = Globals.offset + Globals.limit
-            if self.parentFrame and hasattr(self.parentFrame, "fetchData"):
-                self.parentFrame.fetchData(False)
-        event.Skip()
 
     def onSingleSelect(self, event):
         """

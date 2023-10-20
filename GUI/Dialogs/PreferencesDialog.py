@@ -47,7 +47,6 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
-            "groupFetchAll",
             "replaceSerial",
             "showDisabledDevices",
             "lastSeenAsDate",
@@ -682,7 +681,6 @@ class PreferencesDialog(wx.Dialog):
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
-            "groupFetchAll": self.checkbox_16.IsChecked(),
             "replaceSerial": self.checkbox_17.IsChecked(),
             "showDisabledDevices": self.checkbox_18.IsChecked(),
             "lastSeenAsDate": self.checkbox_19.IsChecked(),
@@ -719,7 +717,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
-        Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
         Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
         Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
@@ -953,11 +950,6 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.SAVE_VISIBILITY = False
 
-        if self.checkBooleanValuePrefAndSet("groupFetchAll", self.checkbox_16):
-            Globals.GROUP_FETCH_ALL = True
-        else:
-            Globals.GROUP_FETCH_ALL = False
-
         if self.checkBooleanValuePrefAndSet("replaceSerial", self.checkbox_17):
             Globals.REPLACE_SERIAL = True
         else:
@@ -1176,8 +1168,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.FONT_SIZE
         elif key == "saveColVisibility":
             return Globals.SAVE_VISIBILITY
-        elif key == "groupFetchAll":
-            return Globals.GROUP_FETCH_ALL
         elif key == "replaceSerial":
             return Globals.REPLACE_SERIAL
         elif key == "showDisabledDevices":

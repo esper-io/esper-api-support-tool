@@ -144,7 +144,6 @@ class NewFrameLayout(wx.Frame):
         self.kill = False
         self.SpreadsheetUploaded = False
         self.defaultDir = os.getcwd()
-        self.gridArrowState = {"next": False, "prev": False}
         self.groups = None
         self.groupManage = None
         self.AppState = None
@@ -585,20 +584,36 @@ class NewFrameLayout(wx.Frame):
         deviceList = getAllDeviceInfo(
             self, action=action, allDevices=allDevices, tolarance=tolarance
         )
-        gridDeviceData = []
         num = 1
         self.Logging("Processing device information for file")
-        for item in deviceList.values():
-            if len(item) > 1 and item[1]:
-                gridDeviceData.append(item[1])
-                self.gridPanel.app_grid_contents += (
-                    item[1]["AppsEntry"] if "AppsEntry" in item[1] else []
-                )
-            postEventToFrame(
-                eventUtil.myEVT_UPDATE_GAUGE,
-                (int(num / len(deviceList.values())) * 35) + 50,
+        if (
+                action == GeneralActions.GENERATE_DEVICE_REPORT.value
+                or action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+            self.gridPanel.device_grid_contents = createDataFrameFromDict(
+                        Globals.CSV_TAG_ATTR_NAME, deviceList.values()
+                    )
+        if (
+                action == GeneralActions.GENERATE_INFO_REPORT.value
+                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+            ):
+            self.gridPanel.network_grid_contents = createDataFrameFromDict(
+                Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
             )
-            num += 1
+        if (
+            action == GeneralActions.GENERATE_APP_REPORT.value
+            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        ):
+            input = []
+            for item in deviceList.values():
+                input.extend(item["AppsEntry"] if "AppsEntry" in item else [])
+                postEventToFrame(
+                    eventUtil.myEVT_UPDATE_GAUGE,
+                    (int(num / len(deviceList.values())) * 35) + 50,
+                )
+                num += 1
+            self.gridPanel.app_grid_contents = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
         self.Logging("Finished compiling information")
@@ -661,7 +676,6 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
             ) and len(self.gridPanel.app_grid.Table.data) > 0:
-                # self.saveAppInfoAsFile(inFile, showAppDlg=showAppDlg)
                 save_csv_pandas(inFile, self.gridPanel.app_grid.Table.data)
         elif inFile.endswith(".xlsx"):
             df_dict = {}
@@ -714,124 +728,6 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory, isfile=True)
-
-    def mergeDataSource(self, deviceList, networkList):
-        newData = []
-        networkIndx = {}
-        indx = 0
-        for network in networkList:
-            if "network_info" in network:
-                network = network["network_info"]
-            name = network["Esper Name"]
-            networkIndx[name] = indx
-            indx += 1
-        for device in deviceList:
-            name = device["EsperName"]
-            if name in networkIndx:
-                device.update(networkList[networkIndx[name]])
-                newData.append(device)
-            else:
-                newData.append(device)
-        return newData
-
-    @api_tool_decorator()
-    def populateWorkSheet(
-        self,
-        workbook,
-        dataSource,
-        baseSheetName,
-        headers,
-        headerKeys,
-        maxGauge=100,
-        beginGauge=85,
-    ):
-        loopNum = math.ceil(len(dataSource) / Globals.SHEET_CHUNK_SIZE)
-        bold = workbook.add_format({"bold": True})
-        bold.set_align("center")
-        bold.set_align("vcenter")
-        numProcessed = 1
-        startTime = datetime.now()
-        for num in range(loopNum):
-            rowIndx = 0
-            sheetName = baseSheetName
-            if loopNum != 1:
-                sheetName += " Part %s" % (num + 1)
-            worksheet = workbook.add_worksheet(sheetName)
-            maxColumnWidth = {}
-            offset = Globals.SHEET_CHUNK_SIZE * num
-            endIndx = len(dataSource)
-            if len(dataSource) > (offset + Globals.SHEET_CHUNK_SIZE):
-                endIndx = offset + Globals.SHEET_CHUNK_SIZE
-            colIndx = 0
-            for header in headers:
-                worksheet.write(rowIndx, colIndx, header, bold)
-                maxColumnWidth[header] = len(header) + 5
-                colIndx += 1
-            rowIndx = 1
-            for entry in dataSource[offset:endIndx]:
-                colIndx = 0
-                for col in headers:
-                    value = ""
-                    if type(entry) is list:
-                        value = entry[colIndx]
-                    elif col in entry:
-                        value = entry[col]
-                    elif headerKeys and col in headerKeys and headerKeys[col] in entry:
-                        value = entry[headerKeys[col]]
-                    worksheet.write(rowIndx, colIndx, str(value))
-                    if headers[colIndx] not in maxColumnWidth or (
-                        type(value) is not bool
-                        and value is not None
-                        and headers[colIndx] in maxColumnWidth
-                        and maxColumnWidth[headers[colIndx]] < len(str(value))
-                    ):
-                        maxColumnWidth[headers[colIndx]] = len(value) + 5
-                    elif type(value) is bool or value is None or not value:
-                        maxColumnWidth[headers[colIndx]] = len(headers[colIndx])
-                    colIndx += 1
-                rowIndx += 1
-                # Update Gauge every 2 seonds
-                if int((datetime.now() - startTime).total_seconds()) % 5 == 0:
-                    percent = (
-                        int((numProcessed / len(dataSource)) * (maxGauge - beginGauge))
-                        + beginGauge
-                    )
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, percent)
-                numProcessed += 1
-            for num in range(len(headers)):
-                worksheet.set_column(num, num, maxColumnWidth[headers[num]])
-
-    @api_tool_decorator()
-    def saveAppInfoAsFile(self, inFile, showAppDlg=True):
-        if self.gridPanel.app_grid_contents:
-            gridData = []
-            gridData.append(Globals.CSV_APP_ATTR_NAME)
-            createNewFile(inFile)
-
-            num = 1
-            for entry in self.gridPanel.app_grid_contents:
-                if type(entry) is dict:
-                    gridData.append(list(entry.values()))
-                elif type(entry) is list:
-                    for row in entry:
-                        gridData.append(list(row.values()))
-                val = (num / len(self.gridPanel.app_grid_contents)) * 100
-                if val <= 95:
-                    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, int(val))
-                num += 1
-
-            write_data_to_csv(inFile, gridData)
-
-            self.Logging("---> Info saved to csv file - " + inFile)
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
-            self.toggleEnabledState(True)
-            self.setCursorDefault()
-            self.gridPanel.enableGridProperties()
-
-            if showAppDlg:
-                displayMessageBox(
-                    ("Info saved to csv file - " + inFile, wx.OK | wx.ICON_INFORMATION)
-                )
 
     @api_tool_decorator()
     def onUploadSpreadsheet(self, event):
@@ -897,6 +793,13 @@ class NewFrameLayout(wx.Frame):
                 print(e)
                 pass
         if dfs is not None:
+            dfs.dropna(
+                axis=0,
+                how='all',
+                thresh=None,
+                subset=None,
+                inplace=True
+            )
             self.processSpreadsheetUpload(dfs)
         self.gridPanel.notebook_2.SetSelection(0)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
@@ -1507,7 +1410,7 @@ class NewFrameLayout(wx.Frame):
             api_response = getAllDevices(
                 clientData,
                 limit=Globals.limit,
-                fetchAll=Globals.GROUP_FETCH_ALL,
+                fetchAll=True,
                 tolarance=tolerance,
             )
             self.sidePanel.deviceResp = api_response
@@ -2157,9 +2060,6 @@ class NewFrameLayout(wx.Frame):
                 action == GeneralActions.GENERATE_INFO_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
-                input = []
-                for data in deviceList.values():
-                    input.append(data["network_info"])
                 df = createDataFrameFromDict(
                     Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
@@ -2254,8 +2154,6 @@ class NewFrameLayout(wx.Frame):
                 msg = "Action has completed."
         if self.IsFrozen():
             self.Thaw()
-        self.gridPanel.button_2.Enable(self.gridArrowState["next"])
-        self.gridPanel.button_1.Enable(self.gridArrowState["prev"])
         self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
