@@ -285,10 +285,6 @@ CSV_APP_ATTR_NAME = [
     "Can Uninstall",
 ]
 
-NUMERIC_COLUMNS = [
-    "Android Version",
-]
-
 WHITELIST_AP = []
 
 """ Static Lists """
@@ -328,7 +324,6 @@ SAVE_VISIBILITY = False
 COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 
 # Report Prefs
-GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
 GET_DEVICE_LANGUAGE = False

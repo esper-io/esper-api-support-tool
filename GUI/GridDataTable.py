@@ -26,10 +26,6 @@ class GridDataTable(wx.grid.GridTableBase):
         return str(self.data.columns[col])
 
     def GetTypeName(self, row, col):
-        if self.data[self.data.columns[0]].count() > 0:
-            value = self.data.iloc[row, col]
-            if type(value) is int:
-                return wx.grid.GRID_VALUE_NUMBER
         return wx.grid.GRID_VALUE_STRING
 
     def GetAttr(self, row, col, prop):

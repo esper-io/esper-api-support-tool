@@ -53,8 +53,6 @@ class GridTable(gridlib.Grid):
                 "Normal",
             )
         )
-        self.fillGridHeaders()
-        self.AutoSizeColumns()
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
         self.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -62,7 +60,9 @@ class GridTable(gridlib.Grid):
         self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
 
         self.SetStatusCellColor()
+        self.AutoSizeColumns()
         self.ForceRefresh()
+
     def applyNewDataFrame(self, data, checkColumns=True):
         if data is None:
             data = pd.DataFrame(columns=self.headersLabels)
@@ -84,12 +84,9 @@ class GridTable(gridlib.Grid):
                 missingColumns = list(set(self.headersLabels) - set(matchingColumns))
                 for missingColumn in missingColumns:
                     data[missingColumn] = ""
+                data = data[list(self.headersLabels)]
                 data = data.drop(columns=dropColumns, axis=1)
                 data = data.rename(columns=renameColumns)
-
-        for header in Globals.NUMERIC_COLUMNS:
-            if header in data.columns:
-                data[header] = data[header].astype(int)
 
         self.table = GridDataTable(data)
 
@@ -109,21 +106,6 @@ class GridTable(gridlib.Grid):
 
         self.ApplyGridStyle()
 
-    @api_tool_decorator()
-    def fillGridHeaders(self):
-        """ Populate Grid Headers """
-        num = 0
-        try:
-            for head in self.headersLabels:
-                if head:
-                    if self.GetNumberCols() < len(self.headersLabels):
-                        self.AppendCols(1)
-                    self.SetColLabelValue(num, head)
-                    num += 1
-        except:
-            pass
-        determineDoHereorMainThread(self.AutoSizeColumns)
-
     def SetCellValue(self, *args, **kw):
         return self.table.SetValue(*args, **kw)
 
@@ -138,6 +120,7 @@ class GridTable(gridlib.Grid):
         else:
             col = event
 
+        # TODO: sort android/app version name/app version code
         if col and col > 0:
             if self.sortedColumn != col:
                 self.sortAcesnding = True
