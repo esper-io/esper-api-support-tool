@@ -454,10 +454,10 @@ def getDevicesFromGridHelper(deviceIdentifers, devices, maxAttempt=Globals.MAX_R
 
 @api_tool_decorator()
 def relocateDeviceToNewGroup(frame):
-    devices = getDevicesFromGrid(
-        tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
-    )
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
+    devices = getDevicesFromGrid(
+        newGroupList, tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
+    )
 
     splitResults = splitListIntoChunks(devices)
 
@@ -518,7 +518,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
         )
         if match:
             match = match[0]
-            groupName = match["Group"]
+            groupName = match["Group"].strip()
 
         if groupName:
             if isApiKey(groupName):
