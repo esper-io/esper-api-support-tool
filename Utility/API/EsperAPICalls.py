@@ -297,8 +297,6 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
 def setKiosk(frame, device, deviceInfo, isGroup=False):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
-    failed = False
-    warning = False
     appSelection = frame.sidePanel.selectedAppEntry
     if not appSelection or "pkgName" not in appSelection:
         return {}
@@ -347,10 +345,8 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
             logString = (
                 logString + " <warning, check back on the device (%s)>" % deviceName
             )
-            warning = True
         else:
             logString = logString + " <failed>"
-            failed = True
         if deviceInfo and deviceInfo["Status"] != "Online":
             logString = logString + " (Device offline)"
         postEventToFrame(eventUtil.myEVT_LOG, logString)
@@ -399,8 +395,6 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
         deviceId = device
 
     logString = str("--->" + str(deviceName) + " " + str(aliasName)) + " -> Multi ->"
-    failed = False
-    warning = False
     status = None
     if deviceInfo and deviceInfo["Mode"] == "Kiosk":
         status = toggleKioskMode(frame, deviceId, {}, False, isGroup=isGroup)
@@ -411,10 +405,8 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
                 logString = (
                     logString + " <warning, check back on the device (%s)>" % deviceName
                 )
-                warning = True
             else:
                 logString = logString + " <failed>"
-                failed = True
     else:
         logString = logString + " (Already Multi mode, skipping)"
     if deviceInfo and deviceInfo["Status"] != "Online":
