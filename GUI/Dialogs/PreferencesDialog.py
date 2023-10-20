@@ -49,7 +49,6 @@ class PreferencesDialog(wx.Dialog):
             "fontSize",
             "saveColVisibility",
             "groupFetchAll",
-            "loadXDevices",
             "replaceSerial",
             "showDisabledDevices",
             "lastSeenAsDate",
@@ -415,17 +414,6 @@ class PreferencesDialog(wx.Dialog):
             "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
         )
 
-        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Load X Number of Devices in Grid",
-            wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
-        )
-        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
-        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
@@ -705,7 +693,6 @@ class PreferencesDialog(wx.Dialog):
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
             "groupFetchAll": self.checkbox_16.IsChecked(),
-            "loadXDevices": self.spin_ctrl_11.GetValue(),
             "replaceSerial": self.checkbox_17.IsChecked(),
             "showDisabledDevices": self.checkbox_18.IsChecked(),
             "lastSeenAsDate": self.checkbox_19.IsChecked(),
@@ -744,7 +731,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
-        Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
         Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
         Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
@@ -966,12 +952,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(self.prefs["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
-
-        if "loadXDevices" in self.prefs:
-            Globals.MAX_GRID_LOAD = int(self.prefs["loadXDevices"])
-            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
-                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
-            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
@@ -1216,8 +1196,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SAVE_VISIBILITY
         elif key == "groupFetchAll":
             return Globals.GROUP_FETCH_ALL
-        elif key == "loadXDevices":
-            return Globals.MAX_GRID_LOAD
         elif key == "replaceSerial":
             return Globals.REPLACE_SERIAL
         elif key == "showDisabledDevices":

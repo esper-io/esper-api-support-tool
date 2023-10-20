@@ -2120,8 +2120,6 @@ class NewFrameLayout(wx.Frame):
             appVersion = self.sidePanel.selectedAppEntry["version"]
         if action <= GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.disableGridProperties()
-        num = len(deviceList)
-        num = num + (num - Globals.MAX_GRID_LOAD + 1)
 
         isGroup = True
         if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
