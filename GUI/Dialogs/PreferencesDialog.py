@@ -44,7 +44,6 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow",
             "useJsonForCmd",
             "runCommandOn",
-            "syncGridScroll",
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
@@ -406,14 +405,6 @@ class PreferencesDialog(wx.Dialog):
             "Allow user to resize grid columns",
         )
 
-        (_, _, self.checkbox_13,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Sync Grid's Vertical Scroll Position",
-            wx.CheckBox,
-            "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
-        )
-
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
@@ -687,7 +678,6 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
-            "syncGridScroll": self.checkbox_13.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
@@ -727,7 +717,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
-        Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
         Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
@@ -934,11 +923,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.REACH_QUEUED_ONLY = True
         else:
             Globals.REACH_QUEUED_ONLY = False
-
-        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13, True):
-            Globals.MATCH_SCROLL_POS = True
-        else:
-            Globals.MATCH_SCROLL_POS = False
 
         if "aliasDayDelta" in self.prefs:
             Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
@@ -1186,8 +1170,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMMAND_JSON_INPUT
         elif key == "runCommandOn":
             return Globals.CMD_DEVICE_TYPE
-        elif key == "syncGridScroll":
-            return Globals.MATCH_SCROLL_POS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
