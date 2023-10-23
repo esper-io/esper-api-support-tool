@@ -606,3 +606,8 @@ class GridPanel(wx.Panel):
             and grid.Table.data is not None):
             data = grid.Table.data
         return data
+    
+    def forceRefreshGrids(self):
+        self.device_grid.ForceRefresh()
+        self.network_grid.ForceRefresh()
+        self.app_grid.ForceRefresh()

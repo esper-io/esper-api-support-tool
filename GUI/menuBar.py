@@ -228,6 +228,10 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
         )
         self.colSize.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/resize.png")))
+        self.gridRefresh = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids")
+        )
+        self.gridRefresh.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
         self.clearGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
@@ -312,6 +316,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
+        )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.gridPanel.forceRefreshGrids, self.gridRefresh
         )
         self.Bind(
             wx.EVT_MENU,
