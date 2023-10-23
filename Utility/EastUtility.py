@@ -1025,37 +1025,38 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
     deviceList = {}
     indx = 0
 
-    postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
-    for device in devices:
-        if type(device) is dict:
-            Globals.THREAD_POOL.enqueue(
-                processDeviceInDeviceList,
-                device,
-                device["id"],
-                getApps,
-                getLatestEvents,
-                deviceList,
-                indx,
-                maxDevices=len(devices),
-            )
-        elif hasattr(device, "id"):
-            Globals.THREAD_POOL.enqueue(
-                processDeviceInDeviceList,
-                device,
-                device.id,
-                getApps,
-                getLatestEvents,
-                deviceList,
-                indx,
-                maxDevices=len(devices),
-            )
-        indx += 1
+    if getApps or getLatestEvents:
+        postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
+        for device in devices:
+            if type(device) is dict:
+                Globals.THREAD_POOL.enqueue(
+                    processDeviceInDeviceList,
+                    device,
+                    device["id"],
+                    getApps,
+                    getLatestEvents,
+                    deviceList,
+                    indx,
+                    maxDevices=len(devices),
+                )
+            elif hasattr(device, "id"):
+                Globals.THREAD_POOL.enqueue(
+                    processDeviceInDeviceList,
+                    device,
+                    device.id,
+                    getApps,
+                    getLatestEvents,
+                    deviceList,
+                    indx,
+                    maxDevices=len(devices),
+                )
+            indx += 1
 
-    Globals.THREAD_POOL.join(tolerance=tolarance)
-    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
-    postEventToFrame(
-        eventUtil.myEVT_LOG, "Finished fetching extended device information"
-    )
+            Globals.THREAD_POOL.join(tolerance=tolarance)
+            postEventToFrame(
+                eventUtil.myEVT_LOG, "Finished fetching extended device information"
+            )
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
 
     return deviceList
 
