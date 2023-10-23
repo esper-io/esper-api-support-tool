@@ -17,7 +17,9 @@ class GridDataTable(wx.grid.GridTableBase):
         return len(self.data.columns)
 
     def GetValue(self, row, col):
-        return self.data.iloc[row, col]
+        if hasattr(self, "data"):
+            return self.data.iloc[row, col]
+        return ""
 
     def SetValue(self, row, col, value):
         self.data.iloc[row, col] = value

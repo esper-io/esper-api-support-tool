@@ -21,7 +21,7 @@ class GridTable(gridlib.Grid):
         if data is None:
             data = self.createEmptyDataFrame()
         self.CreateGrid(len(data), len(data.columns))
-        self.applyNewDataFrame(data, checkColumns=False)
+        self.applyNewDataFrame(data, checkColumns=False, autosize=True)
 
         self.sortedColumn = None
         self.sortAcesnding = True
@@ -38,7 +38,7 @@ class GridTable(gridlib.Grid):
             data[col] = data[col].astype("string")
         return data
 
-    def ApplyGridStyle(self):
+    def ApplyGridStyle(self, autosize=False):
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
 
@@ -72,32 +72,28 @@ class GridTable(gridlib.Grid):
         self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
 
         self.SetStatusCellColor()
-        self.AutoSizeColumns()
-        self.ForceRefresh()
+        self.GoToCell(0, 0)
+        if autosize:
+            self.AutoSizeColumns()
+            self.ForceRefresh()
 
-    def applyNewDataFrame(self, data, checkColumns=True):
+    def applyNewDataFrame(self, data, checkColumns=True, autosize=False):
         if data is None:
             data = self.createEmptyDataFrame()
         else:
             if checkColumns:
-                dropColumns = []
                 renameColumns = {}
                 matchingColumns = []
                 for column in data.columns:
-                    matchFound = False
                     for expectedCol in self.headersLabels:
                         if getStrRatioSimilarity(column, expectedCol) >= 95:
                             renameColumns[column] = expectedCol
                             matchingColumns.append(expectedCol)
-                            matchFound = True
                             break
-                    if not matchFound:
-                        dropColumns.append(column)
                 missingColumns = list(set(self.headersLabels) - set(matchingColumns))
                 for missingColumn in missingColumns:
                     data[missingColumn] = ""
                 data = data[list(self.headersLabels)]
-                data = data.drop(columns=dropColumns, axis=1)
                 data = data.rename(columns=renameColumns)
 
         self.convertColumnTypesToString(data)
@@ -117,14 +113,14 @@ class GridTable(gridlib.Grid):
             attr.SetReadOnly(isReadOnly)
             self.SetColAttr(self.headersLabels.index(header), attr)
 
-        self.ApplyGridStyle()
+        self.ApplyGridStyle(autosize=autosize)
 
     def SetCellValue(self, *args, **kw):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
         data = self.createEmptyDataFrame()
-        self.applyNewDataFrame(data, checkColumns=False)
+        self.applyNewDataFrame(data, checkColumns=False, autosize=True)
 
     def SortColumn(self, event):
         col = None

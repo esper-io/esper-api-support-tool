@@ -664,7 +664,13 @@ class NewFrameLayout(wx.Frame):
                     on=["Esper Name", "Group"],
                     how="outer",
                 )
-                result.dropna()
+                result.dropna(
+                            axis=0,
+                            how='all',
+                            thresh=None,
+                            subset=None,
+                            inplace=True
+                        )
                 save_csv_pandas(inFile, result)
             if (
                 not action
@@ -696,7 +702,13 @@ class NewFrameLayout(wx.Frame):
                             on=["Esper Name", "Group"],
                             how="outer",
                         )
-                        result.dropna()
+                        result.dropna(
+                            axis=0,
+                            how='all',
+                            thresh=None,
+                            subset=None,
+                            inplace=True
+                        )
                         df_dict["Device & Network"] = result
                 else:
                     df_dict["Device & Network"] = pd.merge(
@@ -814,18 +826,6 @@ class NewFrameLayout(wx.Frame):
             )
             self.processSpreadsheetUpload(dfs)
         self.gridPanel.notebook_2.SetSelection(0)
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
-        postEventToFrame(
-            eventUtil.myEVT_DISPLAY_NOTIFICATION,
-            ("E.A.S.T.", "Device CSV Upload Completed"),
-        )
-        self.setCursorDefault()
-        self.toggleEnabledState(True)
-        self.sidePanel.groupChoice.Enable(True)
-        self.sidePanel.deviceChoice.Enable(True)
-        self.gridPanel.enableGridProperties()
-        self.gridPanel.thawGridsIfFrozen()
-        self.isUploading = False
 
     def processSpreadsheetUpload(self, data):
         self.SpreadsheetUploaded = True
@@ -1218,11 +1218,18 @@ class NewFrameLayout(wx.Frame):
             self.isUploading = False
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
-            determineDoHereorMainThread(self.gridPanel.thawGridsIfFrozen)
-            determineDoHereorMainThread(self.gridPanel.enableGridProperties)
             determineDoHereorMainThread(self.gridPanel.autoSizeGridsColumns)
             determineDoHereorMainThread(self.sidePanel.groupChoice.Enable, True)
             determineDoHereorMainThread(self.sidePanel.deviceChoice.Enable, True)
+            determineDoHereorMainThread(self.gridPanel.enableGridProperties)
+            determineDoHereorMainThread(self.gridPanel.thawGridsIfFrozen)
+
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
+            postEventToFrame(
+                eventUtil.myEVT_DISPLAY_NOTIFICATION,
+                ("E.A.S.T.", "Device Spreadsheet Upload Complete"),
+            )
+            self.Logging("Upload Complete.")
         if source == 3:
             cmdResults = []
             if (
