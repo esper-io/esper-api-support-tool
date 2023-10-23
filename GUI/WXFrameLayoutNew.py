@@ -591,16 +591,20 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.GENERATE_INFO_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
-            self.gridPanel.device_grid_contents = createDataFrameFromDict(
+            df = createDataFrameFromDict(
                         Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                     )
+            self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False)
+            self.gridPanel.device_grid_contents = df.copy(deep=True)
         if (
                 action == GeneralActions.GENERATE_INFO_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             ):
-            self.gridPanel.network_grid_contents = createDataFrameFromDict(
+            df = createDataFrameFromDict(
                 Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
             )
+            self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False)
+            self.gridPanel.network_grid_contents = df.copy(deep=True)
         if (
             action == GeneralActions.GENERATE_APP_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -613,7 +617,9 @@ class NewFrameLayout(wx.Frame):
                     (int(num / len(deviceList.values())) * 35) + 50,
                 )
                 num += 1
-            self.gridPanel.app_grid_contents = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+            df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+            self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False)
+            self.gridPanel.app_grid_contents = df.copy(deep=True)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
         self.Logging("Finished compiling information")
@@ -684,7 +690,7 @@ class NewFrameLayout(wx.Frame):
                 or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
                 and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
             ):
-                result = pd.merge(
+                result = pd.concat(
                     self.gridPanel.device_grid.Table.data,
                     self.gridPanel.network_grid.Table.data,
                     on=["Esper Name", "Group"],
@@ -784,7 +790,6 @@ class NewFrameLayout(wx.Frame):
         self.Logging("Reading Spreadsheet file: %s" % csv_auth_path)
         dfs = None
         if csv_auth_path.endswith(".csv"):
-            # data = read_data_from_csv(csv_auth_path)
             dfs = read_csv_via_pandas(csv_auth_path)
         elif csv_auth_path.endswith(".xlsx"):
             try:
