@@ -11,6 +11,7 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
+from Utility.GridUtilities import areDataFramesTheSame
 from Utility.Resource import (
     acquireLocks,
     checkIfCurrentThreadStopped,
@@ -583,3 +584,25 @@ class GridPanel(wx.Panel):
         self.device_grid.SetCursor(cursorType)
         self.network_grid.SetCursor(cursorType)
         self.app_grid.SetCursor(cursorType)
+
+    def getGridDataForSave(self):
+        deviceData = networkData = appData = None
+        deviceData = self.__getGridDataForSaveHelper__(self.device_grid, self.device_grid_contents)
+        networkData = self.__getGridDataForSaveHelper__(self.network_grid, self.network_grid_contents)
+        appData = self.__getGridDataForSaveHelper__(self.app_grid, self.app_grid_contents)
+        return deviceData, networkData, appData
+
+    def __getGridDataForSaveHelper__(self, grid, content):
+        data = None
+        if ((content is not None 
+            and grid.Table.data is not None
+            and areDataFramesTheSame(content, grid.Table.data))
+            or (content is not None 
+                and (grid.Table.data is None
+                     or len(grid.Table.data) == 0))):
+            data = content
+        elif ((content is None 
+               or len(content) == 0)
+            and grid.Table.data is not None):
+            data = grid.Table.data
+        return data

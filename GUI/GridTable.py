@@ -19,12 +19,24 @@ class GridTable(gridlib.Grid):
         self.disableProperties = False
 
         if data is None:
-            data = pd.DataFrame(columns=self.headersLabels)
+            data = self.createEmptyDataFrame()
         self.CreateGrid(len(data), len(data.columns))
         self.applyNewDataFrame(data, checkColumns=False)
 
         self.sortedColumn = None
         self.sortAcesnding = True
+
+    def createEmptyDataFrame(self):
+        df = pd.DataFrame(columns=self.headersLabels)
+        for col in self.headersLabels:
+            df[col] = df[col].astype("string")
+        df.index = pd.RangeIndex(start=0, stop=len(df.index) * 1 - 1, step=1)
+        return df
+
+    def convertColumnTypesToString(self, data):
+        for col in self.headersLabels:
+            data[col] = data[col].astype("string")
+        return data
 
     def ApplyGridStyle(self):
         self.SetThemeEnabled(False)
@@ -65,7 +77,7 @@ class GridTable(gridlib.Grid):
 
     def applyNewDataFrame(self, data, checkColumns=True):
         if data is None:
-            data = pd.DataFrame(columns=self.headersLabels)
+            data = self.createEmptyDataFrame()
         else:
             if checkColumns:
                 dropColumns = []
@@ -88,6 +100,7 @@ class GridTable(gridlib.Grid):
                 data = data.drop(columns=dropColumns, axis=1)
                 data = data.rename(columns=renameColumns)
 
+        self.convertColumnTypesToString(data)
         self.table = GridDataTable(data)
 
         # The second parameter means that the grid is to take ownership of the
@@ -110,7 +123,7 @@ class GridTable(gridlib.Grid):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
-        data = pd.DataFrame(columns=self.headersLabels)
+        data = self.createEmptyDataFrame()
         self.applyNewDataFrame(data, checkColumns=False)
 
     def SortColumn(self, event):

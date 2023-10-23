@@ -1,7 +1,7 @@
 import pandas as pd
 import Common.Globals as Globals
 
-from wx.grid import Grid
+from pandas.testing import assert_frame_equal
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
@@ -52,3 +52,11 @@ def createDataFrameFromDict(headerList, sourceData):
                     value = row[header]
                 newData[header].append(value)
     return pd.DataFrame(newData)
+
+
+def areDataFramesTheSame(df1, df2):
+    try:
+        assert_frame_equal(df1, df2)
+        return True
+    except:
+        return False

@@ -594,8 +594,7 @@ class NewFrameLayout(wx.Frame):
             df = createDataFrameFromDict(
                         Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                     )
-            self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False)
-            self.gridPanel.device_grid_contents = df.copy(deep=True)
+            self.gridPanel.device_grid_contents = df
         if (
                 action == GeneralActions.GENERATE_INFO_REPORT.value
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -603,8 +602,7 @@ class NewFrameLayout(wx.Frame):
             df = createDataFrameFromDict(
                 Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
             )
-            self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False)
-            self.gridPanel.network_grid_contents = df.copy(deep=True)
+            self.gridPanel.network_grid_contents = df
         if (
             action == GeneralActions.GENERATE_APP_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -618,11 +616,10 @@ class NewFrameLayout(wx.Frame):
                 )
                 num += 1
             df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-            self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False)
-            self.gridPanel.app_grid_contents = df.copy(deep=True)
+            self.gridPanel.app_grid_contents = df
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
-        self.Logging("Finished compiling information")
+        self.Logging("Finished compiling information. Saving to file...")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
 
         self.saveGridData(
@@ -652,17 +649,18 @@ class NewFrameLayout(wx.Frame):
         renameAppCsv=True,
         tolarance=1,
     ):
+        deviceData, networkData, appData = self.gridPanel.getGridDataForSave()
         if inFile.endswith(".csv"):
             if (
-                self.gridPanel.device_grid.Table.data is not None
-                and len(self.gridPanel.device_grid.Table.data) > 0
+                deviceData is not None
+                and len(deviceData) > 0
             ) or (
-                self.gridPanel.network_grid.Table.data is not None
-                and len(self.gridPanel.network_grid.Table.data) > 0
+                networkData is not None
+                and len(networkData) > 0
             ):
                 result = pd.merge(
-                    self.gridPanel.device_grid.Table.data,
-                    self.gridPanel.network_grid.Table.data,
+                    deviceData,
+                    networkData,
                     on=["Esper Name", "Group"],
                     how="outer",
                 )
@@ -681,8 +679,8 @@ class NewFrameLayout(wx.Frame):
                 not action
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
-            ) and len(self.gridPanel.app_grid.Table.data) > 0:
-                save_csv_pandas(inFile, self.gridPanel.app_grid.Table.data)
+            ) and len(appData) > 0:
+                save_csv_pandas(inFile, appData)
         elif inFile.endswith(".xlsx"):
             df_dict = {}
             if (
@@ -690,21 +688,30 @@ class NewFrameLayout(wx.Frame):
                 or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
                 and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
             ):
-                result = pd.concat(
-                    self.gridPanel.device_grid.Table.data,
-                    self.gridPanel.network_grid.Table.data,
-                    on=["Esper Name", "Group"],
-                    how="outer",
-                )
-                result.dropna()
-                df_dict["Device & Network"] = result
+                if (deviceData is not None
+                    and networkData is not None):
+                        result = pd.merge(
+                            deviceData,
+                            networkData,
+                            on=["Esper Name", "Group"],
+                            how="outer",
+                        )
+                        result.dropna()
+                        df_dict["Device & Network"] = result
+                else:
+                    df_dict["Device & Network"] = pd.merge(
+                            self.gridPanel.device_grid.createEmptyDataFrame(),
+                            self.gridPanel.network_grid.createEmptyDataFrame(),
+                            on=["Esper Name", "Group"],
+                            how="outer",
+                        )
             elif (
-                self.gridPanel.device_grid.Table.data is not None
-                and len(self.gridPanel.device_grid.Table.data) > 0
+                deviceData is not None
+                and len(deviceData) > 0
             ):
-                df_dict["Device"] = self.gridPanel.device_grid.Table.data
+                df_dict["Device"] = deviceData
                 if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
-                    df_dict["Network"] = self.gridPanel.network_grid.Table.data
+                    df_dict["Network"] = networkData
             if (
                 not action
                 or (
@@ -712,9 +719,9 @@ class NewFrameLayout(wx.Frame):
                     and action == GeneralActions.GENERATE_APP_REPORT.value
                     or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 )
-                and len(self.gridPanel.app_grid.Table.data) > 0
+                and len(appData) > 0
             ):
-                df_dict["Application"] = self.gridPanel.app_grid.Table.data
+                df_dict["Application"] = appData
             save_excel_pandas_xlxswriter(inFile, df_dict)
 
         Globals.THREAD_POOL.join(tolerance=tolarance)
