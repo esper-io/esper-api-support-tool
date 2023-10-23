@@ -794,7 +794,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         deviceInfo["KioskApp"] = ""
 
     if "lockdown_state" in deviceInfo:
-        deviceInfo["lockdown_state"] = bool(deviceInfo["lockdown_state"])
+        deviceInfo["lockdown_state"] = not bool(deviceInfo["lockdown_state"])
 
     if device and hasattr(device, "provisioned_on") and device.provisioned_on:
         provisionedOnDate = utc_to_local(device.provisioned_on)
