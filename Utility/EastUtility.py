@@ -532,6 +532,19 @@ def compileDeviceGroupData(deviceInfo):
         else:
             deviceInfo["groups"] = groupNames
 
+    if not deviceInfo["isSupervisorPluginActive"]:
+        deviceInfo["isSupervisorPluginActive"] = "False"
+    elif "isSupervisorPluginActive" not in deviceInfo:
+        deviceInfo["isSupervisorPluginActive"] = "N/A"
+    if not deviceInfo["isKnoxActive"]:
+        deviceInfo["isKnoxActive"] = "False"
+    elif "isKnoxActive" not in deviceInfo:
+        deviceInfo["isKnoxActive"] = "N/A"
+    if not deviceInfo["isCSDKActive"]:
+        deviceInfo["isCSDKActive"] = "False"
+    elif "isCSDKActive" not in deviceInfo:
+        deviceInfo["isCSDKActive"] = "N/A"
+
     return deviceInfo
 
 
