@@ -285,6 +285,15 @@ CSV_APP_ATTR_NAME = [
     "Can Uninstall",
 ]
 
+SEMANTIC_VERSION_COL = [
+    "Android Version",
+    "Application Version Code",
+]
+
+DATE_COL = [
+    "Security Patch"
+]
+
 WHITELIST_AP = []
 
 """ Static Lists """

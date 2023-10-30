@@ -5,10 +5,11 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 
 from GUI.GridDataTable import GridDataTable
-from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
+from Utility.Resource import getStrRatioSimilarity
 from Common.decorator import api_tool_decorator
 
 from Common.enum import Color
+from distutils.version import LooseVersion
 
 
 class GridTable(gridlib.Grid):
@@ -33,9 +34,12 @@ class GridTable(gridlib.Grid):
         df.index = pd.RangeIndex(start=0, stop=len(df.index) * 1 - 1, step=1)
         return df
 
-    def convertColumnTypesToString(self, data):
+    def convertColumnTypes(self, data):
         for col in self.headersLabels:
-            data[col] = data[col].astype("string")
+            if col in Globals.DATE_COL:
+                data[col] = pd.to_datetime(data[col])
+            else:
+                data[col] = data[col].astype("string")
         return data
 
     def ApplyGridStyle(self, autosize=False):
@@ -96,7 +100,7 @@ class GridTable(gridlib.Grid):
                 data = data[list(self.headersLabels)]
                 data = data.rename(columns=renameColumns)
 
-        self.convertColumnTypesToString(data)
+        self.convertColumnTypes(data)
         data.fillna("", inplace=True)
         self.table = GridDataTable(data)
 
@@ -138,10 +142,14 @@ class GridTable(gridlib.Grid):
                 self.sortAcesnding = not self.sortAcesnding
             self.sortedColumn = col
             self.SetSortingColumn(self.sortedColumn, self.sortAcesnding)
-            df = self.table.data.sort_values(
-                self.GetColLabelValue(col), ascending=self.sortAcesnding
-            )
-            self.applyNewDataFrame(df, checkColumns=False)
+            colName = self.GetColLabelValue(col)
+            if colName in Globals.SEMANTIC_VERSION_COL:
+                df = self.table.data.iloc[self.table.data[colName].apply(LooseVersion).argsort()].reset_index(drop=True)
+            else:
+                df = self.table.data.sort_values(
+                    colName, ascending=self.sortAcesnding
+                )
+            self.applyNewDataFrame(df, checkColumns=False, autosize=True)
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):
