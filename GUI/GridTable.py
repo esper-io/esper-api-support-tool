@@ -97,6 +97,7 @@ class GridTable(gridlib.Grid):
                 data = data.rename(columns=renameColumns)
 
         self.convertColumnTypesToString(data)
+        data.fillna("", inplace=True)
         self.table = GridDataTable(data)
 
         # The second parameter means that the grid is to take ownership of the
