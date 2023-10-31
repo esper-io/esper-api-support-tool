@@ -186,7 +186,7 @@ class BulkFactoryReset(wx.Dialog):
         self.setCursorBusy()
         if self.reset_grid.GetNumberRows() > 0:
             df = pd.DataFrame(columns=self.expectedHeaders)
-            self.reset_grid.applyNewDataFrame(df, checkColumns=False)
+            self.reset_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
 
     def uploadCSV(self, filePath):
         self.doPreUploadActivity()
@@ -209,7 +209,7 @@ class BulkFactoryReset(wx.Dialog):
                     gridTableData[self.expectedHeaders[0]].append(id)
                     self.identifers.append(str(id))
             df = pd.DataFrame(gridTableData, columns=self.expectedHeaders)
-            self.reset_grid.applyNewDataFrame(df)
+            self.reset_grid.applyNewDataFrame(df, resetPosition=True)
         self.reset_grid.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()

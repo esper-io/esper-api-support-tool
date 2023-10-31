@@ -287,7 +287,7 @@ class WidgetPicker(wx.Dialog):
         if inFile:
             if self.widget_grid.GetNumberRows() > 0:
                 df = pd.DataFrame(columns=self.gridHeader)
-                self.widget_grid.applyNewDataFrame(df)
+                self.widget_grid.applyNewDataFrame(df, resetPosition=True)
             self.button_1.Enable(False)
             Globals.THREAD_POOL.enqueue(self.onUploadHelper, inFile)
 
@@ -313,7 +313,7 @@ class WidgetPicker(wx.Dialog):
                 identifers = dfs[dfs.columns.values.tolist()[0]].tolist()
                 self.addIdToDeviceList(identifers, gridTableData)
                 df = pd.DataFrame(gridTableData, columns=self.gridHeader)
-                self.widget_grid.applyNewDataFrame(df)
+                self.widget_grid.applyNewDataFrame(df, resetPosition=True)
         except Exception as e:
             raise e
         finally:

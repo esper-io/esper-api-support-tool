@@ -290,9 +290,13 @@ SEMANTIC_VERSION_COL = [
     "Application Version Code",
 ]
 
-DATE_COL = [
-    "Security Patch"
-]
+DATE_COL = {
+    "Security Patch": "%Y/%m/%d",
+    "Registered On": "%Y/%m/%d %H:%M:%S.%f",
+    "Updated On": "%Y/%m/%d %H:%M:%S.%f",
+    "Created On": "%Y/%m/%d %H:%M:%S.%f",
+    "Last Seen": "%Y/%m/%d %H:%M:%S.%f",
+}
 
 WHITELIST_AP = []
 

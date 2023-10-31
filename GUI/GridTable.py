@@ -5,11 +5,13 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 
 from GUI.GridDataTable import GridDataTable
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getStrRatioSimilarity
 from Common.decorator import api_tool_decorator
 
 from Common.enum import Color
 from distutils.version import LooseVersion
+from pandas.api.types import is_string_dtype, is_bool_dtype
 
 
 class GridTable(gridlib.Grid):
@@ -22,7 +24,7 @@ class GridTable(gridlib.Grid):
         if data is None:
             data = self.createEmptyDataFrame()
         self.CreateGrid(len(data), len(data.columns))
-        self.applyNewDataFrame(data, checkColumns=False, autosize=True)
+        self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
 
         self.sortedColumn = None
         self.sortAcesnding = True
@@ -36,13 +38,20 @@ class GridTable(gridlib.Grid):
 
     def convertColumnTypes(self, data):
         for col in self.headersLabels:
-            if col in Globals.DATE_COL:
-                data[col] = pd.to_datetime(data[col])
-            else:
-                data[col] = data[col].astype("string")
+            if len(data[col]) > 0:
+                if col in Globals.DATE_COL:
+                    data[col] = pd.to_datetime(data[col], exact=False, errors="coerce")
+                    data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
+                    data[col].fillna("No Data Available", inplace=True)
+                elif is_bool_dtype(data[col]):
+                    data[col] = data[col].astype("bool")
+                elif is_string_dtype(data[col]) and data[col].str.isnumeric().all():
+                    data[col] = data[col].astype("int64")
+                else:
+                    data[col] = data[col].astype("string")
         return data
 
-    def ApplyGridStyle(self, autosize=False):
+    def ApplyGridStyle(self, autosize=False, resetPosition=False):
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
 
@@ -76,56 +85,64 @@ class GridTable(gridlib.Grid):
         self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
 
         self.SetStatusCellColor()
-        self.GoToCell(0, 0)
+        if resetPosition:
+            self.GoToCell(0, 0)
         if autosize:
             self.AutoSizeColumns()
             self.ForceRefresh()
 
-    def applyNewDataFrame(self, data, checkColumns=True, autosize=False):
-        if data is None:
-            data = self.createEmptyDataFrame()
-        else:
-            if checkColumns:
-                renameColumns = {}
-                matchingColumns = []
-                for column in data.columns:
-                    for expectedCol in self.headersLabels:
-                        if getStrRatioSimilarity(column, expectedCol) >= 95:
-                            renameColumns[column] = expectedCol
-                            matchingColumns.append(expectedCol)
-                            break
-                missingColumns = list(set(self.headersLabels) - set(matchingColumns))
-                for missingColumn in missingColumns:
-                    data[missingColumn] = ""
-                data = data[list(self.headersLabels)]
-                data = data.rename(columns=renameColumns)
+    def applyNewDataFrame(self, data, checkColumns=True, autosize=False, resetPosition=False):
+        self.Freeze()
+        try:
+            if data is None:
+                data = self.createEmptyDataFrame()
+            else:
+                if checkColumns:
+                    renameColumns = {}
+                    matchingColumns = []
+                    for column in data.columns:
+                        for expectedCol in self.headersLabels:
+                            if getStrRatioSimilarity(column, expectedCol) >= 95:
+                                renameColumns[column] = expectedCol
+                                matchingColumns.append(expectedCol)
+                                break
+                    missingColumns = list(set(self.headersLabels) - set(matchingColumns))
+                    for missingColumn in missingColumns:
+                        data[missingColumn] = ""
+                    data = data[list(self.headersLabels)]
+                    data = data.rename(columns=renameColumns)
 
-        self.convertColumnTypes(data)
-        data.fillna("", inplace=True)
-        self.table = GridDataTable(data)
+            self.convertColumnTypes(data)
+            data.fillna("", inplace=True)
+            self.table = GridDataTable(data)
 
-        # The second parameter means that the grid is to take ownership of the
-        # table and will destroy it when done.  Otherwise you would need to keep
-        # a reference to it and call it's Destroy method later.
-        self.SetTable(self.table, True)
+            # The second parameter means that the grid is to take ownership of the
+            # table and will destroy it when done.  Otherwise you would need to keep
+            # a reference to it and call it's Destroy method later.
+            self.SetTable(self.table, True)
 
-        for header in self.headersLabels:
-            isReadOnly = True
-            if header in Globals.CSV_EDITABLE_COL:
-                isReadOnly = False
-            editor = self.GetCellEditor(0, self.headersLabels.index(header))
-            attr = gridlib.GridCellAttr()
-            attr.SetReadOnly(isReadOnly)
-            self.SetColAttr(self.headersLabels.index(header), attr)
+            for header in self.headersLabels:
+                isReadOnly = True
+                if header in Globals.CSV_EDITABLE_COL:
+                    isReadOnly = False
+                editor = self.GetCellEditor(0, self.headersLabels.index(header))
+                attr = gridlib.GridCellAttr()
+                attr.SetReadOnly(isReadOnly)
+                self.SetColAttr(self.headersLabels.index(header), attr)
 
-        self.ApplyGridStyle(autosize=autosize)
+            self.ApplyGridStyle(autosize=autosize, resetPosition=resetPosition)
+        except Exception as e:
+            ApiToolLog().LogError(e)
+        finally:
+            if self.IsFrozen():
+                self.Thaw()
 
     def SetCellValue(self, *args, **kw):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
         data = self.createEmptyDataFrame()
-        self.applyNewDataFrame(data, checkColumns=False, autosize=True)
+        self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
 
     def SortColumn(self, event):
         col = None
@@ -150,6 +167,7 @@ class GridTable(gridlib.Grid):
                     colName, ascending=self.sortAcesnding
                 )
             self.applyNewDataFrame(df, checkColumns=False, autosize=True)
+            self.GoToCell(0, col)
 
     @api_tool_decorator()
     def toogleViewMenuItem(self, event):

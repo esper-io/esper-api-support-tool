@@ -212,7 +212,7 @@ class GeofenceDialog(wx.Dialog):
     def processUpload(self, filePath):
         if self.geofence_grid.GetNumberRows() > 0:
             df = pd.DataFrame(columns=self.gridHeaderLabels)
-            self.reset_grid.applyNewDataFrame(df, checkColumns=False)
+            self.reset_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
@@ -253,7 +253,7 @@ class GeofenceDialog(wx.Dialog):
                     )
                     expandedGroupData[self.gridHeaderLabels[2]].append("")
             data = pd.DataFrame(expandedGroupData, columns=self.gridHeaderLabels)
-            self.geofence_grid.applyNewDataFrame(data)
+            self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
             self.applyGridSettings()
             if self.geofence_grid.IsFrozen():
                 self.geofence_grid.Thaw()

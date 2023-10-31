@@ -401,7 +401,7 @@ class GroupManagement(wx.Dialog):
             self.setCursorDefault()
         if self.group_grid.GetNumberRows() > 0 and forceRefresh:
             df = pd.DataFrame(columns=self.expectedHeaders)
-            self.group_grid.applyNewDataFrame(df, checkColumns=False)
+            self.group_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
 
     @api_tool_decorator()
     def setCursorDefault(self):
@@ -863,7 +863,7 @@ class GroupManagement(wx.Dialog):
         self.setCursorBusy()
         if self.group_grid.GetNumberRows() > 0:
             df = pd.DataFrame(columns=self.expectedHeaders)
-            self.group_grid.applyNewDataFrame(df, checkColumns=False)
+            self.group_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
         self.tree_ctrl_1.UnselectAll()
         self.tree_ctrl_2.UnselectAll()
         for item in self.uploadCSVTreeItems:
@@ -876,7 +876,7 @@ class GroupManagement(wx.Dialog):
             if data.columns.tolist() != self.expectedHeaders:
                 raise Exception("Invalid Spreadsheet File: Headers don't match")
 
-            self.group_grid.applyNewDataFrame(data)
+            self.group_grid.applyNewDataFrame(data, resetPosition=True)
             dataList = data.values.tolist()
             for row in dataList:
                 if row != self.expectedHeaders:
