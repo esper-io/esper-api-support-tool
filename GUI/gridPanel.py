@@ -116,14 +116,16 @@ class GridPanel(wx.Panel):
     )
     def autoSizeGridsColumns(self, event=None):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
-        self.freezeGrids()
+        self.parentFrame.Logging("Auto Sizing Grid Columns...")
+        self.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
         self.device_grid.AutoSizeColumns()
         self.network_grid.AutoSizeColumns()
         self.app_grid.AutoSizeColumns()
         self.device_grid.ForceRefresh()
         self.network_grid.ForceRefresh()
         self.app_grid.ForceRefresh()
-        self.thawGridsIfFrozen()
+        self.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+        self.parentFrame.Logging("Auto Sizing Complete...")
         releaseLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
 
     @api_tool_decorator(locks=[Globals.grid1_lock])

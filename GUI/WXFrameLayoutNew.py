@@ -2086,7 +2086,7 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
+                self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
                 self.gridPanel.network_grid_contents = df.copy(deep=True)
             # Populate Device sheet
             if (
@@ -2097,7 +2097,7 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
+                self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
                 self.gridPanel.device_grid_contents = df.copy(deep=True)
             # Populate App sheet
             if (
@@ -2108,7 +2108,7 @@ class NewFrameLayout(wx.Frame):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
+                self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
                 self.gridPanel.app_grid_contents = df.copy(deep=True)
 
         Globals.THREAD_POOL.enqueue(
@@ -2180,7 +2180,7 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
-        Globals.THREAD_POOL.enqueue(self.gridPanel.autoSizeGridsColumns)
+        # Globals.THREAD_POOL.enqueue(self.gridPanel.autoSizeGridsColumns)
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
