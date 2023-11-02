@@ -1318,6 +1318,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
         """ Populate Group Choice """
+        self.Logging("--->Processing groups...")
         self.sidePanel.groupsResp = event.GetValue()
         results = None
         if hasattr(self.sidePanel.groupsResp, "results"):
@@ -1385,6 +1386,7 @@ class NewFrameLayout(wx.Frame):
                     50 + int(float(num / len(results)) * 25),
                 )
                 num += 1
+        self.Logging("--->Finished Processing groups...")
         self.sidePanel.groupChoice.Enable(True)
         self.sidePanel.actionChoice.Enable(True)
         postEventToFrame(
@@ -1425,6 +1427,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, tolerance=0):
         """ Populate Device Choice """
+        self.Logging("--->Processing devices...")
         for clientData in self.sidePanel.selectedGroupsList:
             api_response = getAllDevices(
                 clientData,
@@ -1461,6 +1464,7 @@ class NewFrameLayout(wx.Frame):
                 for chunk in splitResults:
                     Globals.THREAD_POOL.enqueue(self.processAddDeviceToChoice, chunk)
                 Globals.THREAD_POOL.join(tolerance=tolerance)
+        self.Logging("--->Finished Processing devices...")
 
     def processAddDeviceToChoice(self, chunk):
         for device in chunk:
@@ -1678,15 +1682,15 @@ class NewFrameLayout(wx.Frame):
         ):
             res = displayMessageBox(
                 (
-                    "Looks like you are generating a report for a large subset of devices.\n\nWe will save the info directly to a file.",
-                    wx.ICON_INFORMATION | wx.CENTRE | wx.OK,
+                    "Looks like you are generating a report for a large subset of devices.\nWould you like to save the info directly to a file?",
+                    wx.ICON_INFORMATION | wx.CENTRE | wx.YES_NO,
                 )
             )
-            if res == wx.OK:
+            if res == wx.YES:
                 self.onClearGrids()
                 return self.onSaveBothAll(None, action=actionClientData)
-            else:
-                return
+            # else:
+            #     return
 
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
@@ -2176,7 +2180,7 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
-        self.gridPanel.autoSizeGridsColumns()
+        Globals.THREAD_POOL.enqueue(self.gridPanel.autoSizeGridsColumns)
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
