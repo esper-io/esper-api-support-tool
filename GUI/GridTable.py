@@ -45,7 +45,7 @@ class GridTable(gridlib.Grid):
                     data[col].fillna("No Data Available", inplace=True)
                 elif is_bool_dtype(data[col]):
                     data[col] = data[col].astype("bool")
-                elif is_string_dtype(data[col]) and data[col].str.isnumeric().all():
+                elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
                     data[col] = data[col].astype("int64")
                 else:
                     data[col] = data[col].astype("string")
@@ -92,8 +92,10 @@ class GridTable(gridlib.Grid):
             self.ForceRefresh()
 
     def applyNewDataFrame(self, data, checkColumns=True, autosize=False, resetPosition=False):
-        self.Freeze()
         try:
+            self.SetCursor(wx.Cursor(wx.CURSOR_ARROWWAIT))
+            self.Freeze()
+            self.logToParentFrame("Loading Grid Data...")
             if data is None:
                 data = self.createEmptyDataFrame()
             else:
@@ -136,6 +138,8 @@ class GridTable(gridlib.Grid):
         finally:
             if self.IsFrozen():
                 self.Thaw()
+            self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
+            self.logToParentFrame("Finished Loading Grid Data...")
 
     def SetCellValue(self, *args, **kw):
         return self.table.SetValue(*args, **kw)
@@ -160,13 +164,15 @@ class GridTable(gridlib.Grid):
             self.sortedColumn = col
             self.SetSortingColumn(self.sortedColumn, self.sortAcesnding)
             colName = self.GetColLabelValue(col)
+            self.logToParentFrame("Sorting Grid on Column: \"%s\" Order: %s" % (colName, "Ascending" if self.sortAcesnding else "Descending"))
             if colName in Globals.SEMANTIC_VERSION_COL:
                 df = self.table.data.iloc[self.table.data[colName].apply(LooseVersion).argsort()].reset_index(drop=True)
             else:
                 df = self.table.data.sort_values(
                     colName, ascending=self.sortAcesnding
                 )
-            self.applyNewDataFrame(df, checkColumns=False, autosize=True)
+            # determineDoHereorMainThread
+            Globals.THREAD_POOL.enqueue(self.applyNewDataFrame, df, checkColumns=False, autosize=True)
             self.GoToCell(0, col)
 
     @api_tool_decorator()
@@ -289,3 +295,7 @@ class GridTable(gridlib.Grid):
                 elif value == "Unknown":
                     self.SetCellTextColour(rowNum, colNum, Color.black.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
+
+    def logToParentFrame(self, msg, isError=False):
+        if Globals.frame and hasattr(Globals.frame, "Logging"):
+                Globals.frame.Logging(msg, isError=isError)
