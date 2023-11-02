@@ -1682,15 +1682,15 @@ class NewFrameLayout(wx.Frame):
         ):
             res = displayMessageBox(
                 (
-                    "Looks like you are generating a report for a large subset of devices.\nWould you like to save the info directly to a file?",
-                    wx.ICON_INFORMATION | wx.CENTRE | wx.YES_NO,
+                    "Looks like you are generating a report for a large subset of devices.\nThe report will be directly save to a file.",
+                    wx.ICON_INFORMATION | wx.CENTRE | wx.OK,
                 )
             )
-            if res == wx.YES:
+            if res == wx.OK:
                 self.onClearGrids()
                 return self.onSaveBothAll(None, action=actionClientData)
-            # else:
-            #     return
+            else:
+                return
 
         if actionClientData == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             with LargeTextEntryDialog(
