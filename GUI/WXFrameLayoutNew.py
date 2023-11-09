@@ -2944,69 +2944,80 @@ class NewFrameLayout(wx.Frame):
         )
 
         if inFile:  # Save button was pressed
-            self.statusBar.gauge.Pulse()
-            self.setCursorBusy()
-            self.toggleEnabledState(False)
-            self.gridPanel.disableGridProperties()
-            users = getAllUsers()
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-            data = [
-                [
-                    "User Id",
-                    "Username",
-                    "Email",
-                    "First Name",
-                    "Last Name",
-                    "Full Name",
-                    "Is Active",
-                    "Role",
-                    "Groups",
-                    "Created On",
-                    "Updated On",
-                    "Last Login",
-                ]
+            self.Logging("---> Processing User Report...")
+            Globals.THREAD_POOL.enqueue(self.processOnUserReport, inFile)
+
+    def processOnUserReport(self, inFile):
+        self.statusBar.gauge.Pulse()
+        self.setCursorBusy()
+        self.toggleEnabledState(False)
+        self.gridPanel.disableGridProperties()
+        users = getAllUsers(tolerance=1)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+        data = [
+            [
+                "User Id",
+                "Username",
+                "Email",
+                "First Name",
+                "Last Name",
+                "Full Name",
+                "Is Active",
+                "Role",
+                "Groups",
+                "Created On",
+                "Updated On",
+                "Last Login",
             ]
-            num = 1
-            for user in users["results"]:
-                entry = []
-                entry.append(user["id"])
-                entry.append(user["username"])
-                entry.append(user["email"])
-                entry.append(user["first_name"])
-                entry.append(user["last_name"])
-                entry.append(user["full_name"])
-                entry.append(user["is_active"])
-                entry.append(user["profile"]["role"])
-                entry.append(user["profile"]["groups"])
-                entry.append(user["profile"]["created_on"])
-                entry.append(user["profile"]["updated_on"])
-                entry.append(user["last_login"])
-                data.append(entry)
-                postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE, int(num / len(users["results"]) * 90)
-                )
-                num += 1
-            createNewFile(inFile)
-
-            write_data_to_csv(inFile, data)
-
-            self.Logging("---> User Report saved to file: " + inFile)
-            self.setCursorDefault()
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
-            self.toggleEnabledState(True)
-            self.gridPanel.enableGridProperties()
-
-            res = displayMessageBox(
-                (
-                    "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
-                    % inFile,
-                    wx.YES_NO | wx.ICON_INFORMATION,
-                )
+        ]
+        num = 1
+        bannedRoles = [
+            "enterprise device",
+            "shoonya admin",
+        ]
+        for user in users["results"]:
+            if user["profile"]["role"].lower() in bannedRoles:
+                continue
+            entry = []
+            entry.append(user["id"])
+            entry.append(user["username"])
+            entry.append(user["email"])
+            entry.append(user["first_name"])
+            entry.append(user["last_name"])
+            entry.append(user["full_name"])
+            entry.append(user["is_active"])
+            entry.append(user["profile"]["role"])
+            entry.append(user["profile"]["groups"])
+            entry.append(user["profile"]["created_on"])
+            entry.append(user["profile"]["updated_on"])
+            entry.append(user["last_login"])
+            data.append(entry)
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE, int(num / len(users["results"]) * 90)
             )
-            self.isSaving = False
-            if res == wx.YES:
-                parentDirectory = Path(inFile).parent.absolute()
-                openWebLinkInBrowser(parentDirectory, isfile=True)
+            num += 1
+        createNewFile(inFile)
+
+        self.Logging("---> Saving User Report to file: " + inFile)
+        write_data_to_csv(inFile, data)
+
+        self.Logging("---> User Report saved to file: " + inFile)
+        self.setCursorDefault()
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+        self.toggleEnabledState(True)
+        self.gridPanel.enableGridProperties()
+
+        res = displayMessageBox(
+            (
+                "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                % inFile,
+                wx.YES_NO | wx.ICON_INFORMATION,
+            )
+        )
+        self.isSaving = False
+        if res == wx.YES:
+            parentDirectory = Path(inFile).parent.absolute()
+            openWebLinkInBrowser(parentDirectory, isfile=True)
 
     @api_tool_decorator()
     def onPendingUserReport(self, event):
@@ -3021,60 +3032,64 @@ class NewFrameLayout(wx.Frame):
         )
 
         if inFile:  # Save button was pressed
-            self.statusBar.gauge.Pulse()
-            self.setCursorBusy()
-            self.toggleEnabledState(False)
-            self.gridPanel.disableGridProperties()
-            users = getAllPendingUsers()
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-            data = [
-                [
-                    "User Id",
-                    "Email",
-                    "Is Active",
-                    "Role",
-                    "Groups",
-                    "Created On",
-                    "Updated On",
-                ]
+            self.Logging("---> Processing Pending User Report...")
+            Globals.THREAD_POOL.enqueue(self.processOnPendingUserReport, inFile)
+    
+    def processOnPendingUserReport(self, inFile):
+        self.statusBar.gauge.Pulse()
+        self.setCursorBusy()
+        self.toggleEnabledState(False)
+        self.gridPanel.disableGridProperties()
+        users = getAllPendingUsers(tolerance=1)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+        data = [
+            [
+                "User Id",
+                "Email",
+                "Is Active",
+                "Role",
+                "Groups",
+                "Created On",
+                "Updated On",
             ]
-            num = 1
-            for user in users["userinvites"]:
-                entry = []
-                entry.append(user["id"])
-                entry.append(user["email"])
-                entry.append(user["meta"]["is_active"])
-                entry.append(user["meta"]["profile"]["role"])
-                entry.append(user["meta"]["profile"]["groups"])
-                entry.append(user["created_at"])
-                entry.append(user["updated_at"])
-                data.append(entry)
-                postEventToFrame(
-                    eventUtil.myEVT_UPDATE_GAUGE,
-                    int(num / len(users["userinvites"]) * 90),
-                )
-                num += 1
-            createNewFile(inFile)
-
-            write_data_to_csv(inFile, data)
-
-            self.Logging("---> Pending User Report saved to file: " + inFile)
-            self.setCursorDefault()
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
-            self.toggleEnabledState(True)
-            self.gridPanel.enableGridProperties()
-
-            res = displayMessageBox(
-                (
-                    "Pending User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
-                    % inFile,
-                    wx.YES_NO | wx.ICON_INFORMATION,
-                )
+        ]
+        num = 1
+        for user in users["userinvites"]:
+            entry = []
+            entry.append(user["id"])
+            entry.append(user["email"])
+            entry.append(user["meta"]["is_active"])
+            entry.append(user["meta"]["profile"]["role"])
+            entry.append(user["meta"]["profile"]["groups"] if "groups" in user["meta"]["profile"] else "")
+            entry.append(user["created_at"])
+            entry.append(user["updated_at"])
+            data.append(entry)
+            postEventToFrame(
+                eventUtil.myEVT_UPDATE_GAUGE,
+                int(num / len(users["userinvites"]) * 90),
             )
-            self.isSaving = False
-            if res == wx.YES:
-                parentDirectory = Path(inFile).parent.absolute()
-                openWebLinkInBrowser(parentDirectory, isfile=True)
+            num += 1
+        createNewFile(inFile)
+        self.Logging("---> Saving Pending User Report to file: " + inFile)
+        write_data_to_csv(inFile, data)
+
+        self.Logging("---> Pending User Report saved to file: " + inFile)
+        self.setCursorDefault()
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
+        self.toggleEnabledState(True)
+        self.gridPanel.enableGridProperties()
+
+        res = displayMessageBox(
+            (
+                "Pending User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?"
+                % inFile,
+                wx.YES_NO | wx.ICON_INFORMATION,
+            )
+        )
+        self.isSaving = False
+        if res == wx.YES:
+            parentDirectory = Path(inFile).parent.absolute()
+            openWebLinkInBrowser(parentDirectory, isfile=True)
 
     @api_tool_decorator()
     def onConvertTemplate(self, event):
