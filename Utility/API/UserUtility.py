@@ -122,7 +122,7 @@ def getUsers(
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}".format(
+    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}&exclude_google_roles=true&search=&exclude_enterprise_device_role=true&authn_user_id_null=false".format(
         tenant=tenant,
         limit=limit,
         offset=offset,
@@ -188,9 +188,9 @@ def getSpecificUser(
     return resp
 
 
-def getAllUsers():
+def getAllUsers(tolerance=0):
     userResp = getUsers()
-    users = getAllFromOffsetsRequests(userResp)
+    users = getAllFromOffsetsRequests(userResp, tolarance=tolerance)
     if type(userResp) is dict and "results" in userResp:
         userResp["results"] = userResp["results"] + users
         userResp["next"] = None
@@ -198,9 +198,9 @@ def getAllUsers():
     return userResp
 
 
-def getAllPendingUsers():
+def getAllPendingUsers(tolerance=0):
     userResp = getPendingUsers()
-    users = getAllFromOffsetsRequests(userResp)
+    users = getAllFromOffsetsRequests(userResp, tolarance=tolerance)
     if type(userResp) is dict and "userinvites" in userResp:
         userResp["userinvites"] = userResp["userinvites"] + users
         userResp["next"] = None
