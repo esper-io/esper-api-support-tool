@@ -1079,7 +1079,7 @@ class NewFrameLayout(wx.Frame):
                 threads = []
                 if Globals.HAS_INTERNET:
                     self.toggleEnabledState(False)
-                    groupThread = self.PopulateGroups()
+                    self.groupThread = self.PopulateGroups()
                     appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
@@ -1088,7 +1088,7 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    threads = [groupThread, appThread, blueprints]
+                    threads = [self.groupThread, appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     threads,
@@ -1498,6 +1498,8 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.GUIThread(
             self, self.fetchAllInstallableApps, None, name="PopulateApps"
         )
+        if self.groupThread and self.groupThread.is_alive():
+            self.groupThread.join()
         thread.startWithRetry()
         return thread
 
