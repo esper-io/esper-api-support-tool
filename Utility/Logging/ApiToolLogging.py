@@ -119,7 +119,8 @@ class ApiToolLog:
 
         self.postIssueToTrack("%s %s" % (content[2], content[3]), content)
 
-        Globals.frame.Logging(str(content), True)
+        if Globals.frame and hasattr(Globals.frame, "Logging"):
+            Globals.frame.Logging(str(content), True)
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():

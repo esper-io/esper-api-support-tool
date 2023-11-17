@@ -194,6 +194,7 @@ class ToolMenuBar(wx.MenuBar):
         fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
         fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
         self.fileAddUser = self.userSubMenu.Append(fou)
+        self.fileAddUser.Enable(False)
 
         userReport = wx.MenuItem(
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
@@ -227,6 +228,10 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
         )
         self.colSize.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/resize.png")))
+        self.gridRefresh = viewMenu.Append(
+            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids")
+        )
+        self.gridRefresh.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
         self.clearGrids = viewMenu.Append(
             wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
         )
@@ -293,7 +298,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
         self.Bind(wx.EVT_MENU, self.AddUser, self.fileAddUser)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onUploadCSV, self.fileOpenConfig)
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onUploadSpreadsheet, self.fileOpenConfig
+        )
         self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
         self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBothAll, self.fileSaveAs)
@@ -309,6 +316,9 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(wx.EVT_MENU, self.parentFrame.onNewBlueprintApp, self.newBlueprintApp)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.gridPanel.autoSizeGridsColumns, self.colSize
+        )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.gridPanel.forceRefreshGrids, self.gridRefresh
         )
         self.Bind(
             wx.EVT_MENU,

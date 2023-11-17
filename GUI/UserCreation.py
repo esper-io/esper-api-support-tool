@@ -18,7 +18,7 @@ from Utility.Resource import (
     correctSaveFileName,
     createNewFile,
     displayMessageBox,
-    displaySaveDialog,
+    displayFileDialog,
     postEventToFrame,
 )
 
@@ -187,18 +187,18 @@ class UserCreation(wx.Frame):
 
         grid_sizer_6 = wx.GridSizer(1, 1, 0, 0)
 
-        self.grid_1 = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(41, 7)
-        self.grid_1.EnableEditing(0)
-        self.grid_1.EnableDragRowSize(0)
-        self.grid_1.SetColLabelValue(0, "First Name")
-        self.grid_1.SetColLabelValue(1, "Last Name")
-        self.grid_1.SetColLabelValue(2, "Email")
-        self.grid_1.SetColLabelValue(3, "Username")
-        self.grid_1.SetColLabelValue(4, "Password")
-        self.grid_1.SetColLabelValue(5, "Role")
-        self.grid_1.SetColLabelValue(6, "Groups")
-        grid_sizer_6.Add(self.grid_1, 1, wx.EXPAND | wx.TOP, 2)
+        self.user_grid = wx.grid.Grid(self.panel_3, wx.ID_ANY, size=(1, 1))
+        self.user_grid.CreateGrid(41, 7)
+        self.user_grid.EnableEditing(0)
+        self.user_grid.EnableDragRowSize(0)
+        self.user_grid.SetColLabelValue(0, "First Name")
+        self.user_grid.SetColLabelValue(1, "Last Name")
+        self.user_grid.SetColLabelValue(2, "Email")
+        self.user_grid.SetColLabelValue(3, "Username")
+        self.user_grid.SetColLabelValue(4, "Password")
+        self.user_grid.SetColLabelValue(5, "Role")
+        self.user_grid.SetColLabelValue(6, "Groups")
+        grid_sizer_6.Add(self.user_grid, 1, wx.EXPAND | wx.TOP, 2)
 
         static_line_2 = wx.StaticLine(self.panel_2, wx.ID_ANY)
         sizer_1.Add(
@@ -273,9 +273,8 @@ class UserCreation(wx.Frame):
         self.DestroyLater()
 
     def downloadTemplate(self, event):
-        inFile = displaySaveDialog(
-            "Save User Creation CSV Template",
-            "CSV Files (*.csv)|*.csv"
+        inFile = displayFileDialog(
+            "Save User Creation CSV Template", "CSV Files (*.csv)|*.csv"
         )
 
         if inFile:
@@ -315,8 +314,8 @@ class UserCreation(wx.Frame):
 
     @api_tool_decorator()
     def processUpload(self, file):
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.user_grid.GetNumberRows() > 0:
+            self.user_grid.DeleteRows(0, self.user_grid.GetNumberRows())
         self.users = []
         data = None
         headers = []
@@ -341,7 +340,7 @@ class UserCreation(wx.Frame):
                 headers = newHeaders
         invalidUsers = []
         if data:
-            self.grid_1.Freeze()
+            self.user_grid.Freeze()
             for entry in data:
                 if "username" not in entry and "Username" not in entry:
                     if (
@@ -439,15 +438,15 @@ class UserCreation(wx.Frame):
                     ):
                         invalidUsers.append(entry)
                     else:
-                        self.grid_1.AppendRows()
+                        self.user_grid.AppendRows()
                         col = 0
                         user = {}
                         for field in entry:
                             if len(headers) > col:
                                 if headers[col]:
                                     indx = self.headers[headers[col]]
-                                    self.grid_1.SetCellValue(
-                                        self.grid_1.GetNumberRows() - 1,
+                                    self.user_grid.SetCellValue(
+                                        self.user_grid.GetNumberRows() - 1,
                                         indx,
                                         str(field),
                                     )
@@ -466,8 +465,8 @@ class UserCreation(wx.Frame):
                             and ("lastname" in user and user["lastname"])
                         ):
                             user["username"] = user["firstname"] + user["lastname"]
-                            self.grid_1.SetCellValue(
-                                self.grid_1.GetNumberRows() - 1,
+                            self.user_grid.SetCellValue(
+                                self.user_grid.GetNumberRows() - 1,
                                 self.headers["Username"],
                                 str(user["username"]),
                             )
@@ -476,8 +475,8 @@ class UserCreation(wx.Frame):
                             or "Viewer" == user["role"]
                         ):
                             user["groups"] = []
-                            self.grid_1.SetCellValue(
-                                self.grid_1.GetNumberRows() - 1,
+                            self.user_grid.SetCellValue(
+                                self.user_grid.GetNumberRows() - 1,
                                 self.headers["Groups"],
                                 "",
                             )
@@ -491,10 +490,10 @@ class UserCreation(wx.Frame):
                 else:
                     for header in entry:
                         headers.append(header.lower().replace(" ", ""))
-        if self.grid_1.IsFrozen():
-            self.grid_1.Thaw()
-        self.grid_1.AutoSizeColumns()
-        if self.grid_1.GetNumberRows() > 0:
+        if self.user_grid.IsFrozen():
+            self.user_grid.Thaw()
+        self.user_grid.AutoSizeColumns()
+        if self.user_grid.GetNumberRows() > 0:
             self.button_6.Enable(True)
         if invalidUsers:
             displayMessageBox(
@@ -535,11 +534,11 @@ class UserCreation(wx.Frame):
         if bool(self.dialog):
             self.dialog.Update(self.dialog.GetRange())
             self.dialog.Destroy()
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.user_grid.GetNumberRows() > 0:
+            self.user_grid.DeleteRows(0, self.user_grid.GetNumberRows())
             self.users = []
-        self.grid_1.SetScrollLineX(15)
-        self.grid_1.SetScrollLineY(15)
+        self.user_grid.SetScrollLineX(15)
+        self.user_grid.SetScrollLineY(15)
         self.button_2.SetFocus()
         self.button_6.Enable(False)
         self.button_7.Enable(True)
@@ -547,7 +546,7 @@ class UserCreation(wx.Frame):
 
     @api_tool_decorator()
     def onModify(self):
-        if not self.grid_1.GetNumberRows() > 0:
+        if not self.user_grid.GetNumberRows() > 0:
             self.button_6.Enable(False)
             return None, "No users uploaded!"
         res = displayMessageBox(
@@ -616,7 +615,7 @@ class UserCreation(wx.Frame):
 
     @api_tool_decorator()
     def onCreate(self):
-        if not self.grid_1.GetNumberRows() > 0:
+        if not self.user_grid.GetNumberRows() > 0:
             self.button_6.Enable(False)
             return None, "No users uploaded!"
         res = displayMessageBox(
@@ -680,7 +679,7 @@ class UserCreation(wx.Frame):
             return logs, dlgMsg
 
     def onDelete(self):
-        if not self.grid_1.GetNumberRows() > 0:
+        if not self.user_grid.GetNumberRows() > 0:
             self.button_6.Enable(False)
             return None, "No users uploaded!"
         res = displayMessageBox(

@@ -55,7 +55,7 @@ def getAllDevices(
     groupToUse,
     limit=None,
     offset=None,
-    fetchAll=False,
+    fetchAll=True,
     maxAttempt=Globals.MAX_RETRY,
     tolarance=0,
     timeout=-1,
@@ -116,13 +116,13 @@ def get_all_devices(
     groupToUse,
     limit,
     offset,
-    fetchAll=False,
+    fetchAll=True,
     maxAttempt=Globals.MAX_RETRY,
     tolarance=0,
     timeout=-1,
 ):
     response = get_all_devices_helper(groupToUse, limit, offset, maxAttempt)
-    if Globals.GROUP_FETCH_ALL or fetchAll:
+    if fetchAll:
         devices = getAllFromOffsetsRequests(response, None, tolarance, timeout)
         if type(response) is dict and "results" in response:
             response["next"] = None
@@ -135,7 +135,7 @@ def fetchDevicesFromGroup(
     groupToUse,
     limit,
     offset,
-    fetchAll=False,
+    fetchAll=True,
     maxAttempt=Globals.MAX_RETRY,
     tolarance=0,
     timeout=-1,

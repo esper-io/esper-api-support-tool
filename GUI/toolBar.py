@@ -80,7 +80,7 @@ class ToolsToolBar(wx.ToolBar):
 
         self.Bind(wx.EVT_TOOL, self.Parent.OnQuit, self.qtool)
         self.Bind(wx.EVT_TOOL, self.Parent.AddEndpoint, self.atool)
-        self.Bind(wx.EVT_TOOL, self.Parent.onUploadCSV, self.otool)
+        self.Bind(wx.EVT_TOOL, self.Parent.onUploadSpreadsheet, self.otool)
         self.Bind(wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
         self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)

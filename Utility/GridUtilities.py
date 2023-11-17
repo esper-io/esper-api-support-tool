@@ -1,4 +1,7 @@
+import pandas as pd
 import Common.Globals as Globals
+
+from pandas.testing import assert_frame_equal
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
@@ -29,3 +32,31 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 }
             if info and info not in deviceInfo["AppsEntry"]:
                 deviceInfo["AppsEntry"].append(info)
+
+
+def createDataFrameFromDict(headerList, sourceData):
+    newData = {}
+    for header in headerList:
+        newData[header] = []
+    for row in sourceData:
+        if type(headerList) is dict:
+            for columnName, key in headerList.items():
+                value = ""
+                if key in row:
+                    value = row[key]
+                newData[columnName].append(value)
+        elif type(headerList) is list:
+            for header in headerList:
+                value = ""
+                if header in row:
+                    value = row[header]
+                newData[header].append(value)
+    return pd.DataFrame(newData)
+
+
+def areDataFramesTheSame(df1, df2):
+    try:
+        assert_frame_equal(df1, df2)
+        return True
+    except:
+        return False

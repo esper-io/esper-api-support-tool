@@ -44,12 +44,9 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow",
             "useJsonForCmd",
             "runCommandOn",
-            "syncGridScroll",
             "aliasDayDelta",
             "fontSize",
             "saveColVisibility",
-            "groupFetchAll",
-            "loadXDevices",
             "replaceSerial",
             "showDisabledDevices",
             "lastSeenAsDate",
@@ -136,17 +133,6 @@ class PreferencesDialog(wx.Dialog):
             "Allow Auto-Posting of Issues",
             wx.CheckBox,
             "Allow EAST to automatically report issues raised and relayed back to the user (most Error dialogs).",
-        )
-
-        (_, _, self.checkbox_28,) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Display Terms on Launch",
-            wx.CheckBox,
-            "Display our Terms for tool use on launch",
-        )
-        self.checkbox_28.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SHOW_DISCLAIMER else wx.CHK_CHECKED
         )
 
         # Report Options
@@ -418,25 +404,6 @@ class PreferencesDialog(wx.Dialog):
             "Allow user to resize grid columns",
         )
 
-        (_, _, self.checkbox_13,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Sync Grid's Vertical Scroll Position",
-            wx.CheckBox,
-            "Sync Device and Network Grid's vertical scroll position. Sync is disabled once a column is sorted.",
-        )
-
-        (_, _, self.spin_ctrl_11,) = self.addPrefToPanel(
-            self.grid,
-            sizer_16,
-            "Load X Number of Devices in Grid",
-            wx.SpinCtrl,
-            "Will only load a specified amount of devices into the grid at a time. More of the same amount will be loaded once the user has scrolled down far enough.",
-        )
-        self.spin_ctrl_11.SetMin(Globals.MAX_GRID_LOAD)
-        self.spin_ctrl_11.SetMax(Globals.MAX_LIMIT)
-        self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
-
         # App Preferences
         self.app = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.app.Hide()
@@ -584,9 +551,9 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.checkbox_30,) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
-            "Show Terms & Conditions",
+            "Show Terms and Conditions",
             wx.CheckBox,
-            "Show Terms & Conditions",
+            "Show Terms and Conditions",
         )
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -658,10 +625,6 @@ class PreferencesDialog(wx.Dialog):
 
         self.Fit()
 
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
-
     @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
@@ -714,13 +677,10 @@ class PreferencesDialog(wx.Dialog):
             "setStateShow": self.checkbox_11.IsChecked(),
             "useJsonForCmd": self.checkbox_12.IsChecked(),
             "runCommandOn": self.combobox_1.GetValue(),
-            "syncGridScroll": self.checkbox_13.IsChecked(),
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
-            "groupFetchAll": self.checkbox_16.IsChecked(),
-            "loadXDevices": self.spin_ctrl_11.GetValue(),
             "replaceSerial": self.checkbox_17.IsChecked(),
             "showDisabledDevices": self.checkbox_18.IsChecked(),
             "lastSeenAsDate": self.checkbox_19.IsChecked(),
@@ -739,7 +699,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleEnabled": self.checkbox_26.IsChecked(),
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
-            "showDisclaimer": self.checkbox_28.IsChecked(),
+            "showDisclaimer": self.checkbox_30.IsChecked(),
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
@@ -755,11 +715,8 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_TIMEOUT = int(self.prefs["commandTimeout"])
         Globals.COMMAND_JSON_INPUT = self.checkbox_12.IsChecked()
         Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
-        Globals.MATCH_SCROLL_POS = self.prefs["syncGridScroll"]
         Globals.ALIAS_DAY_DELTA = self.prefs["aliasDayDelta"]
         Globals.SAVE_VISIBILITY = self.prefs["saveColVisibility"]
-        Globals.GROUP_FETCH_ALL = self.prefs["groupFetchAll"]
-        Globals.MAX_GRID_LOAD = self.prefs["loadXDevices"]
         Globals.REPLACE_SERIAL = self.prefs["replaceSerial"]
         Globals.SHOW_DISABLED_DEVICES = self.prefs["showDisabledDevices"]
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
@@ -787,15 +744,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
         Globals.SCHEDULE_TYPE = self.prefs["scheduleReportType"]
-
-        if Globals.APPS_IN_DEVICE_GRID:
-            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
-        else:
-            Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
-            self.parent.gridPanel.deleteAppColInDeviceGrid()
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
 
         if self.prefs["getAllApps"]:
             Globals.USE_ENTERPRISE_APP = False
@@ -973,11 +921,6 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.REACH_QUEUED_ONLY = False
 
-        if self.checkBooleanValuePrefAndSet("syncGridScroll", self.checkbox_13, True):
-            Globals.MATCH_SCROLL_POS = True
-        else:
-            Globals.MATCH_SCROLL_POS = False
-
         if "aliasDayDelta" in self.prefs:
             Globals.ALIAS_DAY_DELTA = int(self.prefs["aliasDayDelta"])
             if Globals.ALIAS_DAY_DELTA > Globals.ALIAS_MAX_DAY_DELTA:
@@ -990,12 +933,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(self.prefs["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
-
-        if "loadXDevices" in self.prefs:
-            Globals.MAX_GRID_LOAD = int(self.prefs["loadXDevices"])
-            if Globals.MAX_GRID_LOAD > Globals.MAX_LIMIT:
-                Globals.MAX_GRID_LOAD = Globals.MAX_LIMIT
-            self.spin_ctrl_11.SetValue(Globals.MAX_GRID_LOAD)
 
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
@@ -1012,11 +949,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.SAVE_VISIBILITY = True
         else:
             Globals.SAVE_VISIBILITY = False
-
-        if self.checkBooleanValuePrefAndSet("groupFetchAll", self.checkbox_16):
-            Globals.GROUP_FETCH_ALL = True
-        else:
-            Globals.GROUP_FETCH_ALL = False
 
         if self.checkBooleanValuePrefAndSet("replaceSerial", self.checkbox_17):
             Globals.REPLACE_SERIAL = True
@@ -1049,16 +981,12 @@ class PreferencesDialog(wx.Dialog):
             ) or self.prefs["appsInDeviceGrid"] is True:
                 self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
                 Globals.APPS_IN_DEVICE_GRID = True
-                Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
             else:
                 self.checkbox_20.Set3StateValue(wx.CHK_UNCHECKED)
                 Globals.APPS_IN_DEVICE_GRID = False
-                Globals.CSV_TAG_ATTR_NAME.pop("Applications", None)
-                self.parent.gridPanel.deleteAppColInDeviceGrid()
         else:
             self.checkbox_20.Set3StateValue(wx.CHK_CHECKED)
             Globals.APPS_IN_DEVICE_GRID = True
-            Globals.CSV_TAG_ATTR_NAME["Applications"] = "Apps"
 
         if self.checkBooleanValuePrefAndSet("inhibitSleep", self.checkbox_21):
             Globals.INHIBIT_SLEEP = True
@@ -1148,7 +1076,7 @@ class PreferencesDialog(wx.Dialog):
                 self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
             )
 
-        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_28, True):
+        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, True):
             Globals.SHOW_DISCLAIMER = True
             self.checkbox_30.Set3StateValue(wx.CHK_CHECKED)
         else:
@@ -1159,10 +1087,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.GET_DEVICE_LANGUAGE = True
         else:
             Globals.GET_DEVICE_LANGUAGE = False
-
-        self.parent.gridPanel.grid1HeaderLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
-        self.parent.gridPanel.fillDeviceGridHeaders()
-        self.parent.gridPanel.repopulateApplicationField()
 
     def checkBooleanValuePrefAndSet(self, key, checkbox, default=False):
         isEnabled = default
@@ -1238,18 +1162,12 @@ class PreferencesDialog(wx.Dialog):
             return Globals.COMMAND_JSON_INPUT
         elif key == "runCommandOn":
             return Globals.CMD_DEVICE_TYPE
-        elif key == "syncGridScroll":
-            return Globals.MATCH_SCROLL_POS
         elif key == "aliasDayDelta":
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
             return Globals.FONT_SIZE
         elif key == "saveColVisibility":
             return Globals.SAVE_VISIBILITY
-        elif key == "groupFetchAll":
-            return Globals.GROUP_FETCH_ALL
-        elif key == "loadXDevices":
-            return Globals.MAX_GRID_LOAD
         elif key == "replaceSerial":
             return Globals.REPLACE_SERIAL
         elif key == "showDisabledDevices":

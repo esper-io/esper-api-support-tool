@@ -297,8 +297,6 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
 def setKiosk(frame, device, deviceInfo, isGroup=False):
     """Toggles Kiosk Mode With Specified App"""
     logString = ""
-    failed = False
-    warning = False
     appSelection = frame.sidePanel.selectedAppEntry
     if not appSelection or "pkgName" not in appSelection:
         return {}
@@ -347,17 +345,11 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
             logString = (
                 logString + " <warning, check back on the device (%s)>" % deviceName
             )
-            warning = True
         else:
             logString = logString + " <failed>"
-            failed = True
         if deviceInfo and deviceInfo["Status"] != "Online":
             logString = logString + " (Device offline)"
         postEventToFrame(eventUtil.myEVT_LOG, logString)
-        if failed:
-            postEventToFrame(eventUtil.myEVT_ON_FAILED, deviceInfo)
-        if warning:
-            postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
         if status and hasattr(status, "state"):
             entry = {
                 "Esper Name": deviceName,
@@ -403,8 +395,6 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
         deviceId = device
 
     logString = str("--->" + str(deviceName) + " " + str(aliasName)) + " -> Multi ->"
-    failed = False
-    warning = False
     status = None
     if deviceInfo and deviceInfo["Mode"] == "Kiosk":
         status = toggleKioskMode(frame, deviceId, {}, False, isGroup=isGroup)
@@ -415,19 +405,14 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
                 logString = (
                     logString + " <warning, check back on the device (%s)>" % deviceName
                 )
-                warning = True
             else:
                 logString = logString + " <failed>"
-                failed = True
     else:
         logString = logString + " (Already Multi mode, skipping)"
     if deviceInfo and deviceInfo["Status"] != "Online":
         logString = logString + " (Device offline)"
     postEventToFrame(eventUtil.myEVT_LOG, logString)
-    if failed:
-        postEventToFrame(eventUtil.myEVT_ON_FAILED, deviceInfo)
-    if warning:
-        postEventToFrame(eventUtil.myEVT_ON_FAILED, (device, "Queued"))
+
     if status and hasattr(status, "state"):
         entry = {
             "Esper Name": deviceName,
@@ -755,8 +740,6 @@ def clearAppData(frame, device, isGroup=False):
                 }
             resp, json_resp = postEsperCommand(reqData)
             logBadResponse(resp.request.url, resp, json_resp)
-            if resp.status_code > 300:
-                postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
             if resp.status_code < 300:
                 frame.Logging(
                     "---> Clear %s App Data Command has been sent to %s"
@@ -775,7 +758,6 @@ def clearAppData(frame, device, isGroup=False):
         frame.Logging(
             "ERROR: Failed to send Clear App Data Command to %s" % (deviceName)
         )
-        postEventToFrame(eventUtil.myEVT_ON_FAILED, device)
     return json_resp
 
 
@@ -785,40 +767,40 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             enforceRateLimit()
-            if type(entry) is dict and "esperName" in entry.keys():
-                identifier = entry["esperName"]
+            if type(entry) is dict and "Esper Name" in entry.keys():
+                identifier = entry["Esper Name"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
                     name=identifier,
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif type(entry) is dict and "sn" in entry.keys():
-                identifier = entry["sn"]
+            elif type(entry) is dict and "Serial Number" in entry.keys():
+                identifier = entry["Serial Number"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
                     serial=identifier,
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif type(entry) is dict and "csn" in entry.keys():
-                identifier = entry["csn"]
+            elif type(entry) is dict and "Custom Serial Number" in entry.keys():
+                identifier = entry["Custom Serial Number"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
                     search=identifier,
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif type(entry) is dict and "imei1" in entry.keys():
-                identifier = entry["imei1"]
+            elif type(entry) is dict and "IMEI 1" in entry.keys():
+                identifier = entry["IMEI 1"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
                     imei=identifier,
                     limit=Globals.limit,
                     offset=Globals.offset,
                 )
-            elif type(entry) is dict and "imei2" in entry.keys():
-                identifier = entry["imei2"]
+            elif type(entry) is dict and "IMEI 2" in entry.keys():
+                identifier = entry["IMEI 2"]
                 api_response = api_instance.get_all_devices(
                     Globals.enterprise_id,
                     imei=identifier,

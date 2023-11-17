@@ -9,11 +9,16 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.FileUtility import read_data_from_csv, write_data_to_csv
+from GUI.GridTable import GridTable
+from Utility.FileUtility import (
+    read_csv_via_pandas,
+    read_data_from_csv,
+    read_excel_via_openpyxl,
+    write_data_to_csv,
+)
 from Utility.Resource import (
-    correctSaveFileName,
     displayMessageBox,
-    displaySaveDialog,
+    displayFileDialog,
     openWebLinkInBrowser,
 )
 
@@ -80,12 +85,9 @@ class BulkFactoryReset(wx.Dialog):
         self.button_6.SetToolTip("Upload CSV file")
         sizer_4.Add(self.button_6, 0, wx.BOTTOM | wx.RIGHT, 5)
 
-        self.grid_1 = wx.grid.Grid(self, wx.ID_ANY, size=(1, 1))
-        self.grid_1.CreateGrid(10, 1)
-        self.grid_1.EnableDragGridSize(0)
-        self.grid_1.SetColLabelValue(0, "Device Identifiers")
-        self.grid_1.SetColSize(0, 132)
-        grid_sizer_4.Add(self.grid_1, 1, wx.ALL | wx.EXPAND, 5)
+        self.reset_grid = GridTable(self, headers=self.expectedHeaders)
+        self.reset_grid.EnableDragGridSize(0)
+        grid_sizer_4.Add(self.reset_grid, 1, wx.ALL | wx.EXPAND, 5)
 
         sizer_2 = wx.StdDialogButtonSizer()
         sizer_1.Add(sizer_2, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -115,7 +117,7 @@ class BulkFactoryReset(wx.Dialog):
         self.button_OK.Enable(False)
 
         self.button_7.Bind(wx.EVT_BUTTON, self.downloadCSV)
-        self.button_6.Bind(wx.EVT_BUTTON, self.openCSV)
+        self.button_6.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_OK.Bind(wx.EVT_BUTTON, self.onReset)
 
@@ -135,7 +137,7 @@ class BulkFactoryReset(wx.Dialog):
         self.onClose(event)
 
     def downloadCSV(self, event):
-        inFile = displaySaveDialog(
+        inFile = displayFileDialog(
             "Save Bulk Factory Reset CSV as...",
             "CSV files (*.csv)|*.csv",
         )
@@ -169,71 +171,51 @@ class BulkFactoryReset(wx.Dialog):
         self.button_OK.Enable(True)
         self.setCursorDefault()
 
-    def openCSV(self, event):
-        filePath = None
-        with wx.FileDialog(
-            self,
+    def onUpload(self, event):
+        filePath = displayFileDialog(
             "Open Spreadsheet File",
             wildcard="Spreadsheet Files (*.csv;*.xlsx)|*.csv;*.xlsx|CSV Files (*.csv)|*.csv|Microsoft Excel Open XML Spreadsheet (*.xlsx)|*.xlsx",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-        ) as fileDialog:
-            Globals.OPEN_DIALOGS.append(fileDialog)
-            result = fileDialog.ShowModal()
-            Globals.OPEN_DIALOGS.remove(fileDialog)
-            if result == wx.ID_OK:
-                # Proceed loading the file chosen by the user
-                filePath = fileDialog.GetPath()
+            styles=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        )
         if filePath and filePath.endswith(".csv"):
-            self.uploadCSV(filePath)
+            Globals.THREAD_POOL.enqueue(self.uploadCSV, filePath)
         elif filePath and filePath.endswith(".xlsx"):
-            self.uploadXlsx(filePath)
+            Globals.THREAD_POOL.enqueue(self.uploadXlsx, filePath)
 
     def doPreUploadActivity(self):
         self.setCursorBusy()
-        if self.grid_1.GetNumberRows() > 0:
-            self.grid_1.DeleteRows(0, self.grid_1.GetNumberRows())
+        if self.reset_grid.GetNumberRows() > 0:
+            df = pd.DataFrame(columns=self.expectedHeaders)
+            self.reset_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
 
     def uploadCSV(self, filePath):
         self.doPreUploadActivity()
-        data = read_data_from_csv(filePath)
+        data = read_csv_via_pandas(filePath)
         self.processUploadData(data)
 
     def uploadXlsx(self, filePath):
         self.doPreUploadActivity()
-        data = None
-        try:
-            dfs = pd.read_excel(filePath, sheet_name=None, keep_default_na=False)
-            if hasattr(dfs, "keys"):
-                sheetKeys = dfs.keys()
-                for sheet in sheetKeys:
-                    data = dfs[sheet].values.tolist()
-                    break
-        except:
-            pass
+        data = read_excel_via_openpyxl(filePath, readAnySheet=True)
         self.processUploadData(data)
 
     def processUploadData(self, data):
-        if data:
-            for row in data:
-                colNum = 0
-                for col in row:
-                    if colNum > 0:
-                        break
-                    if col in self.expectedHeaders:
-                        break
-                    else:
-                        self.grid_1.AppendRows(1)
-                        self.grid_1.SetCellValue(
-                            self.grid_1.GetNumberRows() - 1, colNum, col
-                        )
-                        self.identifers.append(col)
-                    colNum += 1
-        self.grid_1.AutoSizeColumns()
+        if data is not None:
+            gridTableData = {
+                self.expectedHeaders[0]: [],
+            }
+            identifers = data[data.columns.values.tolist()[0]].tolist()
+            for id in identifers:
+                if id and id not in self.identifers:
+                    gridTableData[self.expectedHeaders[0]].append(id)
+                    self.identifers.append(str(id))
+            df = pd.DataFrame(gridTableData, columns=self.expectedHeaders)
+            self.reset_grid.applyNewDataFrame(df, resetPosition=True)
+        self.reset_grid.AutoSizeColumns()
         self.checkActions()
         self.setCursorDefault()
 
     def checkActions(self):
-        if self.grid_1.GetNumberRows() > 0:
+        if self.reset_grid.GetNumberRows() > 0:
             self.button_OK.Enable(True)
         else:
             self.button_OK.Enable(False)
@@ -245,8 +227,8 @@ class BulkFactoryReset(wx.Dialog):
             self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
             self.SetCursor(myCursor)
-            self.grid_1.GetGridWindow().SetCursor(myCursor)
-            self.grid_1.GetTargetWindow().SetCursor(myCursor)
+            self.reset_grid.GetGridWindow().SetCursor(myCursor)
+            self.reset_grid.GetTargetWindow().SetCursor(myCursor)
         except:
             pass
 
@@ -256,8 +238,8 @@ class BulkFactoryReset(wx.Dialog):
         self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
-        self.grid_1.GetGridWindow().SetCursor(myCursor)
-        self.grid_1.GetTargetWindow().SetCursor(myCursor)
+        self.reset_grid.GetGridWindow().SetCursor(myCursor)
+        self.reset_grid.GetTargetWindow().SetCursor(myCursor)
 
     def getIdentifiers(self):
         return self.identifers

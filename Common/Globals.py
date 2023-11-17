@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.194898"
+VERSION = "v0.194899"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -41,7 +41,7 @@ PRINT_API_LOGS = False
 
 SHEET_CHUNK_SIZE = 500000
 MIN_SHEET_CHUNK_SIZE = 50000
-MAX_SHEET_CHUNK_SIZE = 500000
+MAX_SHEET_CHUNK_SIZE = 1000000
 
 THREAD_POOL = Pool(MAX_THREAD_COUNT)
 if THREAD_POOL:
@@ -72,9 +72,7 @@ msg_lock = threading.Lock()
 api_log_lock = threading.Lock()
 gauge_lock = threading.Lock()
 grid1_lock = threading.Lock()
-grid1_status_lock = threading.Lock()
 grid2_lock = threading.Lock()
-grid_color_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
 join_lock = threading.Lock()
@@ -182,7 +180,9 @@ CSV_TAG_ATTR_NAME = {
     "Alias": "Alias",
     "Group": "groups",
     "Brand": "brand",
+    "Manufacturer": "manufacturer",
     "Model": "model",
+    "Hardware Chip Set": "hardware",
     "Android Version": "androidVersion",
     "Android Build Number": "androidBuildNumber",
     "Status": "Status",
@@ -287,6 +287,19 @@ CSV_APP_ATTR_NAME = [
     "Can Uninstall",
 ]
 
+SEMANTIC_VERSION_COL = [
+    "Android Version",
+    "Application Version Code",
+]
+
+DATE_COL = {
+    "Security Patch": "%Y/%m/%d",
+    "Registered On": "%Y/%m/%d %H:%M:%S.%f",
+    "Updated On": "%Y/%m/%d %H:%M:%S.%f",
+    "Created On": "%Y/%m/%d %H:%M:%S.%f",
+    "Last Seen": "%Y/%m/%d %H:%M:%S.%f",
+}
+
 WHITELIST_AP = []
 
 """ Static Lists """
@@ -326,16 +339,14 @@ SAVE_VISIBILITY = False
 COMBINE_DEVICE_AND_NETWORK_SHEETS = False
 
 # Report Prefs
-GROUP_FETCH_ALL = True
 SHOW_DISABLED_DEVICES = False
 INHIBIT_SLEEP = False
 GET_DEVICE_LANGUAGE = False
+APPS_IN_DEVICE_GRID = True
 
 # Grid Prefs
-MAX_GRID_LOAD = 100
 REPLACE_SERIAL = True
 LAST_SEEN_AS_DATE = True
-APPS_IN_DEVICE_GRID = True
 VERSON_NAME_INSTEAD_OF_CODE = False
 SHOW_GROUP_PATH = False
 
@@ -348,7 +359,6 @@ COMMAND_JSON_INPUT = True
 REACH_QUEUED_ONLY = True
 CMD_DEVICE_TYPE = "all"
 APP_FILTER = "all"
-MATCH_SCROLL_POS = True
 ALIAS_DAY_DELTA = 14
 ALIAS_MAX_DAY_DELTA = 356
 APP_COL_FILTER = []
