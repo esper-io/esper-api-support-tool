@@ -122,7 +122,7 @@ def getUsers(
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}&exclude_google_roles=true&search=&exclude_enterprise_device_role=true&authn_user_id_null=false".format(
+    url = "https://{tenant}-api.esper.cloud/api/user/?limit={limit}&offset={offset}&format=json&exclude_google_roles=true&exclude_enterprise_device_role=true&authn_user_id_null=false".format(
         tenant=tenant,
         limit=limit,
         offset=offset,
@@ -147,7 +147,7 @@ def getPendingUsers(
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
-    url = "https://{tenant}-api.esper.cloud/api/authn2/v0/tenant/{enterprise_id}/invite?limit={limit}&offset={offset}&format=json&exclude_google_roles=true&email=&exclude_enterprise_device_role=true".format(
+    url = "https://{tenant}-api.esper.cloud/api/authn2/v0/tenant/{enterprise_id}/invite?limit={limit}&offset={offset}&format=json&exclude_google_roles=true&exclude_enterprise_device_role=true&authn_user_id_null=false".format(
         tenant=tenant,
         enterprise_id=Globals.enterprise_id,
         limit=limit,
