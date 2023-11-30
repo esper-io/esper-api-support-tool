@@ -152,6 +152,8 @@ class NewFrameLayout(wx.Frame):
         self.previousGroupFetchThread = None
         self.firstRun = True
         self.changedBlueprints = []
+        self.groupThread = None
+        self.appThread = None
 
         self.scheduleReport = None
         self.delayScheduleReport = True
@@ -1079,8 +1081,12 @@ class NewFrameLayout(wx.Frame):
                 threads = []
                 if Globals.HAS_INTERNET:
                     self.toggleEnabledState(False)
+                    if self.groupThread and self.groupThread.is_alive():
+                        self.groupThread.stop()
                     self.groupThread = self.PopulateGroups()
-                    appThread = self.PopulateApps()
+                    if self.appThread and self.appThread.is_alive():
+                        self.appThread.stop()
+                    self.appThread = self.PopulateApps()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1088,7 +1094,7 @@ class NewFrameLayout(wx.Frame):
                         name="loadConfigCheckBlueprint",
                     )
                     blueprints.start()
-                    threads = [self.groupThread, appThread, blueprints]
+                    threads = [self.groupThread, self.appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     threads,
@@ -1505,6 +1511,8 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator(locks=[Globals.token_lock])
     def fetchAllInstallableApps(self):
+        if self.groupThread and self.groupThread.is_alive():
+            self.groupThread.join()
         Globals.token_lock.acquire()
         Globals.token_lock.release()
         if Globals.IS_TOKEN_VALID:
