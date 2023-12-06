@@ -24,7 +24,9 @@ class GridTable(gridlib.Grid):
         if data is None:
             data = self.createEmptyDataFrame()
         self.CreateGrid(len(data), len(data.columns))
-        self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
+        self.applyNewDataFrame(
+            data, checkColumns=False, autosize=True, resetPosition=True
+        )
 
         self.sortedColumn = None
         self.sortAcesnding = True
@@ -91,7 +93,9 @@ class GridTable(gridlib.Grid):
             self.AutoSizeColumns()
             self.ForceRefresh()
 
-    def applyNewDataFrame(self, data, checkColumns=True, autosize=False, resetPosition=False):
+    def applyNewDataFrame(
+        self, data, checkColumns=True, autosize=False, resetPosition=False
+    ):
         try:
             self.SetCursor(wx.Cursor(wx.CURSOR_ARROWWAIT))
             self.Freeze()
@@ -108,7 +112,9 @@ class GridTable(gridlib.Grid):
                                 renameColumns[column] = expectedCol
                                 matchingColumns.append(expectedCol)
                                 break
-                    missingColumns = list(set(self.headersLabels) - set(matchingColumns))
+                    missingColumns = list(
+                        set(self.headersLabels) - set(matchingColumns)
+                    )
                     for missingColumn in missingColumns:
                         data[missingColumn] = ""
                     data = data[list(self.headersLabels)]
@@ -146,7 +152,9 @@ class GridTable(gridlib.Grid):
 
     def EmptyGrid(self):
         data = self.createEmptyDataFrame()
-        self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
+        self.applyNewDataFrame(
+            data, checkColumns=False, autosize=True, resetPosition=True
+        )
 
     def SortColumn(self, event):
         col = None
@@ -164,15 +172,20 @@ class GridTable(gridlib.Grid):
             self.sortedColumn = col
             self.SetSortingColumn(self.sortedColumn, self.sortAcesnding)
             colName = self.GetColLabelValue(col)
-            self.logToParentFrame("Sorting Grid on Column: \"%s\" Order: %s" % (colName, "Ascending" if self.sortAcesnding else "Descending"))
+            self.logToParentFrame(
+                'Sorting Grid on Column: "%s" Order: %s'
+                % (colName, "Ascending" if self.sortAcesnding else "Descending")
+            )
             if colName in Globals.SEMANTIC_VERSION_COL:
-                df = self.table.data.iloc[self.table.data[colName].apply(LooseVersion).argsort()].reset_index(drop=True)
+                df = self.table.data.iloc[
+                    self.table.data[colName].apply(LooseVersion).argsort()
+                ].reset_index(drop=True)
             else:
-                df = self.table.data.sort_values(
-                    colName, ascending=self.sortAcesnding
-                )
+                df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             # determineDoHereorMainThread
-            Globals.THREAD_POOL.enqueue(self.applyNewDataFrame, df, checkColumns=False, autosize=True)
+            Globals.THREAD_POOL.enqueue(
+                self.applyNewDataFrame, df, checkColumns=False, autosize=True
+            )
             self.GoToCell(0, col)
 
     @api_tool_decorator()
@@ -298,4 +311,4 @@ class GridTable(gridlib.Grid):
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):
-                Globals.frame.Logging(msg, isError=isError)
+            Globals.frame.Logging(msg, isError=isError)

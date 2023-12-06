@@ -591,26 +591,32 @@ class GridPanel(wx.Panel):
 
     def getGridDataForSave(self):
         deviceData = networkData = appData = None
-        deviceData = self.__getGridDataForSaveHelper__(self.device_grid, self.device_grid_contents)
-        networkData = self.__getGridDataForSaveHelper__(self.network_grid, self.network_grid_contents)
-        appData = self.__getGridDataForSaveHelper__(self.app_grid, self.app_grid_contents)
+        deviceData = self.__getGridDataForSaveHelper__(
+            self.device_grid, self.device_grid_contents
+        )
+        networkData = self.__getGridDataForSaveHelper__(
+            self.network_grid, self.network_grid_contents
+        )
+        appData = self.__getGridDataForSaveHelper__(
+            self.app_grid, self.app_grid_contents
+        )
         return deviceData, networkData, appData
 
     def __getGridDataForSaveHelper__(self, grid, content):
         data = None
-        if ((content is not None 
+        if (
+            content is not None
             and grid.Table.data is not None
-            and areDataFramesTheSame(content, grid.Table.data))
-            or (content is not None 
-                and (grid.Table.data is None
-                     or len(grid.Table.data) == 0))):
+            and areDataFramesTheSame(content, grid.Table.data)
+        ) or (
+            content is not None
+            and (grid.Table.data is None or len(grid.Table.data) == 0)
+        ):
             data = content
-        elif ((content is None 
-               or len(content) == 0)
-            and grid.Table.data is not None):
+        elif (content is None or len(content) == 0) and grid.Table.data is not None:
             data = grid.Table.data
         return data
-    
+
     def forceRefreshGrids(self):
         self.device_grid.ForceRefresh()
         self.network_grid.ForceRefresh()

@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 
-import ast
 import csv
 import json
-import math
 import os.path
 import platform
 import sys
 import threading
 import time
-from datetime import datetime
-from pathlib import Path
+import numpy as np
 import pandas as pd
 import wx
 import wx.adv as wxadv
-import xlsxwriter
+
+from datetime import datetime
+from pathlib import Path
 from wx.core import TextEntryDialog
 
 import Common.ApiTracker as ApiTracker
@@ -113,7 +112,6 @@ from Utility.Resource import (
     determineDoHereorMainThread,
     displayMessageBox,
     displayFileDialog,
-    getStrRatioSimilarity,
     joinThreadList,
     openWebLinkInBrowser,
     postEventToFrame,
@@ -589,18 +587,16 @@ class NewFrameLayout(wx.Frame):
         num = 1
         self.Logging("Processing device information for file")
         if (
-                action == GeneralActions.GENERATE_DEVICE_REPORT.value
-                or action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
-            df = createDataFrameFromDict(
-                        Globals.CSV_TAG_ATTR_NAME, deviceList.values()
-                    )
+            action == GeneralActions.GENERATE_DEVICE_REPORT.value
+            or action == GeneralActions.GENERATE_INFO_REPORT.value
+            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        ):
+            df = createDataFrameFromDict(Globals.CSV_TAG_ATTR_NAME, deviceList.values())
             self.gridPanel.device_grid_contents = df
         if (
-                action == GeneralActions.GENERATE_INFO_REPORT.value
-                or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-            ):
+            action == GeneralActions.GENERATE_INFO_REPORT.value
+            or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+        ):
             df = createDataFrameFromDict(
                 Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
             )
@@ -653,12 +649,8 @@ class NewFrameLayout(wx.Frame):
     ):
         deviceData, networkData, appData = self.gridPanel.getGridDataForSave()
         if inFile.endswith(".csv"):
-            if (
-                deviceData is not None
-                and len(deviceData) > 0
-            ) or (
-                networkData is not None
-                and len(networkData) > 0
+            if (deviceData is not None and len(deviceData) > 0) or (
+                networkData is not None and len(networkData) > 0
             ):
                 result = pd.merge(
                     deviceData,
@@ -666,13 +658,7 @@ class NewFrameLayout(wx.Frame):
                     on=["Esper Name", "Group"],
                     how="outer",
                 )
-                result.dropna(
-                            axis=0,
-                            how='all',
-                            thresh=None,
-                            subset=None,
-                            inplace=True
-                        )
+                result.dropna(axis=0, how="all", thresh=None, subset=None, inplace=True)
                 save_csv_pandas(inFile, result)
             if (
                 not action
@@ -696,36 +682,33 @@ class NewFrameLayout(wx.Frame):
                 or action <= GeneralActions.GENERATE_DEVICE_REPORT.value
                 and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS
             ):
-                if (deviceData is not None
-                    and networkData is not None):
-                        result = pd.merge(
-                            deviceData,
-                            networkData,
-                            on=["Esper Name", "Group"],
-                            how="outer",
-                        )
-                        result.dropna(
-                            axis=0,
-                            how='all',
-                            thresh=None,
-                            subset=None,
-                            inplace=True
-                        )
-                        df_dict["Device & Network"] = result
+                if deviceData is not None and networkData is not None:
+                    result = pd.merge(
+                        deviceData,
+                        networkData,
+                        on=["Esper Name", "Group"],
+                        how="outer",
+                    )
+                    result.dropna(
+                        axis=0, how="all", thresh=None, subset=None, inplace=True
+                    )
+                    df_dict = self.subdivideSheetData(
+                        "Device & Network", result, df_dict
+                    )
                 else:
-                    df_dict["Device & Network"] = pd.merge(
-                            self.gridPanel.device_grid.createEmptyDataFrame(),
-                            self.gridPanel.network_grid.createEmptyDataFrame(),
-                            on=["Esper Name", "Group"],
-                            how="outer",
-                        )
-            elif (
-                deviceData is not None
-                and len(deviceData) > 0
-            ):
-                df_dict["Device"] = deviceData
+                    deviceNetworkResults = pd.merge(
+                        self.gridPanel.device_grid.createEmptyDataFrame(),
+                        self.gridPanel.network_grid.createEmptyDataFrame(),
+                        on=["Esper Name", "Group"],
+                        how="outer",
+                    )
+                    df_dict = self.subdivideSheetData(
+                        "Device & Network", deviceNetworkResults, df_dict
+                    )
+            elif deviceData is not None and len(deviceData) > 0:
+                df_dict = self.subdivideSheetData("Device", deviceData, df_dict)
                 if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
-                    df_dict["Network"] = networkData
+                    df_dict = self.subdivideSheetData("Network", networkData, df_dict)
             if (
                 not action
                 or (
@@ -735,7 +718,7 @@ class NewFrameLayout(wx.Frame):
                 )
                 and len(appData) > 0
             ):
-                df_dict["Application"] = appData
+                df_dict = self.subdivideSheetData("Application", appData, df_dict)
             save_excel_pandas_xlxswriter(inFile, df_dict)
 
         Globals.THREAD_POOL.join(tolerance=tolarance)
@@ -755,6 +738,17 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory, isfile=True)
+
+    def subdivideSheetData(self, sheetName, sheetData, sheetContainer):
+        if len(sheetData) > Globals.SHEET_CHUNK_SIZE:
+            df_list = np.array_split(sheetData, Globals.SHEET_CHUNK_SIZE)
+            num = 1
+            for df in df_list:
+                newSheetName = sheetName + " Part " + str(num)
+                sheetContainer[newSheetName] = df
+        else:
+            sheetContainer[sheetName] = sheetData
+        return sheetContainer
 
     @api_tool_decorator()
     def onUploadSpreadsheet(self, event):
@@ -819,13 +813,7 @@ class NewFrameLayout(wx.Frame):
                 print(e)
                 pass
         if dfs is not None:
-            dfs.dropna(
-                axis=0,
-                how='all',
-                thresh=None,
-                subset=None,
-                inplace=True
-            )
+            dfs.dropna(axis=0, how="all", thresh=None, subset=None, inplace=True)
             self.processSpreadsheetUpload(dfs)
         self.gridPanel.notebook_2.SetSelection(0)
 
@@ -2096,7 +2084,9 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.network_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
+                self.gridPanel.network_grid.applyNewDataFrame(
+                    df, checkColumns=False, resetPosition=True, autosize=True
+                )
                 self.gridPanel.network_grid_contents = df.copy(deep=True)
             # Populate Device sheet
             if (
@@ -2107,7 +2097,9 @@ class NewFrameLayout(wx.Frame):
                 df = createDataFrameFromDict(
                     Globals.CSV_TAG_ATTR_NAME, deviceList.values()
                 )
-                self.gridPanel.device_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
+                self.gridPanel.device_grid.applyNewDataFrame(
+                    df, checkColumns=False, resetPosition=True, autosize=True
+                )
                 self.gridPanel.device_grid_contents = df.copy(deep=True)
             # Populate App sheet
             if (
@@ -2118,7 +2110,9 @@ class NewFrameLayout(wx.Frame):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                self.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True, autosize=True)
+                self.gridPanel.app_grid.applyNewDataFrame(
+                    df, checkColumns=False, resetPosition=True, autosize=True
+                )
                 self.gridPanel.app_grid_contents = df.copy(deep=True)
 
         Globals.THREAD_POOL.enqueue(
@@ -2554,13 +2548,19 @@ class NewFrameLayout(wx.Frame):
             )
             or wx.EVT_CHAR.typeId == event
         ):
-            determineDoHereorMainThread(self.applySearchColor, queryString, Color.white.value, True)
+            determineDoHereorMainThread(
+                self.applySearchColor, queryString, Color.white.value, True
+            )
         if queryString:
-            determineDoHereorMainThread(self.applySearchColor, queryString, Color.lightYellow.value, True)
+            determineDoHereorMainThread(
+                self.applySearchColor, queryString, Color.lightYellow.value, True
+            )
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
-            determineDoHereorMainThread(self.applySearchColor, queryString, Color.white.value, True)
+            determineDoHereorMainThread(
+                self.applySearchColor, queryString, Color.white.value, True
+            )
         self.setCursorDefault()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
         self.gridPanel.enableGridProperties()
@@ -3044,7 +3044,7 @@ class NewFrameLayout(wx.Frame):
         if inFile:  # Save button was pressed
             self.Logging("---> Processing Pending User Report...")
             Globals.THREAD_POOL.enqueue(self.processOnPendingUserReport, inFile)
-    
+
     def processOnPendingUserReport(self, inFile):
         self.statusBar.gauge.Pulse()
         self.setCursorBusy()
@@ -3070,7 +3070,11 @@ class NewFrameLayout(wx.Frame):
             entry.append(user["email"])
             entry.append(user["meta"]["is_active"])
             entry.append(user["meta"]["profile"]["role"])
-            entry.append(user["meta"]["profile"]["groups"] if "groups" in user["meta"]["profile"] else "")
+            entry.append(
+                user["meta"]["profile"]["groups"]
+                if "groups" in user["meta"]["profile"]
+                else ""
+            )
             entry.append(user["created_at"])
             entry.append(user["updated_at"])
             data.append(entry)

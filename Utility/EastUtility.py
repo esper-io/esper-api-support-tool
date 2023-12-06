@@ -323,7 +323,9 @@ def fetchInstalledDevices(app, version, inFile):
                 for data in deviceList.values():
                     input.extend(data["AppsEntry"])
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
-                Globals.frame.gridPanel.app_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
+                Globals.frame.gridPanel.app_grid.applyNewDataFrame(
+                    df, checkColumns=False, resetPosition=True
+                )
                 Globals.frame.gridPanel.app_grid_contents = df.copy(deep=True)
 
                 postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 80)

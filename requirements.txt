@@ -12,3 +12,4 @@ xlsxwriter
 xlrd
 ratelimit
 openpyxl
+numpy
