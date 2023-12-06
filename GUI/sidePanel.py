@@ -380,73 +380,67 @@ class SidePanel(wx.Panel):
     @api_tool_decorator()
     def onGroupSelection(self, event):
         if not self.parentFrame.isRunning:
-            Globals.THREAD_POOL.enqueue(self.processOnGroupSelection)
+            choices = list(self.groups.keys())
+            newChoices = []
+            deviceCountKeys = self.groupDeviceCount.keys()
+            for choice in choices:
+                match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
+                if match:
+                    if len(match) == 1:
+                        match = match[0]
+                    else:
+                        for m in match:
+                            parts = m.split("/")
+                            if parts[-1] == choice:
+                                match = m
+                                break
+                    newChoices.append(
+                        "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
+                    )
 
-    def processOnGroupSelection(self):
-        choices = list(self.groups.keys())
-        newChoices = []
-        deviceCountKeys = self.groupDeviceCount.keys()
-        for choice in choices:
-            match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
-            if match:
-                if len(match) == 1:
-                    match = match[0]
-                else:
-                    for m in match:
-                        parts = m.split("/")
-                        if parts[-1] == choice:
-                            match = m
-                            break
-                newChoices.append(
-                    "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
+            if self.groupMultiDialog:
+                self.groupMultiDialog = None
+            if not self.groupMultiDialog:
+                self.groupMultiDialog = MultiSelectSearchDlg(
+                    self.parentFrame,
+                    newChoices,
+                    label="Select Group(s)",
+                    title="Select Group(s)",
+                    resp=self.groupsResp,
                 )
 
-        if self.groupMultiDialog:
-            self.groupMultiDialog = None
-        if not self.groupMultiDialog:
-            self.groupMultiDialog = MultiSelectSearchDlg(
-                self.parentFrame,
-                newChoices,
-                label="Select Group(s)",
-                title="Select Group(s)",
-                resp=self.groupsResp,
-            )
-        postEventToFrame(EventUtility.myEVT_PROCESS_FUNCTION, 
-                         (self.openGroupModal, ))
-
-    def openGroupModal(self):
-        Globals.OPEN_DIALOGS.append(self.groupMultiDialog)
-        if self.groupMultiDialog.ShowModal() == wx.ID_OK:
-            self.parentFrame.menubar.disableConfigMenu()
-            self.clearSelections()
-            selections = self.groupMultiDialog.GetSelections()
-            if selections:
-                for groupName in selections:
-                    groupNameProper = groupName.split(" (Device Count:")[0]
-                    groupId = self.groups[groupNameProper]
-                    self.selectedGroups.Append(groupName)
-                    if groupNameProper.lower() == "all devices":
-                        self.selectedGroups.Clear()
-                        self.selectedGroupsList = []
+            Globals.OPEN_DIALOGS.append(self.groupMultiDialog)
+            if self.groupMultiDialog.ShowModal() == wx.ID_OK:
+                self.parentFrame.menubar.disableConfigMenu()
+                self.clearSelections()
+                selections = self.groupMultiDialog.GetSelections()
+                if selections:
+                    for groupName in selections:
+                        groupNameProper = groupName.split(" (Device Count:")[0]
+                        groupId = self.groups[groupNameProper]
                         self.selectedGroups.Append(groupName)
-                        self.selectedGroupsList.append(groupId)
-                        break
-                    if groupId not in self.selectedGroupsList:
-                        self.selectedGroupsList.append(groupId)
-        Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
-        if not Globals.frame.WINDOWS:
-            self.groupMultiDialog.DestroyLater()
-        if (
-            self.selectedGroupsList
-            and not self.parentFrame.preferences
-            or self.parentFrame.preferences["enableDevice"] is True
-        ):
-            self.parentFrame.setCursorBusy()
-            self.devices = {}
-            self.parentFrame.PopulateDevices(None)
-        else:
-            self.parentFrame.menubar.enableConfigMenu()
-        Globals.frame.Refresh()
+                        if groupNameProper.lower() == "all devices":
+                            self.selectedGroups.Clear()
+                            self.selectedGroupsList = []
+                            self.selectedGroups.Append(groupName)
+                            self.selectedGroupsList.append(groupId)
+                            break
+                        if groupId not in self.selectedGroupsList:
+                            self.selectedGroupsList.append(groupId)
+            Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
+            if not Globals.frame.WINDOWS:
+                self.groupMultiDialog.DestroyLater()
+            if (
+                self.selectedGroupsList
+                and not self.parentFrame.preferences
+                or self.parentFrame.preferences["enableDevice"] is True
+            ):
+                self.parentFrame.setCursorBusy()
+                self.devices = {}
+                self.parentFrame.PopulateDevices(None)
+            else:
+                self.parentFrame.menubar.enableConfigMenu()
+            Globals.frame.Refresh()
 
     @api_tool_decorator()
     def onDeviceSelection(self, event):
