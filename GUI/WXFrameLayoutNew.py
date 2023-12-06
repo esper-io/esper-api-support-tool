@@ -738,6 +738,9 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory, isfile=True)
+        self.isSaving = False
+        self.toggleEnabledState(True)
+        self.setCursorDefault()
 
     def subdivideSheetData(self, sheetName, sheetData, sheetContainer):
         if len(sheetData) > Globals.SHEET_CHUNK_SIZE:
