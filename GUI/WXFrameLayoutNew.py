@@ -1112,10 +1112,20 @@ class NewFrameLayout(wx.Frame):
         elif (
             res
             and hasattr(res, "body")
-            and "Authentication credentials were not provided" in res.body
+            and ("Authentication credentials were not provided" in res.body
+                 or "Invalid or missing credentials" in res.body)
         ):
             Globals.IS_TOKEN_VALID = False
-            determineDoHereorMainThread(self.promptForNewToken)
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                self.promptForNewToken,
+            )
+        else:
+            Globals.IS_TOKEN_VALID = False
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
+                (displayMessageBox, ("Cannot Validate API Token! Please check internet connection and relaunch the application.", wx.ICON_ERROR)),
+            )
 
         if res and hasattr(res, "user"):
             Globals.TOKEN_USER = getSpecificUser(res.user)
@@ -1131,7 +1141,7 @@ class NewFrameLayout(wx.Frame):
             with TextEntryDialog(
                 self,
                 "Please enter a new API Token for %s" % Globals.configuration.host,
-                "%s - API Token has expired!" % self.configMenuItem.GetItemLabelText(),
+                "%s - API Token has expired or is invalid!" % self.configMenuItem.GetItemLabelText(),
             ) as dlg:
                 Globals.OPEN_DIALOGS.append(dlg)
                 if dlg.ShowModal() == wx.ID_OK:
@@ -1495,8 +1505,6 @@ class NewFrameLayout(wx.Frame):
         thread = wxThread.GUIThread(
             self, self.fetchAllInstallableApps, None, name="PopulateApps"
         )
-        if self.groupThread and self.groupThread.is_alive():
-            self.groupThread.join()
         thread.startWithRetry()
         return thread
 

@@ -278,7 +278,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e, postIssue=False)
+                    ApiToolLog().LogError(e, postIssue=False, postStatus=False)
                     raise e
                 if "429" not in str(e) and "Too Many Requests" not in str(e):
                     time.sleep(Globals.RETRY_SLEEP)
@@ -289,7 +289,7 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         return api_response
     except ApiException as e:
         print("Exception when calling TokenApi->get_token_info: %s\n" % e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postIssue=False, postStatus=False)
         return e
 
 
