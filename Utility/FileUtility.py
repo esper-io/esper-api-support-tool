@@ -157,7 +157,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                         worksheet.set_column(idx, idx, max_len)  # set column width
             except Exception as e:
                 ApiToolLogging().LogError(e)
-            writer.save()
+        writer.save()
     else:
         for i in range(0, len(df_dict), Globals.MAX_NUMBER_OF_SHEETS_PER_FILE):
             path = path.replace(".xlsx", "_{}.xlsx".format(i))
