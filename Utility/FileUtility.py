@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import openpyxl
 import Common.Globals as Globals
+from Utility.Logging import ApiToolLogging
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -127,52 +128,49 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
-    writer = pd.ExcelWriter(
-        path,
-        engine="xlsxwriter",
-    )
     if len(df_dict) < Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
-        save_excel_pandas_xlxswriter_helper(df_dict, writer)
+        writer = pd.ExcelWriter(
+            path,
+            engine="xlsxwriter",
+        )
+        for sheet, df in df_dict.items():
+            try:
+                sheetNames = []
+                if len(df) > Globals.SHEET_CHUNK_SIZE:
+                    for i in range(0, len(df), Globals.SHEET_CHUNK_SIZE):
+                        sheetName = "{} Part {}".format(sheet, i)
+                        df[i : i + Globals.SHEET_CHUNK_SIZE].to_excel(
+                            writer,
+                            sheet_name=sheetName,
+                            index=False,
+                        )
+                        sheetNames.append(sheetName)
+                else:
+                    sheetNames.append(sheet)
+                    df.to_excel(writer, sheet_name=sheet, index=False)
+                for s in sheetNames:
+                    worksheet = writer.sheets[s]
+                    for idx, col in enumerate(df):  # loop through all columns
+                        series = df[col]
+                        max_len = (
+                            max(
+                                (
+                                    series.astype(str)
+                                    .map(len)
+                                    .max(),  # len of largest item
+                                    len(str(series.name)),  # len of column name/header
+                                )
+                            )
+                            + 1
+                        )  # adding a little extra space
+                        worksheet.set_column(idx, idx, max_len)  # set column width
+            except Exception as e:
+                ApiToolLogging().LogError(e)
+            writer.save()
     else:
         for i in range(0, len(df_dict), Globals.MAX_NUMBER_OF_SHEETS_PER_FILE):
             path = path.replace(".xlsx", "_{}.xlsx".format(i))
             save_excel_pandas_xlxswriter(path, df_dict[i : i + Globals.MAX_NUMBER_OF_SHEETS_PER_FILE])
-
-def save_excel_pandas_xlxswriter_helper(df_dict: dict, writer):
-    for sheet, df in df_dict.items():
-        try:
-            sheetNames = []
-            if len(df) > Globals.SHEET_CHUNK_SIZE:
-                for i in range(0, len(df), Globals.SHEET_CHUNK_SIZE):
-                    sheetName = "{} Part {}".format(sheet, i)
-                    df[i : i + Globals.SHEET_CHUNK_SIZE].to_excel(
-                        writer,
-                        sheet_name=sheetName,
-                        index=False,
-                    )
-                    sheetNames.append(sheetName)
-            else:
-                sheetNames.append(sheet)
-                df.to_excel(writer, sheet_name=sheet, index=False)
-            for s in sheetNames:
-                worksheet = writer.sheets[s]
-                for idx, col in enumerate(df):  # loop through all columns
-                    series = df[col]
-                    max_len = (
-                        max(
-                            (
-                                series.astype(str)
-                                .map(len)
-                                .max(),  # len of largest item
-                                len(str(series.name)),  # len of column name/header
-                            )
-                        )
-                        + 1
-                    )  # adding a little extra space
-                    worksheet.set_column(idx, idx, max_len)  # set column width
-        except Exception as e:
-            print(e)
-    writer.save()
 
 
 def save_csv_pandas(path, df):

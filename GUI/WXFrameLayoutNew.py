@@ -35,7 +35,7 @@ from Utility.FileUtility import (
     write_data_to_csv,
     write_json_file,
 )
-from Utility.GridUtilities import createDataFrameFromDict
+from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 import Utility.Threading.wxThread as wxThread
 
 from Common.decorator import api_tool_decorator
@@ -744,7 +744,7 @@ class NewFrameLayout(wx.Frame):
 
     def subdivideSheetData(self, sheetName, sheetData, sheetContainer):
         if len(sheetData) > Globals.SHEET_CHUNK_SIZE:
-            df_list = np.array_split(sheetData, Globals.SHEET_CHUNK_SIZE)
+            df_list = split_dataframe(sheetData, Globals.SHEET_CHUNK_SIZE)
             num = 1
             for df in df_list:
                 newSheetName = sheetName + " Part " + str(num)
