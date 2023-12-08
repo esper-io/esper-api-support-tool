@@ -749,6 +749,7 @@ class NewFrameLayout(wx.Frame):
             for df in df_list:
                 newSheetName = sheetName + " Part " + str(num)
                 sheetContainer[newSheetName] = df
+                num += 1
         else:
             sheetContainer[sheetName] = sheetData
         return sheetContainer

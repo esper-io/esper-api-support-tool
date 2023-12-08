@@ -131,6 +131,14 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         path,
         engine="xlsxwriter",
     )
+    if len(df_dict) < Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
+        save_excel_pandas_xlxswriter_helper(df_dict, writer)
+    else:
+        for i in range(0, len(df_dict), Globals.MAX_NUMBER_OF_SHEETS_PER_FILE):
+            path = path.replace(".xlsx", "_{}.xlsx".format(i))
+            save_excel_pandas_xlxswriter(path, df_dict[i : i + Globals.MAX_NUMBER_OF_SHEETS_PER_FILE])
+
+def save_excel_pandas_xlxswriter_helper(df_dict: dict, writer):
     for sheet, df in df_dict.items():
         try:
             sheetNames = []
