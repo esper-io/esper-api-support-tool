@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import openpyxl
 import Common.Globals as Globals
+from itertools import islice
 from Utility.Logging import ApiToolLogging
 
 
@@ -159,9 +160,19 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                 ApiToolLogging().LogError(e)
         writer.save()
     else:
-        for i in range(0, len(df_dict), Globals.MAX_NUMBER_OF_SHEETS_PER_FILE):
-            path = path.replace(".xlsx", "_{}.xlsx".format(i))
-            save_excel_pandas_xlxswriter(path, df_dict[i : i + Globals.MAX_NUMBER_OF_SHEETS_PER_FILE])
+        split_dict_list = list(__split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE))
+        for i in range(0, len(split_dict_list)):
+            if i == 0:
+                path = path[:-5] + "_{}.xlsx".format(i)
+            else:
+                path = path[:-7] + "_{}.xlsx".format(i)
+            save_excel_pandas_xlxswriter(path, split_dict_list[i])
+
+
+def __split_dict_into_chunks__(data, size):
+    it = iter(data)
+    for _ in range(0, len(data), size):
+        yield {k:data[k] for k in islice(it, size)}
 
 
 def save_csv_pandas(path, df):
