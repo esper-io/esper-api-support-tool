@@ -128,7 +128,7 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
-    if len(df_dict) < Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
+    if len(df_dict) <= Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
         writer = pd.ExcelWriter(
             path,
             engine="xlsxwriter",
@@ -136,18 +136,9 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         for sheet, df in df_dict.items():
             try:
                 sheetNames = []
-                if len(df) > Globals.SHEET_CHUNK_SIZE:
-                    for i in range(0, len(df), Globals.SHEET_CHUNK_SIZE):
-                        sheetName = "{} Part {}".format(sheet, i)
-                        df[i : i + Globals.SHEET_CHUNK_SIZE].to_excel(
-                            writer,
-                            sheet_name=sheetName,
-                            index=False,
-                        )
-                        sheetNames.append(sheetName)
-                else:
-                    sheetNames.append(sheet)
-                    df.to_excel(writer, sheet_name=sheet, index=False)
+                sheetNames.append(sheet)
+                df.to_excel(writer, sheet_name=sheet, index=False)
+                # Auto adjust column width
                 for s in sheetNames:
                     worksheet = writer.sheets[s]
                     for idx, col in enumerate(df):  # loop through all columns
