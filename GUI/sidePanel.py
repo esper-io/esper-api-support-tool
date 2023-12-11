@@ -384,7 +384,7 @@ class SidePanel(wx.Panel):
             newChoices = []
             for choice in choices:
                 match = self.groupDeviceCount.get(choice)
-                if match:
+                if match is not None:
                     newChoices.append(
                         "%s (Device Count: %s)" % (choice, match)
                     )
