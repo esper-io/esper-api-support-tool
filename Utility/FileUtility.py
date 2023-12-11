@@ -160,7 +160,9 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                 ApiToolLogging().LogError(e)
         writer.save()
     else:
-        split_dict_list = list(__split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE))
+        split_dict_list = list(
+            __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
+        )
         for i in range(0, len(split_dict_list)):
             if i == 0:
                 path = path[:-5] + "_{}.xlsx".format(i)
@@ -172,7 +174,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
 def __split_dict_into_chunks__(data, size):
     it = iter(data)
     for _ in range(0, len(data), size):
-        yield {k:data[k] for k in islice(it, size)}
+        yield {k: data[k] for k in islice(it, size)}
 
 
 def save_csv_pandas(path, df):

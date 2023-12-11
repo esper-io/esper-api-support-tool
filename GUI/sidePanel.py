@@ -385,9 +385,7 @@ class SidePanel(wx.Panel):
             for choice in choices:
                 match = self.groupDeviceCount.get(choice)
                 if match is not None:
-                    newChoices.append(
-                        "%s (Device Count: %s)" % (choice, match)
-                    )
+                    newChoices.append("%s (Device Count: %s)" % (choice, match))
 
             if self.groupMultiDialog:
                 self.groupMultiDialog = None
