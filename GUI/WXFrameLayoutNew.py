@@ -1348,26 +1348,11 @@ class NewFrameLayout(wx.Frame):
             )
         if results and len(results):
             for group in results:
-                if hasattr(group, "name"):
-                    if (
-                        hasattr(group, "enterprise")
-                        and Globals.enterprise_id not in group.enterprise
-                    ):
-                        return
-                    if group.name not in self.sidePanel.groups:
-                        self.sidePanel.groups[group.name] = group.id
-                    else:
-                        self.sidePanel.groups[group.path] = group.id
-                    if group.id not in Globals.knownGroups:
-                        Globals.knownGroups[group.id] = group
-                elif type(group) is dict:
+                if type(group) is dict:
                     if Globals.enterprise_id not in group["enterprise"]:
                         return
-                    groupEntryId = group["name"]
+                    groupEntryId = group["path"]
                     if groupEntryId not in self.sidePanel.groups:
-                        self.sidePanel.groups[groupEntryId] = group["id"]
-                    else:
-                        groupEntryId = group["path"]
                         self.sidePanel.groups[groupEntryId] = group["id"]
 
                     pathParts = group["path"].split("/")
