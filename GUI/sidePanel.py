@@ -382,21 +382,10 @@ class SidePanel(wx.Panel):
         if not self.parentFrame.isRunning:
             choices = list(self.groups.keys())
             newChoices = []
-            deviceCountKeys = self.groupDeviceCount.keys()
             for choice in choices:
-                match = list(filter(lambda x: x.endswith(choice), deviceCountKeys))
-                if match:
-                    if len(match) == 1:
-                        match = match[0]
-                    else:
-                        for m in match:
-                            parts = m.split("/")
-                            if parts[-1] == choice:
-                                match = m
-                                break
-                    newChoices.append(
-                        "%s (Device Count: %s)" % (choice, self.groupDeviceCount[match])
-                    )
+                match = self.groupDeviceCount.get(choice)
+                if match is not None:
+                    newChoices.append("%s (Device Count: %s)" % (choice, match))
 
             if self.groupMultiDialog:
                 self.groupMultiDialog = None

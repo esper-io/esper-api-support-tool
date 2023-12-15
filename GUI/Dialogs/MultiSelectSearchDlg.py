@@ -101,7 +101,11 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         grid_sizer_1 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        listStyle = wx.LB_MULTIPLE | wx.LB_NEEDED_SB if not single else wx.LB_NEEDED_SB
+        listStyle = (
+            wx.LB_MULTIPLE | wx.LB_NEEDED_SB | wx.LB_SORT
+            if not single
+            else wx.LB_NEEDED_SB | wx.LB_SORT
+        )
         self.check_list_box_1 = wx.CheckListBox(
             self.panel_2,
             wx.ID_ANY,

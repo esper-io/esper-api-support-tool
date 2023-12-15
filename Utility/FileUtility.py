@@ -6,6 +6,8 @@ import os
 import pandas as pd
 import openpyxl
 import Common.Globals as Globals
+from itertools import islice
+from Utility.Logging import ApiToolLogging
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -127,44 +129,52 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
-    writer = pd.ExcelWriter(
-        path,
-        engine="xlsxwriter",
-    )
-    for sheet, df in df_dict.items():
-        try:
-            sheetNames = []
-            if len(df) > Globals.SHEET_CHUNK_SIZE:
-                for i in range(0, len(df), Globals.SHEET_CHUNK_SIZE):
-                    sheetName = "{} Part {}".format(sheet, i)
-                    df[i : i + Globals.SHEET_CHUNK_SIZE].to_excel(
-                        writer,
-                        sheet_name=sheetName,
-                        index=False,
-                    )
-                    sheetNames.append(sheetName)
-            else:
+    if len(df_dict) <= Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
+        writer = pd.ExcelWriter(
+            path,
+            engine="xlsxwriter",
+        )
+        for sheet, df in df_dict.items():
+            try:
+                sheetNames = []
                 sheetNames.append(sheet)
                 df.to_excel(writer, sheet_name=sheet, index=False)
-            for s in sheetNames:
-                worksheet = writer.sheets[s]
-                for idx, col in enumerate(df):  # loop through all columns
-                    series = df[col]
-                    max_len = (
-                        max(
-                            (
-                                series.astype(str)
-                                .map(len)
-                                .max(),  # len of largest item
-                                len(str(series.name)),  # len of column name/header
+                # Auto adjust column width
+                for s in sheetNames:
+                    worksheet = writer.sheets[s]
+                    for idx, col in enumerate(df):  # loop through all columns
+                        series = df[col]
+                        max_len = (
+                            max(
+                                (
+                                    series.astype(str)
+                                    .map(len)
+                                    .max(),  # len of largest item
+                                    len(str(series.name)),  # len of column name/header
+                                )
                             )
-                        )
-                        + 1
-                    )  # adding a little extra space
-                    worksheet.set_column(idx, idx, max_len)  # set column width
-        except Exception as e:
-            print(e)
-    writer.save()
+                            + 1
+                        )  # adding a little extra space
+                        worksheet.set_column(idx, idx, max_len)  # set column width
+            except Exception as e:
+                ApiToolLogging().LogError(e)
+        writer.save()
+    else:
+        split_dict_list = list(
+            __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
+        )
+        for i in range(0, len(split_dict_list)):
+            if i == 0:
+                path = path[:-5] + "_{}.xlsx".format(i)
+            else:
+                path = path[:-7] + "_{}.xlsx".format(i)
+            save_excel_pandas_xlxswriter(path, split_dict_list[i])
+
+
+def __split_dict_into_chunks__(data, size):
+    it = iter(data)
+    for _ in range(0, len(data), size):
+        yield {k: data[k] for k in islice(it, size)}
 
 
 def save_csv_pandas(path, df):
