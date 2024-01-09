@@ -15,9 +15,8 @@ from fuzzywuzzy import fuzz
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
-from Utility.FileUtility import write_content_to_file
+from Utility.FileUtility import getToolDataPath, write_content_to_file
 from Utility.Logging.IssueTracker import IssueTracker
-from Utility.FileUtility import getToolDataPath
 
 
 class ApiToolLog:
@@ -233,6 +232,7 @@ class ApiToolLog:
             or "HTTP" in str(excpt)
             or "Failed to load configuration" in str(excpt)
             or "Read-only file system" in str(excpt)
+            or "ApiException" in str(excpt)
             or type(excpt) is ApiException
         ):
             return

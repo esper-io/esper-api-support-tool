@@ -289,6 +289,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
+                return
             else:
                 tmp = copy.deepcopy(self.originalChoices[self.page])
                 self.selected = self.selected + tmp
@@ -453,15 +454,15 @@ class MultiSelectSearchDlg(wx.Dialog):
             name = ""
             if hasattr(device, "hardware_info"):
                 name = "%s %s %s %s" % (
-                    device.hardware_info["manufacturer"],
-                    device.hardware_info["model"],
+                    device.hardware_info["manufacturer"] if "model" in device.hardware_info else "",
+                    device.hardware_info["model"] if "model" in device.hardware_info else "",
                     device.device_name,
                     device.alias_name if device.alias_name else "",
                 )
             else:
                 name = "%s %s %s %s" % (
-                    device["hardwareInfo"]["manufacturer"],
-                    device["hardwareInfo"]["model"],
+                    device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else "",
+                    device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else "",
                     device["device_name"],
                     device["alias_name"] if device["alias_name"] else "",
                 )
