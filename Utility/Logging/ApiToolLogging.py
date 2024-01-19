@@ -61,6 +61,9 @@ class ApiToolLog:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             exc_traceback = format_list(extract_tb(exc_traceback))
 
+            if not exc_traceback:
+                exc_traceback = traceback.format_exc()
+
         self.limitLogFileSizes()
         content = [
             "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),

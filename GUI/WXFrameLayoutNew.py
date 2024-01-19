@@ -2018,13 +2018,16 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def setStatus(self, status, orgingalMsg, isError=False):
         """ Set status bar text """
-        self.statusBar.sbText.SetLabel(status)
-        if orgingalMsg:
-            self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
-        if isError:
-            self.statusBar.sbText.SetForegroundColour(Color.red.value)
-        else:
-            self.statusBar.sbText.SetForegroundColour(Color.black.value)
+        try:
+            self.statusBar.sbText.SetLabel(status)
+            if orgingalMsg:
+                self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
+            if isError:
+                self.statusBar.sbText.SetForegroundColour(Color.red.value)
+            else:
+                self.statusBar.sbText.SetForegroundColour(Color.black.value)
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def onFetch(self, event):

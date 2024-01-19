@@ -488,7 +488,9 @@ class GridPanel(wx.Panel):
 
     def updateGridContent(self, event):
         evtVal = event.GetValue()
-        if self.device_grid_contents:
+        if (self.device_grid_contents is not None 
+            and hasattr(self.device_grid_contents, "empty") 
+            and not self.device_grid_contents.empty):
             device = evtVal[0]
             modified = evtVal[1]
             deviceListing = list(
@@ -617,7 +619,7 @@ class GridPanel(wx.Panel):
             data = grid.Table.data
         return data
 
-    def forceRefreshGrids(self):
+    def forceRefreshGrids(self, event=None):
         self.device_grid.ForceRefresh()
         self.network_grid.ForceRefresh()
         self.app_grid.ForceRefresh()
