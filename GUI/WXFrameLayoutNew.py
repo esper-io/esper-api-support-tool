@@ -7,36 +7,20 @@ import platform
 import sys
 import threading
 import time
+from datetime import datetime
+from pathlib import Path
+
 import pandas as pd
 import wx
 import wx.adv as wxadv
-
-from datetime import datetime
-from pathlib import Path
 from wx.core import TextEntryDialog
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
 import Utility.API.EsperTemplateUtil as templateUtil
-from Utility.API.WidgetUtility import setWidget
-from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
-from Utility.FileUtility import (
-    getToolDataPath,
-    read_csv_via_pandas,
-    read_data_from_csv,
-    read_data_from_csv_as_dict,
-    read_excel_via_openpyxl,
-    read_json_file,
-    save_csv_pandas,
-    save_excel_pandas_xlxswriter,
-    write_data_to_csv,
-    write_json_file,
-)
-from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 import Utility.Threading.wxThread as wxThread
-
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, GeneralActions, GridActions
 from Common.SleepInhibitor import SleepInhibitor
@@ -61,64 +45,48 @@ from GUI.gridPanel import GridPanel
 from GUI.menuBar import ToolMenuBar
 from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
-
-from Utility.API.AppUtilities import (
-    getAllInstallableApps,
-    getAppDictEntry,
-    installAppOnDevices,
-    installAppOnGroups,
-    uninstallAppOnDevice,
-    uninstallAppOnGroup,
-)
-from Utility.API.BlueprintUtility import (
-    checkBlueprintEnabled,
-    getAllBlueprints,
-    modifyAppsInBlueprints,
-    prepareBlueprintClone,
-    prepareBlueprintConversion,
-    pushBlueprintUpdate,
-)
+from Utility.API.AppUtilities import (getAllInstallableApps, getAppDictEntry,
+                                      installAppOnDevices, installAppOnGroups,
+                                      uninstallAppOnDevice,
+                                      uninstallAppOnGroup)
+from Utility.API.AuditPosting import AuditPosting
+from Utility.API.BlueprintUtility import (checkBlueprintEnabled,
+                                          getAllBlueprints,
+                                          modifyAppsInBlueprints,
+                                          prepareBlueprintClone,
+                                          prepareBlueprintConversion,
+                                          pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import (
-    clearAppData,
-    getTokenInfo,
-    setAppState,
-    setKiosk,
-    setMulti,
-    validateConfiguration,
-)
+from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
+                                       setKiosk, setMulti,
+                                       validateConfiguration)
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import getAllPendingUsers, getAllUsers, getSpecificUser
+from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
+                                     getSpecificUser)
+from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (
-    TakeAction,
-    clearKnownGroups,
-    fetchInstalledDevices,
-    filterDeviceList,
-    getAllDeviceInfo,
-    removeNonWhitelisted,
-    uploadAppToEndpoint,
-)
+from Utility.EastUtility import (TakeAction, clearKnownGroups,
+                                 fetchInstalledDevices, filterDeviceList,
+                                 getAllDeviceInfo, removeNonWhitelisted,
+                                 uploadAppToEndpoint)
+from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
+                                 read_data_from_csv,
+                                 read_data_from_csv_as_dict,
+                                 read_excel_via_openpyxl, read_json_file,
+                                 save_csv_pandas, save_excel_pandas_xlxswriter,
+                                 write_data_to_csv, write_json_file)
 from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
+from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkEsperInternetConnection,
-    checkForInternetAccess,
-    checkIfCurrentThreadStopped,
-    correctSaveFileName,
-    createNewFile,
-    determineDoHereorMainThread,
-    displayMessageBox,
-    displayFileDialog,
-    joinThreadList,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    processFunc,
-    resourcePath,
-    splitListIntoChunks,
-    updateErrorTracker,
-)
+from Utility.Resource import (checkEsperInternetConnection,
+                              checkForInternetAccess,
+                              checkIfCurrentThreadStopped, correctSaveFileName,
+                              createNewFile, determineDoHereorMainThread,
+                              displayFileDialog, displayMessageBox,
+                              joinThreadList, openWebLinkInBrowser,
+                              postEventToFrame, processFunc, resourcePath,
+                              splitListIntoChunks, updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -1472,15 +1440,15 @@ class NewFrameLayout(wx.Frame):
             name = ""
             if hasattr(device, "hardware_info"):
                 name = "%s ~ %s ~ %s %s" % (
-                    device.hardware_info["manufacturer"],
-                    device.hardware_info["model"],
+                    device.hardware_info["manufacturer"] if "manufacturer" in device.hardware_info else "",
+                    device.hardware_info["model"] if "model" in device.hardware_info else "",
                     device.device_name,
                     "~ %s" % device.alias_name if device.alias_name else "",
                 )
             else:
                 name = "%s ~ %s ~ %s %s" % (
-                    device["hardwareInfo"]["manufacturer"],
-                    device["hardwareInfo"]["model"],
+                    device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else "",
+                    device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else "",
                     device["device_name"],
                     "~ %s" % device["alias_name"] if device["alias_name"] else "",
                 )
