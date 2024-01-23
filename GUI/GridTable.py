@@ -1,17 +1,17 @@
+import platform
+from distutils.version import LooseVersion
+
 import pandas as pd
 import wx
 import wx.grid as gridlib
+from pandas.api.types import is_bool_dtype, is_string_dtype
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-
+from Common.enum import Color
 from GUI.GridDataTable import GridDataTable
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import getStrRatioSimilarity
-from Common.decorator import api_tool_decorator
-
-from Common.enum import Color
-from distutils.version import LooseVersion
-from pandas.api.types import is_string_dtype, is_bool_dtype
+from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
 
 
 class GridTable(gridlib.Grid):
@@ -54,6 +54,9 @@ class GridTable(gridlib.Grid):
         return data
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
+        if platform.system() == "Darwin":
+            determineDoHereorMainThread(self.ApplyGridStyle, autosize, resetPosition)
+            return
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
 
@@ -96,6 +99,10 @@ class GridTable(gridlib.Grid):
     def applyNewDataFrame(
         self, data, checkColumns=True, autosize=False, resetPosition=False
     ):
+        if platform.system() == "Darwin":
+            determineDoHereorMainThread(self.applyNewDataFrame, data, checkColumns, autosize, resetPosition)
+            return
+
         try:
             self.SetCursor(wx.Cursor(wx.CURSOR_ARROWWAIT))
             self.Freeze()
