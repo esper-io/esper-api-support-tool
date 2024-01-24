@@ -457,7 +457,7 @@ def determineDoHereorMainThread(func, *args, **kwargs):
     if not callable(func):
         return
 
-    if platform.system() == "Windows":
+    if platform.system() == "Windows" and "main" in threading.current_thread().name.lower():
         # do here
         if args and kwargs:
             func(*args, **kwargs)
