@@ -3,6 +3,7 @@ from distutils.version import LooseVersion
 
 import pandas as pd
 import wx
+import threading
 import wx.grid as gridlib
 from pandas.api.types import is_bool_dtype, is_string_dtype
 
@@ -54,7 +55,7 @@ class GridTable(gridlib.Grid):
         return data
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
-        if platform.system() == "Darwin":
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
             determineDoHereorMainThread(self.ApplyGridStyle, autosize, resetPosition)
             return
         self.SetThemeEnabled(False)
@@ -99,7 +100,7 @@ class GridTable(gridlib.Grid):
     def applyNewDataFrame(
         self, data, checkColumns=True, autosize=False, resetPosition=False
     ):
-        if platform.system() == "Darwin":
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
             determineDoHereorMainThread(self.applyNewDataFrame, data, checkColumns, autosize, resetPosition)
             return
 
