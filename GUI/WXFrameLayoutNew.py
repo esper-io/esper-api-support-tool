@@ -683,6 +683,7 @@ class NewFrameLayout(wx.Frame):
                     and action == GeneralActions.GENERATE_APP_REPORT.value
                     or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 )
+                and appData is not None
                 and len(appData) > 0
             ):
                 df_dict = self.subdivideSheetData("Application", appData, df_dict)
@@ -1651,8 +1652,6 @@ class NewFrameLayout(wx.Frame):
             )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
-            self.displayAppFilterPrompt()
-
             res = displayMessageBox(
                 (
                     "Looks like you are generating a report for a large subset of devices.\nThe report will be directly save to a file.",
@@ -1744,48 +1743,57 @@ class NewFrameLayout(wx.Frame):
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
+            # run action on group
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
 
-            self.displayAppFilterPrompt()
-
-            isDevice = False
-            if (not self.sidePanel.selectedDevicesList or allDevicesSelected):
-                # run action on group
-                groupLabel = ""
-                for groupId in self.sidePanel.selectedGroupsList:
-                    groupLabel = list(self.sidePanel.groups.keys())[
-                        list(self.sidePanel.groups.values()).index(groupId)
+            groupLabel = ""
+            for groupId in self.sidePanel.selectedGroupsList:
+                groupLabel = list(self.sidePanel.groups.keys())[
+                    list(self.sidePanel.groups.values()).index(groupId)
+                ]
+                self.Logging(
+                    '---> Attempting to run action, "%s", on group, %s.'
+                    % (actionLabel, groupLabel)
+                )
+            self.statusBar.gauge.Pulse()
+            Globals.THREAD_POOL.enqueue(
+                TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData
+            )
+        elif (
+            self.sidePanel.selectedDevicesList
+            and actionSelection > 0
+            and actionClientData > 0
+            and actionClientData < GridActions.MODIFY_ALIAS.value
+        ):
+            # run action on device
+            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
+                appSelection, appLabel = self.getAppDataForRun()
+            self.gridPanel.EmptyGrids()
+            self.gridPanel.disableGridProperties()
+            for deviceId in self.sidePanel.selectedDevicesList:
+                deviceLabel = None
+                try:
+                    deviceLabel = list(self.sidePanel.devices.keys())[
+                        list(self.sidePanel.devices.values()).index(deviceId)
                     ]
-                    self.Logging(
-                        '---> Attempting to run action, "%s", on group, %s.'
-                        % (actionLabel, groupLabel)
-                    )
-            else:
-                isDevice = True
-                for deviceId in self.sidePanel.selectedDevicesList:
-                    deviceLabel = None
-                    try:
-                        deviceLabel = list(self.sidePanel.devices.keys())[
-                            list(self.sidePanel.devices.values()).index(deviceId)
-                        ]
-                    except:
-                        deviceLabel = list(self.sidePanel.devicesExtended.keys())[
-                            list(self.sidePanel.devicesExtended.values()).index(deviceId)
-                        ]
-                    self.Logging(
-                        '---> Attempting to run action, "%s", on device, %s.'
-                        % (actionLabel, deviceLabel)
-                    )
+                except:
+                    deviceLabel = list(self.sidePanel.devicesExtended.keys())[
+                        list(self.sidePanel.devicesExtended.values()).index(deviceId)
+                    ]
+                self.Logging(
+                    '---> Attempting to run action, "%s", on device, %s.'
+                    % (actionLabel, deviceLabel)
+                )
             self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction,
                 self,
-                self.sidePanel.selectedGroupsList if not isDevice else self.sidePanel.selectedDevicesList,
+                self.sidePanel.selectedDevicesList,
                 actionClientData,
-                isDevice
+                True,
             )
         elif actionClientData >= GridActions.MODIFY_ALIAS.value:
             # run grid action
@@ -3423,20 +3431,3 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(
                     setWidget, enable, widgetName=className, groups=deviceList
                 )
-
-    def displayAppFilterPrompt(self):
-        if Globals.SHOW_APP_FILTER_DIALOG:
-            dlg = wx.RichMessageDialog(
-                self, 
-                message="Would you like to alter the filter for displayed apps? Filter can also be altered in the Preferences > Application menu.",
-                caption="Filter Apps?",
-                style=wx.YES_NO | wx.ICON_QUESTION
-            )
-            dlg.ShowCheckBox("Do not ask again")
-            res = dlg.ShowModal()
-
-            Globals.SHOW_APP_FILTER_DIALOG = not dlg.IsCheckBoxChecked()
-
-            if res == wx.ID_YES:
-                self.prefDialog.appFilterDlg(None)
-                self.prefDialog.OnApply(None)
