@@ -199,7 +199,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
-        self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
         self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)

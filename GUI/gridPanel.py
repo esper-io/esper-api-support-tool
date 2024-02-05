@@ -479,36 +479,6 @@ class GridPanel(wx.Panel):
             return self.getDeviceRowsSpecificCols(columns)
         return []
 
-    def updateGridContent(self, event):
-        evtVal = event.GetValue()
-        if (self.device_grid_contents is not None 
-            and hasattr(self.device_grid_contents, "empty") 
-            and not self.device_grid_contents.empty):
-            device = evtVal[0]
-            modified = evtVal[1]
-            deviceListing = list(
-                filter(
-                    lambda x: (
-                        x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
-                        if hasattr(device, "device_name")
-                        else device["device_name"]
-                        if type(device) is dict
-                        else device
-                    ),
-                    self.device_grid_contents,
-                )
-            )
-            for listing in deviceListing:
-                try:
-                    indx = self.device_grid_contents.index(listing)
-                    if modified == "alias":
-                        listing["OriginalAlias"] = listing["Alias"]
-                    elif modified == "tags":
-                        listing["OriginalTags"] = listing["Tags"]
-                    self.device_grid_contents[indx] = listing
-                except Exception as e:
-                    ApiToolLog().LogError(e)
-
     def getColVisibility(self):
         if not self.grid1ColVisibility and not self.grid2ColVisibility:
             headerLabels = list(Globals.CSV_TAG_ATTR_NAME.keys())
