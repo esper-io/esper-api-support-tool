@@ -1,9 +1,9 @@
 import platform
+import threading
 from distutils.version import LooseVersion
 
 import pandas as pd
 import wx
-import threading
 import wx.grid as gridlib
 from pandas.api.types import is_bool_dtype, is_string_dtype
 
@@ -31,6 +31,7 @@ class GridTable(gridlib.Grid):
 
         self.sortedColumn = None
         self.sortAcesnding = True
+        self.currentlySelectedCell = []
 
     def createEmptyDataFrame(self):
         df = pd.DataFrame(columns=self.headersLabels)
@@ -87,6 +88,7 @@ class GridTable(gridlib.Grid):
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
         self.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
+        self.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
         self.GetGridWindow().Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.GetGridWindow().Bind(wx.EVT_MOTION, self.onGridMotion)
 
@@ -218,7 +220,7 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
-        if self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
+        if self.currentlySelectedCell and self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
             data = wx.TextDataObject()
             data.SetText(
                 widget.GetCellValue(
@@ -320,3 +322,11 @@ class GridTable(gridlib.Grid):
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):
             Globals.frame.Logging(msg, isError=isError)
+
+    def onSingleSelect(self, event):
+        """
+        Get the selection of a single cell by clicking or
+        moving the selection with the arrow keys
+        """
+        self.currentlySelectedCell = (event.GetRow(), event.GetCol())
+        event.Skip()

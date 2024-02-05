@@ -6,21 +6,15 @@ import wx
 import wx.grid as gridlib
 
 import Common.Globals as Globals
-from GUI.GridTable import GridTable
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
+from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
-from Utility.Resource import (
-    acquireLocks,
-    checkIfCurrentThreadStopped,
-    determineDoHereorMainThread,
-    postEventToFrame,
-    releaseLocks,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
+                              determineDoHereorMainThread, postEventToFrame,
+                              releaseLocks, resourcePath, scale_bitmap)
 
 
 class GridPanel(wx.Panel):
@@ -104,10 +98,6 @@ class GridPanel(wx.Panel):
     def __set_properties(self):
         self.SetThemeEnabled(False)
         self.device_grid.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
-
-        self.device_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.network_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.app_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
 
         self.enableGridProperties()
 
@@ -512,14 +502,6 @@ class GridPanel(wx.Panel):
                 elif modified == "tags":
                     listing["OriginalTags"] = listing["Tags"]
                 self.device_grid_contents[indx] = listing
-
-    def onSingleSelect(self, event):
-        """
-        Get the selection of a single cell by clicking or
-        moving the selection with the arrow keys
-        """
-        self.currentlySelectedCell = (event.GetRow(), event.GetCol())
-        event.Skip()
 
     def getColVisibility(self):
         if not self.grid1ColVisibility and not self.grid2ColVisibility:
