@@ -603,6 +603,8 @@ class GridPanel(wx.Panel):
             data = content
         elif (content is None or len(content) == 0) and grid.Table.data is not None:
             data = grid.Table.data
+        else:
+            data = content
         return data
 
     def forceRefreshGrids(self, event=None):
