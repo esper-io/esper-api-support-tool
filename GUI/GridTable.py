@@ -220,7 +220,9 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
-        if self.currentlySelectedCell and self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
+        if (self.currentlySelectedCell 
+            and self.currentlySelectedCell[0] >= 0 
+            and self.currentlySelectedCell[1] >= 0):
             data = wx.TextDataObject()
             data.SetText(
                 widget.GetCellValue(
