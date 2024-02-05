@@ -1652,12 +1652,14 @@ class NewFrameLayout(wx.Frame):
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
             if (
-                Globals.APPS_IN_DEVICE_GRID 
-                 and (
+                (
+                    Globals.APPS_IN_DEVICE_GRID 
+                    and actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                )
+                or (
                     actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value
-                    or actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
-                 )
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value 
+                )
             ):
                 self.displayAppFilterPrompt()
 
@@ -1758,12 +1760,14 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.disableGridProperties()
 
             if (
-                Globals.APPS_IN_DEVICE_GRID 
-                 and (
+                (
+                    Globals.APPS_IN_DEVICE_GRID 
+                    and actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                )
+                or (
                     actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
-                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value
-                    or actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
-                 )
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value 
+                )
             ):
                 self.displayAppFilterPrompt()
 
