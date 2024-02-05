@@ -3428,8 +3428,8 @@ class NewFrameLayout(wx.Frame):
         if Globals.SHOW_APP_FILTER_DIALOG:
             dlg = wx.RichMessageDialog(
                 self, 
-                message="Would you like to alter the filter for displayed apps?",
-                caption="",
+                message="Would you like to alter the filter for displayed apps? Filter can also be altered in the Preferences > Application menu.",
+                caption="Filter Apps?",
                 style=wx.YES_NO | wx.ICON_QUESTION
             )
             dlg.ShowCheckBox("Do not ask again")
