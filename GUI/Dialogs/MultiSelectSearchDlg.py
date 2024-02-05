@@ -3,6 +3,7 @@
 import copy
 import math
 import platform
+import threading
 
 import wx
 
@@ -10,7 +11,9 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import getStrRatioSimilarity, resourcePath, scale_bitmap
+from Utility.Resource import (determineDoHereorMainThread,
+                              getStrRatioSimilarity, resourcePath,
+                              scale_bitmap)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -428,6 +431,9 @@ class MultiSelectSearchDlg(wx.Dialog):
                 elif type(resp) == dict and "results" in resp:
                     self.originalChoices.append(self.processDevices(resp["results"]))
 
+        determineDoHereorMainThread(self.updateChoicesFromResp, resp)
+
+    def updateChoicesFromResp(self, resp):
         if resp:
             self.check_list_box_1.Clear()
             choices = self.originalChoices[self.page]
@@ -476,6 +482,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         return nameList
 
     def selectAllDevices(self):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.selectAllDevices)
+            return
         self.setCursorBusy()
         self.button_1.Enable(False)
         self.button_2.Enable(False)
