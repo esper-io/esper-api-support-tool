@@ -3422,7 +3422,7 @@ class NewFrameLayout(wx.Frame):
                     setWidget, enable, widgetName=className, groups=deviceList
                 )
 
-     def displayAppFilterPrompt(self):
+    def displayAppFilterPrompt(self):
         if Globals.SHOW_APP_FILTER_DIALOG:
             dlg = wx.RichMessageDialog(
                 self, 
