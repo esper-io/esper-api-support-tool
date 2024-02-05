@@ -462,9 +462,9 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.btn_appFilter,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Filter App Column",
+            "Filter App Column & Report",
             wx.Button,
-            "Filter the Application Column to only show particular applications.",
+            "Filter the Application Column and Report to only show particular applications.",
         )
 
         # Schedule Preferences
