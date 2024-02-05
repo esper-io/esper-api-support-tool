@@ -174,7 +174,7 @@ class GridTable(gridlib.Grid):
             col = event
 
         # TODO: sort android/app version name/app version code
-        if col and col >= 0:
+        if col is not None and col >= 0:
             if self.sortedColumn != col:
                 self.sortAcesnding = True
             else:
@@ -346,3 +346,17 @@ class GridTable(gridlib.Grid):
             determineDoHereorMainThread(super().SetCellBackgroundColour, rowNum, colNum, color)
             return
         super().SetCellBackgroundColour(rowNum, colNum, color)
+
+    @api_tool_decorator()
+    def ForceRefresh(self):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(super().ForceRefresh)
+            return
+        return super().ForceRefresh()
+
+    @api_tool_decorator()
+    def AutoSizeColumns(self, setAsMin=True):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(super().AutoSizeColumns, setAsMin)
+            return
+        return super().AutoSizeColumns(setAsMin)
