@@ -1652,7 +1652,15 @@ class NewFrameLayout(wx.Frame):
             )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
-            self.displayAppFilterPrompt()
+            if (
+                Globals.APPS_IN_DEVICE_GRID 
+                 and (
+                    actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                 )
+            ):
+                self.displayAppFilterPrompt()
 
             res = displayMessageBox(
                 (
@@ -1749,6 +1757,16 @@ class NewFrameLayout(wx.Frame):
                 appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
+
+            if (
+                Globals.APPS_IN_DEVICE_GRID 
+                 and (
+                    actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                 )
+            ):
+                self.displayAppFilterPrompt()
 
             isDevice = False
             if not self.sidePanel.selectedDevicesList or allDevicesSelected:
