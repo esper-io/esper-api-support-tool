@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import time
-
-import esperclient
-
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
+
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
 from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
@@ -59,7 +56,7 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
         aliasList = frame.gridPanel.getDeviceAliasFromList()
         if aliasList:
             maxGaugeAction = len(aliasList)
-    frame.statusBar.gauge.SetValue(1)
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 1)
 
     postEventToFrame(
         eventUtil.myEVT_AUDIT,

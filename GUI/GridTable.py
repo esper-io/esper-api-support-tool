@@ -332,3 +332,17 @@ class GridTable(gridlib.Grid):
         """
         self.currentlySelectedCell = (event.GetRow(), event.GetCol())
         event.Skip()
+
+    @api_tool_decorator()
+    def SetCellTextColour(self, rowNum, colNum, color):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(super().SetCellTextColour, rowNum, colNum, color)
+            return
+        super().SetCellTextColour(rowNum, colNum, color)
+
+    @api_tool_decorator()
+    def SetCellBackgroundColour(self, rowNum, colNum, color):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(super().SetCellBackgroundColour, rowNum, colNum, color)
+            return
+        super().SetCellBackgroundColour(rowNum, colNum, color)
