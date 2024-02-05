@@ -12,6 +12,7 @@ from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
+from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
                               determineDoHereorMainThread, postEventToFrame,
                               releaseLocks, resourcePath, scale_bitmap)
@@ -496,12 +497,15 @@ class GridPanel(wx.Panel):
                 )
             )
             for listing in deviceListing:
-                indx = self.device_grid_contents.index(listing)
-                if modified == "alias":
-                    listing["OriginalAlias"] = listing["Alias"]
-                elif modified == "tags":
-                    listing["OriginalTags"] = listing["Tags"]
-                self.device_grid_contents[indx] = listing
+                try:
+                    indx = self.device_grid_contents.index(listing)
+                    if modified == "alias":
+                        listing["OriginalAlias"] = listing["Alias"]
+                    elif modified == "tags":
+                        listing["OriginalTags"] = listing["Tags"]
+                    self.device_grid_contents[indx] = listing
+                except Exception as e:
+                    ApiToolLog().LogError(e)
 
     def getColVisibility(self):
         if not self.grid1ColVisibility and not self.grid2ColVisibility:
