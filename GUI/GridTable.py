@@ -174,7 +174,7 @@ class GridTable(gridlib.Grid):
             col = event
 
         # TODO: sort android/app version name/app version code
-        if col and col > 0:
+        if col and col >= 0:
             if self.sortedColumn != col:
                 self.sortAcesnding = True
             else:
