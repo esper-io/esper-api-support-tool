@@ -367,7 +367,7 @@ class GridPanel(wx.Panel):
                 if col == "Tags":
                     properTagList = []
                     for r in re.findall(
-                        r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
+                        r"\".+?\"|\'.+?\'|\’.+?\’|\’.+?\’|\‘.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
                         row[columns.index(col)],
                     ):
                         processedTag = r.strip()
@@ -376,6 +376,7 @@ class GridPanel(wx.Panel):
                             or processedTag.startswith("'")
                             or processedTag.startswith("[")
                             or processedTag.startswith("’")
+                            or processedTag.startswith("‘")
                         ):
                             processedTag = processedTag[1 : len(processedTag)]
                         while (
@@ -383,13 +384,14 @@ class GridPanel(wx.Panel):
                             or processedTag.endswith("'")
                             or processedTag.endswith("]")
                             or processedTag.endswith("’")
+                            or processedTag.startswith("‘")
                         ):
                             processedTag = processedTag[0 : len(processedTag) - 1]
                         if processedTag:
                             properTagList.append(processedTag.strip())
-                        if len(properTagList) >= Globals.MAX_TAGS:
-                            properTagList = properTagList[0 : Globals.MAX_TAGS]
-                        entry[col] = properTagList
+                    if len(properTagList) >= Globals.MAX_TAGS:
+                        properTagList = properTagList[0 : Globals.MAX_TAGS]
+                    entry[col] = properTagList
                 else:
                     entry[col] = row[columns.index(col)].strip()
             returnList.append(entry)
