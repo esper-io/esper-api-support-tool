@@ -1,7 +1,7 @@
 import pandas as pd
-import Common.Globals as Globals
-
 from pandas.testing import assert_frame_equal
+
+import Common.Globals as Globals
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
@@ -30,7 +30,11 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                     "Can Clear Data": app["is_data_clearable"],
                     "Can Uninstall": app["is_uninstallable"],
                 }
-            if info and info not in deviceInfo["AppsEntry"]:
+            if (info 
+                and info not in deviceInfo["AppsEntry"]
+                and ((Globals.APP_COL_FILTER
+                and app["package_name"] in Globals.APP_COL_FILTER) 
+                    or not Globals.APP_COL_FILTER)):
                 deviceInfo["AppsEntry"].append(info)
 
 
