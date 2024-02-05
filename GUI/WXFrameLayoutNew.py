@@ -1651,6 +1651,8 @@ class NewFrameLayout(wx.Frame):
             )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
+            self.displayAppFilterPrompt()
+
             res = displayMessageBox(
                 (
                     "Looks like you are generating a report for a large subset of devices.\nThe report will be directly save to a file.",
@@ -1742,11 +1744,12 @@ class NewFrameLayout(wx.Frame):
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
-            
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
+
+            self.displayAppFilterPrompt()
 
             isDevice = False
             if (not self.sidePanel.selectedDevicesList or allDevicesSelected):
@@ -3420,3 +3423,20 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(
                     setWidget, enable, widgetName=className, groups=deviceList
                 )
+
+    def displayAppFilterPrompt(self):
+        if Globals.SHOW_APP_FILTER_DIALOG:
+            dlg = wx.RichMessageDialog(
+                self, 
+                message="Would you like to alter the filter for displayed apps?",
+                caption="",
+                style=wx.YES_NO | wx.ICON_QUESTION
+            )
+            dlg.ShowCheckBox("Do not ask again")
+            res = dlg.ShowModal()
+
+            Globals.SHOW_APP_FILTER_DIALOG = not dlg.IsCheckBoxChecked()
+
+            if res == wx.ID_YES:
+                self.prefDialog.appFilterDlg(None)
+                self.prefDialog.OnApply(None)
