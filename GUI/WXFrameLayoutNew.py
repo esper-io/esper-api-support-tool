@@ -1742,57 +1742,47 @@ class NewFrameLayout(wx.Frame):
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
-            # run action on group
+            
             if self.checkAppRequirement(actionClientData, appSelection, appLabel):
                 appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
 
-            groupLabel = ""
-            for groupId in self.sidePanel.selectedGroupsList:
-                groupLabel = list(self.sidePanel.groups.keys())[
-                    list(self.sidePanel.groups.values()).index(groupId)
-                ]
-                self.Logging(
-                    '---> Attempting to run action, "%s", on group, %s.'
-                    % (actionLabel, groupLabel)
-                )
-            self.statusBar.gauge.Pulse()
-            Globals.THREAD_POOL.enqueue(
-                TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData
-            )
-        elif (
-            self.sidePanel.selectedDevicesList
-            and actionSelection > 0
-            and actionClientData > 0
-            and actionClientData < GridActions.MODIFY_ALIAS.value
-        ):
-            # run action on device
-            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
-                appSelection, appLabel = self.getAppDataForRun()
-            self.gridPanel.EmptyGrids()
-            self.gridPanel.disableGridProperties()
-            for deviceId in self.sidePanel.selectedDevicesList:
-                deviceLabel = None
-                try:
-                    deviceLabel = list(self.sidePanel.devices.keys())[
-                        list(self.sidePanel.devices.values()).index(deviceId)
+            isDevice = False
+            if (not self.sidePanel.selectedDevicesList or allDevicesSelected):
+                # run action on group
+                groupLabel = ""
+                for groupId in self.sidePanel.selectedGroupsList:
+                    groupLabel = list(self.sidePanel.groups.keys())[
+                        list(self.sidePanel.groups.values()).index(groupId)
                     ]
-                except:
-                    deviceLabel = list(self.sidePanel.devicesExtended.keys())[
-                        list(self.sidePanel.devicesExtended.values()).index(deviceId)
-                    ]
-                self.Logging(
-                    '---> Attempting to run action, "%s", on device, %s.'
-                    % (actionLabel, deviceLabel)
-                )
+                    self.Logging(
+                        '---> Attempting to run action, "%s", on group, %s.'
+                        % (actionLabel, groupLabel)
+                    )
+            else:
+                isDevice = True
+                for deviceId in self.sidePanel.selectedDevicesList:
+                    deviceLabel = None
+                    try:
+                        deviceLabel = list(self.sidePanel.devices.keys())[
+                            list(self.sidePanel.devices.values()).index(deviceId)
+                        ]
+                    except:
+                        deviceLabel = list(self.sidePanel.devicesExtended.keys())[
+                            list(self.sidePanel.devicesExtended.values()).index(deviceId)
+                        ]
+                    self.Logging(
+                        '---> Attempting to run action, "%s", on device, %s.'
+                        % (actionLabel, deviceLabel)
+                    )
             self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction,
                 self,
-                self.sidePanel.selectedDevicesList,
+                self.sidePanel.selectedGroupsList if not isDevice else self.sidePanel.selectedDevicesList,
                 actionClientData,
-                True,
+                isDevice
             )
         elif actionClientData >= GridActions.MODIFY_ALIAS.value:
             # run grid action
