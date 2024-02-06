@@ -187,9 +187,15 @@ class GridTable(gridlib.Grid):
                 % (colName, "Ascending" if self.sortAcesnding else "Descending")
             )
             if colName in Globals.SEMANTIC_VERSION_COL:
-                df = self.table.data.iloc[
-                    self.table.data[colName].apply(LooseVersion).argsort()
-                ].reset_index(drop=True)
+                try:
+                    df = self.table.data.iloc[
+                        self.table.data[colName].apply(LooseVersion).argsort()
+                    ].reset_index(drop=True)
+
+                    if not self.sortAcesnding:
+                        df = df.iloc[::-1]
+                except:
+                    df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             else:
                 df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             # determineDoHereorMainThread

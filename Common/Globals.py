@@ -291,6 +291,7 @@ CSV_APP_ATTR_NAME = [
 SEMANTIC_VERSION_COL = [
     "Android Version",
     "Application Version Code",
+    "Application Version Name"
 ]
 
 DATE_COL = {
