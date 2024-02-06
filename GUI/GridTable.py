@@ -173,7 +173,6 @@ class GridTable(gridlib.Grid):
         else:
             col = event
 
-        # TODO: sort android/app version name/app version code
         if col is not None and col >= 0:
             if self.sortedColumn != col:
                 self.sortAcesnding = True
@@ -198,7 +197,6 @@ class GridTable(gridlib.Grid):
                     df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             else:
                 df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
-            # determineDoHereorMainThread
             Globals.THREAD_POOL.enqueue(
                 self.applyNewDataFrame, df, checkColumns=False, autosize=True
             )
