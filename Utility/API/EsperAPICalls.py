@@ -284,6 +284,24 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
         ApiToolLog().LogError(e, postIssue=False, postStatus=False)
         return e
 
+@api_tool_decorator()
+def getTokenInfoV2(maxAttempt=Globals.MAX_RETRY):
+    try:
+        url = "{tenant}/authn2/v0/personal-access-token/".format(
+            tenant=Globals.configuration.host
+        )
+        userResp = performGetRequestWithRetry(
+            url, headers=getHeader(), maxRetry=maxAttempt
+        )
+        resp = None
+        if userResp and hasattr(userResp, "json"):
+            resp = userResp.json()
+        return resp
+    except ApiException as e:
+        print("Exception when calling TokenApi->get_token_info: %s\n" % e)
+        ApiToolLog().LogError(e, postIssue=False, postStatus=False)
+        return e
+
 
 @api_tool_decorator()
 def setKiosk(frame, device, deviceInfo, isGroup=False):

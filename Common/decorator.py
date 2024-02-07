@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import platform
 import sys
 import threading
 import time
@@ -106,10 +107,13 @@ def determineErrorDisplay(e):
 
 
 def displayApiExcpetionMsg(e):
+    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        wx.CallAfter(displayApiExcpetionMsg, e)
+        return e
     Globals.msg_lock.acquire(timeout=10)
     bodyMsg = json.loads(e.body).get("message", "N/A")
     wx.MessageBox(
-        "%s %s: %s" % (e.reason, e.status, bodyMsg),
+        message="%s %s: %s" % (e.reason, e.status, bodyMsg),
         style=wx.OK | wx.ICON_ERROR,
         parent=Globals.frame,
     )
@@ -119,9 +123,12 @@ def displayApiExcpetionMsg(e):
 
 
 def displayGenericErrorMsg(e):
+    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        wx.CallAfter(displayGenericErrorMsg, e)
+        return e
     Globals.msg_lock.acquire(timeout=10)
     wx.MessageBox(
-        "An Error has occured: \n\n%s" % e,
+        message="An Error has occured: \n\n%s" % e,
         style=wx.OK | wx.ICON_ERROR,
         parent=Globals.frame,
     )
