@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import csv
+import platform
+import threading
 from pathlib import Path
 
 import pandas as pd
@@ -10,17 +12,10 @@ import wx.grid
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.GridTable import GridTable
-from Utility.FileUtility import (
-    read_csv_via_pandas,
-    read_data_from_csv,
-    read_excel_via_openpyxl,
-    write_data_to_csv,
-)
-from Utility.Resource import (
-    displayMessageBox,
-    displayFileDialog,
-    openWebLinkInBrowser,
-)
+from Utility.FileUtility import (read_csv_via_pandas, read_data_from_csv,
+                                 read_excel_via_openpyxl, write_data_to_csv)
+from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
+                              displayMessageBox, openWebLinkInBrowser)
 
 
 class BulkFactoryReset(wx.Dialog):
@@ -201,6 +196,9 @@ class BulkFactoryReset(wx.Dialog):
         self.processUploadData(data)
 
     def processUploadData(self, data):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.processUploadData, data)
+            return
         if data is not None:
             gridTableData = {
                 self.expectedHeaders[0]: [],

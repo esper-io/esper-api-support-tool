@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 import json
+import platform
+import threading
 
 import wx
 import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.API.BlueprintUtility import (
-    checkBlueprintEnabled,
-    getAllBlueprintsFromHost,
-    getGroupBlueprintDetailForHost,
-)
+from Utility.API.BlueprintUtility import (checkBlueprintEnabled,
+                                          getAllBlueprintsFromHost,
+                                          getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import getEsperConfig, openWebLinkInBrowser
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              openWebLinkInBrowser)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -230,6 +231,9 @@ class BlueprintsDialog(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.getBlueprintEnabledEndpoints, config)
+            return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
         for config in self.configMenuOpt.values():
@@ -271,6 +275,9 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.loadGroupHelper, config)
+            return
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]),
             config["enterprise"],
@@ -329,6 +336,9 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadBlueprintHelper(self, event, match, config):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.loadBlueprintHelper, event, match, config)
+            return
         revision = getGroupBlueprintDetailForHost(
             config["apiHost"],
             config["apiKey"],

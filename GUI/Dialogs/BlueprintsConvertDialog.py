@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import json
+import platform
+import threading
 
 import wx
 import wx.html as wxHtml
@@ -10,7 +12,8 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import checkBlueprintEnabled
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import getEsperConfig, openWebLinkInBrowser
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              openWebLinkInBrowser)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -236,6 +239,9 @@ class BlueprintsConvertDialog(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.getBlueprintEnabledEndpoints)
+            return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
         for config in self.configMenuOpt.values():
@@ -288,6 +294,9 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.loadGroupHelper, config)
+            return
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]),
             config["enterprise"],
@@ -362,6 +371,9 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.populateSourceTempaltes, srcName)
+            return
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
             if self.sourceTemplate:

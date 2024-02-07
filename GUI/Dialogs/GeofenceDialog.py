@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import csv
+import platform
+import threading
 
 import pandas as pd
 import wx
@@ -12,7 +14,8 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import displayFileDialog, displayMessageBox, getHeader
+from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
+                              displayMessageBox, getHeader)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -210,6 +213,9 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def processUpload(self, filePath):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.processUpload, filePath)
+            return
         if self.geofence_grid.GetNumberRows() > 0:
             df = pd.DataFrame(columns=self.gridHeaderLabels)
             self.reset_grid.applyNewDataFrame(
@@ -323,6 +329,18 @@ class GeofenceDialog(wx.Dialog):
         radius,
         actionsList,
     ):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(
+                self.processCreateGeoFenceRequest,
+                properGroupIdList,
+                name,
+                description,
+                latitude,
+                longitude,
+                radius,
+                actionsList
+            )
+            return
         deviceList = []
         for groupId in properGroupIdList:
             devices = get_all_devices(groupId, Globals.limit, 0)
