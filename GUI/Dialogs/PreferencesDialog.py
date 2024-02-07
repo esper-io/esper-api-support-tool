@@ -1286,7 +1286,7 @@ class PreferencesDialog(wx.Dialog):
 
     def appFilterDlg(self, event):
         with LargeTextEntryDialog(
-            None,
+            Globals.frame,
             "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
             "App Column Filter",
             textPlaceHolder=",".join(self.appColFilter)
