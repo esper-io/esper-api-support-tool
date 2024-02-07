@@ -1085,6 +1085,9 @@ class NewFrameLayout(wx.Frame):
         except:
             pass
 
+        if Globals.token_lock.locked():
+            Globals.token_lock.release()
+
     def validateV1Token(self):
         res = None
         try:
@@ -1124,8 +1127,6 @@ class NewFrameLayout(wx.Frame):
             if res and hasattr(res, "scope"):
                 if "write" not in res.scope:
                     self.menubar.fileAddUser.Enable(False)
-        if Globals.token_lock.locked():
-            Globals.token_lock.release()
 
     def validateV2Token(self):
         res = None
