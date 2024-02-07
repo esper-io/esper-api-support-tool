@@ -344,6 +344,9 @@ class GridTable(gridlib.Grid):
                         # Red for devices last seen more than 24 hours
                         self.SetCellTextColour(rowNum, lastSeenColNum, Color.red.value)
                         self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightRed.value)
+                else:
+                    self.SetCellTextColour(rowNum, lastSeenColNum, Color.red.value)
+                    self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightRed.value)
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):
