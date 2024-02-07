@@ -3,19 +3,14 @@
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
 from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    isApiKey,
-    postEventToFrame,
-    splitListIntoChunks,
-)
+from Utility.Resource import (enforceRateLimit, isApiKey, postEventToFrame,
+                              splitListIntoChunks)
 from Utility.Threading import wxThread
 
 

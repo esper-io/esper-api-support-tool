@@ -6,23 +6,20 @@ import wx
 import wx.adv as adv
 
 import Common.Globals as Globals
+import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from GUI.Dialogs.HtmlDialog import HtmlDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from GUI.UserCreation import UserCreation
 from Utility import EventUtility
-from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
+from Utility.API.CollectionsApi import (checkCollectionIsEnabled,
+                                        preformEqlSearch)
 from Utility.EastUtility import processCollectionDevices
-import Utility.Threading.wxThread as wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkForUpdate,
-    downloadFileFromUrl,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    resourcePath,
-)
+from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
+                              openWebLinkInBrowser, postEventToFrame,
+                              resourcePath)
 
 
 class ToolMenuBar(wx.MenuBar):
@@ -396,18 +393,18 @@ class ToolMenuBar(wx.MenuBar):
             print(e)
             ApiToolLog().LogError(e)
         if json:
-            tagVersion = json["tag_name"].split("-")[0].replace("v", "")
+            tagVersion = json.get("tag_name", "").split("-")[0].replace("v", "")
             if float(tagVersion) > float(Globals.VERSION.replace("v", "")):
                 downloadURL = ""
                 name = ""
-                assets = json["assets"]
+                assets = json.get("assets", [])
                 for asset in assets:
-                    name = asset["name"]
+                    name = asset.get("name", "")
                     if "win" in name.lower() and self.WINDOWS:
-                        downloadURL = asset["browser_download_url"]
+                        downloadURL = asset.get("browser_download_url", "")
                         break
                     elif "mac" in name.lower() and not self.WINDOWS:
-                        downloadURL = asset["browser_download_url"]
+                        downloadURL = asset.get("browser_download_url", "")
                         break
                 if downloadURL:
                     postEventToFrame(
