@@ -13,25 +13,37 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
+from Utility.GridUtilities import constructDeviceAppRowEntry, createDataFrameFromDict
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
-                                      uploadApplication)
-from Utility.API.CommandUtility import (executeCommandOnDevice,
-                                        executeCommandOnGroup)
-from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
-                                       getDeviceDetail, getLatestEvent,
-                                       getLatestEventApiUrl, searchForDevice)
+from Utility.API.AppUtilities import (
+    getDeviceAppsApiUrl,
+    getInstallDevices,
+    uploadApplication,
+)
+from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
+from Utility.API.DeviceUtility import (
+    getAllDevices,
+    getDeviceById,
+    getDeviceDetail,
+    getLatestEvent,
+    getLatestEventApiUrl,
+    searchForDevice,
+)
 from Utility.API.GroupUtility import fetchGroupName
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import (constructDeviceAppRowEntry,
-                                   createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
-                              getHeader, ipv6Tomac, postEventToFrame,
-                              splitListIntoChunks, utc_to_local)
+from Utility.Resource import (
+    checkIfCurrentThreadStopped,
+    displayMessageBox,
+    getHeader,
+    ipv6Tomac,
+    postEventToFrame,
+    splitListIntoChunks,
+    utc_to_local,
+)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -633,9 +645,9 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
 
 
 def compileDeviceHardwareData(device, deviceInfo, latestEventData):
-    deviceId = device.get("id", "")
-    deviceStatus = device.get("status", "")
-    deviceTags = device.get("tags", "")
+    deviceId = device["id"]
+    deviceStatus = device["status"]
+    deviceTags = device["tags"]
 
     deviceAlias = None
     if "alias_name" in device:
@@ -681,14 +693,14 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         deviceInfo["Alias"] = ""
 
     if isinstance(deviceStatus, str):
-        if deviceStatus.lower() == "online" or deviceStatus.lower() == "active":
-            deviceInfo["Status"] = "ACTIVE"
+        if deviceStatus.lower() == "online":
+            deviceInfo["Status"] = "Online"
         elif "unspecified" in deviceStatus.lower():
             deviceInfo["Status"] = "Unspecified"
         elif "provisioning" in deviceStatus.lower():
             deviceInfo["Status"] = "Provisioning"
-        elif deviceStatus.lower() == "offline" or deviceStatus.lower() == "inactive":
-            deviceInfo["Status"] = "INACTIVE"
+        elif deviceStatus.lower() == "offline":
+            deviceInfo["Status"] = "Offline"
         elif "wipe" in deviceStatus.lower():
             deviceInfo["Status"] = "Wipe In-Progress"
         elif deviceStatus.lower() == "disabled":
@@ -705,7 +717,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
             deviceInfo["Status"] = "Unspecified"
         elif deviceStatus == DeviceState.ACTIVE.value:
-            deviceInfo["Status"] = "ACTIVE"
+            deviceInfo["Status"] = "Online"
         elif deviceStatus == DeviceState.DISABLED.value:
             deviceInfo["Status"] = "Disabled"
         elif (
@@ -722,7 +734,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         ):
             deviceInfo["Status"] = "Applying Blueprint"
         elif deviceStatus == DeviceState.INACTIVE.value:
-            deviceInfo["Status"] = "INACTIVE"
+            deviceInfo["Status"] = "Offline"
         elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
             deviceInfo["Status"] = "Wipe In-Progress"
         else:

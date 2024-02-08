@@ -1,12 +1,10 @@
 import platform
 import threading
-from datetime import datetime
 from distutils.version import LooseVersion
 
 import pandas as pd
 import wx
 import wx.grid as gridlib
-from dateutil import tz
 from pandas.api.types import is_bool_dtype, is_string_dtype
 
 import Common.Globals as Globals
@@ -301,52 +299,31 @@ class GridTable(gridlib.Grid):
             and "Status" in self.headersLabels
             and not Globals.frame.SpreadsheetUploaded
         ):
-            statusColNum = self.headersLabels.index("Status")
-            lastSeenColNum = self.headersLabels.index("Last Seen")
-            localTimeZone = tz.tzlocal()
-            currentTime = datetime.now().astimezone(localTimeZone)
+            colNum = self.headersLabels.index("Status")
             for rowNum in range(numRows):
-                statusValue = self.GetCellValue(rowNum, statusColNum)
-                lastSeenValue = self.GetCellValue(rowNum, lastSeenColNum)
-                if statusValue == "Offline" or statusValue == "INACTIVE":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.red.value)
-                elif statusValue == "Online" or statusValue == "ACTIVE":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.green.value)
-                elif statusValue == "Unspecified":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.darkGrey.value)
-                elif statusValue == "Provisioning" or statusValue == "Onboarding":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.orange.value)
-                elif statusValue == "Wipe In-Progress":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.purple.value)
+                value = self.GetCellValue(rowNum, colNum)
+                if value == "Offline":
+                    self.SetCellTextColour(rowNum, colNum, Color.red.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
+                elif value == "Online":
+                    self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                elif value == "Unspecified":
+                    self.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
+                elif value == "Provisioning" or value == "Onboarding":
+                    self.SetCellTextColour(rowNum, colNum, Color.orange.value)
                     self.SetCellBackgroundColour(
-                        rowNum, statusColNum, Color.lightPurple.value
+                        rowNum, colNum, Color.lightOrange.value
                     )
-                elif statusValue == "Unknown":
-                    self.SetCellTextColour(rowNum, statusColNum, Color.black.value)
-                    self.SetCellBackgroundColour(rowNum, statusColNum, Color.white.value)
-
-                if lastSeenValue and lastSeenValue != "No Data Available":
-                    gmtDateTime = datetime.strptime(
-                        lastSeenValue, 
-                        Globals.DATE_COL["Last Seen"]).astimezone(tz.gettz("GMT")
+                elif value == "Wipe In-Progress":
+                    self.SetCellTextColour(rowNum, colNum, Color.purple.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightPurple.value
                     )
-                    localTime = gmtDateTime.astimezone(localTimeZone)
-                    timeDiff = (currentTime - localTime).total_seconds()
-                    if timeDiff <= 60 * 30:
-                        # Green for devices last seen less than a 30 minutes
-                        self.SetCellTextColour(rowNum, lastSeenColNum, Color.green.value)
-                        self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightGreen.value)
-                    elif timeDiff > 60 * 30 and timeDiff < 60 * 60 * 24:
-                        # Orange for devices last seen between 30 minutes and 24 hours
-                        self.SetCellTextColour(rowNum, lastSeenColNum, Color.orange.value)
-                        self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightOrange.value)
-                    else:
-                        # Red for devices last seen more than 24 hours
-                        self.SetCellTextColour(rowNum, lastSeenColNum, Color.red.value)
-                        self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightRed.value)
-                else:
-                    self.SetCellTextColour(rowNum, lastSeenColNum, Color.red.value)
-                    self.SetCellBackgroundColour(rowNum, lastSeenColNum, Color.lightRed.value)
+                elif value == "Unknown":
+                    self.SetCellTextColour(rowNum, colNum, Color.black.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):

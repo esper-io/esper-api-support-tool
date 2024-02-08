@@ -14,14 +14,22 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
-from Utility.API.CommandUtility import (getCommandsApiInstance,
-                                        postEsperCommand,
-                                        waitForCommandToFinish)
+from Utility.API.CommandUtility import (
+    getCommandsApiInstance,
+    postEsperCommand,
+    waitForCommandToFinish,
+)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
-                              postEventToFrame)
-from Utility.Web.WebRequests import (performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
+from Utility.Resource import (
+    enforceRateLimit,
+    getHeader,
+    logBadResponse,
+    postEventToFrame,
+)
+from Utility.Web.WebRequests import (
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -339,7 +347,7 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
             )
         else:
             logString = logString + " <failed>"
-        if deviceInfo and deviceInfo["Status"] != "Online" and deviceInfo["Status"] != "ACTIVE":
+        if deviceInfo and deviceInfo["Status"] != "Online":
             logString = logString + " (Device offline)"
         postEventToFrame(eventUtil.myEVT_LOG, logString)
         if status and hasattr(status, "state"):
@@ -401,7 +409,7 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
                 logString = logString + " <failed>"
     else:
         logString = logString + " (Already Multi mode, skipping)"
-    if deviceInfo and deviceInfo["Status"] != "Online" and deviceInfo["Status"] != "ACTIVE":
+    if deviceInfo and deviceInfo["Status"] != "Online":
         logString = logString + " (Device offline)"
     postEventToFrame(eventUtil.myEVT_LOG, logString)
 
