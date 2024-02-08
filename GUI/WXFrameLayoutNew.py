@@ -430,11 +430,14 @@ class NewFrameLayout(wx.Frame):
                 for auth in self.auth_data:
                     authEntry = []
                     indx = 0
-                    for val in auth.values():
-                        if indx > len(tmp[0]):
-                            break
-                        authEntry.append(val)
-                        indx += 1
+                    if isinstance(auth, dict):
+                        for val in auth.values():
+                            if indx > len(tmp[0]):
+                                break
+                            authEntry.append(val)
+                            indx += 1
+                    else:
+                        authEntry = auth
                     if authEntry not in tmp:
                         tmp.append(authEntry)
                 write_data_to_csv(self.authPath, tmp)
