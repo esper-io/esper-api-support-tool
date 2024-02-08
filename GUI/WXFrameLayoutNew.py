@@ -1808,7 +1808,7 @@ class NewFrameLayout(wx.Frame):
             if (
                 (
                     Globals.APPS_IN_DEVICE_GRID 
-                    and actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                    and actionClientData <= GeneralActions.GENERATE_APP_REPORT.value
                 )
                 or (
                     actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
