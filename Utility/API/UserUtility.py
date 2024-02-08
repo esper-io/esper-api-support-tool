@@ -4,11 +4,13 @@ import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import getHeader, isApiKey, postEventToFrame
-from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
-                                     performDeleteRequestWithRetry,
-                                     performGetRequestWithRetry,
-                                     performPatchRequestWithRetry,
-                                     performPostRequestWithRetry)
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    performDeleteRequestWithRetry,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+    performPostRequestWithRetry,
+)
 
 
 def getUserBody(user):
@@ -204,18 +206,3 @@ def getAllPendingUsers(tolerance=0):
         userResp["next"] = None
         userResp["prev"] = None
     return userResp
-
-def getUserInfo():
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/user_info/".format(
-        tenant=tenant
-    )
-    userResp = performGetRequestWithRetry(
-        url, headers=getHeader()
-    )
-    resp = None
-    if userResp and hasattr(userResp, "json"):
-        resp = userResp.json()
-    return resp

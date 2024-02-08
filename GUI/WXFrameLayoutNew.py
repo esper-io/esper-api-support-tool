@@ -58,13 +58,12 @@ from Utility.API.BlueprintUtility import (checkBlueprintEnabled,
                                           pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo,
-                                       getTokenInfoV2, setAppState, setKiosk,
-                                       setMulti, validateConfiguration)
-from Utility.API.FeatureFlag import getFeatureFlags
+from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
+                                       setKiosk, setMulti,
+                                       validateConfiguration)
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
-                                     getSpecificUser, getUserInfo)
+                                     getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
 from Utility.EastUtility import (TakeAction, clearKnownGroups,
@@ -1070,24 +1069,6 @@ class NewFrameLayout(wx.Frame):
     def validateToken(self):
         Globals.token_lock.acquire()
         try:
-            flags = getFeatureFlags()
-            v2Flag = False
-            if hasattr(flags, "status_code") and flags.status_code < 300:
-                jsonResp = flags.json()
-                flag = "esper.cloud.auth.personal_access_token.enable"
-                if flag in jsonResp and jsonResp[flag]:
-                    v2Flag = True
-
-            if v2Flag:
-                self.validateV2Token()
-            else:
-                self.validateV1Token()
-        except:
-            pass
-
-    def validateV1Token(self):
-        res = None
-        try:
             res = getTokenInfo(maxAttempt=2)
         except:
             pass
@@ -1098,10 +1079,10 @@ class NewFrameLayout(wx.Frame):
                 determineDoHereorMainThread(self.promptForNewToken)
         elif (
             res
+            and hasattr(res, "body")
             and (
-                "Authentication credentials were not provided" in str(res)
-                or "Invalid or missing credentials" in str(res)
-                or "detail: Unauthenticated. Could not decode token." in str(res)
+                "Authentication credentials were not provided" in res.body
+                or "Invalid or missing credentials" in res.body
             )
         ):
             Globals.IS_TOKEN_VALID = False
@@ -1111,12 +1092,15 @@ class NewFrameLayout(wx.Frame):
             )
         else:
             Globals.IS_TOKEN_VALID = False
-            wx.CallAfter(
-                displayMessageBox,
+            postEventToFrame(
+                eventUtil.myEVT_PROCESS_FUNCTION,
                 (
+                    displayMessageBox,
+                    (
                         "Cannot Validate API Token! Please check internet connection and relaunch the application.",
                         wx.ICON_ERROR,
-                )
+                    ),
+                ),
             )
 
         if res and hasattr(res, "user"):
@@ -1126,35 +1110,6 @@ class NewFrameLayout(wx.Frame):
                     self.menubar.fileAddUser.Enable(False)
         if Globals.token_lock.locked():
             Globals.token_lock.release()
-
-    def validateV2Token(self):
-        res = None
-        try:
-            res = getTokenInfoV2(maxAttempt=2)
-        except:
-            pass
-        if res:
-            if ("Authentication credentials were not provided" in str(res)
-                or "Invalid or missing credentials" in str(res)
-                or "detail: Unauthenticated. Could not decode token." in str(res)):
-                Globals.IS_TOKEN_VALID = False
-            elif res.get("personal_access_tokens", ""):
-                for token in res["personal_access_tokens"]:
-                    prefix = token.get("prefix", "")
-                    if Globals.configuration.api_key["Authorization"].startswith(prefix):
-                        expiry_at = token["expiry_at"]
-                        if expiry_at == -1:
-                            Globals.IS_TOKEN_VALID = True
-                        else:
-                            expire = datetime.fromtimestamp(expiry_at / 1e3)
-                            if expire > datetime.now():
-                                Globals.IS_TOKEN_VALID = True
-                        break
-            else:
-                Globals.IS_TOKEN_VALID = False
-        
-        if not Globals.IS_TOKEN_VALID:
-            determineDoHereorMainThread(self.promptForNewToken)
 
     def promptForNewToken(self):
         newToken = ""
