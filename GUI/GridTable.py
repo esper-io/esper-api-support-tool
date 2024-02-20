@@ -296,34 +296,26 @@ class GridTable(gridlib.Grid):
         numRows = self.GetNumberRows()
         if (
             numRows > 0
-            and "Status" in self.headersLabels
+            and "Last Seen" in self.headersLabels
             and not Globals.frame.SpreadsheetUploaded
         ):
-            colNum = self.headersLabels.index("Status")
+            colNum = self.headersLabels.index("Last Seen")
             for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
-                if value == "Offline":
-                    self.SetCellTextColour(rowNum, colNum, Color.red.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
-                elif value == "Online":
+                if value == "Less than 1 minute ago":
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
-                elif value == "Unspecified":
-                    self.SetCellTextColour(rowNum, colNum, Color.darkGrey.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.grey.value)
-                elif value == "Provisioning" or value == "Onboarding":
-                    self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightOrange.value
-                    )
-                elif value == "Wipe In-Progress":
-                    self.SetCellTextColour(rowNum, colNum, Color.purple.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightPurple.value
-                    )
-                elif value == "Unknown":
-                    self.SetCellTextColour(rowNum, colNum, Color.black.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.white.value)
+                elif " minutes ago" in value:
+                    minutes = int(value.split(" ")[0])
+                    if minutes < 30:
+                        self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                    else:
+                        self.SetCellTextColour(rowNum, colNum, Color.orange.value)
+                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                elif " days ago" in value:
+                    self.SetCellTextColour(rowNum, colNum, Color.red.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):

@@ -1,16 +1,16 @@
-import Utility.Email.EmailUtils as email
-import sys
-import os
 import json
-import pytz
+import os
 import platform
+import sys
+from datetime import datetime
+
+import pytz
 
 import Common.Globals as Globals
-
-from datetime import datetime
+import Utility.Email.EmailUtils as email
 from Utility.FileUtility import read_json_file
-
 from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Logging.SlackUtils import SlackUtils
 
 
 class AuditPosting:
@@ -22,6 +22,7 @@ class AuditPosting:
         self.getEmailInfo()
 
         self.util = email.EmailUtils(self.login, self.pw, self.to_addr)
+        self.slack_utils = SlackUtils()
 
     def getEmailInfo(self):
         filePath = "token.json"
@@ -56,10 +57,20 @@ class AuditPosting:
             return
 
         if type(values) is dict and "operation" in values and "data" in values:
-            if "resp" in values:
-                self.emailOperation(values["operation"], values["data"], values["resp"])
-            else:
-                self.emailOperation(values["operation"], values["data"])
+            try:
+                self.slack_utils.post_block_message(
+                    "East Usage",
+                    self.slack_utils.get_operation_blocks(
+                        values["operation"], 
+                        values["data"], 
+                        values["resp"] if "resp" in values else ""
+                    )
+                )
+            except:
+                if "resp" in values:
+                    self.emailOperation(values["operation"], values["data"], values["resp"])
+                else:
+                    self.emailOperation(values["operation"], values["data"])
 
     def emailOperation(self, operation, data, resp=""):
         now = datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S")

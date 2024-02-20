@@ -3,19 +3,14 @@
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
 from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    isApiKey,
-    postEventToFrame,
-    splitListIntoChunks,
-)
+from Utility.Resource import (enforceRateLimit, isApiKey, postEventToFrame,
+                              splitListIntoChunks)
 from Utility.Threading import wxThread
 
 
@@ -356,7 +351,11 @@ def setAllAppsState(device, state):
     else:
         deviceName = device
         deviceId = device
-    _, resp = apiCalls.getdeviceapps(deviceId, False, Globals.USE_ENTERPRISE_APP)
+    resp = None
+    if device.get("os") is not None and device.get("os").lower() == "android":
+        _, resp = apiCalls.getAndroidDeviceApps(deviceId, False, Globals.USE_ENTERPRISE_APP)
+    else:
+        _, resp = apiCalls.getIosDeviceApps(deviceId, createAppListArg=False)
     if resp and "results" in resp:
         for app in resp["results"]:
             stateStatus = None

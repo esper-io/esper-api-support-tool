@@ -81,6 +81,9 @@ join_lock = threading.Lock()
 # Known Group Var
 knownGroups = {}
 
+# Known Blueprints
+knownBlueprints = {}
+
 OPEN_DIALOGS = []
 
 """ Actions """
@@ -91,7 +94,7 @@ GENERAL_ACTIONS = {
     + "Generate Report "
     + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-    "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
+    # "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     ("\t" if platform.system() == "Windows" else "")
@@ -177,25 +180,34 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 """ CSV Headers """
 
 CSV_TAG_ATTR_NAME = {
-    "Esper Name": "EsperName",
-    "Alias": "Alias",
+    "Esper Name": ["EsperName", "name"],
+    "Alias": ["Alias", "alias"],
     "Group": "groups",
     "Brand": "brand",
     "Manufacturer": "manufacturer",
     "Model": "model",
     "Hardware Chip Set": "hardware",
-    "Android Version": "androidVersion",
-    "Android Build Number": "androidBuildNumber",
-    "Status": "Status",
+    "OS": "os",
+    "OS Version": ["androidVersion", "os_version"],
+    "Build Number": ["androidBuildNumber", "os_build_number"],
+    "Registered On": ["provisioned_on", "onboarded_on"],
+    "Updated On": ["updated_on", "updated_at"],
+    "Created On": ["created_on", "created_at"],
+    "Last Seen": "last_seen",
+    "State": "Status",
     "Esper Version": "esper_client",
     "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
+    "Managed By": "managed_by",
     "Template": "template_name",
     "Template Device Language": "templateDeviceLocale",
+    "Assigned Blueprint": "assigned_blueprint_id",
+    "Current Blueprint": "current_blueprint_id",
+    "Current Blueprint Version": "current_blueprint_version_id",
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
-    "Serial Number": "Serial",
+    "Serial Number": ["Serial", "serial"],
     "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
@@ -210,11 +222,7 @@ CSV_TAG_ATTR_NAME = {
     "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
-    "Device Type": "device_type",
-    "Registered On": "provisioned_on",
-    "Updated On": "updated_on",
-    "Created On": "created_on",
-    "Last Seen": "last_seen",
+    "Device Type": ["device_type", "device_source"],
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
     "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
@@ -254,7 +262,7 @@ CSV_TAG_ATTR_NAME = {
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Group": "groups",
-    "Security Patch": "securityPatchLevel",
+    "Security Patch": ["securityPatchLevel", "security_patch_level"],
     "[WIFI ACCESS POINTS]": "wifiAP",
     "[Current WIFI Connection]": "currentWifi",
     "Ethernet Connection": "ethernetState",

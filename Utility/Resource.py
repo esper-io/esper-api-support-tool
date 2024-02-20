@@ -447,6 +447,7 @@ def processFunc(event):
         fun()
     elif type(fun) == tuple and callable(fun[0]):
         if type(fun[1]) == tuple:
+            # This breaks if intended tuple is given as a single argument
             fun[0](*fun[1])
         else:
             fun[0](fun[1])

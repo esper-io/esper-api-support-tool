@@ -408,7 +408,7 @@ class SidePanel(wx.Panel):
                         groupNameProper = groupName.split(" (Device Count:")[0]
                         groupId = self.groups[groupNameProper]
                         self.selectedGroups.Append(groupName)
-                        if groupNameProper.lower() == "all devices":
+                        if not self.groupMultiDialog.blueprintEnabled and groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
                             self.selectedGroupsList = []
                             self.selectedGroups.Append(groupName)

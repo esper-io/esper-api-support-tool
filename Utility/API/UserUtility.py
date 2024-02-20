@@ -4,13 +4,11 @@ import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import getHeader, isApiKey, postEventToFrame
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performDeleteRequestWithRetry,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performDeleteRequestWithRetry,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 def getUserBody(user):

@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-import webbrowser
 import datetime
-import subprocess
+import os
 import pathlib
 import platform
-import os
 import re
 import shutil
+import subprocess
 import sys
-import Common.Globals as Globals
+import webbrowser
 
-from Utility.Resource import isModuleInstalled, installRequiredModules
+import Common.Globals as Globals
+from Utility.Resource import installRequiredModules, isModuleInstalled
 
 
 def updateFileVersionInfo(path="file_version_info.txt"):
@@ -97,6 +97,10 @@ def getExecutableCommand(doFirst=True):
                 curDirPath
                 + "/Utility/Logging/token.json%s."
                 % (";" if platform.system() == "Windows" else ":"),
+                "--add-data",
+                curDirPath
+                + "/Utility/Logging/slack_details.json%s."
+                % (";" if platform.system() == "Windows" else ":"),
                 curDirPath + "/Main.py",
             ]
     else:
@@ -122,6 +126,10 @@ def getExecutableCommand(doFirst=True):
                 "--add-data",
                 curDirPath
                 + "/Utility/Logging/token.json%s."
+                % (";" if platform.system() == "Windows" else ":"),
+                "--add-data",
+                curDirPath
+                + "/Utility/Logging/slack_details.json%s."
                 % (";" if platform.system() == "Windows" else ":"),
                 curDirPath + "/Main.py",
             ]

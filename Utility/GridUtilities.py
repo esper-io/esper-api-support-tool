@@ -5,35 +5,55 @@ import Common.Globals as Globals
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
-    if deviceInfo["appObj"] and "results" in deviceInfo["appObj"]:
+    if deviceInfo["appObj"] and "results" in deviceInfo["appObj"] and deviceInfo["appObj"]["results"]:
         deviceInfo["AppsEntry"] = []
         info = {}
         for app in deviceInfo["appObj"]["results"]:
-            if app["package_name"] not in Globals.BLACKLIST_PACKAGE_NAME:
-                esperName = ""
-                if hasattr(device, "device_name"):
-                    esperName = device.device_name
-                elif "device_name" in device:
-                    esperName = device["device_name"]
-                elif "name" in device:
-                    esperName = device["name"]
+            esperName = ""
+            if hasattr(device, "device_name"):
+                esperName = device.device_name
+            elif "device_name" in device:
+                esperName = device["device_name"]
+            elif "name" in device:
+                esperName = device["name"]
+            appInFilter = True
+            if "package_name" in app:
                 info = {
                     "Esper Name": esperName,
                     "Group": deviceInfo["groups"] if "groups" in deviceInfo else "",
                     "Application Name": app["app_name"],
                     "Application Type": app["app_type"],
-                    "Application Version Code": app["version_code"],
-                    "Application Version Name": app["version_name"],
+                    "Application Version Code": app.get("version_code", ""),
+                    "Application Version Name": app.get("version_name", ""),
                     "Package Name": app["package_name"],
-                    "State": app["state"],
-                    "Whitelisted": app["whitelisted"],
-                    "Can Clear Data": app["is_data_clearable"],
-                    "Can Uninstall": app["is_uninstallable"],
+                    "State": app.get("state", ""),
+                    "Whitelisted": app.get("whitelisted", ""),
+                    "Can Clear Data": app.get("is_data_clearable", ""),
+                    "Can Uninstall": app.get("is_uninstallable", ""),
                 }
+                appInFilter = app["package_name"] in Globals.APP_COL_FILTER
+            elif "bundle_id" in app:
+                info = {
+                    "Esper Name": esperName,
+                    "Group": deviceInfo["groups"] if "groups" in deviceInfo else "",
+                    "Application Name": app["app_name"],
+                    "Application Type": app["app_type"],
+                    "Application Version Code": app.get("apple_app_version", ""),
+                    "Application Version Name": app.get("version_name", ""),
+                    "Package Name": app["bundle_id"],
+                    "State": app.get("state", ""),
+                    "Whitelisted": app.get("whitelisted", ""),
+                    "Can Clear Data": app.get("is_data_clearable", ""),
+                    "Can Uninstall": app.get("is_uninstallable", ""),
+                }
+                appInFilter = app["bundle_id"] in Globals.APP_COL_FILTER
             if (info 
                 and info not in deviceInfo["AppsEntry"]
-                and ((Globals.APP_COL_FILTER
-                and app["package_name"] in Globals.APP_COL_FILTER) 
+                and  info["Package Name"] not in Globals.BLACKLIST_PACKAGE_NAME
+                and ((
+                        Globals.APP_COL_FILTER
+                        and appInFilter
+                    ) 
                     or not Globals.APP_COL_FILTER)):
                 deviceInfo["AppsEntry"].append(info)
 
@@ -46,8 +66,13 @@ def createDataFrameFromDict(headerList, sourceData):
         if type(headerList) is dict:
             for columnName, key in headerList.items():
                 value = ""
-                if key in row:
+                if type(key) is str and key in row:
                     value = row[key]
+                elif type(key) is list:
+                    for k in key:
+                        if k in row:
+                            value = row[k]
+                            break
                 newData[columnName].append(value)
         elif type(headerList) is list:
             for header in headerList:

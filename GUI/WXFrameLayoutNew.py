@@ -66,7 +66,7 @@ from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
                                      getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (TakeAction, clearKnownGroups,
+from Utility.EastUtility import (TakeAction, clearKnownGroupsAndBlueprints,
                                  fetchInstalledDevices, filterDeviceList,
                                  getAllDeviceInfo, removeNonWhitelisted,
                                  uploadAppToEndpoint)
@@ -924,7 +924,7 @@ class NewFrameLayout(wx.Frame):
         if not self.firstRun:
             Globals.THREAD_POOL.clearQueue()
         self.onClearGrids()
-        clearKnownGroups()
+        clearKnownGroupsAndBlueprints()
         try:
             if self.groupManage:
                 self.groupManage.Destroy()
@@ -1301,6 +1301,22 @@ class NewFrameLayout(wx.Frame):
         thread.startWithRetry()
         self.previousGroupFetchThread = thread
         return thread
+    
+    @api_tool_decorator()
+    def PopulateBlueprints(self):
+        self.Logging("--->Attempting to fetch blueprints...")
+        self.setCursorBusy()
+        thread = wxThread.GUIThread(
+            self, self.fetchAllInstallableApps, None, name="PopulateBlueprints"
+        )
+        thread.startWithRetry()
+        return thread
+
+    def fetchAllKnownBlueprints(self):
+        resp = getAllBlueprints()
+        for item in resp["results"]:
+            Globals.knownBlueprints[item["id"]] = item
+
 
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
@@ -1428,7 +1444,7 @@ class NewFrameLayout(wx.Frame):
                     )
                 api_response["results"] = sorted(
                     api_response["results"],
-                    key=lambda i: i["device_name"].lower(),
+                    key=lambda i: i["device_name"].lower() if "device_name" in i else i["name"].lower(),
                 )
                 splitResults = splitListIntoChunks(api_response["results"])
 
@@ -1448,12 +1464,19 @@ class NewFrameLayout(wx.Frame):
                     device.device_name,
                     "~ %s" % device.alias_name if device.alias_name else "",
                 )
-            else:
+            elif "hardwareInfo" in device:
                 name = "%s ~ %s ~ %s %s" % (
                     device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else "",
                     device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else "",
                     device["device_name"],
                     "~ %s" % device["alias_name"] if device["alias_name"] else "",
+                )
+            elif "hardware_info" in device:
+                name = "%s ~ %s ~ %s %s" % (
+                    device["hardware_info"]["brand"] if "brand" in device["hardware_info"] else "",
+                    device["hardware_info"]["model"] if "model" in device["hardware_info"] else "",
+                    device["name"],
+                    "~ %s" % device["alias"] if device["alias"] else "",
                 )
             if name and name not in self.sidePanel.devices:
                 if hasattr(device, "id"):
@@ -1528,7 +1551,7 @@ class NewFrameLayout(wx.Frame):
         elif results and type(results[0]) == dict and "application_name" in results[0]:
             results = sorted(
                 results,
-                key=lambda i: i["application_name"].lower(),
+                key=lambda i: i["application_name"].lower() if "application_name" in i else i["app_name"].lower(),
             )
         elif results:
             results = sorted(
@@ -1644,6 +1667,7 @@ class NewFrameLayout(wx.Frame):
                                 match
                             ]
 
+
         if (
             actionClientData < GeneralActions.GENERATE_APP_REPORT.value
             and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT
@@ -1674,6 +1698,10 @@ class NewFrameLayout(wx.Frame):
             )
             if res == wx.OK:
                 self.onClearGrids()
+                postEventToFrame(eventUtil.myEVT_AUDIT, {
+                    "operation": "LargeReportGeneration",
+                    "data": "Action: %s" % (actionLabel)
+                })
                 return self.onSaveBothAll(None, action=actionClientData)
             else:
                 return
@@ -1761,6 +1789,11 @@ class NewFrameLayout(wx.Frame):
                 appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
+
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
+                    "operation": "ReportGeneration",
+                    "data": "Action: %s" % (actionLabel)
+                })
 
             if (
                 (
@@ -2099,7 +2132,7 @@ class NewFrameLayout(wx.Frame):
             ):
                 input = []
                 for data in deviceList.values():
-                    input.extend(data["AppsEntry"])
+                    input.extend(data.get("AppsEntry", []))
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
                 self.gridPanel.app_grid.applyNewDataFrame(
                     df, checkColumns=False, resetPosition=True, autosize=True
@@ -2835,7 +2868,10 @@ class NewFrameLayout(wx.Frame):
                         self.notification.MSWUseToasts()
                     except:
                         pass
+            try:
                 self.notification.Show()
+            except Exception as e:
+                ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def onSuspend(self, event):

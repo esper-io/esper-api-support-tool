@@ -10,10 +10,8 @@ from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getHeader, postEventToFrame
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performGetRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -84,6 +82,28 @@ def getAllDevices(
 
 
 def get_all_devices_helper(
+        groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
+):
+    extention = "?limit=%s&offset=%s" % (limit, offset)
+    if groupToUse.strip():
+        extention += "&group_multi=%s" % (
+            groupToUse.strip(),
+        )
+    url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
+    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+    if api_response.status_code < 300:
+        api_response = api_response.json()
+        if "content" in api_response:
+            api_response = api_response["content"]
+        if type(responses) == list:
+            responses.append(api_response)
+    else:
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
+    return api_response
+
+def get_all_android_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
     extention = "device/?limit=%s&offset=%s" % (limit, offset)
@@ -153,6 +173,8 @@ def fetchDevicesFromGroup(
         ):
             api_response.results += resp.results
         else:
+            if "content" in resp:
+                resp = resp["content"]
             for device in resp["results"]:
                 if device not in api_response["results"]:
                     api_response["results"].append(device)
@@ -186,7 +208,7 @@ def fetchDevicesFromGroupHelper(
 
 
 @api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=True):
+def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=True, do_join=True):
     """ Make a API call to get a Device belonging to the Enterprise by its Id """
     try:
         api_response_list = []
@@ -204,7 +226,8 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=Tr
             api_response, api_response_list = getDeviceByIdHelper(
                 deviceToUse, api_response_list, api_response, maxAttempt
             )
-        Globals.THREAD_POOL.join(tolerance=tolerance)
+        if do_join:
+            Globals.THREAD_POOL.join(tolerance=tolerance)
         Globals.THREAD_POOL.results()
         if api_response and api_response_list and hasattr(api_response, "results"):
             api_response.results = api_response_list

@@ -10,19 +10,13 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
-from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
+from Utility.API.CommandUtility import (executeCommandOnDevice,
+                                        executeCommandOnGroup)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    displayMessageBox,
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-)
+from Utility.Resource import (displayMessageBox, enforceRateLimit, getHeader,
+                              logBadResponse, postEventToFrame)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performGetRequestWithRetry)
 
 
 def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=False):
@@ -161,6 +155,17 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
 
 @api_tool_decorator()
 def getAllInstallableApps(tolerance=0):
+    androidApps = getAllAndroidInstallableApps(tolerance=tolerance)
+    iosApps = getAllIosInstallableApps(tolerance=tolerance)
+
+    resp = {
+        "results": androidApps["results"] + iosApps["results"],
+    }
+    return resp
+
+
+@api_tool_decorator()
+def getAllAndroidInstallableApps(tolerance=0):
     tenant = Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
@@ -179,6 +184,46 @@ def getAllInstallableApps(tolerance=0):
         return respJson
     return resp
 
+
+@api_tool_decorator()
+def getAllIosInstallableApps(tolerance=0):
+    enterprise_apps = getEnterpriseIosApps(tolerance=tolerance)
+    # vppAppsUrl = "https://esperx24-api.esper.cloud/api/apps/v0/vpp/"
+    # vppAppDetailUrl = "https://esperx24-api.esper.cloud/api/v2/itunesapps/?apple_app_id=%s"
+    return enterprise_apps
+
+@api_tool_decorator()
+def getEnterpriseIosApps(limit=None, offset=0, app_name="", tolerance=0):
+    esperIosAppsUrl = "%s/v2/tenant-apps?format=json&limit=%s&offset=%s&app_name=%s" % (
+        Globals.configuration.host,
+        limit if limit else Globals.limit,
+        offset,
+        app_name
+    )
+    resp = performGetRequestWithRetry(esperIosAppsUrl, headers=getHeader())
+    if resp:
+        resp_json = resp.json()
+        content = resp_json["content"]
+        appsResp = getAllFromOffsetsRequests(content, tolarance=tolerance)
+        if type(appsResp) is dict and "content" in appsResp and "results" in appsResp["content"]:
+            content["results"] = content["results"] + appsResp["content"]["results"]
+            content["next"] = None
+            content["prev"] = None
+        app_res = {"results": []}
+        for app in content["results"]:
+            app_details_url = "%s/v2/tenant-apps/%s/versions?format=json&limit=1&offset=0" % (
+                Globals.configuration.host,
+                app["id"]
+            )
+            details_resp = performGetRequestWithRetry(app_details_url, headers=getHeader())
+            if details_resp:
+                details_json = details_resp.json()
+                details_json["content"]["results"][0]["version_id"] = details_json["content"]["results"][0]["id"]
+                details_json["content"]["results"][0].update(app)
+                app_res["results"].append(details_json["content"]["results"][0])
+
+        return app_res
+    return resp
 
 def constructAppPkgVerStr(appName, pkgName, version):
     appPkgVerStr = ""
@@ -623,8 +668,9 @@ def getAppDictEntry(app, update=True):
             appPkgName: app["package_name"],
             "appPkgName": appPkgName,
             "packageName": app["package_name"],
-            "app_state": app["state"],
+            "app_state": app["state"] if "state" in app else "",
             "id": app["id"],
+            "is_ios": app.get("platform", "").lower() == "apple",
         }
 
     validApp = None

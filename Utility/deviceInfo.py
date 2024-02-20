@@ -39,7 +39,7 @@ def getWifiStatus(deviceInfo):
     if "network" in deviceInfo:
         wifi_event = deviceInfo["network"]
     wifi_string = ""
-    current_wifi_connection = "Wifi Disconnected"
+    current_wifi_connection = ""
     current_wifi_configurations = ""
 
     if wifi_event:
@@ -71,7 +71,7 @@ def getWifiStatus(deviceInfo):
 
 def getCellularStatus(deviceInfo):
     network_event = deviceInfo["network_event"]
-    cellular_connections = "[NOT CONNECTED]"
+    cellular_connections = ""
     current_active_connection = ""
 
     if network_event and "currentActiveConnection" in network_event:
@@ -82,6 +82,7 @@ def getCellularStatus(deviceInfo):
     simoperator = ""
     connection_status = ""
     if network_event and "cellularNetworkInfo" in network_event:
+        cellular_connections = "[NOT CONNECTED]"
         cellularNetworkInfo = network_event["cellularNetworkInfo"]
         if cellularNetworkInfo:
             if "mobileNetworkStatus" in cellularNetworkInfo:
@@ -135,8 +136,12 @@ def constructNetworkInfo(device, deviceInfo):
 
     for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
         if value:
-            if value in deviceInfo:
+            if type(value) is str and value in deviceInfo:
                 networkInfo[key] = str(deviceInfo[value])
+            elif type(value) is list:
+                for v in value:
+                    if v in deviceInfo:
+                        networkInfo[key] = str(deviceInfo[v])
             else:
                 networkInfo[key] = ""
 
