@@ -1,5 +1,6 @@
 import platform
 import threading
+from datetime import datetime
 from distutils.version import LooseVersion
 
 import pandas as pd
@@ -300,8 +301,18 @@ class GridTable(gridlib.Grid):
             and not Globals.frame.SpreadsheetUploaded
         ):
             colNum = self.headersLabels.index("Last Seen")
+            currentDate = datetime.now()
             for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
+                datePattern = "%Y-%m-%dT%H:%M:%S.%fZ" if "." in value else "%Y-%m-%dT%H:%MZ"
+                parsedDateTime = None
+                differenceInMinutes = None
+                try:
+                    parsedDateTime = datetime.strptime(value, datePattern) if "ago" not in value else None
+                except:
+                    pass
+                if parsedDateTime:
+                    differenceInMinutes = (currentDate - parsedDateTime).total_seconds() / 60
                 if value == "Less than 1 minute ago":
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
@@ -314,6 +325,15 @@ class GridTable(gridlib.Grid):
                         self.SetCellTextColour(rowNum, colNum, Color.orange.value)
                         self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
                 elif " days ago" in value:
+                    self.SetCellTextColour(rowNum, colNum, Color.red.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
+                elif differenceInMinutes and differenceInMinutes < 30:
+                    self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                elif differenceInMinutes and differenceInMinutes < 1440:
+                    self.SetCellTextColour(rowNum, colNum, Color.orange.value)
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                elif differenceInMinutes and differenceInMinutes > 1440:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
 
