@@ -50,8 +50,7 @@ from Utility.API.AppUtilities import (getAllInstallableApps, getAppDictEntry,
                                       uninstallAppOnDevice,
                                       uninstallAppOnGroup)
 from Utility.API.AuditPosting import AuditPosting
-from Utility.API.BlueprintUtility import (checkBlueprintEnabled,
-                                          getAllBlueprints,
+from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
                                           modifyAppsInBlueprints,
                                           prepareBlueprintClone,
                                           prepareBlueprintConversion,
@@ -1628,6 +1627,8 @@ class NewFrameLayout(wx.Frame):
         estimatedDeviceCount = len(self.sidePanel.selectedDevicesList)
         if not self.sidePanel.selectedDevicesList:
             for group in self.sidePanel.selectedGroupsList:
+                if group == "(All devices)":
+                    estimatedDeviceCount = Globals.MAX_DEVICE_COUNT + 1
                 match = list(filter(lambda x: x["id"] == group, self.groups))
                 if match:
                     match = match[0]
@@ -2950,7 +2951,7 @@ class NewFrameLayout(wx.Frame):
         if "isBlueprintsEnabled" in config:
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         else:
-            checkBlueprintEnabled(config)
+            checkFeatureFlags(config)
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)

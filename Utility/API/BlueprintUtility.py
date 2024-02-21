@@ -36,28 +36,33 @@ def checkBlueprintsIsEnabled():
     return enabled
 
 
-def checkBlueprintEnabled(data):
-    isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(
-        data["apiHost"],
-        {
-            "Authorization": "Bearer %s" % data["apiKey"],
-            "Content-Type": "application/json",
-        },
-    )
-    data["isBlueprintsEnabled"] = isBlueprintEnabled
-
-
-def checkBlueprintsIsEnabledForTenant(host, header):
-    enabled = False
+def checkFeatureFlags(data):
+    host = data["apiHost"]
+    header ={
+        "Authorization": "Bearer %s" % data["apiKey"],
+        "Content-Type": "application/json",
+    }
     resp = getFeatureFlagsForTenant(host, header)
+    jsonResp = None
     if hasattr(resp, "status_code") and resp.status_code < 300:
         jsonResp = resp.json()
-        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"] is True:
-            return True
-        if "esper.cloud.blueprints.v2" in jsonResp and jsonResp["esper.cloud.blueprints.v2"] is True:
-            return True
-    return enabled
 
+    checkBlueprintEnabled(data, jsonResp)
+    checkIosEnabled(data, jsonResp)
+
+def checkBlueprintEnabled(data, jsonResp):
+    enabled = False
+    if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"] is True:
+        enabled =  True
+    if "esper.cloud.blueprints.v2" in jsonResp and jsonResp["esper.cloud.blueprints.v2"] is True:
+        enabled =  True
+    data["isBlueprintsEnabled"] = enabled
+
+def checkIosEnabled(data, jsonResp):
+    enabled = False
+    if "esper.cloud.ios.enable" in jsonResp and jsonResp["esper.cloud.ios.enable"] is True:
+        enabled =  True
+    data["isIosEnabled"] = enabled
 
 @api_tool_decorator()
 def getAllBlueprints():

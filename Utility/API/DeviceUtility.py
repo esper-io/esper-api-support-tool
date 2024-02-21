@@ -84,24 +84,17 @@ def getAllDevices(
 def get_all_devices_helper(
         groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
-    extention = "?limit=%s&offset=%s" % (limit, offset)
-    if groupToUse.strip():
-        extention += "&group_multi=%s" % (
-            groupToUse.strip(),
+    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+    iosEnabled = config["isIosEnabled"]
+
+    if iosEnabled:
+        return get_all_ios_devices_helper(
+            groupToUse, limit, offset, maxAttempt, responses
         )
-    url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
-    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
-    if api_response.status_code < 300:
-        api_response = api_response.json()
-        if "content" in api_response:
-            api_response = api_response["content"]
-        if type(responses) == list:
-            responses.append(api_response)
     else:
-        raise Exception(
-            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        return get_all_android_devices_helper(
+            groupToUse, limit, offset, maxAttempt, responses
         )
-    return api_response
 
 def get_all_android_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
@@ -131,6 +124,28 @@ def get_all_android_devices_helper(
         )
     return api_response
 
+
+def get_all_ios_devices_helper(
+        groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
+):
+    extention = "?limit=%s&offset=%s" % (limit, offset)
+    if groupToUse.strip():
+        extention += "&group_multi=%s" % (
+            groupToUse.strip(),
+        )
+    url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
+    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+    if api_response.status_code < 300:
+        api_response = api_response.json()
+        if "content" in api_response:
+            api_response = api_response["content"]
+        if type(responses) == list:
+            responses.append(api_response)
+    else:
+        raise Exception(
+            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+        )
+    return api_response
 
 def get_all_devices(
     groupToUse,

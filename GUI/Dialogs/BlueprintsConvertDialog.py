@@ -10,7 +10,7 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
-from Utility.API.BlueprintUtility import checkBlueprintEnabled
+from Utility.API.BlueprintUtility import checkFeatureFlags
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
                               openWebLinkInBrowser)
@@ -246,7 +246,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.combo_box_1.Clear()
         for config in self.configMenuOpt.values():
             if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkBlueprintEnabled, config)
+                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
         enabled = list(
             filter(

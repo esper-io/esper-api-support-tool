@@ -511,7 +511,9 @@ def populateDeviceInfoDictionaryComplieData(
             return
         unpackageDict(deviceInfo, device)
 
-    if device.get("os") is not None and device.get("os").lower() == "android":
+    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+    iosEnabled = config["isIosEnabled"]
+    if device.get("os") is not None and device.get("os").lower() == "android" and iosEnabled:
         androidDeviceInfo = getDeviceById(device.get("id"), do_join=False)
         unpackageDict(deviceInfo, androidDeviceInfo)
 
@@ -1095,10 +1097,15 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             )
         Globals.THREAD_POOL.join(tolerance=1, timeout=3 * 60)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
+        groupId = None
+        if len(Globals.frame.sidePanel.selectedGroupsList) == 1 and Globals.frame.sidePanel.selectedGroupsList[0] == "(All devices)":
+            groupId = " "
+        elif Globals.frame.sidePanel.selectedGroupsList and not allDevices:
+            groupId = Globals.frame.sidePanel.selectedGroupsList
+        else:
+            groupId = " "
         api_response = getAllDevices(
-            Globals.frame.sidePanel.selectedGroupsList
-            if Globals.frame.sidePanel.selectedGroupsList and not allDevices
-            else " ",
+            groupId,
             tolarance=tolarance,
             timeout=3 * 60,
         )

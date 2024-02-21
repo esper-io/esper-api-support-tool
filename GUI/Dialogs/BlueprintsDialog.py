@@ -9,7 +9,7 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.API.BlueprintUtility import (checkBlueprintEnabled,
+from Utility.API.BlueprintUtility import (checkFeatureFlags,
                                           getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
@@ -238,7 +238,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_1.Clear()
         for config in self.configMenuOpt.values():
             if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkBlueprintEnabled, config)
+                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
         choices = list(
             filter(
