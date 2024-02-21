@@ -101,7 +101,9 @@ def TakeAction(frame, input, action, isDevice=False):
 def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, device, results=None,):
     appResp = latestEvent = None
     if getApps:
-        if device.get("os") is not None and device.get("os").lower() == "android":
+        config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+        iosEnabled = config["isIosEnabled"]
+        if device.get("os") is not None and device.get("os").lower() == "android" or not iosEnabled:
             appResp = perform_web_requests(
                 (
                     getDeviceAppsApiUrl(deviceId, Globals.USE_ENTERPRISE_APP),
