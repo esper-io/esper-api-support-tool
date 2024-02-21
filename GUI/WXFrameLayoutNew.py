@@ -1690,7 +1690,7 @@ class NewFrameLayout(wx.Frame):
                 self.onClearGrids()
                 postEventToFrame(eventUtil.myEVT_AUDIT, {
                     "operation": "LargeReportGeneration",
-                    "data": "Action: %s" % (actionLabel)
+                    "data": "Action: %s Targets:%s" % (actionLabel, self.sidePanel.selectedGroupsList if not self.sidePanel.selectedDevicesList else self.sidePanel.selectedDevicesList)
                 })
                 return self.onSaveBothAll(None, action=actionClientData)
             else:
@@ -1726,6 +1726,10 @@ class NewFrameLayout(wx.Frame):
                             self.setCursorDefault()
                             self.toggleEnabledState(True)
                             return
+                        else:
+                            postEventToFrame(eventUtil.myEVT_AUDIT, {
+                                "operation": "ApplySSIDWhitelist",
+                            })
                         Globals.OPEN_DIALOGS.remove(textDialog2)
                 else:
                     Globals.OPEN_DIALOGS.remove(textDialog)
@@ -3399,6 +3403,11 @@ class NewFrameLayout(wx.Frame):
             reportAction = GeneralActions.GENERATE_APP_REPORT.value
         elif Globals.SCHEDULE_TYPE == "All":
             reportAction = GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
+            "operation": "ScheduledReportGeneration",
+            "data": "Action: %s Targets:All Devices" % (Globals.SCHEDULE_TYPE)
+        })
 
         self.scheduleReportRunning = True
         Globals.THREAD_POOL.enqueue(
