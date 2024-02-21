@@ -1087,23 +1087,12 @@ class NewFrameLayout(wx.Frame):
                 "Authentication credentials were not provided" in res.body
                 or "Invalid or missing credentials" in res.body
             )
+            or (hasattr(res, "status") and res.status >= 300)
         ):
             Globals.IS_TOKEN_VALID = False
             postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 self.promptForNewToken,
-            )
-        else:
-            Globals.IS_TOKEN_VALID = False
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (
-                    displayMessageBox,
-                    (
-                        "Cannot Validate API Token! Please check internet connection and relaunch the application.",
-                        wx.ICON_ERROR,
-                    ),
-                ),
             )
 
         if res and hasattr(res, "user"):
