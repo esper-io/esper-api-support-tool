@@ -62,7 +62,7 @@ class SlackUtils:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": "EAST Usage",
+                    "text": "%sEAST Usage" % (":bug: " if self.debug else ""),
                     "emoji": True
                 }
             },
