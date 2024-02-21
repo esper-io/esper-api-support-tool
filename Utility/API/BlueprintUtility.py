@@ -52,9 +52,9 @@ def checkBlueprintsIsEnabledForTenant(host, header):
     resp = getFeatureFlagsForTenant(host, header)
     if hasattr(resp, "status_code") and resp.status_code < 300:
         jsonResp = resp.json()
-        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"]:
+        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"] is True:
             return True
-        if "esper.cloud.blueprints.v2"  in jsonResp and jsonResp["esper.cloud.blueprints.v2"]:
+        if "esper.cloud.blueprints.v2" in jsonResp and jsonResp["esper.cloud.blueprints.v2"] is True:
             return True
     return enabled
 
