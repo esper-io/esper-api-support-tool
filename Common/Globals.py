@@ -94,7 +94,7 @@ GENERAL_ACTIONS = {
     + "Generate Report "
     + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-    # "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
+    "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
     ("\t" if platform.system() == "Windows" else "")
