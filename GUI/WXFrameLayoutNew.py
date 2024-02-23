@@ -2202,7 +2202,6 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
-        # Globals.THREAD_POOL.enqueue(self.gridPanel.autoSizeGridsColumns)
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False

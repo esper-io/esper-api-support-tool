@@ -291,7 +291,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     if Globals.SHOW_TEMPLATE_DIALOG:
         result = CheckboxMessageBox(
             "Confirmation",
-            "The %s will attempt to clone to template.\nThe following apps are missing: %s\nThe following Content is missing: %s\n\nContinue?"
+            "The %s will attempt to clone to Blueprint.\nThe following apps are missing: %s\nThe following Content is missing: %s\n\nContinue?"
             % (
                 Globals.TITLE,
                 missingApps if missingApps else None,

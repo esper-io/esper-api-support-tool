@@ -188,8 +188,8 @@ def getAllAndroidInstallableApps(tolerance=0):
 @api_tool_decorator()
 def getAllIosInstallableApps(tolerance=0):
     enterprise_apps = getEnterpriseIosApps(tolerance=tolerance)
-    # vppAppsUrl = "https://esperx24-api.esper.cloud/api/apps/v0/vpp/"
-    # vppAppDetailUrl = "https://esperx24-api.esper.cloud/api/v2/itunesapps/?apple_app_id=%s"
+    # vppAppsUrl = "https://{host}-api.esper.cloud/api/apps/v0/vpp/"
+    # vppAppDetailUrl = "https://{host}-api.esper.cloud/api/v2/itunesapps/?apple_app_id=%s"
     return enterprise_apps
 
 @api_tool_decorator()
