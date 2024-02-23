@@ -7,10 +7,8 @@ from itertools import islice
 
 import openpyxl
 import pandas as pd
-import xlsxwriter
 
 import Common.Globals as Globals
-from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -165,7 +163,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                         )  # adding a little extra space
                         worksheet.set_column(idx, idx, max_len)  # set column width
         except Exception as e:
-            ApiToolLog().LogError(e)
+            pass
         finally:
             writer.save()
     else:
