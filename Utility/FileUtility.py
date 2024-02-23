@@ -139,9 +139,9 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         )
         
         sheetNames = []
-        sheetNames.append(sheet)
         try:
             for sheet, df in df_dict.items():
+                sheetNames.append(sheet)
                 df.to_excel(writer, sheet_name=sheet, index=False)
 
             # Auto adjust column width
