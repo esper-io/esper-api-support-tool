@@ -168,7 +168,6 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             ApiToolLogging().LogError(e)
         finally:
             writer.save()
-            writer.close()
     else:
         split_dict_list = list(
             __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
