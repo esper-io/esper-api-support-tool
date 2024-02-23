@@ -133,21 +133,42 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
     if len(df_dict) <= Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
-        workbook = xlsxwriter.Workbook(path, {'constant_memory': True})
+        writer = pd.ExcelWriter(
+            path,
+            engine="xlsxwriter",
+        )
+        
+        sheetNames = []
+        sheetNames.append(sheet)
         try:
             for sheet, df in df_dict.items():
-                worksheet = workbook.add_worksheet(sheet)
-                worksheet.write_row(0, 0, [col for col in df.columns])
+                df.to_excel(writer, sheet_name=sheet, index=False)
 
-                for indx, row in df.iterrows():
-                    worksheet.write_row(indx + 1, 0, [col for col in row])
-
+            # Auto adjust column width
+            for s in sheetNames:
+                worksheet = writer.sheets[s]
                 if hasattr(worksheet, "autofit"):
                     worksheet.autofit()
+                else:
+                    for idx, col in enumerate(df):  # loop through all columns
+                        series = df[col]
+                        max_len = (
+                            max(
+                                (
+                                    series.astype(str)
+                                    .map(len)
+                                    .max(),  # len of largest item
+                                    len(str(series.name)),  # len of column name/header
+                                )
+                            )
+                            + 1
+                        )  # adding a little extra space
+                        worksheet.set_column(idx, idx, max_len)  # set column width
         except Exception as e:
             ApiToolLogging().LogError(e)
         finally:
-            workbook.close()
+            writer.save()
+            writer.close()
     else:
         split_dict_list = list(
             __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
