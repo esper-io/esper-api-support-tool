@@ -194,19 +194,19 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onChar(self, event):
         event.Skip()
-        wx.CallAfter(self.onSearch, event)
 
     @api_tool_decorator()
     def onSearch(self, event=None):
         if event:
             event.Skip()
         queryString = ""
+        searchInput = self.search.GetValue()
         if hasattr(event, "GetString"):
             queryString = event.GetString()
         else:
-            queryString = self.search.GetValue()
-        self.check_list_box_1.Clear()
+            queryString = searchInput
 
+        self.check_list_box_1.Clear()
         if queryString:
             sortedList = list(
                 filter(
@@ -227,6 +227,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
             self.isFiltered = False
+        self.search_queue = ""
 
     @api_tool_decorator()
     def OnListSelection(self, event):
