@@ -44,7 +44,6 @@ class SlackUtils:
                     return
                 self.token = data["token"]
                 self.channel_id = data["channel_id"]
-            ApiToolLog().Log("Token: %s Channel ID: %s" % (self.token, self.channel_id))
         else:
             ApiToolLog().Log("Current CWD: %s" % resourcePath(""))
             ApiToolLog().Log(os.listdir(resourcePath("")))
