@@ -13,6 +13,8 @@ import webbrowser
 import Common.Globals as Globals
 from Utility.Resource import installRequiredModules, isModuleInstalled
 
+curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
+
 
 def updateFileVersionInfo(path="file_version_info.txt"):
     content = []
@@ -91,16 +93,11 @@ def getExecutableCommand(doFirst=True):
                 "--icon",
                 curDirPath + "/Images/icon.ico",
                 "--add-data",
-                curDirPath
-                + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Images"),
                 "--add-data",
-                curDirPath
-                + "/Utility/Logging/token.json%s."
-                % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
                 "--add-data",
-                curDirPath
-                + "/Utility/Logging/slack_details.json%s."
-                % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
                 curDirPath + "/Main.py",
             ]
     else:
@@ -121,26 +118,28 @@ def getExecutableCommand(doFirst=True):
                 "--distpath",
                 dispath,
                 "--add-data",
-                curDirPath
-                + "/Images%sImages/" % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Images"),
                 "--add-data",
-                curDirPath
-                + "/Utility/Logging/token.json%s."
-                % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
                 "--add-data",
-                curDirPath
-                + "/Utility/Logging/slack_details.json%s."
-                % (";" if platform.system() == "Windows" else ":"),
+                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
                 curDirPath + "/Main.py",
             ]
         elif isModuleInstalled("py2app"):
             cmd = [sys.executable, "setup.py", "py2app"]
     return cmd
 
+def getPyInstallerFilePathStr(path):
+    delimiter = ";" if platform.system() == "Windows" else ":"
+    completePath = curDirPath + path
+    if os.path.isdir(completePath):
+        return completePath + delimiter + path[1:]
+    else:
+        return completePath + "%s." % (delimiter)
+
 
 if __name__ == "__main__":
     Globals.THREAD_POOL.abort()
-    curDirPath = str(pathlib.Path().absolute()).replace("\\", "/")
     dispath = curDirPath + "/output"
     app_name = obtainAppName()
 

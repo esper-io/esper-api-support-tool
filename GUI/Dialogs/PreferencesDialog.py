@@ -1136,7 +1136,9 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
 
         for key in self.prefKeys:
-            self.prefs[key] = self.getDefaultKeyValue(key)
+            defaultVal = self.getDefaultKeyValue(key)
+            if key not in self.prefs or self.prefs[key] is None:
+                self.prefs[key] = defaultVal
 
         return self.prefs
 

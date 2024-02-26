@@ -66,7 +66,8 @@ class AuditPosting:
                         values["resp"] if "resp" in values else ""
                     )
                 )
-            except:
+            except Exception as e:
+                ApiToolLog().LogError(e)
                 if "resp" in values:
                     self.emailOperation(values["operation"], values["data"], values["resp"])
                 else:

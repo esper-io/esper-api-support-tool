@@ -3495,4 +3495,5 @@ class NewFrameLayout(wx.Frame):
 
             if res == wx.ID_YES:
                 self.prefDialog.appFilterDlg(None)
+            self.prefDialog.prefs["showAppFilter"] = Globals.SHOW_APP_FILTER_DIALOG
             self.savePrefs(self.prefDialog)
