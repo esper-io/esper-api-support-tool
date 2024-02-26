@@ -1062,7 +1062,7 @@ class PreferencesDialog(wx.Dialog):
                 self.reportType.SetSelection(indx)
             else:
                 self.reportType.SetSelection(self.prefs["scheduleReportType"])
-            Globals.SCHEDULE_TYPE = self.reportType.GetValue().lower()
+            Globals.SCHEDULE_TYPE = self.reportType.GetValue()
 
         if "scheduleInterval" in self.prefs and self.prefs["scheduleInterval"]:
             try:
@@ -1136,8 +1136,7 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
 
         for key in self.prefKeys:
-            if key not in self.prefs.keys() or self.prefs[key] is None:
-                self.prefs[key] = self.getDefaultKeyValue(key)
+            self.prefs[key] = self.getDefaultKeyValue(key)
 
         return self.prefs
 

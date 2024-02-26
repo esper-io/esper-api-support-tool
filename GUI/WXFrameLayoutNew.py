@@ -3495,5 +3495,4 @@ class NewFrameLayout(wx.Frame):
 
             if res == wx.ID_YES:
                 self.prefDialog.appFilterDlg(None)
-                self.prefDialog.OnApply(None)
-                self.savePrefs(self.prefDialog)
+            self.savePrefs(self.prefDialog)
