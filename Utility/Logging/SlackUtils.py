@@ -108,7 +108,10 @@ class SlackUtils:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Date:* %s" % datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S")
+                    "text": "*Date:* %s\t\t\tEAST Version:%s" % (
+                        datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S"),
+                        Globals.VERSION
+                    )
                 }
             },
             {
