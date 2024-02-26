@@ -1727,6 +1727,7 @@ class NewFrameLayout(wx.Frame):
                         else:
                             postEventToFrame(eventUtil.myEVT_AUDIT, {
                                 "operation": "ApplySSIDWhitelist",
+                                "data": Globals.WHITELIST_AP
                             })
                         Globals.OPEN_DIALOGS.remove(textDialog2)
                 else:
