@@ -28,7 +28,6 @@ from GUI.ConfigureWidget import WidgetPicker
 from GUI.consoleWindow import Console
 from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
-from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
@@ -75,7 +74,7 @@ from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
                                  read_excel_via_openpyxl, read_json_file,
                                  save_csv_pandas, save_excel_pandas_xlxswriter,
                                  write_data_to_csv, write_json_file)
-from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
+from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkEsperInternetConnection,
@@ -227,7 +226,6 @@ class NewFrameLayout(wx.Frame):
         if self.kill:
             return
 
-        self.menubar.checkCollectionEnabled()
         self.internetCheck = wxThread.GUIThread(
             self, checkForInternetAccess, (self), name="InternetCheck"
         )
@@ -2629,12 +2627,9 @@ class NewFrameLayout(wx.Frame):
             determineDoHereorMainThread(self.menubar.EnableTop, option, state)
         determineDoHereorMainThread(self.menubar.fileOpenConfig.Enable, state)
         determineDoHereorMainThread(self.menubar.pref.Enable, state)
-        determineDoHereorMainThread(self.menubar.collection.Enable, state)
-        determineDoHereorMainThread(self.menubar.eqlQuery.Enable, state)
         determineDoHereorMainThread(self.menubar.run.Enable, state)
         determineDoHereorMainThread(self.menubar.installedDevices.Enable, state)
         determineDoHereorMainThread(self.menubar.command.Enable, state)
-        determineDoHereorMainThread(self.menubar.collectionSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.setSaveMenuOptionsEnableState, state)
 
@@ -2756,15 +2751,6 @@ class NewFrameLayout(wx.Frame):
             self.isRunning = False
             self.setCursorDefault()
             self.toggleEnabledState(True)
-
-    @api_tool_decorator()
-    def createGroup(self, event):
-        if not self.groupManage:
-            self.groupManage = GroupManagement(self.groups)
-        with self.groupManage as manage:
-            Globals.OPEN_DIALOGS.append(manage)
-            manage.ShowModal()
-            Globals.OPEN_DIALOGS.remove(manage)
 
     @api_tool_decorator()
     def installApp(self, event):
@@ -2911,18 +2897,6 @@ class NewFrameLayout(wx.Frame):
                     Globals.THREAD_POOL.join()
         if event:
             event.Skip()
-
-    @api_tool_decorator()
-    def onBulkFactoryReset(self, event):
-        with BulkFactoryReset() as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            res = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-
-            if res == wx.ID_OK:
-                self.statusBar.gauge.Pulse()
-                ids = dlg.getIdentifiers()
-                bulkFactoryReset(ids)
 
     @api_tool_decorator()
     def onGeofence(self, event):

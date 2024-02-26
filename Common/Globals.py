@@ -101,13 +101,13 @@ GENERAL_ACTIONS = {
     + "* " * NUM_STARS
     + "General Actions "
     + "* " * NUM_STARS: -1,
-    "Action -> Set Device Mode": 1.5,
-    "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
-    "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
+    # "Action -> Set Device Mode": 1.5,
+    # "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
+    # "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
-    "Action -> Install App": GeneralActions.INSTALL_APP.value,
-    "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
+    # "Action -> Install App": GeneralActions.INSTALL_APP.value,
+    # "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {
@@ -117,10 +117,10 @@ GRID_ACTIONS = {
     + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
     "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
-    "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
+    # "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
-    "Action -> Install Selected App": GridActions.INSTALL_APP.value,
-    "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
+    # "Action -> Install Selected App": GridActions.INSTALL_APP.value,
+    # "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
     # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
 }
 
