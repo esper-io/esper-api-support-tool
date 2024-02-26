@@ -53,7 +53,7 @@ class GridTable(gridlib.Grid):
                 elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
                     data[col] = data[col].astype("int64")
                 else:
-                    data[col] = data[col].astype("string")
+                    data[col] = data[col].astype("str")
         return data
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
