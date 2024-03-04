@@ -6,19 +6,15 @@ import time
 
 import esperclient
 import wx
+from esperclient.models.v0_command_args import V0CommandArgs
 
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-    splitListIntoChunks,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
+                              postEventToFrame, splitListIntoChunks)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -498,3 +494,14 @@ def postEsperCommand(command_data, useV0=True):
     except Exception as e:
         ApiToolLog().LogError(e, postIssue=False)
     return resp, json_resp
+
+
+@api_tool_decorator()
+def sendPowerDownCommand():
+    """ Send a Power Down Command to the selected Devices """
+    command_args = V0CommandArgs(
+        custom_settings_config={
+            "dpcParams": [{"key": "powerOff", "value": "true"}]
+        }
+    )
+    createCommand(Globals.frame, command_args, "UPDATE_DEVICE_CONFIG", None, "immediate")

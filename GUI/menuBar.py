@@ -85,6 +85,8 @@ class ToolMenuBar(wx.MenuBar):
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
+        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices")
+        self.powerDown = runMenu.Append(powerDownItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.cloneSubMenu = wx.Menu()
@@ -280,6 +282,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
         )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onPowerDown, self.powerDown)
 
     @api_tool_decorator()
     def onAbout(self, event):

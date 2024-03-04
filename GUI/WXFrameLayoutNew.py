@@ -54,7 +54,7 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
                                           prepareBlueprintClone,
                                           prepareBlueprintConversion,
                                           pushBlueprintUpdate)
-from Utility.API.CommandUtility import createCommand
+from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
                                        setKiosk, setMulti,
@@ -1979,6 +1979,20 @@ class NewFrameLayout(wx.Frame):
                 )
 
             self.setCursorDefault()
+
+    def onPowerDown(self, event):
+        self.setCursorBusy()
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            sendPowerDownCommand()
+        else:
+            displayMessageBox(
+                ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
+            )
+
+            self.setCursorDefault()
+
 
     @api_tool_decorator()
     def onCommandDone(self, event):
