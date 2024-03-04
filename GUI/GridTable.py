@@ -37,7 +37,7 @@ class GridTable(gridlib.Grid):
     def createEmptyDataFrame(self):
         df = pd.DataFrame(columns=self.headersLabels)
         for col in self.headersLabels:
-            df[col] = df[col].astype("string")
+            df[col] = df[col].astype("str")
         df.index = pd.RangeIndex(start=0, stop=len(df.index) * 1 - 1, step=1)
         return df
 

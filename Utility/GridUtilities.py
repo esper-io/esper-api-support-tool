@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas.api.types import is_bool_dtype, is_string_dtype
 from pandas.testing import assert_frame_equal
 
 import Common.Globals as Globals
@@ -58,7 +59,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 deviceInfo["AppsEntry"].append(info)
 
 
-def createDataFrameFromDict(headerList, sourceData):
+def createDataFrameFromDict(headerList, sourceData, convertTypes=False):
     newData = {}
     for header in headerList:
         newData[header] = []
@@ -80,7 +81,10 @@ def createDataFrameFromDict(headerList, sourceData):
                 if header in row:
                     value = row[header]
                 newData[header].append(value)
-    return pd.DataFrame(newData)
+    df = pd.DataFrame(newData)
+    if convertTypes:
+        df = convertColumnTypes(df, headerList)
+    return df
 
 
 def areDataFramesTheSame(df1, df2):
@@ -97,3 +101,18 @@ def split_dataframe(df, chunk_size):
     for i in range(num_chunks):
         chunks.append(df[i * chunk_size : (i + 1) * chunk_size])
     return chunks
+
+def convertColumnTypes(data, headers):
+    for col in headers:
+        if len(data[col]) > 0:
+            if col in Globals.DATE_COL:
+                data[col] = pd.to_datetime(data[col], exact=False, errors="coerce")
+                data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
+                data[col].fillna("No Data Available", inplace=True)
+            elif is_bool_dtype(data[col]):
+                data[col] = data[col].astype("bool")
+            elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
+                data[col] = data[col].astype("int64")
+            else:
+                data[col] = data[col].astype("str")
+    return data

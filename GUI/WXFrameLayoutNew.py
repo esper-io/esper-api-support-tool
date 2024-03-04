@@ -557,14 +557,14 @@ class NewFrameLayout(wx.Frame):
             or action == GeneralActions.GENERATE_INFO_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         ):
-            df = createDataFrameFromDict(Globals.CSV_TAG_ATTR_NAME, deviceList.values())
+            df = createDataFrameFromDict(Globals.CSV_TAG_ATTR_NAME, deviceList.values(), True)
             self.gridPanel.device_grid_contents = df
         if (
             action == GeneralActions.GENERATE_INFO_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         ):
             df = createDataFrameFromDict(
-                Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
+                Globals.CSV_NETWORK_ATTR_NAME, deviceList.values(), True
             )
             self.gridPanel.network_grid_contents = df
         if (
@@ -579,7 +579,7 @@ class NewFrameLayout(wx.Frame):
                     (int(num / len(deviceList.values())) * 35) + 50,
                 )
                 num += 1
-            df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+            df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input, True)
             self.gridPanel.app_grid_contents = df
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
