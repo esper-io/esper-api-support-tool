@@ -296,7 +296,7 @@ class GridPanel(wx.Panel):
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
         acquireLocks([Globals.grid1_lock])
-        statusIndex = self.grid1HeaderLabels.index("Status")
+        seenIndex = self.grid1HeaderLabels.index("Last Seen") if "Last Seen" in self.grid1HeaderLabels else -1
         deviceName = ""
         if device:
             deviceName = (
@@ -317,7 +317,7 @@ class GridPanel(wx.Panel):
                     for colNum in range(self.device_grid.GetNumberCols()):
                         if (
                             colNum < self.device_grid.GetNumberCols()
-                            and colNum != statusIndex
+                            and colNum != seenIndex
                         ):
                             self.device_grid.SetCellTextColour(rowNum, colNum, color)
                             if bgColor:
