@@ -693,7 +693,7 @@ class CommandDialog(wx.Dialog):
             schedule_args = V0CommandScheduleArgs(
                 name=scheduleConfig["name"]
                 if "name" in scheduleConfig
-                else "Task_%s" % random.randint(0, Globals.MAX_LIMIT),
+                else "Task %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 start_datetime=scheduleConfig["start_datetime"]
                 if "start_datetime" in scheduleConfig
                 else None,
