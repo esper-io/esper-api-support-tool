@@ -54,8 +54,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         config = parent.sidePanel.configChoice[parent.configMenuItem.GetItemLabelText()]
         if "isBlueprintsEnabled" in config:
             self.blueprintEnabled = config["isBlueprintsEnabled"]
-            self.allDeviceStr = "(All devices)"
-            choices.insert(0, self.allDeviceStr)
+            self.allDeviceStr = ""
         if not self.blueprintEnabled:
             for choice in choices:
                 groupName = choice.split(" (Device Count:")[0]

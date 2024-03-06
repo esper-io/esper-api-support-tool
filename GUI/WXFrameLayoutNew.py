@@ -1625,8 +1625,6 @@ class NewFrameLayout(wx.Frame):
         estimatedDeviceCount = len(self.sidePanel.selectedDevicesList)
         if not self.sidePanel.selectedDevicesList:
             for group in self.sidePanel.selectedGroupsList:
-                if group == "(All devices)":
-                    estimatedDeviceCount = Globals.MAX_DEVICE_COUNT + 1
                 match = list(filter(lambda x: x["id"] == group, self.groups))
                 if match:
                     match = match[0]
