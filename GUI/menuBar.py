@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+import atexit
+import os
 import platform
+import shutil
+import sys
 
 import wx
 import wx.adv as adv
@@ -365,10 +369,10 @@ class ToolMenuBar(wx.MenuBar):
         dlg = wx.MessageBox(
             "Update found! Do you want to update?",
             "Update",
-            wx.YES_NO | wx.ICON_QUESTION,
+            wx.OK | wx.ICON_QUESTION,
             parent=Globals.frame,
         )
-        if dlg == wx.YES:
+        if dlg == wx.ID_OK or dlg == wx.OK:
             self.parentFrame.statusBar.gauge.Pulse()
             thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
             thread.startWithRetry()
@@ -397,12 +401,37 @@ class ToolMenuBar(wx.MenuBar):
             )
             if result:
                 openWebLinkInBrowser(result, isfile=True)
+                atexit.register(lambda file = __file__: self.deleteFile(file))
                 Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
             )
         self.isCheckingForUpdates = False
+
+    def deleteFile(self, file_path):
+        application_path = ""
+        if getattr(sys, 'frozen', False):
+            # If the application is run as a bundle, the PyInstaller bootloader
+            # extends the sys module by a flag frozen=True and sets the app 
+            # path into variable _MEIPASS'.
+            application_path = os.path.dirname(sys.executable)
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+
+        files = os.listdir(application_path)
+        try:
+            version = Globals.VERSION.replace(".", "-")
+            extention = "exe" if platform.system() == "Windows" else "app"
+            versionExtention = "%s_EsperApiSupportTool.%s" % (version, extention)
+            for file in files:
+                ApiToolLog().Log(file)
+                if file.endswith(".exe") and file.endswith(versionExtention):
+                    exe_path = os.path.join(application_path, file)
+                    shutil.rmtree(exe_path, ignore_errors=True)
+                    break
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def uncheckConsole(self, event):
