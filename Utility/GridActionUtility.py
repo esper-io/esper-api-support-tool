@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import time
-
-import esperclient
-
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
@@ -13,12 +9,8 @@ from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    isApiKey,
-    postEventToFrame,
-    splitListIntoChunks,
-)
+from Utility.Resource import (enforceRateLimit, isApiKey, postEventToFrame,
+                              splitListIntoChunks)
 from Utility.Threading import wxThread
 
 
@@ -59,7 +51,7 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
         aliasList = frame.gridPanel.getDeviceAliasFromList()
         if aliasList:
             maxGaugeAction = len(aliasList)
-    frame.statusBar.gauge.SetValue(1)
+    postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 1)
 
     postEventToFrame(
         eventUtil.myEVT_AUDIT,
@@ -359,7 +351,11 @@ def setAllAppsState(device, state):
     else:
         deviceName = device
         deviceId = device
-    _, resp = apiCalls.getdeviceapps(deviceId, False, Globals.USE_ENTERPRISE_APP)
+    resp = None
+    if device.get("os") is not None and device.get("os").lower() == "android":
+        _, resp = apiCalls.getAndroidDeviceApps(deviceId, False, Globals.USE_ENTERPRISE_APP)
+    else:
+        _, resp = apiCalls.getIosDeviceApps(deviceId, createAppListArg=False)
     if resp and "results" in resp:
         for app in resp["results"]:
             stateStatus = None
@@ -660,55 +656,6 @@ def uninstallApp(frame):
         wxThread.waitTillThreadsFinish,
         Globals.THREAD_POOL.threads,
         GridActions.UNINSTALL_APP.value,
-        -1,
-        5,
-        tolerance=1,
-    )
-
-
-def processBulkFactoryReset(devices, numDevices, processed):
-    status = []
-    postEventToFrame(
-        eventUtil.myEVT_AUDIT,
-        {
-            "operation": "WIPE",
-            "data": devices,
-        },
-    )
-    for device in devices:
-        deviceId = None
-        if hasattr(device, "device_name"):
-            deviceId = deviceId
-        else:
-            deviceId = device["id"]
-        if deviceId:
-            resp = apiCalls.factoryResetDevice(deviceId)
-            status.append(resp)
-            processed.append(device)
-        value = int(len(processed) / numDevices * 100)
-        postEventToFrame(
-            eventUtil.myEVT_UPDATE_GAUGE,
-            value,
-        )
-    return status
-
-
-def bulkFactoryReset(identifers):
-    devices = getDevicesFromGrid(deviceIdentifers=identifers, tolerance=1)
-
-    splitResults = splitListIntoChunks(devices)
-    numDevices = len(devices)
-    processed = []
-
-    for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(
-            processBulkFactoryReset, chunk, numDevices, processed
-        )
-
-    Globals.THREAD_POOL.enqueue(
-        wxThread.waitTillThreadsFinish,
-        Globals.THREAD_POOL.threads,
-        GridActions.FACTORY_RESET.value,
         -1,
         5,
         tolerance=1,

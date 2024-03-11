@@ -7,12 +7,8 @@ import requests
 import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    enforceRateLimit,
-    getHeader,
-    postEventToFrame,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, enforceRateLimit,
+                              getHeader, postEventToFrame)
 
 
 def performGetRequestWithRetry(
@@ -302,6 +298,8 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
     Globals.THREAD_POOL.join(tolarance, timeout)
     resultList = Globals.THREAD_POOL.results()
     for resp in resultList:
+        if "content" in resp:
+            resp = resp["content"]
         if resp and hasattr(resp, "results") and resp.results:
             results += resp.results
         elif type(resp) is dict and "results" in resp and resp["results"]:

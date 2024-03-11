@@ -12,10 +12,14 @@ class GridDataTable(wx.grid.GridTableBase):
         self.data = data
 
     def GetNumberRows(self):
-        return len(self.data)
+        if hasattr(self, "data"):
+            return len(self.data)
+        return 0
 
     def GetNumberCols(self):
-        return len(self.data.columns)
+        if hasattr(self, "data"):
+            return len(self.data.columns)
+        return 0
 
     def GetValue(self, row, col):
         if hasattr(self, "data"):
@@ -23,10 +27,13 @@ class GridDataTable(wx.grid.GridTableBase):
         return ""
 
     def SetValue(self, row, col, value):
-        self.data.iloc[row, col] = value
+        if hasattr(self, "data"):
+            self.data.iloc[row, col] = value
 
     def GetColLabelValue(self, col):
-        return str(self.data.columns[col])
+        if hasattr(self, "data"):
+            return str(self.data.columns[col])
+        return ""
 
     def GetTypeName(self, row, col):
         return wx.grid.GRID_VALUE_STRING

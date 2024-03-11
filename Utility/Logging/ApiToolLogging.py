@@ -15,9 +15,8 @@ from fuzzywuzzy import fuzz
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
-from Utility.FileUtility import write_content_to_file
+from Utility.FileUtility import getToolDataPath, write_content_to_file
 from Utility.Logging.IssueTracker import IssueTracker
-from Utility.FileUtility import getToolDataPath
 
 
 class ApiToolLog:
@@ -61,6 +60,9 @@ class ApiToolLog:
         if exc_type is None or exc_value is None or exc_traceback is None:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             exc_traceback = format_list(extract_tb(exc_traceback))
+
+            if not exc_traceback:
+                exc_traceback = traceback.format_exc()
 
         self.limitLogFileSizes()
         content = [
@@ -233,6 +235,7 @@ class ApiToolLog:
             or "HTTP" in str(excpt)
             or "Failed to load configuration" in str(excpt)
             or "Read-only file system" in str(excpt)
+            or "ApiException" in str(excpt)
             or type(excpt) is ApiException
         ):
             return

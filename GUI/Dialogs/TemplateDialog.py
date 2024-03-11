@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import json
+import platform
+import threading
 
 import wx
 import wx.html as wxHtml
@@ -8,7 +10,8 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
-from Utility.Resource import getStrRatioSimilarity, openWebLinkInBrowser
+from Utility.Resource import (determineDoHereorMainThread,
+                              getStrRatioSimilarity, openWebLinkInBrowser)
 
 
 class TemplateDialog(wx.Dialog):
@@ -223,6 +226,9 @@ class TemplateDialog(wx.Dialog):
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.populateSourceTempaltes, srcName)
+            return
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
             for template in self.sourceTemplate:
@@ -241,6 +247,9 @@ class TemplateDialog(wx.Dialog):
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
+        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+            determineDoHereorMainThread(self.fetchDestTempaltes, destName)
+            return
         if destName:
             self.destTemplate = self.getTemplates(self.configMenuOpt[destName])
         self.checkInputValues()

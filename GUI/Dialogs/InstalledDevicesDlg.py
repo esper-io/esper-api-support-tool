@@ -32,7 +32,8 @@ class InstalledDevicesDlg(wx.Dialog):
         self.selectedVersion = None
         self.apps = apps
         for app in self.apps:
-            self.appNameList.append(app["appPkgName"])
+            if "is_ios" in app and not app["is_ios"]:
+                self.appNameList.append(app["appPkgName"])
         self.versions = []
         self.showAllVersionsOption = showAllVersionsOption
 
@@ -102,7 +103,7 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
             grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
 
-            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "App Versions:")
+            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Available App Versions:")
             label_2.SetFont(
                 wx.Font(
                     Globals.FONT_SIZE,

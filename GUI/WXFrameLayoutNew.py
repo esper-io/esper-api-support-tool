@@ -7,36 +7,20 @@ import platform
 import sys
 import threading
 import time
+from datetime import datetime
+from pathlib import Path
+
 import pandas as pd
 import wx
 import wx.adv as wxadv
-
-from datetime import datetime
-from pathlib import Path
 from wx.core import TextEntryDialog
 
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 import GUI.EnhancedStatusBar as ESB
 import Utility.API.EsperTemplateUtil as templateUtil
-from Utility.API.WidgetUtility import setWidget
-from Utility.API.AuditPosting import AuditPosting
 import Utility.EventUtility as eventUtil
-from Utility.FileUtility import (
-    getToolDataPath,
-    read_csv_via_pandas,
-    read_data_from_csv,
-    read_data_from_csv_as_dict,
-    read_excel_via_openpyxl,
-    read_json_file,
-    save_csv_pandas,
-    save_excel_pandas_xlxswriter,
-    write_data_to_csv,
-    write_json_file,
-)
-from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 import Utility.Threading.wxThread as wxThread
-
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, GeneralActions, GridActions
 from Common.SleepInhibitor import SleepInhibitor
@@ -44,7 +28,6 @@ from GUI.ConfigureWidget import WidgetPicker
 from GUI.consoleWindow import Console
 from GUI.Dialogs.BlueprintsConvertDialog import BlueprintsConvertDialog
 from GUI.Dialogs.BlueprintsDialog import BlueprintsDialog
-from GUI.Dialogs.BulkFactoryReset import BulkFactoryReset
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
@@ -61,64 +44,47 @@ from GUI.gridPanel import GridPanel
 from GUI.menuBar import ToolMenuBar
 from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
-
-from Utility.API.AppUtilities import (
-    getAllInstallableApps,
-    getAppDictEntry,
-    installAppOnDevices,
-    installAppOnGroups,
-    uninstallAppOnDevice,
-    uninstallAppOnGroup,
-)
-from Utility.API.BlueprintUtility import (
-    checkBlueprintEnabled,
-    getAllBlueprints,
-    modifyAppsInBlueprints,
-    prepareBlueprintClone,
-    prepareBlueprintConversion,
-    pushBlueprintUpdate,
-)
-from Utility.API.CommandUtility import createCommand
+from Utility.API.AppUtilities import (getAllInstallableApps, getAppDictEntry,
+                                      installAppOnDevices, installAppOnGroups,
+                                      uninstallAppOnDevice,
+                                      uninstallAppOnGroup)
+from Utility.API.AuditPosting import AuditPosting
+from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
+                                          modifyAppsInBlueprints,
+                                          prepareBlueprintClone,
+                                          prepareBlueprintConversion,
+                                          pushBlueprintUpdate)
+from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import (
-    clearAppData,
-    getTokenInfo,
-    setAppState,
-    setKiosk,
-    setMulti,
-    validateConfiguration,
-)
+from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
+                                       setKiosk, setMulti,
+                                       validateConfiguration)
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import getAllPendingUsers, getAllUsers, getSpecificUser
+from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
+                                     getSpecificUser)
+from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (
-    TakeAction,
-    clearKnownGroups,
-    fetchInstalledDevices,
-    filterDeviceList,
-    getAllDeviceInfo,
-    removeNonWhitelisted,
-    uploadAppToEndpoint,
-)
-from Utility.GridActionUtility import bulkFactoryReset, iterateThroughGridRows
+from Utility.EastUtility import (TakeAction, clearKnownGroupsAndBlueprints,
+                                 fetchInstalledDevices, filterDeviceList,
+                                 getAllDeviceInfo, removeNonWhitelisted,
+                                 uploadAppToEndpoint)
+from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
+                                 read_data_from_csv,
+                                 read_data_from_csv_as_dict,
+                                 read_excel_via_openpyxl, read_json_file,
+                                 save_csv_pandas, save_excel_pandas_xlxswriter,
+                                 write_data_to_csv, write_json_file)
+from Utility.GridActionUtility import iterateThroughGridRows
+from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkEsperInternetConnection,
-    checkForInternetAccess,
-    checkIfCurrentThreadStopped,
-    correctSaveFileName,
-    createNewFile,
-    determineDoHereorMainThread,
-    displayMessageBox,
-    displayFileDialog,
-    joinThreadList,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    processFunc,
-    resourcePath,
-    splitListIntoChunks,
-    updateErrorTracker,
-)
+from Utility.Resource import (checkEsperInternetConnection,
+                              checkForInternetAccess,
+                              checkIfCurrentThreadStopped, correctSaveFileName,
+                              createNewFile, determineDoHereorMainThread,
+                              displayFileDialog, displayMessageBox,
+                              joinThreadList, openWebLinkInBrowser,
+                              postEventToFrame, processFunc, resourcePath,
+                              splitListIntoChunks, updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -231,7 +197,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
         self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
-        self.Bind(eventUtil.EVT_UPDATE_GRID_CONTENT, self.gridPanel.updateGridContent)
         self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
@@ -261,7 +226,6 @@ class NewFrameLayout(wx.Frame):
         if self.kill:
             return
 
-        self.menubar.checkCollectionEnabled()
         self.internetCheck = wxThread.GUIThread(
             self, checkForInternetAccess, (self), name="InternetCheck"
         )
@@ -463,11 +427,14 @@ class NewFrameLayout(wx.Frame):
                 for auth in self.auth_data:
                     authEntry = []
                     indx = 0
-                    for val in auth.values():
-                        if indx > len(tmp[0]):
-                            break
-                        authEntry.append(val)
-                        indx += 1
+                    if isinstance(auth, dict):
+                        for val in auth.values():
+                            if indx > len(tmp[0]):
+                                break
+                            authEntry.append(val)
+                            indx += 1
+                    else:
+                        authEntry = auth
                     if authEntry not in tmp:
                         tmp.append(authEntry)
                 write_data_to_csv(self.authPath, tmp)
@@ -590,14 +557,14 @@ class NewFrameLayout(wx.Frame):
             or action == GeneralActions.GENERATE_INFO_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         ):
-            df = createDataFrameFromDict(Globals.CSV_TAG_ATTR_NAME, deviceList.values())
+            df = createDataFrameFromDict(Globals.CSV_TAG_ATTR_NAME, deviceList.values(), True)
             self.gridPanel.device_grid_contents = df
         if (
             action == GeneralActions.GENERATE_INFO_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
         ):
             df = createDataFrameFromDict(
-                Globals.CSV_NETWORK_ATTR_NAME, deviceList.values()
+                Globals.CSV_NETWORK_ATTR_NAME, deviceList.values(), True
             )
             self.gridPanel.network_grid_contents = df
         if (
@@ -612,7 +579,7 @@ class NewFrameLayout(wx.Frame):
                     (int(num / len(deviceList.values())) * 35) + 50,
                 )
                 num += 1
-            df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
+            df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input, True)
             self.gridPanel.app_grid_contents = df
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
 
@@ -715,6 +682,7 @@ class NewFrameLayout(wx.Frame):
                     and action == GeneralActions.GENERATE_APP_REPORT.value
                     or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 )
+                and appData is not None
                 and len(appData) > 0
             ):
                 df_dict = self.subdivideSheetData("Application", appData, df_dict)
@@ -953,7 +921,7 @@ class NewFrameLayout(wx.Frame):
         if not self.firstRun:
             Globals.THREAD_POOL.clearQueue()
         self.onClearGrids()
-        clearKnownGroups()
+        clearKnownGroupsAndBlueprints()
         try:
             if self.groupManage:
                 self.groupManage.Destroy()
@@ -1116,23 +1084,12 @@ class NewFrameLayout(wx.Frame):
                 "Authentication credentials were not provided" in res.body
                 or "Invalid or missing credentials" in res.body
             )
+            or (hasattr(res, "status") and res.status >= 300)
         ):
             Globals.IS_TOKEN_VALID = False
             postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
                 self.promptForNewToken,
-            )
-        else:
-            Globals.IS_TOKEN_VALID = False
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                (
-                    displayMessageBox,
-                    (
-                        "Cannot Validate API Token! Please check internet connection and relaunch the application.",
-                        wx.ICON_ERROR,
-                    ),
-                ),
             )
 
         if res and hasattr(res, "user"):
@@ -1330,6 +1287,22 @@ class NewFrameLayout(wx.Frame):
         thread.startWithRetry()
         self.previousGroupFetchThread = thread
         return thread
+    
+    @api_tool_decorator()
+    def PopulateBlueprints(self):
+        self.Logging("--->Attempting to fetch blueprints...")
+        self.setCursorBusy()
+        thread = wxThread.GUIThread(
+            self, self.fetchAllInstallableApps, None, name="PopulateBlueprints"
+        )
+        thread.startWithRetry()
+        return thread
+
+    def fetchAllKnownBlueprints(self):
+        resp = getAllBlueprints()
+        for item in resp["results"]:
+            Globals.knownBlueprints[item["id"]] = item
+
 
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
@@ -1457,7 +1430,7 @@ class NewFrameLayout(wx.Frame):
                     )
                 api_response["results"] = sorted(
                     api_response["results"],
-                    key=lambda i: i["device_name"].lower(),
+                    key=lambda i: i["device_name"].lower() if "device_name" in i else i["name"].lower(),
                 )
                 splitResults = splitListIntoChunks(api_response["results"])
 
@@ -1472,17 +1445,24 @@ class NewFrameLayout(wx.Frame):
             name = ""
             if hasattr(device, "hardware_info"):
                 name = "%s ~ %s ~ %s %s" % (
-                    device.hardware_info["manufacturer"],
-                    device.hardware_info["model"],
+                    device.hardware_info["manufacturer"] if "manufacturer" in device.hardware_info else "",
+                    device.hardware_info["model"] if "model" in device.hardware_info else "",
                     device.device_name,
                     "~ %s" % device.alias_name if device.alias_name else "",
                 )
-            else:
+            elif "hardwareInfo" in device:
                 name = "%s ~ %s ~ %s %s" % (
-                    device["hardwareInfo"]["manufacturer"],
-                    device["hardwareInfo"]["model"],
+                    device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else "",
+                    device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else "",
                     device["device_name"],
                     "~ %s" % device["alias_name"] if device["alias_name"] else "",
+                )
+            elif "hardware_info" in device:
+                name = "%s ~ %s ~ %s %s" % (
+                    device["hardware_info"]["brand"] if "brand" in device["hardware_info"] else "",
+                    device["hardware_info"]["model"] if "model" in device["hardware_info"] else "",
+                    device["name"],
+                    "~ %s" % device["alias"] if device["alias"] else "",
                 )
             if name and name not in self.sidePanel.devices:
                 if hasattr(device, "id"):
@@ -1557,7 +1537,7 @@ class NewFrameLayout(wx.Frame):
         elif results and type(results[0]) == dict and "application_name" in results[0]:
             results = sorted(
                 results,
-                key=lambda i: i["application_name"].lower(),
+                key=lambda i: i["application_name"].lower() if "application_name" in i else i["app_name"].lower(),
             )
         elif results:
             results = sorted(
@@ -1673,6 +1653,7 @@ class NewFrameLayout(wx.Frame):
                                 match
                             ]
 
+
         if (
             actionClientData < GeneralActions.GENERATE_APP_REPORT.value
             and estimatedDeviceCount > Globals.MAX_DEVICE_COUNT
@@ -1683,6 +1664,18 @@ class NewFrameLayout(wx.Frame):
             )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
         ):
+            if (
+                (
+                    Globals.APPS_IN_DEVICE_GRID 
+                    and actionClientData == GeneralActions.GENERATE_DEVICE_REPORT.value
+                )
+                or (
+                    actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value 
+                )
+            ):
+                self.displayAppFilterPrompt()
+
             res = displayMessageBox(
                 (
                     "Looks like you are generating a report for a large subset of devices.\nThe report will be directly save to a file.",
@@ -1691,6 +1684,10 @@ class NewFrameLayout(wx.Frame):
             )
             if res == wx.OK:
                 self.onClearGrids()
+                postEventToFrame(eventUtil.myEVT_AUDIT, {
+                    "operation": "LargeReportGeneration",
+                    "data": "Action: %s Targets:%s" % (actionLabel, self.sidePanel.selectedGroupsList if not self.sidePanel.selectedDevicesList else self.sidePanel.selectedDevicesList)
+                })
                 return self.onSaveBothAll(None, action=actionClientData)
             else:
                 return
@@ -1725,6 +1722,11 @@ class NewFrameLayout(wx.Frame):
                             self.setCursorDefault()
                             self.toggleEnabledState(True)
                             return
+                        else:
+                            postEventToFrame(eventUtil.myEVT_AUDIT, {
+                                "operation": "ApplySSIDWhitelist",
+                                "data": Globals.WHITELIST_AP
+                            })
                         Globals.OPEN_DIALOGS.remove(textDialog2)
                 else:
                     Globals.OPEN_DIALOGS.remove(textDialog)
@@ -1769,7 +1771,6 @@ class NewFrameLayout(wx.Frame):
                 return
         if (
             self.sidePanel.selectedGroupsList
-            and (not self.sidePanel.selectedDevicesList or allDevicesSelected)
             and actionSelection > 0
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS.value
@@ -1780,51 +1781,57 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
 
-            groupLabel = ""
-            for groupId in self.sidePanel.selectedGroupsList:
-                groupLabel = list(self.sidePanel.groups.keys())[
-                    list(self.sidePanel.groups.values()).index(groupId)
-                ]
-                self.Logging(
-                    '---> Attempting to run action, "%s", on group, %s.'
-                    % (actionLabel, groupLabel)
+            postEventToFrame(eventUtil.myEVT_AUDIT, {
+                    "operation": "ReportGeneration",
+                    "data": "Action: %s" % (actionLabel)
+                })
+
+            if (
+                (
+                    Globals.APPS_IN_DEVICE_GRID 
+                    and actionClientData <= GeneralActions.GENERATE_APP_REPORT.value
                 )
-            self.statusBar.gauge.Pulse()
-            Globals.THREAD_POOL.enqueue(
-                TakeAction, self, self.sidePanel.selectedGroupsList, actionClientData
-            )
-        elif (
-            self.sidePanel.selectedDevicesList
-            and actionSelection > 0
-            and actionClientData > 0
-            and actionClientData < GridActions.MODIFY_ALIAS.value
-        ):
-            # run action on device
-            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
-                appSelection, appLabel = self.getAppDataForRun()
-            self.gridPanel.EmptyGrids()
-            self.gridPanel.disableGridProperties()
-            for deviceId in self.sidePanel.selectedDevicesList:
-                deviceLabel = None
-                try:
-                    deviceLabel = list(self.sidePanel.devices.keys())[
-                        list(self.sidePanel.devices.values()).index(deviceId)
-                    ]
-                except:
-                    deviceLabel = list(self.sidePanel.devicesExtended.keys())[
-                        list(self.sidePanel.devicesExtended.values()).index(deviceId)
-                    ]
-                self.Logging(
-                    '---> Attempting to run action, "%s", on device, %s.'
-                    % (actionLabel, deviceLabel)
+                or (
+                    actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
+                    or actionClientData == GeneralActions.GENERATE_APP_REPORT.value 
                 )
+            ):
+                self.displayAppFilterPrompt()
+
+            isDevice = False
+            if not self.sidePanel.selectedDevicesList or allDevicesSelected:
+                groupLabel = ""
+                for groupId in self.sidePanel.selectedGroupsList:
+                    groupLabel = list(self.sidePanel.groups.keys())[
+                        list(self.sidePanel.groups.values()).index(groupId)
+                    ]
+                    self.Logging(
+                        '---> Attempting to run action, "%s", on group, %s.'
+                        % (actionLabel, groupLabel)
+                    )
+            else:
+                isDevice = True
+                for deviceId in self.sidePanel.selectedDevicesList:
+                    deviceLabel = None
+                    try:
+                        deviceLabel = list(self.sidePanel.devices.keys())[
+                            list(self.sidePanel.devices.values()).index(deviceId)
+                        ]
+                    except:
+                        deviceLabel = list(self.sidePanel.devicesExtended.keys())[
+                            list(self.sidePanel.devicesExtended.values()).index(deviceId)
+                        ]
+                    self.Logging(
+                        '---> Attempting to run action, "%s", on device, %s.'
+                        % (actionLabel, deviceLabel)
+                    )
             self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction,
                 self,
-                self.sidePanel.selectedDevicesList,
+                self.sidePanel.selectedGroupsList if not isDevice else self.sidePanel.selectedDevicesList,
                 actionClientData,
-                True,
+                isDevice
             )
         elif actionClientData >= GridActions.MODIFY_ALIAS.value:
             # run grid action
@@ -1971,6 +1978,20 @@ class NewFrameLayout(wx.Frame):
 
             self.setCursorDefault()
 
+    def onPowerDown(self, event):
+        self.setCursorBusy()
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+
+        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
+            sendPowerDownCommand()
+        else:
+            displayMessageBox(
+                ("Please select an group and or device", wx.OK | wx.ICON_ERROR)
+            )
+
+            self.setCursorDefault()
+
+
     @api_tool_decorator()
     def onCommandDone(self, event):
         """ Tell user to check the Esper Console for detailed results """
@@ -2018,13 +2039,16 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def setStatus(self, status, orgingalMsg, isError=False):
         """ Set status bar text """
-        self.statusBar.sbText.SetLabel(status)
-        if orgingalMsg:
-            self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
-        if isError:
-            self.statusBar.sbText.SetForegroundColour(Color.red.value)
-        else:
-            self.statusBar.sbText.SetForegroundColour(Color.black.value)
+        try:
+            self.statusBar.sbText.SetLabel(status)
+            if orgingalMsg:
+                self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
+            if isError:
+                self.statusBar.sbText.SetForegroundColour(Color.red.value)
+            else:
+                self.statusBar.sbText.SetForegroundColour(Color.black.value)
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def onFetch(self, event):
@@ -2113,7 +2137,7 @@ class NewFrameLayout(wx.Frame):
             ):
                 input = []
                 for data in deviceList.values():
-                    input.extend(data["AppsEntry"])
+                    input.extend(data.get("AppsEntry", []))
                 df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input)
                 self.gridPanel.app_grid.applyNewDataFrame(
                     df, checkColumns=False, resetPosition=True, autosize=True
@@ -2189,7 +2213,6 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.thawGridsIfFrozen()
         if self.gridPanel.disableProperties:
             self.gridPanel.enableGridProperties()
-        # Globals.THREAD_POOL.enqueue(self.gridPanel.autoSizeGridsColumns)
         if self.isRunning or enable:
             self.toggleEnabledState(True)
         self.isRunning = False
@@ -2617,12 +2640,9 @@ class NewFrameLayout(wx.Frame):
             determineDoHereorMainThread(self.menubar.EnableTop, option, state)
         determineDoHereorMainThread(self.menubar.fileOpenConfig.Enable, state)
         determineDoHereorMainThread(self.menubar.pref.Enable, state)
-        determineDoHereorMainThread(self.menubar.collection.Enable, state)
-        determineDoHereorMainThread(self.menubar.eqlQuery.Enable, state)
         determineDoHereorMainThread(self.menubar.run.Enable, state)
         determineDoHereorMainThread(self.menubar.installedDevices.Enable, state)
         determineDoHereorMainThread(self.menubar.command.Enable, state)
-        determineDoHereorMainThread(self.menubar.collectionSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.setSaveMenuOptionsEnableState, state)
 
@@ -2746,15 +2766,6 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(True)
 
     @api_tool_decorator()
-    def createGroup(self, event):
-        if not self.groupManage:
-            self.groupManage = GroupManagement(self.groups)
-        with self.groupManage as manage:
-            Globals.OPEN_DIALOGS.append(manage)
-            manage.ShowModal()
-            Globals.OPEN_DIALOGS.remove(manage)
-
-    @api_tool_decorator()
     def installApp(self, event):
         if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
             res = version = pkg = None
@@ -2849,7 +2860,10 @@ class NewFrameLayout(wx.Frame):
                         self.notification.MSWUseToasts()
                     except:
                         pass
+            try:
                 self.notification.Show()
+            except Exception as e:
+                ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def onSuspend(self, event):
@@ -2898,18 +2912,6 @@ class NewFrameLayout(wx.Frame):
             event.Skip()
 
     @api_tool_decorator()
-    def onBulkFactoryReset(self, event):
-        with BulkFactoryReset() as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            res = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-
-            if res == wx.ID_OK:
-                self.statusBar.gauge.Pulse()
-                ids = dlg.getIdentifiers()
-                bulkFactoryReset(ids)
-
-    @api_tool_decorator()
     def onGeofence(self, event):
         with GeofenceDialog() as dlg:
             Globals.OPEN_DIALOGS.append(dlg)
@@ -2939,7 +2941,7 @@ class NewFrameLayout(wx.Frame):
         if "isBlueprintsEnabled" in config:
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         else:
-            checkBlueprintEnabled(config)
+            checkFeatureFlags(config)
             self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
@@ -3388,6 +3390,11 @@ class NewFrameLayout(wx.Frame):
         elif Globals.SCHEDULE_TYPE == "All":
             reportAction = GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
 
+        postEventToFrame(eventUtil.myEVT_AUDIT, {
+            "operation": "ScheduledReportGeneration",
+            "data": "Action: %s Targets:All Devices" % (Globals.SCHEDULE_TYPE)
+        })
+
         self.scheduleReportRunning = True
         Globals.THREAD_POOL.enqueue(
             self.saveAllFile,
@@ -3459,3 +3466,21 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(
                     setWidget, enable, widgetName=className, groups=deviceList
                 )
+
+    def displayAppFilterPrompt(self):
+        if Globals.SHOW_APP_FILTER_DIALOG:
+            dlg = wx.RichMessageDialog(
+                self, 
+                message="Would you like to alter the filter for displayed apps? Filter can also be altered in the Preferences > Application menu.",
+                caption="Filter Apps?",
+                style=wx.YES_NO | wx.ICON_QUESTION
+            )
+            dlg.ShowCheckBox("Do not ask again")
+            res = dlg.ShowModal()
+
+            Globals.SHOW_APP_FILTER_DIALOG = not dlg.IsCheckBoxChecked()
+
+            if res == wx.ID_YES:
+                self.prefDialog.appFilterDlg(None)
+            self.prefDialog.prefs["showAppFilter"] = Globals.SHOW_APP_FILTER_DIALOG
+            self.savePrefs(self.prefDialog)

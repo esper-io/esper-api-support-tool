@@ -10,17 +10,11 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
+                              postEventToFrame)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
@@ -127,6 +121,14 @@ def renameGroup(groupId, newName):
         {"operation": "renameGroup", "data": body, "resp": resp},
     )
     return resp
+
+
+def getGroupByIdURL(groupId):
+    return "{tenant}/enterprise/{enterprise}/devicegroup/{group}/".format(
+        tenant=Globals.configuration.host, 
+        enterprise=Globals.enterprise_id, 
+        group=groupId
+    )
 
 
 @api_tool_decorator()

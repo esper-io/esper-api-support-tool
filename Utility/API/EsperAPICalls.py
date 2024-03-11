@@ -14,22 +14,14 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
-from Utility.API.CommandUtility import (
-    getCommandsApiInstance,
-    postEsperCommand,
-    waitForCommandToFinish,
-)
+from Utility.API.CommandUtility import (getCommandsApiInstance,
+                                        postEsperCommand,
+                                        waitForCommandToFinish)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
+                              postEventToFrame)
+from Utility.Web.WebRequests import (performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -347,7 +339,7 @@ def setKiosk(frame, device, deviceInfo, isGroup=False):
             )
         else:
             logString = logString + " <failed>"
-        if deviceInfo and deviceInfo["Status"] != "Online":
+        if deviceInfo and deviceInfo["Status"] != "Online" and deviceInfo["Status"] != "Active":
             logString = logString + " (Device offline)"
         postEventToFrame(eventUtil.myEVT_LOG, logString)
         if status and hasattr(status, "state"):
@@ -409,7 +401,7 @@ def setMulti(frame, device, deviceInfo, isGroup=False):
                 logString = logString + " <failed>"
     else:
         logString = logString + " (Already Multi mode, skipping)"
-    if deviceInfo and deviceInfo["Status"] != "Online":
+    if deviceInfo and deviceInfo["Status"] != "Online" and deviceInfo["Status"] != "Active":
         logString = logString + " (Device offline)"
     postEventToFrame(eventUtil.myEVT_LOG, logString)
 
@@ -545,7 +537,26 @@ def factoryResetDevice(
 
 
 @api_tool_decorator()
-def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
+def getIosDeviceApps(deviceId, limit=None, offset=0, appType=None, createAppListArg=True):
+    url = "%s/v2/devices/%s/device-apps/" % (
+        Globals.configuration.host,
+        deviceId,
+    )
+    extention = "?limit=%s&offset=%s" % (
+        limit if limit else Globals.limit,
+        offset,
+    )
+    if appType:
+        extention = extention + "&app_type=%s" % appType
+    url = url + extention
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    json_resp = resp.json()
+    applist = createAppList(json_resp) if createAppListArg else []
+    return applist, json_resp
+
+
+@api_tool_decorator()
+def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
     extention = (
         Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
@@ -565,7 +576,7 @@ def getdeviceapps(deviceid, createAppListArg=True, useEnterprise=False):
 
 def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
     applist = []
-    if json_resp and "results" in json_resp and len(json_resp["results"]):
+    if json_resp and "results" in json_resp and json_resp["results"] and len(json_resp["results"]):
         for app in json_resp["results"]:
             if (
                 "install_state" in app and "uninstall" in app["install_state"].lower()
@@ -575,14 +586,14 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
             ):
                 continue
             entry = None
+            if obtainAppDictEntry:
+                entry = getAppDictEntry(app, False)
             if "application" in app:
                 pkgName = app["application"]["package_name"]
                 if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
                     filterData and pkgName not in Globals.APP_COL_FILTER
                 ):
                     continue
-                if obtainAppDictEntry:
-                    entry = getAppDictEntry(app, False)
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["application"]["version"]["version_name"][
@@ -612,13 +623,11 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
 
                 appName = app["application"]["application_name"]
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
-            else:
+            elif app.get("package_name") is not None and app.get("platform", "").lower() != "apple":
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
                     filterData and app["package_name"] not in Globals.APP_COL_FILTER
                 ):
                     continue
-                if obtainAppDictEntry:
-                    entry = getAppDictEntry(app, False)
                 version = None
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
@@ -635,6 +644,23 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 applist.append(
                     constructAppPkgVerStr(app["app_name"], app["package_name"], version)
                 )
+            elif app.get("package_name") is not None and app.get("platform", "").lower() == "apple":
+                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
+                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
+                ):
+                    continue
+                applist.append(
+                    constructAppPkgVerStr(app["app_name"], app["package_name"], app["version_name"])
+                )
+            elif app.get("bundle_id") is not None and app.get("platform", "").lower() == "apple":
+                if app["bundle_id"] in Globals.BLACKLIST_PACKAGE_NAME or (
+                    filterData and app["bundle_id"] not in Globals.APP_COL_FILTER
+                ):
+                    continue
+                applist.append(
+                    constructAppPkgVerStr(app["app_name"], app["bundle_id"], app["version_name"])
+                )
+            
             if (
                 entry is not None
                 and entry not in Globals.frame.sidePanel.selectedDeviceApps

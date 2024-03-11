@@ -12,28 +12,13 @@ from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.GridTable import GridTable
 from GUI.TabPanel import TabPanel
-from Utility.API.GroupUtility import (
-    createGroup,
-    deleteGroup,
-    fetchGroupName,
-    getAllGroups,
-    renameGroup,
-)
-from Utility.FileUtility import (
-    read_csv_via_pandas,
-    read_data_from_csv,
-    read_excel_via_openpyxl,
-    write_data_to_csv,
-)
-from Utility.Resource import (
-    correctSaveFileName,
-    displayMessageBox,
-    displayFileDialog,
-    isApiKey,
-    openWebLinkInBrowser,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.API.GroupUtility import (createGroup, deleteGroup, fetchGroupName,
+                                      getAllGroups, renameGroup)
+from Utility.FileUtility import (read_csv_via_pandas, read_data_from_csv,
+                                 read_excel_via_openpyxl, write_data_to_csv)
+from Utility.Resource import (correctSaveFileName, displayFileDialog,
+                              displayMessageBox, isApiKey,
+                              openWebLinkInBrowser, resourcePath, scale_bitmap)
 
 
 class GroupManagement(wx.Dialog):
