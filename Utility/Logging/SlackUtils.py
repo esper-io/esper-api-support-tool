@@ -129,7 +129,9 @@ class SlackUtils:
                             {
                                 "type": "text",
                                 "text": "%s:" % section_name,
-                                "style": "bold"
+                                "style": {
+                                    "bold": True
+                                }
                             },
                             {
                                 "type": "text",
