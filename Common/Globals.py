@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.1949"
+VERSION = "v0.19523"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -81,6 +81,9 @@ join_lock = threading.Lock()
 # Known Group Var
 knownGroups = {}
 
+# Known Blueprints
+knownBlueprints = {}
+
 OPEN_DIALOGS = []
 
 """ Actions """
@@ -98,13 +101,13 @@ GENERAL_ACTIONS = {
     + "* " * NUM_STARS
     + "General Actions "
     + "* " * NUM_STARS: -1,
-    "Action -> Set Device Mode": 1.5,
-    "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
-    "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
+    # "Action -> Set Device Mode": 1.5,
+    # "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
+    # "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
-    "Action -> Install App": GeneralActions.INSTALL_APP.value,
-    "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
+    # "Action -> Install App": GeneralActions.INSTALL_APP.value,
+    # "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {
@@ -114,10 +117,10 @@ GRID_ACTIONS = {
     + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
     "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
-    "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
+    # "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
-    "Action -> Install Selected App": GridActions.INSTALL_APP.value,
-    "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
+    # "Action -> Install Selected App": GridActions.INSTALL_APP.value,
+    # "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
     # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
 }
 
@@ -139,25 +142,25 @@ COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    "SET_KIOSK_APP",
-    "SET_DEVICE_LOCKDOWN_STATE",
-    "SET_APP_STATE",
-    "WIPE",
-    "UPDATE_LATEST_DPC",
+    # "SET_KIOSK_APP",
+    # "SET_DEVICE_LOCKDOWN_STATE",
+    # "SET_APP_STATE",
+    # "WIPE",
+    # "UPDATE_LATEST_DPC",
 ]
 
 JSON_COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    "SET_NEW_POLICY",
-    "ADD_WIFI_AP",
-    "REMOVE_WIFI_AP",
-    "SET_KIOSK_APP",
-    "SET_DEVICE_LOCKDOWN_STATE",
-    "SET_APP_STATE",
-    "WIPE",
-    "UPDATE_LATEST_DPC",
+    # "SET_NEW_POLICY",
+    # "ADD_WIFI_AP",
+    # "REMOVE_WIFI_AP",
+    # "SET_KIOSK_APP",
+    # "SET_DEVICE_LOCKDOWN_STATE",
+    # "SET_APP_STATE",
+    # "WIPE",
+    # "UPDATE_LATEST_DPC",
 ]
 
 """ URL Requests and Extensions """
@@ -177,25 +180,34 @@ DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 """ CSV Headers """
 
 CSV_TAG_ATTR_NAME = {
-    "Esper Name": "EsperName",
-    "Alias": "Alias",
+    "Esper Name": ["EsperName", "name"],
+    "Alias": ["Alias", "alias"],
     "Group": "groups",
     "Brand": "brand",
     "Manufacturer": "manufacturer",
     "Model": "model",
     "Hardware Chip Set": "hardware",
-    "Android Version": "androidVersion",
-    "Android Build Number": "androidBuildNumber",
-    "Status": "Status",
+    "OS": "os",
+    "OS Version": ["androidVersion", "os_version"],
+    "Build Number": ["androidBuildNumber", "os_build_number"],
+    "Registered On": ["provisioned_on", "onboarded_on"],
+    "Updated On": ["updated_on", "updated_at"],
+    "Created On": ["created_on", "created_at"],
+    "Last Seen": "last_seen",
+    # "State": "Status",
     "Esper Version": "esper_client",
     "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
+    "Managed By": "managed_by",
     "Template": "template_name",
     "Template Device Language": "templateDeviceLocale",
+    "Assigned Blueprint": "assigned_blueprint_id",
+    "Current Blueprint": "current_blueprint_id",
+    "Current Blueprint Version": "current_blueprint_version_id",
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
-    "Serial Number": "Serial",
+    "Serial Number": ["Serial", "serial"],
     "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
@@ -210,11 +222,7 @@ CSV_TAG_ATTR_NAME = {
     "Applications": "Apps",
     "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
-    "Device Type": "device_type",
-    "Registered On": "provisioned_on",
-    "Updated On": "updated_on",
-    "Created On": "created_on",
-    "Last Seen": "last_seen",
+    "Device Type": ["device_type", "device_source"],
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",
     "Total RAM (MB)": "totalRam",
     "Storage Occupied by OS (MB)": "OS_OCCUPIED_STORAGE_MEASURED",
@@ -254,7 +262,7 @@ CSV_TAG_ATTR_NAME = {
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
     "Group": "groups",
-    "Security Patch": "securityPatchLevel",
+    "Security Patch": ["securityPatchLevel", "security_patch_level"],
     "[WIFI ACCESS POINTS]": "wifiAP",
     "[Current WIFI Connection]": "currentWifi",
     "Ethernet Connection": "ethernetState",
@@ -291,6 +299,7 @@ CSV_APP_ATTR_NAME = [
 SEMANTIC_VERSION_COL = [
     "Android Version",
     "Application Version Code",
+    "Application Version Name"
 ]
 
 DATE_COL = {
@@ -368,6 +377,7 @@ APP_COL_FILTER = []
 SHOW_GRID_DIALOG = True
 SHOW_TEMPLATE_DIALOG = True
 SHOW_TEMPLATE_UPDATE = True
+SHOW_APP_FILTER_DIALOG = True
 
 # Schedule Report
 SCHEDULE_INTERVAL = 12

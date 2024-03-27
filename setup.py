@@ -7,9 +7,10 @@ Usage:
 
 import pathlib
 import platform
-import Common.Globals as Globals
 
 from setuptools import setup
+
+import Common.Globals as Globals
 
 system = platform.system()
 bit = platform.machine()
@@ -33,7 +34,11 @@ if system == "Windows":
     raise Exception("Py2app is not compatible with Windows")
 
 APP = ["Main.py"]
-DATA_FILES = [curDirPath + "/Utility/Logging/token.json", curDirPath + "/Images"]
+DATA_FILES = [
+    curDirPath + "/Utility/Logging/token.json",
+    curDirPath + "/Utility/Logging/slack_details.json",
+    curDirPath + "/Images",
+]
 OPTIONS = {
     "argv_emulation": True,
     "extension": ".app",

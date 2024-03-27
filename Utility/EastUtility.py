@@ -13,37 +13,25 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-from Utility.GridUtilities import constructDeviceAppRowEntry, createDataFrameFromDict
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (
-    getDeviceAppsApiUrl,
-    getInstallDevices,
-    uploadApplication,
-)
-from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
-from Utility.API.DeviceUtility import (
-    getAllDevices,
-    getDeviceById,
-    getDeviceDetail,
-    getLatestEvent,
-    getLatestEventApiUrl,
-    searchForDevice,
-)
-from Utility.API.GroupUtility import fetchGroupName
+from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
+                                      uploadApplication)
+from Utility.API.CommandUtility import (executeCommandOnDevice,
+                                        executeCommandOnGroup)
+from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
+                                       getDeviceDetail, getLatestEvent,
+                                       getLatestEventApiUrl, searchForDevice)
+from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
+from Utility.GridUtilities import (constructDeviceAppRowEntry,
+                                   createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    displayMessageBox,
-    getHeader,
-    ipv6Tomac,
-    postEventToFrame,
-    splitListIntoChunks,
-    utc_to_local,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
+                              getHeader, ipv6Tomac, postEventToFrame,
+                              splitListIntoChunks, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -110,17 +98,69 @@ def TakeAction(frame, input, action, isDevice=False):
                 ApiToolLog().LogError(e)
 
 
-def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, results=None):
+def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, device, results=None,):
     appResp = latestEvent = None
     if getApps:
-        appResp = perform_web_requests(
-            (
-                getDeviceAppsApiUrl(deviceId, Globals.USE_ENTERPRISE_APP),
-                getHeader(),
-                "GET",
-                None,
+        config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+        iosEnabled = config["isIosEnabled"]
+        if device.get("os") is not None and device.get("os").lower() == "android" or not iosEnabled:
+            appResp = perform_web_requests(
+                (
+                    getDeviceAppsApiUrl(deviceId, Globals.USE_ENTERPRISE_APP),
+                    getHeader(),
+                    "GET",
+                    None,
+                )
             )
-        )
+        else:
+            _, appResp = apiCalls.getIosDeviceApps(deviceId, createAppListArg=False)
+            if "content" in appResp:
+                appResp = appResp["content"]
+            if appResp.get("results"):
+                for app in appResp["results"]:
+                    if app.get("app_type", "") != "VPP":
+                        enterpriseApp = perform_web_requests(
+                            (
+                                "%s/v2/tenant-apps/%s/" % (
+                                    Globals.configuration.host,
+                                    app["app_id"]
+                                ),
+                                getHeader(),
+                                "GET",
+                                None,
+                            )
+                        )
+                        enterpriseAppVersion = perform_web_requests(
+                            (
+                                "%s/v2/tenant-apps/%s/versions/%s" % (
+                                    Globals.configuration.host,
+                                    app["app_id"],
+                                    app["app_version_id"]
+                                ),
+                                getHeader(),
+                                "GET",
+                                None,
+                            )
+                        )
+                        app.update(enterpriseApp["content"])
+                        app.update(enterpriseAppVersion["content"])
+                    else:
+                        vppResp = perform_web_requests(
+                            (
+                                "%s/v2/itunesapps/?app_id=%s" % (
+                                    Globals.configuration.host,
+                                    app["app_id"],
+                                ),
+                                getHeader(),
+                                "GET",
+                                None,
+                            )
+                        )
+                        if "content" in vppResp:
+                            vppResp = vppResp["content"]
+                        if vppResp and "results" in vppResp:
+                            vppApp = vppResp["results"][0]
+                            app.update(vppApp)
     if getLatestEvents:
         latestEvent = perform_web_requests(
             (
@@ -231,7 +271,7 @@ def processDeviceInDeviceList(
     device, deviceId, getApps, getLatestEvents, deviceList, indx, maxDevices=None
 ):
     additionalInfo = {}
-    getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, additionalInfo)
+    getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, device, additionalInfo)
     deviceInfo = {}
     latestData = appData = None
     if deviceId in additionalInfo:
@@ -268,10 +308,10 @@ def updateGaugeForObtainingDeviceInfo(processed, deviceList):
 
 def filterDeviceList(device):
     deviceStatus = DeviceState.DISABLED.value
-    if hasattr(device, "status"):
+    if hasattr(device, "state"):
         deviceStatus = device.status
-    elif type(device) == dict and "status" in device:
-        deviceStatus = device["status"]
+    elif type(device) == dict and "state" in device:
+        deviceStatus = device["state"]
     if not Globals.SHOW_DISABLED_DEVICES and deviceStatus == DeviceState.DISABLED.value:
         return False
     return True
@@ -465,13 +505,19 @@ def populateDeviceInfoDictionaryComplieData(
 ):
     """Populates Device Info Dictionary"""
     if type(device) == dict:
-        deviceStatus = device["status"]
+        deviceStatus = device["state"]
         if (
             not Globals.SHOW_DISABLED_DEVICES
             and deviceStatus == DeviceState.DISABLED.value
         ):
             return
         unpackageDict(deviceInfo, device)
+
+    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+    iosEnabled = config["isIosEnabled"]
+    if device.get("os") is not None and device.get("os").lower() == "android" and iosEnabled:
+        androidDeviceInfo = getDeviceById(device.get("id"), do_join=False)
+        unpackageDict(deviceInfo, androidDeviceInfo)
 
     deviceInfo = compileDeviceGroupData(deviceInfo)
     deviceInfo = compileDeviceHardwareData(device, deviceInfo, latestEventData)
@@ -488,8 +534,11 @@ def compileDeviceGroupData(deviceInfo):
         deviceGroups = deviceInfo["groups"]
     elif "group" in deviceInfo:
         deviceGroups = deviceInfo["group"]
+    elif "group_id" in deviceInfo:
+        deviceGroups = deviceInfo["group_id"]
     if deviceGroups:
         groupNames = []
+        group = groupName = ""
         if type(deviceGroups) == list:
             for groupURL in deviceGroups:
                 group = None
@@ -524,6 +573,28 @@ def compileDeviceGroupData(deviceInfo):
             groupNames.append(deviceGroups["path"])
         elif type(deviceGroups) == dict and "name" in deviceGroups:
             groupNames.append(deviceGroups["name"])
+        elif type(deviceGroups) == str:
+            if deviceGroups in Globals.knownGroups:
+                group = Globals.knownGroups[deviceGroups]
+            else:
+                groupName = fetchGroupName(getGroupByIdURL(deviceGroups), True)
+                Globals.knownGroups[groupId] = groupName
+                groupName = groupName["name"]
+
+            if type(group) == list and len(group) == 1:
+                groupName = group[0]
+            elif Globals.SHOW_GROUP_PATH and type(group) == dict:
+                groupName = group["path"]
+            elif type(group) == dict:
+                groupName = group["name"]
+            elif Globals.SHOW_GROUP_PATH and hasattr(group, "path"):
+                groupName = group.path
+            elif hasattr(group, "name"):
+                groupName = group.name
+
+            if groupName:
+                groupNames.append(groupName)
+
         if len(groupNames) == 1:
             if type(groupNames[0]) == list:
                 deviceInfo["groups"] = groupNames[0][0]
@@ -534,18 +605,20 @@ def compileDeviceGroupData(deviceInfo):
         else:
             deviceInfo["groups"] = groupNames
 
-    if not deviceInfo["isSupervisorPluginActive"]:
+    if "isSupervisorPluginActive" not in deviceInfo:
+        deviceInfo["isSupervisorPluginActive"] = "N/A"
+    elif not deviceInfo["isSupervisorPluginActive"]:
         deviceInfo["isSupervisorPluginActive"] = "False"
+
+    if "isKnoxActive" not in deviceInfo:
+        deviceInfo["isKnoxActive"] = "N/A"
     elif "isSupervisorPluginActive" not in deviceInfo:
         deviceInfo["isSupervisorPluginActive"] = "N/A"
-    if not deviceInfo["isKnoxActive"]:
-        deviceInfo["isKnoxActive"] = "False"
-    elif "isKnoxActive" not in deviceInfo:
-        deviceInfo["isKnoxActive"] = "N/A"
-    if not deviceInfo["isCSDKActive"]:
-        deviceInfo["isCSDKActive"] = "False"
-    elif "isCSDKActive" not in deviceInfo:
+
+    if "isCSDKActive" not in deviceInfo:
         deviceInfo["isCSDKActive"] = "N/A"
+    elif not deviceInfo["isCSDKActive"]:
+        deviceInfo["isCSDKActive"] = "False"
 
     return deviceInfo
 
@@ -583,28 +656,9 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
         deviceInfo["gpsState"] = "No data available"
 
     if network_info and "createTime" in network_info:
-        if Globals.LAST_SEEN_AS_DATE:
-            deviceInfo["last_seen"] = str(
-                datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            )
-        else:
-            dt = datetime.strptime(network_info["createTime"], "%Y-%m-%dT%H:%MZ")
-            utc_date_time = dt.astimezone(pytz.utc)
-            updatedOnDate = utc_to_local(utc_date_time)
-
-            time_delta = utc_to_local(datetime.now()) - updatedOnDate
-            total_seconds = time_delta.total_seconds()
-            minutes = total_seconds / 60
-            if minutes < 0:
-                deviceInfo["last_seen"] = "Less than 1 minute ago"
-            elif minutes > 0 and minutes < 60:
-                deviceInfo["last_seen"] = "%s minute ago" % minutes
-            elif minutes > 60 and minutes < 1440:
-                hours = int(math.ceil(minutes / 60))
-                deviceInfo["last_seen"] = "%s hours ago" % hours
-            elif minutes > 1440:
-                days = int(math.ceil(minutes / 1440))
-                deviceInfo["last_seen"] = "%s days ago" % days
+        deviceInfo["last_seen"] = parseLastSeen(network_info["createTime"])
+    elif "last_seen" in deviceInfo and deviceInfo["last_seen"]:
+        deviceInfo["last_seen"] = parseLastSeen(deviceInfo["last_seen"])
     else:
         deviceInfo["last_seen"] = "No data available"
 
@@ -646,8 +700,8 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
 
 def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     deviceId = device["id"]
-    deviceStatus = device["status"]
-    deviceTags = device["tags"]
+    deviceStatus = device["state"]
+    deviceTags = device.get("tags", [])
 
     deviceAlias = None
     if "alias_name" in device:
@@ -658,12 +712,12 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     deviceHardware = None
     if "hardwareInfo" in device:
         deviceHardware = device["hardwareInfo"]
-    elif "alias" in device:
+    elif "hardware" in device:
         deviceHardware = device["hardware"]
 
     if "device_name" in device:
         deviceInfo["EsperName"] = device["device_name"]
-    elif "alias" in device:
+    elif "name" in device:
         deviceInfo["EsperName"] = device["name"]
 
     isTemplate = True
@@ -692,53 +746,11 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     else:
         deviceInfo["Alias"] = ""
 
-    if isinstance(deviceStatus, str):
-        if deviceStatus.lower() == "online":
-            deviceInfo["Status"] = "Online"
-        elif "unspecified" in deviceStatus.lower():
-            deviceInfo["Status"] = "Unspecified"
-        elif "provisioning" in deviceStatus.lower():
-            deviceInfo["Status"] = "Provisioning"
-        elif deviceStatus.lower() == "offline":
-            deviceInfo["Status"] = "Offline"
-        elif "wipe" in deviceStatus.lower():
-            deviceInfo["Status"] = "Wipe In-Progress"
-        elif deviceStatus.lower() == "disabled":
-            deviceInfo["Status"] = "Disabled"
-        else:
-            deviceInfo["Status"] = "Unknown"
+    deviceState = parseDeviceState(deviceStatus)
+    if deviceState:
+        deviceInfo["Status"] = deviceState
     else:
-        if (
-            not Globals.SHOW_DISABLED_DEVICES
-            and deviceStatus == DeviceState.DISABLED.value
-        ):
-            return
-
-        if deviceStatus == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
-            deviceInfo["Status"] = "Unspecified"
-        elif deviceStatus == DeviceState.ACTIVE.value:
-            deviceInfo["Status"] = "Online"
-        elif deviceStatus == DeviceState.DISABLED.value:
-            deviceInfo["Status"] = "Disabled"
-        elif (
-            deviceStatus >= DeviceState.PROVISIONING_BEGIN.value
-            and deviceStatus < DeviceState.INACTIVE.value
-        ) or (
-            deviceStatus >= DeviceState.ONBOARDING_IN_PROGRESS.value
-            and deviceStatus <= DeviceState.ONBOARDED.value
-        ):
-            deviceInfo["Status"] = "Onboarding"
-        elif (
-            deviceStatus >= DeviceState.AFW_ACCOUNT_ADDED.value
-            and deviceStatus <= DeviceState.CUSTOM_SETTINGS_PROCESSED.value
-        ):
-            deviceInfo["Status"] = "Applying Blueprint"
-        elif deviceStatus == DeviceState.INACTIVE.value:
-            deviceInfo["Status"] = "Offline"
-        elif deviceStatus == DeviceState.WIPE_IN_PROGRESS.value:
-            deviceInfo["Status"] = "Wipe In-Progress"
-        else:
-            deviceInfo["Status"] = "Unknown"
+        return
 
     kioskMode = None
     if "current_app_mode" in deviceInfo:
@@ -749,15 +761,15 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
             deviceInfo["Mode"] = "Multi"
 
     hdwareKey = None
-    if "serial_number" in deviceHardware:
+    if deviceHardware and "serial_number" in deviceHardware:
         hdwareKey = "serial_number"
-    elif "serialNumber" in deviceHardware:
+    elif deviceHardware and "serialNumber" in deviceHardware:
         hdwareKey = "serialNumber"
 
     custHdwareKey = None
-    if "custom_serial_number" in deviceHardware:
+    if deviceHardware and "custom_serial_number" in deviceHardware:
         custHdwareKey = "custom_serial_number"
-    elif "customSerialNumber" in deviceHardware:
+    elif deviceHardware and "customSerialNumber" in deviceHardware:
         custHdwareKey = "customSerialNumber"
 
     if Globals.REPLACE_SERIAL:
@@ -829,6 +841,77 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     return deviceInfo
 
 
+def parseDeviceState(state):
+    returnVal = ""
+    stringState = str(state)
+
+    if isinstance(state, str):
+        state = state.lower()
+
+    if stringState == "online" or stringState == "active"  or state == DeviceState.ACTIVE.value:
+        returnVal = "Active"
+    elif "unspecified" in stringState or state == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
+        returnVal = "Unspecified"
+    elif ("provisioning" in stringState 
+          or (
+              state >= DeviceState.PROVISIONING_BEGIN.value 
+              and state < DeviceState.INACTIVE.value
+            ) 
+          or (
+            state >= DeviceState.ONBOARDING_IN_PROGRESS.value
+            and state <= DeviceState.ONBOARDED.value
+        )):
+        returnVal = "Onboarding"
+    elif ("blueprint" in stringState or (
+            state >= DeviceState.AFW_ACCOUNT_ADDED.value
+            and state <= DeviceState.CUSTOM_SETTINGS_PROCESSED.value
+        )):
+        returnVal = "Applying Blueprint"
+    elif stringState == "offline" or stringState == "inactive"  or state == DeviceState.INACTIVE.value:
+        returnVal = "Inactive"
+    elif "wipe" in stringState or state == DeviceState.WIPE_IN_PROGRESS.value:
+        returnVal = "Wipe In-Progress"
+    elif stringState == "disabled"  or state == DeviceState.DISABLED.value:
+        returnVal = "Disabled"
+    else:
+        returnVal = "Unknown"
+
+    if (
+        not Globals.SHOW_DISABLED_DEVICES
+        and returnVal == "Disabled"
+    ):
+        return None
+    return returnVal
+
+
+def parseLastSeen(date):
+    returnVal = ""
+    datePattern = "%Y-%m-%dT%H:%M:%S.%fZ" if "." in date else "%Y-%m-%dT%H:%MZ"
+    if Globals.LAST_SEEN_AS_DATE:
+        returnVal = str(
+            datetime.strptime(date, datePattern)
+        )
+    else:
+        dt = datetime.strptime(date, datePattern)
+        utc_date_time = dt.astimezone(pytz.utc)
+        updatedOnDate = utc_to_local(utc_date_time)
+
+        time_delta = utc_to_local(datetime.now()) - updatedOnDate
+        total_seconds = time_delta.total_seconds()
+        minutes = total_seconds / 60
+        if minutes < 0:
+            returnVal = "Less than 1 minute ago"
+        elif minutes > 0 and minutes < 60:
+            returnVal = "%s minutes ago" % minutes
+        elif minutes > 60 and minutes < 1440:
+            hours = int(math.ceil(minutes / 60))
+            returnVal = "%s hours ago" % hours
+        elif minutes > 1440:
+            days = int(math.ceil(minutes / 1440))
+            returnVal = "%s days ago" % days
+    return returnVal
+
+
 def compileDeviceAppData(deviceInfo, appData):
     apps = (
         apiCalls.createAppList(
@@ -836,7 +919,7 @@ def compileDeviceAppData(deviceInfo, appData):
             obtainAppDictEntry=False,
             filterData=True
             if Globals.APP_COL_FILTER
-            and not any("" in s for s in Globals.APP_COL_FILTER)
+            and not any(len(s) == 0 for s in Globals.APP_COL_FILTER)
             else False,
         )
         if appData
@@ -851,21 +934,40 @@ def compileDeviceAppData(deviceInfo, appData):
 
 def enforceGridData(device, deviceInfo, latestEventData, appData):
     for attribute in Globals.CSV_TAG_ATTR_NAME:
-        value = (
-            deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]]
-            if Globals.CSV_TAG_ATTR_NAME[attribute] in deviceInfo
-            else ""
-        )
-        deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(value)
+        attrKey = Globals.CSV_TAG_ATTR_NAME[attribute]
+        attrValue = ""
+        if type(attrKey) is str:
+            attrValue = (
+                deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]]
+                if Globals.CSV_TAG_ATTR_NAME[attribute] in deviceInfo
+                else ""
+            )
+            deviceInfo[Globals.CSV_TAG_ATTR_NAME[attribute]] = str(attrValue)
+        elif type(attrKey) is list:
+            for key in attrKey:
+                if key in deviceInfo and deviceInfo[key] is not None and deviceInfo[key] != "" and not attrValue:
+                    attrValue = deviceInfo[key]
+                    deviceInfo[key] = str(attrValue)
 
     if latestEventData:
         for attribute in Globals.CSV_NETWORK_ATTR_NAME.keys():
-            value = (
-                deviceInfo["network_info"][attribute]
-                if attribute in deviceInfo["network_info"]
-                else ""
-            )
-            deviceInfo[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(value)
+            attrKey = Globals.CSV_NETWORK_ATTR_NAME[attribute]
+            attrValue = ""
+            if type(attrKey) is str:
+                attrValue = (
+                    deviceInfo["network_info"][attribute]
+                    if attribute in deviceInfo["network_info"]
+                    else ""
+                )
+                deviceInfo[Globals.CSV_NETWORK_ATTR_NAME[attribute]] = str(attrValue)
+            elif type(attrKey) is list:
+                for key in attrKey:
+                    if key in deviceInfo and deviceInfo[key] is not None and deviceInfo[key] != "" and not attrValue:
+                        attrValue = deviceInfo[key]
+                        deviceInfo[key] = str(attrValue)
+                    elif deviceInfo["network_info"] and key in deviceInfo["network_info"] and deviceInfo["network_info"][key] and not attrValue:
+                        attrValue = deviceInfo["network_info"][key]
+                        deviceInfo[key] = str(attrValue)
 
     if appData and "results" in deviceInfo["appObj"]:
         deviceInfo["AppsEntry"] = []
@@ -892,7 +994,10 @@ def populateDeviceInfoDictionary(
         unpackageDict(deviceInfo, device)
     appThread = None
     if getApps:
-        appThread = apiCalls.getdeviceapps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+        if deviceInfo.get("os") is not None and deviceInfo.get("os").lower() == "android":
+            appThread = apiCalls.getAndroidDeviceApps(deviceId, True, Globals.USE_ENTERPRISE_APP)
+        else:
+            appThread = apiCalls.getIosDeviceApps(deviceId, createAppListArg=True)
     eventThread = None
     if getLatestEvents:
         eventThread = getLatestEvent(deviceId)
@@ -970,8 +1075,9 @@ def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
         )
 
 
-def clearKnownGroups():
+def clearKnownGroupsAndBlueprints():
     Globals.knownGroups.clear()
+    Globals.knownBlueprints.clear()
 
 
 def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
@@ -993,10 +1099,15 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             )
         Globals.THREAD_POOL.join(tolerance=1, timeout=3 * 60)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
+        groupId = None
+        if len(Globals.frame.sidePanel.selectedGroupsList) == 1 and Globals.frame.sidePanel.selectedGroupsList[0] == "(All devices)":
+            groupId = " "
+        elif Globals.frame.sidePanel.selectedGroupsList and not allDevices:
+            groupId = Globals.frame.sidePanel.selectedGroupsList
+        else:
+            groupId = " "
         api_response = getAllDevices(
-            Globals.frame.sidePanel.selectedGroupsList
-            if Globals.frame.sidePanel.selectedGroupsList and not allDevices
-            else " ",
+            groupId,
             tolarance=tolarance,
             timeout=3 * 60,
         )

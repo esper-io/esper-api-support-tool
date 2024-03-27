@@ -1,28 +1,26 @@
 #!/usr/bin/env python
 
+import atexit
+import os
 import platform
+import shutil
+import sys
 
 import wx
 import wx.adv as adv
 
 import Common.Globals as Globals
+import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
-from GUI.Dialogs.CollectionsDlg import CollectionsDialog
 from GUI.Dialogs.HtmlDialog import HtmlDialog
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from GUI.UserCreation import UserCreation
 from Utility import EventUtility
-from Utility.API.CollectionsApi import checkCollectionIsEnabled, preformEqlSearch
 from Utility.EastUtility import processCollectionDevices
-import Utility.Threading.wxThread as wxThread
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkForUpdate,
-    downloadFileFromUrl,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    resourcePath,
-)
+from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
+                              openWebLinkInBrowser, postEventToFrame,
+                              resourcePath)
 
 
 class ToolMenuBar(wx.MenuBar):
@@ -91,6 +89,8 @@ class ToolMenuBar(wx.MenuBar):
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
+        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices")
+        self.powerDown = runMenu.Append(powerDownItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.cloneSubMenu = wx.Menu()
@@ -121,18 +121,6 @@ class ToolMenuBar(wx.MenuBar):
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.appSubMenu = wx.Menu()
-        self.uploadApp = self.appSubMenu.Append(wx.ID_ANY, "Upload App (APK)")
-        self.uploadApp.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/upload.png")))
-        self.installApp = self.appSubMenu.Append(wx.ID_ANY, "Install App")
-        self.uninstallApp = self.appSubMenu.Append(wx.ID_ANY, "Uninstall App")
-        self.appSubMenu.Append(wx.ID_SEPARATOR)
-        self.setKiosk = self.appSubMenu.Append(wx.ID_ANY, "Set Kiosk App")
-        self.setMultiApp = self.appSubMenu.Append(wx.ID_ANY, "Set to Multi-App Mode")
-        self.appSubMenu.Append(wx.ID_SEPARATOR)
-        self.clearData = self.appSubMenu.Append(wx.ID_ANY, "Clear App Data")
-        self.appSubMenu.Append(wx.ID_SEPARATOR)
-        self.setAppState = self.appSubMenu.Append(wx.ID_ANY, "Set App State")
-        self.appSubMenu.Append(wx.ID_SEPARATOR)
         self.installedDevices = self.appSubMenu.Append(
             wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
         )
@@ -146,39 +134,11 @@ class ToolMenuBar(wx.MenuBar):
 
         self.groupSubMenu = wx.Menu()
         self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
-        self.createGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Manage Groups\tCtrl+G")
         self.downloadGroups = self.groupSubMenu.Append(
             wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G"
         )
         self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
         self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
-        runMenu.Append(wx.ID_SEPARATOR)
-
-        self.collectionSubMenu = wx.Menu()
-        collectionItem = wx.MenuItem(
-            self.collectionSubMenu,
-            wx.ID_ANY,
-            "&Perform Collection Action (Preview)\tCtrl+Shift+F",
-        )
-        self.collection = self.collectionSubMenu.Append(collectionItem)
-        self.collection.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/collections.png"))
-        )
-        eqlQueryItem = wx.MenuItem(
-            self.collectionSubMenu, wx.ID_ANY, "&EQL Search (Preview)\tCtrl+F"
-        )
-        self.eqlQuery = self.collectionSubMenu.Append(eqlQueryItem)
-        self.eqlQuery.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/search.png")))
-        self.collectionSubMenu = runMenu.Append(
-            wx.ID_ANY, "&Collections", self.collectionSubMenu
-        )
-        self.collectionSubMenu.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/collections.png"))
-        )
-        runMenu.Append(wx.ID_SEPARATOR)
-
-        bulkReset = wx.MenuItem(runMenu, wx.ID_ANY, "&Bulk Factory Reset\t")
-        self.bulkFactoryReset = runMenu.Append(bulkReset)
         runMenu.Append(wx.ID_SEPARATOR)
 
         geo = wx.MenuItem(runMenu, wx.ID_ANY, "&Create Geofence")
@@ -191,10 +151,6 @@ class ToolMenuBar(wx.MenuBar):
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.userSubMenu = wx.Menu()
-        fou = wx.MenuItem(self.userSubMenu, wx.ID_ADD, "&Manage Users\tCtrl+U")
-        fou.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/addUser.png")))
-        self.fileAddUser = self.userSubMenu.Append(fou)
-        self.fileAddUser.Enable(False)
 
         userReport = wx.MenuItem(
             self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
@@ -283,21 +239,14 @@ class ToolMenuBar(wx.MenuBar):
         self.run.Enable(False)
         self.command.Enable(False)
         self.clearConsole.Enable(False)
-        self.collection.Enable(False)
-        self.eqlQuery.Enable(False)
-        self.collectionSubMenu.Enable(False)
         self.groupSubMenu.Enable(False)
         self.fileSave.Enable(False)
         self.fileSaveAs.Enable(False)
-
-        self.Bind(wx.EVT_MENU, self.onEqlQuery, self.eqlQuery)
-        self.Bind(wx.EVT_MENU, self.onCollection, self.collection)
 
         self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
-        self.Bind(wx.EVT_MENU, self.AddUser, self.fileAddUser)
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onUploadSpreadsheet, self.fileOpenConfig
         )
@@ -326,18 +275,7 @@ class ToolMenuBar(wx.MenuBar):
             self.deviceColumns,
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
-        self.Bind(wx.EVT_MENU, self.parentFrame.createGroup, self.createGroup)
         self.Bind(wx.EVT_MENU, self.parentFrame.downloadGroups, self.downloadGroups)
-        self.Bind(wx.EVT_MENU, self.parentFrame.installApp, self.installApp)
-        self.Bind(wx.EVT_MENU, self.parentFrame.uninstallApp, self.uninstallApp)
-        self.Bind(wx.EVT_MENU, self.onClearData, self.clearData)
-        self.Bind(wx.EVT_MENU, self.onSetAppState, self.setAppState)
-        self.Bind(wx.EVT_MENU, self.onSetMode, self.setKiosk)
-        self.Bind(wx.EVT_MENU, self.onSetMode, self.setMultiApp)
-        self.Bind(wx.EVT_MENU, self.parentFrame.uploadApplication, self.uploadApp)
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.onBulkFactoryReset, self.bulkFactoryReset
-        )
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
         self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
         self.Bind(
@@ -348,6 +286,7 @@ class ToolMenuBar(wx.MenuBar):
         self.Bind(
             wx.EVT_MENU, self.parentFrame.onConfigureWidgets, self.configureWidgets
         )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onPowerDown, self.powerDown)
 
     @api_tool_decorator()
     def onAbout(self, event):
@@ -430,10 +369,10 @@ class ToolMenuBar(wx.MenuBar):
         dlg = wx.MessageBox(
             "Update found! Do you want to update?",
             "Update",
-            wx.YES_NO | wx.ICON_QUESTION,
+            wx.OK | wx.ICON_QUESTION,
             parent=Globals.frame,
         )
-        if dlg == wx.YES:
+        if dlg == wx.ID_OK or dlg == wx.OK:
             self.parentFrame.statusBar.gauge.Pulse()
             thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
             thread.startWithRetry()
@@ -462,12 +401,37 @@ class ToolMenuBar(wx.MenuBar):
             )
             if result:
                 openWebLinkInBrowser(result, isfile=True)
+                atexit.register(lambda file = __file__: self.deleteFile(file))
                 Globals.frame.OnQuit(None)
         elif msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
             )
         self.isCheckingForUpdates = False
+
+    def deleteFile(self, file_path):
+        application_path = ""
+        if getattr(sys, 'frozen', False):
+            # If the application is run as a bundle, the PyInstaller bootloader
+            # extends the sys module by a flag frozen=True and sets the app 
+            # path into variable _MEIPASS'.
+            application_path = os.path.dirname(sys.executable)
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+
+        files = os.listdir(application_path)
+        try:
+            version = Globals.VERSION.replace(".", "-")
+            extention = "exe" if platform.system() == "Windows" else "app"
+            versionExtention = "%s_EsperApiSupportTool.%s" % (version, extention)
+            for file in files:
+                ApiToolLog().Log(file)
+                if file.endswith(".exe") and file.endswith(versionExtention):
+                    exe_path = os.path.join(application_path, file)
+                    shutil.rmtree(exe_path, ignore_errors=True)
+                    break
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def uncheckConsole(self, event):
@@ -481,111 +445,6 @@ class ToolMenuBar(wx.MenuBar):
     @api_tool_decorator()
     def enableConfigMenu(self):
         self.EnableTop(self.ConfigMenuPosition, True)
-
-    @api_tool_decorator()
-    def onEqlQuery(self, event):
-        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
-        self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids()
-        with LargeTextEntryDialog(
-            self.parentFrame, "Enter EQL Query:", "EQL Query"
-        ) as textDialog:
-            Globals.OPEN_DIALOGS.append(textDialog)
-            if textDialog.ShowModal() == wx.ID_OK:
-                eql = textDialog.GetValue()
-                if eql:
-                    self.parentFrame.toggleEnabledState(False)
-                    self.parentFrame.statusBar.gauge.Pulse()
-                    self.parentFrame.Logging("---> Performing EQL Query")
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.parentFrame.Logging(
-                        "---> Finished Performing EQL Query, processing results..."
-                    )
-                    Globals.THREAD_POOL.enqueue(
-                        processCollectionDevices, deviceListResp
-                    )
-            else:
-                self.parentFrame.setCursorDefault()
-            Globals.OPEN_DIALOGS.remove(textDialog)
-
-    @api_tool_decorator()
-    def onCollection(self, event):
-        postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, 0)
-        self.parentFrame.setCursorBusy()
-        self.parentFrame.onClearGrids()
-        with CollectionsDialog(self.parentFrame) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            if dlg.ShowModal() == wx.ID_EXECUTE:
-                eql = dlg.getSelectionEql()
-                if eql:
-                    self.parentFrame.statusBar.gauge.Pulse()
-                    self.parentFrame.toggleEnabledState(False)
-                    self.parentFrame.Logging("---> Performing EQL Query")
-                    deviceListResp = preformEqlSearch(eql, None, returnJson=True)
-                    self.parentFrame.Logging(
-                        "---> Finished Performing EQL Query, processing results..."
-                    )
-                    Globals.THREAD_POOL.enqueue(
-                        processCollectionDevices, deviceListResp
-                    )
-            else:
-                self.parentFrame.setCursorDefault()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            dlg.DestroyLater()
-
-    @api_tool_decorator()
-    def checkCollectionEnabled(self):
-        if not checkCollectionIsEnabled():
-            if hasattr(self.collectionSubMenu, "Hide"):
-                self.collectionSubMenu.Hide()
-            else:
-                self.collectionSubMenu.Enable(False)
-        else:
-            if hasattr(self.collectionSubMenu, "Show"):
-                self.collectionSubMenu.Show()
-            else:
-                self.collectionSubMenu.Enable(True)
-
-    @api_tool_decorator()
-    def AddUser(self, event):
-        if not self.uc:
-            self.uc = UserCreation(self)
-            Globals.OPEN_DIALOGS.append(self.uc)
-        self.parentFrame.toggleEnabledState(False)
-        self.parentFrame.isRunning = True
-        self.uc.Show()
-        self.uc.tryToMakeActive()
-
-    @api_tool_decorator()
-    def onClearData(self, event):
-        indx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[4]
-        )
-        self.parentFrame.sidePanel.actionChoice.SetSelection(indx)
-        self.parentFrame.onRun()
-
-    @api_tool_decorator()
-    def onSetMode(self, event):
-        kioskIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[2]
-        )
-        multiIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[3]
-        )
-        menuItem = event.EventObject.FindItemById(event.Id)
-        if "multi" in menuItem.GetItemLabelText().lower():
-            self.parentFrame.sidePanel.actionChoice.SetSelection(multiIndx)
-        else:
-            self.parentFrame.sidePanel.actionChoice.SetSelection(kioskIndx)
-        self.parentFrame.onRun()
-
-    @api_tool_decorator()
-    def onSetAppState(self, event):
-        showIndx = self.parentFrame.sidePanel.actionChoice.GetItems().index(
-            list(Globals.GENERAL_ACTIONS.keys())[5]
-        )
-        self.parentFrame.sidePanel.actionChoice.SetSelection(showIndx)
-        self.parentFrame.onRun()
 
     def setSaveMenuOptionsEnableState(self, state):
         self.fileSave.Enable(state)

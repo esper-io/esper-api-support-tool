@@ -6,21 +6,16 @@ import wx
 import wx.grid as gridlib
 
 import Common.Globals as Globals
-from GUI.GridTable import GridTable
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
+from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
-from Utility.Resource import (
-    acquireLocks,
-    checkIfCurrentThreadStopped,
-    determineDoHereorMainThread,
-    postEventToFrame,
-    releaseLocks,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
+                              determineDoHereorMainThread, postEventToFrame,
+                              releaseLocks, resourcePath, scale_bitmap)
 
 
 class GridPanel(wx.Panel):
@@ -104,10 +99,6 @@ class GridPanel(wx.Panel):
     def __set_properties(self):
         self.SetThemeEnabled(False)
         self.device_grid.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.onCellChange)
-
-        self.device_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.network_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
-        self.app_grid.Bind(gridlib.EVT_GRID_SELECT_CELL, self.onSingleSelect)
 
         self.enableGridProperties()
 
@@ -305,7 +296,7 @@ class GridPanel(wx.Panel):
     def applyTextColorToDevice(self, device, color, bgColor=None, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
         acquireLocks([Globals.grid1_lock])
-        statusIndex = self.grid1HeaderLabels.index("Status")
+        seenIndex = self.grid1HeaderLabels.index("Last Seen") if "Last Seen" in self.grid1HeaderLabels else -1
         deviceName = ""
         if device:
             deviceName = (
@@ -326,7 +317,7 @@ class GridPanel(wx.Panel):
                     for colNum in range(self.device_grid.GetNumberCols()):
                         if (
                             colNum < self.device_grid.GetNumberCols()
-                            and colNum != statusIndex
+                            and colNum != seenIndex
                         ):
                             self.device_grid.SetCellTextColour(rowNum, colNum, color)
                             if bgColor:
@@ -376,7 +367,7 @@ class GridPanel(wx.Panel):
                 if col == "Tags":
                     properTagList = []
                     for r in re.findall(
-                        r"\".+?\"|\'.+?\'|\’.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
+                        r"\".+?\"|\'.+?\'|\’.+?\’|\’.+?\’|\‘.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
                         row[columns.index(col)],
                     ):
                         processedTag = r.strip()
@@ -385,6 +376,7 @@ class GridPanel(wx.Panel):
                             or processedTag.startswith("'")
                             or processedTag.startswith("[")
                             or processedTag.startswith("’")
+                            or processedTag.startswith("‘")
                         ):
                             processedTag = processedTag[1 : len(processedTag)]
                         while (
@@ -392,13 +384,14 @@ class GridPanel(wx.Panel):
                             or processedTag.endswith("'")
                             or processedTag.endswith("]")
                             or processedTag.endswith("’")
+                            or processedTag.startswith("‘")
                         ):
                             processedTag = processedTag[0 : len(processedTag) - 1]
                         if processedTag:
                             properTagList.append(processedTag.strip())
-                        if len(properTagList) >= Globals.MAX_TAGS:
-                            properTagList = properTagList[0 : Globals.MAX_TAGS]
-                        entry[col] = properTagList
+                    if len(properTagList) >= Globals.MAX_TAGS:
+                        properTagList = properTagList[0 : Globals.MAX_TAGS]
+                    entry[col] = properTagList
                 else:
                     entry[col] = row[columns.index(col)].strip()
             returnList.append(entry)
@@ -485,39 +478,6 @@ class GridPanel(wx.Panel):
             ]
             return self.getDeviceRowsSpecificCols(columns)
         return []
-
-    def updateGridContent(self, event):
-        evtVal = event.GetValue()
-        if self.device_grid_contents:
-            device = evtVal[0]
-            modified = evtVal[1]
-            deviceListing = list(
-                filter(
-                    lambda x: (
-                        x[Globals.CSV_TAG_ATTR_NAME["Esper Name"]] == device.device_name
-                        if hasattr(device, "device_name")
-                        else device["device_name"]
-                        if type(device) is dict
-                        else device
-                    ),
-                    self.device_grid_contents,
-                )
-            )
-            for listing in deviceListing:
-                indx = self.device_grid_contents.index(listing)
-                if modified == "alias":
-                    listing["OriginalAlias"] = listing["Alias"]
-                elif modified == "tags":
-                    listing["OriginalTags"] = listing["Tags"]
-                self.device_grid_contents[indx] = listing
-
-    def onSingleSelect(self, event):
-        """
-        Get the selection of a single cell by clicking or
-        moving the selection with the arrow keys
-        """
-        self.currentlySelectedCell = (event.GetRow(), event.GetCol())
-        event.Skip()
 
     def getColVisibility(self):
         if not self.grid1ColVisibility and not self.grid2ColVisibility:
@@ -615,9 +575,11 @@ class GridPanel(wx.Panel):
             data = content
         elif (content is None or len(content) == 0) and grid.Table.data is not None:
             data = grid.Table.data
+        else:
+            data = content
         return data
 
-    def forceRefreshGrids(self):
+    def forceRefreshGrids(self, event=None):
         self.device_grid.ForceRefresh()
         self.network_grid.ForceRefresh()
         self.app_grid.ForceRefresh()

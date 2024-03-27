@@ -67,6 +67,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleReportType",
             "scheduleInterval",
             "showDisclaimer",
+            "showAppFilter",
             "getTemplateLanguage",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
@@ -306,8 +307,8 @@ class PreferencesDialog(wx.Dialog):
             + "\nThis preference specifies the max amount of rows saved to a sheet."
             + "\nWill use Spinner value * 1000.\nMax (Default): {:,} -> {:,}\nMin: {:,} -> {:,}".format(
                 Globals.MAX_SHEET_CHUNK_SIZE / 1000,
-                Globals.MIN_SHEET_CHUNK_SIZE / 1000,
                 Globals.MAX_SHEET_CHUNK_SIZE,
+                Globals.MIN_SHEET_CHUNK_SIZE / 1000,
                 Globals.MIN_SHEET_CHUNK_SIZE,
             ),
         )
@@ -462,9 +463,9 @@ class PreferencesDialog(wx.Dialog):
         (_, _, self.btn_appFilter,) = self.addPrefToPanel(
             self.app,
             sizer_9,
-            "Filter App Column",
+            "Filter App Column And Report",
             wx.Button,
-            "Filter the Application Column to only show particular applications.",
+            "Filter the Application Column and Report to only show particular applications.",
         )
 
         # Schedule Preferences
@@ -530,7 +531,7 @@ class PreferencesDialog(wx.Dialog):
         self.prompts.Hide()
         sizer_5.Add(self.prompts, 1, wx.EXPAND, 0)
 
-        sizer_19 = wx.FlexGridSizer(3, 1, 0, 0)
+        sizer_19 = wx.FlexGridSizer(4, 1, 0, 0)
 
         (_, _, self.checkbox_8,) = self.addPrefToPanel(
             self.prompts,
@@ -554,6 +555,14 @@ class PreferencesDialog(wx.Dialog):
             "Show Terms and Conditions",
             wx.CheckBox,
             "Show Terms and Conditions",
+        )
+
+        (_, _, self.checkbox_31,) = self.addPrefToPanel(
+            self.prompts,
+            sizer_19,
+            "Show App Filter Dialog",
+            wx.CheckBox,
+            "Show App Filter Dialog",
         )
 
         sizer_2 = wx.StdDialogButtonSizer()
@@ -700,6 +709,7 @@ class PreferencesDialog(wx.Dialog):
             "scheduleReportType": self.reportType.GetValue(),
             "scheduleInterval": self.spin_ctrl_13.GetValue(),
             "showDisclaimer": self.checkbox_30.IsChecked(),
+            "showAppFilter": self.checkbox_31.IsChecked(),
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
@@ -737,6 +747,7 @@ class PreferencesDialog(wx.Dialog):
         Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
         Globals.APP_COL_FILTER = self.appColFilter
         Globals.SHOW_DISCLAIMER = self.prefs["showDisclaimer"]
+        Globals.SHOW_APP_FILTER_DIALOG = self.prefs["showAppFilter"]
         Globals.GET_DEVICE_LANGUAGE = self.prefs["getTemplateLanguage"]
 
         Globals.SCHEDULE_ENABLED = self.prefs["scheduleEnabled"]
@@ -756,7 +767,7 @@ class PreferencesDialog(wx.Dialog):
             else:
                 self.parent.gridPanel.disableGridProperties(False, False, True)
 
-        if self.IsModal():
+        if event and self.IsModal():
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
@@ -1051,7 +1062,7 @@ class PreferencesDialog(wx.Dialog):
                 self.reportType.SetSelection(indx)
             else:
                 self.reportType.SetSelection(self.prefs["scheduleReportType"])
-            Globals.SCHEDULE_TYPE = self.reportType.GetValue().lower()
+            Globals.SCHEDULE_TYPE = self.reportType.GetValue()
 
         if "scheduleInterval" in self.prefs and self.prefs["scheduleInterval"]:
             try:
@@ -1082,6 +1093,13 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.SHOW_DISCLAIMER = False
             self.checkbox_30.Set3StateValue(wx.CHK_UNCHECKED)
+
+        if self.checkBooleanValuePrefAndSet("showAppFilter", self.checkbox_31, True):
+            Globals.SHOW_APP_FILTER_DIALOG = True
+            self.checkbox_31.Set3StateValue(wx.CHK_CHECKED)
+        else:
+            Globals.SHOW_APP_FILTER_DIALOG = False
+            self.checkbox_31.Set3StateValue(wx.CHK_UNCHECKED)
 
         if self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29):
             Globals.GET_DEVICE_LANGUAGE = True
@@ -1118,8 +1136,9 @@ class PreferencesDialog(wx.Dialog):
         self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
 
         for key in self.prefKeys:
-            if key not in self.prefs.keys() or self.prefs[key] is None:
-                self.prefs[key] = self.getDefaultKeyValue(key)
+            defaultVal = self.getDefaultKeyValue(key)
+            if key not in self.prefs or self.prefs[key] is None:
+                self.prefs[key] = defaultVal
 
         return self.prefs
 
@@ -1206,6 +1225,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.SCHEDULE_INTERVAL
         elif key == "showDisclaimer":
             return Globals.SHOW_DISCLAIMER
+        elif key == "showAppFilter":
+            return Globals.SHOW_APP_FILTER_DIALOG
         elif key == "getTemplateLanguage":
             return Globals.GET_DEVICE_LANGUAGE
         else:
@@ -1266,7 +1287,7 @@ class PreferencesDialog(wx.Dialog):
 
     def appFilterDlg(self, event):
         with LargeTextEntryDialog(
-            None,
+            Globals.frame,
             "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
             "App Column Filter",
             textPlaceHolder=",".join(self.appColFilter)

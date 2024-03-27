@@ -10,29 +10,20 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
-from Utility.API.AppUtilities import (
-    getAllApplicationsForHost,
-    getAllAppVersionsForHost,
-    uploadApplicationForHost,
-)
+from Utility.API.AppUtilities import (getAllApplicationsForHost,
+                                      getAllAppVersionsForHost,
+                                      uploadApplicationForHost)
 from Utility.API.CommandUtility import postEsperCommand
-from Utility.API.ContentUtility import getAllContentFromHost, uploadContentToHost
+from Utility.API.ContentUtility import (getAllContentFromHost,
+                                        uploadContentToHost)
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    deleteFile,
-    displayMessageBox,
-    download,
-    getEsperConfig,
-    getHeader,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (deleteFile, displayMessageBox, download,
+                              getEsperConfig, getHeader, postEventToFrame)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 def checkBlueprintsIsEnabled():
@@ -45,26 +36,33 @@ def checkBlueprintsIsEnabled():
     return enabled
 
 
-def checkBlueprintEnabled(data):
-    isBlueprintEnabled = checkBlueprintsIsEnabledForTenant(
-        data["apiHost"],
-        {
-            "Authorization": "Bearer %s" % data["apiKey"],
-            "Content-Type": "application/json",
-        },
-    )
-    data["isBlueprintsEnabled"] = isBlueprintEnabled
-
-
-def checkBlueprintsIsEnabledForTenant(host, header):
-    enabled = False
+def checkFeatureFlags(data):
+    host = data["apiHost"]
+    header ={
+        "Authorization": "Bearer %s" % data["apiKey"],
+        "Content-Type": "application/json",
+    }
     resp = getFeatureFlagsForTenant(host, header)
+    jsonResp = None
     if hasattr(resp, "status_code") and resp.status_code < 300:
         jsonResp = resp.json()
-        if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"]:
-            return True
-    return enabled
 
+    checkBlueprintEnabled(data, jsonResp)
+    checkIosEnabled(data, jsonResp)
+
+def checkBlueprintEnabled(data, jsonResp):
+    enabled = False
+    if "esper.cloud.onboarding" in jsonResp and jsonResp["esper.cloud.onboarding"] is True:
+        enabled =  True
+    if "esper.cloud.blueprints.v2" in jsonResp and jsonResp["esper.cloud.blueprints.v2"] is True:
+        enabled =  True
+    data["isBlueprintsEnabled"] = enabled
+
+def checkIosEnabled(data, jsonResp):
+    enabled = False
+    if "esper.cloud.ios.enable" in jsonResp and jsonResp["esper.cloud.ios.enable"] is True:
+        enabled =  True
+    data["isIosEnabled"] = enabled
 
 @api_tool_decorator()
 def getAllBlueprints():
@@ -72,6 +70,19 @@ def getAllBlueprints():
         baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        respJson = resp.json()
+        blueprints = getAllFromOffsetsRequests(respJson)
+        if type(blueprints) is dict and "results" in blueprints:
+            respJson["results"] = respJson["results"] + blueprints["results"]
+            respJson["next"] = None
+            respJson["prev"] = None
+        return respJson
+    return resp
+
+@api_tool_decorator()
+def getAllBlueprintVersions(bp_id):
+    resp = getBlueprintVersions(bp_id)
     if resp:
         respJson = resp.json()
         blueprints = getAllFromOffsetsRequests(respJson)
@@ -123,6 +134,13 @@ def getBlueprint(id):
     resp = performGetRequestWithRetry(url, headers=getHeader())
     return resp
 
+def getBlueprintVersions(bpId):
+    url = "{base}/v2/blueprints/{blueprint_id}/versions/".format(
+        baseUrl=Globals.configuration.host,
+        blueprint_id=bpId,
+    )
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    return resp
 
 # @api_tool_decorator()
 # def getAllBlueprintFromHost(host, key, enterprise, id):
@@ -273,7 +291,7 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
     if Globals.SHOW_TEMPLATE_DIALOG:
         result = CheckboxMessageBox(
             "Confirmation",
-            "The %s will attempt to clone to template.\nThe following apps are missing: %s\nThe following Content is missing: %s\n\nContinue?"
+            "The %s will attempt to clone to Blueprint.\nThe following apps are missing: %s\nThe following Content is missing: %s\n\nContinue?"
             % (
                 Globals.TITLE,
                 missingApps if missingApps else None,

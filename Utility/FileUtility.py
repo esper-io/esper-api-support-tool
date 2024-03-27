@@ -1,12 +1,14 @@
 import csv
 import json
-import tempfile
-import platform
 import os
-import pandas as pd
-import openpyxl
-import Common.Globals as Globals
+import platform
+import tempfile
 from itertools import islice
+
+import openpyxl
+import pandas as pd
+
+import Common.Globals as Globals
 from Utility.Logging import ApiToolLogging
 
 
@@ -125,7 +127,7 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
 
 
 def read_csv_via_pandas(path: str) -> pd.DataFrame:
-    return pd.read_csv(path, sep=",", header=0, keep_default_na=False)
+    return pd.read_csv(path, sep=",", header=0, keep_default_na=False, chunksize=1000)
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
@@ -134,14 +136,19 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             path,
             engine="xlsxwriter",
         )
-        for sheet, df in df_dict.items():
-            try:
-                sheetNames = []
+        
+        sheetNames = []
+        try:
+            for sheet, df in df_dict.items():
                 sheetNames.append(sheet)
                 df.to_excel(writer, sheet_name=sheet, index=False)
-                # Auto adjust column width
-                for s in sheetNames:
-                    worksheet = writer.sheets[s]
+
+            # Auto adjust column width
+            for s in sheetNames:
+                worksheet = writer.sheets[s]
+                if hasattr(worksheet, "autofit"):
+                    worksheet.autofit()
+                else:
                     for idx, col in enumerate(df):  # loop through all columns
                         series = df[col]
                         max_len = (
@@ -156,9 +163,10 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                             + 1
                         )  # adding a little extra space
                         worksheet.set_column(idx, idx, max_len)  # set column width
-            except Exception as e:
-                ApiToolLogging().LogError(e)
-        writer.save()
+        except Exception as e:
+            pass
+        finally:
+            writer.save()
     else:
         split_dict_list = list(
             __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
@@ -169,7 +177,6 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             else:
                 path = path[:-7] + "_{}.xlsx".format(i)
             save_excel_pandas_xlxswriter(path, split_dict_list[i])
-
 
 def __split_dict_into_chunks__(data, size):
     it = iter(data)
