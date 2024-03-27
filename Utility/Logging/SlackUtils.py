@@ -133,7 +133,7 @@ class SlackUtils:
                             },
                             {
                                 "type": "text",
-                                "text": str(data)
+                                "text": str(data) if data else "None"
                             }
                         ]
                     }
