@@ -118,6 +118,7 @@ def processDeviceModificationForList(
         "progress": 0,
         "sent": 0,
         "skip": 0,
+        "invalid": 0,
     }
     status = []
     for device in chunk:
@@ -185,12 +186,11 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
         logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
         if not newName:
             # Return if no alias specified
-            status = {
+            return {
                 "Device Name": deviceName,
                 "Device Id": deviceId,
                 "Alias Status": "No alias to set",
             }
-            return (tracker, status)
 
         if newName != str(aliasName):
             # Change alias if it differs than what is already set (as retrieved by API)
@@ -235,6 +235,8 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
+    else:
+        tracker["invalid"] += 1
     statusResp = {
         "Device Name": deviceName,
         "Device Id": deviceId,
@@ -318,7 +320,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
             "Tags": tags,
         }
     else:
-        tracker["skip"] += 1
+        tracker["invalid"] += 1
         status = {
             "Device Name": deviceName,
             "Device Id": deviceId,

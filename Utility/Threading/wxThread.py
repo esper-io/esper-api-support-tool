@@ -63,6 +63,7 @@ def waitTillThreadsFinish(
             "progress": 0,
             "sent": 0,
             "skip": 0,
+            "invalid": 0,
         }
         if threads == Globals.THREAD_POOL.threads:
             resp = Globals.THREAD_POOL.results()
@@ -74,6 +75,7 @@ def waitTillThreadsFinish(
                     tracker["sent"] += thread_tracker["sent"]
                     tracker["skip"] += thread_tracker["skip"]
                     tracker["progress"] += thread_tracker["progress"]
+                    tracker["invalid"] += thread_tracker["invalid"]
 
                     devices += thread[1]
                     statuses += thread[2]
@@ -86,26 +88,31 @@ def waitTillThreadsFinish(
                     tracker["sent"] += thread_tracker["sent"]
                     tracker["skip"] += thread_tracker["skip"]
                     tracker["progress"] += thread_tracker["progress"]
+                    tracker["invalid"] += thread_tracker["invalid"]
 
                     devices += thread._args[1]
                     statuses += thread.result[2]
         msg = ""
         if action == GridActions.MODIFY_TAGS.value:
-            msg = "Requested %s tag changes. %s succeeded, %s failed, %s skipped (no tags found to apply), %s in-progress. \n\nREMINDER: Only %s tags MAX may be currently applied to a device!" % (
+            msg = "Requested %s tag changes of %s devices. %s succeeded, %s failed, %s skipped, %s in-progress, %s tag entries not found. \n\nREMINDER: Only %s tags MAX may be currently applied to a device!" % (
                 tracker["sent"],
+                len(devices),
                 tracker["success"],
                 tracker["fail"],
                 tracker["skip"],
                 tracker["progress"],
+                tracker["invalid"],
                 Globals.MAX_TAGS
             )
         else:
-            msg = "Requested %s Alias changes. %s succeeded, %s failed. %s skipped (either no Alias found or is already applied). %s in-progress." % (
+            msg = "Requested %s Alias changes of %s devices. %s succeeded, %s failed. %s skipped (Alias is already applied). %s in-progress. %s Alias entries not found." % (
                 tracker["sent"],
+                len(devices),
                 tracker["success"],
                 tracker["fail"],
                 tracker["skip"],
                 tracker["progress"],
+                tracker["invalid"],
             )
         postEventToFrame(eventUtil.myEVT_LOG, msg)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
