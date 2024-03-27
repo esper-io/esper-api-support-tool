@@ -112,38 +112,30 @@ def obtainEsperDeviceEntriesFromList(iterList):
 def processDeviceModificationForList(
     action, chunk, tagsFromGrid, aliasDic, maxGaugeAction
 ):
-    changeSucceeded = 0
-    succeeded = 0
-    numNewName = 0
+    tracker = {
+        "success": 0,
+        "fail": 0,
+        "sent": 0,
+        "skip": 0,
+    }
     status = []
-    aliasStatus = []
-    tagStatus = []
     for device in chunk:
         if action == GridActions.MODIFY_TAGS.value:
-            numSucceeded, tagStatusMsg = changeTagsForDevice(
-                device, tagsFromGrid, maxGaugeAction
+            tagStatusMsg = changeTagsForDevice(
+                device, tagsFromGrid, maxGaugeAction, tracker
             )
-            changeSucceeded += numSucceeded
-            tagStatus.append(tagStatusMsg)
+            status.append(tagStatusMsg)
         else:
-            numNameChanged, numSuccess, aliasStatusMsg = changeAliasForDevice(
-                device, aliasDic, maxGaugeAction
+            aliasStatusMsg = changeAliasForDevice(
+                device, aliasDic, maxGaugeAction, tracker
             )
-            numNewName += numNameChanged
-            succeeded += numSuccess
-            aliasStatus.append(aliasStatusMsg)
+            status.append(aliasStatusMsg)
 
-    tmp = tagStatus if action == GridActions.MODIFY_TAGS.value else aliasStatus
-    for stat in tmp:
-        if stat not in status:
-            status.append(stat)
-    return (changeSucceeded, succeeded, numNewName, chunk, status)
+    return (tracker, chunk, status)
 
 
 @api_tool_decorator()
-def changeAliasForDevice(device, aliasList, maxGaugeAction):
-    numNewName = 0
-    succeeded = 0
+def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     logString = ""
     status = deviceName = deviceId = aliasName = serial = imei1 = imei2 = None
     if hasattr(device, "device_name"):
@@ -197,29 +189,32 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction):
                 "Device Id": deviceId,
                 "Alias Status": "No alias to set",
             }
-            return (numNewName, succeeded, status)
+            tracker["skip"] += 1
+            return (tracker, status)
 
         if newName != str(aliasName):
             # Change alias if it differs than what is already set (as retrieved by API)
-            numNewName += 1
             status = ""
             try:
                 ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
                 status = apiCalls.setdevicename(deviceId, newName, ignoreQueued)
+                tracker["sent"] += 1
             except Exception as e:
                 ApiToolLog().LogError(e)
             if hasattr(status, "to_dict"):
                 status = status.to_dict()
             if "Success" in str(status):
                 logString = logString + " <success>"
-                succeeded += 1
+                tracker["success"] += 1
             elif "Queued" in str(status):
                 logString = logString + " <Queued> Make sure device is online."
             elif "Scheduled" in str(status):
                 logString = logString + " <Scheduled> Make sure device is online."
             else:
                 logString = logString + " <failed>"
+                tracker["fail"] += 1
         else:
+            tracker["skip"] += 1
             logString = logString + " (Alias Name already set)"
             status = {
                 "device": deviceName,
@@ -250,13 +245,12 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction):
         }
     else:
         statusResp["Alias Status"] = "No alias to set"
-    return (numNewName, succeeded, statusResp)
+    return statusResp
 
 
 @api_tool_decorator()
-def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction):
+def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
     # Tag modification
-    changeSucceeded = 0
     status = deviceName = deviceId = serial = imei1 = imei2 = None
     if hasattr(device, "device_name"):
         deviceName = device.device_name
@@ -300,21 +294,32 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction):
 
         try:
             tags = setdevicetags(deviceId, tagsFromCell)
+            tracker["sent"] += 1
         except Exception as e:
             ApiToolLog().LogError(e)
         if tags == tagsFromCell:
-            changeSucceeded += 1
+            tracker["success"] += 1
+        else:
+            tracker["fail"] += 1
         postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
             int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
-    status = {
-        "Device Name": deviceName,
-        "Device Id": deviceId,
-        "Tags": tags,
-    }
-    return changeSucceeded, status
+
+        status = {
+            "Device Name": deviceName,
+            "Device Id": deviceId,
+            "Tags": tags,
+        }
+    else:
+        tracker["skip"] += 1
+        status = {
+            "Device Name": deviceName,
+            "Device Id": deviceId,
+            "Tags": "No tags to set",
+        }
+    return status
 
 
 @api_tool_decorator()

@@ -55,36 +55,52 @@ def waitTillThreadsFinish(
         return (action, entId, deviceList, True, len(deviceList) * 3)
     if source == 2:
         postEventToFrame(eventUtil.myEVT_COMPLETE, None)
-        changeSucceeded = succeeded = numNewName = 0
         statuses = []
         devices = []
+        tracker = {
+            "success": 0,
+            "fail": 0,
+            "sent": 0,
+            "skip": 0,
+        }
         if threads == Globals.THREAD_POOL.threads:
             resp = Globals.THREAD_POOL.results()
             for thread in resp:
                 if type(thread) == tuple:
-                    changeSucceeded += thread[0]
-                    succeeded += thread[1]
-                    numNewName += thread[2]
-                    devices += thread[3]
-                    statuses += thread[4]
+                    thread_tracker = thread[0]
+                    tracker["success"] += thread_tracker["success"]
+                    tracker["fail"] += thread_tracker["fail"]
+                    tracker["sent"] += thread_tracker["sent"]
+                    tracker["skip"] += thread_tracker["skip"]
+
+                    devices += thread[1]
+                    statuses += thread[2]
         else:
             for thread in threads:
                 if type(thread.result) == tuple:
-                    changeSucceeded += thread.result[0]
-                    succeeded += thread.result[1]
-                    numNewName += thread.result[2]
+                    thread_tracker = thread.result[0]
+                    tracker["success"] += thread_tracker["success"]
+                    tracker["fail"] += thread_tracker["fail"]
+                    tracker["sent"] += thread_tracker["sent"]
+                    tracker["skip"] += thread_tracker["skip"]
+
                     devices += thread._args[1]
-                    statuses += thread.result[4]
+                    statuses += thread.result[2]
         msg = ""
         if action == GridActions.MODIFY_TAGS.value:
-            msg = (
-                "Successfully changed tags for %s of %s devices.\n\nREMINDER: Only %s tags MAX may be currently applied to a device!"
-                % (changeSucceeded, len(devices), Globals.MAX_TAGS)
+            msg = "Requested %s tag changes. %s succeeded, %s failed, %s skipped (no tags found to apply). \n\nREMINDER: Only %s tags MAX may be currently applied to a device!" % (
+                tracker["sent"],
+                tracker["success"],
+                tracker["fail"],
+                tracker["skip"],
+                Globals.MAX_TAGS
             )
         else:
-            msg = "Successfully changed aliases for %s of %s devices." % (
-                succeeded,
-                numNewName,
+            msg = "Requested %s Alias changes. %s succeeded, %s failed. %s skipped (either no Alias found or is already applied)." % (
+                tracker["sent"],
+                tracker["success"],
+                tracker["fail"],
+                tracker["skip"],
             )
         postEventToFrame(eventUtil.myEVT_LOG, msg)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))
