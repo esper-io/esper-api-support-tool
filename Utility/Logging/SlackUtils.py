@@ -128,7 +128,7 @@ class SlackUtils:
                         "elements": [
                             {
                                 "type": "text",
-                                "text": "%s:" % section_name,
+                                "text": "%s: " % section_name,
                                 "style": {
                                     "bold": True
                                 }
