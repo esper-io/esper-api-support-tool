@@ -60,6 +60,7 @@ def waitTillThreadsFinish(
         tracker = {
             "success": 0,
             "fail": 0,
+            "progress": 0,
             "sent": 0,
             "skip": 0,
         }
@@ -72,6 +73,7 @@ def waitTillThreadsFinish(
                     tracker["fail"] += thread_tracker["fail"]
                     tracker["sent"] += thread_tracker["sent"]
                     tracker["skip"] += thread_tracker["skip"]
+                    tracker["progress"] += thread_tracker["progress"]
 
                     devices += thread[1]
                     statuses += thread[2]
@@ -83,24 +85,27 @@ def waitTillThreadsFinish(
                     tracker["fail"] += thread_tracker["fail"]
                     tracker["sent"] += thread_tracker["sent"]
                     tracker["skip"] += thread_tracker["skip"]
+                    tracker["progress"] += thread_tracker["progress"]
 
                     devices += thread._args[1]
                     statuses += thread.result[2]
         msg = ""
         if action == GridActions.MODIFY_TAGS.value:
-            msg = "Requested %s tag changes. %s succeeded, %s failed, %s skipped (no tags found to apply). \n\nREMINDER: Only %s tags MAX may be currently applied to a device!" % (
+            msg = "Requested %s tag changes. %s succeeded, %s failed, %s skipped (no tags found to apply), %s in-progress. \n\nREMINDER: Only %s tags MAX may be currently applied to a device!" % (
                 tracker["sent"],
                 tracker["success"],
                 tracker["fail"],
                 tracker["skip"],
+                tracker["progress"],
                 Globals.MAX_TAGS
             )
         else:
-            msg = "Requested %s Alias changes. %s succeeded, %s failed. %s skipped (either no Alias found or is already applied)." % (
+            msg = "Requested %s Alias changes. %s succeeded, %s failed. %s skipped (either no Alias found or is already applied). %s in-progress." % (
                 tracker["sent"],
                 tracker["success"],
                 tracker["fail"],
                 tracker["skip"],
+                tracker["progress"],
             )
         postEventToFrame(eventUtil.myEVT_LOG, msg)
         postEventToFrame(eventUtil.myEVT_COMMAND, (msg, statuses))

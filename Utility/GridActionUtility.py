@@ -115,6 +115,7 @@ def processDeviceModificationForList(
     tracker = {
         "success": 0,
         "fail": 0,
+        "progress": 0,
         "sent": 0,
         "skip": 0,
     }
@@ -189,7 +190,6 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 "Device Id": deviceId,
                 "Alias Status": "No alias to set",
             }
-            tracker["skip"] += 1
             return (tracker, status)
 
         if newName != str(aliasName):
@@ -208,8 +208,13 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 tracker["success"] += 1
             elif "Queued" in str(status):
                 logString = logString + " <Queued> Make sure device is online."
+                tracker["progress"] += 1
             elif "Scheduled" in str(status):
                 logString = logString + " <Scheduled> Make sure device is online."
+                tracker["progress"] += 1
+            elif "in-progress" in str(status):
+                logString = logString + " <In-Progress> Make sure device is online."
+                tracker["progress"] += 1
             else:
                 logString = logString + " <failed>"
                 tracker["fail"] += 1
