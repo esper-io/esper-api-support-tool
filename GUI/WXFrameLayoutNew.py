@@ -1072,25 +1072,18 @@ class NewFrameLayout(wx.Frame):
             res = getTokenInfo(maxAttempt=2)
         except:
             pass
-        if res and hasattr(res, "expires_on"):
-            Globals.IS_TOKEN_VALID = True
-            if res.expires_on <= datetime.now(res.expires_on.tzinfo) or not res:
+        Globals.IS_TOKEN_VALID = True
+        if ((res and hasattr(res, "expires_on") and res.expires_on <= datetime.now(res.expires_on.tzinfo)) 
+            or (res
+                and hasattr(res, "body")
+                and (
+                    "Authentication credentials were not provided" in res.body
+                    or "Invalid or missing credentials" in res.body
+                )
+                or (hasattr(res, "status") and res.status >= 300))
+            or res is None):
                 Globals.IS_TOKEN_VALID = False
                 determineDoHereorMainThread(self.promptForNewToken)
-        elif (
-            res
-            and hasattr(res, "body")
-            and (
-                "Authentication credentials were not provided" in res.body
-                or "Invalid or missing credentials" in res.body
-            )
-            or (hasattr(res, "status") and res.status >= 300)
-        ):
-            Globals.IS_TOKEN_VALID = False
-            postEventToFrame(
-                eventUtil.myEVT_PROCESS_FUNCTION,
-                self.promptForNewToken,
-            )
 
         if res and hasattr(res, "user"):
             Globals.TOKEN_USER = getSpecificUser(res.user)
