@@ -114,19 +114,31 @@ class SlackUtils:
                     )
                 }
             },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Data:* %s" % data
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Other:* %s" % resp
-                }
-            }
+            self.add_rich_text_section("Data", data),
+            self.add_rich_text_section("Other", resp),
         ]
         return blocks
+    
+    def add_rich_text_section(self, section_name, data):
+        rich_text = {
+                "type": "rich_text",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [
+                            {
+                                "type": "text",
+                                "text": "%s: " % section_name,
+                                "style": {
+                                    "bold": True
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": str(data) if data else "None"
+                            }
+                        ]
+                    }
+                ]
+            }
+        return rich_text

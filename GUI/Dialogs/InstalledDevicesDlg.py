@@ -32,7 +32,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.selectedVersion = None
         self.apps = apps
         for app in self.apps:
-            if "is_ios" in app and not app["is_ios"]:
+            if "is_ios" not in app or ("is_ios" in app and not app["is_ios"]):
                 self.appNameList.append(app["appPkgName"])
         self.versions = []
         self.showAllVersionsOption = showAllVersionsOption
