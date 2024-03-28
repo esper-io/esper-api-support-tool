@@ -376,6 +376,7 @@ class NewFrameLayout(wx.Frame):
                         if isValid and type(isValid) == wx.MenuItem:
                             self.loadConfiguartion(isValid)
                     except:
+                        _, host, _, _, _ = dialog.getUserInput()
                         displayMessageBox(
                             (
                                 "ERROR: An error occured when attempting to add the tenant. Check inputs values and your internet connection.",
