@@ -59,7 +59,7 @@ from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
                                        setKiosk, setMulti,
                                        validateConfiguration)
-from Utility.API.GroupUtility import getAllGroups, moveGroup
+from Utility.API.GroupUtility import getAllGroups, getGroupById, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
                                      getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
@@ -2722,24 +2722,24 @@ class NewFrameLayout(wx.Frame):
             Globals.OPEN_DIALOGS.append(groupMultiDialog)
             if groupMultiDialog.ShowModal() == wx.ID_OK:
                 Globals.OPEN_DIALOGS.remove(groupMultiDialog)
-                selections = groupMultiDialog.GetSelections()
-                if selections:
-                    selction = selections[0]
-                    groups = getAllGroups(name=selction)
-                if groups.results:
-                    resp = moveGroup(
-                        groups.results[0].id, self.sidePanel.selectedDevicesList
-                    )
-                    if resp and resp.status_code == 200:
-                        displayMessageBox(
-                            "Selected device(s) have been moved to the %s Group."
-                            % groups.results[0].name
+                user_selection = groupMultiDialog.GetSelections()
+                if user_selection:
+                    selection = user_selection[0]
+                    groupId = self.sidePanel.groups[selection] if selection in self.sidePanel.groups else None
+                    if groupId:
+                        resp = moveGroup(
+                            groupId, self.sidePanel.selectedDevicesList
                         )
-                        self.sidePanel.clearSelections()
-                    elif resp:
-                        displayMessageBox(str(resp))
-                else:
-                    displayMessageBox("No Group found with the name: %s" % selction)
+                        if resp and resp.status_code == 200:
+                            displayMessageBox(
+                                "Selected device(s) have been moved to %s."
+                                % selection
+                            )
+                            self.sidePanel.clearSelections()
+                        elif resp:
+                            displayMessageBox(str(resp))
+                    else:
+                        displayMessageBox("Failed to obtain group data: %s" % selection)
                 postEventToFrame(eventUtil.myEVT_COMPLETE, True)
                 return
             else:
