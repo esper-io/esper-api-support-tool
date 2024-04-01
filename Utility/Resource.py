@@ -377,7 +377,7 @@ def updateErrorTracker():
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
-    if not s or not t:
+    if s and t:
         if usePartial:
             return fuzz.partial_ratio(s.lower(), t.lower())
         return fuzz.ratio(s.lower(), t.lower())

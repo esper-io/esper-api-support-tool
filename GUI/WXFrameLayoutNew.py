@@ -1146,6 +1146,9 @@ class NewFrameLayout(wx.Frame):
             Globals.THREAD_POOL.join(tolerance=tolerance)
         else:
             joinThreadList(threads)
+        determineDoHereorMainThread(self.processWaitForThreadsThenSetCursorDefault, threads, source, action, tolerance)
+
+    def processWaitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
         if source == 0:
             self.gridPanel.setColVisibility()
             self.sidePanel.sortAndPopulateAppChoice()
