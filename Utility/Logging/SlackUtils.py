@@ -123,6 +123,9 @@ class SlackUtils:
         return blocks
     
     def add_rich_text_section(self, section_name, data):
+        dataStr = str(data) if data else "None"
+        if len(dataStr) > 4000:
+            dataStr = dataStr[0:1000]
         rich_text = {
                 "type": "rich_text",
                 "elements": [
@@ -138,7 +141,7 @@ class SlackUtils:
                             },
                             {
                                 "type": "text",
-                                "text": str(data) if data else "None"
+                                "text": dataStr
                             }
                         ]
                     }
