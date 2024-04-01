@@ -369,10 +369,10 @@ class ToolMenuBar(wx.MenuBar):
         dlg = wx.MessageBox(
             "Update found! Do you want to update?",
             "Update",
-            wx.OK | wx.ICON_QUESTION,
+            wx.YES_NO | wx.ICON_QUESTION,
             parent=Globals.frame,
         )
-        if dlg == wx.ID_OK or dlg == wx.OK:
+        if dlg == wx.ID_YES or dlg == wx.YES:
             self.parentFrame.statusBar.gauge.Pulse()
             thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
             thread.startWithRetry()
