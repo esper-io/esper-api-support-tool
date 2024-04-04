@@ -207,7 +207,7 @@ CSV_TAG_ATTR_NAME = {
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
-    "Serial Number": ["Serial", "serial"],
+    "Serial Number": ["serialNumber", "Serial", "serial"],
     "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",
