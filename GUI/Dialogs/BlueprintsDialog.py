@@ -41,13 +41,7 @@ class BlueprintsDialog(wx.Dialog):
         self.fromConfig = None
         self.blueprint = None
         self.group = None
-        choices = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-                and self.configMenuOpt[x]["isBlueprintsEnabled"],
-                self.configMenuOpt.keys(),
-            )
-        )
+        choices = self.configMenuOpt.keys()
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -240,13 +234,14 @@ class BlueprintsDialog(wx.Dialog):
             if "isBlueprintsEnabled" not in config:
                 Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
-        choices = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-                and self.configMenuOpt[x]["isBlueprintsEnabled"],
-                self.configMenuOpt.keys(),
-            )
-        )
+        choices = self.configMenuOpt.keys()
+        # list(
+        #     filter(
+        #         lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
+        #         and self.configMenuOpt[x]["isBlueprintsEnabled"],
+        #         self.configMenuOpt.keys(),
+        #     )
+        # )
         for choice in choices:
             self.combo_box_3.Append(choice)
             self.combo_box_1.Append(choice)

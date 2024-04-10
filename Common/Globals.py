@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195241"
+VERSION = "v0.195242"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50

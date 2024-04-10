@@ -2935,11 +2935,8 @@ class NewFrameLayout(wx.Frame):
     def loadConfigCheckBlueprint(self, config):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
-        if "isBlueprintsEnabled" in config:
-            self.blueprintsEnabled = config["isBlueprintsEnabled"]
-        else:
-            checkFeatureFlags(config)
-            self.blueprintsEnabled = config["isBlueprintsEnabled"]
+        checkFeatureFlags(config)
+        self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
         else:
