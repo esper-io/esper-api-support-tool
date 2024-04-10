@@ -384,8 +384,10 @@ class SidePanel(wx.Panel):
             newChoices = []
             for choice in choices:
                 match = self.groupDeviceCount.get(choice)
-                if match is not None:
+                if match is not None and choice != Globals.ALL_DEVICES_IN_TENANT:
                     newChoices.append("%s (Device Count: %s)" % (choice, match))
+                elif choice == Globals.ALL_DEVICES_IN_TENANT:
+                    newChoices.append(Globals.ALL_DEVICES_IN_TENANT)
 
             if self.groupMultiDialog:
                 self.groupMultiDialog = None
@@ -408,7 +410,7 @@ class SidePanel(wx.Panel):
                         groupNameProper = groupName.split(" (Device Count:")[0]
                         groupId = self.groups[groupNameProper] if groupNameProper in self.groups else groupNameProper
                         self.selectedGroups.Append(groupName)
-                        if not self.groupMultiDialog.blueprintEnabled and groupNameProper.lower() == "all devices":
+                        if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
                             self.selectedGroupsList = []
                             self.selectedGroups.Append(groupName)

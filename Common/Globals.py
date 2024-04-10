@@ -28,6 +28,8 @@ error_tracker = {}
 IS_TOKEN_VALID = False
 TOKEN_USER = None
 
+ALL_DEVICES_IN_TENANT = "* All Devices In Tenant *"
+
 MAX_DEVICE_COUNT = 5000
 
 MAX_ERROR_TIME_DIFF = 2

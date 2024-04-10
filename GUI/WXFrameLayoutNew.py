@@ -1325,6 +1325,7 @@ class NewFrameLayout(wx.Frame):
                 if type(i) is dict
                 else i,
             )
+        results.insert(0, Globals.ALL_DEVICES_IN_TENANT)
         if results and len(results):
             for group in results:
                 if type(group) is dict:
@@ -1352,6 +1353,12 @@ class NewFrameLayout(wx.Frame):
 
                     if group["id"] not in Globals.knownGroups:
                         Globals.knownGroups[group["id"]] = group
+                elif type(group) is str:
+                    if group not in self.sidePanel.groups:
+                        self.sidePanel.groups[group] = ""
+                    if group not in Globals.knownGroups:
+                        Globals.knownGroups[group] = ""
+                    self.sidePanel.groupDeviceCount[group] = -1
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
                     50 + int(float(num / len(results)) * 25),
