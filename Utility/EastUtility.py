@@ -604,6 +604,8 @@ def compileDeviceGroupData(deviceInfo):
             deviceInfo["groups"] = ""
         else:
             deviceInfo["groups"] = groupNames
+    else:
+        deviceInfo["groups"] = ""
 
     if "isSupervisorPluginActive" not in deviceInfo:
         deviceInfo["isSupervisorPluginActive"] = "N/A"
