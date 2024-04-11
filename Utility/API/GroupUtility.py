@@ -220,7 +220,7 @@ def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
             try:
                 enforceRateLimit()
                 api_response = api_instance.get_group_by_id(
-                    Globals.enterprise_id,
+                    enterprise_id=Globals.enterprise_id,
                     group_id=group_id,
                     limit=limit,
                     offset=offset,

@@ -71,7 +71,7 @@ def createDataFrameFromDict(headerList, sourceData, convertTypes=False):
                     value = row[key]
                 elif type(key) is list:
                     for k in key:
-                        if k in row:
+                        if k in row and row[k]:
                             value = row[k]
                             break
                 newData[columnName].append(value)

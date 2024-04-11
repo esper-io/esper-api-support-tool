@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.19524"
+VERSION = "v0.195242"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -27,6 +27,8 @@ MAX_TAGS = 5
 error_tracker = {}
 IS_TOKEN_VALID = False
 TOKEN_USER = None
+
+ALL_DEVICES_IN_TENANT = "* All Devices In Tenant *"
 
 MAX_DEVICE_COUNT = 5000
 
@@ -207,7 +209,7 @@ CSV_TAG_ATTR_NAME = {
     "Policy": "policy_name",
     "Mode": "Mode",
     "Lockdown State": "lockdown_state",
-    "Serial Number": ["Serial", "serial"],
+    "Serial Number": ["serialNumber", "Serial", "serial"],
     "Custom Serial Number": "Custom Serial",
     "IMEI 1": "imei1",
     "IMEI 2": "imei2",

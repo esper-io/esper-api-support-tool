@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+import ssl
 import sys
 from datetime import datetime
 
@@ -21,6 +22,8 @@ class SlackUtils:
         if not self.token or not self.channel_id:
             self.get_slack_details()
         self.client = WebClient(token=self.token) if self.token else None
+
+        ssl._create_default_https_context = ssl._create_unverified_context
 
     def send_message(self, message):
         if self.client is None:
@@ -120,6 +123,9 @@ class SlackUtils:
         return blocks
     
     def add_rich_text_section(self, section_name, data):
+        dataStr = str(data) if data else "None"
+        if len(dataStr) > 4000:
+            dataStr = dataStr[0:1000]
         rich_text = {
                 "type": "rich_text",
                 "elements": [
@@ -135,7 +141,7 @@ class SlackUtils:
                             },
                             {
                                 "type": "text",
-                                "text": str(data) if data else "None"
+                                "text": dataStr
                             }
                         ]
                     }

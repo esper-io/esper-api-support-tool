@@ -42,20 +42,8 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.chosenTemplate = None
         self.group = None
         self.sourceTemplate = []
-        templateSrc = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-                and not self.configMenuOpt[x]["isBlueprintsEnabled"],
-                self.configMenuOpt.keys(),
-            )
-        )
-        blueprintDest = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-                and self.configMenuOpt[x]["isBlueprintsEnabled"],
-                self.configMenuOpt.keys(),
-            )
-        )
+        templateSrc = self.configMenuOpt.keys()
+        blueprintDest = self.configMenuOpt.keys()
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -248,23 +236,24 @@ class BlueprintsConvertDialog(wx.Dialog):
             if "isBlueprintsEnabled" not in config:
                 Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
-        enabled = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-                and self.configMenuOpt[x]["isBlueprintsEnabled"],
-                self.configMenuOpt.keys(),
-            )
-        )
-        disabled = list(
-            filter(
-                lambda x: "isBlueprintsEnabled" not in self.configMenuOpt[x]
-                or (
-                    "isBlueprintsEnabled" in self.configMenuOpt[x]
-                    and not self.configMenuOpt[x]["isBlueprintsEnabled"]
-                ),
-                self.configMenuOpt.keys(),
-            )
-        )
+        # enabled = list(
+        #     filter(
+        #         lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
+        #         and self.configMenuOpt[x]["isBlueprintsEnabled"],
+        #         self.configMenuOpt.keys(),
+        #     )
+        # )
+        # disabled = list(
+        #     filter(
+        #         lambda x: "isBlueprintsEnabled" not in self.configMenuOpt[x]
+        #         or (
+        #             "isBlueprintsEnabled" in self.configMenuOpt[x]
+        #             and not self.configMenuOpt[x]["isBlueprintsEnabled"]
+        #         ),
+        #         self.configMenuOpt.keys(),
+        #     )
+        # )
+        enabled = disabled = self.configMenuOpt.keys()
         for choice in enabled:
             self.combo_box_1.Append(choice)
         for choice in disabled:

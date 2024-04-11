@@ -63,8 +63,6 @@ def getAllDevices(
         limit = Globals.limit
     if not offset:
         offset = Globals.offset
-    if not groupToUse:
-        return None
     try:
         api_response = None
         if type(groupToUse) == list:

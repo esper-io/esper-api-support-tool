@@ -29,7 +29,6 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.SetMinSize(size)
         self.SetTitle(title)
         self.SetThemeEnabled(False)
-
         self.originalChoices = [choices]
         self.selected = []
         self.onBoxCalledPrior = False
@@ -39,6 +38,10 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.resp = resp
         self.limit = 0
         self.allDeviceStr = ""
+
+        if "group" in label.lower():
+            self.allDeviceStr = Globals.ALL_DEVICES_IN_TENANT
+
         if resp and hasattr(resp, "count") and hasattr(resp, "results"):
             if len(resp.results) > 0:
                 self.limit = math.floor(resp.count / len(resp.results))
@@ -49,18 +52,6 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if hasattr(parent, "sidePanel"):
             self.group = parent.sidePanel.selectedGroupsList
-
-        self.blueprintEnabled = False
-        config = parent.sidePanel.configChoice[parent.configMenuItem.GetItemLabelText()]
-        if "isBlueprintsEnabled" in config:
-            self.blueprintEnabled = config["isBlueprintsEnabled"]
-            self.allDeviceStr = ""
-        if not self.blueprintEnabled:
-            for choice in choices:
-                groupName = choice.split(" (Device Count:")[0]
-                if "All devices" == groupName:
-                    self.allDeviceStr = choice
-                    break
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 

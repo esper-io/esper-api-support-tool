@@ -9,26 +9,18 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
-from Utility.API.AppUtilities import (
-    getAllApplicationsForHost,
-    getAllAppVersionsForHost,
-    uploadApplicationForHost,
-)
-from Utility.API.GroupUtility import createDeviceGroupForHost, getDeviceGroupsForHost
+from Utility.API.AppUtilities import (getAllApplicationsForHost,
+                                      getAllAppVersionsForHost,
+                                      uploadApplicationForHost)
+from Utility.API.GroupUtility import (createDeviceGroupForHost,
+                                      getDeviceGroupsForHost)
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    deleteFile,
-    download,
-    getEsperConfig,
-    joinThreadList,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (deleteFile, download, getEsperConfig,
+                              joinThreadList, postEventToFrame)
+from Utility.Web.WebRequests import (performGetRequestWithRetry,
+                                     performPatchRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 class EsperTemplateUtil:
@@ -69,7 +61,7 @@ class EsperTemplateUtil:
         templateFound = None
         maxId = len(toTemplates) + 1
         templateExist = list(
-            filter(lambda x: x["name"] == self.templateName, toTemplates)
+            filter(lambda x: x["name"] == self.templateName if "name" in x else False, toTemplates)
         )
         templateFound = chosenTemplate
 

@@ -377,10 +377,12 @@ def updateErrorTracker():
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
-    if usePartial:
-        return fuzz.partial_ratio(s.lower(), t.lower())
-    return fuzz.ratio(s.lower(), t.lower())
+    if s and t:
+        if usePartial:
+            return fuzz.partial_ratio(s.lower(), t.lower())
+        return fuzz.ratio(s.lower(), t.lower())
 
+    return False
 
 def isApiKey(key):
     if type(key) != str:

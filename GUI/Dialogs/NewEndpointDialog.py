@@ -4,8 +4,8 @@ import re
 
 import wx
 import wx.html as wxHtml
-import Common.Globals as Globals
 
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Resource import openWebLinkInBrowser
 
@@ -138,6 +138,13 @@ class NewEndpointDialog(wx.Dialog):
         prefix = "Bearer"
         return name, host, entId, key, prefix
 
+    def getUserInput(self):
+        name = str(self.text_ctrl_1.GetValue().strip())
+        hostname = self.text_ctrl_2.GetValue().strip()
+        entId = str(self.text_ctrl_3.GetValue().strip())
+        key = str(self.text_ctrl_4.GetValue().strip())
+        return name, hostname, entId, key
+
     @api_tool_decorator()
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
@@ -166,16 +173,6 @@ class NewEndpointDialog(wx.Dialog):
 
     @api_tool_decorator()
     def checkInputs(self, event):
-        hostname = self.text_ctrl_2.GetValue().strip()
-        if hostname:
-            match = re.search(
-                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
-            )
-            if match:
-                hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
-                hostname = hostname.replace("https://", "")
-                hostname = hostname.replace("http://", "")
-                self.text_ctrl_2.SetValue(hostname)
         if (
             self.text_ctrl_4.GetValue()
             and self.text_ctrl_3.GetValue()

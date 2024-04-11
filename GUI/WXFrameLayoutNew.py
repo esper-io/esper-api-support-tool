@@ -59,7 +59,7 @@ from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
                                        setKiosk, setMulti,
                                        validateConfiguration)
-from Utility.API.GroupUtility import getAllGroups, moveGroup
+from Utility.API.GroupUtility import getAllGroups, getGroupById, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
                                      getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
@@ -376,6 +376,7 @@ class NewFrameLayout(wx.Frame):
                         if isValid and type(isValid) == wx.MenuItem:
                             self.loadConfiguartion(isValid)
                     except:
+                        _, host, _, _, _ = dialog.getUserInput()
                         displayMessageBox(
                             (
                                 "ERROR: An error occured when attempting to add the tenant. Check inputs values and your internet connection.",
@@ -783,6 +784,8 @@ class NewFrameLayout(wx.Frame):
             except Exception as e:
                 print(e)
                 pass
+        if not hasattr(dfs, "dropna"):
+            dfs = pd.concat(dfs, ignore_index=True)
         if dfs is not None:
             dfs.dropna(axis=0, how="all", thresh=None, subset=None, inplace=True)
             self.processSpreadsheetUpload(dfs)
@@ -1019,9 +1022,6 @@ class NewFrameLayout(wx.Frame):
 
         if host and key and prefix and entId:
             self.sidePanel.configList.AppendText("API Host = " + host + "\n")
-            self.sidePanel.configList.AppendText("API key = " + key + "\n")
-            self.sidePanel.configList.AppendText("API Prefix = " + prefix + "\n")
-            self.sidePanel.configList.AppendText("Enterprise = " + entId)
             self.sidePanel.configList.ShowPosition(0)
             Globals.IS_TOKEN_VALID = False
 
@@ -1145,6 +1145,9 @@ class NewFrameLayout(wx.Frame):
             Globals.THREAD_POOL.join(tolerance=tolerance)
         else:
             joinThreadList(threads)
+        determineDoHereorMainThread(self.processWaitForThreadsThenSetCursorDefault, threads, source, action, tolerance)
+
+    def processWaitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
         if source == 0:
             self.gridPanel.setColVisibility()
             self.sidePanel.sortAndPopulateAppChoice()
@@ -1321,6 +1324,7 @@ class NewFrameLayout(wx.Frame):
                 if type(i) is dict
                 else i,
             )
+        results.insert(0, Globals.ALL_DEVICES_IN_TENANT)
         if results and len(results):
             for group in results:
                 if type(group) is dict:
@@ -1348,6 +1352,12 @@ class NewFrameLayout(wx.Frame):
 
                     if group["id"] not in Globals.knownGroups:
                         Globals.knownGroups[group["id"]] = group
+                elif type(group) is str:
+                    if group not in self.sidePanel.groups:
+                        self.sidePanel.groups[group] = ""
+                    if group not in Globals.knownGroups:
+                        Globals.knownGroups[group] = ""
+                    self.sidePanel.groupDeviceCount[group] = -1
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
                     50 + int(float(num / len(results)) * 25),
@@ -2721,24 +2731,24 @@ class NewFrameLayout(wx.Frame):
             Globals.OPEN_DIALOGS.append(groupMultiDialog)
             if groupMultiDialog.ShowModal() == wx.ID_OK:
                 Globals.OPEN_DIALOGS.remove(groupMultiDialog)
-                selections = groupMultiDialog.GetSelections()
-                if selections:
-                    selction = selections[0]
-                    groups = getAllGroups(name=selction)
-                if groups.results:
-                    resp = moveGroup(
-                        groups.results[0].id, self.sidePanel.selectedDevicesList
-                    )
-                    if resp and resp.status_code == 200:
-                        displayMessageBox(
-                            "Selected device(s) have been moved to the %s Group."
-                            % groups.results[0].name
+                user_selection = groupMultiDialog.GetSelections()
+                if user_selection:
+                    selection = user_selection[0]
+                    groupId = self.sidePanel.groups[selection] if selection in self.sidePanel.groups else None
+                    if groupId:
+                        resp = moveGroup(
+                            groupId, self.sidePanel.selectedDevicesList
                         )
-                        self.sidePanel.clearSelections()
-                    elif resp:
-                        displayMessageBox(str(resp))
-                else:
-                    displayMessageBox("No Group found with the name: %s" % selction)
+                        if resp and resp.status_code == 200:
+                            displayMessageBox(
+                                "Selected device(s) have been moved to %s."
+                                % selection
+                            )
+                            self.sidePanel.clearSelections()
+                        elif resp:
+                            displayMessageBox(str(resp))
+                    else:
+                        displayMessageBox("Failed to obtain group data: %s" % selection)
                 postEventToFrame(eventUtil.myEVT_COMPLETE, True)
                 return
             else:
@@ -2931,11 +2941,8 @@ class NewFrameLayout(wx.Frame):
     def loadConfigCheckBlueprint(self, config):
         Globals.token_lock.acquire()
         Globals.token_lock.release()
-        if "isBlueprintsEnabled" in config:
-            self.blueprintsEnabled = config["isBlueprintsEnabled"]
-        else:
-            checkFeatureFlags(config)
-            self.blueprintsEnabled = config["isBlueprintsEnabled"]
+        checkFeatureFlags(config)
+        self.blueprintsEnabled = config["isBlueprintsEnabled"]
         if self.blueprintsEnabled:
             self.menubar.toggleCloneMenuOptions(True)
         else:

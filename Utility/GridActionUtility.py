@@ -304,7 +304,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
             tracker["sent"] += 1
         except Exception as e:
             ApiToolLog().LogError(e)
-        if tags == tagsFromCell:
+        if tags == tagsFromCell or (not tags and not tagsFromCell):
             tracker["success"] += 1
         else:
             tracker["fail"] += 1
