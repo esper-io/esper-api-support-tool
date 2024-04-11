@@ -784,6 +784,8 @@ class NewFrameLayout(wx.Frame):
             except Exception as e:
                 print(e)
                 pass
+        if not hasattr(dfs, "dropna"):
+            dfs = pd.concat(dfs, ignore_index=True)
         if dfs is not None:
             dfs.dropna(axis=0, how="all", thresh=None, subset=None, inplace=True)
             self.processSpreadsheetUpload(dfs)
