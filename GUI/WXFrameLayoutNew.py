@@ -1020,9 +1020,6 @@ class NewFrameLayout(wx.Frame):
 
         if host and key and prefix and entId:
             self.sidePanel.configList.AppendText("API Host = " + host + "\n")
-            self.sidePanel.configList.AppendText("API key = " + key + "\n")
-            self.sidePanel.configList.AppendText("API Prefix = " + prefix + "\n")
-            self.sidePanel.configList.AppendText("Enterprise = " + entId)
             self.sidePanel.configList.ShowPosition(0)
             Globals.IS_TOKEN_VALID = False
 
