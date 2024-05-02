@@ -754,14 +754,6 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     else:
         return
 
-    kioskMode = None
-    if "current_app_mode" in deviceInfo:
-        kioskMode = deviceInfo["current_app_mode"]
-        if kioskMode == 0:
-            deviceInfo["Mode"] = "Kiosk"
-        else:
-            deviceInfo["Mode"] = "Multi"
-
     hdwareKey = None
     if deviceHardware and "serial_number" in deviceHardware:
         hdwareKey = "serial_number"
@@ -815,6 +807,15 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
             )
         ):
             device["tags"] = []
+
+
+    kioskMode = None
+    if "current_app_mode" in deviceInfo:
+        kioskMode = deviceInfo["current_app_mode"]
+        if kioskMode == 1:
+            deviceInfo["Mode"] = "Kiosk"
+        else:
+            deviceInfo["Mode"] = "Multi"
 
     if kioskMode == 0:
         kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")

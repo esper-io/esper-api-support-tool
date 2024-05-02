@@ -11,5 +11,4 @@ openpyxl
 xlsxwriter
 xlrd
 ratelimit
-openpyxl
 slack_sdk

@@ -1666,6 +1666,8 @@ class NewFrameLayout(wx.Frame):
                 or actionClientData == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
             )
             and estimatedDeviceCount > (Globals.MAX_DEVICE_COUNT / 25)
+        ) or (
+            '' in self.sidePanel.selectedGroupsList
         ):
             if (
                 (
