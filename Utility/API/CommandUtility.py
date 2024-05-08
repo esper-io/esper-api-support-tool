@@ -15,7 +15,8 @@ from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
                               postEventToFrame, splitListIntoChunks)
-from Utility.Web.WebRequests import performPostRequestWithRetry
+from Utility.Web.WebRequests import (performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -131,6 +132,10 @@ def executeCommandOnGroup(
                 schedule,
                 maxAttempt,
             )
+            executeCommandHelper(
+                sendCommandToGroup, [groupToUse], command_type, command_args,
+                schedule_type, schedule, maxAttempt, statusList, isGroup=True
+            )
             entryName = list(
                 filter(lambda x: groupToUse == x[1], frame.sidePanel.devices.items())
             )
@@ -163,25 +168,10 @@ def executeCommandOnGroup(
     else:
         splitGroupList = splitListIntoChunks(groupList, maxChunkSize=500)
         for gList in splitGroupList:
-            last_status = sendCommandToGroup(
-                gList, command_type, command_args, schedule_type, schedule, maxAttempt
+            executeCommandHelper(
+                sendCommandToGroup, gList, command_type, command_args,
+                schedule_type, schedule, maxAttempt, statusList, isGroup=True
             )
-            if last_status and hasattr(last_status, "state"):
-                entry = {}
-                entry["Groups"] = gList
-                if hasattr(last_status, "id"):
-                    entry["Command Id"] = last_status.id
-                entry["Status State"] = last_status.state
-                if hasattr(last_status, "reason"):
-                    entry["Reason"] = last_status.reason
-                statusList.append(entry)
-            else:
-                entry = {}
-                entry["Groups"] = gList
-                if hasattr(last_status, "state"):
-                    entry["Command Id"] = last_status.id
-                entry["Status"] = last_status
-                statusList.append(entry)
     if postStatus:
         postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
@@ -208,75 +198,78 @@ def executeCommandOnDevice(
         devicelist = deviceIds
     if not combineRequests:
         for deviceToUse in devicelist:
-            last_status = sendCommandToDevice(
-                [deviceToUse],
-                command_type,
-                command_args,
-                schedule_type,
-                schedule,
-                maxAttempt,
+            executeCommandHelper(
+                sendCommandToDevice, [deviceToUse], command_type, command_args,
+                schedule_type, schedule, maxAttempt, statusList
             )
-            deviceEntryName = list(
-                filter(lambda x: deviceToUse == x[1], frame.sidePanel.devices.items())
-            )
-            if deviceEntryName:
-                deviceEntryName = deviceEntryName[0]
-            if last_status and hasattr(last_status, "state"):
-                entry = {}
-                if deviceEntryName and len(deviceEntryName) > 1:
-                    parts = deviceEntryName[0].split(" ")
-                    if len(parts) > 3:
-                        entry["Esper Name"] = parts[2]
-                        entry["Alias"] = parts[3]
-                    elif len(parts) > 2:
-                        entry["Esper Name"] = parts[2]
-                    entry["Device Id"] = deviceEntryName[1]
-                else:
-                    entry["Device Id"] = deviceToUse
-                if hasattr(last_status, "id"):
-                    entry["Command Id"] = last_status.id
-                entry["status"] = last_status.state
-                if hasattr(last_status, "reason"):
-                    entry["Reason"] = last_status.reason
-                statusList.append(entry)
-            else:
-                entry = {}
-                if deviceEntryName and len(deviceEntryName) > 1:
-                    parts = deviceEntryName[0].split(" ")
-                    if len(parts) > 3:
-                        entry["Esper Name"] = parts[2]
-                        entry["Alias"] = parts[3]
-                    elif len(parts) > 2:
-                        entry["Esper Name"] = parts[2]
-                    entry["Device Id"] = deviceEntryName[1]
-                else:
-                    entry["Device Id"] = deviceToUse
-                entry["Status"] = last_status
-                statusList.append(entry)
     else:
         splitDeviceList = splitListIntoChunks(devicelist, maxChunkSize=500)
         for dList in splitDeviceList:
-            last_status = sendCommandToDevice(
-                dList, command_type, command_args, schedule_type, schedule, maxAttempt
+            executeCommandHelper(
+                sendCommandToDevice, dList, command_type, command_args,
+                schedule_type, schedule, maxAttempt, statusList
             )
-            if last_status and hasattr(last_status, "state"):
-                entry = {}
-                entry["Devices"] = dList
-                if hasattr(last_status, "id"):
-                    entry["Command Id"] = last_status.id
-                entry["status"] = last_status.state
-                if hasattr(last_status, "reason"):
-                    entry["Reason"] = last_status.reason
-                statusList.append(entry)
-            else:
-                entry = {}
-                entry["Devices"] = dList
-                entry["Status"] = last_status
-                statusList.append(entry)
     if postStatus:
         postEventToFrame(eventUtil.myEVT_COMMAND, statusList)
     return statusList
 
+def executeCommandHelper(cmdFunc,
+                         targetList,
+                         command_type,
+                         command_args,
+                         schedule_type,
+                         schedule,
+                         maxAttempt,
+                         statusList,
+                         isGroup=False):
+    last_status = cmdFunc(
+        targetList,
+        command_type,
+        command_args,
+        schedule_type,
+        schedule,
+        maxAttempt,
+    )
+    entry = {}
+    if not isGroup:
+        entry["Devices"] = targetList
+    else:
+        entry["Groups"] = targetList
+    firstEntry = targetList[0]
+    if len(targetList) == 1 and not isGroup:
+        deviceEntryName = list(
+            filter(lambda x: firstEntry == x[1], Globals.frame.sidePanel.devices.items())
+        )
+        deviceEntryName = deviceEntryName[0] if deviceEntryName else None
+        entry["Device Id"] = firstEntry
+        if deviceEntryName and len(deviceEntryName) > 1:
+            parts = deviceEntryName[0].split(" ~ ")
+            if len(parts) > 3:
+                entry["Esper Name"] = parts[2]
+                entry["Alias"] = parts[3]
+            elif len(parts) > 2:
+                entry["Esper Name"] = parts[2]
+    elif len(targetList) == 1 and isGroup:
+        entry["Group Id"] = firstEntry
+        groupEntryName = Globals.knownGroups.get(firstEntry, None)
+        if groupEntryName.get("name", False):
+            entry["Group Name"] = groupEntryName.get("name")
+
+    if last_status and hasattr(last_status, "state"):
+        entry["Status"] = last_status.state
+        if hasattr(last_status, "id"):
+            entry["Command Id"] = last_status.id
+        if hasattr(last_status, "reason"):
+            entry["Reason"] = last_status.reason
+    elif type(last_status) is dict and "state" in last_status:
+        entry["Status"] = last_status["state"]
+        if "id" in last_status:
+            entry["Command Id"] = last_status["id"]
+        if "reason" in last_status:
+            entry["Reason"] = last_status["reason"]
+    else:
+        entry["Status"] = last_status
+    statusList.append(entry)
 
 def sendCommandToDevice(
     deviceList,
@@ -296,7 +289,9 @@ def sendCommandToDevice(
         schedule=schedule_type,
         schedule_args=schedule,
     )
-    last_status = executeCommandAndWait(request, maxAttempt=maxAttempt)
+    ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
+    _, last_status = postEsperCommand(request.to_dict(), maxAttempt=maxAttempt)
+    last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -318,48 +313,9 @@ def sendCommandToGroup(
         schedule=schedule_type,
         schedule_args=schedule,
     )
-    last_status = executeCommandAndWait(request, maxAttempt=maxAttempt)
-    return last_status
-
-
-def executeCommandAndWait(request, maxAttempt=Globals.MAX_RETRY):
-    api_instance = getCommandsApiInstance()
-    api_response = None
-    for attempt in range(maxAttempt):
-        try:
-            enforceRateLimit()
-            api_response = api_instance.create_command(Globals.enterprise_id, request)
-            ApiToolLog().LogApiRequestOccurrence(
-                "executeCommandAndWait",
-                api_instance.create_command,
-                Globals.PRINT_API_LOGS,
-            )
-            postEventToFrame(
-                eventUtil.myEVT_AUDIT,
-                {
-                    "operation": "Command (%s)" % request.command,
-                    "data": request,
-                    "resp": api_response,
-                },
-            )
-            break
-        except Exception as e:
-            if hasattr(e, "body") and (
-                "invalid device id" in e.body or "invalid group id" in e.body
-            ):
-                logBadResponse("create command api", api_response, None)
-                return None
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e, postIssue=False)
-                raise e
-            if "429" not in str(e) and "Too Many Requests" not in str(e):
-                time.sleep(Globals.RETRY_SLEEP)
-            else:
-                time.sleep(
-                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                )  # Sleep for a minute * retry number
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-    last_status = waitForCommandToFinish(api_response.id, ignoreQueue=ignoreQueued)
+    _, last_status = postEsperCommand(request.to_dict(), maxAttempt=maxAttempt)
+    last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -371,34 +327,11 @@ def waitForCommandToFinish(
     maxAttempt=Globals.MAX_RETRY,
 ):
     """ Wait until a Command is done or it times out """
-    api_instance = getCommandsApiInstance()
-    response = None
-    for attempt in range(maxAttempt):
-        try:
-            enforceRateLimit()
-            response = api_instance.get_command_request_status(
-                Globals.enterprise_id, request_id
-            )
-            ApiToolLog().LogApiRequestOccurrence(
-                "waitForCommandToFinish",
-                api_instance.get_command_request_status,
-                Globals.PRINT_API_LOGS,
-            )
-            break
-        except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e, postIssue=False)
-                raise e
-            if "429" not in str(e) and "Too Many Requests" not in str(e):
-                time.sleep(Globals.RETRY_SLEEP)
-            else:
-                time.sleep(
-                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                )  # Sleep for a minute * retry number
-    if response and response.results:
-        status = response.results[0]
+    response = getCommandRequestStats(request_id, maxAttempt=maxAttempt)
+    if response and "status" in response and response["status"]:
+        status = response["status"][0]
         postEventToFrame(
-            eventUtil.myEVT_LOG, "---> Command state: %s" % str(status.state)
+            eventUtil.myEVT_LOG, "---> Command state: %s" % str(status["state"])
         )
 
         stateList = [
@@ -414,7 +347,7 @@ def waitForCommandToFinish(
             stateList.remove("Command Queued")
 
         start = time.perf_counter()
-        while status.state not in stateList:
+        while status["state"] not in stateList:
             end = time.perf_counter()
             duration = end - start
             if duration >= timeout:
@@ -424,30 +357,7 @@ def waitForCommandToFinish(
                     % str(status.state),
                 )
                 break
-            for attempt in range(maxAttempt):
-                try:
-                    enforceRateLimit()
-                    response = api_instance.get_command_request_status(
-                        Globals.enterprise_id, request_id
-                    )
-                    ApiToolLog().LogApiRequestOccurrence(
-                        "waitForCommandToFinish",
-                        api_instance.get_command_request_status,
-                        Globals.PRINT_API_LOGS,
-                    )
-                    break
-                except Exception as e:
-                    if attempt == maxAttempt - 1:
-                        ApiToolLog().LogError(e, postIssue=False)
-                        raise e
-                    if "429" not in str(e) and "Too Many Requests" not in str(e):
-                        time.sleep(Globals.RETRY_SLEEP)
-                    else:
-                        time.sleep(
-                            Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                        )  # Sleep for a minute * retry number
-            if response and response.results:
-                status = response.results[0]
+            status = getCommandRequestStats(request_id, maxAttempt=maxAttempt)
             postEventToFrame(
                 eventUtil.myEVT_LOG, "---> Command state: %s" % str(status.state)
             )
@@ -458,30 +368,16 @@ def waitForCommandToFinish(
 
 
 @api_tool_decorator()
-def getCommandsApiInstance():
-    """ Returns an instace of the Commands API """
-    return esperclient.CommandsV2Api(esperclient.ApiClient(Globals.configuration))
-
-
-@api_tool_decorator()
-def postEsperCommand(command_data, useV0=True):
+def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
     json_resp = None
     resp = None
     try:
         headers = getHeader()
-        url = ""
-        if useV0:
-            url = "https://%s-api.esper.cloud/api/v0/enterprise/%s/command/" % (
-                Globals.configuration.host.split("-api")[0].replace("https://", ""),
-                Globals.enterprise_id,
-            )
-        else:
-            url = "https://%s-api.esper.cloud/api/enterprise/%s/command/" % (
-                Globals.configuration.host.split("-api")[0].replace("https://", ""),
-                Globals.enterprise_id,
-            )
-        resp = performPostRequestWithRetry(url, headers=headers, json=command_data)
-        json_resp = resp.json()
+        url = "https://%s-api.esper.cloud/api/commands/v0/commands/" % Globals.configuration.host.split("-api")[0].replace("https://", "")
+        resp = performPostRequestWithRetry(url, headers=headers, json=command_data, maxRetry=maxAttempt)
+        json_resp = resp.json() if resp else None
+        if "content" in json_resp:
+            json_resp = json_resp["content"]
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
             {
@@ -494,6 +390,25 @@ def postEsperCommand(command_data, useV0=True):
     except Exception as e:
         ApiToolLog().LogError(e, postIssue=False)
     return resp, json_resp
+
+
+def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
+    url = "https://%s-api.esper.cloud/api/commands/v0/commands/%s/stats/" % (
+        Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        command_id
+    )
+    json_resp = None
+    resp = None
+    try:
+        headers = getHeader()
+        resp = performGetRequestWithRetry(url, headers=headers, maxRetry=maxAttempt)
+        json_resp = resp.json() if resp else None
+        if "content" in json_resp:
+            json_resp = json_resp["content"]
+        logBadResponse(url, resp, json_resp)
+    except Exception as e:
+        ApiToolLog().LogError(e, postIssue=False)
+    return json_resp
 
 
 @api_tool_decorator()

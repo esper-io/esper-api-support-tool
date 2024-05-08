@@ -5,7 +5,6 @@ import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import GridActions
-from Utility.API.AppUtilities import installAppOnDevices, uninstallAppOnDevice
 from Utility.API.DeviceUtility import setDeviceDisabled, setdevicetags
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -23,14 +22,6 @@ def iterateThroughGridRows(frame, action):
         modifyDevice(frame, GridActions.MODIFY_TAGS.value)
     if action == GridActions.MOVE_GROUP.value:
         relocateDeviceToNewGroup(frame)
-    if action == GridActions.SET_APP_STATE.value:
-        setAppStateForAllAppsListed(action)
-    if action == GridActions.INSTALL_APP.value:
-        installApp(frame)
-    if action == GridActions.UNINSTALL_APP.value:
-        uninstallApp(frame)
-    if action == GridActions.SET_DEVICE_DISABLED.value:
-        setDevicesDisabled()
 
 
 @api_tool_decorator()
@@ -330,111 +321,6 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
 
 
 @api_tool_decorator()
-def setAppStateForAllAppsListed(state):
-    deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
-    if devices:
-        deviceList = getDeviceIdFromGridDevices(devices)
-
-        for device in deviceList:
-            Globals.THREAD_POOL.enqueue(setAllAppsState, device, Globals.frame.AppState)
-
-        Globals.THREAD_POOL.enqueue(
-            wxThread.waitTillThreadsFinish,
-            Globals.THREAD_POOL.threads,
-            state,
-            -1,
-            4,
-            tolerance=1,
-        )
-
-
-@api_tool_decorator()
-def setAllAppsState(device, state):
-    stateStatuses = []
-    deviceName = None
-    deviceId = None
-    if hasattr(device, "device_name"):
-        deviceName = device.device_name
-        deviceId = device.id
-    elif type(device) is dict:
-        deviceName = device["device_name"]
-        deviceId = device["id"]
-    else:
-        deviceName = device
-        deviceId = device
-    resp = None
-    if device.get("os") is not None and device.get("os").lower() == "android":
-        _, resp = apiCalls.getAndroidDeviceApps(deviceId, False, Globals.USE_ENTERPRISE_APP)
-    else:
-        _, resp = apiCalls.getIosDeviceApps(deviceId, createAppListArg=False)
-    if resp and "results" in resp:
-        for app in resp["results"]:
-            stateStatus = None
-            package_name = None
-            if "application" in app:
-                package_name = app["application"]["package_name"]
-                if app["application"]["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
-                    continue
-            else:
-                package_name = app["package_name"]
-                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME:
-                    continue
-            if state == "DISABLE":
-                stateStatus = apiCalls.setAppState(
-                    deviceId,
-                    package_name,
-                    state="DISABLE",
-                )
-            if state == "HIDE":
-                stateStatus = apiCalls.setAppState(
-                    deviceId,
-                    package_name,
-                    state="HIDE",
-                )
-            if state == "SHOW":
-                stateStatus = apiCalls.setAppState(
-                    deviceId,
-                    package_name,
-                    state="SHOW",
-                )
-            postEventToFrame(
-                eventUtil.myEVT_AUDIT,
-                {
-                    "operation": "SetAppState",
-                    "data": {"id": deviceId, "app": package_name, "state": state},
-                    "resp": stateStatus,
-                },
-            )
-            if stateStatus and hasattr(stateStatus, "state"):
-                entry = {
-                    "Device Name": deviceName,
-                    "Device id": deviceId,
-                    "State Status": stateStatus.state,
-                }
-                if hasattr(stateStatus, "reason"):
-                    entry["Reason"] = stateStatus.reason
-                stateStatuses.append(entry)
-            else:
-                stateStatuses.append(
-                    {
-                        "Device Name": deviceName,
-                        "Device id": deviceId,
-                        "State Status": stateStatus,
-                    }
-                )
-    else:
-        stateStatuses.append(
-            {
-                "Device Name": deviceName,
-                "Device id": deviceId,
-                "State Status": "Failed to obtain device apps: %s" % resp,
-            }
-        )
-    return stateStatuses
-
-
-@api_tool_decorator()
 def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     if not deviceIdentifers:
         deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(
@@ -600,80 +486,6 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
     return results
 
 
-@api_tool_decorator()
-def processInstallLatestApp(devices, app):
-    status = []
-    resp = installAppOnDevices(app["pkgName"], version=app["version"], devices=devices)
-    if type(resp) == dict and "Error" in resp.keys():
-        status.append(
-            {
-                "Devices": devices,
-                "Error": resp["Error"],
-            }
-        )
-    else:
-        status += resp
-    return status
-
-
-@api_tool_decorator()
-def processUninstallApp(devices, app):
-    status = []
-    resp = uninstallAppOnDevice(app["pkgName"], device=devices)
-    if type(resp) == dict and "Error" in resp.keys():
-        status.append(
-            {
-                "Devices": devices,
-                "Error": resp["Error"],
-            }
-        )
-    else:
-        status += resp
-    return status
-
-
-def installApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
-
-    devices = getDeviceIdFromGridDevices(devices)
-    deviceList = splitListIntoChunks(devices, maxChunkSize=500)
-    for entry in deviceList:
-        Globals.THREAD_POOL.enqueue(
-            processInstallLatestApp, entry, frame.sidePanel.selectedAppEntry
-        )
-
-    Globals.THREAD_POOL.enqueue(
-        wxThread.waitTillThreadsFinish,
-        Globals.THREAD_POOL.threads,
-        GridActions.INSTALL_APP.value,
-        -1,
-        5,
-        tolerance=1,
-    )
-
-
-def uninstallApp(frame):
-    deviceIdentifers = frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=1)
-    devices = getDevicesFromGrid(deviceIdentifers=deviceIdentifers, tolerance=1)
-
-    devices = getDeviceIdFromGridDevices(devices)
-    deviceList = splitListIntoChunks(devices, maxChunkSize=500)
-    for entry in deviceList:
-        Globals.THREAD_POOL.enqueue(
-            processUninstallApp, entry, frame.sidePanel.selectedAppEntry
-        )
-
-    Globals.THREAD_POOL.enqueue(
-        wxThread.waitTillThreadsFinish,
-        Globals.THREAD_POOL.threads,
-        GridActions.UNINSTALL_APP.value,
-        -1,
-        5,
-        tolerance=1,
-    )
-
-
 def processSetDeviceDisabled(devices, numDevices, processed):
     status = []
     for device in devices:
@@ -699,28 +511,6 @@ def processSetDeviceDisabled(devices, numDevices, processed):
         },
     )
     return status
-
-
-def setDevicesDisabled():
-    devices = getDevicesFromGrid(tolerance=1)
-
-    splitResults = splitListIntoChunks(devices)
-    numDevices = len(devices)
-    processed = []
-
-    for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(
-            processSetDeviceDisabled, chunk, numDevices, processed
-        )
-
-    Globals.THREAD_POOL.enqueue(
-        wxThread.waitTillThreadsFinish,
-        Globals.THREAD_POOL.threads,
-        GridActions.SET_DEVICE_DISABLED.value,
-        -1,
-        5,
-        tolerance=1,
-    )
 
 
 def getDeviceIdFromGridDevices(devices):

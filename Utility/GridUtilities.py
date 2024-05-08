@@ -28,9 +28,9 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                     "Application Version Name": app.get("version_name", ""),
                     "Package Name": app["package_name"],
                     "State": app.get("state", ""),
-                    "Whitelisted": app.get("whitelisted", ""),
-                    "Can Clear Data": app.get("is_data_clearable", ""),
-                    "Can Uninstall": app.get("is_uninstallable", ""),
+                    "Whitelisted": str(app.get("whitelisted", "")),
+                    "Can Clear Data": str(app.get("is_data_clearable", "")),
+                    "Can Uninstall": str(app.get("is_uninstallable", "")),
                 }
                 appInFilter = app["package_name"] in Globals.APP_COL_FILTER
             elif "bundle_id" in app:

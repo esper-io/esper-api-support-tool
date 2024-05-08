@@ -1003,8 +1003,8 @@ def enforceGridData(device, deviceInfo, latestEventData, appData):
                         attrValue = deviceInfo["network_info"][key]
                         deviceInfo[key] = str(attrValue)
 
+    deviceInfo["AppsEntry"] = []
     if appData and "results" in deviceInfo["appObj"]:
-        deviceInfo["AppsEntry"] = []
         constructDeviceAppRowEntry(device, deviceInfo)
 
     return deviceInfo
@@ -1028,7 +1028,10 @@ def populateDeviceInfoDictionary(
         unpackageDict(deviceInfo, device)
     appThread = None
     if getApps:
-        if deviceInfo.get("os") is not None and deviceInfo.get("os").lower() == "android":
+        if (
+            (deviceInfo.get("os") is not None and deviceInfo.get("os").lower() == "android")
+            or (deviceInfo.get("androidVersion") is not None)
+        ):
             appThread = apiCalls.getAndroidDeviceApps(deviceId, True, Globals.USE_ENTERPRISE_APP)
         else:
             appThread = apiCalls.getIosDeviceApps(deviceId, createAppListArg=True)
@@ -1109,9 +1112,10 @@ def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
         )
 
 
-def clearKnownGroupsAndBlueprints():
+def clearKnownGlobalVariables():
     Globals.knownGroups.clear()
     Globals.knownBlueprints.clear()
+    Globals.knownApplications = []
 
 
 def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):

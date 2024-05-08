@@ -13,10 +13,7 @@ import Common.Globals as Globals
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.HtmlDialog import HtmlDialog
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from GUI.UserCreation import UserCreation
 from Utility import EventUtility
-from Utility.EastUtility import processCollectionDevices
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
                               openWebLinkInBrowser, postEventToFrame,

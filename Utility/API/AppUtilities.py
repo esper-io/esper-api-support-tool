@@ -550,6 +550,11 @@ def getInstallDevices(
                 api_response = resp
             else:
                 api_response.results += resp.results
+            no_dupe = []
+            for device in api_response.results:
+                if device not in no_dupe:
+                    no_dupe.append(device)
+            api_response.results = no_dupe
         return api_response
     else:
         return get_installed_devices(
@@ -700,41 +705,6 @@ def getAppDictEntry(app, update=True):
             )
         )
         entry["isValid"] = True
-
-    if (
-        Globals.frame
-        and hasattr(Globals.frame, "sidePanel")
-        and "isValid" in entry
-        and update
-    ):
-        selectedDeviceAppsMatch = list(
-            filter(
-                lambda entry: entry["app_name"] == appName
-                and entry["appPkgName"] == appPkgName,
-                Globals.frame.sidePanel.selectedDeviceApps,
-            )
-        )
-        enterpriseAppsMatch = list(
-            filter(
-                lambda entry: entry["app_name"] == appName
-                and entry["appPkgName"] == appPkgName,
-                Globals.frame.sidePanel.enterpriseApps,
-            )
-        )
-        if selectedDeviceAppsMatch and "isValid" in entry:
-            indx = Globals.frame.sidePanel.selectedDeviceApps.index(
-                selectedDeviceAppsMatch[0]
-            )
-            oldEntry = Globals.frame.sidePanel.selectedDeviceApps[indx]
-            if update:
-                oldEntry.update(entry)
-                Globals.frame.sidePanel.selectedDeviceApps[indx] = entry = oldEntry
-        if enterpriseAppsMatch and "isValid" in entry:
-            indx = Globals.frame.sidePanel.enterpriseApps.index(enterpriseAppsMatch[0])
-            oldEntry = Globals.frame.sidePanel.enterpriseApps[indx]
-            if update:
-                oldEntry.update(entry)
-                Globals.frame.sidePanel.enterpriseApps[indx] = entry = oldEntry
 
     return entry
 

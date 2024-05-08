@@ -32,7 +32,6 @@ from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from GUI.Dialogs.CommandDialog import CommandDialog
 from GUI.Dialogs.ConfirmTextDialog import ConfirmTextDialog
 from GUI.Dialogs.GeofenceDialog import GeofenceDialog
-from GUI.Dialogs.groupManagement import GroupManagement
 from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
@@ -44,10 +43,7 @@ from GUI.gridPanel import GridPanel
 from GUI.menuBar import ToolMenuBar
 from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
-from Utility.API.AppUtilities import (getAllInstallableApps, getAppDictEntry,
-                                      installAppOnDevices, installAppOnGroups,
-                                      uninstallAppOnDevice,
-                                      uninstallAppOnGroup)
+from Utility.API.AppUtilities import getAllInstallableApps, getAppDictEntry
 from Utility.API.AuditPosting import AuditPosting
 from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
                                           modifyAppsInBlueprints,
@@ -56,15 +52,13 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
                                           pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import (clearAppData, getTokenInfo, setAppState,
-                                       setKiosk, setMulti,
-                                       validateConfiguration)
-from Utility.API.GroupUtility import getAllGroups, getGroupById, moveGroup
+from Utility.API.EsperAPICalls import getTokenInfo, validateConfiguration
+from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
                                      getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (TakeAction, clearKnownGroupsAndBlueprints,
+from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
                                  fetchInstalledDevices, filterDeviceList,
                                  getAllDeviceInfo, removeNonWhitelisted,
                                  uploadAppToEndpoint)
@@ -192,7 +186,6 @@ class NewFrameLayout(wx.Frame):
         self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
         self.Bind(eventUtil.EVT_FETCH, self.onFetch)
         self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
-        self.Bind(eventUtil.EVT_APPS, self.addAppstoAppChoiceThread)
         self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
         self.Bind(eventUtil.EVT_LOG, self.onLog)
         self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
@@ -924,7 +917,7 @@ class NewFrameLayout(wx.Frame):
         if not self.firstRun:
             Globals.THREAD_POOL.clearQueue()
         self.onClearGrids()
-        clearKnownGroupsAndBlueprints()
+        clearKnownGlobalVariables()
         try:
             if self.groupManage:
                 self.groupManage.Destroy()
@@ -934,12 +927,11 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.groups = {}
         self.sidePanel.devices = {}
         self.sidePanel.groupDeviceCount = {}
-        self.sidePanel.clearSelections(clearApp=True)
+        self.sidePanel.clearSelections()
         self.sidePanel.destroyMultiChoiceDialogs()
         self.sidePanel.deviceChoice.Enable(False)
         self.sidePanel.removeEndpointBtn.Enable(False)
         self.sidePanel.notebook_1.SetSelection(0)
-        self.sidePanel.clearStoredApps()
         # Clear Search Input
         self.frame_toolbar.search.SetValue("")
         # Disable other options
@@ -1045,7 +1037,7 @@ class NewFrameLayout(wx.Frame):
                     self.groupThread = self.PopulateGroups()
                     if self.appThread and self.appThread.is_alive():
                         self.appThread.stop()
-                    self.appThread = self.PopulateApps()
+                    self.fetchApplications()
                     blueprints = wxThread.GUIThread(
                         self,
                         self.loadConfigCheckBlueprint,
@@ -1150,7 +1142,6 @@ class NewFrameLayout(wx.Frame):
     def processWaitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
         if source == 0:
             self.gridPanel.setColVisibility()
-            self.sidePanel.sortAndPopulateAppChoice()
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.actionChoice.Enable(True)
             self.sidePanel.removeEndpointBtn.Enable(True)
@@ -1164,7 +1155,6 @@ class NewFrameLayout(wx.Frame):
                 self.Logging("---> No Devices found")
             else:
                 self.sidePanel.deviceChoice.Enable(True)
-                self.sidePanel.sortAndPopulateAppChoice()
                 self.Logging("---> Application list populated")
                 if not self.isRunning:
                     self.menubar.enableConfigMenu()
@@ -1263,7 +1253,7 @@ class NewFrameLayout(wx.Frame):
     def PopulateGroups(self):
         """ Populate Group Choice """
         self.sidePanel.groupChoice.Enable(False)
-        self.Logging("--->Attempting to populate groups...")
+        self.Logging("---> Attempting to populate groups...")
         self.setCursorBusy()
         if self.previousGroupFetchThread:
             self.previousGroupFetchThread.stop()
@@ -1284,6 +1274,37 @@ class NewFrameLayout(wx.Frame):
         self.previousGroupFetchThread = thread
         return thread
     
+    def fetchApplications(self):
+        thread = wxThread.GUIThread(
+            self,
+            self.fetchAppsHelper,
+            (),
+            name="FetchApplications",
+        )
+        thread.startWithRetry()
+        self.appThread = thread
+        return thread
+    
+    def fetchAppsHelper(self):
+        if self.groupThread and self.groupThread.is_alive():
+            self.groupThread.join()
+        Globals.token_lock.acquire()
+        Globals.token_lock.release()
+        if Globals.IS_TOKEN_VALID:
+            self.Logging("---> Attempting to fetch applications...")
+            appResp = getAllInstallableApps(1)
+            if appResp:
+                appList = appResp.get("results", [])
+                for app in appList:
+                    entry = getAppDictEntry(app)
+                    if (
+                            entry 
+                            and entry not in Globals.knownApplications 
+                            and ("isValid" in entry and entry["isValid"])
+                        ):
+                        Globals.knownApplications.append(entry)
+            self.Logging("---> Finished fetching applications...")
+
     @api_tool_decorator()
     def PopulateBlueprints(self):
         self.Logging("--->Attempting to fetch blueprints...")
@@ -1473,101 +1494,6 @@ class NewFrameLayout(wx.Frame):
                     self.sidePanel.devices[name] = device["id"]
 
     @api_tool_decorator()
-    def PopulateApps(self):
-        """ Populate App Choice """
-        self.Logging("--->Attempting to populate apps...")
-        self.sidePanel.appChoice.Enable(False)
-        self.setCursorBusy()
-        thread = wxThread.GUIThread(
-            self, self.fetchAllInstallableApps, None, name="PopulateApps"
-        )
-        thread.startWithRetry()
-        return thread
-
-    @api_tool_decorator(locks=[Globals.token_lock])
-    def fetchAllInstallableApps(self):
-        if self.groupThread and self.groupThread.is_alive():
-            self.groupThread.join()
-        Globals.token_lock.acquire()
-        Globals.token_lock.release()
-        if Globals.IS_TOKEN_VALID:
-            resp = getAllInstallableApps(tolerance=1)
-            self.addAppsToAppChoice(resp)
-
-    def addAppstoAppChoiceThread(self, event):
-        api_response = None
-        if hasattr(event, "GetValue"):
-            api_response = event.GetValue()
-        else:
-            api_response = event
-        if hasattr(api_response, "results"):
-            api_response = api_response.results
-        elif type(api_response) == tuple and "results" in api_response[1]:
-            api_response = api_response[1]["results"]
-        elif type(api_response) == dict:
-            api_response = api_response["results"]
-        if api_response:
-            Globals.THREAD_POOL.enqueue(self.addAppsToAppChoice, api_response)
-
-    @api_tool_decorator()
-    def addAppsToAppChoice(self, event):
-        """ Populate App Choice """
-        api_response = None
-        if hasattr(event, "GetValue"):
-            api_response = event.GetValue()
-        else:
-            api_response = event
-        results = None
-
-        if hasattr(api_response, "results"):
-            results = api_response.results
-        elif type(api_response) == tuple and "results" in api_response[1]:
-            results = api_response[1]["results"]
-        elif type(api_response) == dict:
-            results = api_response["results"]
-
-        if results and type(results[0]) == dict and "application" in results[0]:
-            results = sorted(
-                results,
-                key=lambda i: i["application"]["application_name"].lower(),
-            )
-        elif results and hasattr(results[0], "application_name"):
-            results = sorted(
-                results,
-                key=lambda i: i.application_name.lower(),
-            )
-        elif results and type(results[0]) == dict and "application_name" in results[0]:
-            results = sorted(
-                results,
-                key=lambda i: i["application_name"].lower() if "application_name" in i else i["app_name"].lower(),
-            )
-        elif results:
-            results = sorted(
-                results,
-                key=lambda i: i["app_name"].lower(),
-            )
-
-        if results and len(results):
-            for app in results:
-                entry = getAppDictEntry(app)
-                if (
-                    entry
-                    and entry not in self.sidePanel.enterpriseApps
-                    and ("isValid" in entry and entry["isValid"])
-                ):
-                    self.sidePanel.enterpriseApps.append(entry)
-
-    @api_tool_decorator()
-    def getAppDataForRun(self):
-        appSelection = self.sidePanel.selectedApp.GetSelection()
-        appLabel = (
-            self.sidePanel.selectedAppEntry["name"]
-            if self.sidePanel.selectedAppEntry
-            else ""
-        )
-        return appSelection, appLabel
-
-    @api_tool_decorator()
     def onRun(self, event=None):
         """ Try to run the specifed Action on a group or device """
         if not Globals.HAS_INTERNET:
@@ -1605,7 +1531,6 @@ class NewFrameLayout(wx.Frame):
 
         self.gridPanel.UnsetSortingColumns()
 
-        appSelection, appLabel = self.getAppDataForRun()
         actionSelection = self.sidePanel.actionChoice.GetSelection()
         actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
 
@@ -1779,9 +1704,6 @@ class NewFrameLayout(wx.Frame):
             and actionClientData > 0
             and actionClientData < GridActions.MODIFY_ALIAS.value
         ):
-            # run action on group
-            if self.checkAppRequirement(actionClientData, appSelection, appLabel):
-                appSelection, appLabel = self.getAppDataForRun()
             self.gridPanel.EmptyGrids()
             self.gridPanel.disableGridProperties()
 
@@ -1899,21 +1821,6 @@ class NewFrameLayout(wx.Frame):
             self.setCursorDefault()
             self.toggleEnabledState(True)
 
-    @api_tool_decorator()
-    def checkAppRequirement(self, actionClientData, appSelection, appLabel):
-        if (
-            actionClientData == GeneralActions.SET_KIOSK.value
-            or actionClientData == GeneralActions.CLEAR_APP_DATA.value
-            or actionClientData == GeneralActions.INSTALL_APP.value
-            or actionClientData == GeneralActions.UNINSTALL_APP.value
-            or actionClientData == GeneralActions.SET_APP_STATE.value
-            or actionClientData == GridActions.INSTALL_APP.value
-            or actionClientData == GridActions.UNINSTALL_APP.value
-        ) and (appSelection < 0 or appLabel == "No available app(s) on this device"):
-            self.sidePanel.onAppSelection(None)
-            self.sidePanel.notebook_1.SetSelection(2)
-            return True
-        return False
 
     @api_tool_decorator()
     def showConsole(self, event):
@@ -2070,11 +1977,6 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def processFetch(self, action, entId, deviceList, updateGauge=False, maxGauge=None):
         """ Given device data perform the specified action """
-        appToUse = None
-        appVersion = None
-        if self.sidePanel.selectedAppEntry:
-            appToUse = self.sidePanel.selectedAppEntry["pkgName"]
-            appVersion = self.sidePanel.selectedAppEntry["version"]
         if action <= GeneralActions.GENERATE_APP_REPORT.value:
             self.gridPanel.disableGridProperties()
 
@@ -2082,31 +1984,9 @@ class NewFrameLayout(wx.Frame):
         if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
             isGroup = False
 
-        if action == GeneralActions.SET_KIOSK.value:
-            Globals.THREAD_POOL.enqueue(
-                setKiosk, self, deviceList, None, isGroup=isGroup
-            )
-        elif action == GeneralActions.SET_MULTI.value:
-            Globals.THREAD_POOL.enqueue(
-                setMulti, self, deviceList, None, isGroup=isGroup
-            )
-        elif action == GeneralActions.CLEAR_APP_DATA.value:
-            Globals.THREAD_POOL.enqueue(clearAppData, self, deviceList, isGroup=isGroup)
-        elif action == GeneralActions.SET_APP_STATE.value:
-            Globals.THREAD_POOL.enqueue(
-                setAppState, deviceList, appToUse, self.AppState, isGroup=isGroup
-            )
-        elif action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
+        if action == GeneralActions.REMOVE_NON_WHITELIST_AP.value:
             Globals.THREAD_POOL.enqueue(
                 removeNonWhitelisted, deviceList, None, isGroup=isGroup
-            )
-        elif action == GeneralActions.INSTALL_APP.value:
-            Globals.THREAD_POOL.enqueue(
-                installAppOnDevices, appToUse, appVersion, deviceList, isGroup=isGroup
-            )
-        elif action == GeneralActions.UNINSTALL_APP.value:
-            Globals.THREAD_POOL.enqueue(
-                uninstallAppOnDevice, appToUse, deviceList, isGroup=isGroup
             )
         else:
             # Populate Network sheet
@@ -2229,7 +2109,6 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.notebook_2.SetSelection(2)
         if self.isSaving:
             self.isSaving = False
-        self.sidePanel.sortAndPopulateAppChoice()
         if not self.IsIconized() and self.IsActive():
             postEventToFrame(
                 eventUtil.myEVT_PROCESS_FUNCTION,
@@ -2351,8 +2230,6 @@ class NewFrameLayout(wx.Frame):
             Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
             if self.sidePanel.selectedGroupsList and self.preferences["enableDevice"]:
                 self.PopulateDevices(None)
-            if self.sidePanel.selectedDevicesList:
-                self.sidePanel.selectedDeviceApps = []
             self.setFontSizeForLabels()
             self.handleScheduleReportPref()
         Globals.OPEN_DIALOGS.remove(self.prefDialog)
@@ -2614,17 +2491,6 @@ class NewFrameLayout(wx.Frame):
         determineDoHereorMainThread(self.sidePanel.actionChoice.Enable, state)
         determineDoHereorMainThread(self.sidePanel.removeEndpointBtn.Enable, state)
 
-        if not self.sidePanel.appChoice.IsEnabled() and state:
-            action = self.sidePanel.actionChoice.GetValue()
-            clientData = None
-            if action in Globals.GENERAL_ACTIONS:
-                clientData = Globals.GENERAL_ACTIONS[action]
-            elif action in Globals.GRID_ACTIONS:
-                clientData = Globals.GRID_ACTIONS[action]
-            determineDoHereorMainThread(self.sidePanel.setAppChoiceState, clientData)
-        else:
-            determineDoHereorMainThread(self.sidePanel.appChoice.Enable, state)
-
         determineDoHereorMainThread(
             self.frame_toolbar.EnableTool, self.frame_toolbar.otool.Id, state
         )
@@ -2658,11 +2524,11 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onInstalledDevices(self, event):
         reset = True
-        if self.sidePanel.apps:
+        if Globals.knownApplications:
             self.setCursorBusy()
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.toggleEnabledState(False)
-            with InstalledDevicesDlg(self.sidePanel.apps) as dlg:
+            with InstalledDevicesDlg(Globals.knownApplications) as dlg:
                 Globals.OPEN_DIALOGS.append(dlg)
                 res = dlg.ShowModal()
                 Globals.OPEN_DIALOGS.remove(dlg)
@@ -2708,7 +2574,7 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(
                 (
-                    "No apps found",
+                    "No apps found. Please try reloading the configuration.",
                     wx.ICON_INFORMATION,
                 )
             )
@@ -2768,70 +2634,6 @@ class NewFrameLayout(wx.Frame):
             self.isRunning = False
             self.setCursorDefault()
             self.toggleEnabledState(True)
-
-    @api_tool_decorator()
-    def installApp(self, event):
-        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
-            res = version = pkg = None
-            with InstalledDevicesDlg(
-                self.sidePanel.enterpriseApps,
-                title="Install Application",
-                showAllVersionsOption=False,
-            ) as dlg:
-                Globals.OPEN_DIALOGS.append(dlg)
-                res = dlg.ShowModal()
-                Globals.OPEN_DIALOGS.remove(dlg)
-                if res == wx.ID_OK:
-                    _, version, pkg = dlg.getAppValues(returnPkgName=True)
-            if pkg:
-                if self.sidePanel.selectedDevicesList:
-                    Globals.THREAD_POOL.enqueue(
-                        installAppOnDevices, pkg, version, postStatus=True
-                    )
-                elif self.sidePanel.selectedGroupsList:
-                    Globals.THREAD_POOL.enqueue(
-                        installAppOnGroups, pkg, version, postStatus=True
-                    )
-        else:
-            displayMessageBox(
-                (
-                    "Please select the group(s) and or device(s) you wish to install an app to!",
-                    wx.OK | wx.ICON_ERROR,
-                )
-            )
-
-    @api_tool_decorator()
-    def uninstallApp(self, event):
-        if self.sidePanel.selectedGroupsList or self.sidePanel.selectedDevicesList:
-            res = pkg = None
-            with InstalledDevicesDlg(
-                self.sidePanel.apps,
-                hide_version=True,
-                title="Uninstall Application",
-                showAllVersionsOption=False,
-                showPkgTextInput=True,
-            ) as dlg:
-                Globals.OPEN_DIALOGS.append(dlg)
-                res = dlg.ShowModal()
-                Globals.OPEN_DIALOGS.remove(dlg)
-            if res == wx.ID_OK:
-                _, _, pkg = dlg.getAppValues(returnPkgName=True)
-            if pkg:
-                if self.sidePanel.selectedDevicesList:
-                    Globals.THREAD_POOL.enqueue(
-                        uninstallAppOnDevice, pkg, postStatus=True
-                    )
-                elif self.sidePanel.selectedGroupsList:
-                    Globals.THREAD_POOL.enqueue(
-                        uninstallAppOnGroup, pkg, postStatus=True
-                    )
-        else:
-            displayMessageBox(
-                (
-                    "Please select the group(s) and or device(s) you wish to uninstall an app from!",
-                    wx.OK | wx.ICON_ERROR,
-                )
-            )
 
     @api_tool_decorator()
     def callSetGaugeLater(self, event):
@@ -2949,7 +2751,9 @@ class NewFrameLayout(wx.Frame):
         else:
             self.menubar.toggleCloneMenuOptions(False)
 
+        self.Logging("---> Attempting to fetch Blueprints...")
         self.fetchAllKnownBlueprints()
+        self.Logging("---> Blueprints fetched.")
 
     @api_tool_decorator()
     def onUserReport(self, event):
@@ -3209,12 +3013,12 @@ class NewFrameLayout(wx.Frame):
 
     def onNewBlueprintApp(self, event):
         reset = True
-        if self.sidePanel.apps:
+        if Globals.knownApplications:
             self.setCursorBusy()
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.toggleEnabledState(False)
             with InstalledDevicesDlg(
-                self.sidePanel.apps,
+                Globals.knownApplications,
                 title="Select New Blueprint App",
                 showAllVersionsOption=False,
                 showBlueprintInput=True,
@@ -3237,7 +3041,7 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(
                 (
-                    "No apps found",
+                    "No apps found. Please try reloading the configuration.",
                     wx.ICON_INFORMATION,
                 )
             )

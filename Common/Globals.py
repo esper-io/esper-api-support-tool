@@ -86,6 +86,8 @@ knownGroups = {}
 # Known Blueprints
 knownBlueprints = {}
 
+knownApplications = []
+
 OPEN_DIALOGS = []
 
 """ Actions """
