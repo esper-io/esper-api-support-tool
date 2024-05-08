@@ -18,6 +18,7 @@ from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
 from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
                                       uploadApplication)
+from Utility.API.BlueprintUtility import getBlueprint
 from Utility.API.CommandUtility import (executeCommandOnDevice,
                                         executeCommandOnGroup)
 from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
@@ -607,6 +608,34 @@ def compileDeviceGroupData(deviceInfo):
     else:
         deviceInfo["groups"] = ""
 
+    if "assigned_blueprint_id" in deviceInfo:
+        bp_id = deviceInfo["assigned_blueprint_id"]
+        if bp_id in Globals.knownBlueprints:
+            deviceInfo["assigned_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
+        else:
+            bp_resp = getBlueprint(bp_id)
+            Globals.knownBlueprints[bp_id] = bp_resp
+            deviceInfo["assigned_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+
+    current_bp_id = None
+    if "current_blueprint_id" in deviceInfo:
+        current_bp_id = deviceInfo["current_blueprint_id"]
+        if bp_id in Globals.knownBlueprints:
+            deviceInfo["current_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
+        else:
+            bp_resp = getBlueprint(bp_id)
+            Globals.knownBlueprints[bp_id] = bp_resp
+            deviceInfo["current_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+
+    if "current_blueprint_version_id" in deviceInfo and current_bp_id:
+        versiond_id = deviceInfo["current_blueprint_version_id"]
+        current_bp = Globals.knownBlueprints[current_bp_id]
+        latest_published_id = current_bp["latest_published_version_id"]
+        if versiond_id == latest_published_id:
+            deviceInfo["is_current_blueprint_version_latest"] = True
+        else:
+            deviceInfo["is_current_blueprint_version_latest"] = False
+
     if "isSupervisorPluginActive" not in deviceInfo:
         deviceInfo["isSupervisorPluginActive"] = "N/A"
     elif not deviceInfo["isSupervisorPluginActive"]:
@@ -812,16 +841,18 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     kioskMode = None
     if "current_app_mode" in deviceInfo:
         kioskMode = deviceInfo["current_app_mode"]
-        if kioskMode == 1:
+        if kioskMode == 0:
             deviceInfo["Mode"] = "Kiosk"
         else:
             deviceInfo["Mode"] = "Multi"
 
-    if kioskMode == 0:
-        kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
+    kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
+    if kioskModeApp is not None and kioskModeApp:
         deviceInfo["KioskApp"] = str(kioskModeApp)
+        deviceInfo["Mode"] = "Kiosk"
     else:
         deviceInfo["KioskApp"] = ""
+        deviceInfo["Mode"] = "Multi"
 
     if "lockdown_state" in deviceInfo:
         deviceInfo["lockdown_state"] = not bool(deviceInfo["lockdown_state"])

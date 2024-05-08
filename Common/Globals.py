@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195242"
+VERSION = "v0.195243"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -205,7 +205,8 @@ CSV_TAG_ATTR_NAME = {
     "Template Device Language": "templateDeviceLocale",
     "Assigned Blueprint": "assigned_blueprint_id",
     "Current Blueprint": "current_blueprint_id",
-    "Current Blueprint Version": "current_blueprint_version_id",
+    "Current Blueprint Version Id": "current_blueprint_version_id",
+    "Is Current Blueprint Version Latest Published": "is_current_blueprint_version_latest",
     "Policy": "policy_name",
     "Mode": "Mode",
     "Pinned App": "KioskApp",

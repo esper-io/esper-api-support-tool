@@ -1295,10 +1295,9 @@ class NewFrameLayout(wx.Frame):
         return thread
 
     def fetchAllKnownBlueprints(self):
-        resp = getAllBlueprints()
-        for item in resp["results"]:
+        resp = getAllBlueprints(tolerance=1, useThreadPool=False)
+        for item in resp.get("content").get("results", []):
             Globals.knownBlueprints[item["id"]] = item
-
 
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
@@ -2949,6 +2948,8 @@ class NewFrameLayout(wx.Frame):
             self.menubar.toggleCloneMenuOptions(True)
         else:
             self.menubar.toggleCloneMenuOptions(False)
+
+        self.fetchAllKnownBlueprints()
 
     @api_tool_decorator()
     def onUserReport(self, event):

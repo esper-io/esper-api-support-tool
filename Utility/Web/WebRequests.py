@@ -267,10 +267,15 @@ def performPostRequestWithRetry(
     return resp
 
 
-def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1):
+def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True):
     count = None
+    resultList = []
     if not results:
         results = []
+    if hasattr(api_response, "content"):
+        api_response = api_response.content
+    elif type(api_response) is dict and "content" in api_response:
+        api_response = api_response["content"]
     if hasattr(api_response, "count"):
         count = api_response.count
     elif type(api_response) is dict and "count" in api_response:
@@ -290,13 +295,18 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
             url = apiNext.replace(
                 "offset=%s" % respOffset, "offset=%s" % str(respOffsetInt)
             )
-            Globals.THREAD_POOL.enqueue(
-                perform_web_requests, (url, getHeader(), "GET", None)
-            )
+            if useThreadPool:
+                Globals.THREAD_POOL.enqueue(
+                    perform_web_requests, (url, getHeader(), "GET", None)
+                )
+            else:
+                resp_json = perform_web_requests((url, getHeader(), "GET", None))
+                resultList.append(resp_json)
             respOffsetInt += int(respLimit)
 
-    Globals.THREAD_POOL.join(tolarance, timeout)
-    resultList = Globals.THREAD_POOL.results()
+    if useThreadPool:
+        Globals.THREAD_POOL.join(tolarance, timeout)
+        resultList = Globals.THREAD_POOL.results()
     for resp in resultList:
         if "content" in resp:
             resp = resp["content"]
