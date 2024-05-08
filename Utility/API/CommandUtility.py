@@ -13,8 +13,8 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
-                              postEventToFrame, splitListIntoChunks)
+from Utility.Resource import (getHeader, logBadResponse, postEventToFrame,
+                              splitListIntoChunks)
 from Utility.Web.WebRequests import (performGetRequestWithRetry,
                                      performPostRequestWithRetry)
 
