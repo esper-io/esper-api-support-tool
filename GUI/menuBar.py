@@ -89,7 +89,7 @@ class ToolMenuBar(wx.MenuBar):
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
-        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices")
+        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices (Knox Only)")
         self.powerDown = runMenu.Append(powerDownItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
