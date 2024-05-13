@@ -600,20 +600,24 @@ def compileDeviceGroupData(deviceInfo):
         bp_id = deviceInfo["assigned_blueprint_id"]
         if bp_id in Globals.knownBlueprints:
             deviceInfo["assigned_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
-        else:
+        elif bp_id:
             bp_resp = getBlueprint(bp_id)
             Globals.knownBlueprints[bp_id] = bp_resp
             deviceInfo["assigned_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+        else:
+            deviceInfo["assigned_blueprint_id"] = ""
 
     current_bp_id = None
     if "current_blueprint_id" in deviceInfo:
         current_bp_id = deviceInfo["current_blueprint_id"]
         if bp_id in Globals.knownBlueprints:
             deviceInfo["current_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
-        else:
+        elif bp_id:
             bp_resp = getBlueprint(bp_id)
             Globals.knownBlueprints[bp_id] = bp_resp
             deviceInfo["current_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+        else:
+            deviceInfo["current_blueprint_id"] = ""
 
     if "current_blueprint_version_id" in deviceInfo and current_bp_id:
         versiond_id = deviceInfo["current_blueprint_version_id"]
