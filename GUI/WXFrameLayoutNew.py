@@ -2411,6 +2411,7 @@ class NewFrameLayout(wx.Frame):
             determineDoHereorMainThread(
                 self.applySearchColor, queryString, Color.white.value, True
             )
+            self.Logging("--> Search Clearing completed")
         self.setCursorDefault()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_DEFAULT))
         self.gridPanel.enableGridProperties()
