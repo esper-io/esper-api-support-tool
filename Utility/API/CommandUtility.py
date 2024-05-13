@@ -166,6 +166,9 @@ def executeCommandOnGroup(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
+        if len(groupList) == 1 and "" in groupList:
+            groupList = list(Globals.knownGroups.keys())
+            groupList.remove("* All Devices In Tenant *")
         splitGroupList = splitListIntoChunks(groupList, maxChunkSize=500)
         for gList in splitGroupList:
             executeCommandHelper(
@@ -252,7 +255,7 @@ def executeCommandHelper(cmdFunc,
     elif len(targetList) == 1 and isGroup:
         entry["Group Id"] = firstEntry
         groupEntryName = Globals.knownGroups.get(firstEntry, None)
-        if groupEntryName.get("name", False):
+        if groupEntryName and groupEntryName.get("name", False):
             entry["Group Name"] = groupEntryName.get("name")
 
     if last_status and hasattr(last_status, "state"):
@@ -289,9 +292,14 @@ def sendCommandToDevice(
         schedule=schedule_type,
         schedule_args=schedule,
     )
+    body = request.to_dict()
+    removeKeyList = ["id", "enterprise", "issued_by", "created_on", "status"]
+    for key in removeKeyList:
+        body.pop(key, None)
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-    _, last_status = postEsperCommand(request.to_dict(), maxAttempt=maxAttempt)
-    last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
+    _, last_status = postEsperCommand(body, maxAttempt=maxAttempt)
+    if last_status:
+        last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -313,9 +321,14 @@ def sendCommandToGroup(
         schedule=schedule_type,
         schedule_args=schedule,
     )
+    body = request.to_dict()
+    removeKeyList = ["id", "enterprise", "issued_by", "created_on", "status"]
+    for key in removeKeyList:
+        body.pop(key, None)
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-    _, last_status = postEsperCommand(request.to_dict(), maxAttempt=maxAttempt)
-    last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
+    _, last_status = postEsperCommand(body, maxAttempt=maxAttempt)
+    if last_status:
+        last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -376,7 +389,7 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
         url = "https://%s-api.esper.cloud/api/commands/v0/commands/" % Globals.configuration.host.split("-api")[0].replace("https://", "")
         resp = performPostRequestWithRetry(url, headers=headers, json=command_data, maxRetry=maxAttempt)
         json_resp = resp.json() if resp else None
-        if "content" in json_resp:
+        if json_resp and "content" in json_resp:
             json_resp = json_resp["content"]
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
@@ -403,7 +416,7 @@ def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
         headers = getHeader()
         resp = performGetRequestWithRetry(url, headers=headers, maxRetry=maxAttempt)
         json_resp = resp.json() if resp else None
-        if "content" in json_resp:
+        if json_resp and "content" in json_resp:
             json_resp = json_resp["content"]
         logBadResponse(url, resp, json_resp)
     except Exception as e:
