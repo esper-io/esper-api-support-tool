@@ -538,8 +538,9 @@ def compileDeviceGroupData(deviceInfo):
                     group = Globals.knownGroups[groupId]
                 else:
                     groupName = fetchGroupName(groupURL, True)
-                    Globals.knownGroups[groupId] = groupName
-                    groupName = groupName["name"]
+                    if groupName:
+                        Globals.knownGroups[groupId] = groupName
+                        groupName = groupName["name"]
 
                 if type(group) == list and len(group) == 1:
                     groupName = group[0]
@@ -567,8 +568,9 @@ def compileDeviceGroupData(deviceInfo):
                 group = Globals.knownGroups[deviceGroups]
             else:
                 groupName = fetchGroupName(getGroupByIdURL(deviceGroups), True)
-                Globals.knownGroups[groupId] = groupName
-                groupName = groupName["name"]
+                if groupName:
+                    Globals.knownGroups[deviceGroups] = groupName
+                    groupName = groupName["name"]
 
             if type(group) == list and len(group) == 1:
                 groupName = group[0]
