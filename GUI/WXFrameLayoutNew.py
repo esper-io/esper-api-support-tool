@@ -2367,6 +2367,7 @@ class NewFrameLayout(wx.Frame):
                         thread.stop()
             self.searchThreads = []
 
+        self.Logging("--> Searching for %s" % queryString)
         t = wxThread.GUIThread(
             self,
             self.processSearch,
