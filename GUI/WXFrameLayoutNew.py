@@ -1192,16 +1192,9 @@ class NewFrameLayout(wx.Frame):
         if source == 3:
             cmdResults = []
             if (
-                action == GeneralActions.SET_KIOSK.value
-                or action == GeneralActions.SET_MULTI.value
-                or action == GeneralActions.SET_APP_STATE.value
-                or action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
+                action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
-                or action == GeneralActions.INSTALL_APP.value
-                or action == GeneralActions.UNINSTALL_APP.value
-                or action == GridActions.SET_APP_STATE.value
                 or action == GridActions.MOVE_GROUP.value
-                or action == GridActions.FACTORY_RESET.value
             ):
                 if threads == Globals.THREAD_POOL.threads:
                     resp = Globals.THREAD_POOL.results()
@@ -1218,28 +1211,6 @@ class NewFrameLayout(wx.Frame):
                                 cmdResults = cmdResults + t.result
                             else:
                                 cmdResults.append(t.result)
-            if action and action == GeneralActions.CLEAR_APP_DATA.value:
-                if threads == Globals.THREAD_POOL.threads:
-                    resp = Globals.THREAD_POOL.results()
-                    for t in resp:
-                        if t:
-                            displayMessageBox(
-                                (
-                                    "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
-                                    wx.ICON_INFORMATION,
-                                )
-                            )
-                            break
-                else:
-                    for t in threads:
-                        if t.result:
-                            displayMessageBox(
-                                (
-                                    "Clear App Data Command has been sent to the device(s).\nPlease check devices' event feeds for command status.",
-                                    wx.ICON_INFORMATION,
-                                )
-                            )
-                            break
             self.onComplete((True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
@@ -1664,40 +1635,6 @@ class NewFrameLayout(wx.Frame):
                     self.setCursorDefault()
                     self.toggleEnabledState(True)
                     return
-        if actionClientData == GeneralActions.MOVE_GROUP.value:
-            self.moveGroup()
-            self.sleepInhibitor.uninhibit()
-            return
-        if (
-            actionClientData == GeneralActions.SET_APP_STATE.value
-            or actionClientData == GridActions.SET_APP_STATE.value
-        ):
-            self.displayAppStateChoiceDlg()
-            if not self.AppState:
-                self.sleepInhibitor.uninhibit()
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
-                return
-        if actionClientData == GeneralActions.SET_DEVICE_MODE.value:
-            res = None
-            with wx.SingleChoiceDialog(
-                self, "Select Device Mode:", "", ["Multi-App", "Kiosk"]
-            ) as dlg:
-                Globals.OPEN_DIALOGS.append(dlg)
-                res = dlg.ShowModal()
-                Globals.OPEN_DIALOGS.remove(dlg)
-                if res == wx.ID_OK:
-                    if dlg.GetStringSelection() == "Multi-App":
-                        actionClientData = GeneralActions.SET_MULTI.value
-                    else:
-                        actionClientData = GeneralActions.SET_KIOSK.value
-            if not res or res == wx.ID_CANCEL:
-                self.sleepInhibitor.uninhibit()
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
-                return
         if (
             self.sidePanel.selectedGroupsList
             and actionSelection > 0

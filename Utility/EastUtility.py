@@ -72,31 +72,19 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        if action >= GeneralActions.SET_DEVICE_MODE.value:
-            postEventToFrame(
-                eventUtil.myEVT_FETCH,
-                (action, Globals.enterprise_id, input),
-            )
-        else:
-            api_response = getDeviceById(input, tolerance=1)
-            iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
+        api_response = getDeviceById(input, tolerance=1)
+        iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
-        if action >= GeneralActions.SET_DEVICE_MODE.value:
-            postEventToFrame(
-                eventUtil.myEVT_FETCH,
-                (action, Globals.enterprise_id, input),
+        # Iterate Through Each Device in Group VIA Api Request
+        try:
+            frame.Logging("---> Making API Request")
+            api_response = getAllDevices(input, tolarance=1)
+            iterateThroughDeviceList(
+                frame, action, api_response, Globals.enterprise_id
             )
-        else:
-            # Iterate Through Each Device in Group VIA Api Request
-            try:
-                frame.Logging("---> Making API Request")
-                api_response = getAllDevices(input, tolarance=1)
-                iterateThroughDeviceList(
-                    frame, action, api_response, Globals.enterprise_id
-                )
-            except ApiException as e:
-                print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-                ApiToolLog().LogError(e)
+        except ApiException as e:
+            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+            ApiToolLog().LogError(e)
 
 
 def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, device, results=None,):
@@ -192,7 +180,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
     ) and (
         action != GeneralActions.GENERATE_DEVICE_REPORT.value
-        and action < GeneralActions.SET_DEVICE_MODE.value
+        and action < GeneralActions.REMOVE_NON_WHITELIST_AP.value
     )
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value
