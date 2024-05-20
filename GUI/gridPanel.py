@@ -159,31 +159,29 @@ class GridPanel(wx.Panel):
                 self.device_grid.SetCellBackgroundColour(x, y, Color.lightBlue.value)
 
     @api_tool_decorator()
-    def applyTextColorMatchingGridRow(self, grid, query, bgColor, applyAll=False):
+    def applyTextColorMatchingGridRow(self, grid: GridTable, query: str, bgColor, applyAll=False):
         """ Apply a Text or Bg Color to a Grid Row """
-        for rowNum in range(grid.GetNumberRows()):
-            if checkIfCurrentThreadStopped():
-                return
-            if rowNum < grid.GetNumberRows():
-                match = []
-                [
-                    match.append(grid.GetCellValue(rowNum, colNum))
-                    if query.lower() in grid.GetCellValue(rowNum, colNum).lower()
-                    else None
-                    for colNum in range(grid.GetNumberCols())
-                ]
-                if match or applyAll:
-                    for colNum in range(grid.GetNumberCols()):
-                        if colNum < grid.GetNumberCols() and (
-                            grid.GetCellBackgroundColour(rowNum, colNum)
-                            == Color.white.value
-                            or (
-                                applyAll
-                                and grid.GetCellBackgroundColour(rowNum, colNum)
-                                == Color.lightYellow.value
-                            )
-                        ):
-                            grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
+        queryList = query.split(" ")
+        combinedQueryStr = "|".join(queryList)
+        cols = grid.Table.data.columns
+        rowsToHighlight = []
+        for col in cols:
+            results = grid.Table.data[col].str.contains(combinedQueryStr, case=False, na=True)
+            for num in range(len(results)):
+                if results[num] and num not in rowsToHighlight:
+                    rowsToHighlight.append(num)
+        for rowNum in rowsToHighlight:
+            for colNum in range(len(cols)):
+                if colNum < grid.GetNumberCols() and (
+                    grid.GetCellBackgroundColour(rowNum, colNum)
+                    == Color.white.value
+                    or (
+                        applyAll
+                        and grid.GetCellBackgroundColour(rowNum, colNum)
+                        == Color.lightYellow.value
+                    )
+                ):
+                    grid.SetCellBackgroundColour(rowNum, colNum, bgColor)
         grid.ForceRefresh()
 
     @api_tool_decorator()

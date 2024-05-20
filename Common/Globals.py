@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195242"
+VERSION = "v0.195243"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -85,6 +85,8 @@ knownGroups = {}
 
 # Known Blueprints
 knownBlueprints = {}
+
+knownApplications = []
 
 OPEN_DIALOGS = []
 
@@ -205,9 +207,11 @@ CSV_TAG_ATTR_NAME = {
     "Template Device Language": "templateDeviceLocale",
     "Assigned Blueprint": "assigned_blueprint_id",
     "Current Blueprint": "current_blueprint_id",
-    "Current Blueprint Version": "current_blueprint_version_id",
+    "Current Blueprint Version Id": "current_blueprint_version_id",
+    "Is Current Blueprint Version Latest Published": "is_current_blueprint_version_latest",
     "Policy": "policy_name",
     "Mode": "Mode",
+    "Pinned App": "KioskApp",
     "Lockdown State": "lockdown_state",
     "Serial Number": ["serialNumber", "Serial", "serial"],
     "Custom Serial Number": "Custom Serial",
@@ -222,7 +226,6 @@ CSV_TAG_ATTR_NAME = {
     "Is Supervisor Plugin Active": "isSupervisorPluginActive",
     "Tags": "Tags",
     "Applications": "Apps",
-    "Pinned App": "KioskApp",
     "Is GMS": "is_gms",
     "Device Type": ["device_type", "device_source"],
     "Available RAM (MB)": "AVAILABLE_RAM_MEASURED",

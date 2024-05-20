@@ -18,6 +18,7 @@ from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
 from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
                                       uploadApplication)
+from Utility.API.BlueprintUtility import getBlueprint
 from Utility.API.CommandUtility import (executeCommandOnDevice,
                                         executeCommandOnGroup)
 from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
@@ -71,31 +72,19 @@ def TakeAction(frame, input, action, isDevice=False):
         iterateThroughGridRows(frame, action)
     elif isDevice:
         frame.Logging("---> Making API Request")
-        if action >= GeneralActions.SET_DEVICE_MODE.value:
-            postEventToFrame(
-                eventUtil.myEVT_FETCH,
-                (action, Globals.enterprise_id, input),
-            )
-        else:
-            api_response = getDeviceById(input, tolerance=1)
-            iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
+        api_response = getDeviceById(input, tolerance=1)
+        iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
     else:
-        if action >= GeneralActions.SET_DEVICE_MODE.value:
-            postEventToFrame(
-                eventUtil.myEVT_FETCH,
-                (action, Globals.enterprise_id, input),
+        # Iterate Through Each Device in Group VIA Api Request
+        try:
+            frame.Logging("---> Making API Request")
+            api_response = getAllDevices(input, tolarance=1)
+            iterateThroughDeviceList(
+                frame, action, api_response, Globals.enterprise_id
             )
-        else:
-            # Iterate Through Each Device in Group VIA Api Request
-            try:
-                frame.Logging("---> Making API Request")
-                api_response = getAllDevices(input, tolarance=1)
-                iterateThroughDeviceList(
-                    frame, action, api_response, Globals.enterprise_id
-                )
-            except ApiException as e:
-                print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
-                ApiToolLog().LogError(e)
+        except ApiException as e:
+            print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+            ApiToolLog().LogError(e)
 
 
 def getAdditionalDeviceInfo(deviceId, getApps, getLatestEvents, device, results=None,):
@@ -191,7 +180,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         or "Applications" in Globals.CSV_TAG_ATTR_NAME.keys()
     ) and (
         action != GeneralActions.GENERATE_DEVICE_REPORT.value
-        and action < GeneralActions.SET_DEVICE_MODE.value
+        and action < GeneralActions.REMOVE_NON_WHITELIST_AP.value
     )
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value
@@ -549,8 +538,9 @@ def compileDeviceGroupData(deviceInfo):
                     group = Globals.knownGroups[groupId]
                 else:
                     groupName = fetchGroupName(groupURL, True)
-                    Globals.knownGroups[groupId] = groupName
-                    groupName = groupName["name"]
+                    if groupName:
+                        Globals.knownGroups[groupId] = groupName
+                        groupName = groupName["name"]
 
                 if type(group) == list and len(group) == 1:
                     groupName = group[0]
@@ -578,8 +568,9 @@ def compileDeviceGroupData(deviceInfo):
                 group = Globals.knownGroups[deviceGroups]
             else:
                 groupName = fetchGroupName(getGroupByIdURL(deviceGroups), True)
-                Globals.knownGroups[groupId] = groupName
-                groupName = groupName["name"]
+                if groupName:
+                    Globals.knownGroups[deviceGroups] = groupName
+                    groupName = groupName["name"]
 
             if type(group) == list and len(group) == 1:
                 groupName = group[0]
@@ -606,6 +597,38 @@ def compileDeviceGroupData(deviceInfo):
             deviceInfo["groups"] = groupNames
     else:
         deviceInfo["groups"] = ""
+
+    if "assigned_blueprint_id" in deviceInfo:
+        bp_id = deviceInfo["assigned_blueprint_id"]
+        if bp_id in Globals.knownBlueprints:
+            deviceInfo["assigned_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
+        elif bp_id:
+            bp_resp = getBlueprint(bp_id)
+            Globals.knownBlueprints[bp_id] = bp_resp
+            deviceInfo["assigned_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+        else:
+            deviceInfo["assigned_blueprint_id"] = ""
+
+    current_bp_id = None
+    if "current_blueprint_id" in deviceInfo:
+        current_bp_id = deviceInfo["current_blueprint_id"]
+        if bp_id in Globals.knownBlueprints:
+            deviceInfo["current_blueprint_id"] = Globals.knownBlueprints[bp_id]["name"]
+        elif bp_id:
+            bp_resp = getBlueprint(bp_id)
+            Globals.knownBlueprints[bp_id] = bp_resp
+            deviceInfo["current_blueprint_id"] = bp_resp.get("name", "<Unknown>")
+        else:
+            deviceInfo["current_blueprint_id"] = ""
+
+    if "current_blueprint_version_id" in deviceInfo and current_bp_id:
+        versiond_id = deviceInfo["current_blueprint_version_id"]
+        current_bp = Globals.knownBlueprints[current_bp_id]
+        latest_published_id = current_bp["latest_published_version_id"]
+        if versiond_id == latest_published_id:
+            deviceInfo["is_current_blueprint_version_latest"] = True
+        else:
+            deviceInfo["is_current_blueprint_version_latest"] = False
 
     if "isSupervisorPluginActive" not in deviceInfo:
         deviceInfo["isSupervisorPluginActive"] = "N/A"
@@ -754,14 +777,6 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     else:
         return
 
-    kioskMode = None
-    if "current_app_mode" in deviceInfo:
-        kioskMode = deviceInfo["current_app_mode"]
-        if kioskMode == 0:
-            deviceInfo["Mode"] = "Kiosk"
-        else:
-            deviceInfo["Mode"] = "Multi"
-
     hdwareKey = None
     if deviceHardware and "serial_number" in deviceHardware:
         hdwareKey = "serial_number"
@@ -816,11 +831,22 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
         ):
             device["tags"] = []
 
-    if kioskMode == 0:
-        kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
+
+    kioskMode = None
+    if "current_app_mode" in deviceInfo:
+        kioskMode = deviceInfo["current_app_mode"]
+        if kioskMode == 0:
+            deviceInfo["Mode"] = "Kiosk"
+        else:
+            deviceInfo["Mode"] = "Multi"
+
+    kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
+    if kioskModeApp is not None and kioskModeApp:
         deviceInfo["KioskApp"] = str(kioskModeApp)
+        deviceInfo["Mode"] = "Kiosk"
     else:
         deviceInfo["KioskApp"] = ""
+        deviceInfo["Mode"] = "Multi"
 
     if "lockdown_state" in deviceInfo:
         deviceInfo["lockdown_state"] = not bool(deviceInfo["lockdown_state"])
@@ -971,8 +997,8 @@ def enforceGridData(device, deviceInfo, latestEventData, appData):
                         attrValue = deviceInfo["network_info"][key]
                         deviceInfo[key] = str(attrValue)
 
+    deviceInfo["AppsEntry"] = []
     if appData and "results" in deviceInfo["appObj"]:
-        deviceInfo["AppsEntry"] = []
         constructDeviceAppRowEntry(device, deviceInfo)
 
     return deviceInfo
@@ -996,7 +1022,10 @@ def populateDeviceInfoDictionary(
         unpackageDict(deviceInfo, device)
     appThread = None
     if getApps:
-        if deviceInfo.get("os") is not None and deviceInfo.get("os").lower() == "android":
+        if (
+            (deviceInfo.get("os") is not None and deviceInfo.get("os").lower() == "android")
+            or (deviceInfo.get("androidVersion") is not None)
+        ):
             appThread = apiCalls.getAndroidDeviceApps(deviceId, True, Globals.USE_ENTERPRISE_APP)
         else:
             appThread = apiCalls.getIosDeviceApps(deviceId, createAppListArg=True)
@@ -1077,9 +1106,10 @@ def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
         )
 
 
-def clearKnownGroupsAndBlueprints():
+def clearKnownGlobalVariables():
     Globals.knownGroups.clear()
     Globals.knownBlueprints.clear()
+    Globals.knownApplications = []
 
 
 def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):

@@ -246,7 +246,6 @@ class InstalledDevicesDlg(wx.Dialog):
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.search.Bind(wx.EVT_SEARCH, self.onSearch)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
-        self.search.Bind(wx.EVT_CHAR, self.onKey)
         if self.otherPkgInput:
             self.otherPkgInput.Bind(wx.EVT_CHAR, self.onOtherPkgInput)
 
@@ -353,20 +352,6 @@ class InstalledDevicesDlg(wx.Dialog):
             return app_id, version_id, app_name
         else:
             return app_id, version_id
-
-    @api_tool_decorator()
-    def onKey(self, event):
-        keycode = event.GetKeyCode()
-        # CTRL + C or CTRL + Insert
-        if event.ControlDown() and keycode in [67, 322]:
-            self.on_copy(event)
-        # CTRL + V
-        elif event.ControlDown() and keycode == 86:
-            self.on_paste(event)
-        elif keycode == wx.WXK_ESCAPE:
-            self.onClose(event)
-        else:
-            self.onChar(event)
 
     @api_tool_decorator()
     def on_copy(self, event):

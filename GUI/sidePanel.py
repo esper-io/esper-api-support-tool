@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 
-import csv
 
 import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Common.enum import GeneralActions, GridActions
-from GUI.Dialogs.InstalledDevicesDlg import InstalledDevicesDlg
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
-from Utility import EventUtility
 from Utility.FileUtility import write_data_to_csv
-from Utility.Resource import postEventToFrame, resourcePath, scale_bitmap
+from Utility.Resource import resourcePath, scale_bitmap
 
 
 class SidePanel(wx.Panel):
@@ -28,9 +24,6 @@ class SidePanel(wx.Panel):
         self.groupsResp = None
         self.groups = {}
         self.groupDeviceCount = {}
-        self.enterpriseApps = []
-        self.selectedDeviceApps = []
-        self.selectedAppEntry = []
 
         self.groupMultiDialog = None
         self.deviceMultiDialog = None
@@ -184,36 +177,6 @@ class SidePanel(wx.Panel):
         )
         grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
 
-        self.panel_16 = wx.Panel(self.notebook_1, wx.ID_ANY)
-        self.notebook_1.AddPage(self.panel_16, "Application")
-
-        sizer_8 = wx.BoxSizer(wx.VERTICAL)
-
-        self.appChoice = wx.Button(self.panel_16, wx.ID_ANY, "Select Application")
-        self.appChoice.SetToolTip("Select Application")
-        sizer_8.Add(self.appChoice, 0, wx.EXPAND | wx.TOP, 5)
-
-        self.panel_17 = wx.Panel(self.panel_16, wx.ID_ANY)
-        sizer_8.Add(self.panel_17, 1, wx.EXPAND | wx.TOP, 5)
-
-        grid_sizer_9 = wx.GridSizer(1, 1, 0, 0)
-
-        self.selectedApp = wx.ListBox(
-            self.panel_17, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
-        )
-        self.selectedApp.SetToolTip("Currently Selected Application")
-        self.selectedApp.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
-        grid_sizer_9.Add(self.selectedApp, 0, wx.EXPAND, 0)
-
         static_line_2 = wx.StaticLine(self, wx.ID_ANY)
         sizer_1.Add(static_line_2, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
 
@@ -248,10 +211,6 @@ class SidePanel(wx.Panel):
         sizer_1.Add(self.runBtn, 0, wx.ALL | wx.EXPAND, 5)
 
         self.panel_10.SetSizer(sizer_5)
-
-        self.panel_17.SetSizer(grid_sizer_9)
-
-        self.panel_16.SetSizer(sizer_8)
 
         self.panel_12.SetSizer(grid_sizer_7)
 
@@ -295,13 +254,11 @@ class SidePanel(wx.Panel):
         self.actionChoice.Enable(False)
         self.deviceChoice.Enable(False)
         self.groupChoice.Enable(False)
-        self.appChoice.Enable(False)
         self.runBtn.Enable(False)
 
         self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
         self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
-        self.appChoice.Bind(wx.EVT_BUTTON, self.onAppSelection)
         self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
         self.deviceChoice.Bind(
@@ -356,15 +313,11 @@ class SidePanel(wx.Panel):
                     )
 
     @api_tool_decorator()
-    def clearSelections(self, clearApp=False):
+    def clearSelections(self):
         self.selectedGroups.Clear()
         self.selectedDevices.Clear()
         self.selectedGroupsList = []
         self.selectedDevicesList = []
-        if clearApp:
-            self.selectedApp.Clear()
-            self.enterpriseApps = []
-            self.selectedDeviceApps = []
 
     @api_tool_decorator()
     def destroyMultiChoiceDialogs(self):
@@ -452,7 +405,6 @@ class SidePanel(wx.Panel):
                 self.parentFrame.menubar.disableConfigMenu()
                 self.selectedDevices.Clear()
                 self.selectedDevicesList = []
-                self.selectedDeviceApps = []
                 selections = self.deviceMultiDialog.GetSelections()
                 for deviceName in selections:
                     deviceId = None
@@ -470,30 +422,6 @@ class SidePanel(wx.Panel):
                 self.deviceMultiDialog.DestroyLater()
             Globals.frame.Refresh()
 
-    def clearStoredApps(self):
-        self.apps = []
-        self.selectedDeviceApps = []
-        self.enterpriseApps = []
-
-    @api_tool_decorator()
-    def sortAndPopulateAppChoice(self):
-        if not self.selectedDevicesList:
-            self.apps = self.enterpriseApps
-        else:
-            self.apps = self.selectedDeviceApps
-        if not self.apps:
-            self.apps = self.selectedDeviceApps + self.enterpriseApps
-        tmp = []
-        for app in self.apps:
-            if app not in tmp:
-                tmp.append(app)
-        self.apps = tmp
-        self.apps = sorted(self.apps, key=lambda i: i["app_name"].lower())
-        if len(self.apps):
-            percent = self.parentFrame.statusBar.gauge.GetValue()
-            val = percent + int(float(len(self.apps) / 2) * 25)
-            postEventToFrame(EventUtility.myEVT_UPDATE_GAUGE, val)
-
     @api_tool_decorator()
     def onActionSelection(self, event):
         clientData = event.ClientData
@@ -503,73 +431,3 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GENERAL_ACTIONS[action]
             elif action in Globals.GRID_ACTIONS:
                 clientData = Globals.GRID_ACTIONS[action]
-        self.setAppChoiceState(clientData)
-
-    @api_tool_decorator()
-    def setAppChoiceState(self, clientData):
-        if (
-            clientData == GeneralActions.SET_DEVICE_MODE.value
-            or clientData == GeneralActions.SET_KIOSK.value
-            or clientData == GeneralActions.CLEAR_APP_DATA.value
-            or clientData == GeneralActions.SET_APP_STATE.value
-            or clientData == GeneralActions.INSTALL_APP.value
-            or clientData == GeneralActions.UNINSTALL_APP.value
-            or clientData == GridActions.INSTALL_APP.value
-            or clientData == GridActions.UNINSTALL_APP.value
-        ):
-            self.appChoice.Enable(True)
-            if (
-                self.selectedGroupsList
-                or self.selectedDevicesList
-                or clientData == GridActions.INSTALL_APP.value
-                or clientData == GridActions.UNINSTALL_APP.value
-            ):
-                self.notebook_1.SetSelection(2)
-        else:
-            self.appChoice.Enable(False)
-            if self.selectedGroupsList and (
-                not self.parentFrame.preferences
-                or self.parentFrame.preferences["enableDevice"] is True
-            ):
-                self.notebook_1.SetSelection(1)
-            else:
-                self.notebook_1.SetSelection(0)
-
-    def onAppSelection(self, event):
-        res = version = pkg = app_id = app_name = None
-        self.selectedApp.Clear()
-        action = self.actionChoice.GetClientData(self.actionChoice.GetSelection())
-        hideVersion = (
-            True
-            if action != GeneralActions.INSTALL_APP.value
-            and action != GridActions.INSTALL_APP.value
-            else False
-        )
-        apps = self.enterpriseApps
-        if self.selectedDevicesList and hideVersion and self.selectedDeviceApps:
-            apps = self.selectedDeviceApps
-        with InstalledDevicesDlg(
-            apps,
-            hide_version=hideVersion,
-            title="Select Application",
-            showAllVersionsOption=False,
-            showPkgTextInput=hideVersion,
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            res = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            if res == wx.ID_OK:
-                app_id, version, pkg, app_name = dlg.getAppValues(
-                    returnPkgName=True, returnAppName=True
-                )
-        if app_name:
-            self.selectedApp.Append(app_name)
-            self.selectedApp.SetSelection(0)
-            self.selectedAppEntry = {
-                "id": app_id,
-                "version": version,
-                "pkgName": pkg,
-                "name": app_name,
-            }
-        if event:
-            event.Skip()

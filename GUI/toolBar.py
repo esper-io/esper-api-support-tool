@@ -87,8 +87,6 @@ class ToolsToolBar(wx.ToolBar):
         self.Bind(wx.EVT_TOOL, self.Parent.uploadApplication, self.uploadApp)
 
         self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
-        self.search.Bind(wx.EVT_KEY_DOWN, self.onKey)
-        self.search.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
     @api_tool_decorator()

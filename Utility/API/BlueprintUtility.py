@@ -65,14 +65,15 @@ def checkIosEnabled(data, jsonResp):
     data["isIosEnabled"] = enabled
 
 @api_tool_decorator()
-def getAllBlueprints():
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/".format(
-        baseUrl=Globals.configuration.host, enterprise_id=Globals.enterprise_id
+def getAllBlueprints(tolerance=0, useThreadPool=True):
+    url = "{baseUrl}/v2/blueprints/?limit={limit}".format(
+        baseUrl=Globals.configuration.host,
+        limit=Globals.limit,
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
     if resp:
         respJson = resp.json()
-        blueprints = getAllFromOffsetsRequests(respJson)
+        blueprints = getAllFromOffsetsRequests(respJson, tolarance=tolerance, useThreadPool=useThreadPool)
         if type(blueprints) is dict and "results" in blueprints:
             respJson["results"] = respJson["results"] + blueprints["results"]
             respJson["next"] = None
@@ -110,8 +111,8 @@ def getAllBlueprintsFromHost(host, key, enterprise):
 def getAllBlueprintsFromHostHelper(
     host, key, enterprise, limit=Globals.limit, offset=0, responses=None
 ):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/?limit={limit}&offset={offset}".format(
-        baseUrl=host, enterprise_id=enterprise, limit=limit, offset=offset
+    url = "{baseUrl}/v2/blueprints/?limit={limit}&offset={offset}".format(
+        baseUrl=host, limit=limit, offset=offset
     )
     resp = performGetRequestWithRetry(
         url,

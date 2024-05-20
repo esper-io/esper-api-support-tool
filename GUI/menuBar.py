@@ -13,10 +13,7 @@ import Common.Globals as Globals
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.HtmlDialog import HtmlDialog
-from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from GUI.UserCreation import UserCreation
 from Utility import EventUtility
-from Utility.EastUtility import processCollectionDevices
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
                               openWebLinkInBrowser, postEventToFrame,
@@ -89,7 +86,7 @@ class ToolMenuBar(wx.MenuBar):
         commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
-        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices")
+        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices (Knox Only)")
         self.powerDown = runMenu.Append(powerDownItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
