@@ -448,11 +448,12 @@ class ToolMenuBar(wx.MenuBar):
         self.fileSaveAs.Enable(state)
 
     def toggleCloneMenuOptions(self, showBlueprint, toggleBothSameState=False):
-        if toggleBothSameState:
-            self.clone.Enable(enable=showBlueprint)
-            self.cloneBP.Enable(enable=showBlueprint)
-            self.newBlueprintApp.Enable(enable=showBlueprint)
-        else:
-            self.clone.Enable(enable=bool(not showBlueprint))
-            self.cloneBP.Enable(enable=showBlueprint)
-            self.newBlueprintApp.Enable(enable=showBlueprint)
+        # if toggleBothSameState:
+        #     self.clone.Enable(enable=showBlueprint)
+        #     self.cloneBP.Enable(enable=showBlueprint)
+        #     self.newBlueprintApp.Enable(enable=showBlueprint)
+        # else:
+        #     self.clone.Enable(enable=bool(not showBlueprint))
+        #     self.cloneBP.Enable(enable=showBlueprint)
+        #     self.newBlueprintApp.Enable(enable=showBlueprint)
+        pass

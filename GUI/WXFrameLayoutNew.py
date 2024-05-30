@@ -2458,10 +2458,10 @@ class NewFrameLayout(wx.Frame):
         determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.setSaveMenuOptionsEnableState, state)
 
-        if not self.blueprintsEnabled:
-            determineDoHereorMainThread(self.menubar.clone.Enable, state)
-        else:
-            determineDoHereorMainThread(self.menubar.cloneBP.Enable, state)
+        # if not self.blueprintsEnabled:
+        #     determineDoHereorMainThreasd(self.menubar.clone.Enable, state)
+        # else:
+        #     determineDoHereorMainThread(self.menubar.cloneBP.Enable, state)
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
