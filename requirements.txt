@@ -12,3 +12,4 @@ xlsxwriter
 xlrd
 ratelimit
 slack_sdk
+sentry-sdk
