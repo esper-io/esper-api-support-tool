@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_string_dtype
 from pandas.testing import assert_frame_equal
@@ -112,7 +114,13 @@ def convertColumnTypes(data, headers):
             elif is_bool_dtype(data[col]):
                 data[col] = data[col].astype("bool")
             elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
-                data[col] = data[col].astype("int64")
+                if float(data[col]) < sys.maxsize:
+                    data[col] = data[col].astype("int64")
+                else:
+                    data[col] = data[col].astype("float64")
+
+                    if "." in data[col]:
+                        data[col].apply(lambda x: "{:.0f}".format(x))
             else:
                 data[col] = data[col].astype("str")
     return data
