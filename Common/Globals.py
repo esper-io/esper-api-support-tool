@@ -273,6 +273,8 @@ CSV_NETWORK_ATTR_NAME = {
     "Ethernet Connection": "ethernetState",
     "[Cellular Access Point]": "cellAP",
     "Active Connection": "activeConnection",
+    "Network Signal Strength (RSSI)": "networkSignalStrength",
+    "Cellular Signal Strength (RSSI)": "cellularSignalStrength",
     "IPv4 Address(es)": "ipv4Address",
     "IPv6 Address(es)": "ipv6Address",
     "Bluetooth State": "bluetoothState",

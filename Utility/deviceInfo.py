@@ -134,6 +134,22 @@ def constructNetworkInfo(device, deviceInfo):
     deviceInfo["cellAP"] = cellStatus[0]
     deviceInfo["activeConnection"] = cellStatus[1]
 
+    deviceInfo["networkSignalStrength"] = "N/A"
+    deviceInfo["cellularSignalStrength"] = "N/A"
+
+    cellularKey = ""
+    if deviceInfo["network_event"] and "cellularNetworkInfo" in deviceInfo["network_event"]:
+        cellularKey = "cellularNetworkInfo"
+    elif deviceInfo["network_event"] and "cellular" in deviceInfo["network_event"]:
+        cellularKey = "cellular"
+    if cellularKey:
+        if "signalStrength" in deviceInfo["network_event"][cellularKey]:
+            deviceInfo["cellularSignalStrength"] = deviceInfo["network_event"][cellularKey]["signalStrength"]
+    
+    if deviceInfo["network_event"] and "wifiNetworkInfo" in deviceInfo["network_event"]:
+        if "signalStrength" in deviceInfo["network_event"]["wifiNetworkInfo"]:
+            deviceInfo["networkSignalStrength"] = deviceInfo["network_event"]["wifiNetworkInfo"]["signalStrength"]
+
     for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
         if value:
             if type(value) is str and value in deviceInfo:
