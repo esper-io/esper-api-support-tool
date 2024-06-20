@@ -69,7 +69,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_3 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=list(choices),
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_5.Add(self.combo_box_3, 0, wx.EXPAND, 0)
@@ -149,7 +149,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_1 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=list(choices),
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
