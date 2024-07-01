@@ -74,6 +74,23 @@ def obtainAppName():
 
 def getExecutableCommand(doFirst=True):
     cmd = []
+    hidden_imports = [
+        "sentry_sdk.integrations.aiohttp",
+        "sentry_sdk.integrations.anthropic",
+        "sentry_sdk.integrations.ariadne",
+        "sentry_sdk.integrations.arq",
+        "sentry_sdk.integrations.asyncpg",
+        "sentry_sdk.integrations.boto3",
+        "sentry_sdk.integrations.bottle",
+        "sentry_sdk.integrations.stdlib",
+        "sentry_sdk.integrations.excepthook",
+        "sentry_sdk.integrations.dedupe", 
+        "sentry_sdk.integrations.atexit",
+        "sentry_sdk.integrations.modules",
+        "sentry_sdk.integrations.argv",
+        "sentry_sdk.integrations.logging",
+        "sentry_sdk.integrations.threading",
+    ]
     if platform.system() == "Windows":
         if isModuleInstalled("pyinstaller"):
             updateFileVersionInfo()
@@ -90,14 +107,14 @@ def getExecutableCommand(doFirst=True):
                 dispath,
                 "--version-file",
                 curDirPath + "/file_version_info.txt",
+                *getHiddenImportsParams(*hidden_imports),
                 "--icon",
                 curDirPath + "/Images/icon.ico",
-                "--add-data",
-                getPyInstallerFilePathStr("/Images"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
+                *getAddDataParameters(
+                    "/Images",
+                    "/Utility/Logging/token.json",
+                    "/Utility/Logging/slack_details.json"
+                ),
                 curDirPath + "/Main.py",
             ]
     else:
@@ -115,14 +132,14 @@ def getExecutableCommand(doFirst=True):
                 app_name.replace(".app", ""),
                 "--osx-bundle-identifier",
                 "com.esper.esperapisupporttool",
+                *getHiddenImportsParams(*hidden_imports),
                 "--distpath",
                 dispath,
-                "--add-data",
-                getPyInstallerFilePathStr("/Images"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
+                *getAddDataParameters(
+                    "/Images",
+                    "/Utility/Logging/token.json",
+                    "/Utility/Logging/slack_details.json"
+                ),
                 curDirPath + "/Main.py",
             ]
         elif isModuleInstalled("py2app"):
@@ -136,6 +153,20 @@ def getPyInstallerFilePathStr(path):
         return completePath + delimiter + path[1:]
     else:
         return completePath + "%s." % (delimiter)
+
+def getHiddenImportsParams(*imports):
+    res = []
+    for imp in imports:
+        res.append("--hidden-import")
+        res.append(imp)
+    return res
+
+def getAddDataParameters(*paths):
+    res = []
+    for path in paths:
+        res.append("--add-data")
+        res.append(getPyInstallerFilePathStr(path))
+    return res
 
 
 if __name__ == "__main__":
