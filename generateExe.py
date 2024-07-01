@@ -82,6 +82,33 @@ def getExecutableCommand(doFirst=True):
         "sentry_sdk.integrations.asyncpg",
         "sentry_sdk.integrations.boto3",
         "sentry_sdk.integrations.bottle",
+        "sentry_sdk.integrations.celery",
+        "sentry_sdk.integrations.chalice",
+        "sentry_sdk.integrations.clickhouse_driver",
+        "sentry_sdk.integrations.cohere",
+        "sentry_sdk.integrations.django",
+        "sentry_sdk.integrations.falcon",
+        "sentry_sdk.integrations.fastapi",
+        "sentry_sdk.integrations.flask",
+        "sentry_sdk.integrations.gql",
+        "sentry_sdk.integrations.graphene",
+        "sentry_sdk.integrations.httpx",
+        "sentry_sdk.integrations.huey",
+        "sentry_sdk.integrations.huggingface_hub",
+        "sentry_sdk.integrations.langchain",
+        "sentry_sdk.integrations.loguru",
+        "sentry_sdk.integrations.openai",
+        "sentry_sdk.integrations.pymongo",
+        "sentry_sdk.integrations.pyramid",
+        "sentry_sdk.integrations.quart",
+        "sentry_sdk.integrations.rq",
+        "sentry_sdk.integrations.sanic",
+        "sentry_sdk.integrations.sqlalchemy",
+        "sentry_sdk.integrations.starlite",
+        "sentry_sdk.integrations.strawberry",
+        "sentry_sdk.integrations.tornado",
+        "sentry_sdk.integrations.trytond",
+        "sentry_sdk.integrations.wsgi",
         "sentry_sdk.integrations.stdlib",
         "sentry_sdk.integrations.excepthook",
         "sentry_sdk.integrations.dedupe", 
@@ -146,6 +173,7 @@ def getExecutableCommand(doFirst=True):
             cmd = [sys.executable, "setup.py", "py2app"]
     return cmd
 
+
 def getPyInstallerFilePathStr(path):
     delimiter = ";" if platform.system() == "Windows" else ":"
     completePath = curDirPath + path
@@ -154,12 +182,14 @@ def getPyInstallerFilePathStr(path):
     else:
         return completePath + "%s." % (delimiter)
 
+
 def getHiddenImportsParams(*imports):
     res = []
     for imp in imports:
         res.append("--hidden-import")
         res.append(imp)
     return res
+
 
 def getAddDataParameters(*paths):
     res = []
