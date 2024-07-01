@@ -1026,7 +1026,6 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(self.validateToken)
 
                 postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-                self.menubar.toggleCloneMenuOptions(False, True)
                 if Globals.HAS_INTERNET is None:
                     Globals.HAS_INTERNET = checkEsperInternetConnection()
                 threads = []
@@ -2458,11 +2457,6 @@ class NewFrameLayout(wx.Frame):
         determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
         determineDoHereorMainThread(self.menubar.setSaveMenuOptionsEnableState, state)
 
-        # if not self.blueprintsEnabled:
-        #     determineDoHereorMainThreasd(self.menubar.clone.Enable, state)
-        # else:
-        #     determineDoHereorMainThread(self.menubar.cloneBP.Enable, state)
-
     @api_tool_decorator()
     def onInstalledDevices(self, event):
         reset = True
@@ -2688,10 +2682,6 @@ class NewFrameLayout(wx.Frame):
         Globals.token_lock.release()
         checkFeatureFlags(config)
         self.blueprintsEnabled = config["isBlueprintsEnabled"]
-        if self.blueprintsEnabled:
-            self.menubar.toggleCloneMenuOptions(True)
-        else:
-            self.menubar.toggleCloneMenuOptions(False)
 
         self.Logging("---> Attempting to fetch Blueprints...")
         self.fetchAllKnownBlueprints()
