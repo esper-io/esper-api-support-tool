@@ -58,9 +58,9 @@ class GridTable(gridlib.Grid):
                         data[col] = data[col].astype("float64")
 
                         if "." not in data[col]:
-                            data[col].apply(lambda x: "{:.0f}".format(x))
+                            data[col] = data[col].apply(lambda x: "{:.0f}".format(x))
                         else:
-                            data[col].apply(lambda x: "{:.2f}".format(x))
+                            data[col] = data[col].apply(lambda x: "{:.2f}".format(x))
                 else:
                     data[col] = data[col].astype("str")
         return data
