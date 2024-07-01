@@ -1,4 +1,5 @@
 import platform
+import sys
 import threading
 from datetime import datetime
 from distutils.version import LooseVersion
@@ -51,7 +52,13 @@ class GridTable(gridlib.Grid):
                 elif is_bool_dtype(data[col]):
                     data[col] = data[col].astype("bool")
                 elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
-                    data[col] = data[col].astype("int64")
+                    if float(data[col]) < sys.maxsize:
+                        data[col] = data[col].astype("int64")
+                    else:
+                        data[col] = data[col].astype("float64")
+
+                        if "." in data[col]:
+                            data[col].apply(lambda x: "{:.0f}".format(x))
                 else:
                     data[col] = data[col].astype("str")
         return data
