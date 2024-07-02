@@ -52,7 +52,7 @@ class GridTable(gridlib.Grid):
                 elif is_bool_dtype(data[col]):
                     data[col] = data[col].astype("bool")
                 elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
-                    if float(data[col]) < sys.maxsize:
+                    if float(data[col].max()) < sys.maxsize:
                         data[col] = data[col].astype("int64")
                     else:
                         data[col] = data[col].astype("float64")

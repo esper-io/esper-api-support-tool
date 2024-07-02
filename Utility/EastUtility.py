@@ -653,7 +653,7 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
     network_info = getValueFromLatestEvent(latestEvent, "networkEvent")
     unpackageDict(deviceInfo, latestEvent)
 
-    if "audioSettings" in deviceInfo:
+    if "audioSettings" in deviceInfo and deviceInfo["audioSettings"]:
         for audio in deviceInfo["audioSettings"]:
             if "audioStream" in audio and "volumeLevel" in audio:
                 deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
