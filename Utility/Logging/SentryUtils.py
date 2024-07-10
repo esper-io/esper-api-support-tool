@@ -14,7 +14,7 @@ class SentryUtils():
         self.readTokenInfo()
 
         if self.dsn:
-            sentry_sdk.init(self.dsn, traces_sample_rate=1.0)
+            sentry_sdk.init(self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1)
 
     def readTokenInfo(self):
         filePath = "token.json"
