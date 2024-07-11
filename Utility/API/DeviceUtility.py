@@ -112,7 +112,7 @@ def get_all_android_devices_helper(
         + extention
     )
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
-    if api_response.status_code < 300:
+    if api_response and api_response.status_code < 300:
         api_response = api_response.json()
         if type(responses) == list:
             responses.append(api_response)
