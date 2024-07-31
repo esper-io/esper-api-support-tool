@@ -111,7 +111,7 @@ def getExecutableCommand(doFirst=True):
         "sentry_sdk.integrations.wsgi",
         "sentry_sdk.integrations.stdlib",
         "sentry_sdk.integrations.excepthook",
-        "sentry_sdk.integrations.dedupe", 
+        "sentry_sdk.integrations.dedupe",
         "sentry_sdk.integrations.atexit",
         "sentry_sdk.integrations.modules",
         "sentry_sdk.integrations.argv",
@@ -122,11 +122,13 @@ def getExecutableCommand(doFirst=True):
         if isModuleInstalled("pyinstaller"):
             updateFileVersionInfo()
             cmd = [
-                "pyinstaller",
+                sys.executable,
+                "-m",
+                "PyInstaller",
                 "--noconfirm",
                 "--onefile",
                 "--windowed",
-                "--ascii",
+                # "--ascii",
                 "--clean",
                 "--name",
                 app_name,
@@ -140,20 +142,22 @@ def getExecutableCommand(doFirst=True):
                 *getAddDataParameters(
                     "/Images",
                     "/Utility/Logging/token.json",
-                    "/Utility/Logging/slack_details.json"
+                    "/Utility/Logging/slack_details.json",
                 ),
                 curDirPath + "/Main.py",
             ]
     else:
         if isModuleInstalled("pyinstaller") and doFirst:
             cmd = [
-                "pyinstaller",
+                sys.executable,
+                "-m",
+                "PyInstaller",
                 "--noconfirm",
                 "--onefile",
                 "--windowed",
                 "--icon",
                 curDirPath + "/Images/icon.png",
-                "--ascii",
+                # "--ascii",
                 "--clean",
                 "--name",
                 app_name.replace(".app", ""),
@@ -165,7 +169,7 @@ def getExecutableCommand(doFirst=True):
                 *getAddDataParameters(
                     "/Images",
                     "/Utility/Logging/token.json",
-                    "/Utility/Logging/slack_details.json"
+                    "/Utility/Logging/slack_details.json",
                 ),
                 curDirPath + "/Main.py",
             ]
@@ -237,7 +241,10 @@ if __name__ == "__main__":
                 dispath + "/Main.app",
                 dispath + "/" + app_name,
             )
-        webbrowser.open(dispath)
+        if os.path.exists(dispath + "/" + app_name):
+            webbrowser.open(dispath)
+        else:
+            print(">>>\tFAILED to generate executeable")
     except Exception as e:
         print(
             "FAILED to remove old executeable or rename the newly generated executable"

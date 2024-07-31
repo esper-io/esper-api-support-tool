@@ -21,7 +21,9 @@ class MyApp(wx.App):
             self.instance = wx.SingleInstanceChecker(self.name)
 
             if self.instance.IsAnotherRunning() and not Globals.IS_DEBUG:
-                wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
+                wx.MessageBox(
+                    "Another instance is running!", style=wx.ICON_ERROR
+                )
                 return False
 
             Globals.frame = FrameLayout()
@@ -39,11 +41,11 @@ class MyApp(wx.App):
         Globals.frame.MacNewFile()
 
 
-@api_tool_decorator()
+@api_tool_decorator(displayPrompt=False)
 def main():
     """Launches Main App"""
     logger = ApiToolLog()
-    SentryUtils()
+    # SentryUtils()
     sys.excepthook = logger.excepthook
 
     logger.limitLogFileSizes()

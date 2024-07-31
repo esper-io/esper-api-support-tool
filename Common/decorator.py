@@ -15,7 +15,7 @@ import Common.Globals as Globals
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
-def api_tool_decorator(locks=None):
+def api_tool_decorator(locks=None, displayPrompt=True):
     def inner(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -34,10 +34,12 @@ def api_tool_decorator(locks=None):
                 logPlaceDone(func, *args, **kwargs)
             except ApiException as e:
                 logError(e)
-                excpt = determineErrorDisplay(e)
+                if displayPrompt:
+                    excpt = determineErrorDisplay(e)
             except Exception as e:
                 logError(e)
-                excpt = determineErrorDisplay(e)
+                if displayPrompt:
+                    excpt = determineErrorDisplay(e)
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
@@ -72,7 +74,9 @@ def api_tool_decorator(locks=None):
             if start and end:
                 duration = end - start
                 if Globals.PRINT_FUNC_DURATION:
-                    print("%s executed in %s seconds." % (func.__name__, duration))
+                    print(
+                        "%s executed in %s seconds." % (func.__name__, duration)
+                    )
             return result
 
         return wrapper
