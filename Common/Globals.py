@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195246"
+VERSION = "v0.195247"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -170,15 +170,17 @@ JSON_COMMAND_TYPES = [
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://github.com/esper-io/esper-api-support-tool/wiki"
-LATEST_UPDATE_LINK = (
-    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+LATEST_UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+UPDATE_LINK = (
+    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 )
-UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "status/?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTERPRISE"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = (
+    "app/?limit={limit}&app_type=ENTERPRISE"
+)
 DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
@@ -306,7 +308,7 @@ CSV_APP_ATTR_NAME = [
 SEMANTIC_VERSION_COL = [
     "Android Version",
     "Application Version Code",
-    "Application Version Name"
+    "Application Version Name",
 ]
 
 DATE_COL = {
