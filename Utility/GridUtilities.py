@@ -110,7 +110,7 @@ def convertColumnTypes(data, headers):
             if col in Globals.DATE_COL:
                 data[col] = pd.to_datetime(data[col], exact=False, errors="coerce")
                 data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
-                data[col].fillna("No Data Available", inplace=True)
+                data[col] = data[col].fillna("No Data Available")
             elif is_bool_dtype(data[col]):
                 data[col] = data[col].astype("bool")
             elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
