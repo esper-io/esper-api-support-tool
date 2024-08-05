@@ -186,11 +186,12 @@ def fetchDevicesFromGroup(
         ):
             api_response.results += resp.results
         else:
-            if "content" in resp:
+            if resp and "content" in resp:
                 resp = resp["content"]
-            for device in resp["results"]:
-                if device not in api_response["results"]:
-                    api_response["results"].append(device)
+            if resp and "results" in resp:
+                for device in resp["results"]:
+                    if device not in api_response["results"]:
+                        api_response["results"].append(device)
 
     return api_response
 
