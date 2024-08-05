@@ -176,6 +176,8 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         finally:
             if hasattr(writer, "save"):
                 writer.save()
+            if hasattr(writer, "close"):
+                writer.close()
     else:
         split_dict_list = list(
             __split_dict_into_chunks__(
