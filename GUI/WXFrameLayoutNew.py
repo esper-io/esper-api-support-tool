@@ -380,17 +380,22 @@ class NewFrameLayout(wx.Frame):
                             self.loadConfiguartion(isValid)
                         else:
                             _, host, _, _ = dialog.getUserInput()
+                            ApiToolLog().Log(
+                                "Failed to validate configuration via API; possible wrong input or internet connection issue."
+                            )
                             displayMessageBox(
                                 (
-                                    "ERROR: An error occured when attempting to add the tenant. Check inputs values and your internet connection.",
+                                    "ERROR: An error occured when attempting to add the tenant.\nCheck inputs values and your internet connection.",
                                     wx.ICON_ERROR,
                                 )
                             )
                     except Exception as e:
+                        ApiToolLog().LogError(e)
                         _, host, _, _ = dialog.getUserInput()
                         displayMessageBox(
                             (
-                                "ERROR: An error occured when attempting to add the tenant (%s). Check inputs values and your internet connection." % str(e),
+                                "ERROR: An error occured when attempting to add the tenant (%s).\nCheck inputs values and your internet connection."
+                                % str(e),
                                 wx.ICON_ERROR,
                             )
                         )

@@ -15,8 +15,10 @@ from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import postEsperCommand
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
+from Utility.Web.WebRequests import (
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -117,7 +119,9 @@ def setdevicename(
 
 @api_tool_decorator()
 def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.TokenApi(esperclient.ApiClient(Globals.configuration))
+    api_instance = esperclient.TokenApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
     try:
         api_response = None
         for attempt in range(maxAttempt):
@@ -125,7 +129,9 @@ def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
                 enforceRateLimit()
                 api_response = api_instance.get_token_info()
                 ApiToolLog().LogApiRequestOccurrence(
-                    "getTokenInfo", api_instance.get_token_info, Globals.PRINT_API_LOGS
+                    "getTokenInfo",
+                    api_instance.get_token_info,
+                    Globals.PRINT_API_LOGS,
                 )
                 break
             except Exception as e:
@@ -154,7 +160,9 @@ def validateConfiguration(
     configuration.api_key["Authorization"] = key
     configuration.api_key_prefix["Authorization"] = prefix
 
-    api_instance = esperclient.EnterpriseApi(esperclient.ApiClient(configuration))
+    api_instance = esperclient.EnterpriseApi(
+        esperclient.ApiClient(configuration)
+    )
     enterprise_id = entId
 
     try:
@@ -168,6 +176,7 @@ def validateConfiguration(
                     api_instance.get_enterprise,
                     Globals.PRINT_API_LOGS,
                 )
+                ApiToolLog().Log(str(api_response))
                 break
             except Exception as e:
                 if attempt == maxAttempt - 1:
@@ -188,7 +197,9 @@ def validateConfiguration(
 
 
 @api_tool_decorator()
-def getIosDeviceApps(deviceId, limit=None, offset=0, appType=None, createAppListArg=True):
+def getIosDeviceApps(
+    deviceId, limit=None, offset=0, appType=None, createAppListArg=True
+):
     url = "%s/v2/devices/%s/device-apps/" % (
         Globals.configuration.host,
         deviceId,
@@ -215,7 +226,9 @@ def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
         else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
     hasFormat = [
-        tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
+        tup[1]
+        for tup in string.Formatter().parse(extention)
+        if tup[1] is not None
     ]
     if hasFormat:
         if "limit" in hasFormat:
@@ -227,10 +240,16 @@ def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
 
 def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
     applist = []
-    if json_resp and "results" in json_resp and json_resp["results"] and len(json_resp["results"]):
+    if (
+        json_resp
+        and "results" in json_resp
+        and json_resp["results"]
+        and len(json_resp["results"])
+    ):
         for app in json_resp["results"]:
             if (
-                "install_state" in app and "uninstall" in app["install_state"].lower()
+                "install_state" in app
+                and "uninstall" in app["install_state"].lower()
             ) or (
                 hasattr(app, "install_state")
                 and "uninstall" in app.install_state.lower()
@@ -248,7 +267,9 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["application"]["version"]["version_name"][
-                            1 : len(app["application"]["version"]["version_name"])
+                            1 : len(
+                                app["application"]["version"]["version_name"]
+                            )
                         ]
                         if (
                             app["application"]["version"]["version_name"]
@@ -261,7 +282,9 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 else:
                     version = (
                         app["application"]["version"]["version_code"][
-                            1 : len(app["application"]["version"]["version_code"])
+                            1 : len(
+                                app["application"]["version"]["version_code"]
+                            )
                         ]
                         if (
                             app["application"]["version"]["version_code"]
@@ -274,48 +297,72 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
 
                 appName = app["application"]["application_name"]
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
-            elif app.get("package_name") is not None and app.get("platform", "").lower() != "apple":
+            elif (
+                app.get("package_name") is not None
+                and app.get("platform", "").lower() != "apple"
+            ):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
+                    filterData
+                    and app["package_name"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 version = None
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["version_name"][1 : len(app["version_name"])]
-                        if app["version_name"] and app["version_name"].startswith("v")
+                        if app["version_name"]
+                        and app["version_name"].startswith("v")
                         else app["version_name"]
                     )
                 else:
                     version = (
                         app["version_code"][1 : len(app["version_code"])]
-                        if app["version_code"] and app["version_code"].startswith("v")
+                        if app["version_code"]
+                        and app["version_code"].startswith("v")
                         else app["version_code"]
                     )
                 applist.append(
-                    constructAppPkgVerStr(app["app_name"], app["package_name"], version)
+                    constructAppPkgVerStr(
+                        app["app_name"], app["package_name"], version
+                    )
                 )
-            elif app.get("package_name") is not None and app.get("platform", "").lower() == "apple":
+            elif (
+                app.get("package_name") is not None
+                and app.get("platform", "").lower() == "apple"
+            ):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
+                    filterData
+                    and app["package_name"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 applist.append(
-                    constructAppPkgVerStr(app["app_name"], app["package_name"], app["version_name"])
+                    constructAppPkgVerStr(
+                        app["app_name"],
+                        app["package_name"],
+                        app["version_name"],
+                    )
                 )
-            elif app.get("bundle_id") is not None and app.get("platform", "").lower() == "apple":
+            elif (
+                app.get("bundle_id") is not None
+                and app.get("platform", "").lower() == "apple"
+            ):
                 if app["bundle_id"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["bundle_id"] not in Globals.APP_COL_FILTER
+                    filterData
+                    and app["bundle_id"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 applist.append(
-                    constructAppPkgVerStr(app["app_name"], app["bundle_id"], app["version_name"])
+                    constructAppPkgVerStr(
+                        app["app_name"], app["bundle_id"], app["version_name"]
+                    )
                 )
     return applist
 
 
 def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+    api_instance = esperclient.DeviceApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
     api_response = None
     for attempt in range(maxAttempt):
         try:
