@@ -386,11 +386,11 @@ class NewFrameLayout(wx.Frame):
                                     wx.ICON_ERROR,
                                 )
                             )
-                    except:
+                    except Exception as e:
                         _, host, _, _ = dialog.getUserInput()
                         displayMessageBox(
                             (
-                                "ERROR: An error occured when attempting to add the tenant. Check inputs values and your internet connection.",
+                                "ERROR: An error occured when attempting to add the tenant (%s). Check inputs values and your internet connection." % str(e),
                                 wx.ICON_ERROR,
                             )
                         )
