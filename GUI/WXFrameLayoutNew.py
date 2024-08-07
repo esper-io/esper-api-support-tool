@@ -660,7 +660,7 @@ class NewFrameLayout(wx.Frame):
                     how="outer",
                 )
                 result = result.dropna(
-                    axis=0, how="all", thresh=None, subset=None
+                    axis=0, how="all", subset=None
                 )
                 save_csv_pandas(inFile, result)
             if (
