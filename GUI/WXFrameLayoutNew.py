@@ -1165,6 +1165,9 @@ class NewFrameLayout(wx.Frame):
                         in res.body
                         or "Invalid or missing credentials" in res.body
                     )
+                    or "Authentication credentials were not provided"
+                    in str(res)
+                    or "Invalid or missing credentials" in str(res)
                 )
             )
             or (hasattr(res, "status") and res.status >= 300)
