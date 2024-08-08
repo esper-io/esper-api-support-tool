@@ -118,40 +118,6 @@ def setdevicename(
 
 
 @api_tool_decorator()
-def getTokenInfo(maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.TokenApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    try:
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.get_token_info()
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getTokenInfo",
-                    api_instance.get_token_info,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e, postIssue=False, postStatus=False)
-                    raise e
-                if "429" not in str(e) and "Too Many Requests" not in str(e):
-                    time.sleep(Globals.RETRY_SLEEP)
-                else:
-                    time.sleep(
-                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                    )  # Sleep for a minute * retry number
-        return api_response
-    except ApiException as e:
-        print("Exception when calling TokenApi->get_token_info: %s\n" % e)
-        ApiToolLog().LogError(e, postIssue=False, postStatus=False)
-        return e
-
-
-@api_tool_decorator()
 def validateConfiguration(
     host, entId, key, prefix="Bearer", maxAttempt=Globals.MAX_RETRY
 ):
@@ -194,6 +160,42 @@ def validateConfiguration(
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
         ApiToolLog().LogError(e, postIssue=False)
     return False
+
+
+def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
+    api_instance = esperclient.EnterpriseApi(
+        esperclient.ApiClient(Globals.configuration)
+    )
+    try:
+        api_response = None
+        for attempt in range(maxAttempt):
+            try:
+                enforceRateLimit()
+                api_response = api_instance.get_enterprise(
+                    Globals.enterprise_id
+                )
+                ApiToolLog().LogApiRequestOccurrence(
+                    "validateConfiguration",
+                    api_instance.get_enterprise,
+                    Globals.PRINT_API_LOGS,
+                )
+                ApiToolLog().Log(str(api_response))
+                break
+            except Exception as e:
+                if attempt == maxAttempt - 1:
+                    ApiToolLog().LogError(e, postIssue=False)
+                    raise e
+                if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    time.sleep(Globals.RETRY_SLEEP)
+                else:
+                    time.sleep(
+                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
+                    )  # Sleep for a minute * retry number
+        if hasattr(api_response, "id"):
+            return True
+    except ApiException as e:
+        print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
+        ApiToolLog().LogError(e, postIssue=False)
 
 
 @api_tool_decorator()

@@ -45,40 +45,66 @@ from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
 from Utility.API.AppUtilities import getAllInstallableApps, getAppDictEntry
 from Utility.API.AuditPosting import AuditPosting
-from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
-                                          modifyAppsInBlueprints,
-                                          prepareBlueprintClone,
-                                          prepareBlueprintConversion,
-                                          pushBlueprintUpdate)
+from Utility.API.BlueprintUtility import (
+    checkFeatureFlags,
+    getAllBlueprints,
+    modifyAppsInBlueprints,
+    prepareBlueprintClone,
+    prepareBlueprintConversion,
+    pushBlueprintUpdate,
+)
 from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import getTokenInfo, validateConfiguration
+from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
-                                     getSpecificUser)
+from Utility.API.UserUtility import (
+    getAllPendingUsers,
+    getAllUsers,
+    getSpecificUser,
+)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
-                                 fetchInstalledDevices, filterDeviceList,
-                                 getAllDeviceInfo, removeNonWhitelisted,
-                                 uploadAppToEndpoint)
-from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
-                                 read_data_from_csv,
-                                 read_data_from_csv_as_dict,
-                                 read_excel_via_openpyxl, read_json_file,
-                                 save_csv_pandas, save_excel_pandas_xlxswriter,
-                                 write_data_to_csv, write_json_file)
+from Utility.EastUtility import (
+    TakeAction,
+    clearKnownGlobalVariables,
+    fetchInstalledDevices,
+    filterDeviceList,
+    getAllDeviceInfo,
+    removeNonWhitelisted,
+    uploadAppToEndpoint,
+)
+from Utility.FileUtility import (
+    getToolDataPath,
+    read_csv_via_pandas,
+    read_data_from_csv,
+    read_data_from_csv_as_dict,
+    read_excel_via_openpyxl,
+    read_json_file,
+    save_csv_pandas,
+    save_excel_pandas_xlxswriter,
+    write_data_to_csv,
+    write_json_file,
+)
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (checkEsperInternetConnection,
-                              checkForInternetAccess,
-                              checkIfCurrentThreadStopped, correctSaveFileName,
-                              createNewFile, determineDoHereorMainThread,
-                              displayFileDialog, displayMessageBox,
-                              joinThreadList, openWebLinkInBrowser,
-                              postEventToFrame, processFunc, resourcePath,
-                              splitListIntoChunks, updateErrorTracker)
+from Utility.Resource import (
+    checkEsperInternetConnection,
+    checkForInternetAccess,
+    checkIfCurrentThreadStopped,
+    correctSaveFileName,
+    createNewFile,
+    determineDoHereorMainThread,
+    displayFileDialog,
+    displayMessageBox,
+    joinThreadList,
+    openWebLinkInBrowser,
+    postEventToFrame,
+    processFunc,
+    resourcePath,
+    splitListIntoChunks,
+    updateErrorTracker,
+)
 
 
 class NewFrameLayout(wx.Frame):
@@ -659,9 +685,7 @@ class NewFrameLayout(wx.Frame):
                     on=["Esper Name", "Group"],
                     how="outer",
                 )
-                result = result.dropna(
-                    axis=0, how="all", subset=None
-                )
+                result = result.dropna(axis=0, how="all", subset=None)
                 save_csv_pandas(inFile, result)
             if (
                 not action
@@ -1127,25 +1151,23 @@ class NewFrameLayout(wx.Frame):
     def validateToken(self):
         Globals.token_lock.acquire()
         try:
-            res = getTokenInfo(maxAttempt=2)
+            res = getCompanySettings(maxAttempt=2)
         except:
             pass
         Globals.IS_TOKEN_VALID = True
         if (
             (
                 res
-                and hasattr(res, "expires_on")
-                and res.expires_on <= datetime.now(res.expires_on.tzinfo)
-            )
-            or (
-                res
-                and hasattr(res, "body")
                 and (
-                    "Authentication credentials were not provided" in res.body
-                    or "Invalid or missing credentials" in res.body
+                    hasattr(res, "body")
+                    and (
+                        "Authentication credentials were not provided"
+                        in res.body
+                        or "Invalid or missing credentials" in res.body
+                    )
                 )
-                or (hasattr(res, "status") and res.status >= 300)
             )
+            or (hasattr(res, "status") and res.status >= 300)
             or res is None
         ):
             Globals.IS_TOKEN_VALID = False
