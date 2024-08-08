@@ -191,11 +191,10 @@ def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
                     time.sleep(
                         Globals.RETRY_SLEEP * 20 * (attempt + 1)
                     )  # Sleep for a minute * retry number
-        if hasattr(api_response, "id"):
-            return True
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
         ApiToolLog().LogError(e, postIssue=False)
+    return api_response
 
 
 @api_tool_decorator()
