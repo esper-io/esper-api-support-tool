@@ -1176,11 +1176,6 @@ class NewFrameLayout(wx.Frame):
             Globals.IS_TOKEN_VALID = False
             determineDoHereorMainThread(self.promptForNewToken)
 
-        if res and hasattr(res, "user"):
-            Globals.TOKEN_USER = getSpecificUser(res.user)
-            if res and hasattr(res, "scope"):
-                if "write" not in res.scope:
-                    self.menubar.fileAddUser.Enable(False)
         if Globals.token_lock.locked():
             Globals.token_lock.release()
 
