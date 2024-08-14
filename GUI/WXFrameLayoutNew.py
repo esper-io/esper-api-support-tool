@@ -45,66 +45,40 @@ from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
 from Utility.API.AppUtilities import getAllInstallableApps, getAppDictEntry
 from Utility.API.AuditPosting import AuditPosting
-from Utility.API.BlueprintUtility import (
-    checkFeatureFlags,
-    getAllBlueprints,
-    modifyAppsInBlueprints,
-    prepareBlueprintClone,
-    prepareBlueprintConversion,
-    pushBlueprintUpdate,
-)
+from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
+                                          modifyAppsInBlueprints,
+                                          prepareBlueprintClone,
+                                          prepareBlueprintConversion,
+                                          pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import (
-    getAllPendingUsers,
-    getAllUsers,
-    getSpecificUser,
-)
+from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
+                                     getSpecificUser)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (
-    TakeAction,
-    clearKnownGlobalVariables,
-    fetchInstalledDevices,
-    filterDeviceList,
-    getAllDeviceInfo,
-    removeNonWhitelisted,
-    uploadAppToEndpoint,
-)
-from Utility.FileUtility import (
-    getToolDataPath,
-    read_csv_via_pandas,
-    read_data_from_csv,
-    read_data_from_csv_as_dict,
-    read_excel_via_openpyxl,
-    read_json_file,
-    save_csv_pandas,
-    save_excel_pandas_xlxswriter,
-    write_data_to_csv,
-    write_json_file,
-)
+from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
+                                 fetchInstalledDevices, filterDeviceList,
+                                 getAllDeviceInfo, removeNonWhitelisted,
+                                 uploadAppToEndpoint)
+from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
+                                 read_data_from_csv,
+                                 read_data_from_csv_as_dict,
+                                 read_excel_via_openpyxl, read_json_file,
+                                 save_csv_pandas, save_excel_pandas_xlxswriter,
+                                 write_data_to_csv, write_json_file)
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkEsperInternetConnection,
-    checkForInternetAccess,
-    checkIfCurrentThreadStopped,
-    correctSaveFileName,
-    createNewFile,
-    determineDoHereorMainThread,
-    displayFileDialog,
-    displayMessageBox,
-    joinThreadList,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    processFunc,
-    resourcePath,
-    splitListIntoChunks,
-    updateErrorTracker,
-)
+from Utility.Resource import (checkEsperInternetConnection,
+                              checkForInternetAccess,
+                              checkIfCurrentThreadStopped, correctSaveFileName,
+                              createNewFile, determineDoHereorMainThread,
+                              displayFileDialog, displayMessageBox,
+                              joinThreadList, openWebLinkInBrowser,
+                              postEventToFrame, processFunc, resourcePath,
+                              splitListIntoChunks, updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -153,6 +127,9 @@ class NewFrameLayout(wx.Frame):
         self.prefPath = "%s/prefs.json" % basePath
         self.authPath = "%s/auth.csv" % basePath
         self.keyPath = "%s/east.key" % basePath
+
+        pd.set_option("mode.copy_on_write", True)
+        pd.set_option("display.precision", 2)
 
         wx.Frame.__init__(
             self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE

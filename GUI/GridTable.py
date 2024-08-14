@@ -13,6 +13,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.GridDataTable import GridDataTable
+from Utility.GridUtilities import convertColumnTypes
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
 
@@ -41,37 +42,6 @@ class GridTable(gridlib.Grid):
             df[col] = df[col].astype("str")
         df.index = pd.RangeIndex(start=0, stop=len(df.index) * 1 - 1, step=1)
         return df
-
-    def convertColumnTypes(self, data):
-        for col in self.headersLabels:
-            if len(data[col]) > 0:
-                if col in Globals.DATE_COL:
-                    data[col] = pd.to_datetime(
-                        data[col], exact=False, errors="coerce"
-                    )
-                    data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
-                    data[col] = data[col].fillna("No Data Available")
-                elif is_bool_dtype(data[col]):
-                    data[col] = data[col].astype("bool")
-                elif is_string_dtype(data[col]) and all(
-                    data[col].str.isnumeric()
-                ):
-                    if float(data[col].max()) < sys.maxsize:
-                        data[col] = data[col].astype("int64")
-                    else:
-                        data[col] = data[col].astype("float64")
-
-                        if "." not in data[col]:
-                            data[col] = data[col].apply(
-                                lambda x: "{:.0f}".format(x)
-                            )
-                        else:
-                            data[col] = data[col].apply(
-                                lambda x: "{:.2f}".format(x)
-                            )
-                else:
-                    data[col] = data[col].astype("str")
-        return data
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
         if (
@@ -162,7 +132,7 @@ class GridTable(gridlib.Grid):
                     data = data[list(self.headersLabels)]
                     data = data.rename(columns=renameColumns)
 
-            self.convertColumnTypes(data)
+            convertColumnTypes(data, self.headersLabels)
             data = data.fillna("")
             self.table = GridDataTable(data)
 
