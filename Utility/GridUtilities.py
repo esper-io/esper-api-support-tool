@@ -211,8 +211,10 @@ def convertColumnTypes(data, headers):
                 elif gridColType == "category":
                     data[col] = data[col].astype("category")
                 else:
-                    data[col] = data[col].astype("string")
+                    data[col] = data[col].astype(pd.StringDtype())
 
                 if col_type != data[col].dtype:
                     break
+        if col_type == data[col].dtype:
+            data[col] = data[col].astype(pd.StringDtype())
     return data
