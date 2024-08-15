@@ -205,9 +205,9 @@ class GridTable(gridlib.Grid):
                     self.table.data[colName] = pd.to_datetime(
                         self.table.data[colName], exact=False, errors="coerce"
                     )
-                    self.table.data[colName] = self.table.data[col].dt.strftime(
-                        Globals.DATE_COL[colName]
-                    )
+                    self.table.data[colName] = self.table.data[
+                        colName
+                    ].dt.strftime(Globals.DATE_COL[colName])
                     self.table.data[colName] = self.table.data[colName].fillna(
                         "No Data Available"
                     )
@@ -219,7 +219,7 @@ class GridTable(gridlib.Grid):
                     self.table.data[colName] = self.table.data[colName].astype(
                         pd.StringDtype()
                     )
-                except:
+                except Exception as e:
                     df = self.table.data.sort_values(
                         colName, ascending=self.sortAcesnding
                     )
