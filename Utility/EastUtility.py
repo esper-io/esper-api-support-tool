@@ -829,6 +829,9 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     elif "name" in device:
         deviceInfo["EsperName"] = device["name"]
 
+    if "os" not in deviceInfo:
+        deviceInfo["os"] = "Android"
+
     isTemplate = True
     if Globals.frame:
         isTemplate = not Globals.frame.blueprintsEnabled
