@@ -826,8 +826,6 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
                 deviceInfo["templateDeviceLocale"] = "N/A"
         else:
             deviceInfo["templateDeviceLocale"] = "N/A"
-    elif not isTemplate:
-        deviceInfo["templateDeviceLocale"] = "Not Fetched/Incompatible Field"
     else:
         deviceInfo["templateDeviceLocale"] = "Not Fetched"
 
