@@ -202,13 +202,13 @@ class GridTable(gridlib.Grid):
             elif colName in Globals.DATE_COL.keys():
                 try:
                     # convert column to datetime
-                    self.table.data[col] = pd.to_datetime(
-                        self.table.data[col], exact=False, errors="coerce"
+                    self.table.data[colName] = pd.to_datetime(
+                        self.table.data[colName], exact=False, errors="coerce"
                     )
-                    self.table.data[col] = self.table.data[col].dt.strftime(
-                        Globals.DATE_COL[col]
+                    self.table.data[colName] = self.table.data[col].dt.strftime(
+                        Globals.DATE_COL[colName]
                     )
-                    self.table.data[col] = self.table.data[col].fillna(
+                    self.table.data[colName] = self.table.data[colName].fillna(
                         "No Data Available"
                     )
                     # sort by datetime
@@ -216,7 +216,7 @@ class GridTable(gridlib.Grid):
                         colName, ascending=self.sortAcesnding
                     )
                     # convert column back to string
-                    self.table.data[col] = self.table.data[col].astype(
+                    self.table.data[colName] = self.table.data[colName].astype(
                         pd.StringDtype()
                     )
                 except:
