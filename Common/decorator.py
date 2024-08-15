@@ -173,20 +173,4 @@ def construct_log_place_str(prefix, func, *args, **kwargs):
     else:
         place += str(func)
 
-    # argStrList = "\tArguements: "
-    # if args:
-    #     for x in args:
-    #         if isinstance(x) is dict:
-    #             argStrList += type(x) + ", "
-    #         else:
-    #             argStrList += str(x) + ", "
-
-    # kwargStrList = "\tKeyword Arguements: "
-    # if kwargs:
-    #     for key, val in kwargs.items():
-    #         if isinstance(val) is dict:
-    #             kwargStrList += "%s:%s, " % (str(key), str(type(dict)))
-    #         else:
-    #             kwargStrList += "%s:%s, " % (str(key), str(val))
-
-    return place  # + argStrList + kwargStrList
+    return place

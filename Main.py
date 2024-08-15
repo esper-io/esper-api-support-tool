@@ -45,7 +45,7 @@ class MyApp(wx.App):
 def main():
     """Launches Main App"""
     logger = ApiToolLog()
-    # SentryUtils()
+    SentryUtils()
     sys.excepthook = logger.excepthook
 
     logger.limitLogFileSizes()
