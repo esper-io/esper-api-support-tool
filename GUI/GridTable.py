@@ -133,7 +133,12 @@ class GridTable(gridlib.Grid):
                     data = data.rename(columns=renameColumns)
 
             convertColumnTypes(data, self.headersLabels)
-            data = data.fillna("")
+            for col in self.headersLabels:
+                if str(data[col].dtype)[:3] == "cat":
+                    data[col] = data[col].cat.add_categories("")
+                    data[col] = data[col].fillna("")
+                else:
+                    data[col] = data[col].fillna("")
             self.table = GridDataTable(data)
 
             # The second parameter means that the grid is to take ownership of the
