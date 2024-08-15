@@ -215,6 +215,6 @@ def convertColumnTypes(data, headers):
 
                 if col_type != data[col].dtype:
                     break
-        if col_type == data[col].dtype:
-            data[col] = data[col].astype(pd.StringDtype())
+            if col_type == data[col].dtype:
+                data[col] = data[col].astype(pd.StringDtype())
     return data
