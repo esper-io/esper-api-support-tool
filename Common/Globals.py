@@ -297,11 +297,6 @@ DATE_COL = {
 }
 
 GRID_COL_TYPES = {
-    # "Security Patch": "DATE",
-    # "Registered On": "DATE",
-    # "Updated On": "DATE",
-    # "Created On": "DATE",
-    # "Last Seen": "DATE",
     "Whitelisted": "BOOL",
     "Can Clear Data": "BOOL",
     "Can Uninstall": "BOOL",

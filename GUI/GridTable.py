@@ -199,6 +199,30 @@ class GridTable(gridlib.Grid):
                     df = self.table.data.sort_values(
                         colName, ascending=self.sortAcesnding
                     )
+            elif colName in Globals.DATE_COL.keys():
+                try:
+                    # convert column to datetime
+                    self.table.data[col] = pd.to_datetime(
+                        self.table.data[col], exact=False, errors="coerce"
+                    )
+                    self.table.data[col] = self.table.data[col].dt.strftime(
+                        Globals.DATE_COL[col]
+                    )
+                    self.table.data[col] = self.table.data[col].fillna(
+                        "No Data Available"
+                    )
+                    # sort by datetime
+                    df = self.table.data.sort_values(
+                        colName, ascending=self.sortAcesnding
+                    )
+                    # convert column back to string
+                    self.table.data[col] = self.table.data[col].astype(
+                        pd.StringDtype()
+                    )
+                except:
+                    df = self.table.data.sort_values(
+                        colName, ascending=self.sortAcesnding
+                    )
             else:
                 df = self.table.data.sort_values(
                     colName, ascending=self.sortAcesnding
