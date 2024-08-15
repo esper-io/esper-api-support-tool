@@ -10,16 +10,27 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
-from Utility.API.CommandUtility import (executeCommandOnDevice,
-                                        executeCommandOnGroup)
+from Utility.API.CommandUtility import (
+    executeCommandOnDevice,
+    executeCommandOnGroup,
+)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (displayMessageBox, enforceRateLimit, getHeader,
-                              logBadResponse, postEventToFrame)
-from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
-                                     performGetRequestWithRetry)
+from Utility.Resource import (
+    displayMessageBox,
+    enforceRateLimit,
+    getHeader,
+    logBadResponse,
+    postEventToFrame,
+)
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    performGetRequestWithRetry,
+)
 
 
-def uninstallAppOnDevice(packageName, device=None, postStatus=False, isGroup=False):
+def uninstallAppOnDevice(
+    packageName, device=None, postStatus=False, isGroup=False
+):
     if isGroup:
         return executeCommandOnGroup(
             Globals.frame,
@@ -62,14 +73,18 @@ def installAppOnDevices(
             if hasattr(appList, "results"):
                 for app in appList.results:
                     if app.package_name == packageName:
-                        app.versions.sort(key=lambda s: s.version_code.split("."))
+                        app.versions.sort(
+                            key=lambda s: s.version_code.split(".")
+                        )
                         appVersion = app.versions[-1]
                         appVersionId = appVersion.id
                         break
             elif type(appList) == dict and "results" in appList:
                 for app in appList["results"]:
                     if app["package_name"] == packageName:
-                        app["versions"].sort(key=lambda s: s["version_code"].split("."))
+                        app["versions"].sort(
+                            key=lambda s: s["version_code"].split(".")
+                        )
                         appVersion = app["versions"][-1]
                         appVersionId = appVersion["id"]
                         break
@@ -112,7 +127,9 @@ def installAppOnDevices(
         }
 
 
-def installAppOnGroups(packageName, version=None, groups=None, postStatus=False):
+def installAppOnGroups(
+    packageName, version=None, groups=None, postStatus=False
+):
     appVersion = version
     appVersionId = version
     if not appVersion:
@@ -127,7 +144,9 @@ def installAppOnGroups(packageName, version=None, groups=None, postStatus=False)
         elif type(appList) == dict and "results" in appList:
             for app in appList["results"]:
                 if app["package_name"] == packageName:
-                    app["versions"].sort(key=lambda s: s["version_code"].split("."))
+                    app["versions"].sort(
+                        key=lambda s: s["version_code"].split(".")
+                    )
                     appVersion = app["versions"][-1]
                     appVersionId = appVersion["id"]
                     break
@@ -192,38 +211,53 @@ def getAllIosInstallableApps(tolerance=0):
     # vppAppDetailUrl = "https://{host}-api.esper.cloud/api/v2/itunesapps/?apple_app_id=%s"
     return enterprise_apps
 
+
 @api_tool_decorator()
 def getEnterpriseIosApps(limit=None, offset=0, app_name="", tolerance=0):
-    esperIosAppsUrl = "%s/v2/tenant-apps?format=json&limit=%s&offset=%s&app_name=%s" % (
-        Globals.configuration.host,
-        limit if limit else Globals.limit,
-        offset,
-        app_name
+    esperIosAppsUrl = (
+        "%s/v2/tenant-apps?format=json&limit=%s&offset=%s&app_name=%s"
+        % (
+            Globals.configuration.host,
+            limit if limit else Globals.limit,
+            offset,
+            app_name,
+        )
     )
     resp = performGetRequestWithRetry(esperIosAppsUrl, headers=getHeader())
     if resp:
         resp_json = resp.json()
         content = resp_json["content"]
         appsResp = getAllFromOffsetsRequests(content, tolarance=tolerance)
-        if type(appsResp) is dict and "content" in appsResp and "results" in appsResp["content"]:
-            content["results"] = content["results"] + appsResp["content"]["results"]
+        if (
+            type(appsResp) is dict
+            and "content" in appsResp
+            and "results" in appsResp["content"]
+        ):
+            content["results"] = (
+                content["results"] + appsResp["content"]["results"]
+            )
             content["next"] = None
             content["prev"] = None
         app_res = {"results": []}
         for app in content["results"]:
-            app_details_url = "%s/v2/tenant-apps/%s/versions?format=json&limit=1&offset=0" % (
-                Globals.configuration.host,
-                app["id"]
+            app_details_url = (
+                "%s/v2/tenant-apps/%s/versions?format=json&limit=1&offset=0"
+                % (Globals.configuration.host, app["id"])
             )
-            details_resp = performGetRequestWithRetry(app_details_url, headers=getHeader())
+            details_resp = performGetRequestWithRetry(
+                app_details_url, headers=getHeader()
+            )
             if details_resp:
                 details_json = details_resp.json()
-                details_json["content"]["results"][0]["version_id"] = details_json["content"]["results"][0]["id"]
+                details_json["content"]["results"][0]["version_id"] = (
+                    details_json["content"]["results"][0]["id"]
+                )
                 details_json["content"]["results"][0].update(app)
                 app_res["results"].append(details_json["content"]["results"][0])
 
         return app_res
     return resp
+
 
 def constructAppPkgVerStr(appName, pkgName, version):
     appPkgVerStr = ""
@@ -246,7 +280,9 @@ def constructAppPkgVerStr(appName, pkgName, version):
 
 
 @api_tool_decorator()
-def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX_RETRY):
+def uploadApplicationForHost(
+    config, enterprise_id, file, maxAttempt=Globals.MAX_RETRY
+):
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
         api_response = None
@@ -261,7 +297,11 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                 )
                 postEventToFrame(
                     eventUtil.myEVT_AUDIT,
-                    {"operation": "UploadApp", "data": file, "resp": api_response},
+                    {
+                        "operation": "UploadApp",
+                        "data": file,
+                        "resp": api_response,
+                    },
                 )
                 break
             except Exception as e:
@@ -276,7 +316,9 @@ def uploadApplicationForHost(config, enterprise_id, file, maxAttempt=Globals.MAX
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
-        raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
+        raise Exception(
+            "Exception when calling ApplicationApi->upload: %s\n" % e
+        )
 
 
 @api_tool_decorator()
@@ -293,13 +335,18 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                 api_response = api_instance.upload(enterprise_id, file)
                 postEventToFrame(
                     eventUtil.myEVT_AUDIT,
-                    {"operation": "UploadApp", "data": file, "resp": api_response},
+                    {
+                        "operation": "UploadApp",
+                        "data": file,
+                        "resp": api_response,
+                    },
                 )
                 break
             except Exception as e:
                 if (
                     attempt == maxAttempt - 1
-                    or "App Upload failed as this version already exists" in str(e)
+                    or "App Upload failed as this version already exists"
+                    in str(e)
                 ):
                     ApiToolLog().LogError(e, postIssue=False)
                     raise e
@@ -311,12 +358,14 @@ def uploadApplication(file, maxAttempt=Globals.MAX_RETRY):
                     )  # Sleep for a minute * retry number
         return api_response
     except ApiException as e:
-        raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
+        raise Exception(
+            "Exception when calling ApplicationApi->upload: %s\n" % e
+        )
 
 
 @api_tool_decorator()
 def getAllApplications(maxAttempt=Globals.MAX_RETRY):
-    """ Make a API call to get all Applications belonging to the Enterprise """
+    """Make a API call to get all Applications belonging to the Enterprise"""
     if Globals.USE_ENTERPRISE_APP:
         try:
             api_instance = esperclient.ApplicationApi(
@@ -342,17 +391,22 @@ def getAllApplications(maxAttempt=Globals.MAX_RETRY):
                     if attempt == maxAttempt - 1:
                         ApiToolLog().LogError(e, postIssue=False)
                         raise e
-                    if "429" not in str(e) and "Too Many Requests" not in str(e):
+                    if "429" not in str(e) and "Too Many Requests" not in str(
+                        e
+                    ):
                         time.sleep(Globals.RETRY_SLEEP)
                     else:
                         time.sleep(
                             Globals.RETRY_SLEEP * 20 * (attempt + 1)
                         )  # Sleep for a minute * retry number
-            postEventToFrame(eventUtil.myEVT_LOG, "---> App API Request Finished")
+            postEventToFrame(
+                eventUtil.myEVT_LOG, "---> App API Request Finished"
+            )
             return api_response
         except ApiException as e:
             raise Exception(
-                "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+                "Exception when calling ApplicationApi->get_all_applications: %s\n"
+                % e
             )
     else:
         return getAppsEnterpriseAndPlayStore()
@@ -366,7 +420,7 @@ def getAllApplicationsForHost(
     package_name="",
     maxAttempt=Globals.MAX_RETRY,
 ):
-    """ Make a API call to get all Applications belonging to the Enterprise """
+    """Make a API call to get all Applications belonging to the Enterprise"""
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
         api_response = None
@@ -400,7 +454,8 @@ def getAllApplicationsForHost(
         return api_response
     except Exception as e:
         raise Exception(
-            "Exception when calling ApplicationApi->get_all_applications: %s\n" % e
+            "Exception when calling ApplicationApi->get_all_applications: %s\n"
+            % e
         )
 
 
@@ -411,13 +466,15 @@ def getAllAppVersionsForHost(
     app_id,
     maxAttempt=Globals.MAX_RETRY,
 ):
-    """ Make a API call to get all Applications belonging to the Enterprise """
+    """Make a API call to get all Applications belonging to the Enterprise"""
     try:
         api_response = None
         for attempt in range(maxAttempt):
             try:
                 url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
-                    tenant=config.host, enterprise_id=enterprise_id, appId=app_id
+                    tenant=config.host,
+                    enterprise_id=enterprise_id,
+                    appId=app_id,
                 )
                 header = {
                     "Authorization": f"Bearer {config.api_key['Authorization']}",
@@ -442,23 +499,6 @@ def getAllAppVersionsForHost(
         raise Exception(
             "Exception when calling ApplicationApi->get_app_versions: %s\n" % e
         )
-
-
-# def getApplication(application_id):
-#     api_instance = esperclient.ApplicationApi(
-#         esperclient.ApiClient(Globals.configuration)
-#     )
-#     enterprise_id = Globals.enterprise_id
-#     try:
-#         # Get application information
-
-#         api_response = api_instance.get_application(application_id, enterprise_id)
-#         ApiToolLog().LogApiRequestOccurrence(
-#             "getApplication", api_instance.get_application, Globals.PRINT_API_LOGS
-#         )
-#         return api_response
-#     except ApiException as e:
-#         print("Exception when calling ApplicationApi->get_application: %s\n" % e)
 
 
 def getAppVersions(
@@ -510,7 +550,9 @@ def getAppVersions(
 
 def getAppVersionsEnterpriseAndPlayStore(application_id):
     url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/{app_id}/version/".format(
-        tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        tenant=Globals.configuration.host.split("-api")[0].replace(
+            "https://", ""
+        ),
         ent_id=Globals.enterprise_id,
         app_id=application_id,
     )
@@ -525,7 +567,9 @@ def getAppsEnterpriseAndPlayStore(package_name=""):
     jsonResp = {}
     if package_name:
         url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/?package_name={pkg}".format(
-            tenant=Globals.configuration.host.split("-api")[0].replace("https://", ""),
+            tenant=Globals.configuration.host.split("-api")[0].replace(
+                "https://", ""
+            ),
             ent_id=Globals.enterprise_id,
             pkg=package_name,
         )
@@ -718,7 +762,9 @@ def getDeviceAppsApiUrl(deviceid, useEnterprise=False):
     if Globals.APP_FILTER.lower() != "all":
         extention += "&state=%s" % Globals.APP_FILTER.upper()
     hasFormat = [
-        tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None
+        tup[1]
+        for tup in string.Formatter().parse(extention)
+        if tup[1] is not None
     ]
     if hasFormat:
         if "limit" in hasFormat:
