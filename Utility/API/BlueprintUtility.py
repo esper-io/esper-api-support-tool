@@ -38,19 +38,6 @@ from Utility.Web.WebRequests import (
 )
 
 
-def checkBlueprintsIsEnabled():
-    enabled = False
-    resp = getFeatureFlags()
-    if hasattr(resp, "status_code") and resp.status_code < 300:
-        jsonResp = resp.json()
-        if (
-            "esper.cloud.onboarding" in jsonResp
-            and jsonResp["esper.cloud.onboarding"]
-        ):
-            return True
-    return enabled
-
-
 def checkFeatureFlags(data):
     host = data["apiHost"]
     header = {
@@ -103,20 +90,6 @@ def getAllBlueprints(tolerance=0, useThreadPool=True):
         blueprints = getAllFromOffsetsRequests(
             respJson, tolarance=tolerance, useThreadPool=useThreadPool
         )
-        if type(blueprints) is dict and "results" in blueprints:
-            respJson["results"] = respJson["results"] + blueprints["results"]
-            respJson["next"] = None
-            respJson["prev"] = None
-        return respJson
-    return resp
-
-
-@api_tool_decorator()
-def getAllBlueprintVersions(bp_id):
-    resp = getBlueprintVersions(bp_id)
-    if resp:
-        respJson = resp.json()
-        blueprints = getAllFromOffsetsRequests(respJson)
         if type(blueprints) is dict and "results" in blueprints:
             respJson["results"] = respJson["results"] + blueprints["results"]
             respJson["next"] = None

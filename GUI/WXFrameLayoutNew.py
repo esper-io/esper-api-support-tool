@@ -57,11 +57,7 @@ from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import (
-    getAllPendingUsers,
-    getAllUsers,
-    getSpecificUser,
-)
+from Utility.API.UserUtility import getAllPendingUsers, getAllUsers
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
 from Utility.EastUtility import (
@@ -1383,16 +1379,6 @@ class NewFrameLayout(wx.Frame):
                         Globals.knownApplications.append(entry)
             self.Logging("---> Finished fetching applications...")
 
-    @api_tool_decorator()
-    def PopulateBlueprints(self):
-        self.Logging("--->Attempting to fetch blueprints...")
-        self.setCursorBusy()
-        thread = wxThread.GUIThread(
-            self, self.fetchAllInstallableApps, None, name="PopulateBlueprints"
-        )
-        thread.startWithRetry()
-        return thread
-
     def fetchAllKnownBlueprints(self):
         resp = getAllBlueprints(tolerance=1, useThreadPool=False)
         for item in resp.get("content").get("results", []):
@@ -1634,7 +1620,6 @@ class NewFrameLayout(wx.Frame):
             or self.isBusy
         ) and time.time() < end_time:
             time.sleep(1)
-        self.start_time = time.time()
         self.setCursorBusy()
         self.isRunning = True
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
@@ -2869,20 +2854,6 @@ class NewFrameLayout(wx.Frame):
             and hasattr(event, "Veto")
         ):
             event.Veto()
-
-    @api_tool_decorator()
-    def displayAppStateChoiceDlg(self):
-        res = None
-        with wx.SingleChoiceDialog(
-            self, "Select App State:", "", ["DISABLE", "HIDE", "SHOW"]
-        ) as dlg:
-            Globals.OPEN_DIALOGS.append(dlg)
-            res = dlg.ShowModal()
-            Globals.OPEN_DIALOGS.remove(dlg)
-            if res == wx.ID_OK:
-                self.AppState = dlg.GetStringSelection()
-            else:
-                self.AppState = None
 
     @api_tool_decorator()
     def uploadApplication(self, event=None, title="", joinThread=False):

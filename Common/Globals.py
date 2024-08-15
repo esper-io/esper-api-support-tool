@@ -360,7 +360,6 @@ GRID_COL_TYPES = {
 WHITELIST_AP = []
 
 """ Static Lists """
-CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 
 BLACKLIST_PACKAGE_NAME = [

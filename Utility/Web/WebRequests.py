@@ -44,14 +44,20 @@ def performRequestWithRetry(
             if resp.status_code == 429:
                 doExponentialBackoff(attempt)
         except Exception as e:
-            if attempt == maxRetry - 1:
-                ApiToolLog().LogError(e, postIssue=False)
-            if "429" not in str(e) and "Too Many Requests" not in str(e):
-                time.sleep(Globals.RETRY_SLEEP)
-            else:
-                doExponentialBackoff(attempt)
-            postEventToFrame(EventUtility.myEVT_LOG, str(e))
+            handleRequestError(attempt, e, maxRetry)
     return resp
+
+
+def handleRequestError(attempt, e, maxRetry, raiseError=False):
+    if attempt == maxRetry - 1:
+        ApiToolLog().LogError(e, postIssue=False)
+        if raiseError:
+            raise e
+    if "429" not in str(e) and "Too Many Requests" not in str(e):
+        time.sleep(Globals.RETRY_SLEEP)
+    else:
+        doExponentialBackoff(attempt)
+    postEventToFrame(EventUtility.myEVT_LOG, str(e))
 
 
 def doExponentialBackoff(attempt):

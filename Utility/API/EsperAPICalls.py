@@ -16,6 +16,7 @@ from Utility.API.CommandUtility import postEsperCommand
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
 from Utility.Web.WebRequests import (
+    handleRequestError,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
 )
@@ -145,15 +146,7 @@ def validateConfiguration(
                 ApiToolLog().Log(str(api_response))
                 break
             except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e, postIssue=False)
-                    raise e
-                if "429" not in str(e) and "Too Many Requests" not in str(e):
-                    time.sleep(Globals.RETRY_SLEEP)
-                else:
-                    time.sleep(
-                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                    )  # Sleep for a minute * retry number
+                handleRequestError(attempt, e, maxAttempt, raiseError=True)
         if hasattr(api_response, "id"):
             return True
     except ApiException as e:
@@ -182,15 +175,7 @@ def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
                 ApiToolLog().Log(str(api_response))
                 break
             except Exception as e:
-                if attempt == maxAttempt - 1:
-                    ApiToolLog().LogError(e, postIssue=False)
-                    raise e
-                if "429" not in str(e) and "Too Many Requests" not in str(e):
-                    time.sleep(Globals.RETRY_SLEEP)
-                else:
-                    time.sleep(
-                        Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                    )  # Sleep for a minute * retry number
+                handleRequestError(attempt, e, maxAttempt, raiseError=True)
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
         ApiToolLog().LogError(e, postIssue=False)
@@ -422,13 +407,5 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
             )
             break
         except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e, postIssue=False)
-                raise e
-            if "429" not in str(e) and "Too Many Requests" not in str(e):
-                time.sleep(Globals.RETRY_SLEEP)
-            else:
-                time.sleep(
-                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                )  # Sleep for a minute * retry number
+            handleRequestError(attempt, e, maxAttempt, raiseError=True)
     return api_response

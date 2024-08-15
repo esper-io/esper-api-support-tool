@@ -13,25 +13,13 @@ class GeneralActions(Enum):
     GENERATE_APP_REPORT = 4  # App
 
     # Actions
-    # SET_DEVICE_MODE = 50
-    # SET_KIOSK = 51
-    # SET_MULTI = 52
-    # CLEAR_APP_DATA = 53
-    # SET_APP_STATE = 54
     REMOVE_NON_WHITELIST_AP = 55
     MOVE_GROUP = 56
-    # INSTALL_APP = 57
-    # UNINSTALL_APP = 58
 
 
 class GridActions(Enum):
     MODIFY_ALIAS = 200
-    # SET_APP_STATE = 201
     MOVE_GROUP = 202
-    # INSTALL_APP = 203
-    # UNINSTALL_APP = 204
-    # FACTORY_RESET = 207
-    # SET_DEVICE_DISABLED = 208
     MODIFY_TAGS = 209
 
 
@@ -44,7 +32,9 @@ class DeviceState(Enum):
     POLICY_APPLICATION_IN_PROGRESS = 50
 
     INACTIVE = 60  # This state is set by cloud, when device is unreachable
-    WIPE_IN_PROGRESS = 70  # State set by cloud, in the 5 minute waiting period for WIPE
+    WIPE_IN_PROGRESS = (
+        70  # State set by cloud, in the 5 minute waiting period for WIPE
+    )
 
     ONBOARDING_IN_PROGRESS = 80
     ONBOARDING_FAILED = 90

@@ -2,7 +2,6 @@ import sys
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_bool_dtype, is_string_dtype
 from pandas.testing import assert_frame_equal
 
 import Common.Globals as Globals

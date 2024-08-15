@@ -11,13 +11,18 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import (determineDoHereorMainThread,
-                              getStrRatioSimilarity, resourcePath,
-                              scale_bitmap)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    getStrRatioSimilarity,
+    resourcePath,
+    scale_bitmap,
+)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
-    def __init__(self, parent, choices, label="", title="", single=False, resp=None):
+    def __init__(
+        self, parent, choices, label="", title="", single=False, resp=None
+    ):
         size = (500, 400)
         super(MultiSelectSearchDlg, self).__init__(
             parent,
@@ -110,7 +115,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         grid_sizer_1.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
 
         grid_sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_1.Add(grid_sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND | wx.TOP, 5)
+        grid_sizer_1.Add(
+            grid_sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND | wx.TOP, 5
+        )
 
         prev_icon = scale_bitmap(resourcePath("Images/prev.png"), 18, 18)
         self.button_1 = wx.BitmapButton(
@@ -217,7 +224,6 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
             self.isFiltered = False
-        self.search_queue = ""
 
     @api_tool_decorator()
     def OnListSelection(self, event):
@@ -414,15 +420,22 @@ class MultiSelectSearchDlg(wx.Dialog):
 
             if "device" in self.label.lower():
                 resp = getAllDevices(
-                    self.group, limit=resultLimit, offset=resultOffset, tolarance=1
+                    self.group,
+                    limit=resultLimit,
+                    offset=resultOffset,
+                    tolarance=1,
                 )
             elif "group" in self.label.lower():
                 resp = getAllGroups(offset=resultOffset, tolerance=1)
             if resp:
                 if hasattr(resp, "results"):
-                    self.originalChoices.append(self.processDevices(resp.results))
+                    self.originalChoices.append(
+                        self.processDevices(resp.results)
+                    )
                 elif type(resp) == dict and "results" in resp:
-                    self.originalChoices.append(self.processDevices(resp["results"]))
+                    self.originalChoices.append(
+                        self.processDevices(resp["results"])
+                    )
 
         determineDoHereorMainThread(self.updateChoicesFromResp, resp)
 
@@ -438,12 +451,12 @@ class MultiSelectSearchDlg(wx.Dialog):
             self.check_list_box_1.SetCheckedStrings(self.selected)
 
     def setCursorBusy(self):
-        """ Set cursor icon to busy state """
+        """Set cursor icon to busy state"""
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
 
     def setCursorDefault(self):
-        """ Set cursor icon to busy state """
+        """Set cursor icon to busy state"""
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
@@ -453,15 +466,31 @@ class MultiSelectSearchDlg(wx.Dialog):
             name = ""
             if hasattr(device, "hardware_info"):
                 name = "%s %s %s %s" % (
-                    device.hardware_info["manufacturer"] if "model" in device.hardware_info else "",
-                    device.hardware_info["model"] if "model" in device.hardware_info else "",
+                    (
+                        device.hardware_info["manufacturer"]
+                        if "model" in device.hardware_info
+                        else ""
+                    ),
+                    (
+                        device.hardware_info["model"]
+                        if "model" in device.hardware_info
+                        else ""
+                    ),
                     device.device_name,
                     device.alias_name if device.alias_name else "",
                 )
             else:
                 name = "%s %s %s %s" % (
-                    device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else "",
-                    device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else "",
+                    (
+                        device["hardwareInfo"]["manufacturer"]
+                        if "manufacturer" in device["hardwareInfo"]
+                        else ""
+                    ),
+                    (
+                        device["hardwareInfo"]["model"]
+                        if "model" in device["hardwareInfo"]
+                        else ""
+                    ),
                     device["device_name"],
                     device["alias_name"] if device["alias_name"] else "",
                 )
@@ -475,7 +504,10 @@ class MultiSelectSearchDlg(wx.Dialog):
         return nameList
 
     def selectAllDevices(self):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.selectAllDevices)
             return
         self.setCursorBusy()
@@ -496,14 +528,22 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         if count > len(self.originalChoices[0]):
             self.resp = getAllDevices(
-                self.group, limit=Globals.limit, offset=0, fetchAll=True, tolarance=1
+                self.group,
+                limit=Globals.limit,
+                offset=0,
+                fetchAll=True,
+                tolarance=1,
             )
             if self.resp:
                 self.check_list_box_1.Clear()
                 if hasattr(self.resp, "results"):
-                    self.originalChoices[0] = self.processDevices(self.resp.results)
+                    self.originalChoices[0] = self.processDevices(
+                        self.resp.results
+                    )
                 elif type(self.resp) == dict and "results" in self.resp:
-                    self.originalChoices[0] = self.processDevices(self.resp["results"])
+                    self.originalChoices[0] = self.processDevices(
+                        self.resp["results"]
+                    )
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
         self.selected = copy.deepcopy(self.originalChoices[0])

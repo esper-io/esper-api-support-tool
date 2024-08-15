@@ -7,7 +7,6 @@ from distutils.version import LooseVersion
 import pandas as pd
 import wx
 import wx.grid as gridlib
-from pandas.api.types import is_bool_dtype, is_string_dtype
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
