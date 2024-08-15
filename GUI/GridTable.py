@@ -168,10 +168,11 @@ class GridTable(gridlib.Grid):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
-        data = self.createEmptyDataFrame()
-        self.applyNewDataFrame(
-            data, checkColumns=False, autosize=True, resetPosition=True
-        )
+        if not self.table.data.empty:
+            data = self.createEmptyDataFrame()
+            self.applyNewDataFrame(
+                data, checkColumns=False, autosize=True, resetPosition=True
+            )
 
     def SortColumn(self, event):
         col = None
