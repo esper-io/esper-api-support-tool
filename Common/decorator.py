@@ -9,7 +9,6 @@ from functools import wraps
 from traceback import extract_tb, format_list, print_exc
 
 import wx
-from esperclient.rest import ApiException
 
 import Common.Globals as Globals
 from Utility.Logging.ApiToolLogging import ApiToolLog
@@ -32,10 +31,6 @@ def api_tool_decorator(locks=None, displayPrompt=True):
             try:
                 result = func(*args, **kwargs)
                 logPlaceDone(func, *args, **kwargs)
-            except ApiException as e:
-                logError(e)
-                if displayPrompt:
-                    excpt = determineErrorDisplay(e)
             except Exception as e:
                 logError(e)
                 if displayPrompt:
@@ -92,18 +87,12 @@ def determineErrorDisplay(e):
         minutes = timeDiff.total_seconds() / 60
         if minutes > Globals.MAX_ERROR_TIME_DIFF:
             Globals.error_tracker[str(e)] = datetime.now()
-            if isinstance(e, ApiException):
-                displayApiExcpetionMsg(e)
-            else:
-                displayGenericErrorMsg(e)
+            displayGenericErrorMsg(e)
         else:
             print_exc()
     else:
         Globals.error_tracker[str(e)] = datetime.now()
-        if isinstance(e, ApiException):
-            displayApiExcpetionMsg(e)
-        else:
-            displayGenericErrorMsg(e)
+        displayGenericErrorMsg(e)
     if Globals.error_lock.locked():
         Globals.error_lock.release()
     return e

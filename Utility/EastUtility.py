@@ -16,41 +16,23 @@ import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (
-    getDeviceAppsApiUrl,
-    getInstallDevices,
-    uploadApplication,
-)
+from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
+                                      uploadApplication)
 from Utility.API.BlueprintUtility import getBlueprint
-from Utility.API.CommandUtility import (
-    executeCommandOnDevice,
-    executeCommandOnGroup,
-)
-from Utility.API.DeviceUtility import (
-    getAllDevices,
-    getDeviceById,
-    getDeviceDetail,
-    getLatestEvent,
-    getLatestEventApiUrl,
-    searchForDevice,
-)
+from Utility.API.CommandUtility import (executeCommandOnDevice,
+                                        executeCommandOnGroup)
+from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
+                                       getDeviceDetail, getLatestEvent,
+                                       getLatestEventApiUrl, searchForDevice)
 from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import (
-    constructDeviceAppRowEntry,
-    createDataFrameFromDict,
-)
+from Utility.GridUtilities import (constructDeviceAppRowEntry,
+                                   createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    displayMessageBox,
-    getHeader,
-    ipv6Tomac,
-    postEventToFrame,
-    splitListIntoChunks,
-    utc_to_local,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
+                              getHeader, ipv6Tomac, postEventToFrame,
+                              splitListIntoChunks, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -832,11 +814,7 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
     if "os" not in deviceInfo:
         deviceInfo["os"] = "Android"
 
-    isTemplate = True
-    if Globals.frame:
-        isTemplate = not Globals.frame.blueprintsEnabled
-
-    if Globals.GET_DEVICE_LANGUAGE and isTemplate:
+    if Globals.GET_DEVICE_LANGUAGE:
         deviceInfo["templateDeviceLocale"] = "N/A"
         resp = getDeviceInitialTemplate(deviceId)
         if "template" in resp:

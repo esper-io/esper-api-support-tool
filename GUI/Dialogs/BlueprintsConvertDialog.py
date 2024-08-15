@@ -240,9 +240,7 @@ class BlueprintsConvertDialog(wx.Dialog):
             return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
-        for config in self.configMenuOpt.values():
-            if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
+
         Globals.THREAD_POOL.join(tolerance=1)
         enabled = disabled = self.configMenuOpt.keys()
         for choice in enabled:

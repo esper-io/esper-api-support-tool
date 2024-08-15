@@ -10,32 +10,20 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
-from Utility.API.AppUtilities import (
-    getAllApplicationsForHost,
-    getAllAppVersionsForHost,
-    uploadApplicationForHost,
-)
+from Utility.API.AppUtilities import (getAllApplicationsForHost,
+                                      getAllAppVersionsForHost,
+                                      uploadApplicationForHost)
 from Utility.API.CommandUtility import postEsperCommand
-from Utility.API.ContentUtility import (
-    getAllContentFromHost,
-    uploadContentToHost,
-)
+from Utility.API.ContentUtility import (getAllContentFromHost,
+                                        uploadContentToHost)
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    deleteFile,
-    displayMessageBox,
-    download,
-    getEsperConfig,
-    getHeader,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (deleteFile, displayMessageBox, download,
+                              getEsperConfig, getHeader, postEventToFrame)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 def checkFeatureFlags(data):
@@ -49,23 +37,7 @@ def checkFeatureFlags(data):
     if hasattr(resp, "status_code") and resp.status_code < 300:
         jsonResp = resp.json()
 
-    checkBlueprintEnabled(data, jsonResp)
     checkIosEnabled(data, jsonResp)
-
-
-def checkBlueprintEnabled(data, jsonResp):
-    enabled = False
-    if (
-        "esper.cloud.onboarding" in jsonResp
-        and jsonResp["esper.cloud.onboarding"] is True
-    ):
-        enabled = True
-    if (
-        "esper.cloud.blueprints.v2" in jsonResp
-        and jsonResp["esper.cloud.blueprints.v2"] is True
-    ):
-        enabled = True
-    data["isBlueprintsEnabled"] = enabled
 
 
 def checkIosEnabled(data, jsonResp):

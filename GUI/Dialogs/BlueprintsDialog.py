@@ -237,14 +237,11 @@ class BlueprintsDialog(wx.Dialog):
             and "main" not in threading.current_thread().name.lower()
         ):
             determineDoHereorMainThread(
-                self.getBlueprintEnabledEndpoints, config
+                self.getBlueprintEnabledEndpoints,
             )
             return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
-        for config in self.configMenuOpt.values():
-            if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
         choices = self.configMenuOpt.keys()
         for choice in choices:
