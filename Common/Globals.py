@@ -359,8 +359,6 @@ GRID_COL_TYPES = {
     "Active Connection": "CATEGORY",
     "IMEI 1": "NUMBER",
     "IMEI 2": "NUMBER",
-    "ICCID 1": "NUMBER",
-    "ICCID 2": "NUMBER",
     "Application Version Code": "NUMBER",
     "Available RAM (MB)": "NUMBER",
     "Total RAM (MB)": "NUMBER",

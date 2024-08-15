@@ -134,7 +134,12 @@ def convertColumnTypes(data, headers):
                 elif gridColType == "number":
                     data.loc[data[col] == "None", col] = None
                     data.loc[data[col] == "", col] = None
-                    data[col] = data[col].fillna(0).infer_objects(copy=False)
+                    with pd.option_context(
+                        "future.no_silent_downcasting", False
+                    ):
+                        data[col] = (
+                            data[col].fillna(0).infer_objects(copy=False)
+                        )
 
                     try:
                         c_min = float(data[col].astype("float64").min())
