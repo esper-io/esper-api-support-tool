@@ -134,7 +134,8 @@ class GridTable(gridlib.Grid):
             convertColumnTypes(data, self.headersLabels)
             for col in self.headersLabels:
                 if str(data[col].dtype)[:3] == "cat":
-                    data[col] = data[col].cat.add_categories("")
+                    if "" not in data[col].cat.categories:
+                        data[col] = data[col].cat.add_categories("")
                     data[col] = data[col].fillna("")
                 else:
                     data[col] = data[col].fillna("")

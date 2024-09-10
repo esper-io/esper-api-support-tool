@@ -414,8 +414,10 @@ class GridPanel(wx.Panel):
                     if len(properTagList) >= Globals.MAX_TAGS:
                         properTagList = properTagList[0 : Globals.MAX_TAGS]
                     entry[col] = properTagList
-                else:
+                elif row[columns.index(col)] is str:
                     entry[col] = row[columns.index(col)].strip()
+                else:
+                    entry[col] = row[columns.index(col)]
             returnList.append(entry)
         return returnList
 
