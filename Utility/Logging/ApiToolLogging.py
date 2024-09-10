@@ -2,9 +2,7 @@
 
 import json
 import os
-import platform
 import sys
-import tempfile
 import threading
 import traceback
 from datetime import datetime
@@ -32,7 +30,9 @@ class ApiToolLog:
                 os.makedirs(parentPath)
             write_content_to_file(self.logPath, "")
         if not os.path.exists(self.placePath) and Globals.RECORD_PLACE:
-            parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
+            parentPath = os.path.abspath(
+                os.path.join(self.placePath, os.pardir)
+            )
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
             write_content_to_file(self.placePath, "")
@@ -113,7 +113,11 @@ class ApiToolLog:
             "".join(traceback.format_exception(type, value, tb)),
             "\tExc Type: %s\n" % str(exc_type) if str(exc_type) else type,
             "\tExc Value: %s\n" % str(exc_value) if str(exc_value) else value,
-            "\tExc Traceback:\n%s\n" % str(exc_traceback) if str(exc_traceback) else tb,
+            (
+                "\tExc Traceback:\n%s\n" % str(exc_traceback)
+                if str(exc_traceback)
+                else tb
+            ),
             "\tEsper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
@@ -132,26 +136,40 @@ class ApiToolLog:
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():
-            Globals.THREAD_POOL.enqueue(self.LogApiRequest, src, api_func, writeToFile)
+            Globals.THREAD_POOL.enqueue(
+                self.LogApiRequest, src, api_func, writeToFile
+            )
         else:
             self.LogApiRequest(src, api_func, writeToFile)
 
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = "%s\tTenant: %s\n\tUser: %s (id: %s)\n\n\tSession API Summary:\t%s\n\n\tTotal Requests: %s\n\n" % (
-                datetime.now(),
-                str(Globals.configuration.host),
-                str(Globals.TOKEN_USER["username"])
-                if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
-                else "Unknown",
-                str(Globals.TOKEN_USER["id"])
-                if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                else "Unknown",
-                str(api_func)
-                if api_func != ApiTracker.API_REQUEST_TRACKER
-                else json.dumps(ApiTracker.API_REQUEST_TRACKER, indent=4),
-                ApiTracker.API_REQUEST_SESSION_TRACKER,
+            strToWrite = (
+                "%s\tTenant: %s\n\tUser: %s (id: %s)\n\n\tSession API Summary:\t%s\n\n\tTotal Requests: %s\n\n"
+                % (
+                    datetime.now(),
+                    str(Globals.configuration.host),
+                    (
+                        str(Globals.TOKEN_USER["username"])
+                        if Globals.TOKEN_USER
+                        and "username" in Globals.TOKEN_USER
+                        else "Unknown"
+                    ),
+                    (
+                        str(Globals.TOKEN_USER["id"])
+                        if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                        else "Unknown"
+                    ),
+                    (
+                        str(api_func)
+                        if api_func != ApiTracker.API_REQUEST_TRACKER
+                        else json.dumps(
+                            ApiTracker.API_REQUEST_TRACKER, indent=4
+                        )
+                    ),
+                    ApiTracker.API_REQUEST_SESSION_TRACKER,
+                )
             )
         else:
             ApiTracker.API_REQUEST_SESSION_TRACKER += 1
@@ -187,20 +205,30 @@ class ApiToolLog:
                     writeToFile = True
         if writeToFile:
             if not strToWrite:
-                strToWrite = "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\n\tFunction: %s, triggerring %s.\n\n\tTotal Requests: %s\n" % (
-                    datetime.now(),
-                    str(Globals.configuration.host),
-                    str(Globals.TOKEN_USER["username"])
-                    if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
-                    else "Unknown",
-                    str(Globals.TOKEN_USER["id"])
-                    if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                    else "Unknown",
-                    str(src),
-                    str(api_func)
-                    if not hasattr(api_func, "__name__")
-                    else api_func.__name__,
-                    ApiTracker.API_REQUEST_SESSION_TRACKER,
+                strToWrite = (
+                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\n\tFunction: %s, triggerring %s.\n\n\tTotal Requests: %s\n"
+                    % (
+                        datetime.now(),
+                        str(Globals.configuration.host),
+                        (
+                            str(Globals.TOKEN_USER["username"])
+                            if Globals.TOKEN_USER
+                            and "username" in Globals.TOKEN_USER
+                            else "Unknown"
+                        ),
+                        (
+                            str(Globals.TOKEN_USER["id"])
+                            if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                            else "Unknown"
+                        ),
+                        str(src),
+                        (
+                            str(api_func)
+                            if not hasattr(api_func, "__name__")
+                            else api_func.__name__
+                        ),
+                        ApiTracker.API_REQUEST_SESSION_TRACKER,
+                    )
                 )
             Globals.api_log_lock.acquire()
             self.limitLogFileSizes()
