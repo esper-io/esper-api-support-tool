@@ -149,8 +149,8 @@ class NewFrameLayout(wx.Frame):
         self.authPath = "%s/auth.csv" % basePath
         self.keyPath = "%s/east.key" % basePath
 
-        pd.set_option("mode.copy_on_write", True)
-        pd.set_option("display.precision", 2)
+        self.setPandasOption("mode.copy_on_write", True)
+        self.setPandasOption("display.precision", 2)
 
         wx.Frame.__init__(
             self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE
@@ -269,6 +269,12 @@ class NewFrameLayout(wx.Frame):
                 showCheckBox=True
             )
             Globals.SHOW_DISCLAIMER = self.preferences["showDisclaimer"]
+
+    def setPandasOption(self, key, value):
+        try:
+            pd.set_option(key, value)
+        except Exception as e:
+            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def tryToMakeActive(self):
