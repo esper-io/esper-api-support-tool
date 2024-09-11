@@ -39,7 +39,9 @@ class ColumnVisibility(wx.Dialog):
 
         self.text_ctrl_1 = wx.SearchCtrl(self, wx.ID_ANY, "")
         self.text_ctrl_1.ShowCancelButton(True)
-        grid_sizer_1.Add(self.text_ctrl_1, 0, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5)
+        grid_sizer_1.Add(
+            self.text_ctrl_1, 0, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5
+        )
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
         self.notebook_1.SetThemeEnabled(False)
@@ -124,7 +126,9 @@ class ColumnVisibility(wx.Dialog):
 
         sizer = wx.GridSizer(1, 1, 0, 0)
 
-        choice = self.choiceDataDict[label] if label in self.choiceDataDict else []
+        choice = (
+            self.choiceDataDict[label] if label in self.choiceDataDict else []
+        )
         if not choice:
             grid = self.pageGridDict[label]
             exemptCols = self.colLabelException[label]
@@ -134,7 +138,9 @@ class ColumnVisibility(wx.Dialog):
                     continue
                 choice.append(colLabel)
             self.choiceDataDict[label] = choice
-        check_list_box = wx.CheckListBox(notebook_panel, wx.ID_ANY, choices=choice)
+        check_list_box = wx.CheckListBox(
+            notebook_panel, wx.ID_ANY, choices=choice
+        )
         sizer.Add(check_list_box, 0, wx.ALL | wx.EXPAND, 3)
         self.checkBoxes[label] = check_list_box
         check_list_box.Bind(wx.EVT_CHECKLISTBOX, self.OnSelection)
@@ -249,14 +255,5 @@ class ColumnVisibility(wx.Dialog):
             return self.check_list_box_1.IsChecked(item)
         return True
 
-    # def getChoiceDataDict(self):
-    #     return self.choiceDataDict
-
     def getSelected(self):
         return self.selected
-
-    # def getCheckboxes(self):
-    #     return self.checkBoxes
-
-    # def getCheckBox(self, label):
-    #     return self.checkBoxes[label]

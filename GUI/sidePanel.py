@@ -273,10 +273,11 @@ class SidePanel(wx.Panel):
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")
-            if len(value) > 2:
-                value = value[3].replace("Enterprise = ", "")
+            # TODO: Search for entry based on host url instead of enterprise id
+            if len(value) > 0:
+                value = value[0].replace("API Host = ", "").strip()
             result = list(
-                filter(lambda x: value == x["enterprise"], self.parentFrame.auth_data)
+                filter(lambda x: value == x["apiHost"], self.parentFrame.auth_data)
             )
             if result:
                 result = result[0]

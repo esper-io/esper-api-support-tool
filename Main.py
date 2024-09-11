@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
-from Utility.Logging.ApiToolLogging import ApiToolLog
+import locale
+import sys
+
+import wx
 
 import Common.Globals as Globals
-import sys
-import wx
-import locale
-
 from Common.decorator import api_tool_decorator
+from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
+from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.Logging.SentryUtils import SentryUtils
 
 
 class MyApp(wx.App):
@@ -20,7 +21,9 @@ class MyApp(wx.App):
             self.instance = wx.SingleInstanceChecker(self.name)
 
             if self.instance.IsAnotherRunning() and not Globals.IS_DEBUG:
-                wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
+                wx.MessageBox(
+                    "Another instance is running!", style=wx.ICON_ERROR
+                )
                 return False
 
             Globals.frame = FrameLayout()
@@ -38,10 +41,14 @@ class MyApp(wx.App):
         Globals.frame.MacNewFile()
 
 
-@api_tool_decorator()
+@api_tool_decorator(displayPrompt=False)
 def main():
     """Launches Main App"""
     logger = ApiToolLog()
+    try:
+        SentryUtils()
+    except Exception as e:
+        ApiToolLog().LogError(e)
     sys.excepthook = logger.excepthook
 
     logger.limitLogFileSizes()

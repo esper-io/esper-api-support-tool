@@ -10,8 +10,11 @@ from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getHeader, postEventToFrame
-from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
-                                     performGetRequestWithRetry)
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    handleRequestError,
+    performGetRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -58,7 +61,7 @@ def getAllDevices(
     tolarance=0,
     timeout=-1,
 ):
-    """ Make a API call to get all Devices belonging to the Enterprise """
+    """Make a API call to get all Devices belonging to the Enterprise"""
     if not limit:
         limit = Globals.limit
     if not offset:
@@ -67,22 +70,40 @@ def getAllDevices(
         api_response = None
         if type(groupToUse) == list:
             api_response = fetchDevicesFromGroup(
-                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance, timeout
+                groupToUse,
+                limit,
+                offset,
+                fetchAll,
+                maxAttempt,
+                tolarance,
+                timeout,
             )
         else:
             api_response = get_all_devices(
-                groupToUse, limit, offset, fetchAll, maxAttempt, tolarance, timeout
+                groupToUse,
+                limit,
+                offset,
+                fetchAll,
+                maxAttempt,
+                tolarance,
+                timeout,
             )
-        postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
+        postEventToFrame(
+            EventUtility.myEVT_LOG, "---> Device API Request Finished"
+        )
         return api_response
     except ApiException as e:
-        raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
+        raise Exception(
+            "Exception when calling DeviceApi->get_all_devices: %s\n" % e
+        )
 
 
 def get_all_devices_helper(
-        groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
+    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
-    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
+    config = Globals.frame.sidePanel.configChoice[
+        Globals.frame.configMenuItem.GetItemLabelText()
+    ]
     iosEnabled = config["isIosEnabled"]
 
     if iosEnabled:
@@ -93,6 +114,7 @@ def get_all_devices_helper(
         return get_all_android_devices_helper(
             groupToUse, limit, offset, maxAttempt, responses
         )
+
 
 def get_all_android_devices_helper(
     groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
@@ -111,28 +133,31 @@ def get_all_android_devices_helper(
         )
         + extention
     )
-    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
-    if api_response.status_code < 300:
+    api_response = performGetRequestWithRetry(
+        url, getHeader(), maxRetry=maxAttempt
+    )
+    if api_response and api_response.status_code < 300:
         api_response = api_response.json()
         if type(responses) == list:
             responses.append(api_response)
     else:
         raise Exception(
-            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+            "HTTP Response %s:\t\n%s"
+            % (api_response.status_code, api_response.content)
         )
     return api_response
 
 
 def get_all_ios_devices_helper(
-        groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
+    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
 ):
     extention = "?limit=%s&offset=%s" % (limit, offset)
     if groupToUse.strip():
-        extention += "&group_multi=%s" % (
-            groupToUse.strip(),
-        )
+        extention += "&group_multi=%s" % (groupToUse.strip(),)
     url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
-    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+    api_response = performGetRequestWithRetry(
+        url, getHeader(), maxRetry=maxAttempt
+    )
     if api_response.status_code < 300:
         api_response = api_response.json()
         if "content" in api_response:
@@ -141,9 +166,11 @@ def get_all_ios_devices_helper(
             responses.append(api_response)
     else:
         raise Exception(
-            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+            "HTTP Response %s:\t\n%s"
+            % (api_response.status_code, api_response.content)
         )
     return api_response
+
 
 def get_all_devices(
     groupToUse,
@@ -186,11 +213,12 @@ def fetchDevicesFromGroup(
         ):
             api_response.results += resp.results
         else:
-            if "content" in resp:
+            if resp and "content" in resp:
                 resp = resp["content"]
-            for device in resp["results"]:
-                if device not in api_response["results"]:
-                    api_response["results"].append(device)
+            if resp and "results" in resp:
+                for device in resp["results"]:
+                    if device not in api_response["results"]:
+                        api_response["results"].append(device)
 
     return api_response
 
@@ -221,8 +249,14 @@ def fetchDevicesFromGroupHelper(
 
 
 @api_tool_decorator()
-def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=True, do_join=True):
-    """ Make a API call to get a Device belonging to the Enterprise by its Id """
+def getDeviceById(
+    deviceToUse,
+    maxAttempt=Globals.MAX_RETRY,
+    tolerance=0,
+    log=True,
+    do_join=True,
+):
+    """Make a API call to get a Device belonging to the Enterprise by its Id"""
     try:
         api_response_list = []
         api_response = None
@@ -242,7 +276,11 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=Tr
         if do_join:
             Globals.THREAD_POOL.join(tolerance=tolerance)
         Globals.THREAD_POOL.results()
-        if api_response and api_response_list and hasattr(api_response, "results"):
+        if (
+            api_response
+            and api_response_list
+            and hasattr(api_response, "results")
+        ):
             api_response.results = api_response_list
         elif api_response and hasattr(api_response, "results"):
             api_response.results = [api_response]
@@ -257,7 +295,9 @@ def getDeviceById(deviceToUse, maxAttempt=Globals.MAX_RETRY, tolerance=0, log=Tr
                 "previous": None,
             }
         if log:
-            postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
+            postEventToFrame(
+                EventUtility.myEVT_LOG, "---> Device API Request Finished"
+            )
         return api_response
     except ApiException as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
@@ -281,15 +321,7 @@ def getDeviceByIdHelper(
                 api_response = api_response.json()
             break
         except Exception as e:
-            if attempt == maxAttempt - 1:
-                ApiToolLog().LogError(e, postIssue=False)
-                raise e
-            if "429" not in str(e) and "Too Many Requests" not in str(e):
-                time.sleep(Globals.RETRY_SLEEP)
-            else:
-                time.sleep(
-                    Globals.RETRY_SLEEP * 20 * (attempt + 1)
-                )  # Sleep for a minute * retry number
+            handleRequestError(attempt, e, maxAttempt, raiseError=True)
     if api_response:
         api_response_list.append(api_response)
 
@@ -371,7 +403,8 @@ def searchForDevice(
         api_response = api_response.json()
     else:
         raise Exception(
-            "HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content)
+            "HTTP Response %s:\t\n%s"
+            % (api_response.status_code, api_response.content)
         )
     return api_response
 

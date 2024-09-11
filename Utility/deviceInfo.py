@@ -50,13 +50,19 @@ def getWifiStatus(deviceInfo):
         ):
             for access_point in wifi_event["configuredWifiNetworks"]:
                 current_wifi_configurations += access_point + " "
-        if "wifi_access_points" in wifi_event and wifi_event["wifi_access_points"]:
+        if (
+            "wifi_access_points" in wifi_event
+            and wifi_event["wifi_access_points"]
+        ):
             for access_point in wifi_event["wifi_access_points"]:
                 current_wifi_configurations += access_point + " "
 
         # Connected Network
         if "wifiNetworkInfo" in wifi_event and wifi_event["wifiNetworkInfo"]:
-            if "<unknown ssid>" not in wifi_event["wifiNetworkInfo"]["wifiSSID"]:
+            if (
+                "<unknown ssid>"
+                not in wifi_event["wifiNetworkInfo"]["wifiSSID"]
+            ):
                 ssid = wifi_event["wifiNetworkInfo"]["wifiSSID"] + ": Connected"
                 current_wifi_connection = ssid
         if "ssid" in wifi_event:
@@ -64,7 +70,11 @@ def getWifiStatus(deviceInfo):
             current_wifi_connection = ssid
 
     wifi_string = (
-        "[" + current_wifi_configurations + "],[" + current_wifi_connection + "]"
+        "["
+        + current_wifi_configurations
+        + "],["
+        + current_wifi_connection
+        + "]"
     )
     return wifi_string
 
@@ -133,6 +143,44 @@ def constructNetworkInfo(device, deviceInfo):
     deviceInfo["currentWifi"] = wifiStatus[1]
     deviceInfo["cellAP"] = cellStatus[0]
     deviceInfo["activeConnection"] = cellStatus[1]
+
+    deviceInfo["networkSignalStrength"] = "N/A"
+    deviceInfo["cellularSignalStrength"] = "N/A"
+
+    cellularKey = ""
+    if (
+        deviceInfo["network_event"]
+        and "cellularNetworkInfo" in deviceInfo["network_event"]
+    ):
+        cellularKey = "cellularNetworkInfo"
+    elif (
+        deviceInfo["network_event"]
+        and "cellular" in deviceInfo["network_event"]
+    ):
+        cellularKey = "cellular"
+    if (
+        cellularKey
+        and deviceInfo
+        and "network_event" in deviceInfo
+        and deviceInfo["network_event"]
+        and cellularKey in deviceInfo["network_event"]
+        and deviceInfo["network_event"][cellularKey]
+        and "signalStrength" in deviceInfo["network_event"][cellularKey]
+    ):
+        deviceInfo["cellularSignalStrength"] = deviceInfo["network_event"][
+            cellularKey
+        ]["signalStrength"]
+
+    if (
+        deviceInfo
+        and deviceInfo["network_event"]
+        and "wifiNetworkInfo" in deviceInfo["network_event"]
+        and deviceInfo["network_event"]["wifiNetworkInfo"]
+        and "signalStrength" in deviceInfo["network_event"]["wifiNetworkInfo"]
+    ):
+        deviceInfo["networkSignalStrength"] = deviceInfo["network_event"][
+            "wifiNetworkInfo"
+        ]["signalStrength"]
 
     for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
         if value:

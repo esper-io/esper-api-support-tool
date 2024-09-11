@@ -12,8 +12,11 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import checkFeatureFlags
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
-                              openWebLinkInBrowser)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    getEsperConfig,
+    openWebLinkInBrowser,
+)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -212,7 +215,9 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.Layout()
 
         # Bind Events
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.text_ctrl_1.Bind(
+            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
+        )
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
 
@@ -227,32 +232,16 @@ class BlueprintsConvertDialog(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.getBlueprintEnabledEndpoints)
             return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
-        for config in self.configMenuOpt.values():
-            if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
+
         Globals.THREAD_POOL.join(tolerance=1)
-        # enabled = list(
-        #     filter(
-        #         lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-        #         and self.configMenuOpt[x]["isBlueprintsEnabled"],
-        #         self.configMenuOpt.keys(),
-        #     )
-        # )
-        # disabled = list(
-        #     filter(
-        #         lambda x: "isBlueprintsEnabled" not in self.configMenuOpt[x]
-        #         or (
-        #             "isBlueprintsEnabled" in self.configMenuOpt[x]
-        #             and not self.configMenuOpt[x]["isBlueprintsEnabled"]
-        #         ),
-        #         self.configMenuOpt.keys(),
-        #     )
-        # )
         enabled = disabled = self.configMenuOpt.keys()
         for choice in enabled:
             self.combo_box_1.Append(choice)
@@ -283,7 +272,10 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.loadGroupHelper, config)
             return
         destinationGroups = getDeviceGroupsForHost(
@@ -309,7 +301,9 @@ class BlueprintsConvertDialog(wx.Dialog):
         else:
             self.button_OK.Enable(False)
         if self.combo_box_2.GetSelection() > -1:
-            self.group = self.combo_box_2.GetClientData(self.combo_box_2.GetSelection())
+            self.group = self.combo_box_2.GetClientData(
+                self.combo_box_2.GetSelection()
+            )
         self.changeCursorToDefault()
 
     @api_tool_decorator()
@@ -333,7 +327,9 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.SetCursor(myCursor)
         selection = event.GetSelection()
         name = self.combo_box_4.GetString(selection)
-        template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
+        template = list(
+            filter(lambda x: x["name"] == name, self.sourceTemplate)
+        )
 
         if type(template) == list:
             template = template[0]
@@ -341,7 +337,9 @@ class BlueprintsConvertDialog(wx.Dialog):
             self.chosenTemplate = self.getTemplateDetails(template)
             self.text_ctrl_1.Clear()
             if self.chosenTemplate:
-                self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+                self.text_ctrl_1.AppendText(
+                    json.dumps(self.chosenTemplate, indent=2)
+                )
             else:
                 self.text_ctrl_1.AppendText(
                     "An ERROR occured when fetching the template, please try again."
@@ -355,12 +353,16 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.sourceTemplate = []
         self.combo_box_4.Clear()
         Globals.THREAD_POOL.enqueue(
-            self.populateSourceTempaltes, event.String if event.String else False
+            self.populateSourceTempaltes,
+            event.String if event.String else False,
         )
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.populateSourceTempaltes, srcName)
             return
         if srcName:
@@ -377,7 +379,9 @@ class BlueprintsConvertDialog(wx.Dialog):
         tempList = util.getTemplates(
             dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
         )
-        return tempList["results"] if tempList and "results" in tempList else None
+        return (
+            tempList["results"] if tempList and "results" in tempList else None
+        )
 
     @api_tool_decorator()
     def getTemplateDetails(self, template):
@@ -386,5 +390,8 @@ class BlueprintsConvertDialog(wx.Dialog):
             self.combo_box_3.GetString(self.combo_box_3.GetSelection())
         ]
         return util.getTemplate(
-            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
+            dataSrc["apiHost"],
+            dataSrc["apiKey"],
+            dataSrc["enterprise"],
+            template["id"],
         )

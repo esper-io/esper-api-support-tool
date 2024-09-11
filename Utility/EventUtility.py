@@ -11,9 +11,6 @@ EVT_COMPLETE = wx.PyEventBinder(myEVT_COMPLETE, 1)
 myEVT_GROUP = wx.NewEventType()
 EVT_GROUP = wx.PyEventBinder(myEVT_GROUP, 1)
 
-myEVT_APPS = wx.NewEventType()
-EVT_APPS = wx.PyEventBinder(myEVT_APPS, 1)
-
 myEVT_LOG = wx.NewEventType()
 EVT_LOG = wx.PyEventBinder(myEVT_LOG, 1)
 

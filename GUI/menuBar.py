@@ -217,8 +217,6 @@ class ToolMenuBar(wx.MenuBar):
         about.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/info.png")))
         self.Bind(wx.EVT_MENU, self.onAbout, about)
 
-        self.toggleCloneMenuOptions(False)
-
         self.sensitiveMenuOptions = [0, 1, 2, 3, 4, 5]
         self.ConfigMenuPosition = 4
         self.Append(fileMenu, "&File")
@@ -446,13 +444,3 @@ class ToolMenuBar(wx.MenuBar):
     def setSaveMenuOptionsEnableState(self, state):
         self.fileSave.Enable(state)
         self.fileSaveAs.Enable(state)
-
-    def toggleCloneMenuOptions(self, showBlueprint, toggleBothSameState=False):
-        if toggleBothSameState:
-            self.clone.Enable(enable=showBlueprint)
-            self.cloneBP.Enable(enable=showBlueprint)
-            self.newBlueprintApp.Enable(enable=showBlueprint)
-        else:
-            self.clone.Enable(enable=bool(not showBlueprint))
-            self.cloneBP.Enable(enable=showBlueprint)
-            self.newBlueprintApp.Enable(enable=showBlueprint)

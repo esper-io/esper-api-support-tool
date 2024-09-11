@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195243"
+VERSION = "v0.195251"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -105,13 +105,8 @@ GENERAL_ACTIONS = {
     + "* " * NUM_STARS
     + "General Actions "
     + "* " * NUM_STARS: -1,
-    # "Action -> Set Device Mode": 1.5,
-    # "Action -> Clear App Data": GeneralActions.CLEAR_APP_DATA.value,
-    # "Action -> Set App's State to ...": GeneralActions.SET_APP_STATE.value,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
-    # "Action -> Install App": GeneralActions.INSTALL_APP.value,
-    # "Action -> Uninstall App": GeneralActions.UNINSTALL_APP.value,
 }
 
 GRID_ACTIONS = {
@@ -121,11 +116,7 @@ GRID_ACTIONS = {
     + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
     "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
-    # "Action -> Set All Apps' State to ...": GridActions.SET_APP_STATE.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
-    # "Action -> Install Selected App": GridActions.INSTALL_APP.value,
-    # "Action -> Uninstall Selected App": GridActions.UNINSTALL_APP.value,
-    # "Action -> Remove Selected Devices From Dashboard": GridActions.SET_DEVICE_DISABLED.value,
 }
 
 LOGLIST = []
@@ -146,39 +137,28 @@ COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    # "SET_KIOSK_APP",
-    # "SET_DEVICE_LOCKDOWN_STATE",
-    # "SET_APP_STATE",
-    # "WIPE",
-    # "UPDATE_LATEST_DPC",
 ]
 
 JSON_COMMAND_TYPES = [
     "REBOOT",
     "UPDATE_HEARTBEAT",
     "UPDATE_DEVICE_CONFIG",
-    # "SET_NEW_POLICY",
-    # "ADD_WIFI_AP",
-    # "REMOVE_WIFI_AP",
-    # "SET_KIOSK_APP",
-    # "SET_DEVICE_LOCKDOWN_STATE",
-    # "SET_APP_STATE",
-    # "WIPE",
-    # "UPDATE_LATEST_DPC",
 ]
 
 """ URL Requests and Extensions """
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://github.com/esper-io/esper-api-support-tool/wiki"
-LATEST_UPDATE_LINK = (
-    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+LATEST_UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
+UPDATE_LINK = (
+    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 )
-UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "status/?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTERPRISE"
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = (
+    "app/?limit={limit}&app_type=ENTERPRISE"
+)
 DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """
@@ -198,7 +178,6 @@ CSV_TAG_ATTR_NAME = {
     "Updated On": ["updated_on", "updated_at"],
     "Created On": ["created_on", "created_at"],
     "Last Seen": "last_seen",
-    # "State": "Status",
     "Esper Version": "esper_client",
     "Foundation Version": "eeaVersion",
     "Is EMM": "is_emm",
@@ -273,6 +252,8 @@ CSV_NETWORK_ATTR_NAME = {
     "Ethernet Connection": "ethernetState",
     "[Cellular Access Point]": "cellAP",
     "Active Connection": "activeConnection",
+    "Network Signal Strength (RSSI)": "networkSignalStrength",
+    "Cellular Signal Strength (RSSI)": "cellularSignalStrength",
     "IPv4 Address(es)": "ipv4Address",
     "IPv6 Address(es)": "ipv6Address",
     "Bluetooth State": "bluetoothState",
@@ -304,7 +285,7 @@ CSV_APP_ATTR_NAME = [
 SEMANTIC_VERSION_COL = [
     "Android Version",
     "Application Version Code",
-    "Application Version Name"
+    "Application Version Name",
 ]
 
 DATE_COL = {
@@ -315,10 +296,70 @@ DATE_COL = {
     "Last Seen": "%Y/%m/%d %H:%M:%S.%f",
 }
 
+GRID_COL_TYPES = {
+    "Whitelisted": "BOOL",
+    "Can Clear Data": "BOOL",
+    "Can Uninstall": "BOOL",
+    "Is EMM": "BOOL",
+    "Lockdown State": "BOOL",
+    "Is Knox Active": "BOOL",
+    "Is CSDK Active": "BOOL",
+    "Is Supervisor Plugin Active": "BOOL",
+    "Is GMS": "BOOL",
+    "Battery Present": "BOOL",
+    "Batter Low Indicator": "BOOL",
+    "Bluetooth State": "BOOL",
+    "Application Type": "CATEGORY",
+    "State": "CATEGORY",
+    "Group": "CATEGORY",
+    "Brand": "CATEGORY",
+    "Android Version": "CATEGORY",
+    "Status": "CATEGORY",
+    "Esper Version": "CATEGORY",
+    "Foundation Version": "CATEGORY",
+    "Template": "CATEGORY",
+    "Template Device Language": "CATEGORY",
+    "Policy": "CATEGORY",
+    "Mode": "CATEGORY",
+    "Timezone": "CATEGORY",
+    "GPS State": "CATEGORY",
+    "Rotation": "CATEGORY",
+    "Power Source": "CATEGORY",
+    "Battery State": "CATEGORY",
+    "Battery Health": "CATEGORY",
+    "Battery Technology": "CATEGORY",
+    "Active Connection": "CATEGORY",
+    "IMEI 1": "NUMBER",
+    "IMEI 2": "NUMBER",
+    "Application Version Code": "NUMBER",
+    "Available RAM (MB)": "NUMBER",
+    "Total RAM (MB)": "NUMBER",
+    "Storage Occupied by OS (MB)": "NUMBER",
+    "Available Internal Storage (MB)": "NUMBER",
+    "Total Internal Storage (MB)": "NUMBER",
+    "Brightness": "NUMBER",
+    "Screen Timeout (ms)": "NUMBER",
+    "Music Volume": "NUMBER",
+    "Ring Volume": "NUMBER",
+    "Alarm Volume": "NUMBER",
+    "Notification Volume": "NUMBER",
+    "Battery Level (%)": "NUMBER",
+    "Battery Scale": "NUMBER",
+    "Battery Current (μA)": "NUMBER",
+    "Battery Current Avg. (μA)": "NUMBER",
+    "Battery Voltage (Volt)": "NUMBER",
+    "Battery Capacity Count (%)": "NUMBER",
+    "Battery Capacity Total (Ah)": "NUMBER",
+    "Battery Level Absolute": "NUMBER",
+    "Frequency": "NUMBER",
+    "linkSpeed": "NUMBER",
+    "Data Speed Down": "NUMBER",
+    "Data Speed Up": "NUMBER",
+}
+
 WHITELIST_AP = []
 
 """ Static Lists """
-CSV_DEPRECATED_HEADER_LABEL = ["Number"]
 CSV_EDITABLE_COL = ["Alias", "Tags", "Group"]
 
 BLACKLIST_PACKAGE_NAME = [

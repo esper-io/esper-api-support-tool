@@ -90,7 +90,7 @@ class PreferencesDialog(wx.Dialog):
         self.list_box_1 = wx.ListBox(
             self.window_1_pane_1,
             wx.ID_ANY,
-            choices=[],  # ["General", "Grid", "Application", "Command", "Prompts"],
+            choices=[],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
@@ -109,7 +109,11 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_6 = wx.FlexGridSizer(6, 1, 0, 0)
 
-        (_, _, self.checkbox_21,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_21,
+        ) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Inhibit Sleep When Running",
@@ -120,7 +124,11 @@ class PreferencesDialog(wx.Dialog):
             wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
         )
 
-        (_, _, self.checkbox_25,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_25,
+        ) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Include Pre-release in Update Check",
@@ -128,7 +136,11 @@ class PreferencesDialog(wx.Dialog):
             "When checking for updates, include Pre-Releases.",
         )
 
-        (_, _, self.checkbox_27,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_27,
+        ) = self.addPrefToPanel(
             self.general,
             sizer_6,
             "Allow Auto-Posting of Issues",
@@ -142,7 +154,11 @@ class PreferencesDialog(wx.Dialog):
         sizer_5.Add(self.report, 1, wx.EXPAND, 0)
         sizer_10 = wx.FlexGridSizer(12, 1, 0, 0)
 
-        (_, _, self.checkbox_1,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_1,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Enable Device Selection",
@@ -150,7 +166,11 @@ class PreferencesDialog(wx.Dialog):
             "Allow user to specify actions on a selections of devices within a group.",
         )
 
-        (_, _, self.checkbox_16,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_16,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Fetch all devices in one page",
@@ -166,7 +186,11 @@ class PreferencesDialog(wx.Dialog):
             5,
         )
 
-        (_, _, self.checkbox_18,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_18,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Show Disabled Devices",
@@ -174,10 +198,16 @@ class PreferencesDialog(wx.Dialog):
             "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
         )
         self.checkbox_18.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED
+            wx.CHK_UNCHECKED
+            if not Globals.SHOW_DISABLED_DEVICES
+            else wx.CHK_CHECKED
         )
 
-        (_, _, self.checkbox_29,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_29,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Get Template Language",
@@ -185,10 +215,16 @@ class PreferencesDialog(wx.Dialog):
             "Fetches Language from the Initial Template used to provision the device.\nWill increase report generation speed.\nNot applicable for Blueprint Tenants.",
         )
         self.checkbox_29.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.GET_DEVICE_LANGUAGE else wx.CHK_CHECKED
+            wx.CHK_UNCHECKED
+            if not Globals.GET_DEVICE_LANGUAGE
+            else wx.CHK_CHECKED
         )
 
-        (_, _, self.combobox_2,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.combobox_2,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Filter App State",
@@ -198,7 +234,11 @@ class PreferencesDialog(wx.Dialog):
         )
         self.combobox_2.SetSelection(0)
 
-        (_, _, self.checkbox_17,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_17,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Replace Serial Number with Custom",
@@ -206,7 +246,11 @@ class PreferencesDialog(wx.Dialog):
             "Replaces Serial Number entry with Custom Serial Number, if available.",
         )
 
-        (_, _, self.checkbox_19,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_19,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Last Seen As Date",
@@ -214,7 +258,11 @@ class PreferencesDialog(wx.Dialog):
             "Value displayed in the “Last Seen” column will be a Date instead of a time estimation.",
         )
 
-        (_, _, self.checkbox_20,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_20,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Show Apps In Device Grid",
@@ -222,7 +270,11 @@ class PreferencesDialog(wx.Dialog):
             "Show a list of applications in the Device Info Grid. Note: Re-adding the column will append it to the end.",
         )
 
-        (_, _, self.checkbox_24,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_24,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "Show Group Path Instead of Name",
@@ -238,7 +290,11 @@ class PreferencesDialog(wx.Dialog):
             5,
         )
 
-        (_, _, self.spin_ctrl_1,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_1,
+        ) = self.addPrefToPanel(
             self.report,
             sizer_10,
             "API Request Limit",
@@ -255,7 +311,11 @@ class PreferencesDialog(wx.Dialog):
         self.display.Hide()
         sizer_5.Add(self.display, 1, wx.EXPAND, 0)
         sizer_11 = wx.FlexGridSizer(5, 1, 0, 0)
-        (_, _, self.spin_ctrl_10,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_10,
+        ) = self.addPrefToPanel(
             self.display,
             sizer_11,
             "Font Size",
@@ -271,7 +331,11 @@ class PreferencesDialog(wx.Dialog):
         self.save.Hide()
         sizer_5.Add(self.save, 1, wx.EXPAND, 0)
         sizer_12 = wx.FlexGridSizer(5, 1, 0, 0)
-        (_, _, self.checkbox_15,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_15,
+        ) = self.addPrefToPanel(
             self.save,
             sizer_12,
             "Save only visible columns",
@@ -279,7 +343,11 @@ class PreferencesDialog(wx.Dialog):
             "When saving to a CSV file, only the columns visible in the Grids will be saved to the file.",
         )
 
-        (_, _, self.checkbox_23,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_23,
+        ) = self.addPrefToPanel(
             self.save,
             sizer_12,
             "Combine Device And Network Sheets",
@@ -298,7 +366,11 @@ class PreferencesDialog(wx.Dialog):
             5,
         )
 
-        (_, _, self.spin_ctrl_12,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_12,
+        ) = self.addPrefToPanel(
             self.save,
             sizer_12,
             "Maximum Split Sheet Size",
@@ -323,7 +395,11 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_14 = wx.FlexGridSizer(7, 1, 0, 0)
 
-        (_, _, self.spin_ctrl_6,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_6,
+        ) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Command Timeout (seconds)",
@@ -333,7 +409,11 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_6.SetMin(0)
         self.spin_ctrl_6.SetValue(Globals.COMMAND_TIMEOUT)
 
-        (_, _, self.checkbox_5,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_5,
+        ) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Reach Queued Command State Only",
@@ -341,7 +421,11 @@ class PreferencesDialog(wx.Dialog):
             "Allow the tool to wait until a command has reached the Queued state, don't wait for the other state changes.",
         )
 
-        (_, _, self.combobox_1,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.combobox_1,
+        ) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Device Type",
@@ -360,7 +444,11 @@ class PreferencesDialog(wx.Dialog):
         )
 
         # Command Dialog
-        (_, __file__, self.checkbox_12,) = self.addPrefToPanel(
+        (
+            _,
+            __file__,
+            self.checkbox_12,
+        ) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Use Json Input for Commands",
@@ -377,7 +465,11 @@ class PreferencesDialog(wx.Dialog):
         )
 
         # Alias Command Option
-        (_, _, self.spin_ctrl_9,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_9,
+        ) = self.addPrefToPanel(
             self.command,
             sizer_14,
             "Date Delta for Alias Command",
@@ -397,7 +489,11 @@ class PreferencesDialog(wx.Dialog):
         sizer_16 = wx.FlexGridSizer(7, 1, 0, 0)
 
         # Grid Display
-        (_, _, self.checkbox_10,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_10,
+        ) = self.addPrefToPanel(
             self.grid,
             sizer_16,
             "Allow Column Resizing",
@@ -412,7 +508,11 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_9 = wx.FlexGridSizer(6, 1, 0, 0)
 
-        (_, _, self.checkbox_2,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_2,
+        ) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Fetch All Installed Apps on Device",
@@ -428,7 +528,11 @@ class PreferencesDialog(wx.Dialog):
             5,
         )
 
-        (_, _, self.checkbox_11,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_11,
+        ) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Set App State To SHOW before Set Kiosk",
@@ -444,7 +548,11 @@ class PreferencesDialog(wx.Dialog):
             5,
         )
 
-        (_, _, self.checkbox_4,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_4,
+        ) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Show App's Package Name",
@@ -452,7 +560,11 @@ class PreferencesDialog(wx.Dialog):
             "Displays an Application's Package Name (e.g., In Tags or the Application input)",
         )
 
-        (_, _, self.checkbox_22,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_22,
+        ) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Display Version Name Instead of Code",
@@ -460,7 +572,11 @@ class PreferencesDialog(wx.Dialog):
             "Displays the App Version Name instead of the Version Code",
         )
 
-        (_, _, self.btn_appFilter,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.btn_appFilter,
+        ) = self.addPrefToPanel(
             self.app,
             sizer_9,
             "Filter App Column And Report",
@@ -475,7 +591,11 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_20 = wx.FlexGridSizer(7, 1, 0, 0)
 
-        (_, _, self.checkbox_26,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_26,
+        ) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
             "Enable Schedule Report",
@@ -485,7 +605,11 @@ class PreferencesDialog(wx.Dialog):
             + " The report will be auto saved at the appointed location. Report will generate a report for the whole endpoint.",
         )
 
-        (_, _, self.btn_save_report,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.btn_save_report,
+        ) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
             "Report Location",
@@ -495,7 +619,11 @@ class PreferencesDialog(wx.Dialog):
         self.btn_save_report.Bind(wx.EVT_BUTTON, self.reportSaveLocation)
 
         self.reportSaveTypes = ["xlsx", "csv"]
-        (_, _, self.reportSaveType,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.reportSaveType,
+        ) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
             "Save File Format",
@@ -505,7 +633,11 @@ class PreferencesDialog(wx.Dialog):
         )
         self.reportSaveType.SetSelection(0)
 
-        (_, _, self.reportType,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.reportType,
+        ) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
             "Report Type",
@@ -515,7 +647,11 @@ class PreferencesDialog(wx.Dialog):
         )
         self.reportType.SetSelection(1)
 
-        (_, _, self.spin_ctrl_13,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.spin_ctrl_13,
+        ) = self.addPrefToPanel(
             self.schedule,
             sizer_20,
             "Schedule Interval",
@@ -533,7 +669,11 @@ class PreferencesDialog(wx.Dialog):
 
         sizer_19 = wx.FlexGridSizer(4, 1, 0, 0)
 
-        (_, _, self.checkbox_8,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_8,
+        ) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Grid Confirmation Prompt",
@@ -541,7 +681,11 @@ class PreferencesDialog(wx.Dialog):
             "Grid Confirmation Prompt",
         )
 
-        (_, _, self.checkbox_7,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_7,
+        ) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Template Confirmation Prompt",
@@ -549,7 +693,11 @@ class PreferencesDialog(wx.Dialog):
             "Template Confirmation Prompt",
         )
 
-        (_, _, self.checkbox_30,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_30,
+        ) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Show Terms and Conditions",
@@ -557,7 +705,11 @@ class PreferencesDialog(wx.Dialog):
             "Show Terms and Conditions",
         )
 
-        (_, _, self.checkbox_31,) = self.addPrefToPanel(
+        (
+            _,
+            _,
+            self.checkbox_31,
+        ) = self.addPrefToPanel(
             self.prompts,
             sizer_19,
             "Show App Filter Dialog",
@@ -605,7 +757,9 @@ class PreferencesDialog(wx.Dialog):
 
         self.window_1_pane_1.SetSizer(sizer_4)
 
-        self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
+        self.window_1.SplitVertically(
+            self.window_1_pane_1, self.window_1_pane_2
+        )
 
         panel_1.SetSizer(sizer_3)
 
@@ -672,12 +826,16 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            "windowSize": tuple(self.parent.GetSize())
-            if self.parent
-            else Globals.MIN_SIZE,
-            "windowPosition": tuple(self.parent.GetPosition())
-            if self.parent
-            else str(wx.CENTRE),
+            "windowSize": (
+                tuple(self.parent.GetSize())
+                if self.parent
+                else Globals.MIN_SIZE
+            ),
+            "windowPosition": (
+                tuple(self.parent.GetPosition())
+                if self.parent
+                else str(wx.CENTRE)
+            ),
             "isMaximized": self.parent.IsMaximized() if self.parent else False,
             "getAllApps": self.checkbox_2.IsChecked(),
             "showPkg": self.checkbox_4.IsChecked(),
@@ -732,7 +890,9 @@ class PreferencesDialog(wx.Dialog):
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
-        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
+        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs[
+            "appVersionNameInsteadOfCode"
+        ]
         Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs[
             "combineDeviceAndNetworkSheets"
         ]
@@ -789,7 +949,10 @@ class PreferencesDialog(wx.Dialog):
                 Globals.limit = Globals.MIN_LIMIT
             self.spin_ctrl_1.SetValue(Globals.limit)
 
-        if "gridDialog" in self.prefs and type(self.prefs["gridDialog"]) == bool:
+        if (
+            "gridDialog" in self.prefs
+            and type(self.prefs["gridDialog"]) == bool
+        ):
             Globals.SHOW_GRID_DIALOG = self.prefs["gridDialog"]
             if Globals.SHOW_GRID_DIALOG:
                 self.checkbox_8.Set3StateValue(wx.CHK_CHECKED)
@@ -837,7 +1000,11 @@ class PreferencesDialog(wx.Dialog):
             if self.parent:
                 self.parent.Maximize(self.prefs["isMaximized"])
 
-        if "windowPosition" in self.prefs and self.prefs["windowPosition"] and onBoot:
+        if (
+            "windowPosition" in self.prefs
+            and self.prefs["windowPosition"]
+            and onBoot
+        ):
             if self.parent:
                 if self.prefs["windowPosition"] == "1":
                     self.parent.Centre()
@@ -919,7 +1086,9 @@ class PreferencesDialog(wx.Dialog):
 
         if "appFilter" in self.prefs and self.prefs["appFilter"]:
             if isinstance(self.prefs["appFilter"], str):
-                indx = self.combobox_2.GetItems().index(self.prefs["appFilter"].upper())
+                indx = self.combobox_2.GetItems().index(
+                    self.prefs["appFilter"].upper()
+                )
                 self.combobox_2.SetSelection(indx)
             else:
                 self.combobox_2.SetSelection(self.prefs["appFilter"])
@@ -948,15 +1117,20 @@ class PreferencesDialog(wx.Dialog):
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
             if self.prefs["colVisibility"]:
-                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][
-                    0
-                ]
-            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
-                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][
-                    1
-                ]
+                self.parent.gridPanel.grid1ColVisibility = self.prefs[
+                    "colVisibility"
+                ][0]
+            if (
+                self.prefs["colVisibility"]
+                and len(self.prefs["colVisibility"]) > 1
+            ):
+                self.parent.gridPanel.grid2ColVisibility = self.prefs[
+                    "colVisibility"
+                ][1]
 
-        if self.checkBooleanValuePrefAndSet("saveColVisibility", self.checkbox_16):
+        if self.checkBooleanValuePrefAndSet(
+            "saveColVisibility", self.checkbox_16
+        ):
             Globals.SAVE_VISIBILITY = True
         else:
             Globals.SAVE_VISIBILITY = False
@@ -966,7 +1140,9 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.REPLACE_SERIAL = False
 
-        if self.checkBooleanValuePrefAndSet("showDisabledDevices", self.checkbox_18):
+        if self.checkBooleanValuePrefAndSet(
+            "showDisabledDevices", self.checkbox_18
+        ):
             Globals.SHOW_DISABLED_DEVICES = True
         else:
             Globals.SHOW_DISABLED_DEVICES = False
@@ -1028,33 +1204,47 @@ class PreferencesDialog(wx.Dialog):
         else:
             Globals.LAST_OPENED_ENDPOINT = 0
 
-        if self.checkBooleanValuePrefAndSet("prereleaseUpdate", self.checkbox_25):
+        if self.checkBooleanValuePrefAndSet(
+            "prereleaseUpdate", self.checkbox_25
+        ):
             Globals.CHECK_PRERELEASES = True
         else:
             Globals.CHECK_PRERELEASES = False
 
         if "maxSplitFileSize" in self.prefs:
-            Globals.SHEET_CHUNK_SIZE = int(self.prefs["maxSplitFileSize"]) * 1000
+            Globals.SHEET_CHUNK_SIZE = (
+                int(self.prefs["maxSplitFileSize"]) * 1000
+            )
             self.spin_ctrl_12.SetValue(int(self.prefs["maxSplitFileSize"]))
             if Globals.SHEET_CHUNK_SIZE > Globals.MAX_SHEET_CHUNK_SIZE:
                 Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
             if Globals.SHEET_CHUNK_SIZE < Globals.MIN_SHEET_CHUNK_SIZE:
                 Globals.SHEET_CHUNK_SIZE = Globals.MIN_SHEET_CHUNK_SIZE
 
-        if self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27):
+        if self.checkBooleanValuePrefAndSet(
+            "allowAutoIssuePost", self.checkbox_27
+        ):
             Globals.AUTO_REPORT_ISSUES = True
         else:
             Globals.AUTO_REPORT_ISSUES = False
 
-        if "appColFilter" in self.prefs and type(self.prefs["appColFilter"]) is list:
+        if (
+            "appColFilter" in self.prefs
+            and type(self.prefs["appColFilter"]) is list
+        ):
             Globals.APP_COL_FILTER = self.prefs["appColFilter"]
 
-        if self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26):
+        if self.checkBooleanValuePrefAndSet(
+            "scheduleEnabled", self.checkbox_26
+        ):
             Globals.SCHEDULE_ENABLED = True
         else:
             Globals.SCHEDULE_ENABLED = False
 
-        if "scheduleReportType" in self.prefs and self.prefs["scheduleReportType"]:
+        if (
+            "scheduleReportType" in self.prefs
+            and self.prefs["scheduleReportType"]
+        ):
             if isinstance(self.prefs["scheduleReportType"], str):
                 indx = self.reportType.GetItems().index(
                     self.prefs["scheduleReportType"]
@@ -1075,7 +1265,10 @@ class PreferencesDialog(wx.Dialog):
                 Globals.SCHEDULE_INTERVAL = Globals.MAX_SCHEDULE_INTERVAL
             self.spin_ctrl_13.SetValue(Globals.SCHEDULE_INTERVAL)
 
-        if "scheduleSaveLocation" in self.prefs and self.prefs["scheduleSaveLocation"]:
+        if (
+            "scheduleSaveLocation" in self.prefs
+            and self.prefs["scheduleSaveLocation"]
+        ):
             self.file_location = self.prefs["scheduleSaveLocation"]
             Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         else:
@@ -1087,21 +1280,27 @@ class PreferencesDialog(wx.Dialog):
                 self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
             )
 
-        if self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, True):
+        if self.checkBooleanValuePrefAndSet(
+            "showDisclaimer", self.checkbox_30, True
+        ):
             Globals.SHOW_DISCLAIMER = True
             self.checkbox_30.Set3StateValue(wx.CHK_CHECKED)
         else:
             Globals.SHOW_DISCLAIMER = False
             self.checkbox_30.Set3StateValue(wx.CHK_UNCHECKED)
 
-        if self.checkBooleanValuePrefAndSet("showAppFilter", self.checkbox_31, True):
+        if self.checkBooleanValuePrefAndSet(
+            "showAppFilter", self.checkbox_31, True
+        ):
             Globals.SHOW_APP_FILTER_DIALOG = True
             self.checkbox_31.Set3StateValue(wx.CHK_CHECKED)
         else:
             Globals.SHOW_APP_FILTER_DIALOG = False
             self.checkbox_31.Set3StateValue(wx.CHK_UNCHECKED)
 
-        if self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29):
+        if self.checkBooleanValuePrefAndSet(
+            "getTemplateLanguage", self.checkbox_29
+        ):
             Globals.GET_DEVICE_LANGUAGE = True
         else:
             Globals.GET_DEVICE_LANGUAGE = False
@@ -1110,7 +1309,8 @@ class PreferencesDialog(wx.Dialog):
         isEnabled = default
         if key in self.prefs:
             if (
-                isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true"
+                isinstance(self.prefs[key], str)
+                and self.prefs[key].lower() == "true"
             ) or self.prefs[key] is True:
                 checkbox.Set3StateValue(wx.CHK_CHECKED)
                 isEnabled = True
@@ -1162,11 +1362,19 @@ class PreferencesDialog(wx.Dialog):
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
         elif key == "windowSize":
-            return tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE
+            return (
+                tuple(self.parent.GetSize())
+                if self.parent
+                else Globals.MIN_SIZE
+            )
         elif key == "isMaximized":
             return self.parent.IsMaximized() if self.parent else False
         elif key == "windowPosition":
-            return tuple(self.parent.GetPosition()) if self.parent else str(wx.CENTRE)
+            return (
+                tuple(self.parent.GetPosition())
+                if self.parent
+                else str(wx.CENTRE)
+            )
         elif key == "getAllApps":
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":
@@ -1237,7 +1445,13 @@ class PreferencesDialog(wx.Dialog):
         event.Skip()
 
     def addPrefToPanel(
-        self, sourcePanel, sourceSizer, labelText, inputObjType, toolTip="", choice=[]
+        self,
+        sourcePanel,
+        sourceSizer,
+        labelText,
+        inputObjType,
+        toolTip="",
+        choice=[],
     ):
         panel = wx.Panel(sourcePanel, wx.ID_ANY)
         if sourceSizer.GetEffectiveRowsCount() >= sourceSizer.GetRows():
@@ -1290,11 +1504,15 @@ class PreferencesDialog(wx.Dialog):
             Globals.frame,
             "Enter the package names, in a comma seperated format, of the applications you want to appear in the Application column",
             "App Column Filter",
-            textPlaceHolder=",".join(self.appColFilter)
-            if self.appColFilter
-            else ",".join(Globals.APP_COL_FILTER)
-            if Globals.APP_COL_FILTER
-            else "",
+            textPlaceHolder=(
+                ",".join(self.appColFilter)
+                if self.appColFilter
+                else (
+                    ",".join(Globals.APP_COL_FILTER)
+                    if Globals.APP_COL_FILTER
+                    else ""
+                )
+            ),
         ) as textDialog:
             Globals.OPEN_DIALOGS.append(textDialog)
             if textDialog.ShowModal() == wx.ID_OK:

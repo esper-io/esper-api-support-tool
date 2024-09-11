@@ -74,7 +74,9 @@ def __read_data_from_csv_helper__(
 ):
     fileData = None
     with open(filePath, "r", encoding=encoding) as csvFile:
-        reader = csv.reader(csvFile, quoting=quoting, skipinitialspace=skipinitialspace)
+        reader = csv.reader(
+            csvFile, quoting=quoting, skipinitialspace=skipinitialspace
+        )
         fileData = list(reader)
     return fileData
 
@@ -82,17 +84,25 @@ def __read_data_from_csv_helper__(
 def write_data_to_csv(
     filePath: str, data, mode="w", encoding="utf-8", newline=""
 ) -> None:
-    with open(filePath, mode, newline=newline, encoding=encoding) as csvfile:
-        writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-        if type(data) is dict:
-            writer.writerow(list(data.values()))
-        elif any(isinstance(el, list) for el in data):
-            writer.writerows(data)
-        elif type(data) is list:
-            writer.writerow(data)
-        else:
-            if data:
+    try:
+        with open(
+            filePath, mode, newline=newline, encoding=encoding
+        ) as csvfile:
+            writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
+            if type(data) is dict:
+                writer.writerow(list(data.values()))
+            elif any(isinstance(el, list) for el in data):
                 writer.writerows(data)
+            elif type(data) is list:
+                writer.writerow(data)
+            else:
+                if data:
+                    writer.writerows(data)
+    except Exception as e:
+        ApiToolLogging.logger.error(
+            "Error while writing data to csv file: %s" % str(e)
+        )
+        raise e
 
 
 def getToolDataPath():
@@ -127,7 +137,9 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
 
 
 def read_csv_via_pandas(path: str) -> pd.DataFrame:
-    return pd.read_csv(path, sep=",", header=0, keep_default_na=False, chunksize=1000)
+    return pd.read_csv(
+        path, sep=",", header=0, keep_default_na=False, chunksize=1000
+    )
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
@@ -136,7 +148,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             path,
             engine="xlsxwriter",
         )
-        
+
         sheetNames = []
         try:
             for sheet, df in df_dict.items():
@@ -157,19 +169,28 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                                     series.astype(str)
                                     .map(len)
                                     .max(),  # len of largest item
-                                    len(str(series.name)),  # len of column name/header
+                                    len(
+                                        str(series.name)
+                                    ),  # len of column name/header
                                 )
                             )
                             + 1
                         )  # adding a little extra space
-                        worksheet.set_column(idx, idx, max_len)  # set column width
+                        worksheet.set_column(
+                            idx, idx, max_len
+                        )  # set column width
         except Exception as e:
             pass
         finally:
-            writer.save()
+            if hasattr(writer, "save"):
+                writer.save()
+            if hasattr(writer, "close"):
+                writer.close()
     else:
         split_dict_list = list(
-            __split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE)
+            __split_dict_into_chunks__(
+                df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE
+            )
         )
         for i in range(0, len(split_dict_list)):
             if i == 0:
@@ -177,6 +198,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             else:
                 path = path[:-7] + "_{}.xlsx".format(i)
             save_excel_pandas_xlxswriter(path, split_dict_list[i])
+
 
 def __split_dict_into_chunks__(data, size):
     it = iter(data)
@@ -186,5 +208,9 @@ def __split_dict_into_chunks__(data, size):
 
 def save_csv_pandas(path, df):
     df.to_csv(
-        path, sep=",", index=False, encoding="utf-8", quoting=csv.QUOTE_NONNUMERIC
+        path,
+        sep=",",
+        index=False,
+        encoding="utf-8",
+        quoting=csv.QUOTE_NONNUMERIC,
     )

@@ -1,4 +1,5 @@
 import platform
+import sys
 import threading
 from datetime import datetime
 from distutils.version import LooseVersion
@@ -6,12 +7,12 @@ from distutils.version import LooseVersion
 import pandas as pd
 import wx
 import wx.grid as gridlib
-from pandas.api.types import is_bool_dtype, is_string_dtype
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
 from GUI.GridDataTable import GridDataTable
+from Utility.GridUtilities import convertColumnTypes
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
 
@@ -41,24 +42,14 @@ class GridTable(gridlib.Grid):
         df.index = pd.RangeIndex(start=0, stop=len(df.index) * 1 - 1, step=1)
         return df
 
-    def convertColumnTypes(self, data):
-        for col in self.headersLabels:
-            if len(data[col]) > 0:
-                if col in Globals.DATE_COL:
-                    data[col] = pd.to_datetime(data[col], exact=False, errors="coerce")
-                    data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
-                    data[col].fillna("No Data Available", inplace=True)
-                elif is_bool_dtype(data[col]):
-                    data[col] = data[col].astype("bool")
-                elif is_string_dtype(data[col]) and all(data[col].str.isnumeric()):
-                    data[col] = data[col].astype("int64")
-                else:
-                    data[col] = data[col].astype("str")
-        return data
-
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(self.ApplyGridStyle, autosize, resetPosition)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                self.ApplyGridStyle, autosize, resetPosition
+            )
             return
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
@@ -103,8 +94,17 @@ class GridTable(gridlib.Grid):
     def applyNewDataFrame(
         self, data, checkColumns=True, autosize=False, resetPosition=False
     ):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(self.applyNewDataFrame, data, checkColumns, autosize, resetPosition)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                self.applyNewDataFrame,
+                data,
+                checkColumns,
+                autosize,
+                resetPosition,
+            )
             return
 
         try:
@@ -131,8 +131,14 @@ class GridTable(gridlib.Grid):
                     data = data[list(self.headersLabels)]
                     data = data.rename(columns=renameColumns)
 
-            self.convertColumnTypes(data)
-            data.fillna("", inplace=True)
+            convertColumnTypes(data, self.headersLabels)
+            for col in self.headersLabels:
+                if str(data[col].dtype)[:3] == "cat":
+                    if "" not in data[col].cat.categories:
+                        data[col] = data[col].cat.add_categories("")
+                    data[col] = data[col].fillna("")
+                else:
+                    data[col] = data[col].fillna("")
             self.table = GridDataTable(data)
 
             # The second parameter means that the grid is to take ownership of the
@@ -162,10 +168,11 @@ class GridTable(gridlib.Grid):
         return self.table.SetValue(*args, **kw)
 
     def EmptyGrid(self):
-        data = self.createEmptyDataFrame()
-        self.applyNewDataFrame(
-            data, checkColumns=False, autosize=True, resetPosition=True
-        )
+        if not self.table.data.empty:
+            data = self.createEmptyDataFrame()
+            self.applyNewDataFrame(
+                data, checkColumns=False, autosize=True, resetPosition=True
+            )
 
     def SortColumn(self, event):
         col = None
@@ -195,9 +202,37 @@ class GridTable(gridlib.Grid):
                     if not self.sortAcesnding:
                         df = df.iloc[::-1]
                 except:
-                    df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
+                    df = self.table.data.sort_values(
+                        colName, ascending=self.sortAcesnding
+                    )
+            elif colName in Globals.DATE_COL.keys():
+                try:
+                    # convert column to datetime
+                    self.table.data[colName] = pd.to_datetime(
+                        self.table.data[colName], exact=False, errors="coerce"
+                    )
+                    self.table.data[colName] = self.table.data[
+                        colName
+                    ].dt.strftime(Globals.DATE_COL[colName])
+                    self.table.data[colName] = self.table.data[colName].fillna(
+                        "No Data Available"
+                    )
+                    # sort by datetime
+                    df = self.table.data.sort_values(
+                        colName, ascending=self.sortAcesnding
+                    )
+                    # convert column back to string
+                    self.table.data[colName] = self.table.data[colName].astype(
+                        pd.StringDtype()
+                    )
+                except Exception as e:
+                    df = self.table.data.sort_values(
+                        colName, ascending=self.sortAcesnding
+                    )
             else:
-                df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
+                df = self.table.data.sort_values(
+                    colName, ascending=self.sortAcesnding
+                )
             Globals.THREAD_POOL.enqueue(
                 self.applyNewDataFrame, df, checkColumns=False, autosize=True
             )
@@ -225,9 +260,11 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
-        if (self.currentlySelectedCell 
-            and self.currentlySelectedCell[0] >= 0 
-            and self.currentlySelectedCell[1] >= 0):
+        if (
+            self.currentlySelectedCell
+            and self.currentlySelectedCell[0] >= 0
+            and self.currentlySelectedCell[1] >= 0
+        ):
             data = wx.TextDataObject()
             data.SetText(
                 widget.GetCellValue(
@@ -304,38 +341,66 @@ class GridTable(gridlib.Grid):
             currentDate = datetime.now()
             for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
-                datePattern = "%Y/%m/%d %H:%M:%S.%f" if "." in value else "%Y-%m-%dT%H:%MZ"
+                datePattern = (
+                    "%Y/%m/%d %H:%M:%S.%f"
+                    if "." in value
+                    else "%Y-%m-%dT%H:%MZ"
+                )
                 parsedDateTime = None
                 differenceInMinutes = None
                 try:
-                    parsedDateTime = datetime.strptime(value, datePattern) if "ago" not in value else None
+                    parsedDateTime = (
+                        datetime.strptime(value, datePattern)
+                        if "ago" not in value
+                        else None
+                    )
                 except:
                     pass
                 if parsedDateTime:
-                    differenceInMinutes = (currentDate - parsedDateTime).total_seconds() / 60
+                    differenceInMinutes = (
+                        currentDate - parsedDateTime
+                    ).total_seconds() / 60
                 if value == "Less than 1 minute ago":
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightGreen.value
+                    )
                 elif " minutes ago" in value:
                     minutes = int(value.split(" ")[0])
                     if minutes < 30:
-                        self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                        self.SetCellTextColour(
+                            rowNum, colNum, Color.green.value
+                        )
+                        self.SetCellBackgroundColour(
+                            rowNum, colNum, Color.lightGreen.value
+                        )
                     else:
-                        self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                        self.SetCellTextColour(
+                            rowNum, colNum, Color.orange.value
+                        )
+                        self.SetCellBackgroundColour(
+                            rowNum, colNum, Color.lightYellow.value
+                        )
                 elif " days ago" in value:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightRed.value
+                    )
                 elif differenceInMinutes and differenceInMinutes < 30:
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightGreen.value
+                    )
                 elif differenceInMinutes and differenceInMinutes < 1440:
                     self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightYellow.value
+                    )
                 elif differenceInMinutes and differenceInMinutes > 1440:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
-                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
+                    self.SetCellBackgroundColour(
+                        rowNum, colNum, Color.lightRed.value
+                    )
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):
@@ -351,28 +416,44 @@ class GridTable(gridlib.Grid):
 
     @api_tool_decorator()
     def SetCellTextColour(self, rowNum, colNum, color):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(super().SetCellTextColour, rowNum, colNum, color)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                super().SetCellTextColour, rowNum, colNum, color
+            )
             return
         super().SetCellTextColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def SetCellBackgroundColour(self, rowNum, colNum, color):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(super().SetCellBackgroundColour, rowNum, colNum, color)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                super().SetCellBackgroundColour, rowNum, colNum, color
+            )
             return
         super().SetCellBackgroundColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def ForceRefresh(self):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(super().ForceRefresh)
             return
         return super().ForceRefresh()
 
     @api_tool_decorator()
     def AutoSizeColumns(self, setAsMin=True):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(super().AutoSizeColumns, setAsMin)
             return
         return super().AutoSizeColumns(setAsMin)

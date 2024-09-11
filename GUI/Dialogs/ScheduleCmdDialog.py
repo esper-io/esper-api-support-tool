@@ -2,9 +2,10 @@
 
 from datetime import datetime, timedelta
 
-import Common.Globals as Globals
 import wx
 import wx.adv
+
+import Common.Globals as Globals
 
 
 class ScheduleCmdDialog(wx.Dialog):
@@ -60,7 +61,9 @@ class ScheduleCmdDialog(wx.Dialog):
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        self.checkbox_1 = wx.CheckBox(self.panel_2, wx.ID_ANY, "Recurring schedule")
+        self.checkbox_1 = wx.CheckBox(
+            self.panel_2, wx.ID_ANY, "Recurring schedule"
+        )
         grid_sizer_3.Add(self.checkbox_1, 0, wx.ALL, 5)
         self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.checkInputs)
 
@@ -72,7 +75,12 @@ class ScheduleCmdDialog(wx.Dialog):
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Days to Repeat On:")
         label_2.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_3.Add(label_2, 0, wx.LEFT, 2)
@@ -103,12 +111,19 @@ class ScheduleCmdDialog(wx.Dialog):
         label_3 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Start Date:")
         label_3.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_4.Add(label_3, 0, wx.LEFT, 2)
 
-        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
+        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(
+            self.window_1_pane_2, wx.ID_ANY
+        )
         self.datepicker_ctrl_1.Bind(wx.adv.EVT_DATE_CHANGED, self.checkInputs)
         sizer_4.Add(self.datepicker_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -118,12 +133,19 @@ class ScheduleCmdDialog(wx.Dialog):
         label_5 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "End Date:")
         label_5.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_6.Add(label_5, 0, wx.LEFT, 2)
 
-        self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
+        self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(
+            self.window_1_pane_2, wx.ID_ANY
+        )
         self.datepicker_ctrl_2.Bind(wx.adv.EVT_DATE_CHANGED, self.checkInputs)
         sizer_6.Add(self.datepicker_ctrl_2, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -135,13 +157,19 @@ class ScheduleCmdDialog(wx.Dialog):
         )
         label_4.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_5.Add(label_4, 0, wx.LEFT, 2)
 
-        # self.text_ctrl_1 = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "")
-        self.text_ctrl_1 = wx.adv.TimePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
+        self.text_ctrl_1 = wx.adv.TimePickerCtrl(
+            self.window_1_pane_2, wx.ID_ANY
+        )
         self.text_ctrl_1.Bind(wx.adv.EVT_TIME_CHANGED, self.verifyTime)
         sizer_5.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -153,13 +181,19 @@ class ScheduleCmdDialog(wx.Dialog):
         )
         label_6.SetFont(
             wx.Font(
-                9, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, 0, ""
+                9,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "",
             )
         )
         sizer_7.Add(label_6, 0, wx.LEFT, 2)
 
-        # self.text_ctrl_2 = wx.TextCtrl(self.window_1_pane_2, wx.ID_ANY, "")
-        self.text_ctrl_2 = wx.adv.TimePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
+        self.text_ctrl_2 = wx.adv.TimePickerCtrl(
+            self.window_1_pane_2, wx.ID_ANY
+        )
         self.text_ctrl_2.Bind(wx.adv.EVT_TIME_CHANGED, self.checkInputs)
         sizer_7.Add(self.text_ctrl_2, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -209,9 +243,17 @@ class ScheduleCmdDialog(wx.Dialog):
     def verifyTime(self, event=None):
         time = self.text_ctrl_1.GetTime()
         now = datetime.now().time()
-        if now.hour >= time[0] and now.minute >= time[1] and now.second >= time[2]:
-            newTime = datetime.combine(datetime.today(), now) + timedelta(minutes=5)
-            self.text_ctrl_1.SetTime((newTime.hour, newTime.minute, newTime.second))
+        if (
+            now.hour >= time[0]
+            and now.minute >= time[1]
+            and now.second >= time[2]
+        ):
+            newTime = datetime.combine(datetime.today(), now) + timedelta(
+                minutes=5
+            )
+            self.text_ctrl_1.SetTime(
+                (newTime.hour, newTime.minute, newTime.second)
+            )
 
         self.checkInputs()
 
@@ -258,7 +300,9 @@ class ScheduleCmdDialog(wx.Dialog):
         if self.checkbox_1.IsChecked():
             days = list(self.check_list_box_1.GetCheckedStrings())
 
-        startDateTime, endDateTime, startTime, endtime = self.getDateTimeStrings()
+        startDateTime, endDateTime, startTime, endtime = (
+            self.getDateTimeStrings()
+        )
 
         return {
             "name": "%s Blueprint Update" % str(datetime.now()),

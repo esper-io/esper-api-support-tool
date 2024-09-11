@@ -9,13 +9,12 @@ from functools import wraps
 from traceback import extract_tb, format_list, print_exc
 
 import wx
-from esperclient.rest import ApiException
 
 import Common.Globals as Globals
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
-def api_tool_decorator(locks=None):
+def api_tool_decorator(locks=None, displayPrompt=True):
     def inner(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -32,12 +31,10 @@ def api_tool_decorator(locks=None):
             try:
                 result = func(*args, **kwargs)
                 logPlaceDone(func, *args, **kwargs)
-            except ApiException as e:
-                logError(e)
-                excpt = determineErrorDisplay(e)
             except Exception as e:
                 logError(e)
-                excpt = determineErrorDisplay(e)
+                if displayPrompt:
+                    excpt = determineErrorDisplay(e)
             finally:
                 if Globals.frame and excpt:
                     Globals.frame.Logging(str(excpt), isError=True)
@@ -72,7 +69,9 @@ def api_tool_decorator(locks=None):
             if start and end:
                 duration = end - start
                 if Globals.PRINT_FUNC_DURATION:
-                    print("%s executed in %s seconds." % (func.__name__, duration))
+                    print(
+                        "%s executed in %s seconds." % (func.__name__, duration)
+                    )
             return result
 
         return wrapper
@@ -88,18 +87,12 @@ def determineErrorDisplay(e):
         minutes = timeDiff.total_seconds() / 60
         if minutes > Globals.MAX_ERROR_TIME_DIFF:
             Globals.error_tracker[str(e)] = datetime.now()
-            if isinstance(e, ApiException):
-                displayApiExcpetionMsg(e)
-            else:
-                displayGenericErrorMsg(e)
+            displayGenericErrorMsg(e)
         else:
             print_exc()
     else:
         Globals.error_tracker[str(e)] = datetime.now()
-        if isinstance(e, ApiException):
-            displayApiExcpetionMsg(e)
-        else:
-            displayGenericErrorMsg(e)
+        displayGenericErrorMsg(e)
     if Globals.error_lock.locked():
         Globals.error_lock.release()
     return e
@@ -169,20 +162,4 @@ def construct_log_place_str(prefix, func, *args, **kwargs):
     else:
         place += str(func)
 
-    # argStrList = "\tArguements: "
-    # if args:
-    #     for x in args:
-    #         if isinstance(x) is dict:
-    #             argStrList += type(x) + ", "
-    #         else:
-    #             argStrList += str(x) + ", "
-
-    # kwargStrList = "\tKeyword Arguements: "
-    # if kwargs:
-    #     for key, val in kwargs.items():
-    #         if isinstance(val) is dict:
-    #             kwargStrList += "%s:%s, " % (str(key), str(type(dict)))
-    #         else:
-    #             kwargStrList += "%s:%s, " % (str(key), str(val))
-
-    return place  # + argStrList + kwargStrList
+    return place

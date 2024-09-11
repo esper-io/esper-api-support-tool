@@ -9,12 +9,17 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.API.BlueprintUtility import (checkFeatureFlags,
-                                          getAllBlueprintsFromHost,
-                                          getGroupBlueprintDetailForHost)
+from Utility.API.BlueprintUtility import (
+    checkFeatureFlags,
+    getAllBlueprintsFromHost,
+    getGroupBlueprintDetailForHost,
+)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
-                              openWebLinkInBrowser)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    getEsperConfig,
+    openWebLinkInBrowser,
+)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -69,7 +74,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_3 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=list(choices),
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_5.Add(self.combo_box_3, 0, wx.EXPAND, 0)
@@ -149,7 +154,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_1 = wx.ComboBox(
             self.panel_1,
             value="",
-            choices=choices,
+            choices=list(choices),
             style=wx.CB_DROPDOWN | wx.CB_SORT | wx.CB_READONLY,
         )
         sizer_3.Add(self.combo_box_1, 0, wx.EXPAND, 0)
@@ -210,7 +215,9 @@ class BlueprintsDialog(wx.Dialog):
         self.Layout()
 
         # Bind Events
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.text_ctrl_1.Bind(
+            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
+        )
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
 
@@ -225,23 +232,18 @@ class BlueprintsDialog(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(self.getBlueprintEnabledEndpoints, config)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                self.getBlueprintEnabledEndpoints,
+            )
             return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
-        for config in self.configMenuOpt.values():
-            if "isBlueprintsEnabled" not in config:
-                Globals.THREAD_POOL.enqueue(checkFeatureFlags, config)
         Globals.THREAD_POOL.join(tolerance=1)
         choices = self.configMenuOpt.keys()
-        # list(
-        #     filter(
-        #         lambda x: "isBlueprintsEnabled" in self.configMenuOpt[x]
-        #         and self.configMenuOpt[x]["isBlueprintsEnabled"],
-        #         self.configMenuOpt.keys(),
-        #     )
-        # )
         for choice in choices:
             self.combo_box_3.Append(choice)
             self.combo_box_1.Append(choice)
@@ -270,7 +272,10 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.loadGroupHelper, config)
             return
         destinationGroups = getDeviceGroupsForHost(
@@ -324,15 +329,22 @@ class BlueprintsDialog(wx.Dialog):
             self.combo_box_3.GetString(self.combo_box_3.GetSelection())
         ]
         if match["group"]:
-            Globals.THREAD_POOL.enqueue(self.loadBlueprintHelper, event, match, config)
+            Globals.THREAD_POOL.enqueue(
+                self.loadBlueprintHelper, event, match, config
+            )
         else:
             self.text_ctrl_1.SetValue("No preview available")
         self.checkInputs()
 
     @api_tool_decorator()
     def loadBlueprintHelper(self, event, match, config):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-            determineDoHereorMainThread(self.loadBlueprintHelper, event, match, config)
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(
+                self.loadBlueprintHelper, event, match, config
+            )
             return
         revision = getGroupBlueprintDetailForHost(
             config["apiHost"],
@@ -344,7 +356,9 @@ class BlueprintsDialog(wx.Dialog):
         self.blueprint = revision
         formattedRes = ""
         try:
-            formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
+            formattedRes = json.dumps(revision.json(), indent=2).replace(
+                "\\n", "\n"
+            )
         except:
             formattedRes = json.dumps(str(revision.json()), indent=2).replace(
                 "\\n", "\n"
@@ -366,7 +380,9 @@ class BlueprintsDialog(wx.Dialog):
         else:
             self.button_OK.Enable(False)
         if self.combo_box_2.GetSelection() > -1:
-            self.group = self.combo_box_2.GetClientData(self.combo_box_2.GetSelection())
+            self.group = self.combo_box_2.GetClientData(
+                self.combo_box_2.GetSelection()
+            )
         self.changeCursorToDefault()
 
     @api_tool_decorator()

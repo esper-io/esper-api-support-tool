@@ -83,7 +83,10 @@ class Pool:
                 isAbortSet = False
                 if hasattr(threading.current_thread(), "abort"):
                     isAbortSet = threading.current_thread().abort.is_set()
-                if hasattr(threading.current_thread(), "isStopped") and not isAbortSet:
+                if (
+                    hasattr(threading.current_thread(), "isStopped")
+                    and not isAbortSet
+                ):
                     isAbortSet = threading.current_thread().isStopped()
                 if (
                     (timeout > 0 and time.perf_counter() - startTime >= timeout)
@@ -117,10 +120,6 @@ class Pool:
     def getNumberOfActiveThreads(self):
         numActive = [i.is_set() for i in self.idles].count(False)
         return numActive
-
-    # def done(self):
-    #     """Returns True if no tasks are left to be completed"""
-    #     return self.queue.empty()
 
     def isDoneWithinTolerance(self, queueTolerance=0):
         return self.idle(queueTolerance)

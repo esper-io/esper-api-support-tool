@@ -74,15 +74,60 @@ def obtainAppName():
 
 def getExecutableCommand(doFirst=True):
     cmd = []
+    hidden_imports = [
+        "sentry_sdk.integrations.aiohttp",
+        "sentry_sdk.integrations.anthropic",
+        "sentry_sdk.integrations.ariadne",
+        "sentry_sdk.integrations.arq",
+        "sentry_sdk.integrations.asyncpg",
+        "sentry_sdk.integrations.boto3",
+        "sentry_sdk.integrations.bottle",
+        "sentry_sdk.integrations.celery",
+        "sentry_sdk.integrations.chalice",
+        "sentry_sdk.integrations.clickhouse_driver",
+        "sentry_sdk.integrations.cohere",
+        "sentry_sdk.integrations.django",
+        "sentry_sdk.integrations.falcon",
+        "sentry_sdk.integrations.fastapi",
+        "sentry_sdk.integrations.flask",
+        "sentry_sdk.integrations.gql",
+        "sentry_sdk.integrations.graphene",
+        "sentry_sdk.integrations.httpx",
+        "sentry_sdk.integrations.huey",
+        "sentry_sdk.integrations.huggingface_hub",
+        "sentry_sdk.integrations.langchain",
+        "sentry_sdk.integrations.loguru",
+        "sentry_sdk.integrations.openai",
+        "sentry_sdk.integrations.pymongo",
+        "sentry_sdk.integrations.pyramid",
+        "sentry_sdk.integrations.quart",
+        "sentry_sdk.integrations.rq",
+        "sentry_sdk.integrations.sanic",
+        "sentry_sdk.integrations.sqlalchemy",
+        "sentry_sdk.integrations.starlite",
+        "sentry_sdk.integrations.strawberry",
+        "sentry_sdk.integrations.tornado",
+        "sentry_sdk.integrations.trytond",
+        "sentry_sdk.integrations.wsgi",
+        "sentry_sdk.integrations.stdlib",
+        "sentry_sdk.integrations.excepthook",
+        "sentry_sdk.integrations.dedupe",
+        "sentry_sdk.integrations.atexit",
+        "sentry_sdk.integrations.modules",
+        "sentry_sdk.integrations.argv",
+        "sentry_sdk.integrations.logging",
+        "sentry_sdk.integrations.threading",
+    ]
     if platform.system() == "Windows":
         if isModuleInstalled("pyinstaller"):
             updateFileVersionInfo()
             cmd = [
-                "pyinstaller",
+                sys.executable,
+                "-m",
+                "PyInstaller",
                 "--noconfirm",
                 "--onefile",
                 "--windowed",
-                "--ascii",
                 "--clean",
                 "--name",
                 app_name,
@@ -90,44 +135,46 @@ def getExecutableCommand(doFirst=True):
                 dispath,
                 "--version-file",
                 curDirPath + "/file_version_info.txt",
+                *getHiddenImportsParams(*hidden_imports),
                 "--icon",
                 curDirPath + "/Images/icon.ico",
-                "--add-data",
-                getPyInstallerFilePathStr("/Images"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
+                *getAddDataParameters(
+                    "/Images",
+                    "/Utility/Logging/token.json",
+                    "/Utility/Logging/slack_details.json",
+                ),
                 curDirPath + "/Main.py",
             ]
     else:
         if isModuleInstalled("pyinstaller") and doFirst:
             cmd = [
-                "pyinstaller",
+                sys.executable,
+                "-m",
+                "PyInstaller",
                 "--noconfirm",
                 "--onefile",
                 "--windowed",
                 "--icon",
                 curDirPath + "/Images/icon.png",
-                "--ascii",
                 "--clean",
                 "--name",
                 app_name.replace(".app", ""),
                 "--osx-bundle-identifier",
                 "com.esper.esperapisupporttool",
+                *getHiddenImportsParams(*hidden_imports),
                 "--distpath",
                 dispath,
-                "--add-data",
-                getPyInstallerFilePathStr("/Images"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/token.json"),
-                "--add-data",
-                getPyInstallerFilePathStr("/Utility/Logging/slack_details.json"),
+                *getAddDataParameters(
+                    "/Images",
+                    "/Utility/Logging/token.json",
+                    "/Utility/Logging/slack_details.json",
+                ),
                 curDirPath + "/Main.py",
             ]
         elif isModuleInstalled("py2app"):
             cmd = [sys.executable, "setup.py", "py2app"]
     return cmd
+
 
 def getPyInstallerFilePathStr(path):
     delimiter = ";" if platform.system() == "Windows" else ":"
@@ -136,6 +183,22 @@ def getPyInstallerFilePathStr(path):
         return completePath + delimiter + path[1:]
     else:
         return completePath + "%s." % (delimiter)
+
+
+def getHiddenImportsParams(*imports):
+    res = []
+    for imp in imports:
+        res.append("--hidden-import")
+        res.append(imp)
+    return res
+
+
+def getAddDataParameters(*paths):
+    res = []
+    for path in paths:
+        res.append("--add-data")
+        res.append(getPyInstallerFilePathStr(path))
+    return res
 
 
 if __name__ == "__main__":
@@ -176,7 +239,10 @@ if __name__ == "__main__":
                 dispath + "/Main.app",
                 dispath + "/" + app_name,
             )
-        webbrowser.open(dispath)
+        if os.path.exists(dispath + "/" + app_name):
+            webbrowser.open(dispath)
+        else:
+            print(">>>\tFAILED to generate executeable")
     except Exception as e:
         print(
             "FAILED to remove old executeable or rename the newly generated executable"
