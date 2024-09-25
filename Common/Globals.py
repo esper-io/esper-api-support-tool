@@ -17,7 +17,7 @@ IS_DEBUG = False
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195251"
+VERSION = "v0.195252"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -245,6 +245,7 @@ CSV_TAG_ATTR_NAME = {
 }
 CSV_NETWORK_ATTR_NAME = {
     "Esper Name": "EsperName",
+    "Serial Number": ["serialNumber", "Serial", "serial"],
     "Group": "groups",
     "Security Patch": ["securityPatchLevel", "security_patch_level"],
     "[WIFI ACCESS POINTS]": "wifiAP",
@@ -270,6 +271,7 @@ CSV_NETWORK_ATTR_NAME = {
 }
 CSV_APP_ATTR_NAME = [
     "Esper Name",
+    "Serial Number",
     "Group",
     "Application Name",
     "Application Type",
