@@ -16,7 +16,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
         deviceInfo["AppsEntry"] = []
         info = {}
         for app in deviceInfo["appObj"]["results"]:
-            esperName = ""
+            serialNumber = esperName = ""
             if hasattr(device, "device_name"):
                 esperName = device.device_name
             elif "device_name" in device:
@@ -27,6 +27,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
             if "package_name" in app:
                 info = {
                     "Esper Name": esperName,
+                    "Serial Number": serialNumber,
                     "Group": (
                         deviceInfo["groups"] if "groups" in deviceInfo else ""
                     ),
