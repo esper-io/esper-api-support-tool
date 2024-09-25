@@ -52,6 +52,7 @@ OPTIONS = {
         "CFBundleVersion": Globals.VERSION,
         "CFBundleShortVersionString": Globals.VERSION,
         "NSHumanReadableCopyright": "No Copyright © 2022",
+        "NSRequiresAquaSystemAppearance": "No",
     },
 }
 
