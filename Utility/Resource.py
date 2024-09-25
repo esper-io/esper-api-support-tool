@@ -20,6 +20,7 @@ from fuzzywuzzy import fuzz
 from ratelimit import limits, sleep_and_retry
 
 import Common.Globals as Globals
+from Common import enum
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.EventUtility import CustomEvent
@@ -527,3 +528,20 @@ def displayFileDialog(
     if result == wx.ID_OK:  # Save button was pressed
         return inFile
     return None
+
+
+def setElmTheme(elm):
+    isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
+
+    if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
+        elm, "SetBackgroundColour"
+    ):
+        if isDarkMode:
+            elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
+            elm.SetForegroundColour(enum.Color.white.value)
+        else:
+            elm.SetBackgroundColour(enum.Color.lightGrey.value)
+            elm.SetForegroundColour(enum.Color.black.value)
+    if hasattr(elm, "GetChildren") and elm.GetChildren():
+        for child in elm.GetChildren():
+            setElmTheme(child)
