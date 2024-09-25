@@ -49,10 +49,10 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                     ),
                     "Application Name": app["app_name"],
                     "Application Type": app["app_type"],
-                    "Application Version Code": app.get(
+                    "Application Version Code": "",
+                    "Application Version Name": app.get(
                         "apple_app_version", ""
                     ),
-                    "Application Version Name": app.get("version_name", ""),
                     "Package Name": app["bundle_id"],
                     "State": app.get("state", ""),
                     "Whitelisted": app.get("whitelisted", ""),
