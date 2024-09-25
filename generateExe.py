@@ -267,3 +267,9 @@ if __name__ == "__main__":
             shutil.rmtree("build")
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
+
+    if os.path.exists("dist"):
+        try:
+            shutil.rmtree("dist")
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
