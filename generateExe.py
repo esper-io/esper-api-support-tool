@@ -155,7 +155,7 @@ def getExecutableCommand(doFirst=True):
                 "--onefile",
                 "--windowed",
                 "--icon",
-                curDirPath + "/Images/icon.png",
+                curDirPath + "/Images/icon.icns",
                 "--clean",
                 "--name",
                 app_name.replace(".app", ""),
