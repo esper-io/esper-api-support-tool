@@ -28,7 +28,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def resourcePath(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -40,7 +40,7 @@ def resourcePath(relative_path):
 
 @api_tool_decorator()
 def createNewFile(filePath, fileData=None):
-    """ Create a new File to write in """
+    """Create a new File to write in"""
     if not os.path.exists(filePath):
         parentPath = os.path.abspath(os.path.join(filePath, os.pardir))
         if not os.path.exists(parentPath):
@@ -56,7 +56,7 @@ def scale_bitmap(bitmap, width, height):
 
 
 def postEventToFrame(eventType, eventValue=None):
-    """ Post an Event to the Main Thread """
+    """Post an Event to the Main Thread"""
     if eventType:
         try:
             evt = CustomEvent(eventType, -1, eventValue)
@@ -105,8 +105,9 @@ def checkEsperInternetConnection():
 def checkForInternetAccess(frame):
     while not frame.kill:
         if frame.IsShownOnScreen() and frame.IsActive():
-            if not checkEsperInternetConnection() and not checkInternetConnection(
-                Globals.LATEST_UPDATE_LINK
+            if (
+                not checkEsperInternetConnection()
+                and not checkInternetConnection(Globals.LATEST_UPDATE_LINK)
             ):
                 displayMessageBox(
                     (
@@ -140,7 +141,9 @@ def checkForUpdate():
     return None
 
 
-def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1024):
+def downloadFileFromUrl(
+    url, fileName, filepath="", redirects=True, chunk_size=1024
+):
     if not filepath:
         filepath = str(os.path.join(Path.home(), "Downloads"))
     fullPath = os.path.join(filepath, fileName)
@@ -168,7 +171,8 @@ def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1
                 if chunk:
                     file.write(chunk)
                 postEventToFrame(
-                    EventUtility.myEVT_UPDATE_GAUGE, int(dl / total_length * 100)
+                    EventUtility.myEVT_UPDATE_GAUGE,
+                    int(dl / total_length * 100),
                 )
         return fullPath
     except Exception as e:
@@ -313,7 +317,8 @@ def splitListIntoChunks(
         n = len(mainList)
     if n > 0:
         splitResults = [
-            mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)
+            mainList[i * n : (i + 1) * n]
+            for i in range((len(mainList) + n - 1) // n)
         ]
     else:
         splitResults = mainList
@@ -338,7 +343,9 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
         else:
             prettyReponse = str(resp)
         print(prettyReponse)
-        ApiToolLog().LogResponse("\n%s\t" % datetime.now() + prettyReponse + "\n")
+        ApiToolLog().LogResponse(
+            "\n%s\t" % datetime.now() + prettyReponse + "\n"
+        )
         if displayMsgBox:
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
@@ -377,12 +384,15 @@ def updateErrorTracker():
 
 
 def getStrRatioSimilarity(s, t, usePartial=False):
-    if s and t:
-        if usePartial:
-            return fuzz.partial_ratio(s.lower(), t.lower())
-        return fuzz.ratio(s.lower(), t.lower())
-
+    try:
+        if s and t:
+            if usePartial:
+                return fuzz.partial_ratio(s.lower(), t.lower())
+            return fuzz.ratio(s.lower(), t.lower())  # TODO possible error here.
+    except Exception as e:
+        ApiToolLog().LogError(e)
     return False
+
 
 def isApiKey(key):
     if type(key) != str:
@@ -443,7 +453,7 @@ def getEsperConfig(host, apiKey, auth="Bearer"):
 
 
 def processFunc(event):
-    """ Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
+    """Primarily used to execute functions on the main thread (e.g. execute GUI actions on Mac)"""
     fun = event.GetValue()
     if callable(fun):
         fun()
@@ -460,7 +470,10 @@ def determineDoHereorMainThread(func, *args, **kwargs):
     if not callable(func):
         return
 
-    if platform.system() == "Windows" and "main" in threading.current_thread().name.lower():
+    if (
+        platform.system() == "Windows"
+        and "main" in threading.current_thread().name.lower()
+    ):
         # do here
         if args and kwargs:
             func(*args, **kwargs)

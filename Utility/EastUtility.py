@@ -16,23 +16,41 @@ import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
-                                      uploadApplication)
+from Utility.API.AppUtilities import (
+    getDeviceAppsApiUrl,
+    getInstallDevices,
+    uploadApplication,
+)
 from Utility.API.BlueprintUtility import getBlueprint
-from Utility.API.CommandUtility import (executeCommandOnDevice,
-                                        executeCommandOnGroup)
-from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
-                                       getDeviceDetail, getLatestEvent,
-                                       getLatestEventApiUrl, searchForDevice)
+from Utility.API.CommandUtility import (
+    executeCommandOnDevice,
+    executeCommandOnGroup,
+)
+from Utility.API.DeviceUtility import (
+    getAllDevices,
+    getDeviceById,
+    getDeviceDetail,
+    getLatestEvent,
+    getLatestEventApiUrl,
+    searchForDevice,
+)
 from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import (constructDeviceAppRowEntry,
-                                   createDataFrameFromDict)
+from Utility.GridUtilities import (
+    constructDeviceAppRowEntry,
+    createDataFrameFromDict,
+)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
-                              getHeader, ipv6Tomac, postEventToFrame,
-                              splitListIntoChunks, utc_to_local)
+from Utility.Resource import (
+    checkIfCurrentThreadStopped,
+    displayMessageBox,
+    getHeader,
+    ipv6Tomac,
+    postEventToFrame,
+    splitListIntoChunks,
+    utc_to_local,
+)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -689,8 +707,14 @@ def compileDeviceGroupData(deviceInfo):
 
     if "current_blueprint_version_id" in deviceInfo and current_bp_id:
         versiond_id = deviceInfo["current_blueprint_version_id"]
-        current_bp = Globals.knownBlueprints[current_bp_id]
-        latest_published_id = current_bp["latest_published_version_id"]
+        current_bp = (
+            Globals.knownBlueprints[current_bp_id]
+            if current_bp_id in Globals.knownBlueprints
+            else current_bp_id
+        )
+        latest_published_id = None
+        if type(current_bp) is dict:
+            latest_published_id = current_bp["latest_published_version_id"]
         if versiond_id == latest_published_id:
             deviceInfo["is_current_blueprint_version_latest"] = True
         else:
