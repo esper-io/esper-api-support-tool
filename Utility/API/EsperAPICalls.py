@@ -15,11 +15,9 @@ from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import postEsperCommand
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (
-    handleRequestError,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Web.WebRequests import (handleRequestError,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -199,7 +197,7 @@ def getIosDeviceApps(
     url = url + extention
     resp = performGetRequestWithRetry(url, headers=getHeader())
     json_resp = resp.json()
-    applist = createAppList(json_resp) if createAppListArg else []
+    applist = createAppList(json_resp["content"]) if createAppListArg else []
     return applist, json_resp
 
 
@@ -241,9 +239,6 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 and "uninstall" in app.install_state.lower()
             ):
                 continue
-            entry = None
-            if obtainAppDictEntry:
-                entry = getAppDictEntry(app, False)
             if "application" in app:
                 pkgName = app["application"]["package_name"]
                 if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
@@ -283,10 +278,7 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
 
                 appName = app["application"]["application_name"]
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
-            elif (
-                app.get("package_name") is not None
-                and app.get("platform", "").lower() != "apple"
-            ):
+            elif app.get("package_name") is not None and not isAppleApp(app):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
                     filterData
                     and app["package_name"] not in Globals.APP_COL_FILTER
@@ -312,10 +304,7 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                         app["app_name"], app["package_name"], version
                     )
                 )
-            elif (
-                app.get("package_name") is not None
-                and app.get("platform", "").lower() == "apple"
-            ):
+            elif app.get("package_name") is not None and isAppleApp(app):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
                     filterData
                     and app["package_name"] not in Globals.APP_COL_FILTER
@@ -328,10 +317,7 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                         app["version_name"],
                     )
                 )
-            elif (
-                app.get("bundle_id") is not None
-                and app.get("platform", "").lower() == "apple"
-            ):
+            elif app.get("bundle_id") is not None and isAppleApp(app):
                 if app["bundle_id"] in Globals.BLACKLIST_PACKAGE_NAME or (
                     filterData
                     and app["bundle_id"] not in Globals.APP_COL_FILTER
@@ -339,10 +325,20 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                     continue
                 applist.append(
                     constructAppPkgVerStr(
-                        app["app_name"], app["bundle_id"], app["version_name"]
+                        app["app_name"],
+                        app["bundle_id"],
+                        app["apple_app_version"],
                     )
                 )
     return applist
+
+
+def isAppleApp(app):
+    return (
+        app.get("platform", "").lower() == "apple"
+        or "device_families" in app
+        or app.get("app_type", "").lower() in Globals.APPLE_APP_TYPES
+    )
 
 
 def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):

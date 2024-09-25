@@ -329,8 +329,6 @@ GRID_COL_TYPES = {
     "Battery Health": "CATEGORY",
     "Battery Technology": "CATEGORY",
     "Active Connection": "CATEGORY",
-    "IMEI 1": "NUMBER",
-    "IMEI 2": "NUMBER",
     "Application Version Code": "NUMBER",
     "Available RAM (MB)": "NUMBER",
     "Total RAM (MB)": "NUMBER",
@@ -373,6 +371,8 @@ CMD_DEVICE_TYPES = ["All", "Active", "Inactive"]
 APP_FILTER_TYPES = ["ALL", "SHOW", "HIDE", "DISABLE"]
 
 EXCEPTION_MSGS = ["Not Able to Process CSV File! Missing HEADERS!"]
+
+APPLE_APP_TYPES = ["VPP", "ESPER_IOS"]
 
 """ WxPython Frame """
 frame = None

@@ -166,8 +166,14 @@ def getAdditionalDeviceInfo(
                                 None,
                             )
                         )
-                        app.update(enterpriseApp["content"])
-                        app.update(enterpriseAppVersion["content"])
+                        if (
+                            type(enterpriseApp) is dict
+                            and type(enterpriseAppVersion) is dict
+                            and "content" in enterpriseApp
+                            and "content" in enterpriseAppVersion
+                        ):
+                            app.update(enterpriseApp["content"])
+                            app.update(enterpriseAppVersion["content"])
                     else:
                         vppResp = perform_web_requests(
                             (
@@ -181,7 +187,7 @@ def getAdditionalDeviceInfo(
                                 None,
                             )
                         )
-                        if "content" in vppResp:
+                        if type(vppResp) is dict and "content" in vppResp:
                             vppResp = vppResp["content"]
                         if vppResp and "results" in vppResp:
                             vppApp = vppResp["results"][0]
