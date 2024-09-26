@@ -69,6 +69,7 @@ class PreferencesDialog(wx.Dialog):
             "showDisclaimer",
             "showAppFilter",
             "getTemplateLanguage",
+            "pullAppleDevices",
         ]
         self.appColFilter = Globals.APP_COL_FILTER
 
@@ -152,7 +153,7 @@ class PreferencesDialog(wx.Dialog):
         self.report = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.report.Hide()
         sizer_5.Add(self.report, 1, wx.EXPAND, 0)
-        sizer_10 = wx.FlexGridSizer(12, 1, 0, 0)
+        sizer_10 = wx.FlexGridSizer(13, 1, 0, 0)
 
         (
             _,
@@ -164,6 +165,18 @@ class PreferencesDialog(wx.Dialog):
             "Enable Device Selection",
             wx.CheckBox,
             "Allow user to specify actions on a selections of devices within a group.",
+        )
+
+        (
+            _,
+            _,
+            self.checkbox_32,
+        ) = self.addPrefToPanel(
+            self.report,
+            sizer_10,
+            "Pull Apple Devices",
+            wx.CheckBox,
+            "Pull Apple Devices in addition to Android Devices, if available.",
         )
 
         (
@@ -821,6 +834,7 @@ class PreferencesDialog(wx.Dialog):
     def OnApply(self, event):
         self.prefs = {
             "enableDevice": self.checkbox_1.IsChecked(),
+            "pullAppleDevices": self.checkbox_32.IsChecked(),
             "limit": self.spin_ctrl_1.GetValue(),
             "gridDialog": self.checkbox_8.IsChecked(),
             "templateDialog": self.checkbox_7.IsChecked(),
@@ -871,6 +885,7 @@ class PreferencesDialog(wx.Dialog):
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
+        Globals.PULL_APPLE_DEVICES = self.prefs["pullAppleDevices"]
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
         Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
         Globals.SET_APP_STATE_AS_SHOW = self.prefs["setStateShow"]
@@ -940,6 +955,10 @@ class PreferencesDialog(wx.Dialog):
 
         if "enableDevice" in self.prefs:
             self.checkbox_1.SetValue(self.prefs["enableDevice"])
+
+        if "pullAppleDevices" in self.prefs:
+            self.checkbox_32.SetValue(self.prefs["pullAppleDevices"])
+            Globals.PULL_APPLE_DEVICES = self.prefs["pullAppleDevices"]
 
         if "limit" in self.prefs and self.prefs["limit"]:
             Globals.limit = self.prefs["limit"]
@@ -1351,6 +1370,8 @@ class PreferencesDialog(wx.Dialog):
     def getDefaultKeyValue(self, key):
         if key == "enableDevice":
             return True
+        if key == "pullAppleDevices":
+            return Globals.PULL_APPLE_DEVICES
         elif key == "limit":
             return Globals.MAX_LIMIT
         elif key == "gridDialog":

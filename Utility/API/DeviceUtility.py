@@ -106,7 +106,7 @@ def get_all_devices_helper(
     ]
     iosEnabled = config["isIosEnabled"]
 
-    if iosEnabled:
+    if iosEnabled and Globals.PULL_APPLE_DEVICES:
         return get_all_ios_devices_helper(
             groupToUse, limit, offset, maxAttempt, responses
         )
