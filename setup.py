@@ -42,7 +42,7 @@ DATA_FILES = [
 OPTIONS = {
     "argv_emulation": True,
     "extension": ".app",
-    "iconfile": curDirPath + "/Images/icon.png",
+    "iconfile": curDirPath + "/Images/icon.icns",
     "includes": ["os", "platform"],
     "plist": {
         "CFBundleName": app_name,
