@@ -53,6 +53,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
             elif "bundle_id" in app:
                 info = {
                     "Esper Name": esperName,
+                    "Serial Number": serialNumber,
                     "Group": (
                         deviceInfo["groups"] if "groups" in deviceInfo else ""
                     ),
