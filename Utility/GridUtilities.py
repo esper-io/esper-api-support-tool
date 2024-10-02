@@ -24,11 +24,11 @@ def constructDeviceAppRowEntry(device, deviceInfo):
             elif "name" in device:
                 esperName = device["name"]
 
-            if "serialNumber" in deviceInfo:
+            if "serialNumber" in deviceInfo and deviceInfo["serialNumber"]:
                 serialNumber = deviceInfo["serialNumber"]
-            elif "Serial" in deviceInfo:
+            elif "Serial" in deviceInfo and deviceInfo["Serial"]:
                 serialNumber = deviceInfo["Serial"]
-            elif "serial" in deviceInfo:
+            elif "serial" in deviceInfo and deviceInfo["serial"]:
                 serialNumber = deviceInfo["serial"]
 
             appInFilter = True
