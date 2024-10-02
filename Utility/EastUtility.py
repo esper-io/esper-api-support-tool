@@ -123,9 +123,10 @@ def getAdditionalDeviceInfo(
         ]
         iosEnabled = config["isIosEnabled"]
         if (
-            device.get("os") is not None
-            and device.get("os").lower() == "android"
+            device.get("os", "") is not None
+            and device.get("os", "").lower() == "android"
             or not iosEnabled
+            or not Globals.PULL_APPLE_DEVICES
         ):
             appResp = perform_web_requests(
                 (
