@@ -195,6 +195,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 "Alias Status": "No alias to set",
             }
 
+        state = "Queued"
         if newName != str(aliasName):
             # Change alias if it differs than what is already set (as retrieved by API)
             status = ""
@@ -221,6 +222,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                             added = True
                         if "Success" in state:
                             tracker["success"] += total
+                            state = "Success"
                         elif (
                             "Queued" in state
                             or "Scheduled" in state
@@ -229,29 +231,36 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                             or "Acknowledged" in state
                         ):
                             tracker["progress"] += total
+                            state = "In-Progress"
                         else:
                             tracker["fail"] += total
+                            state = "Failed"
                 if not added:
                     tracker["progress"] += 1
             elif "Success" in str(status):
                 logString = logString + " <success>"
                 tracker["success"] += 1
+                state = "Success"
             elif "Queued" in str(status):
                 logString = logString + " <Queued> Make sure device is online."
                 tracker["progress"] += 1
+                state = "In-Progress"
             elif "Scheduled" in str(status):
                 logString = (
                     logString + " <Scheduled> Make sure device is online."
                 )
                 tracker["progress"] += 1
+                state = "In-Progress"
             elif "in-progress" in str(status):
                 logString = (
                     logString + " <In-Progress> Make sure device is online."
                 )
                 tracker["progress"] += 1
+                state = "In-Progress"
             else:
                 logString = logString + " <failed>"
                 tracker["fail"] += 1
+                state = "Failed"
         else:
             tracker["skip"] += 1
             logString = logString + " (Alias Name already set)"
@@ -282,11 +291,11 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     }
     if status:
         statusResp["Alias Status"] = {
-            "Command Id": resp.get("id", "Unknown ID"),
+            "Command Id": resp.get("content", {}).get("id", "Unknown ID"),
             "Device Name": deviceName,
             "Device Id": deviceId,
-            "State": resp.get("state", ""),
-            "reason": resp.get("reason", ""),
+            "State": resp.get("content", {}).get("state", state),
+            "reason": resp.get("content", {}).get("reason", ""),
         }
     else:
         statusResp["Alias Status"] = "No alias to set"
