@@ -195,7 +195,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 "Alias Status": "No alias to set",
             }
 
-        state = "Queued"
+        stateStr = "Queued"
         if newName != str(aliasName):
             # Change alias if it differs than what is already set (as retrieved by API)
             status = ""
@@ -223,7 +223,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                         if "Success" in state:
                             tracker["success"] += total
                             if total > 0:
-                                state = "Success"
+                                stateStr = "Success"
                         elif (
                             "Queued" in state
                             or "Scheduled" in state
@@ -233,40 +233,41 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                         ):
                             tracker["progress"] += total
                             if total > 0:
-                                state = "In-Progress"
+                                stateStr = "In-Progress"
                         else:
                             tracker["fail"] += total
                             if total > 0:
-                                state = "Failed"
+                                stateStr = "Failed"
                 if not added:
                     tracker["progress"] += 1
             elif "Success" in str(status):
                 logString = logString + " <success>"
                 tracker["success"] += 1
-                state = "Success"
+                stateStr = "Success"
             elif "Queued" in str(status):
                 logString = logString + " <Queued> Make sure device is online."
                 tracker["progress"] += 1
-                state = "In-Progress"
+                stateStr = "In-Progress"
             elif "Scheduled" in str(status):
                 logString = (
                     logString + " <Scheduled> Make sure device is online."
                 )
                 tracker["progress"] += 1
-                state = "In-Progress"
+                stateStr = "In-Progress"
             elif "in-progress" in str(status):
                 logString = (
                     logString + " <In-Progress> Make sure device is online."
                 )
                 tracker["progress"] += 1
-                state = "In-Progress"
+                stateStr = "In-Progress"
             else:
                 logString = logString + " <failed>"
                 tracker["fail"] += 1
-                state = "Failed"
+                stateStr = "Failed"
         else:
             tracker["skip"] += 1
             logString = logString + " (Alias Name already set)"
+            stateStr = "Skipped"
             status = {
                 "Device Name": deviceName,
                 "Device Id": deviceId,
@@ -297,7 +298,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             "Command Id": resp.get("content", {}).get("id", "Unknown ID"),
             "Device Name": deviceName,
             "Device Id": deviceId,
-            "State": resp.get("content", {}).get("state", state),
+            "State": resp.get("content", {}).get("state", stateStr),
             "reason": resp.get("content", {}).get("reason", ""),
         }
     else:
