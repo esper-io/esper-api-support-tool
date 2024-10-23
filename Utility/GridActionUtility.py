@@ -200,13 +200,40 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             status = ""
             try:
                 ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-                status = apiCalls.setdevicename(deviceId, newName, ignoreQueued)
+                resp, status = apiCalls.setdevicename(
+                    deviceId, newName, ignoreQueued
+                )
                 tracker["sent"] += 1
             except Exception as e:
                 ApiToolLog().LogError(e)
+
             if hasattr(status, "to_dict"):
                 status = status.to_dict()
-            if "Success" in str(status):
+
+            if type(status) is list:
+                logString = logString + str(status)
+                added = False
+                for entry in status:
+                    if type(entry) is dict and entry.get("state", ""):
+                        state = entry["state"]
+                        total = entry.get("total", 0)
+                        if total > 0:
+                            added = True
+                        if "Success" in state:
+                            tracker["success"] += total
+                        elif (
+                            "Queued" in state
+                            or "Scheduled" in state
+                            or "Progress" in state
+                            or "Initiated" in state
+                            or "Acknowledged" in state
+                        ):
+                            tracker["progress"] += total
+                        else:
+                            tracker["fail"] += total
+                if not added:
+                    tracker["progress"] += 1
+            elif "Success" in str(status):
                 logString = logString + " <success>"
                 tracker["success"] += 1
             elif "Queued" in str(status):
@@ -229,10 +256,9 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             tracker["skip"] += 1
             logString = logString + " (Alias Name already set)"
             status = {
-                "device": deviceName,
-                "id": deviceId,
-                "reason": "Alias Name already set",
-                "request": None,
+                "Device Name": deviceName,
+                "Device Id": deviceId,
+                "Reason": "Alias Name already set",
                 "state": None,
             }
         if "Success" in logString or "Queued" in logString:
@@ -256,11 +282,11 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     }
     if status:
         statusResp["Alias Status"] = {
-            "id": status["id"],
-            "request": status["request"],
-            "device": status["device"],
-            "state": status["state"],
-            "reason": status["reason"],
+            "Command Id": resp.get("id", "Unknown ID"),
+            "Device Name": deviceName,
+            "Device Id": deviceId,
+            "State": resp.get("state", ""),
+            "reason": resp.get("reason", ""),
         }
     else:
         statusResp["Alias Status"] = "No alias to set"

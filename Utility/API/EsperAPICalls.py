@@ -12,12 +12,14 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
-from Utility.API.CommandUtility import postEsperCommand
+from Utility.API.CommandUtility import postEsperCommand, waitForCommandToFinish
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (handleRequestError,
-                                     performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
+from Utility.Web.WebRequests import (
+    handleRequestError,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -112,8 +114,10 @@ def setdevicename(
             window_start_time=endTime,
         ),
     )
-    status = postEsperCommand(command.to_dict())
-    return status
+    resp, status = postEsperCommand(command.to_dict(), maxAttempt=maxAttempt)
+    return resp.json(), waitForCommandToFinish(
+        status["id"], ignoreQueue=ignoreQueue
+    )
 
 
 @api_tool_decorator()
