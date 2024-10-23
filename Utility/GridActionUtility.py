@@ -222,7 +222,8 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                             added = True
                         if "Success" in state:
                             tracker["success"] += total
-                            state = "Success"
+                            if total > 0:
+                                state = "Success"
                         elif (
                             "Queued" in state
                             or "Scheduled" in state
@@ -231,10 +232,12 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                             or "Acknowledged" in state
                         ):
                             tracker["progress"] += total
-                            state = "In-Progress"
+                            if total > 0:
+                                state = "In-Progress"
                         else:
                             tracker["fail"] += total
-                            state = "Failed"
+                            if total > 0:
+                                state = "Failed"
                 if not added:
                     tracker["progress"] += 1
             elif "Success" in str(status):
