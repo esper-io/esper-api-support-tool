@@ -112,7 +112,7 @@ def getBlueprint(id):
         id=id,
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
+    return resp.json()
 
 
 def getBlueprintVersions(bpId):

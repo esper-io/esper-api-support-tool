@@ -721,7 +721,9 @@ def compileDeviceGroupData(deviceInfo):
         )
         latest_published_id = None
         if type(current_bp) is dict:
-            latest_published_id = current_bp["latest_published_version_id"]
+            latest_published_id = current_bp.get(
+                "latest_published_version_id", ""
+            )
         if versiond_id == latest_published_id:
             deviceInfo["is_current_blueprint_version_latest"] = True
         else:
@@ -793,7 +795,11 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
     if ipKey:
         deviceInfo["ipv4Address"] = []
         deviceInfo["ipv6Address"] = []
-        if ipKey in deviceInfo and deviceInfo[ipKey]:
+        if (
+            ipKey in deviceInfo
+            and deviceInfo[ipKey]
+            and type(deviceInfo[ipKey]) in [list, dict]
+        ):
             for ip in deviceInfo[ipKey]:
                 if ":" not in ip:
                     deviceInfo["ipv4Address"].append(ip)
@@ -1018,9 +1024,20 @@ def parseDeviceState(state):
 
 def parseLastSeen(date):
     returnVal = ""
-    datePattern = "%Y-%m-%dT%H:%M:%S.%fZ" if "." in date else "%Y-%m-%dT%H:%MZ"
+    datePattern = ""
+    if "." in date:
+        if "+" in date:
+            datePattern = "%Y-%m-%dT%H:%M:%S.%f"
+            date = date.split("+")[0]
+        else:
+            datePattern = "%Y-%m-%dT%H:%M:%S.%fZ"
+    else:
+        datePattern = "%Y-%m-%dT%H:%MZ"
     if Globals.LAST_SEEN_AS_DATE:
-        returnVal = str(datetime.strptime(date, datePattern))
+        try:
+            returnVal = str(datetime.strptime(date, datePattern))
+        except Exception as e:
+            returnVal = "Unknown Format"
     else:
         dt = datetime.strptime(date, datePattern)
         utc_date_time = dt.astimezone(pytz.utc)
