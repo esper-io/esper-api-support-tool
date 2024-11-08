@@ -858,14 +858,14 @@ class NewFrameLayout(wx.Frame):
             dfs = read_csv_via_pandas(csv_auth_path)
         elif csv_auth_path.endswith(".xlsx"):
             try:
-                dfs = read_excel_via_openpyxl(csv_auth_path)
+                dfs = read_excel_via_openpyxl(csv_auth_path, readAnySheet=True)
             except Exception as e:
-                print(e)
+                ApiToolLog().LogError(e)
                 pass
-        if not hasattr(dfs, "dropna"):
-            dfs = pd.concat(dfs, ignore_index=True)
         if dfs is not None:
-            dfs = dfs.dropna(axis=0, how="all", subset=None)
+            dfs = pd.concat([dfs], ignore_index=True)
+            if not hasattr(dfs, "dropna"):
+                dfs = dfs.dropna(axis=0, how="all", subset=None)
             self.processSpreadsheetUpload(dfs)
         self.gridPanel.notebook_2.SetSelection(0)
 
