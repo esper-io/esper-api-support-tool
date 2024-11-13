@@ -120,6 +120,7 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
     workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
     df = None
     rows = []
+    headers = None
     for sheet in workbook.sheetnames:
         if (
             "Device & Network" in sheet
@@ -131,7 +132,11 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
             worksheet = workbook[sheet]
             # Extract the data
             for row in worksheet.iter_rows(values_only=True):
-                rows.append(row)
+                if not headers:
+                    headers = row
+                # Try to avoid shape mismatch
+                if len(row) == len(headers):
+                    rows.append(row)
     df = pd.DataFrame(rows[1:], columns=rows[0])
     return df
 
