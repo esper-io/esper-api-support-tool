@@ -249,6 +249,7 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         self.Centre()
         self.tryToMakeActive()
+        self.onThemeChange()
 
         if self.kill:
             return
@@ -3494,5 +3495,5 @@ class NewFrameLayout(wx.Frame):
             )
             self.savePrefs(self.prefDialog)
 
-    def onThemeChange(self, event):
+    def onThemeChange(self, event=None):
         setElmTheme(self)
