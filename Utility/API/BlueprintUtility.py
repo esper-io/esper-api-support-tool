@@ -10,20 +10,32 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
-from Utility.API.AppUtilities import (getAllApplicationsForHost,
-                                      getAllAppVersionsForHost,
-                                      uploadApplicationForHost)
+from Utility.API.AppUtilities import (
+    getAllApplicationsForHost,
+    getAllAppVersionsForHost,
+    uploadApplicationForHost,
+)
 from Utility.API.CommandUtility import postEsperCommand
-from Utility.API.ContentUtility import (getAllContentFromHost,
-                                        uploadContentToHost)
+from Utility.API.ContentUtility import (
+    getAllContentFromHost,
+    uploadContentToHost,
+)
 from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (deleteFile, displayMessageBox, download,
-                              getEsperConfig, getHeader, postEventToFrame)
-from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
-                                     performGetRequestWithRetry,
-                                     performPostRequestWithRetry)
+from Utility.Resource import (
+    deleteFile,
+    displayMessageBox,
+    download,
+    getEsperConfig,
+    getHeader,
+    postEventToFrame,
+)
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    performGetRequestWithRetry,
+    performPostRequestWithRetry,
+)
 
 
 def checkFeatureFlags(data):
@@ -43,7 +55,8 @@ def checkFeatureFlags(data):
 def checkIosEnabled(data, jsonResp):
     enabled = False
     if (
-        "esper.cloud.ios.enable" in jsonResp
+        jsonResp
+        and "esper.cloud.ios.enable" in jsonResp
         and jsonResp["esper.cloud.ios.enable"] is True
     ):
         enabled = True
