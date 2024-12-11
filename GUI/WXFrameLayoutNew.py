@@ -1391,8 +1391,9 @@ class NewFrameLayout(wx.Frame):
 
     def fetchAllKnownBlueprints(self):
         resp = getAllBlueprints(tolerance=1, useThreadPool=False)
-        for item in resp.get("content").get("results", []):
-            Globals.knownBlueprints[item["id"]] = item
+        if resp:
+            for item in resp.get("content").get("results", []):
+                Globals.knownBlueprints[item["id"]] = item
 
     @api_tool_decorator()
     def addGroupsToGroupChoice(self, event):
