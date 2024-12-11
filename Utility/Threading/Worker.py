@@ -2,8 +2,26 @@
 
 import asyncio
 import ctypes
+import signal
 from threading import Thread
+
 import Common.Globals as Globals
+
+
+class timeout:
+    def __init__(self, seconds=1, error_message="Timeout"):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
 
 
 # class for workers
@@ -38,12 +56,16 @@ class Worker(Thread):
 
             try:
                 # the function may raise
-                result = func(*args, **kwargs)
+                result = None
+                with timeout(seconds=60):
+                    result = func(*args, **kwargs)
                 if result is not None:
                     self.results.put(result)
             except Exception as e:
                 # so we move on and handle it in whatever way the caller wanted
-                if Globals.API_LOGGER and hasattr(Globals.API_LOGGER, "LogError"):
+                if Globals.API_LOGGER and hasattr(
+                    Globals.API_LOGGER, "LogError"
+                ):
                     Globals.API_LOGGER.LogError(e)
             finally:
                 # task complete no matter what happened
