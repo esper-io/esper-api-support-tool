@@ -79,11 +79,13 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame and postStatus:
-            # if Globals.frame.audit:
-            #     Globals.frame.audit.postOperation({
-            #     "operation": "ERROR: %s" % str(e),
-            #     "data": content
-            # })
+            if Globals.frame.audit:
+                Globals.frame.audit.postOperation(
+                    {
+                        "operation": "ERROR",
+                        "data": content,
+                    }
+                )
             Globals.frame.Logging(str(e), True)
 
     def Log(self, msg):
@@ -289,19 +291,22 @@ class ApiToolLog:
         elif excpt is not None:
             title = str(excpt)
 
-        issues = tracker.listOpenIssues()
-        if issues:
-            match = False
-            for issue in issues:
-                ratio = getStrRatioSimilarity(issue["title"], title, True)
-                if ratio >= 90:
-                    match = True
-                    tracker.postIssueComment(issue["number"], content)
-                    break
-            if not match:
+        try:
+            issues = tracker.listOpenIssues()
+            if issues:
+                match = False
+                for issue in issues:
+                    ratio = getStrRatioSimilarity(issue["title"], title, True)
+                    if ratio >= 90:
+                        match = True
+                        tracker.postIssueComment(issue["number"], content)
+                        break
+                if not match:
+                    tracker.createIssue(title, body)
+            else:
                 tracker.createIssue(title, body)
-        else:
-            tracker.createIssue(title, body)
+        except Exception as e:
+            print("Failed to post issue to tracker: %s" % e)
 
         if self.tracker_lock.locked():
             self.tracker_lock.release()
