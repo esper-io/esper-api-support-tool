@@ -86,7 +86,9 @@ class SidePanel(wx.Panel):
                 "Normal",
             )
         )
-        sizer_2.Add(self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3)
+        sizer_2.Add(
+            self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3
+        )
 
         static_line_4 = wx.StaticLine(self, wx.ID_ANY)
         sizer_1.Add(
@@ -199,7 +201,10 @@ class SidePanel(wx.Panel):
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)
 
         self.actionChoice = wx.ComboBox(
-            self.panel_10, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY
+            self.panel_10,
+            wx.ID_ANY,
+            choices=[],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY,
         )
         sizer_5.Add(self.actionChoice, 0, wx.EXPAND | wx.TOP, 5)
 
@@ -269,7 +274,8 @@ class SidePanel(wx.Panel):
     def RemoveEndpoint(self, event):
         value = None
         if (
-            event.GetEventType() == wx.EVT_BUTTON.typeId and event.Id == wx.ID_DELETE
+            event.GetEventType() == wx.EVT_BUTTON.typeId
+            and event.Id == wx.ID_DELETE
         ) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")
@@ -277,7 +283,9 @@ class SidePanel(wx.Panel):
             if len(value) > 0:
                 value = value[0].replace("API Host = ", "").strip()
             result = list(
-                filter(lambda x: value == x["apiHost"], self.parentFrame.auth_data)
+                filter(
+                    lambda x: value == x["apiHost"], self.parentFrame.auth_data
+                )
             )
             if result:
                 result = result[0]
@@ -291,7 +299,9 @@ class SidePanel(wx.Panel):
                 if res == wx.YES:
                     if result in self.parentFrame.auth_data:
                         self.parentFrame.auth_data.remove(result)
-                    data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
+                    data = [
+                        ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
+                    ]
                     for entry in self.parentFrame.auth_data:
                         authEntry = []
                         num = 0
@@ -303,8 +313,13 @@ class SidePanel(wx.Panel):
                         if authEntry not in data:
                             data.append(authEntry)
                     write_data_to_csv(self.parentFrame.authPath, data)
-                    for child in self.parentFrame.menubar.configMenu.GetMenuItems():
-                        if value in self.configChoice[child.GetItemLabel()].values():
+                    for (
+                        child
+                    ) in self.parentFrame.menubar.configMenu.GetMenuItems():
+                        if (
+                            value
+                            in self.configChoice[child.GetItemLabel()].values()
+                        ):
                             self.parentFrame.menubar.configMenu.Delete(child)
                     self.parentFrame.PopulateConfig()
                     wx.MessageBox(
@@ -338,7 +353,10 @@ class SidePanel(wx.Panel):
             newChoices = []
             for choice in choices:
                 match = self.groupDeviceCount.get(choice)
-                if match is not None and choice != Globals.ALL_DEVICES_IN_TENANT:
+                if (
+                    match is not None
+                    and choice != Globals.ALL_DEVICES_IN_TENANT
+                ):
                     newChoices.append("%s (Device Count: %s)" % (choice, match))
                 elif choice == Globals.ALL_DEVICES_IN_TENANT:
                     newChoices.append(Globals.ALL_DEVICES_IN_TENANT)
@@ -362,7 +380,11 @@ class SidePanel(wx.Panel):
                 if selections:
                     for groupName in selections:
                         groupNameProper = groupName.split(" (Device Count:")[0]
-                        groupId = self.groups[groupNameProper] if groupNameProper in self.groups else groupNameProper
+                        groupId = (
+                            self.groups[groupNameProper]
+                            if groupNameProper in self.groups
+                            else groupNameProper
+                        )
                         self.selectedGroups.Append(groupName)
                         if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
@@ -373,8 +395,7 @@ class SidePanel(wx.Panel):
                         if groupId not in self.selectedGroupsList:
                             self.selectedGroupsList.append(groupId)
             Globals.OPEN_DIALOGS.remove(self.groupMultiDialog)
-            if not Globals.frame.WINDOWS:
-                self.groupMultiDialog.DestroyLater()
+            self.destroyMultiChoiceDialogs()
             if (
                 self.selectedGroupsList
                 and not self.parentFrame.preferences
@@ -419,8 +440,7 @@ class SidePanel(wx.Panel):
                         if deviceId not in self.selectedDevicesList:
                             self.selectedDevicesList.append(deviceId)
             Globals.OPEN_DIALOGS.remove(self.deviceMultiDialog)
-            if not Globals.frame.WINDOWS:
-                self.deviceMultiDialog.DestroyLater()
+            self.destroyMultiChoiceDialogs()
             Globals.frame.Refresh()
 
     @api_tool_decorator()
