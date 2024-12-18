@@ -283,6 +283,12 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     @api_tool_decorator()
     def onSelectEvent(self):
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.onSelectEvent)
+            return
         if self.checkbox_1.IsChecked():
             if (
                 self.allDeviceStr
@@ -353,6 +359,12 @@ class MultiSelectSearchDlg(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.processNext)
 
     def processNext(self):
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.processNext)
+            return
         self.button_1.Enable(False)
         self.button_2.Enable(False)
         self.button_OK.Enable(False)
@@ -374,6 +386,12 @@ class MultiSelectSearchDlg(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.processPrev)
 
     def processPrev(self):
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.processPrev)
+            return
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
         self.search.Enable(False)
@@ -390,6 +408,12 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.setCursorDefault()
 
     def checkPageButton(self):
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.checkPageButton)
+            return
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
         elif hasattr(self.resp, "next") and self.resp.next:
@@ -452,11 +476,25 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def setCursorBusy(self):
         """Set cursor icon to busy state"""
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.setCursorBusy)
+            return
+
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
 
     def setCursorDefault(self):
         """Set cursor icon to busy state"""
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.setCursorDefault)
+            return
+
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
         self.SetCursor(myCursor)
 
