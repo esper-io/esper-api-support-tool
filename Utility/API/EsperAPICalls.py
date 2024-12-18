@@ -174,7 +174,6 @@ def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
                     api_instance.get_enterprise,
                     Globals.PRINT_API_LOGS,
                 )
-                ApiToolLog().Log(str(api_response))
                 break
             except Exception as e:
                 handleRequestError(attempt, e, maxAttempt, raiseError=True)
