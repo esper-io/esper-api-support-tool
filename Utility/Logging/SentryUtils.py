@@ -3,18 +3,27 @@ import sys
 
 import sentry_sdk
 
+import Common.Globals as Globals
 from Utility.FileUtility import read_json_file
 
 
-class SentryUtils():
+class SentryUtils:
 
     def __init__(self):
         self.dsn = ""
 
+        if Globals.THREAD_POOL:
+            Globals.THREAD_POOL.enqueue(self.initSDK)
+        else:
+            self.initSDK()
+
+    def initSDK(self):
         self.readTokenInfo()
 
         if self.dsn:
-            sentry_sdk.init(self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1)
+            sentry_sdk.init(
+                self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1
+            )
 
     def readTokenInfo(self):
         filePath = "token.json"

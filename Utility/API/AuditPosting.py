@@ -19,6 +19,15 @@ class AuditPosting:
         self.pw = ""
         self.to_addr = []
 
+        if Globals.THREAD_POOL:
+            Globals.THREAD_POOL.enqueue(self.initAudit)
+        else:
+            self.getEmailInfo()
+
+            self.util = email.EmailUtils(self.login, self.pw, self.to_addr)
+            self.slack_utils = SlackUtils()
+
+    def initAudit(self):
         self.getEmailInfo()
 
         self.util = email.EmailUtils(self.login, self.pw, self.to_addr)
@@ -61,15 +70,17 @@ class AuditPosting:
                 self.slack_utils.post_block_message(
                     "East Usage",
                     self.slack_utils.get_operation_blocks(
-                        values["operation"], 
-                        values["data"], 
-                        values["resp"] if "resp" in values else ""
-                    )
+                        values["operation"],
+                        values["data"],
+                        values["resp"] if "resp" in values else "",
+                    ),
                 )
             except Exception as e:
                 ApiToolLog().LogError(e)
                 if "resp" in values:
-                    self.emailOperation(values["operation"], values["data"], values["resp"])
+                    self.emailOperation(
+                        values["operation"], values["data"], values["resp"]
+                    )
                 else:
                     self.emailOperation(values["operation"], values["data"])
 
@@ -97,13 +108,17 @@ class AuditPosting:
 
         if self.util.isReadyToSend():
             userStr = "User (id: %s) [OS: %s]: %s\n\n" % (
-                Globals.TOKEN_USER["id"]
-                if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                else "Unknown",
+                (
+                    Globals.TOKEN_USER["id"]
+                    if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
+                    else "Unknown"
+                ),
                 platform.system(),
-                Globals.TOKEN_USER["username"]
-                if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
-                else "Unknown",
+                (
+                    Globals.TOKEN_USER["username"]
+                    if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
+                    else "Unknown"
+                ),
             )
             contentStr = "\nResponse Content: " + content if content else ""
             if hasattr(data, "to_dict"):

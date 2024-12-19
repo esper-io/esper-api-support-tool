@@ -244,7 +244,7 @@ class NewFrameLayout(wx.Frame):
 
         Globals.frame = self
 
-        self.loadPref()
+        Globals.THREAD_POOL.enqueue(self.onLaunch)
         self.__set_properties()
         self.Layout()
         self.Centre()
@@ -266,6 +266,12 @@ class NewFrameLayout(wx.Frame):
 
         self.Logging("Welcome to Esper API Tool! Version: %s" % Globals.VERSION)
 
+    def onLaunch(self):
+        self.loadPref()
+
+        determineDoHereorMainThread(self.showDisclaimer)
+
+    def showDisclaimer(self):
         # Display disclaimer unless they have opt'd out.
         if Globals.SHOW_DISCLAIMER:
             self.preferences["showDisclaimer"] = self.menubar.onDisclaimer(
@@ -2348,7 +2354,7 @@ class NewFrameLayout(wx.Frame):
         else:
             createNewFile(self.prefPath)
             self.savePrefs(self.prefDialog)
-        self.PopulateConfig()
+        determineDoHereorMainThread(self.PopulateConfig)
 
     @api_tool_decorator()
     def savePrefs(self, dialog):
