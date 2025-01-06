@@ -5,6 +5,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 import Common.Globals as Globals
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
@@ -222,6 +223,7 @@ def convertColumnTypes(data, headers):
                                 data[col] = data[col].astype(np.float64)
                     except Exception as e:
                         print(e)
+                        ApiToolLog().LogError(e)
                 elif gridColType == "category":
                     data[col] = data[col].astype("category")
                 else:

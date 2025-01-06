@@ -142,9 +142,28 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
 
 
 def read_csv_via_pandas(path: str) -> pd.DataFrame:
-    return pd.read_csv(
-        path, sep=",", header=0, keep_default_na=False, chunksize=1000
-    )
+    data = None
+    try:
+        data = pd.read_csv(
+            path, sep=",", header=0, keep_default_na=False, chunksize=1000
+        )
+    except:
+        try:
+            # Try to decode ANSI encoded CSV files
+            data = pd.read_csv(
+                path,
+                sep=",",
+                header=0,
+                keep_default_na=False,
+                chunksize=1000,
+                encoding="mbcs",
+            )
+        except Exception as e:
+            ApiToolLogging.logger.error(
+                "Error while reading csv file: %s" % str(e)
+            )
+            raise e
+    return pd.concat(data, ignore_index=True)
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):

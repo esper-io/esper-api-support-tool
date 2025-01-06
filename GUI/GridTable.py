@@ -128,8 +128,8 @@ class GridTable(gridlib.Grid):
                     )
                     for missingColumn in missingColumns:
                         data[missingColumn] = ""
-                    data = data[list(self.headersLabels)]
                     data = data.rename(columns=renameColumns)
+                    data = data[list(self.headersLabels)]
 
             convertColumnTypes(data, self.headersLabels)
             for col in self.headersLabels:
