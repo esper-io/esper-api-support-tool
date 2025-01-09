@@ -79,7 +79,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
     applyTo = ""
     commaSeperated = ", "
     if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
-        selections = Globals.frame.sidePanel.deviceMultiDialog.GetSelections()
+        selections = Globals.frame.sidePanel.selectedDevicesList
         label = ""
         for device in selections:
             label += device + commaSeperated
@@ -87,7 +87,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
             label = label[0 : len(label) - len(commaSeperated)]
         applyTo = "device"
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        selections = Globals.frame.sidePanel.groupMultiDialog.GetSelections()
+        selections = Globals.frame.sidePanel.selectedGroupsList
         label = ""
         for group in selections:
             label += group + commaSeperated
