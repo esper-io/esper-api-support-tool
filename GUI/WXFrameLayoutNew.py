@@ -400,6 +400,13 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def AddEndpoint(self, event):
         """Try to open and load an Auth CSV"""
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.addEndpoint, event)
+            return
+
         isValid = False
         errorMsg = None
         name = host = entId = key = None
