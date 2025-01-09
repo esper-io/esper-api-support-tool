@@ -130,6 +130,11 @@ def executeCommandOnGroup(
         groupList = [groupIds]
     elif groupIds and hasattr(groupIds, "__iter__"):
         groupList = groupIds
+
+    if len(groupList) == 1 and "" in groupList:
+        groupList = list(Globals.knownGroups.keys())
+        groupList.remove("* All Devices In Tenant *")
+
     if not combineRequests:
         for groupToUse in groupList:
             last_status = sendCommandToGroup(
@@ -184,9 +189,6 @@ def executeCommandOnGroup(
                 entry["Status"] = last_status
                 statusList.append(entry)
     else:
-        if len(groupList) == 1 and "" in groupList:
-            groupList = list(Globals.knownGroups.keys())
-            groupList.remove("* All Devices In Tenant *")
         splitGroupList = splitListIntoChunks(groupList, maxChunkSize=500)
         for gList in splitGroupList:
             executeCommandHelper(
