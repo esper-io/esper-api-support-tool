@@ -311,6 +311,8 @@ def splitListIntoChunks(
 ):
     if maxThread <= 0:
         return mainList
+    if not mainList:
+        return []
     n = int(len(mainList) / maxThread)
     if maxChunkSize:
         n = maxChunkSize

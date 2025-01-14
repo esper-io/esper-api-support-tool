@@ -36,7 +36,7 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     maxGaugeAction = 0
     if action == GridActions.MODIFY_TAGS.value:
         rowTaglist = frame.gridPanel.getDeviceTagsFromGrid()
-        maxGaugeAction = len(rowTaglist)
+        maxGaugeAction = len(rowTaglist) if rowTaglist else 0
     else:
         aliasList = frame.gridPanel.getDeviceAliasFromList()
         if aliasList:

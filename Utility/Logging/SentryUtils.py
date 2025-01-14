@@ -5,6 +5,7 @@ import sentry_sdk
 
 import Common.Globals as Globals
 from Utility.FileUtility import read_json_file
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 class SentryUtils:
@@ -18,12 +19,15 @@ class SentryUtils:
             self.initSDK()
 
     def initSDK(self):
-        self.readTokenInfo()
+        try:
+            self.readTokenInfo()
 
-        if self.dsn:
-            sentry_sdk.init(
-                self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1
-            )
+            if self.dsn:
+                sentry_sdk.init(
+                    self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1
+                )
+        except Exception as e:
+            ApiToolLog.LogError("Error while initializing Sentry SDK: ", e)
 
     def readTokenInfo(self):
         filePath = "token.json"

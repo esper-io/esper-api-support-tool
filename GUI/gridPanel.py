@@ -388,9 +388,9 @@ class GridPanel(wx.Panel):
                     properTagList = []
                     for r in re.findall(
                         r"\".+?\"|\'.+?\'|\’.+?\’|\’.+?\’|\‘.+?\’|[\w\d '-+\\/^%$#!@$%^&:.!?\-{}\<\>;]+",
-                        row[columns.index(col)],
+                        str(row[columns.index(col)]),
                     ):
-                        processedTag = r.strip()
+                        processedTag = str(r).strip()
                         while (
                             processedTag.startswith('"')
                             or processedTag.startswith("'")
