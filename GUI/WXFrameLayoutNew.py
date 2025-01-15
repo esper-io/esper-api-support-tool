@@ -1171,6 +1171,7 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator(locks=[Globals.token_lock])
     def validateToken(self):
         Globals.token_lock.acquire()
+        res = None
         try:
             res = getCompanySettings(maxAttempt=2)
         except:
