@@ -1559,6 +1559,8 @@ class NewFrameLayout(wx.Frame):
         self.Logging("--->Finished Processing devices...")
 
     def processAddDeviceToChoice(self, chunk):
+        if not chunk:
+            return
         for device in chunk:
             name = ""
             if hasattr(device, "hardware_info"):

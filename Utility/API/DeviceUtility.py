@@ -391,13 +391,7 @@ def searchForDevice(
         else:
             extention += "&tags=%s" % (tags)
 
-    url = (
-        Globals.BASE_REQUEST_URL.format(
-            configuration_host=Globals.configuration.host,
-            enterprise_id=Globals.enterprise_id,
-        )
-        + extention
-    )
+    url = ("%s/device/v0/devices/" % Globals.configuration.host) + extention
     api_response = performGetRequestWithRetry(url, getHeader())
     if api_response.status_code < 300:
         api_response = api_response.json()
