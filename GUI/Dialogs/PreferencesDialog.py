@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os
+import platform
+import threading
 
 import wx
 import wx.adv as wxadv
@@ -8,6 +10,7 @@ import wx.adv as wxadv
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
+from Utility.Resource import determineDoHereorMainThread
 
 
 class PreferencesDialog(wx.Dialog):
@@ -949,6 +952,13 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(self.SetPrefs, prefs, onBoot)
+            return
+
         self.prefs = prefs
         if not self.prefs:
             return
