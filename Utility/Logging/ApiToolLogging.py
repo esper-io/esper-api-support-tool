@@ -37,6 +37,18 @@ class ApiToolLog:
                 os.makedirs(parentPath)
             write_content_to_file(self.placePath, "")
 
+        self.contain_blacklist = [
+            "Invalid token",
+            "ConnectionError",
+            "HTTP Response",
+            "Bad Gateway",
+            "Permission denied",
+            "HTTP",
+            "Failed to load configuration",
+            "Read-only file system",
+            "ApiException",
+        ]
+
     def limitLogFileSizes(self):
         self.limitFileSize(self.logPath)
         self.limitFileSize(self.placePath)
@@ -79,7 +91,7 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame and postStatus:
-            if Globals.frame.audit:
+            if Globals.frame.audit and not self.should_skip(content):
                 Globals.frame.audit.postOperation(
                     {
                         "operation": "ERROR",
@@ -255,19 +267,7 @@ class ApiToolLog:
                 return fuzz.partial_ratio(s.lower(), t.lower())
             return fuzz.ratio(s.lower(), t.lower())
 
-        if (
-            Globals.IS_DEBUG
-            or "Invalid token" in str(excpt)
-            or "ConnectionError" in str(excpt)
-            or "HTTP Response" in str(excpt)
-            or "Bad Gateway" in str(excpt)
-            or "Permission denied" in str(excpt)
-            or "HTTP" in str(excpt)
-            or "Failed to load configuration" in str(excpt)
-            or "Read-only file system" in str(excpt)
-            or "ApiException" in str(excpt)
-            or type(excpt) is ApiException
-        ):
+        if self.should_skip(excpt):
             return
 
         self.tracker_lock.acquire()
@@ -310,3 +310,16 @@ class ApiToolLog:
 
         if self.tracker_lock.locked():
             self.tracker_lock.release()
+
+    def should_skip(self, error_excpt):
+        if (
+            Globals.IS_DEBUG
+            or type(error_excpt) is ApiException
+        ):
+            return True
+        
+        for s in self.contain_blacklist:
+            if s.lower() in str(error_excpt).lower():
+                return True
+
+        return False
