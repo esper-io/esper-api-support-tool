@@ -1568,12 +1568,14 @@ class NewFrameLayout(wx.Frame):
                 name = "%s ~ %s ~ %s %s" % (
                     (
                         device.hardware_info["manufacturer"]
-                        if "manufacturer" in device.hardware_info
+                        if device.hardware_info
+                        and "manufacturer" in device.hardware_info
                         else ""
                     ),
                     (
                         device.hardware_info["model"]
-                        if "model" in device.hardware_info
+                        if device.hardware_info
+                        and "model" in device.hardware_info
                         else ""
                     ),
                     device.device_name,
@@ -1602,12 +1604,14 @@ class NewFrameLayout(wx.Frame):
                 name = "%s ~ %s ~ %s %s" % (
                     (
                         device["hardware_info"]["brand"]
-                        if "brand" in device["hardware_info"]
+                        if device["hardware_info"]
+                        and "brand" in device["hardware_info"]
                         else ""
                     ),
                     (
                         device["hardware_info"]["model"]
-                        if "model" in device["hardware_info"]
+                        if device["hardware_info"]
+                        and "model" in device["hardware_info"]
                         else ""
                     ),
                     device["name"],
