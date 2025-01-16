@@ -69,12 +69,22 @@ class ApiToolLog:
         postIssue=True,
         postStatus=True,
     ):
-        if exc_type is None or exc_value is None or exc_traceback is None:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            exc_traceback = format_list(extract_tb(exc_traceback))
+        try:
+            stack = traceback.extract_stack()
+            if str(stack).count("LogError") > 5:
+                return  # Prevent infinite recursion
+        except:
+            pass
 
-            if not exc_traceback:
-                exc_traceback = traceback.format_exc()
+        if exc_type is None or exc_value is None or exc_traceback is None:
+            try:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                exc_traceback = format_list(extract_tb(exc_traceback))
+
+                if not exc_traceback:
+                    exc_traceback = traceback.format_exc()
+            except:
+                pass
 
         self.limitLogFileSizes()
         content = [
@@ -312,12 +322,9 @@ class ApiToolLog:
             self.tracker_lock.release()
 
     def should_skip(self, error_excpt):
-        if (
-            Globals.IS_DEBUG
-            or type(error_excpt) is ApiException
-        ):
+        if Globals.IS_DEBUG or type(error_excpt) is ApiException:
             return True
-        
+
         for s in self.contain_blacklist:
             if s.lower() in str(error_excpt).lower():
                 return True
