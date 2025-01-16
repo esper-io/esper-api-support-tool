@@ -83,6 +83,8 @@ class ApiToolLog:
 
                 if not exc_traceback:
                     exc_traceback = traceback.format_exc()
+                if not exc_traceback:
+                    exc_traceback = traceback.extract_stack()
             except:
                 pass
 
