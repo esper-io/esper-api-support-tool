@@ -1262,7 +1262,8 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
         labels = list(
             filter(
                 lambda key: frame.sidePanel.devices[key]
-                in frame.sidePanel.selectedDevicesList,
+                in frame.sidePanel.selectedDevicesList
+                or key in frame.sidePanel.devices.values(),
                 frame.sidePanel.devices,
             )
         )

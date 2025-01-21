@@ -343,7 +343,7 @@ def searchForDevice(
     gms=None,
     tags=None,
 ):
-    extention = "device/"
+    extention = ""
 
     if search is not None:
         if "?limit=" not in extention:
@@ -395,6 +395,8 @@ def searchForDevice(
     api_response = performGetRequestWithRetry(url, getHeader())
     if api_response.status_code < 300:
         api_response = api_response.json()
+        if "content" in api_response:
+            api_response = api_response["content"]
     else:
         raise Exception(
             "HTTP Response %s:\t\n%s"
