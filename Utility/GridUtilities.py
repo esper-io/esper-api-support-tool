@@ -222,8 +222,8 @@ def convertColumnTypes(data, headers):
                             else:
                                 data[col] = data[col].astype(np.float64)
                     except Exception as e:
-                        print(e)
-                        ApiToolLog().LogError(e)
+                        post = True if "ValueError" not in str(e) else False
+                        ApiToolLog().LogError(e, postStatus=post)
                 elif gridColType == "category":
                     data[col] = data[col].astype("category")
                 else:
