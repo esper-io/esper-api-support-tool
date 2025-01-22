@@ -156,6 +156,7 @@ def convertColumnTypes(data, headers):
                         c_max = float(data[col].astype("float64").max())
 
                         isDigit = False
+                        hasDecimal = False
                         if str(col_type)[:3] != "int":
                             try:
                                 isDigit = data[col].str.isdigit().any()
@@ -166,8 +167,11 @@ def convertColumnTypes(data, headers):
                                     .str.isdigit()
                                     .any()
                                 )
+                                hasDecimal = data[col].str.contains(".").any()
 
-                        if str(col_type)[:3] == "int" or isDigit:
+                        if str(col_type)[:3] == "int" or (
+                            isDigit and not hasDecimal
+                        ):
                             if (
                                 c_min > np.iinfo(np.int8).min
                                 and c_max < np.iinfo(np.int8).max
