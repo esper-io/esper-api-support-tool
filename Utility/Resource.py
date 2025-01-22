@@ -50,10 +50,16 @@ def createNewFile(filePath, fileData=None):
 
 
 def scale_bitmap(bitmap, width, height):
-    image = wx.Image(bitmap)
-    image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
-    result = wx.Bitmap(image)
-    return result
+    try:
+        image = wx.Image(bitmap)
+        image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
+        result = wx.Bitmap(image)
+        return result
+    except:
+        data = bytearray((0, 0, 0))
+        alpha = bytearray((0,))
+        image = wx.Image(1, 1, data, alpha)
+        return image.ConvertToBitmap()
 
 
 def postEventToFrame(eventType, eventValue=None):
