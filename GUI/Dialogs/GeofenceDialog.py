@@ -14,8 +14,12 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
-                              displayMessageBox, getHeader)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    displayFileDialog,
+    displayMessageBox,
+    getHeader,
+)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -44,17 +48,8 @@ class GeofenceDialog(wx.Dialog):
         grid_sizer_4 = wx.FlexGridSizer(2, 1, 0, 0)
         sizer_1.Add(grid_sizer_4, 1, wx.EXPAND, 0)
 
-        label_7 = wx.StaticText(self, wx.ID_ANY, "Create Geofence")
-        label_7.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        self.dialog_title = "Create Geofence"
+        label_7 = wx.StaticText(self, wx.ID_ANY, self.dialog_title)
         grid_sizer_4.Add(label_7, 0, wx.ALL, 5)
 
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
@@ -176,6 +171,7 @@ class GeofenceDialog(wx.Dialog):
 
         self.SetEscapeId(self.button_CANCEL.GetId())
 
+        self.applyFontSize()
         self.Layout()
 
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.createGeofence)
@@ -213,7 +209,10 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def processUpload(self, filePath):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.processUpload, filePath)
             return
         if self.geofence_grid.GetNumberRows() > 0:
@@ -253,14 +252,20 @@ class GeofenceDialog(wx.Dialog):
                                 group = groupRes
                                 break
                 if group:
-                    expandedGroupData[self.gridHeaderLabels[1]].append(group["path"])
-                    expandedGroupData[self.gridHeaderLabels[2]].append(group["id"])
+                    expandedGroupData[self.gridHeaderLabels[1]].append(
+                        group["path"]
+                    )
+                    expandedGroupData[self.gridHeaderLabels[2]].append(
+                        group["id"]
+                    )
                 else:
                     expandedGroupData[self.gridHeaderLabels[1]].append(
                         "<Could Not Find Group>"
                     )
                     expandedGroupData[self.gridHeaderLabels[2]].append("")
-            data = pd.DataFrame(expandedGroupData, columns=self.gridHeaderLabels)
+            data = pd.DataFrame(
+                expandedGroupData, columns=self.gridHeaderLabels
+            )
             self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
             self.applyGridSettings()
             if self.geofence_grid.IsFrozen():
@@ -289,7 +294,14 @@ class GeofenceDialog(wx.Dialog):
                 properGroupIdList.append(identifier)
 
         # Ensure that inputs are vaild before calling API
-        if name and latitude and description and longitude and radius and actionsList:
+        if (
+            name
+            and latitude
+            and description
+            and longitude
+            and radius
+            and actionsList
+        ):
             dialog = displayMessageBox(
                 (
                     "Found group ids for %s out of %s uploaded entries. Would you like to proceed?"
@@ -329,7 +341,10 @@ class GeofenceDialog(wx.Dialog):
         radius,
         actionsList,
     ):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(
                 self.processCreateGeoFenceRequest,
                 properGroupIdList,
@@ -338,7 +353,7 @@ class GeofenceDialog(wx.Dialog):
                 latitude,
                 longitude,
                 radius,
-                actionsList
+                actionsList,
             )
             return
         deviceList = []
@@ -440,7 +455,7 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def setCursorDefault(self):
-        """ Set cursor icon to default state """
+        """Set cursor icon to default state"""
         try:
             self.isBusy = False
             myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
@@ -449,7 +464,41 @@ class GeofenceDialog(wx.Dialog):
             pass
 
     def setCursorBusy(self):
-        """ Set cursor icon to busy state """
+        """Set cursor icon to busy state"""
         self.isBusy = True
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        headerBold = wx.Font(
+            Globals.HEADER_FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "HeaderBold",
+        )
+
+        self.applyFontHelper(self, normalFont, headerBold)
+
+    def applyFontHelper(self, elm, font, headerBold):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                if (
+                    hasattr(child, "GetLabelText")
+                    and self.dialog_title == child.GetLabelText()
+                ):
+                    child.SetFont(headerBold)
+                else:
+                    child.SetFont(font)
+
+            self.applyFontHelper(child, font, headerBold)

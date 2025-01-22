@@ -71,16 +71,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         grid_sizer_2 = wx.GridSizer(1, 2, 0, 0)
 
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, label)
-        label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
+        self.label_elm = label_1
         grid_sizer_2.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.panel_4 = wx.Panel(self.panel_1, wx.ID_ANY)
@@ -177,6 +168,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.button_2.Bind(wx.EVT_BUTTON, self.onNext)
         self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
         self.checkPageButton()
+
+        self.applyFontSize()
 
         self.Fit()
 
@@ -598,3 +591,26 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.search.Enable(True)
         self.button_OK.Enable(True)
         self.setCursorDefault()
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        normalBoldHeaderFont = wx.Font(
+            Globals.HEADER_FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "NormalBold",
+        )
+        self.label_elm.SetFont(normalBoldHeaderFont)
+        self.checkbox_1.SetFont(normalFont)
+        self.search.SetFont(normalFont)
+        self.check_list_box_1.SetFont(normalFont)
+        self.button_OK.SetFont(normalFont)

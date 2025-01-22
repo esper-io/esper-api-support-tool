@@ -10,8 +10,11 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (determineDoHereorMainThread,
-                              getStrRatioSimilarity, openWebLinkInBrowser)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    getStrRatioSimilarity,
+    openWebLinkInBrowser,
+)
 
 
 class TemplateDialog(wx.Dialog):
@@ -78,7 +81,9 @@ class TemplateDialog(wx.Dialog):
         grid_sizer_3.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_2, wx.ID_ANY, "Source Template:")
-        sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.LEFT, 5)
+        sizer_3.Add(
+            label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.LEFT, 5
+        )
 
         self.templateSearch = wx.SearchCtrl(self.panel_2, wx.ID_ANY, "")
         self.templateSearch.ShowCancelButton(True)
@@ -154,13 +159,16 @@ class TemplateDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
 
+        self.applyFontSize()
         self.Layout()
 
         self.templateSearch.Bind(wx.EVT_SEARCH, self.onSearchTemplate)
         self.templateSearch.Bind(wx.EVT_CHAR, self.onSearchTemplateChar)
         self.templateSearch.Bind(wx.EVT_SEARCH_CANCEL, self.onSearchTemplate)
 
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.text_ctrl_1.Bind(
+            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
+        )
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
@@ -188,7 +196,9 @@ class TemplateDialog(wx.Dialog):
     @api_tool_decorator()
     def getInputSelections(self):
         return (
-            self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
+            self.configMenuOpt[
+                self.choice_2.GetString(self.choice_2.GetSelection())
+            ],
             self.list_box_1.GetString(self.list_box_1.GetSelection()),
         )
 
@@ -207,7 +217,9 @@ class TemplateDialog(wx.Dialog):
             self.chosenTemplate = self.getTemplate(template)
             self.text_ctrl_1.Clear()
             if self.chosenTemplate:
-                self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
+                self.text_ctrl_1.AppendText(
+                    json.dumps(self.chosenTemplate, indent=2)
+                )
             else:
                 self.text_ctrl_1.AppendText(
                     "An ERROR occured when fetching the template, please try again."
@@ -221,12 +233,17 @@ class TemplateDialog(wx.Dialog):
         self.SetCursor(myCursor)
         selection = event.GetSelection()
         name = self.list_box_1.GetString(selection)
-        template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
+        template = list(
+            filter(lambda x: x["name"] == name, self.sourceTemplate)
+        )
         self.populateTemplatePreview(template)
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.populateSourceTempaltes, srcName)
             return
         if srcName:
@@ -242,12 +259,16 @@ class TemplateDialog(wx.Dialog):
         self.sourceTemplate = []
         self.list_box_1.Clear()
         Globals.THREAD_POOL.enqueue(
-            self.populateSourceTempaltes, event.String if event.String else False
+            self.populateSourceTempaltes,
+            event.String if event.String else False,
         )
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
-        if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
             determineDoHereorMainThread(self.fetchDestTempaltes, destName)
             return
         if destName:
@@ -282,7 +303,10 @@ class TemplateDialog(wx.Dialog):
             self.choice_1.GetString(self.choice_1.GetSelection())
         ]
         return util.getTemplate(
-            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"], template["id"]
+            dataSrc["apiHost"],
+            dataSrc["apiKey"],
+            dataSrc["enterprise"],
+            template["id"],
         )
 
     @api_tool_decorator()
@@ -327,3 +351,33 @@ class TemplateDialog(wx.Dialog):
         else:
             for template in self.sourceTemplate:
                 self.list_box_1.Append(template["name"])
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        normalBoldFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "NormalBold",
+        )
+
+        self.applyFontHelper(self, normalFont, normalBoldFont)
+
+    def applyFontHelper(self, elm, font, normalBoldFont):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                if isinstance(child, wx.StaticText):
+                    child.SetFont(normalBoldFont)
+                else:
+                    child.SetFont(font)
+            self.applyFontHelper(child, font, normalBoldFont)

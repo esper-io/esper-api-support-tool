@@ -2,6 +2,7 @@
 
 import wx
 
+from Common import Globals
 from Common.decorator import api_tool_decorator
 from GUI.TabPanel import TabPanel
 from Utility.Resource import getStrRatioSimilarity
@@ -90,6 +91,7 @@ class ColumnVisibility(wx.Dialog):
         for page in pageGridDict.keys():
             self.setCheckedItemsFromGrid(page)
 
+        self.applyFontSize()
         self.Fit()
         self.Center()
 
@@ -257,3 +259,22 @@ class ColumnVisibility(wx.Dialog):
 
     def getSelected(self):
         return self.selected
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

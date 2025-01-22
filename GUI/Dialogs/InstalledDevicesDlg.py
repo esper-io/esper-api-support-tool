@@ -52,20 +52,12 @@ class InstalledDevicesDlg(wx.Dialog):
         grid_sizer_1.Add(grid_sizer_3, 1, wx.EXPAND, 0)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Applications:")
-        label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
         grid_sizer_3.Add(label_1, 0, wx.LEFT, 3)
 
         sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
-        grid_sizer_3.Add(sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5)
+        grid_sizer_3.Add(
+            sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5
+        )
 
         label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "App Search")
         sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -73,7 +65,10 @@ class InstalledDevicesDlg(wx.Dialog):
         self.search = wx.SearchCtrl(self.panel_1, wx.ID_ANY, "")
         self.search.ShowCancelButton(True)
         sizer_3.Add(
-            self.search, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT, 5
+            self.search,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.LEFT,
+            5,
         )
 
         self.list_box_1 = wx.ListBox(
@@ -103,16 +98,8 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
             grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
 
-            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Available App Versions:")
-            label_2.SetFont(
-                wx.Font(
-                    Globals.FONT_SIZE,
-                    wx.FONTFAMILY_DEFAULT,
-                    wx.FONTSTYLE_NORMAL,
-                    wx.FONTWEIGHT_BOLD,
-                    0,
-                    "NormalBold",
-                )
+            label_2 = wx.StaticText(
+                self.panel_1, wx.ID_ANY, "Available App Versions:"
             )
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
@@ -130,11 +117,17 @@ class InstalledDevicesDlg(wx.Dialog):
                 grid_sizer_2.Add(sizer_6, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
                 self.button_2 = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-                sizer_6.Add(self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-                self.button_2.Bind(wx.EVT_BUTTON, self.RemoveBlueprintChangeList)
+                sizer_6.Add(
+                    self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+                )
+                self.button_2.Bind(
+                    wx.EVT_BUTTON, self.RemoveBlueprintChangeList
+                )
 
                 self.button_1 = wx.Button(self.panel_1, wx.ID_ADD, "")
-                sizer_6.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+                sizer_6.Add(
+                    self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+                )
                 self.button_1.Bind(wx.EVT_BUTTON, self.AddToBlueprintChangeList)
 
         if showBlueprintInput:
@@ -149,22 +142,14 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
 
             static_line_1 = wx.StaticLine(self.panel_5, wx.ID_ANY)
-            grid_sizer_6.Add(static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
+            grid_sizer_6.Add(
+                static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5
+            )
 
             sizer_5 = wx.FlexGridSizer(2, 1, 0, 0)
             grid_sizer_6.Add(sizer_5, 1, wx.EXPAND, 0)
 
             label_5 = wx.StaticText(self.panel_5, wx.ID_ANY, "Selected Apps:")
-            label_5.SetFont(
-                wx.Font(
-                    11,
-                    wx.FONTFAMILY_DEFAULT,
-                    wx.FONTSTYLE_NORMAL,
-                    wx.FONTWEIGHT_BOLD,
-                    0,
-                    "",
-                )
-            )
             sizer_5.Add(label_5, 0, wx.LEFT, 5)
 
             self.text_ctrl_3 = wx.TextCtrl(
@@ -235,6 +220,7 @@ class InstalledDevicesDlg(wx.Dialog):
         size = wx.DisplaySize()
         self.SetMaxSize(wx.Size(int(size[0] * 0.75), int(size[1] * 0.75)))
 
+        self.applyFontSize()
         self.Layout()
         self.Fit()
         self.Centre()
@@ -286,7 +272,9 @@ class InstalledDevicesDlg(wx.Dialog):
                     if hasattr(version, "version_code"):
                         self.list_box_2.Append(version.version_code, version.id)
                     elif type(versions) == dict:
-                        self.list_box_2.Append(version["version_code"], version["id"])
+                        self.list_box_2.Append(
+                            version["version_code"], version["id"]
+                        )
         if matches:
             self.list_box_2.Enable(True)
         else:
@@ -329,7 +317,9 @@ class InstalledDevicesDlg(wx.Dialog):
                     or (
                         "appPkgName" in x
                         and x["appPkgName"]
-                        == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                        == self.list_box_1.GetString(
+                            self.list_box_1.GetSelection()
+                        )
                     ),
                     self.apps,
                 )
@@ -438,7 +428,9 @@ class InstalledDevicesDlg(wx.Dialog):
                     or (
                         "appPkgName" in x
                         and x["appPkgName"]
-                        == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                        == self.list_box_1.GetString(
+                            self.list_box_1.GetSelection()
+                        )
                     ),
                     self.apps,
                 )
@@ -494,7 +486,10 @@ class InstalledDevicesDlg(wx.Dialog):
                     entry["version"],
                 )
             else:
-                selectedAppStr += "%s - %s\n" % (entry["name"], entry["version"])
+                selectedAppStr += "%s - %s\n" % (
+                    entry["name"],
+                    entry["version"],
+                )
         self.text_ctrl_3.SetValue(selectedAppStr)
 
     def getBlueprintInputs(self):
@@ -505,3 +500,33 @@ class InstalledDevicesDlg(wx.Dialog):
             )
         else:
             return None
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        normalBold = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "NormalBold",
+        )
+
+        self.applyFontHelper(self, normalFont, normalBold)
+
+    def applyFontHelper(self, elm, normalFont, boldFont):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                if isinstance(child, wx.StaticText):
+                    child.SetFont(boldFont)
+                else:
+                    child.SetFont(normalFont)
+            self.applyFontHelper(child, normalFont, boldFont)

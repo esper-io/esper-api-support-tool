@@ -35,28 +35,8 @@ class LargeTextEntryDialog(wx.Dialog):
         label_1 = wx.StaticText(
             self.panel_1, wx.ID_ANY, label, style=wx.ST_ELLIPSIZE_END
         )
-        label_1.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "",
-            )
-        )
         label_1.Wrap(500)
         label_1.SetToolTip(label)
-        label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
         sizer_3.Add(label_1, 0, wx.ALL, 5)
 
         self.text_ctrl_1 = wx.TextCtrl(
@@ -88,6 +68,7 @@ class LargeTextEntryDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
         self.text_ctrl_1.Bind(wx.EVT_KEY_DOWN, self.onKey)
 
+        self.applyFontSize()
         self.Layout()
         self.Centre()
 
@@ -128,3 +109,22 @@ class LargeTextEntryDialog(wx.Dialog):
             wx.TheClipboard.Close()
         if success:
             widget.WriteText(data.GetText())
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

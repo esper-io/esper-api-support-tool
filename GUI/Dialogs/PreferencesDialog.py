@@ -97,6 +97,16 @@ class PreferencesDialog(wx.Dialog):
             choices=[],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
+        self.list_box_1.SetFont(
+            wx.Font(
+                Globals.FONT_SIZE,
+                self.list_box_1.GetFont().GetFamily(),
+                self.list_box_1.GetFont().GetStyle(),
+                self.list_box_1.GetFont().GetWeight(),
+                0,
+                "Normal",
+            )
+        )
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
 
         self.window_1_pane_2 = wx.ScrolledWindow(
@@ -1498,6 +1508,16 @@ class PreferencesDialog(wx.Dialog):
             style=wx.ST_ELLIPSIZE_END,
         )
         label.SetToolTip(toolTip)
+        currentFont = label.GetFont()
+        wxFont = wx.Font(
+            Globals.FONT_SIZE,
+            currentFont.GetFamily(),
+            currentFont.GetStyle(),
+            currentFont.GetWeight(),
+            0,
+            "Normal",
+        )
+        label.SetFont(wxFont)
         sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         panel_2 = wx.Panel(panel, wx.ID_ANY)
@@ -1524,6 +1544,9 @@ class PreferencesDialog(wx.Dialog):
         if inputObj:
             inputObj.SetToolTip(toolTip)
             grid_sizer.Add(inputObj, 0, wx.ALIGN_RIGHT | wx.EXPAND, 0)
+
+        if hasattr(inputObj, "SetFont"):
+            inputObj.SetFont(wxFont)
 
         panel.SetSizer(sizer)
         panel_2.SetSizer(grid_sizer)

@@ -44,16 +44,6 @@ class SidePanel(wx.Panel):
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
 
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Loaded Tenant:")
-        label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
         grid_sizer_1.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 0)
 
         remove_icon = scale_bitmap(resourcePath("Images/remove.png"), 16, 16)
@@ -76,16 +66,6 @@ class SidePanel(wx.Panel):
             "",
             style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
-        self.configList.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
         sizer_2.Add(
             self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3
         )
@@ -100,16 +80,6 @@ class SidePanel(wx.Panel):
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
         self.notebook_1.SetThemeEnabled(False)
-        self.notebook_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
         sizer_1.Add(self.notebook_1, 1, wx.ALL | wx.EXPAND, 5)
 
         self.panel_8 = wx.Panel(self.notebook_1, wx.ID_ANY)
@@ -133,16 +103,6 @@ class SidePanel(wx.Panel):
             self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
         )
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
-        self.selectedGroups.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
         grid_sizer_8.Add(self.selectedGroups, 0, wx.EXPAND, 0)
 
         self.panel_9 = wx.Panel(self.notebook_1, wx.ID_ANY)
@@ -167,16 +127,6 @@ class SidePanel(wx.Panel):
             self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
         )
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
-        self.selectedDevices.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
         grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
 
         static_line_2 = wx.StaticLine(self, wx.ID_ANY)
@@ -188,16 +138,6 @@ class SidePanel(wx.Panel):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
         label_5 = wx.StaticText(self.panel_10, wx.ID_ANY, "Select Action:")
-        label_5.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
         sizer_5.Add(label_5, 0, wx.EXPAND, 0)
 
         self.actionChoice = wx.ComboBox(
@@ -240,6 +180,7 @@ class SidePanel(wx.Panel):
 
         self.SetSizer(sizer_1)
 
+        self.applyFontSize()
         self.Layout()
 
         actions = {
@@ -452,3 +393,37 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GENERAL_ACTIONS[action]
             elif action in Globals.GRID_ACTIONS:
                 clientData = Globals.GRID_ACTIONS[action]
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        normalBoldFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "NormalBold",
+        )
+
+        self.applyFontHelper(self, normalFont, normalBoldFont)
+
+    def applyFontHelper(self, elm, font, normalBoldFont):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                if (
+                    isinstance(child, wx.StaticText)
+                    or isinstance(child, wx.Notebook)
+                    or isinstance(child, wx.Button)
+                ):
+                    child.SetFont(normalBoldFont)
+                else:
+                    child.SetFont(font)
+            self.applyFontHelper(child, font, normalBoldFont)

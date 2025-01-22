@@ -6,7 +6,11 @@ import Common.Globals as Globals
 
 class HtmlDialog(wx.Dialog):
     def __init__(
-        self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds
+        self,
+        showCheckbox=False,
+        checkboxLabel="Don't show this again",
+        *args,
+        **kwds
     ):
         super(HtmlDialog, self).__init__(
             Globals.frame,
@@ -45,7 +49,27 @@ class HtmlDialog(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
 
+        self.applyFontSize()
         self.Layout()
 
     def isCheckboxChecked(self):
         return self.checkbox_1.IsChecked() if self.checkbox_1 else False
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

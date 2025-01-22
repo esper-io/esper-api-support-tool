@@ -93,7 +93,8 @@ class ColumnVisibilityDialog(wx.Dialog):
         sizer_2 = wx.GridSizer(1, 2, 0, 0)
         grid_sizer_1 = wx.GridSizer(1, 2, 0, 0)
         sizer_3 = wx.StaticBoxSizer(
-            wx.StaticBox(self.panel_1, wx.ID_ANY, "Column Visibility"), wx.VERTICAL
+            wx.StaticBox(self.panel_1, wx.ID_ANY, "Column Visibility"),
+            wx.VERTICAL,
         )
         sizer_4 = wx.GridSizer(1, 1, 0, 0)
         sizer_4.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
@@ -103,14 +104,40 @@ class ColumnVisibilityDialog(wx.Dialog):
         sizer_1.Add(self.panel_1, 0, wx.ALL | wx.EXPAND, 5)
         sizer_2.Add((0, 0), 0, 0, 0)
         grid_sizer_1.Add(
-            self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5
+            self.button_1,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
+            5,
         )
         grid_sizer_1.Add(
-            self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL, 5
+            self.button_2,
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT | wx.ALL,
+            5,
         )
         sizer_2.Add(grid_sizer_1, 1, wx.EXPAND, 0)
         self.panel_2.SetSizer(sizer_2)
         sizer_1.Add(self.panel_2, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
+        self.applyFontSize()
         self.Layout()
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

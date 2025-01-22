@@ -322,6 +322,10 @@ class NewFrameLayout(wx.Frame):
         else:
             children = parent.GetChildren()
         for child in children:
+            if hasattr(child, "applyFontSize"):
+                child.applyFontSize()
+                continue
+
             if type(child) == wx.StaticText:
                 currentFont = child.GetFont()
                 if (
@@ -364,6 +368,10 @@ class NewFrameLayout(wx.Frame):
                     )
             if child.GetChildren():
                 self.setFontSizeForLabels(parent=child)
+
+        for dlg in Globals.OPEN_DIALOGS:
+            if hasattr(dlg, "applyFontSize"):
+                dlg.applyFontSize()
         determineDoHereorMainThread(self.Refresh)
 
     @api_tool_decorator()

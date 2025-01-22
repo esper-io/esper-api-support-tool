@@ -59,16 +59,6 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_5, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Tenant:")
-        label_3.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
         sizer_5.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.combo_box_3 = wx.ComboBox(
@@ -86,16 +76,6 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_1.Add(sizer_6, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_5 = wx.StaticText(self.panel_1, wx.ID_ANY, "Source Blueprint:")
-        label_5.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
         sizer_6.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.combo_box_4 = wx.ComboBox(
@@ -111,16 +91,6 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_1.Add(grid_sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Blueprint Preview:")
-        label_4.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
         grid_sizer_3.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.text_ctrl_1 = wx.TextCtrl(
@@ -139,16 +109,6 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Tenant:")
-        label_1.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
         sizer_3.Add(label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.combo_box_1 = wx.ComboBox(
@@ -163,16 +123,6 @@ class BlueprintsDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
 
         label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Destination Group:")
-        label_2.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
         sizer_4.Add(label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
         self.combo_box_2 = wx.ComboBox(
@@ -212,6 +162,7 @@ class BlueprintsDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
 
+        self.applyFontSize()
         self.Layout()
 
         # Bind Events
@@ -398,3 +349,33 @@ class BlueprintsDialog(wx.Dialog):
 
     def getDestinationGroup(self):
         return self.group
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+        normalBoldFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "NormalBold",
+        )
+
+        self.applyFontHelper(self, normalFont, normalBoldFont)
+
+    def applyFontHelper(self, elm, font, normalBoldFont):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                if isinstance(child, wx.StaticText):
+                    child.SetFont(normalBoldFont)
+                else:
+                    child.SetFont(font)
+            self.applyFontHelper(child, font, normalBoldFont)

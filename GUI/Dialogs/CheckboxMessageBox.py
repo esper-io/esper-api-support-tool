@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import Common.Globals as Globals
 import wx
 
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 
 
@@ -54,7 +54,9 @@ class CheckboxMessageBox(wx.Dialog):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Do not show again")
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
-        sizer_2.Add(sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
+        sizer_2.Add(
+            sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5
+        )
         sizer_5.Add(self.okBtn, 0, wx.ALL, 5)
         sizer_5.Add(self.cancelBtn, 0, wx.ALL, 5)
         sizer_2.Add(sizer_5, 1, wx.ALIGN_BOTTOM | wx.ALL, 5)
@@ -63,6 +65,7 @@ class CheckboxMessageBox(wx.Dialog):
         self.panel_1.SetSizer(grid_sizer_1)
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
+        self.applyFontSize()
         self.Layout()
         self.Centre()
 
@@ -85,3 +88,22 @@ class CheckboxMessageBox(wx.Dialog):
         elif self.IsShown():
             self.Close()
         self.DestroyLater()
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

@@ -19,7 +19,10 @@ class CommandDialog(wx.Dialog):
             Globals.frame,
             wx.ID_ANY,
             size=(400, 200),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.OK | wx.CANCEL | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE
+            | wx.OK
+            | wx.CANCEL
+            | wx.RESIZE_BORDER,
         )
         self.SetThemeEnabled(False)
         self.isJsonInput = Globals.COMMAND_JSON_INPUT
@@ -28,6 +31,7 @@ class CommandDialog(wx.Dialog):
         else:
             self.createSplitWindowView(title, value)
 
+        self.applyFontSize()
         self.Fit()
 
     def createJsonWindowView(self, title, value):
@@ -53,7 +57,9 @@ class CommandDialog(wx.Dialog):
 
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
 
-        label_1 = wx.StaticText(self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:")
+        label_1 = wx.StaticText(
+            self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:"
+        )
         label_1.SetFont(
             wx.Font(
                 Globals.FONT_SIZE,
@@ -156,7 +162,9 @@ class CommandDialog(wx.Dialog):
 
         self.window_1_pane_1.SetSizer(sizer_7)
 
-        self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
+        self.window_1.SplitVertically(
+            self.window_1_pane_1, self.window_1_pane_2
+        )
 
         self.panel_1.SetSizer(sizer_2)
 
@@ -173,7 +181,9 @@ class CommandDialog(wx.Dialog):
 
         grid_sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
-        self.panel_2 = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+        self.panel_2 = wx.ScrolledWindow(
+            self, wx.ID_ANY, style=wx.TAB_TRAVERSAL
+        )
         self.panel_2.SetMinSize((600, 375))
         self.panel_2.SetScrollRate(10, 10)
         grid_sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
@@ -184,7 +194,8 @@ class CommandDialog(wx.Dialog):
         grid_sizer_2.Add(self.command, 1, wx.ALL | wx.EXPAND, 3)
 
         sizer_12 = wx.StaticBoxSizer(
-            wx.StaticBox(self.command, wx.ID_ANY, "Command Arguements"), wx.VERTICAL
+            wx.StaticBox(self.command, wx.ID_ANY, "Command Arguements"),
+            wx.VERTICAL,
         )
 
         self.panel_18 = wx.Panel(self.command, wx.ID_ANY)
@@ -302,14 +313,17 @@ class CommandDialog(wx.Dialog):
         self.text_ctrl_1.SetMinSize((522, 100))
         sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
-        static_line_2 = wx.StaticLine(self.panel_2, wx.ID_ANY, style=wx.LI_VERTICAL)
+        static_line_2 = wx.StaticLine(
+            self.panel_2, wx.ID_ANY, style=wx.LI_VERTICAL
+        )
         grid_sizer_2.Add(static_line_2, 0, wx.ALL | wx.EXPAND, 2)
 
         self.schedule = wx.Panel(self.panel_2, wx.ID_ANY)
         grid_sizer_2.Add(self.schedule, 1, wx.ALL | wx.EXPAND, 3)
 
         sizer_10 = wx.StaticBoxSizer(
-            wx.StaticBox(self.schedule, wx.ID_ANY, "Schedule Arguements"), wx.VERTICAL
+            wx.StaticBox(self.schedule, wx.ID_ANY, "Schedule Arguements"),
+            wx.VERTICAL,
         )
 
         self.panel_13 = wx.Panel(self.schedule, wx.ID_ANY)
@@ -376,7 +390,9 @@ class CommandDialog(wx.Dialog):
         grid_sizer_20 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_8.Add(grid_sizer_20, 1, wx.EXPAND | wx.RIGHT, 2)
 
-        label_11 = wx.StaticText(self.panel_16, wx.ID_ANY, "Start Date and Time")
+        label_11 = wx.StaticText(
+            self.panel_16, wx.ID_ANY, "Start Date and Time"
+        )
         grid_sizer_20.Add(label_11, 0, 0, 0)
 
         grid_sizer_21 = wx.GridSizer(1, 3, 0, 0)
@@ -669,46 +685,75 @@ class CommandDialog(wx.Dialog):
                     otherConfig[key] = cmdConfig[key]
 
             command_args = V0CommandArgs(
-                app_state=cmdConfig["app_state"] if "app_state" in cmdConfig else None,
-                app_version=cmdConfig["app_version"]
-                if "app_version" in cmdConfig
-                else None,
-                device_alias_name=cmdConfig["device_alias_name"]
-                if "device_alias_name" in cmdConfig
-                else None,
+                app_state=(
+                    cmdConfig["app_state"] if "app_state" in cmdConfig else None
+                ),
+                app_version=(
+                    cmdConfig["app_version"]
+                    if "app_version" in cmdConfig
+                    else None
+                ),
+                device_alias_name=(
+                    cmdConfig["device_alias_name"]
+                    if "device_alias_name" in cmdConfig
+                    else None
+                ),
                 custom_settings_config=otherConfig,
-                package_name=cmdConfig["package_name"]
-                if "package_name" in cmdConfig
-                else None,
-                policy_url=cmdConfig["policy_url"]
-                if "policy_url" in cmdConfig
-                else None,
+                package_name=(
+                    cmdConfig["package_name"]
+                    if "package_name" in cmdConfig
+                    else None
+                ),
+                policy_url=(
+                    cmdConfig["policy_url"]
+                    if "policy_url" in cmdConfig
+                    else None
+                ),
                 state=cmdConfig["state"] if "state" in cmdConfig else None,
-                message=cmdConfig["message"] if "message" in cmdConfig else None,
-                wifi_access_points=cmdConfig["wifi_access_points"]
-                if "wifi_access_points" in cmdConfig
-                else None,
+                message=(
+                    cmdConfig["message"] if "message" in cmdConfig else None
+                ),
+                wifi_access_points=(
+                    cmdConfig["wifi_access_points"]
+                    if "wifi_access_points" in cmdConfig
+                    else None
+                ),
             )
             schedule_args = V0CommandScheduleArgs(
-                name=scheduleConfig["name"]
-                if "name" in scheduleConfig
-                else "Task %s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                start_datetime=scheduleConfig["start_datetime"]
-                if "start_datetime" in scheduleConfig
-                else None,
-                end_datetime=scheduleConfig["end_datetime"]
-                if "end_datetime" in scheduleConfig
-                else None,
-                time_type=scheduleConfig["time_type"]
-                if "time_type" in scheduleConfig
-                else None,
-                window_start_time=scheduleConfig["window_start_time"]
-                if "window_start_time" in scheduleConfig
-                else None,
-                window_end_time=scheduleConfig["window_end_time"]
-                if "window_end_time" in scheduleConfig
-                else None,
-                days=scheduleConfig["days"] if "days" in scheduleConfig else None,
+                name=(
+                    scheduleConfig["name"]
+                    if "name" in scheduleConfig
+                    else "Task %s"
+                    % datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                ),
+                start_datetime=(
+                    scheduleConfig["start_datetime"]
+                    if "start_datetime" in scheduleConfig
+                    else None
+                ),
+                end_datetime=(
+                    scheduleConfig["end_datetime"]
+                    if "end_datetime" in scheduleConfig
+                    else None
+                ),
+                time_type=(
+                    scheduleConfig["time_type"]
+                    if "time_type" in scheduleConfig
+                    else None
+                ),
+                window_start_time=(
+                    scheduleConfig["window_start_time"]
+                    if "window_start_time" in scheduleConfig
+                    else None
+                ),
+                window_end_time=(
+                    scheduleConfig["window_end_time"]
+                    if "window_end_time" in scheduleConfig
+                    else None
+                ),
+                days=(
+                    scheduleConfig["days"] if "days" in scheduleConfig else None
+                ),
             )
             schType = ""
             if (
@@ -718,7 +763,8 @@ class CommandDialog(wx.Dialog):
             ):
                 schType = "WINDOW"
             elif (
-                "start_datetime" in scheduleConfig and "end_datetime" in scheduleConfig
+                "start_datetime" in scheduleConfig
+                and "end_datetime" in scheduleConfig
             ):
                 schType = "REOCURRING"
             else:
@@ -736,3 +782,22 @@ class CommandDialog(wx.Dialog):
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():
             self.Close()
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

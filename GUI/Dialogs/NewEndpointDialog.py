@@ -11,7 +11,9 @@ from Utility.Resource import openWebLinkInBrowser
 
 
 class NewEndpointDialog(wx.Dialog):
-    def __init__(self, errorMsg=None, name=None, host=None, entId=None, key=None):
+    def __init__(
+        self, errorMsg=None, name=None, host=None, entId=None, key=None
+    ):
         super(NewEndpointDialog, self).__init__(
             Globals.frame,
             wx.ID_ANY,
@@ -63,7 +65,9 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_3.Bind(wx.EVT_TEXT, self.checkInputs)
         sizer_3.Add(self.text_ctrl_3, 0, wx.ALL | wx.EXPAND, 5)
 
-        label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "API Key (Bearer Token)")
+        label_4 = wx.StaticText(
+            self.panel_1, wx.ID_ANY, "API Key (Bearer Token)"
+        )
         sizer_3.Add(label_4, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
 
         self.text_ctrl_4 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
@@ -83,7 +87,9 @@ class NewEndpointDialog(wx.Dialog):
             "",
             style=wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY,
         )
-        self.text_ctrl_5.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.text_ctrl_5.Bind(
+            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
+        )
         self.text_ctrl_5.SetForegroundColour(wx.Colour(255, 0, 0))
         if errorMsg:
             self.text_ctrl_5.SetValue(str(errorMsg))
@@ -107,6 +113,8 @@ class NewEndpointDialog(wx.Dialog):
 
         self.SetSizer(sizer_1)
 
+        self.applyFontSize()
+
         self.Layout()
         self.Centre()
 
@@ -125,7 +133,8 @@ class NewEndpointDialog(wx.Dialog):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
             match = re.search(
-                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
+                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*",
+                hostname,
             )
             if match:
                 hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
@@ -151,7 +160,8 @@ class NewEndpointDialog(wx.Dialog):
         hostname = self.text_ctrl_2.GetValue().strip()
         if hostname:
             match = re.search(
-                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*", hostname
+                "[https://|http://]*[a-zA-Z]+(-api)*\.esper\.cloud[\S]*",
+                hostname,
             )
             if match:
                 hostname = re.sub("(-api)*\.esper\.cloud[\S]*", "", hostname)
@@ -182,3 +192,22 @@ class NewEndpointDialog(wx.Dialog):
             self.button_APPLY.Enable(True)
         else:
             self.button_APPLY.Enable(False)
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)

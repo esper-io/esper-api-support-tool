@@ -30,22 +30,14 @@ class ConfirmTextDialog(wx.Dialog):
         sizer_9 = wx.BoxSizer(wx.VERTICAL)
 
         label_2 = wx.StaticText(self.panel_8, wx.ID_ANY, caption)
-        label_2.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
         sizer_9.Add(label_2, 0, wx.EXPAND, 0)
 
         static_line_2 = wx.StaticLine(self.panel_8, wx.ID_ANY)
         sizer_9.Add(static_line_2, 0, wx.EXPAND, 0)
 
-        label_5 = wx.StaticText(self.panel_8, wx.ID_ANY, label, style=wx.ALIGN_LEFT)
+        label_5 = wx.StaticText(
+            self.panel_8, wx.ID_ANY, label, style=wx.ALIGN_LEFT
+        )
         label_5.Wrap(500)
         sizer_9.Add(label_5, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
 
@@ -87,10 +79,13 @@ class ConfirmTextDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_2.GetId())
         self.SetEscapeId(self.button_1.GetId())
 
+        self.applyFontSize()
         self.Layout()
         self.Centre()
 
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        self.text_ctrl_1.Bind(
+            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
+        )
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
 
@@ -103,3 +98,22 @@ class ConfirmTextDialog(wx.Dialog):
         elif self.IsShown():
             self.Close()
         self.DestroyLater()
+
+    def applyFontSize(self):
+        normalFont = wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+        self.applyFontHelper(self, normalFont)
+
+    def applyFontHelper(self, elm, font):
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                child.SetFont(font)
+            self.applyFontHelper(child, font)
