@@ -90,3 +90,14 @@ def getAllPendingUsers(tolerance=0):
         userResp["next"] = None
         userResp["prev"] = None
     return userResp
+
+
+def getUserInfo():
+    url = "%s/user_info/" % Globals.configuration.host
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+
+    return (
+        resp.json()
+        if resp and hasattr(resp, "status_code") and resp.status_code < 300
+        else None
+    )

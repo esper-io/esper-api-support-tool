@@ -66,6 +66,7 @@ from Utility.EastUtility import (
     fetchInstalledDevices,
     filterDeviceList,
     getAllDeviceInfo,
+    getUserFromToken,
     removeNonWhitelisted,
     uploadAppToEndpoint,
 )
@@ -1197,6 +1198,8 @@ class NewFrameLayout(wx.Frame):
         ):
             Globals.IS_TOKEN_VALID = False
             determineDoHereorMainThread(self.promptForNewToken)
+
+        Globals.THREAD_POOL.enqueue(getUserFromToken)
 
         if Globals.token_lock.locked():
             Globals.token_lock.release()

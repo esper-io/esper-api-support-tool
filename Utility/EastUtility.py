@@ -35,6 +35,7 @@ from Utility.API.DeviceUtility import (
     searchForDevice,
 )
 from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
+from Utility.API.UserUtility import getUserInfo
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.GridUtilities import (
@@ -699,8 +700,14 @@ def compileDeviceGroupData(deviceInfo):
     current_bp_id = None
     if "current_blueprint_id" in deviceInfo:
         current_bp_id = deviceInfo["current_blueprint_id"]
-        if bp_id in Globals.knownBlueprints and Globals.knownBlueprints[bp_id] and "name" in Globals.knownBlueprints[bp_id]:
-            deviceInfo["current_blueprint_id"] = Globals.knownBlueprints[bp_id].get("name", "<Unknown>")
+        if (
+            bp_id in Globals.knownBlueprints
+            and Globals.knownBlueprints[bp_id]
+            and "name" in Globals.knownBlueprints[bp_id]
+        ):
+            deviceInfo["current_blueprint_id"] = Globals.knownBlueprints[
+                bp_id
+            ].get("name", "<Unknown>")
         elif bp_id:
             bp_resp = getBlueprint(bp_id)
             Globals.knownBlueprints[bp_id] = bp_resp
@@ -1431,3 +1438,12 @@ def uploadAppToEndpoint(path):
             )
         )
     postEventToFrame(eventUtil.myEVT_COMPLETE, True)
+
+
+def getUserFromToken():
+    try:
+        user_info = getUserInfo()
+        if user_info:
+            Globals.TOKEN_USER = user_info
+    except:
+        pass
