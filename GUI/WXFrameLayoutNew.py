@@ -539,24 +539,15 @@ class NewFrameLayout(wx.Frame):
         if os.path.exists(self.authPath):
             if self.key and crypto().isFileDecrypt(self.authPath, self.key):
                 crypto().encryptFile(self.authPath, self.key)
-        if self.consoleWin:
-            self.consoleWin.Close()
-            self.consoleWin.DestroyLater()
-            self.consoleWin = None
-        if self.prefDialog:
-            self.prefDialog.Close()
-            self.prefDialog.DestroyLater()
-        if self.notification:
-            self.notification.Close()
-        if self.menubar.uc:
-            self.menubar.uc.Close()
-            self.menubar.uc.DestroyLater()
+        self.closeDestroyLater(self.consoleWin)
+        self.consoleWin = None
+        self.closeDestroyLater(self.prefDialog)
+        self.closeDestroyLater(self.notification)
+        self.closeDestroyLater(self.menubar.uc)
         if e:
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
-        if self.groupManage:
-            self.groupManage.Close()
-            self.groupManage.DestroyLater()
+        self.closeDestroyLater(self.groupManage)
         thread = ApiToolLog().LogApiRequestOccurrence(
             None, ApiTracker.API_REQUEST_TRACKER, True
         )
@@ -575,6 +566,16 @@ class NewFrameLayout(wx.Frame):
                 item.Close()
         Globals.THREAD_POOL.abort()
         wx.Exit()
+
+    def closeDestroyLater(self, elm):
+        try:
+            if elm:
+                if hasattr(elm, "Close"):
+                    elm.Close()
+                if hasattr(elm, "DestroyLater"):
+                    elm.DestroyLater()
+        except:
+            pass
 
     @api_tool_decorator()
     def onSaveBoth(self, event):
