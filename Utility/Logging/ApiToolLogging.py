@@ -260,7 +260,11 @@ class ApiToolLog:
             self.limitLogFileSizes()
             try:
                 write_content_to_file(self.logPath, strToWrite, "a")
-                if "Summary" in strToWrite and Globals.frame.audit:
+                if (
+                    "Summary" in strToWrite
+                    and Globals.frame.audit
+                    and "foo" not in Globals.configuration.host
+                ):
                     Globals.frame.audit.postOperation(
                         {"operation": "API Usage Summary", "data": strToWrite}
                     )
