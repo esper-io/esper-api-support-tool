@@ -160,6 +160,7 @@ def convertColumnTypes(data, headers):
                         if str(col_type)[:3] != "int":
                             try:
                                 isDigit = data[col].str.isdigit().any()
+                                hasDecimal = data[col].str.contains(".").any()
                             except:
                                 isDigit = (
                                     data[col]
