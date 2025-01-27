@@ -167,7 +167,12 @@ def convertColumnTypes(data, headers):
                                     .str.isdigit()
                                     .any()
                                 )
-                                hasDecimal = data[col].str.contains(".").any()
+                                hasDecimal = (
+                                    data[col]
+                                    .astype(pd.StringDtype())
+                                    .str.contains(".")
+                                    .any()
+                                )
 
                         if str(col_type)[:3] == "int" or (
                             isDigit and not hasDecimal
