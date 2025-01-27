@@ -20,52 +20,52 @@ class ToolsToolBar(wx.ToolBar):
 
         self.SetThemeEnabled(False)
 
-        close_icon = scale_bitmap(resourcePath("Images/exit.png"), *size)
-        self.qtool = self.AddTool(wx.ID_ANY, "Quit", close_icon, "Quit")
-        self.AddSeparator()
-
-        add_icon = scale_bitmap(resourcePath("Images/add.png"), *size)
-        self.atool = self.AddTool(
-            wx.ID_ANY, "Add New Tenant", add_icon, "Add New Tenant"
+        self.qtool = self.addToolBarItem(
+            "Images/exit.png", size, "Quit", "Quit"
         )
-        self.AddSeparator()
-
-        open_icon = scale_bitmap(resourcePath("Images/open.png"), *size)
-        self.otool = self.AddTool(
-            wx.ID_ANY, "Open Device Spreadsheet", open_icon, "Open Device Spreadsheet"
+        self.atool = self.addToolBarItem(
+            "Images/add.png", size, "Add New Tenant", "Add New Tenant"
         )
-        self.AddSeparator()
-
-        save_icon = scale_bitmap(resourcePath("Images/save.png"), *size)
-        self.stool = self.AddTool(
-            wx.ID_ANY,
-            "Save All Reports",
-            save_icon,
-            "Save All Reports",
+        self.otool = self.addToolBarItem(
+            "Images/open.png",
+            size,
+            "Open Device Spreadsheet",
+            "Open Device Spreadsheet",
         )
-        self.AddSeparator()
-
-        exe_icon = scale_bitmap(resourcePath("Images/run.png"), *size)
-        self.rtool = self.AddTool(wx.ID_ANY, "Run Action", exe_icon, "Run Action")
-        self.AddSeparator()
-
-        cmd_icon = scale_bitmap(resourcePath("Images/command.png"), *size)
-        self.cmdtool = self.AddTool(wx.ID_ANY, "Run Command", cmd_icon, "Run Command")
-
-        self.AddSeparator()
-
-        uploadIcon = scale_bitmap(resourcePath("Images/upload.png"), *size)
-        self.uploadApp = self.AddTool(
-            wx.ID_ANY, "Upload App (APK)", uploadIcon, "Upload App (APK)"
+        self.stool = self.addToolBarItem(
+            "Images/save.png", size, "Save All Reports", "Save All Reports"
         )
-
-        self.AddSeparator()
+        self.rtool = self.addToolBarItem(
+            "Images/run.png", size, "Run Action", "Run Action"
+        )
+        self.cmdtool = self.addToolBarItem(
+            "Images/command.png", size, "Run Command", "Run Command"
+        )
+        self.uploadApp = self.addToolBarItem(
+            "Images/upload.png", size, "Upload App (APK)", "Upload App (APK)"
+        )
 
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
         self.AddControl(self.search)
 
         self.__set_properties()
+
+    def addToolBarItem(
+        self,
+        bitmap_path,
+        size,
+        label,
+        shortHelp,
+        id=wx.ID_ANY,
+        addSeparator=True,
+    ):
+        icon = scale_bitmap(resourcePath(bitmap_path), *size)
+        tool = self.AddTool(id, label, icon, shortHelp)
+
+        if addSeparator:
+            self.AddSeparator()
+        return tool
 
     @api_tool_decorator()
     def __set_properties(self):
@@ -127,3 +127,13 @@ class ToolsToolBar(wx.ToolBar):
         if success:
             widget.WriteText(data.GetText())
         widget.SetFocus()
+
+    def toggleMajorityToolsState(self, state):
+        # self.EnableTool(self.qtool.Id, state)  # Quit
+        self.EnableTool(self.rtool.Id, state)  # Run
+        self.EnableTool(self.cmdtool.Id, state)  # Command
+        self.EnableTool(self.atool.Id, state)  # Add Tenant
+        self.EnableTool(self.otool.Id, state)  # Open Spreadsheet
+        self.EnableTool(self.stool.Id, state)  # Save
+        self.EnableTool(self.uploadApp.Id, state)  # Upload App
+        self.search.Enable(state)
