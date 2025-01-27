@@ -27,7 +27,7 @@ class SentryUtils:
                     self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1
                 )
         except Exception as e:
-            ApiToolLog.LogError(e)
+            ApiToolLog.LogError(e, postIssue=False)
 
     def readTokenInfo(self):
         filePath = "token.json"
