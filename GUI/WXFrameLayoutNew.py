@@ -1505,15 +1505,13 @@ class NewFrameLayout(wx.Frame):
             and self.preferences["enableDevice"]
         ):
             self.sidePanel.runBtn.Enable(False)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, False)
-            self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, False)
+            self.frame_toolbar.toggleMajorityToolsState(False)
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
             self.statusBar.gauge.Pulse()
         else:
             if not self.isRunning or not self.isBusy:
                 self.sidePanel.runBtn.Enable(True)
-                self.frame_toolbar.EnableTool(self.frame_toolbar.rtool.Id, True)
-        self.frame_toolbar.EnableTool(self.frame_toolbar.cmdtool.Id, True)
+                self.frame_toolbar.toggleMajorityToolsState(True)
         self.toggleEnabledState(False)
         Globals.THREAD_POOL.enqueue(self.addDevicesToDeviceChoice, tolerance=2)
         Globals.THREAD_POOL.enqueue(
@@ -2706,16 +2704,7 @@ class NewFrameLayout(wx.Frame):
         )
 
         determineDoHereorMainThread(
-            self.frame_toolbar.EnableTool, self.frame_toolbar.otool.Id, state
-        )
-        determineDoHereorMainThread(
-            self.frame_toolbar.EnableTool, self.frame_toolbar.rtool.Id, state
-        )
-        determineDoHereorMainThread(
-            self.frame_toolbar.EnableTool, self.frame_toolbar.cmdtool.Id, state
-        )
-        determineDoHereorMainThread(
-            self.frame_toolbar.EnableTool, self.frame_toolbar.atool.Id, state
+            self.frame_toolbar.toggleMajorityToolsState, state
         )
 
         # Toggle Menu Bar Items
