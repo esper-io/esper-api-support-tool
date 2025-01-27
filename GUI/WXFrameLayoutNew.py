@@ -413,7 +413,7 @@ class NewFrameLayout(wx.Frame):
             platform.system() == "Darwin"
             and "main" not in threading.current_thread().name.lower()
         ):
-            determineDoHereorMainThread(self.addEndpoint, event)
+            determineDoHereorMainThread(self.AddEndpoint, event)
             return
 
         isValid = False
