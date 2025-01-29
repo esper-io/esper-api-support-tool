@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -178,56 +179,18 @@ def convertColumnTypes(data, headers):
                         if str(col_type)[:3] == "int" or (
                             isDigit and not hasDecimal
                         ):
-                            if (
-                                c_min > np.iinfo(np.int8).min
-                                and c_max < np.iinfo(np.int8).max
-                            ):
+                            if __attempt_cast__(c_min, c_max, np.int8):
                                 data[col] = data[col].astype(np.int8)
-                            elif (
-                                c_min > np.iinfo(np.uint8).min
-                                and c_max < np.iinfo(np.uint8).max
-                            ):
-                                data[col] = data[col].astype(np.uint8)
-                            elif (
-                                c_min > np.iinfo(np.int16).min
-                                and c_max < np.iinfo(np.int16).max
-                            ):
+                            elif __attempt_cast__(c_min, c_max, np.int16):
                                 data[col] = data[col].astype(np.int16)
-                            elif (
-                                c_min > np.iinfo(np.uint16).min
-                                and c_max < np.iinfo(np.uint16).max
-                            ):
-                                data[col] = data[col].astype(np.uint16)
-                            elif (
-                                c_min > np.iinfo(np.int32).min
-                                and c_max < np.iinfo(np.int32).max
-                            ):
+                            elif __attempt_cast__(c_min, c_max, np.int32):
                                 data[col] = data[col].astype(np.int32)
-                            elif (
-                                c_min > np.iinfo(np.uint32).min
-                                and c_max < np.iinfo(np.uint32).max
-                            ):
-                                data[col] = data[col].astype(np.uint32)
-                            elif (
-                                c_min > np.iinfo(np.int64).min
-                                and c_max < np.iinfo(np.int64).max
-                            ):
+                            else:
                                 data[col] = data[col].astype(np.int64)
-                            elif (
-                                c_min > np.iinfo(np.uint64).min
-                                and c_max < np.iinfo(np.uint64).max
-                            ):
-                                data[col] = data[col].astype(np.uint64)
                         else:
-                            if (
-                                c_min > np.finfo(np.float16).min
-                                and c_max < np.finfo(np.float16).max
-                            ):
+                            if __attempt_cast__(c_min, c_max, np.float16):
                                 data[col] = data[col].astype(np.float16)
-                            elif (
-                                c_min > np.finfo(np.float32).min
-                                and c_max < np.finfo(np.float32).max
-                            ):
+                            elif __attempt_cast__(c_min, c_max, np.float32):
                                 data[col] = data[col].astype(np.float32)
                             else:
                                 data[col] = data[col].astype(np.float64)
@@ -244,3 +207,15 @@ def convertColumnTypes(data, headers):
             if col_type == data[col].dtype:
                 data[col] = data[col].astype(pd.StringDtype())
     return data
+
+
+def __attempt_cast__(min, max, type):
+    try:
+        with warnings.catch_warnings(record=True) as w:
+            if min > np.finfo(type).min and max < np.finfo(type).max:
+                return True
+            if w:
+                return False
+    except:
+        pass
+    return False
