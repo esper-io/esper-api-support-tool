@@ -117,6 +117,7 @@ def getExecutableCommand(doFirst=True):
         "sentry_sdk.integrations.argv",
         "sentry_sdk.integrations.logging",
         "sentry_sdk.integrations.threading",
+        "Levenshtein",
     ]
     if platform.system() == "Windows":
         if isModuleInstalled("pyinstaller"):

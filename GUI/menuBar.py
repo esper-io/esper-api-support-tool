@@ -415,7 +415,7 @@ class ToolMenuBar(wx.MenuBar):
             else:
                 msg = "You are up-to-date!"
         else:
-            msg = "An error occured while downloading the update. Please try again later."
+            msg = "An error occurred while downloading the update. Please try again later."
         if msg:
             self.parentFrame.Logging(
                 msg, isError=True if "error" in msg.lower() else False
@@ -451,7 +451,7 @@ class ToolMenuBar(wx.MenuBar):
             )
         else:
             icon = wx.ICON_ERROR
-            msg = "An error occured while downloading the update. Please try again later."
+            msg = "An error occurred while downloading the update. Please try again later."
 
         if msg and showDlg:
             postEventToFrame(

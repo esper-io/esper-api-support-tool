@@ -114,7 +114,7 @@ def displayApiExcpetionMsg(e):
 def displayGenericErrorMsg(e):
     Globals.msg_lock.acquire(timeout=10)
     wx.MessageBox(
-        "An Error has occured: \n\n%s" % e,
+        "An Error has occurred: \n\n%s" % e,
         style=wx.OK | wx.ICON_ERROR,
         parent=Globals.frame,
     )

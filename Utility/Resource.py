@@ -395,12 +395,13 @@ def updateErrorTracker():
 def getStrRatioSimilarity(s, t, usePartial=False):
     try:
         if s and t:
-            if usePartial:
+            if hasattr(fuzz, "ratio") and not usePartial:
+                return fuzz.ratio(s.lower(), t.lower())
+            elif hasattr(fuzz, "partial_ratio"):
                 return fuzz.partial_ratio(s.lower(), t.lower())
-            return fuzz.ratio(s.lower(), t.lower())  # TODO possible error here.
     except Exception as e:
         ApiToolLog().LogError(e)
-    return False
+    return 0
 
 
 def isApiKey(key):

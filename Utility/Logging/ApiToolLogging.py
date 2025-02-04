@@ -89,9 +89,10 @@ class ApiToolLog:
                 pass
 
         self.limitLogFileSizes()
+        errorLine = "\t%s\t%s\n" % (str(exc_type), str(exc_value))
         content = [
-            "\n%s\t: An Error has occured: %s\n" % (datetime.now(), e),
-            "\t%s\t%s\n" % (str(exc_type), str(exc_value)),
+            "\n%s\t: An Error has occurred: %s\n" % (datetime.now(), e),
+            errorLine,
             "\tEsper Tool Version: %s\n" % Globals.VERSION,
         ]
         for line in exc_traceback:
@@ -103,7 +104,18 @@ class ApiToolLog:
             self.postIssueToTrack(e, content)
 
         if Globals.frame and postStatus:
-            if Globals.frame.audit and not self.should_skip(content):
+            last_error_time = Globals.error_tracker.get(errorLine, None)
+            minutes = 0
+            if last_error_time:
+                timeDiff = datetime.now() - last_error_time
+                minutes = timeDiff.total_seconds() / 60
+            if (
+                Globals.frame.audit
+                and not self.should_skip(content)
+                and (
+                    not last_error_time or minutes > Globals.MAX_ERROR_TIME_DIFF
+                )
+            ):
                 Globals.frame.audit.postOperation(
                     {
                         "operation": "ERROR",
@@ -111,6 +123,7 @@ class ApiToolLog:
                     }
                 )
             Globals.frame.Logging(str(e), True)
+        Globals.error_tracker[errorLine] = datetime.now()
 
     def Log(self, msg):
         with open(self.logPath, "a") as myfile:
@@ -279,9 +292,15 @@ class ApiToolLog:
             return
 
         def getStrRatioSimilarity(s, t, usePartial=False):
-            if usePartial:
-                return fuzz.partial_ratio(s.lower(), t.lower())
-            return fuzz.ratio(s.lower(), t.lower())
+            try:
+                if s and t:
+                    if hasattr(fuzz, "ratio") and not usePartial:
+                        return fuzz.ratio(s.lower(), t.lower())
+                    elif hasattr(fuzz, "partial_ratio"):
+                        return fuzz.partial_ratio(s.lower(), t.lower())
+            except:
+                pass
+            return 0
 
         if self.should_skip(excpt):
             return

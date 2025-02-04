@@ -222,7 +222,7 @@ class TemplateDialog(wx.Dialog):
                 )
             else:
                 self.text_ctrl_1.AppendText(
-                    "An ERROR occured when fetching the template, please try again."
+                    "An ERROR occurred when fetching the template, please try again."
                 )
             self.text_ctrl_1.ShowPosition(0)
         self.checkInputValues()

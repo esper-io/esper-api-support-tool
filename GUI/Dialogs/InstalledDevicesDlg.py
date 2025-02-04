@@ -273,7 +273,11 @@ class InstalledDevicesDlg(wx.Dialog):
                         self.list_box_2.Append(version.version_code, version.id)
                     elif type(versions) == dict:
                         self.list_box_2.Append(
-                            version["version_code"], version["id"]
+                            version.get(
+                                "version_name",
+                                version.get("version_code", "Unknown"),
+                            ),
+                            version["id"],
                         )
         if matches:
             self.list_box_2.Enable(True)

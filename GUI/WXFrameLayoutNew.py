@@ -409,11 +409,11 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def AddEndpoint(self, event):
         """Try to open and load an Auth CSV"""
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(self.AddEndpoint, event)
+        if "main" not in threading.current_thread().name.lower():
+            postEventToFrame(
+                eventUtil.EventUtility.myEVT_PROCESS_FUNCTION,
+                (self.AddEndpoint, event),
+            )
             return
 
         isValid = False
@@ -442,7 +442,7 @@ class NewFrameLayout(wx.Frame):
                             )
                             displayMessageBox(
                                 (
-                                    "ERROR: An error occured when attempting to add the tenant.\nCheck inputs values and your internet connection.",
+                                    "ERROR: An error occurred when attempting to add the tenant.\nCheck inputs values and your internet connection.",
                                     wx.ICON_ERROR,
                                 )
                             )
@@ -451,7 +451,7 @@ class NewFrameLayout(wx.Frame):
                         _, host, _, _ = dialog.getUserInput()
                         displayMessageBox(
                             (
-                                "ERROR: An error occured when attempting to add the tenant (%s).\nCheck inputs values and your internet connection."
+                                "ERROR: An error occurred when attempting to add the tenant (%s).\nCheck inputs values and your internet connection."
                                 % str(e),
                                 wx.ICON_ERROR,
                             )
@@ -1108,7 +1108,7 @@ class NewFrameLayout(wx.Frame):
                 raise Exception("Failed to load configuration")
         except Exception as e:
             self.Logging(
-                "---> An Error has occured while loading the configuration, please try again."
+                "---> An Error has occurred while loading the configuration, please try again."
             )
             print(e)
             ApiToolLog().LogError(e)
