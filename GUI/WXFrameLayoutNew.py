@@ -57,7 +57,11 @@ from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import getAllPendingUsers, getAllUsers
+from Utility.API.UserUtility import (
+    getAllPendingUsers,
+    getAllUsers,
+    getAuthRoles,
+)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
 from Utility.EastUtility import (
@@ -2948,6 +2952,11 @@ class NewFrameLayout(wx.Frame):
         self.fetchAllKnownBlueprints()
         self.Logging("---> Blueprints fetched.")
 
+        self.Logging("---> Attempting to Custom User Roles...")
+        resp = getAuthRoles()
+        Globals.knownUserRoles = resp.get("roles", [])
+        self.Logging("---> Custom User Roles fetched.")
+
     @api_tool_decorator()
     def onUserReport(self, event):
         defaultFileName = "%s_User-Report" % datetime.now().strftime(
@@ -2985,8 +2994,9 @@ class NewFrameLayout(wx.Frame):
                 "EMM",
                 "Has EMM",
                 "Token",
-                "Role",
+                "Profile Role",
                 "Authz Role ID",
+                "Authz Role",
                 "Groups",
                 "Profile",
                 "Created On",
@@ -3003,6 +3013,17 @@ class NewFrameLayout(wx.Frame):
             if user["profile"]["role"].lower() in bannedRoles:
                 continue
             entry = []
+
+            matchingRole = next(
+                filter(
+                    lambda x: x.get("id") == user["profile"]["authz_role_id"],
+                    Globals.knownUserRoles,
+                ),
+                None,
+            )
+            if matchingRole:
+                matchingRole = matchingRole.get("name", "Unknown")
+
             entry.append(user["id"])
             entry.append(user["username"])
             entry.append(user["email"])
@@ -3017,6 +3038,7 @@ class NewFrameLayout(wx.Frame):
             entry.append(user["token"])
             entry.append(user["profile"]["role"])
             entry.append(user["profile"]["authz_role_id"])
+            entry.append(matchingRole)
             entry.append(user["profile"]["groups"])
             entry.append(user["profile"])
             entry.append(user["profile"]["created_on"])

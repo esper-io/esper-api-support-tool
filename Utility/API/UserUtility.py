@@ -101,3 +101,23 @@ def getUserInfo():
         if resp and hasattr(resp, "status_code") and resp.status_code < 300
         else None
     )
+
+
+def getAuthRoles(limit=None, offset=0):
+    url = (
+        "https://%s-api.esper.cloud/api/authz2/v1/roles/?limit=%s&offset=%s"
+        % (
+            Globals.configuration.host.replace("https://", "").replace(
+                "-api.esper.cloud/api", ""
+            ),
+            limit if limit else Globals.limit,
+            offset,
+        )
+    )
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+
+    return (
+        resp.json()
+        if resp and hasattr(resp, "status_code") and resp.status_code < 300
+        else None
+    )

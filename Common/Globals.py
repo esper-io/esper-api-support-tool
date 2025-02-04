@@ -86,6 +86,9 @@ knownGroups = {}
 # Known Blueprints
 knownBlueprints = {}
 
+# Known Custom User Roles
+knownUserRoles = {}
+
 knownApplications = []
 
 OPEN_DIALOGS = []
