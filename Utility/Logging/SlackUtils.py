@@ -78,73 +78,75 @@ class SlackUtils:
                 "text": {
                     "type": "plain_text",
                     "text": "%sEAST Usage" % (":bug: " if self.debug else ""),
-                    "emoji": True
-                }
+                    "emoji": True,
+                },
             },
-            {
-                "type": "divider"
-            },
+            {"type": "divider"},
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)" % (
-                            Globals.configuration.host.replace("https://", "").replace(
-                            "-api.esper.cloud/api", ""),
+                    "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)"
+                    % (
+                        Globals.configuration.host.replace(
+                            "https://", ""
+                        ).replace("-api.esper.cloud/api", ""),
+                        (
                             Globals.TOKEN_USER["username"]
-                            if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
-                            else "Unknown",
+                            if Globals.TOKEN_USER
+                            and "username" in Globals.TOKEN_USER
+                            else "Unknown"
+                        ),
+                        (
                             Globals.TOKEN_USER["id"]
                             if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
                             else "Unknown"
-                        )
-                }
+                        ),
+                    ),
+                },
             },
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Operation:* %s\t\t\t*Platform:* %s" % (operation, platform.system())
-                }
+                    "text": "*Operation:* %s\t\t\t*Platform:* %s %s"
+                    % (operation, platform.system(), platform.release()),
+                },
             },
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Date:* %s\t\t\tEAST Version:%s" % (
+                    "text": "*Date:* %s\t\t\tEAST Version:%s"
+                    % (
                         datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S"),
-                        Globals.VERSION
-                    )
-                }
+                        Globals.VERSION,
+                    ),
+                },
             },
             self.add_rich_text_section("Data", data),
             self.add_rich_text_section("Other", resp),
         ]
         return blocks
-    
+
     def add_rich_text_section(self, section_name, data):
         dataStr = str(data) if data else "None"
         if len(dataStr) > 4000:
             dataStr = dataStr[0:1000]
         rich_text = {
-                "type": "rich_text",
-                "elements": [
-                    {
-                        "type": "rich_text_section",
-                        "elements": [
-                            {
-                                "type": "text",
-                                "text": "%s: " % section_name,
-                                "style": {
-                                    "bold": True
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": dataStr
-                            }
-                        ]
-                    }
-                ]
-            }
+            "type": "rich_text",
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [
+                        {
+                            "type": "text",
+                            "text": "%s: " % section_name,
+                            "style": {"bold": True},
+                        },
+                        {"type": "text", "text": dataStr},
+                    ],
+                }
+            ],
+        }
         return rich_text
