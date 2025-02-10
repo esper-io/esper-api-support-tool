@@ -3102,6 +3102,7 @@ class NewFrameLayout(wx.Frame):
                 "Email",
                 "Is Active",
                 "Role",
+                "Authz Role",
                 "Groups",
                 "Created On",
                 "Updated On",
@@ -3110,10 +3111,25 @@ class NewFrameLayout(wx.Frame):
         num = 1
         for user in users["userinvites"]:
             entry = []
+
+            matchingRole = next(
+                filter(
+                    lambda x: x.get("id")
+                    == user["meta"]["profile"].get("authz_role_id", ""),
+                    Globals.knownUserRoles,
+                ),
+                None,
+            )
+            if matchingRole:
+                matchingRole = matchingRole.get("name", "")
+            else:
+                matchingRole = ""
+
             entry.append(user["id"])
             entry.append(user["email"])
             entry.append(user["meta"]["is_active"])
             entry.append(user["meta"]["profile"]["role"])
+            entry.append(matchingRole)
             entry.append(
                 user["meta"]["profile"]["groups"]
                 if "groups" in user["meta"]["profile"]
