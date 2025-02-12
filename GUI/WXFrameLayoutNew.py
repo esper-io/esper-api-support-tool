@@ -2954,7 +2954,7 @@ class NewFrameLayout(wx.Frame):
 
         self.Logging("---> Attempting to Custom User Roles...")
         resp = getAuthRoles()
-        Globals.knownUserRoles = resp.get("roles", [])
+        Globals.knownUserRoles = resp.get("roles", []) if resp else []
         self.Logging("---> Custom User Roles fetched.")
 
     @api_tool_decorator()
