@@ -3133,6 +3133,21 @@ class NewFrameLayout(wx.Frame):
             else:
                 matchingRole = ""
 
+            newGroups = []
+            if "groups" in user["meta"]["profile"]:
+                for group in user["meta"]["profile"]["groups"]:
+                    newGroups.append(
+                        {
+                            "id": group,
+                            "name": Globals.knownGroups.get(group, {}).get(
+                                "name", ""
+                            ),
+                            "path": Globals.knownGroups.get(group, {}).get(
+                                "path", ""
+                            ),
+                        }
+                    )
+
             entry.append(user["id"])
             entry.append(user["email"])
             entry.append(user["meta"]["is_active"])
