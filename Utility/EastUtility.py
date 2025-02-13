@@ -1385,7 +1385,11 @@ def searchForDeviceAndAppendToList(searchTerm, listToAppend):
             listToAppend += api_response["results"]
         else:
             for device in api_response["results"]:
-                if device["device_name"] == searchTerm:
+                if (
+                    device
+                    and device.get("device_name", device.get("name", ""))
+                    == searchTerm
+                ):
                     listToAppend.append(device)
                     break
 
