@@ -1399,25 +1399,27 @@ class NewFrameLayout(wx.Frame):
         self.appThread = thread
         return thread
 
+    @api_tool_decorator(locks=[Globals.app_lock])
     def fetchAppsHelper(self):
         if self.groupThread and self.groupThread.is_alive():
             self.groupThread.join()
         Globals.token_lock.acquire()
         Globals.token_lock.release()
-        if Globals.IS_TOKEN_VALID:
-            self.Logging("---> Attempting to fetch applications...")
-            appResp = getAllInstallableApps(1)
-            if appResp:
-                appList = appResp.get("results", [])
-                for app in appList:
-                    entry = getAppDictEntry(app)
-                    if (
-                        entry
-                        and entry not in Globals.knownApplications
-                        and ("isValid" in entry and entry["isValid"])
-                    ):
-                        Globals.knownApplications.append(entry)
-            self.Logging("---> Finished fetching applications...")
+        with Globals.app_lock:
+            if Globals.IS_TOKEN_VALID:
+                self.Logging("---> Attempting to fetch applications...")
+                appResp = getAllInstallableApps(1)
+                if appResp:
+                    appList = appResp.get("results", [])
+                    for app in appList:
+                        entry = getAppDictEntry(app)
+                        if (
+                            entry
+                            and entry not in Globals.knownApplications
+                            and ("isValid" in entry and entry["isValid"])
+                        ):
+                            Globals.knownApplications.append(entry)
+                self.Logging("---> Finished fetching applications...")
 
     def fetchAllKnownBlueprints(self):
         resp = getAllBlueprints(tolerance=1, useThreadPool=False)
@@ -1528,50 +1530,56 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def addDevicesToDeviceChoice(self, tolerance=0):
         """Populate Device Choice"""
-        self.Logging("--->Processing devices...")
-        for clientData in self.sidePanel.selectedGroupsList:
-            api_response = getAllDevices(
-                clientData,
-                limit=Globals.limit,
-                fetchAll=True,
-                tolarance=tolerance,
-            )
-            self.sidePanel.deviceResp = api_response
-            splitResults = None
-            if hasattr(api_response, "results") and len(api_response.results):
-                self.Logging("---> Processing fetched devices...")
-                if not Globals.SHOW_DISABLED_DEVICES:
-                    api_response.results = list(
-                        filter(filterDeviceList, api_response.results)
-                    )
-                api_response.results = sorted(
-                    api_response.results,
-                    key=lambda i: i.device_name.lower(),
+        # Wait for fetch App API to finish, by waiting for lock to be released
+        with Globals.app_lock:
+            self.Logging("--->Processing devices...")
+            for clientData in self.sidePanel.selectedGroupsList:
+                api_response = getAllDevices(
+                    clientData,
+                    limit=Globals.limit,
+                    fetchAll=True,
+                    tolarance=tolerance,
                 )
-                splitResults = splitListIntoChunks(api_response.results)
-            elif type(api_response) is dict and len(api_response["results"]):
-                self.Logging("---> Processing fetched devices...")
-                if not Globals.SHOW_DISABLED_DEVICES:
-                    api_response["results"] = list(
-                        filter(filterDeviceList, api_response["results"])
+                self.sidePanel.deviceResp = api_response
+                splitResults = None
+                if hasattr(api_response, "results") and len(
+                    api_response.results
+                ):
+                    self.Logging("---> Processing fetched devices...")
+                    if not Globals.SHOW_DISABLED_DEVICES:
+                        api_response.results = list(
+                            filter(filterDeviceList, api_response.results)
+                        )
+                    api_response.results = sorted(
+                        api_response.results,
+                        key=lambda i: i.device_name.lower(),
                     )
-                api_response["results"] = sorted(
-                    api_response["results"],
-                    key=lambda i: (
-                        i["device_name"].lower()
-                        if "device_name" in i
-                        else i["name"].lower()
-                    ),
-                )
-                splitResults = splitListIntoChunks(api_response["results"])
+                    splitResults = splitListIntoChunks(api_response.results)
+                elif type(api_response) is dict and len(
+                    api_response["results"]
+                ):
+                    self.Logging("---> Processing fetched devices...")
+                    if not Globals.SHOW_DISABLED_DEVICES:
+                        api_response["results"] = list(
+                            filter(filterDeviceList, api_response["results"])
+                        )
+                    api_response["results"] = sorted(
+                        api_response["results"],
+                        key=lambda i: (
+                            i["device_name"].lower()
+                            if "device_name" in i
+                            else i["name"].lower()
+                        ),
+                    )
+                    splitResults = splitListIntoChunks(api_response["results"])
 
-            if splitResults:
-                for chunk in splitResults:
-                    Globals.THREAD_POOL.enqueue(
-                        self.processAddDeviceToChoice, chunk
-                    )
-                Globals.THREAD_POOL.join(tolerance=tolerance)
-        self.Logging("--->Finished Processing devices...")
+                if splitResults:
+                    for chunk in splitResults:
+                        Globals.THREAD_POOL.enqueue(
+                            self.processAddDeviceToChoice, chunk
+                        )
+                    Globals.THREAD_POOL.join(tolerance=tolerance)
+            self.Logging("--->Finished Processing devices...")
 
     def processAddDeviceToChoice(self, chunk):
         if not chunk:

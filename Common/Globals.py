@@ -78,6 +78,7 @@ grid1_lock = threading.Lock()
 grid2_lock = threading.Lock()
 grid3_lock = threading.Lock()
 token_lock = threading.Lock()
+app_lock = threading.Lock()
 join_lock = threading.Lock()
 
 # Known Group Var
