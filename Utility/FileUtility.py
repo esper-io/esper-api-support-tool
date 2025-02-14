@@ -9,7 +9,7 @@ import openpyxl
 import pandas as pd
 
 import Common.Globals as Globals
-from Utility.Logging import ApiToolLogging
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -99,9 +99,7 @@ def write_data_to_csv(
                 if data:
                     writer.writerows(data)
     except Exception as e:
-        ApiToolLogging.logger.error(
-            "Error while writing data to csv file: %s" % str(e)
-        )
+        ApiToolLog().LogError(e)
         raise e
 
 
@@ -159,9 +157,7 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
                 encoding="mbcs",
             )
         except Exception as e:
-            ApiToolLogging.logger.error(
-                "Error while reading csv file: %s" % str(e)
-            )
+            ApiToolLog().LogError(e)
             raise e
     return pd.concat(data, ignore_index=True)
 
