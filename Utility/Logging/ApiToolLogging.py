@@ -100,9 +100,6 @@ class ApiToolLog:
 
         self.Log(content)
 
-        if postIssue:
-            self.postIssueToTrack(e, content)
-
         if Globals.frame and postStatus:
             last_error_time = Globals.error_tracker.get(errorLine, None)
             minutes = 0
@@ -168,7 +165,12 @@ class ApiToolLog:
                 myfile.write("%s\n" % entry)
             myfile.write("\n")
 
-        self.postIssueToTrack("%s %s" % (content[2], content[3]), content)
+        Globals.frame.audit.postOperation(
+            {
+                "operation": "ERROR",
+                "data": content,
+            }
+        )
 
         if Globals.frame and hasattr(Globals.frame, "Logging"):
             Globals.frame.Logging(str(content), True)
@@ -286,65 +288,6 @@ class ApiToolLog:
             finally:
                 if Globals.api_log_lock.locked():
                     Globals.api_log_lock.release()
-
-    def postIssueToTrack(self, excpt, content):
-        if not Globals.AUTO_REPORT_ISSUES:
-            return
-
-        def getStrRatioSimilarity(s, t, usePartial=False):
-            try:
-                if s and t:
-                    if hasattr(fuzz, "ratio") and not usePartial:
-                        return fuzz.ratio(s.lower(), t.lower())
-                    elif hasattr(fuzz, "partial_ratio"):
-                        return fuzz.partial_ratio(s.lower(), t.lower())
-            except:
-                pass
-            return 0
-
-        if self.should_skip(excpt):
-            return
-
-        self.tracker_lock.acquire()
-
-        tracker = IssueTracker()
-        title = None
-        if excpt is not None:
-            content.insert(0, str(excpt))
-        content.append("EAST Version:\t%s" % Globals.VERSION)
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        body = "\n".join(
-            str(entry)
-            .replace(os.getcwd(), "<user_path>")
-            .replace(dir_path, "<user_path>")
-            .replace(os.path.expanduser("~"), "<user_path>")
-            for entry in content
-        )
-
-        if isinstance(excpt, Exception):
-            title = repr(excpt)
-        elif excpt is not None:
-            title = str(excpt)
-
-        try:
-            issues = tracker.listOpenIssues()
-            if issues:
-                match = False
-                for issue in issues:
-                    ratio = getStrRatioSimilarity(issue["title"], title, True)
-                    if ratio >= 90:
-                        match = True
-                        tracker.postIssueComment(issue["number"], content)
-                        break
-                if not match:
-                    tracker.createIssue(title, body)
-            else:
-                tracker.createIssue(title, body)
-        except Exception as e:
-            print("Failed to post issue to tracker: %s" % e)
-
-        if self.tracker_lock.locked():
-            self.tracker_lock.release()
 
     def should_skip(self, error_excpt):
         if Globals.IS_DEBUG or type(error_excpt) is ApiException:

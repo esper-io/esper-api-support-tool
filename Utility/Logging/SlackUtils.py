@@ -11,7 +11,7 @@ from slack_sdk.errors import SlackApiError
 
 import Common.Globals as Globals
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import resourcePath
+from Utility.Resource import enforceRateLimit, resourcePath
 
 
 class SlackUtils:
@@ -28,6 +28,7 @@ class SlackUtils:
     def send_message(self, message):
         if self.client is None:
             return
+        enforceRateLimit()
         return self.post_block_message(message, None)
 
     def get_slack_details(self):
@@ -55,6 +56,7 @@ class SlackUtils:
         if self.client is None:
             return
         resp = None
+        enforceRateLimit()
         try:
             resp = self.client.chat_postMessage(
                 channel=self.channel_id,
