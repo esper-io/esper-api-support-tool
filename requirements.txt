@@ -2,7 +2,8 @@ wxPython
 requests
 esperclient
 pyinstaller
-fuzzywuzzy
+rapidfuzz
+thefuzz
 python-Levenshtein
 cryptography
 pytz

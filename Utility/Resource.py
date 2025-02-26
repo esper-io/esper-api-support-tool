@@ -16,8 +16,8 @@ from pathlib import Path
 import esperclient
 import requests
 import wx
-from fuzzywuzzy import fuzz
 from ratelimit import limits, sleep_and_retry
+from thefuzz import fuzz, process
 
 import Common.Globals as Globals
 from Common import enum
@@ -395,6 +395,9 @@ def updateErrorTracker():
 def getStrRatioSimilarity(s, t, usePartial=False):
     try:
         if s and t:
+            if s.lower().strip() == t.lower().strip():
+                return 100
+
             if hasattr(fuzz, "ratio") and not usePartial:
                 return fuzz.ratio(s.lower(), t.lower())
             elif hasattr(fuzz, "partial_ratio"):
