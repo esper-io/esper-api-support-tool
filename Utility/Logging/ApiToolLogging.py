@@ -46,6 +46,7 @@ class ApiToolLog:
             "Failed to load configuration",
             "Read-only file system",
             "ApiException",
+            "'error': 'ratelimited'"
         ]
 
     def limitLogFileSizes(self):
