@@ -16,42 +16,24 @@ import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (
-    getDeviceAppsApiUrl,
-    getInstallDevices,
-    uploadApplication,
-)
+from Utility.API.AppUtilities import (getDeviceAppsApiUrl, getInstallDevices,
+                                      uploadApplication)
 from Utility.API.BlueprintUtility import getBlueprint
-from Utility.API.CommandUtility import (
-    executeCommandOnDevice,
-    executeCommandOnGroup,
-)
-from Utility.API.DeviceUtility import (
-    getAllDevices,
-    getDeviceById,
-    getDeviceDetail,
-    getLatestEvent,
-    getLatestEventApiUrl,
-    searchForDevice,
-)
+from Utility.API.CommandUtility import (executeCommandOnDevice,
+                                        executeCommandOnGroup)
+from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
+                                       getDeviceDetail, getLatestEvent,
+                                       getLatestEventApiUrl, searchForDevice)
 from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
 from Utility.API.UserUtility import getUserInfo
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import (
-    constructDeviceAppRowEntry,
-    createDataFrameFromDict,
-)
+from Utility.GridUtilities import (constructDeviceAppRowEntry,
+                                   createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    displayMessageBox,
-    getHeader,
-    ipv6Tomac,
-    postEventToFrame,
-    splitListIntoChunks,
-    utc_to_local,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
+                              getHeader, ipv6Tomac, postEventToFrame,
+                              splitListIntoChunks, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -687,7 +669,7 @@ def compileDeviceGroupData(deviceInfo):
         if bp_id in Globals.knownBlueprints:
             deviceInfo["assigned_blueprint_id"] = Globals.knownBlueprints[
                 bp_id
-            ]["name"]
+            ].get("name", "<Unknown>")
         elif bp_id:
             bp_resp = getBlueprint(bp_id)
             Globals.knownBlueprints[bp_id] = bp_resp
