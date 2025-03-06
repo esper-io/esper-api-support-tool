@@ -91,12 +91,17 @@ class ApiToolLog:
         self.limitLogFileSizes()
         errorLine = "\t%s\t%s\n" % (str(exc_type), str(exc_value))
         content = [
-            "\n%s\t: An Error has occurred: %s\n" % (datetime.now(), e),
+            "\n%s\t: An Error has occurred: %s" % (datetime.now(), e),
             errorLine,
-            "\tEsper Tool Version: %s\n" % Globals.VERSION,
+            "\tEsper Tool Version: %s" % Globals.VERSION,
         ]
         for line in exc_traceback:
-            content.append(line.split('",')[1])
+            parts = line.split('",')
+            entry = "".join(parts[1:]) if len(parts) > 1 else parts[0]
+            entry = entry.replace('\n', "").replace("^", "").strip()
+            entry = "\t%s" % entry
+            if entry:
+                content.append(entry)
 
         self.Log(content)
 
@@ -145,16 +150,16 @@ class ApiToolLog:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exc_traceback = format_list(extract_tb(exc_traceback))
         content = [
-            "\n%s\tUncaught exception:\n" % datetime.now(),
+            "\n%s\tUncaught exception:" % datetime.now(),
             "".join(traceback.format_exception(type, value, tb)),
-            "\tExc Type: %s\n" % str(exc_type) if str(exc_type) else type,
-            "\tExc Value: %s\n" % str(exc_value) if str(exc_value) else value,
+            "Exc Type:\t%s" % str(exc_type) if str(exc_type) else type,
+            "Exc Value:\t%s" % str(exc_value) if str(exc_value) else value,
             (
-                "\tExc Traceback:\n%s\n" % str(exc_traceback)
+                "Exc Traceback:\t%s" % str(exc_traceback)
                 if str(exc_traceback)
                 else tb
             ),
-            "\tEsper Tool Version: " + Globals.VERSION,
+            "Esper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
         for line in exc_traceback:
