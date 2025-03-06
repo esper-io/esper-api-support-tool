@@ -2097,6 +2097,8 @@ class NewFrameLayout(wx.Frame):
                     )
                 if isError:
                     self.statusBar.sbText.SetForegroundColour(Color.red.value)
+                elif (wx.SystemSettings.GetAppearance().IsDark()):
+                    self.statusBar.sbText.SetForegroundColour(Color.white.value)
                 else:
                     self.statusBar.sbText.SetForegroundColour(Color.black.value)
         except Exception as e:
