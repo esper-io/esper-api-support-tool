@@ -16,6 +16,7 @@ from pathlib import Path
 import esperclient
 import requests
 import wx
+import wx.grid
 from ratelimit import limits, sleep_and_retry
 from thefuzz import fuzz, process
 
@@ -545,15 +546,25 @@ def displayFileDialog(
 def setElmTheme(elm):
     isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
 
-    if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
-        elm, "SetBackgroundColour"
-    ):
+    if isinstance(elm, wx.Panel) or isinstance(elm, wx.Button) or isinstance(elm, wx.Window):
         if isDarkMode:
-            elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
-            elm.SetForegroundColour(enum.Color.white.value)
+            setElementTheme(elm, enum.Color.darkdarkGrey.value, enum.Color.white.value)
         else:
-            elm.SetBackgroundColour(enum.Color.lightGrey.value)
-            elm.SetForegroundColour(enum.Color.black.value)
-    if hasattr(elm, "GetChildren") and elm.GetChildren():
+            setElementTheme(elm, enum.Color.lightGrey.value, enum.Color.black.value)
+    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isinstance(elm, wx.grid.Grid):
         for child in elm.GetChildren():
             setElmTheme(child)
+
+def setElementTheme(elm, bgColor, fgColor):
+    if hasattr(elm, "SetBackgroundColour"):
+        elm.SetBackgroundColour(bgColor)
+    if hasattr(elm, "SetForegroundColour"):
+        elm.SetForegroundColour(fgColor)
+    if hasattr(elm, "SetOwnBackgroundColour"):
+        elm.SetOwnBackgroundColour(bgColor)
+    if hasattr(elm, "SetOwnForegroundColour"):
+        elm.SetOwnForegroundColour(fgColor)
+    if hasattr(elm, "SetDefaultCellBackgroundColour"):
+        elm.SetDefaultCellBackgroundColour(bgColor)
+    if hasattr(elm, "SetDefaultCellTextColour"):
+        elm.SetDefaultCellTextColour(fgColor)
