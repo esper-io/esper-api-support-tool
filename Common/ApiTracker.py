@@ -79,4 +79,6 @@ API_FUNCTIONS = {
     "get_token_info": "/token",
     "renew_token": "/token",
     "feature_flags": "/feature-flags",
+    "authz": "/authz2/",
+    "tenant-apps": "/tenant-apps",
 }
