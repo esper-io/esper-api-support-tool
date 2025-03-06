@@ -403,7 +403,7 @@ def getStrRatioSimilarity(s, t, usePartial=False):
             elif hasattr(fuzz, "partial_ratio"):
                 return fuzz.partial_ratio(s.lower(), t.lower())
     except Exception as e:
-        ApiToolLog().LogError(e)
+        ApiToolLog().LogError(e, postIssue=False, postStatus=False)
     return 0
 
 
