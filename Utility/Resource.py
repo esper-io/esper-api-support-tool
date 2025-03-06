@@ -545,18 +545,31 @@ def displayFileDialog(
 
 def setElmTheme(elm):
     isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
+    bgColor = enum.Color.darkdarkGrey.value
+    fgColor = enum.Color.white.value
 
-    if (isinstance(elm, wx.Panel) 
-        or isinstance(elm, wx.Button) 
-        or isinstance(elm, wx.Window) 
-        and not isinstance(elm, wx.ToolBar)):
-        if isDarkMode:
-            setElementTheme(elm, enum.Color.darkdarkGrey.value, enum.Color.white.value)
-        else:
-            setElementTheme(elm, enum.Color.lightGrey.value, enum.Color.black.value)
-    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isinstance(elm, wx.grid.Grid) and not isinstance(elm, wx.ToolBar):
+    if not isDarkMode:
+        bgColor = enum.Color.white.value
+        fgColor = enum.Color.black.value
+
+    if ((isinstance(elm, wx.Panel) 
+        or isinstance(elm, wx.Button)
+        or isinstance(elm, wx.Window))
+        and not isInThemeBlacklist(elm)):
+        setElementTheme(elm, bgColor, fgColor)
+    if isinstance(elm, wx.grid.Grid):
+        elm.SetDefaultCellBackgroundColour(bgColor)
+        elm.SetDefaultCellTextColour(fgColor)
+    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isInThemeBlacklist(elm):
         for child in elm.GetChildren():
             setElmTheme(child)
+
+
+def isInThemeBlacklist(elm):
+    return (isinstance(elm, wx.grid.Grid)
+            or isinstance(elm, wx.ToolBar)
+            or isinstance(elm, wx.Button))
+
 
 def setElementTheme(elm, bgColor, fgColor):
     if hasattr(elm, "SetBackgroundColour"):
@@ -567,7 +580,3 @@ def setElementTheme(elm, bgColor, fgColor):
         elm.SetOwnBackgroundColour(bgColor)
     if hasattr(elm, "SetOwnForegroundColour"):
         elm.SetOwnForegroundColour(fgColor)
-    if hasattr(elm, "SetDefaultCellBackgroundColour"):
-        elm.SetDefaultCellBackgroundColour(bgColor)
-    if hasattr(elm, "SetDefaultCellTextColour"):
-        elm.SetDefaultCellTextColour(fgColor)
