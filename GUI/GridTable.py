@@ -150,10 +150,14 @@ class GridTable(gridlib.Grid):
                 isReadOnly = True
                 if header in Globals.CSV_EDITABLE_COL:
                     isReadOnly = False
-                editor = self.GetCellEditor(0, self.headersLabels.index(header))
-                attr = gridlib.GridCellAttr()
-                attr.SetReadOnly(isReadOnly)
-                self.SetColAttr(self.headersLabels.index(header), attr)
+                numRows = self.GetNumberRows()
+                numCols = self.GetNumberCols()
+                colIndx = self.headersLabels.index(header)
+                if colIndx < numCols and numRows >= 0:
+                    editor = self.GetCellEditor(0, colIndx)
+                    attr = gridlib.GridCellAttr()
+                    attr.SetReadOnly(isReadOnly)
+                    self.SetColAttr(self.headersLabels.index(header), attr)
 
             self.ApplyGridStyle(autosize=autosize, resetPosition=resetPosition)
         except Exception as e:
