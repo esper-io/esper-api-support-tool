@@ -252,7 +252,7 @@ class ApiToolLog:
         if writeToFile:
             if not strToWrite:
                 strToWrite = (
-                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\n\tFunction: %s, triggerring %s.\n\n\tTotal Requests: %s\n"
+                    "%s API Request orginated from Tenant: %s User: %s (id: %s)\n\tFunction: %s, triggerring %s.\n\tTotal Requests: %s\n"
                     % (
                         datetime.now(),
                         str(Globals.configuration.host),
