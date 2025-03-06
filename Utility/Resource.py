@@ -546,12 +546,15 @@ def displayFileDialog(
 def setElmTheme(elm):
     isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
 
-    if isinstance(elm, wx.Panel) or isinstance(elm, wx.Button) or isinstance(elm, wx.Window):
+    if (isinstance(elm, wx.Panel) 
+        or isinstance(elm, wx.Button) 
+        or isinstance(elm, wx.Window) 
+        and not isinstance(elm, wx.ToolBar)):
         if isDarkMode:
             setElementTheme(elm, enum.Color.darkdarkGrey.value, enum.Color.white.value)
         else:
             setElementTheme(elm, enum.Color.lightGrey.value, enum.Color.black.value)
-    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isinstance(elm, wx.grid.Grid):
+    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isinstance(elm, wx.grid.Grid) and not isinstance(elm, wx.ToolBar):
         for child in elm.GetChildren():
             setElmTheme(child)
 
