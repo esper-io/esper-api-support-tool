@@ -6,6 +6,7 @@ import wx
 import wx.adv
 
 import Common.Globals as Globals
+from Utility.Resource import setElmTheme
 
 
 class ScheduleCmdDialog(wx.Dialog):
@@ -234,6 +235,7 @@ class ScheduleCmdDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
 
+        setElmTheme(self)
         self.Layout()
         self.Centre()
 

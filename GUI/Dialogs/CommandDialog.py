@@ -11,6 +11,7 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.Resource import setElmTheme
 
 
 class CommandDialog(wx.Dialog):
@@ -32,6 +33,7 @@ class CommandDialog(wx.Dialog):
             self.createSplitWindowView(title, value)
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Fit()
 
     def createJsonWindowView(self, title, value):

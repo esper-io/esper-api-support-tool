@@ -552,17 +552,33 @@ def setElmTheme(elm):
         bgColor = enum.Color.white.value
         fgColor = enum.Color.black.value
 
-    if ((isinstance(elm, wx.Panel) 
-        or isinstance(elm, wx.Button)
-        or isinstance(elm, wx.Window))
-        and not isInThemeBlacklist(elm)):
-        setElementTheme(elm, bgColor, fgColor)
-    if isinstance(elm, wx.grid.Grid):
-        elm.SetDefaultCellBackgroundColour(bgColor)
-        elm.SetDefaultCellTextColour(fgColor)
-    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isInThemeBlacklist(elm):
-        for child in elm.GetChildren():
-            setElmTheme(child)
+    if platform.system() == "Windows" and sys.getwindowsversion().build < 22000:
+        # Windows 10
+        if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
+            elm, "SetBackgroundColour"
+        ):
+            if isDarkMode:
+                elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
+                elm.SetForegroundColour(enum.Color.white.value)
+            else:
+                elm.SetBackgroundColour(enum.Color.lightGrey.value)
+                elm.SetForegroundColour(enum.Color.black.value)
+        if hasattr(elm, "GetChildren") and elm.GetChildren():
+            for child in elm.GetChildren():
+                setElmTheme(child)
+    else:
+        # Windows 11 & Mac
+        if ((isinstance(elm, wx.Panel) 
+            or isinstance(elm, wx.Button)
+            or isinstance(elm, wx.Window))
+            and not isInThemeBlacklist(elm)):
+            setElementTheme(elm, bgColor, fgColor)
+        if isinstance(elm, wx.grid.Grid):
+            elm.SetDefaultCellBackgroundColour(bgColor)
+            elm.SetDefaultCellTextColour(fgColor)
+        if hasattr(elm, "GetChildren") and elm.GetChildren() and not isInThemeBlacklist(elm):
+            for child in elm.GetChildren():
+                setElmTheme(child)
 
 
 def isInThemeBlacklist(elm):

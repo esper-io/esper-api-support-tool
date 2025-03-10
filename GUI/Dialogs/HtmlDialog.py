@@ -2,6 +2,7 @@ import wx
 import wx.html as html
 
 import Common.Globals as Globals
+from Utility.Resource import setElmTheme
 
 
 class HtmlDialog(wx.Dialog):
@@ -50,6 +51,7 @@ class HtmlDialog(wx.Dialog):
         sizer_1.Fit(self)
 
         self.applyFontSize()
+        self.CentreOnParent()
         self.Layout()
 
     def isCheckboxChecked(self):

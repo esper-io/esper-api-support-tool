@@ -5,7 +5,7 @@ import wx
 from Common import Globals
 from Common.decorator import api_tool_decorator
 from GUI.TabPanel import TabPanel
-from Utility.Resource import getStrRatioSimilarity
+from Utility.Resource import getStrRatioSimilarity, setElmTheme
 
 
 class ColumnVisibility(wx.Dialog):
@@ -71,6 +71,7 @@ class ColumnVisibility(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
         self.SetAffirmativeId(self.button_APPLY.GetId())
 
+        setElmTheme(self)
         self.Layout()
 
         self.Bind(wx.EVT_CLOSE, self.onClose)

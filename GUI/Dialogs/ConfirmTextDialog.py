@@ -5,7 +5,7 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import openWebLinkInBrowser
+from Utility.Resource import openWebLinkInBrowser, setElmTheme
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -80,6 +80,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.SetEscapeId(self.button_1.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
         self.Centre()
 

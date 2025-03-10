@@ -7,7 +7,7 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import openWebLinkInBrowser
+from Utility.Resource import openWebLinkInBrowser, setElmTheme
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -115,6 +115,7 @@ class NewEndpointDialog(wx.Dialog):
 
         self.applyFontSize()
 
+        setElmTheme(self)
         self.Layout()
         self.Centre()
 

@@ -5,7 +5,7 @@ import wx
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.AppUtilities import getAppVersions
-from Utility.Resource import getStrRatioSimilarity
+from Utility.Resource import getStrRatioSimilarity, setElmTheme
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -221,6 +221,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.SetMaxSize(wx.Size(int(size[0] * 0.75), int(size[1] * 0.75)))
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
         self.Fit()
         self.Centre()

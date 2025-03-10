@@ -14,12 +14,8 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    displayFileDialog,
-    displayMessageBox,
-    getHeader,
-)
+from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
+                              displayMessageBox, getHeader, setElmTheme)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -172,6 +168,7 @@ class GeofenceDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
 
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.createGeofence)

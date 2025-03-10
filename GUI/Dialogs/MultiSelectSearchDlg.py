@@ -11,12 +11,9 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    getStrRatioSimilarity,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.Resource import (determineDoHereorMainThread,
+                              getStrRatioSimilarity, resourcePath,
+                              scale_bitmap, setElmTheme)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -151,6 +148,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.SetAffirmativeId(self.button_OK.GetId())
 
+        setElmTheme(self)
         self.Layout()
 
         self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onSelectAll)

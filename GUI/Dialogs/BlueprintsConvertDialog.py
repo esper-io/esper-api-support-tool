@@ -12,11 +12,8 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import checkFeatureFlags
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    getEsperConfig,
-    openWebLinkInBrowser,
-)
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -163,6 +160,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
 
         # Bind Events

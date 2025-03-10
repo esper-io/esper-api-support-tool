@@ -9,17 +9,12 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.API.BlueprintUtility import (
-    checkFeatureFlags,
-    getAllBlueprintsFromHost,
-    getGroupBlueprintDetailForHost,
-)
+from Utility.API.BlueprintUtility import (checkFeatureFlags,
+                                          getAllBlueprintsFromHost,
+                                          getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    getEsperConfig,
-    openWebLinkInBrowser,
-)
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -163,6 +158,7 @@ class BlueprintsDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
 
         # Bind Events

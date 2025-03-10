@@ -4,6 +4,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.Resource import setElmTheme
 
 
 class CheckboxMessageBox(wx.Dialog):
@@ -25,6 +26,8 @@ class CheckboxMessageBox(wx.Dialog):
 
         self.okBtn.Bind(wx.EVT_BUTTON, self.OnClose)
         self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnClose)
+
+        setElmTheme(self)
 
         self.__set_properties(title)
         self.__do_layout(caption)

@@ -4,6 +4,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.Resource import setElmTheme
 
 
 class LargeTextEntryDialog(wx.Dialog):
@@ -69,6 +70,7 @@ class LargeTextEntryDialog(wx.Dialog):
         self.text_ctrl_1.Bind(wx.EVT_KEY_DOWN, self.onKey)
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
         self.Centre()
 

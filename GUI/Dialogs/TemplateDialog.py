@@ -10,11 +10,9 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    getStrRatioSimilarity,
-    openWebLinkInBrowser,
-)
+from Utility.Resource import (determineDoHereorMainThread,
+                              getStrRatioSimilarity, openWebLinkInBrowser,
+                              setElmTheme)
 
 
 class TemplateDialog(wx.Dialog):
@@ -160,6 +158,7 @@ class TemplateDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
 
         self.templateSearch.Bind(wx.EVT_SEARCH, self.onSearchTemplate)
