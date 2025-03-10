@@ -67,7 +67,7 @@ def postEventToFrame(eventType, eventValue=None):
     if eventType:
         try:
             evt = CustomEvent(eventType, -1, eventValue)
-            if Globals.frame:
+            if Globals.frame and not Globals.frame.kill:
                 wx.PostEvent(Globals.frame, evt)
         except Exception as e:
             ApiToolLog().LogError(e)
