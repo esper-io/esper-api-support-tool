@@ -67,13 +67,10 @@ class AuditPosting:
 
         if type(values) is dict and "operation" in values and "data" in values:
             try:
-                self.slack_utils.post_block_message(
-                    "East Usage",
-                    self.slack_utils.get_operation_blocks(
-                        values["operation"],
-                        values["data"],
-                        values["resp"] if "resp" in values else "",
-                    ),
+                self.slack_utils.append_message_and_blocks(
+                    values["operation"],
+                    values["data"],
+                    values["resp"] if "resp" in values else "",
                 )
             except Exception as e:
                 ApiToolLog().LogError(e)
@@ -129,3 +126,6 @@ class AuditPosting:
                 "%s UTC %s : %s" % (now, host, str(operation)),
                 userStr + "Data:\n%s" % str(data) + contentStr,
             )
+
+    def postStoredOperations(self):
+        self.slack_utils.send_stored_operations()

@@ -535,6 +535,7 @@ class NewFrameLayout(wx.Frame):
             self.internetCheck.stop()
         if hasattr(self, "errorTracker") and self.errorTracker:
             self.errorTracker.stop()
+        self.audit.postStoredOperations()
         self.Destroy()
         for item in list(wx.GetTopLevelWindows()):
             if not isinstance(item, NewFrameLayout):
