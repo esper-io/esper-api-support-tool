@@ -16,6 +16,7 @@ from pathlib import Path
 import esperclient
 import requests
 import wx
+import wx.grid
 from ratelimit import limits, sleep_and_retry
 from thefuzz import fuzz, process
 
@@ -544,16 +545,38 @@ def displayFileDialog(
 
 def setElmTheme(elm):
     isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
+    bgColor = enum.Color.darkdarkGrey.value
+    fgColor = enum.Color.white.value
 
-    if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
-        elm, "SetBackgroundColour"
-    ):
-        if isDarkMode:
-            elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
-            elm.SetForegroundColour(enum.Color.white.value)
-        else:
-            elm.SetBackgroundColour(enum.Color.lightGrey.value)
-            elm.SetForegroundColour(enum.Color.black.value)
-    if hasattr(elm, "GetChildren") and elm.GetChildren():
+    if not isDarkMode:
+        bgColor = enum.Color.white.value
+        fgColor = enum.Color.black.value
+
+    if ((isinstance(elm, wx.Panel) 
+        or isinstance(elm, wx.Button)
+        or isinstance(elm, wx.Window))
+        and not isInThemeBlacklist(elm)):
+        setElementTheme(elm, bgColor, fgColor)
+    if isinstance(elm, wx.grid.Grid):
+        elm.SetDefaultCellBackgroundColour(bgColor)
+        elm.SetDefaultCellTextColour(fgColor)
+    if hasattr(elm, "GetChildren") and elm.GetChildren() and not isInThemeBlacklist(elm):
         for child in elm.GetChildren():
             setElmTheme(child)
+
+
+def isInThemeBlacklist(elm):
+    return (isinstance(elm, wx.grid.Grid)
+            or isinstance(elm, wx.ToolBar)
+            or isinstance(elm, wx.Button))
+
+
+def setElementTheme(elm, bgColor, fgColor):
+    if hasattr(elm, "SetBackgroundColour"):
+        elm.SetBackgroundColour(bgColor)
+    if hasattr(elm, "SetForegroundColour"):
+        elm.SetForegroundColour(fgColor)
+    if hasattr(elm, "SetOwnBackgroundColour"):
+        elm.SetOwnBackgroundColour(bgColor)
+    if hasattr(elm, "SetOwnForegroundColour"):
+        elm.SetOwnForegroundColour(fgColor)
