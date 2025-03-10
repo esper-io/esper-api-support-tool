@@ -366,6 +366,13 @@ def fetchInstalledDevices(app, version, inFile):
         "---> Get Installed Devices API Request Finished. Gathering Device Info...",
     )
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 20)
+    postEventToFrame(
+        eventUtil.myEVT_AUDIT,
+        {
+            "operation": "GetInstalledDevicesReport",
+            "data": "%s %s" % (app, version),
+        },
+    )
     if res:
         # Get Basic Device Info
         newDeviceList = processInstallDevices(res)
