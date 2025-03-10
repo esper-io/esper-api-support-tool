@@ -306,6 +306,7 @@ class SlackUtils:
         return resp
 
     def send_stored_operations(self):
-        self.postMessageWithFile("East Usage")
-        self.reset_operations_file()
+        if not Globals.IS_DEBUG:
+            self.postMessageWithFile("East Usage")
+            self.reset_operations_file()
 
