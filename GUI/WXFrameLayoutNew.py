@@ -1043,6 +1043,8 @@ class NewFrameLayout(wx.Frame):
 
         self.firstRun = False
 
+        self.audit.postStoredOperations()
+
         if ApiTracker.API_REQUEST_SESSION_TRACKER > 0:
             thread = ApiToolLog().LogApiRequestOccurrence(
                 None, ApiTracker.API_REQUEST_TRACKER, True
