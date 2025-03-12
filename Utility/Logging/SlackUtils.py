@@ -298,10 +298,11 @@ class SlackUtils:
             ApiToolLog().LogError(e)
         return resp
 
-    def send_stored_operations(self):
+    def send_stored_operations(self, reset=True):
         # Avoid sending messages when debugging
         if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
         self.postMessageWithFile("East Usage")
-        self.reset_operations_file()
+        if reset:
+            self.reset_operations_file()
 
