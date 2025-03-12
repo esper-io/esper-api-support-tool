@@ -223,7 +223,7 @@ class SlackUtils:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)"
+                    "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)\t\t\t*Platform:* %s %s\t\t\tEAST Version:%s"
                     % (
                         Globals.configuration.host.replace(
                             "https://", ""
@@ -239,28 +239,21 @@ class SlackUtils:
                             if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
                             else "Unknown"
                         ),
+                        platform.system(), platform.release(), Globals.VERSION,
                     ),
-                },
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Platform:* %s %s\t\t\tEAST Version:%s"
-                    % (platform.system(), platform.release(), Globals.VERSION,),
                 },
             },
         ]
         if type(data) is list:
             operation_dict = {}
+            api_summary_str = ""
             for entry in data:
-                api_summary_str = ""
                 if type(entry) is list:
                     operation = entry[1]
                     if operation == "API Usage Summary" and len(entry) > 2:
-                        data = entry[2]
-                        summary_parts = data.split(":\t")
-                        if len(summary_parts) > 1:
+                        summary = entry[2]
+                        summary_parts = summary.split(":\t")
+                        if len(summary_parts) > 1 and summary_parts[1]:
                             api_summary_str = summary_parts[1]
                     elif operation in operation_dict:
                         operation_dict[operation] += 1
@@ -275,7 +268,7 @@ class SlackUtils:
             blocks.append(
                 self.add_rich_text_section(
                     "API Summary",
-                    re.sub("\\s", "", api_summary_str)
+                    re.sub("[\\t\\n]", " ", api_summary_str).strip()
                 )
             )
         return blocks
@@ -306,7 +299,9 @@ class SlackUtils:
         return resp
 
     def send_stored_operations(self):
-        if not Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
-            self.postMessageWithFile("East Usage")
-            self.reset_operations_file()
+        # Avoid sending messages when debugging
+        if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
+            return
+        self.postMessageWithFile("East Usage")
+        self.reset_operations_file()
 

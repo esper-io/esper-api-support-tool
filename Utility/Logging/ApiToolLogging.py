@@ -192,7 +192,7 @@ class ApiToolLog:
         strToWrite = ""
         if api_func and type(api_func) == dict:
             strToWrite = (
-                "Session API Summary:\t%s\n\n\tTotal Requests: %s\n\n"
+                "Session API Summary:\t%s\tTotal Requests: %s"
                 % (
                     (
                         str(api_func)
