@@ -548,12 +548,36 @@ def setElmTheme(elm):
     bgColor = enum.Color.darkdarkGrey.value
     fgColor = enum.Color.white.value
 
+    if Globals.THEME == "Dark":
+        isDarkMode = True
+    elif Globals.THEME == "Light":
+        isDarkMode = False
+
     if not isDarkMode:
-        bgColor = enum.Color.white.value
+        bgColor = enum.Color.lightGrey.value
         fgColor = enum.Color.black.value
 
-    if isDarkMode and (isinstance(elm, wx.SearchCtrl) or isinstance(elm, wx.TextCtrl)):
+    if (
+        isDarkMode 
+        and (
+            isinstance(elm, wx.SearchCtrl) 
+            or (
+                isinstance(elm, wx.TextCtrl)
+                and isinstance(elm.GetParent(), wx.SearchCtrl)
+                )
+            )
+        ):
         bgColor = enum.Color.grey.value
+    elif ( not isDarkMode 
+        and (
+            isinstance(elm, wx.SearchCtrl) 
+            or isinstance(elm, wx.TextCtrl)
+            or isinstance(elm, wx.grid.Grid)
+            or isinstance(elm, wx.ListCtrl)
+            or isinstance(elm, wx.ListBox)
+        )
+    ):
+        bgColor = enum.Color.white.value
 
     if platform.system() == "Windows" and sys.getwindowsversion().build < 22000:
         # Windows 10
@@ -591,6 +615,8 @@ def isInThemeBlacklist(elm):
 
 
 def setElementTheme(elm, bgColor, fgColor):
+    if hasattr(elm, "SetThemeEnabled"):
+        elm.SetThemeEnabled(False)
     if hasattr(elm, "SetBackgroundColour"):
         elm.SetBackgroundColour(bgColor)
     if hasattr(elm, "SetForegroundColour"):
@@ -599,3 +625,9 @@ def setElementTheme(elm, bgColor, fgColor):
         elm.SetOwnBackgroundColour(bgColor)
     if hasattr(elm, "SetOwnForegroundColour"):
         elm.SetOwnForegroundColour(fgColor)
+    if hasattr(elm, "SetItemBackgroundColour"):
+        for n in range(0, len(elm.GetItems())):
+            elm.SetItemBackgroundColour(n, bgColor)
+    if hasattr(elm, "SetItemForegroundColour"):
+        for n in range(0, len(elm.GetItems())):
+            elm.SetItemForegroundColour(n, fgColor)

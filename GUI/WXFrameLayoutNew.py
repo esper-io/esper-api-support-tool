@@ -227,7 +227,6 @@ class NewFrameLayout(wx.Frame):
         self.Layout()
         self.Centre()
         self.tryToMakeActive()
-        self.onThemeChange()
 
         if self.kill:
             return
@@ -246,7 +245,7 @@ class NewFrameLayout(wx.Frame):
 
     def onLaunch(self):
         self.loadPref()
-
+        self.Show()
         determineDoHereorMainThread(self.showDisclaimer)
 
     def showDisclaimer(self):
@@ -1465,8 +1464,6 @@ class NewFrameLayout(wx.Frame):
                 )
                 num += 1
         self.Logging("--->Finished Processing groups...")
-        self.sidePanel.groupChoice.Enable(True)
-        self.sidePanel.actionChoice.Enable(True)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
             self.Refresh,
@@ -2106,7 +2103,12 @@ class NewFrameLayout(wx.Frame):
                     )
                 if isError:
                     self.statusBar.sbText.SetForegroundColour(Color.red.value)
-                elif (wx.SystemSettings.GetAppearance().IsDark()):
+                elif (
+                    Globals.THEME == "Dark"
+                    or (
+                        Globals.THEME == "System" 
+                        and wx.SystemSettings.GetAppearance().IsDark()
+                    )):
                     self.statusBar.sbText.SetForegroundColour(Color.white.value)
                 else:
                     self.statusBar.sbText.SetForegroundColour(Color.black.value)
@@ -2406,6 +2408,7 @@ class NewFrameLayout(wx.Frame):
             self.sidePanel.deviceChoice.Enable(True)
         else:
             self.sidePanel.deviceChoice.Enable(False)
+        self.onThemeChange(None)
         self.isSavingPrefs = False
 
     @api_tool_decorator()

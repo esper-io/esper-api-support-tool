@@ -352,6 +352,20 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_10.SetMax(72)
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
+        (
+            _,
+            _,
+            self.combo_theme,
+        ) = self.addPrefToPanel(
+            self.display,
+            sizer_11,
+            "Theme",
+            wx.ComboBox,
+            "Theme of the application.",
+            choice=["Light", "Dark", "System"],
+        )
+        self.combo_theme.SetSelection(2)
+
         # Save Options
         self.save = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.save.Hide()
@@ -874,6 +888,7 @@ class PreferencesDialog(wx.Dialog):
             "aliasDayDelta": self.spin_ctrl_9.GetValue(),
             "colVisibility": self.parent.gridPanel.getColVisibility(),
             "fontSize": self.spin_ctrl_10.GetValue(),
+            "theme": self.combo_theme.GetValue(),
             "saveColVisibility": self.checkbox_15.IsChecked(),
             "replaceSerial": self.checkbox_17.IsChecked(),
             "showDisabledDevices": self.checkbox_18.IsChecked(),
@@ -898,6 +913,7 @@ class PreferencesDialog(wx.Dialog):
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
         }
 
+        Globals.THEME = self.prefs["theme"]
         Globals.PULL_APPLE_DEVICES = self.prefs["pullAppleDevices"]
         Globals.FONT_SIZE = int(self.prefs["fontSize"])
         Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
@@ -1152,6 +1168,11 @@ class PreferencesDialog(wx.Dialog):
             Globals.FONT_SIZE = int(self.prefs["fontSize"])
             Globals.HEADER_FONT_SIZE = Globals.FONT_SIZE + 7
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
+
+        if "theme" in self.prefs:
+            self.combo_theme.SetValue(self.prefs["theme"])
+            Globals.THEME = self.prefs["theme"]
+            self.Parent.onThemeChange(None)
 
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
@@ -1434,6 +1455,8 @@ class PreferencesDialog(wx.Dialog):
             return Globals.ALIAS_DAY_DELTA
         elif key == "fontSize":
             return Globals.FONT_SIZE
+        elif key == "theme":
+            return Globals.THEME
         elif key == "saveColVisibility":
             return Globals.SAVE_VISIBILITY
         elif key == "replaceSerial":

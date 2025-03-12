@@ -28,6 +28,8 @@ error_tracker = {}
 IS_TOKEN_VALID = False
 TOKEN_USER = None
 
+THEME = "System"
+
 ALL_DEVICES_IN_TENANT = "* All Devices In Tenant *"
 
 MAX_DEVICE_COUNT = 5000

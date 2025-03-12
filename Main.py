@@ -28,7 +28,7 @@ class MyApp(wx.App):
 
             Globals.frame = FrameLayout()
             self.SetTopWindow(Globals.frame)
-            Globals.frame.Show()
+            # Globals.frame.Show()
         except Exception as e:
             ApiToolLog().LogError(e)
             raise e
