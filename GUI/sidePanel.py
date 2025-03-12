@@ -428,3 +428,29 @@ class SidePanel(wx.Panel):
                 else:
                     child.SetFont(font)
             self.applyFontHelper(child, font, normalBoldFont)
+
+    def getFriendlySelectedGroupNames(self):
+        friendlyNames = []
+        for groupId in self.selectedGroupsList:
+            found = True
+            for groupName, group in self.groups.items():
+                if groupId == group:
+                    friendlyNames.append(groupName)
+                    found = True
+                    break
+            if not found:
+                friendlyNames.append(groupId)
+        return friendlyNames
+
+    def getFriendlySelectedDeviceNames(self):
+        friendlyNames = []
+        for deviceId in self.selectedDevices:
+            found = True
+            for deviceName, device in self.devices.items():
+                if deviceId == device:
+                    friendlyNames.append(deviceName)
+                    found = True
+                    break
+            if not found:
+                friendlyNames.append(deviceId)
+        return friendlyNames

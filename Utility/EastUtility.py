@@ -370,7 +370,8 @@ def fetchInstalledDevices(app, version, inFile):
         eventUtil.myEVT_AUDIT,
         {
             "operation": "GetInstalledDevicesReport",
-            "data": "%s %s" % (app, version),
+            "data": "App:%s Version:%s" % (app, version),
+            "resp": res
         },
     )
     if res:

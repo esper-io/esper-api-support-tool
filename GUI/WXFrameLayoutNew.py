@@ -1749,9 +1749,9 @@ class NewFrameLayout(wx.Frame):
                         % (
                             actionLabel,
                             (
-                                self.sidePanel.selectedGroupsList
+                                self.sidePanel.getFriendlySelectedGroupNames()
                                 if not self.sidePanel.selectedDevicesList
-                                else self.sidePanel.selectedDevicesList
+                                else self.sidePanel.getFriendlySelectedDeviceNames()
                             ),
                         ),
                     },
@@ -1819,7 +1819,15 @@ class NewFrameLayout(wx.Frame):
                 eventUtil.myEVT_AUDIT,
                 {
                     "operation": "ReportGeneration",
-                    "data": "Action: %s" % (actionLabel),
+                    "data": "Action: %s Targets:%s" 
+                    % (
+                        actionLabel,
+                        (
+                            self.sidePanel.getFriendlySelectedGroupNames()
+                            if not self.sidePanel.selectedDevicesList
+                            else self.sidePanel.getFriendlySelectedDeviceNames()
+                        )
+                    ),
                 },
             )
 
