@@ -552,6 +552,9 @@ def setElmTheme(elm):
         bgColor = enum.Color.white.value
         fgColor = enum.Color.black.value
 
+    if isDarkMode and (isinstance(elm, wx.SearchCtrl) or isinstance(elm, wx.TextCtrl)):
+        bgColor = enum.Color.grey.value
+
     if platform.system() == "Windows" and sys.getwindowsversion().build < 22000:
         # Windows 10
         if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
