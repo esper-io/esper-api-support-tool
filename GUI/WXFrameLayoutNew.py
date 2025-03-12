@@ -246,6 +246,14 @@ class NewFrameLayout(wx.Frame):
     def onLaunch(self):
         self.loadPref()
         self.Show()
+
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "Launch",
+                "data": "API Tool Launched",
+            },
+        )
         determineDoHereorMainThread(self.showDisclaimer)
 
     def showDisclaimer(self):

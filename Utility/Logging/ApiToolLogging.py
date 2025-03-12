@@ -280,7 +280,7 @@ class ApiToolLog:
                     Globals.api_log_lock.release()
 
     def should_skip(self, error_excpt):
-        if Globals.IS_DEBUG or type(error_excpt) is ApiException:
+        if (Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING) or type(error_excpt) is ApiException:
             return True
 
         for s in self.contain_blacklist:

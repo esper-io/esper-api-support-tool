@@ -58,6 +58,9 @@ def main():
     except Exception as e:
         ApiToolLog().LogError(e)
 
+def is_arg_enabled(val):
+    val = val.lower() if hasattr(val, "lower") else val
+    return (val == "true" or val == "t" or val == "y")
 
 if __name__ == "__main__":
     command = " ".join(sys.argv)
@@ -65,48 +68,33 @@ if __name__ == "__main__":
     for cmd in cmdList:
         parts = cmd.split(" ")
         if parts[0] == "record_place":
-            if (
-                parts[1].lower() == "true"
-                or parts[1].lower() == "t"
-                or parts[1].lower() == "y"
-            ):
+            if is_arg_enabled(parts[1]):
                 Globals.RECORD_PLACE = True
             else:
                 Globals.RECORD_PLACE = False
         if parts[0] == "print_res":
-            if (
-                parts[1].lower() == "true"
-                or parts[1].lower() == "t"
-                or parts[1].lower() == "y"
-            ):
+            if is_arg_enabled(parts[1]):
                 Globals.PRINT_RESPONSES = True
             else:
                 Globals.PRINT_RESPONSES = False
         if parts[0] == "print_duration":
-            if (
-                parts[1].lower() == "true"
-                or parts[1].lower() == "t"
-                or parts[1].lower() == "y"
-            ):
+            if is_arg_enabled(parts[1]):
                 Globals.PRINT_FUNC_DURATION = True
             else:
                 Globals.PRINT_FUNC_DURATION = False
         if parts[0] == "log_api":
-            if (
-                parts[1].lower() == "true"
-                or parts[1].lower() == "t"
-                or parts[1].lower() == "y"
-            ):
+            if is_arg_enabled(parts[1]):
                 Globals.PRINT_API_LOGS = True
             else:
                 Globals.PRINT_API_LOGS = False
         if parts[0] == "debug":
-            if (
-                parts[1].lower() == "true"
-                or parts[1].lower() == "t"
-                or parts[1].lower() == "y"
-            ):
+            if is_arg_enabled(parts[1]):
                 Globals.IS_DEBUG = True
             else:
                 Globals.IS_DEBUG = False
+        if parts[0] == "do_extra_logging":
+            if not is_arg_enabled(parts[1]):
+                Globals.DO_EXTRA_LOGGING = False
+            else:
+                Globals.DO_EXTRA_LOGGING = True
     main()

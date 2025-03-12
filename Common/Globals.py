@@ -13,6 +13,7 @@ configuration = esperclient.Configuration()
 enterprise_id = ""
 
 IS_DEBUG = False
+DO_EXTRA_LOGGING = True
 
 API_LOGGER = None
 

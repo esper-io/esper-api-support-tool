@@ -62,7 +62,7 @@ class AuditPosting:
             values = event
 
         # Avoid sending messages when debugging
-        if Globals.IS_DEBUG:
+        if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
 
         if type(values) is dict and "operation" in values and "data" in values:
