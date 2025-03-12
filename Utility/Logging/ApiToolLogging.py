@@ -192,27 +192,12 @@ class ApiToolLog:
         strToWrite = ""
         if api_func and type(api_func) == dict:
             strToWrite = (
-                "%s\tTenant: %s\n\tUser: %s (id: %s)\n\n\tSession API Summary:\t%s\n\n\tTotal Requests: %s\n\n"
+                "Session API Summary:\t%s\n\n\tTotal Requests: %s\n\n"
                 % (
-                    datetime.now(),
-                    str(Globals.configuration.host),
-                    (
-                        str(Globals.TOKEN_USER["username"])
-                        if Globals.TOKEN_USER
-                        and "username" in Globals.TOKEN_USER
-                        else "Unknown"
-                    ),
-                    (
-                        str(Globals.TOKEN_USER["id"])
-                        if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                        else "Unknown"
-                    ),
                     (
                         str(api_func)
                         if api_func != ApiTracker.API_REQUEST_TRACKER
-                        else json.dumps(
-                            ApiTracker.API_REQUEST_TRACKER, indent=4
-                        )
+                        else json.dumps(ApiTracker.API_REQUEST_TRACKER)
                     ),
                     ApiTracker.API_REQUEST_SESSION_TRACKER,
                 )
