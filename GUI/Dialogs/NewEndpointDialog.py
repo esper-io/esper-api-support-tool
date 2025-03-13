@@ -119,6 +119,8 @@ class NewEndpointDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+
         self.Fit()
 
     @api_tool_decorator()

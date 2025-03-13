@@ -174,6 +174,7 @@ class GeofenceDialog(wx.Dialog):
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.createGeofence)
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.applyGridSettings()
 

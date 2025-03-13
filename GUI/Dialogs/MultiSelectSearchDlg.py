@@ -168,6 +168,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.button_2.Bind(wx.EVT_BUTTON, self.onNext)
         self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
         self.checkPageButton()
 
         self.applyFontSize()

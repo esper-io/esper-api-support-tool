@@ -235,6 +235,7 @@ class InstalledDevicesDlg(wx.Dialog):
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         if self.otherPkgInput:
             self.otherPkgInput.Bind(wx.EVT_CHAR, self.onOtherPkgInput)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
     @api_tool_decorator()
     def onClose(self, event):

@@ -68,6 +68,7 @@ class LargeTextEntryDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
         self.text_ctrl_1.Bind(wx.EVT_KEY_DOWN, self.onKey)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.applyFontSize()
         setElmTheme(self)

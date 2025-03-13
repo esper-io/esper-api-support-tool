@@ -89,6 +89,7 @@ class ConfirmTextDialog(wx.Dialog):
         )
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.Fit()
 

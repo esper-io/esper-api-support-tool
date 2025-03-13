@@ -81,6 +81,7 @@ class ColumnVisibility(wx.Dialog):
         self.text_ctrl_1.Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.text_ctrl_1.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.text_ctrl_1.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.Bind(wx.EVT_LISTBOX, self.OnSelection)
         if (

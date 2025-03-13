@@ -36,6 +36,8 @@ class CommandDialog(wx.Dialog):
         setElmTheme(self)
         self.Fit()
 
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+
     def createJsonWindowView(self, title, value):
         self.SetSize((500, 400))
         self.SetTitle(title)

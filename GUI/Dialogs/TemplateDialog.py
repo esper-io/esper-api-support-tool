@@ -175,6 +175,7 @@ class TemplateDialog(wx.Dialog):
         self.list_box_1.Bind(wx.EVT_LISTBOX, self.OnSelection)
         if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
             self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.__set_properties()
 

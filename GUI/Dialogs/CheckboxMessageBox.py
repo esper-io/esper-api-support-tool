@@ -34,6 +34,8 @@ class CheckboxMessageBox(wx.Dialog):
 
         self.Fit()
 
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+
     @api_tool_decorator()
     def __set_properties(self, title):
         self.SetTitle(title)

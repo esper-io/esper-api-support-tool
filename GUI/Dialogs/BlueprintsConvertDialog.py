@@ -175,6 +175,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.combo_box_2.Bind(wx.EVT_COMBOBOX, self.checkInputs)
         self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadTemplates)
         self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadTemplatePreview)
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)

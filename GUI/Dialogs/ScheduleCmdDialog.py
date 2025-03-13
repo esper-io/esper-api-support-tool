@@ -235,6 +235,8 @@ class ScheduleCmdDialog(wx.Dialog):
         self.SetAffirmativeId(self.button_OK.GetId())
         self.SetEscapeId(self.button_CANCEL.GetId())
 
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+
         setElmTheme(self)
         self.Layout()
         self.Centre()
