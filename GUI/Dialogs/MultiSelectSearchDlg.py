@@ -18,7 +18,7 @@ from Utility.Resource import (determineDoHereorMainThread,
 
 class MultiSelectSearchDlg(wx.Dialog):
     def __init__(
-        self, parent, choices, label="", title="", single=False, resp=None
+        self, parent, choices, label="", title="", single=False, resp=None,
     ):
         size = (500, 400)
         super(MultiSelectSearchDlg, self).__init__(
@@ -40,6 +40,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.resp = resp
         self.limit = 0
         self.allDeviceStr = ""
+        self.single_selection = single
 
         if "group" in label.lower():
             self.allDeviceStr = Globals.ALL_DEVICES_IN_TENANT
@@ -78,6 +79,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         self.checkbox_1 = wx.CheckBox(self.panel_4, wx.ID_ANY, "Select All")
         self.checkbox_1.SetToolTip("Select all entries on the page")
+        if single:
+            self.checkbox_1.Hide()
         sizer_4.Add(self.checkbox_1, 0, wx.EXPAND, 5)
 
         self.search = wx.SearchCtrl(self.panel_4, wx.ID_ANY, "")
@@ -92,7 +95,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         listStyle = (
             wx.LB_MULTIPLE | wx.LB_NEEDED_SB | wx.LB_SORT
             if not single
-            else wx.LB_NEEDED_SB | wx.LB_SORT
+            else wx.LB_NEEDED_SB | wx.LB_SORT | wx.LB_SINGLE
         )
         self.check_list_box_1 = wx.CheckListBox(
             self.panel_2,
@@ -221,6 +224,10 @@ class MultiSelectSearchDlg(wx.Dialog):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
         checked = list(self.check_list_box_1.GetCheckedItems())
+        if self.single_selection:
+            for check in checked:
+                self.check_list_box_1.SetCheckedItems(tuple())
+            checked = list(self.check_list_box_1.GetCheckedItems())
         if self.onBoxCalledPrior and platform.system() != "Windows":
             self.onBoxCalledPrior = False
             self.check_list_box_1.Deselect(selection)
@@ -249,6 +256,11 @@ class MultiSelectSearchDlg(wx.Dialog):
     def OnBoxSelection(self, event):
         selection = event.GetSelection()
         selectionStr = self.check_list_box_1.GetString(selection)
+        if self.single_selection:
+            checked = list(self.check_list_box_1.GetCheckedItems())
+            for check in checked:
+                self.check_list_box_1.SetCheckedItems(tuple())
+
         self.onBoxCalledPrior = True
         if selectionStr in self.selected:
             self.selected.remove(selectionStr)
