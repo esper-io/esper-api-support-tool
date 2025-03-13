@@ -575,6 +575,7 @@ def setElmTheme(elm):
             or isinstance(elm, wx.grid.Grid)
             or isinstance(elm, wx.ListCtrl)
             or isinstance(elm, wx.ListBox)
+            or isinstance(elm, wx.SpinCtrl)
         )
     ):
         bgColor = enum.Color.white.value

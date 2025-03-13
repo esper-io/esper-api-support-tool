@@ -15,14 +15,14 @@ from Utility.Resource import determineDoHereorMainThread
 
 class PreferencesDialog(wx.Dialog):
     def __init__(self, parent=None):
+        self.size = (900, 500)
         super(PreferencesDialog, self).__init__(
             parent,
             wx.ID_ANY,
-            size=(800, 500),
+            size=self.size,
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.SetTitle("Preferences")
-        self.size = (800, 500)
         self.SetSize(self.size)
         self.SetMinSize(self.size)
         self.SetThemeEnabled(False)
