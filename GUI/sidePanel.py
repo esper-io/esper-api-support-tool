@@ -444,7 +444,7 @@ class SidePanel(wx.Panel):
 
     def getFriendlySelectedDeviceNames(self):
         friendlyNames = []
-        for deviceId in self.selectedDevices:
+        for deviceId in self.selectedDevicesList:
             found = True
             for deviceName, device in self.devices.items():
                 if deviceId == device:
