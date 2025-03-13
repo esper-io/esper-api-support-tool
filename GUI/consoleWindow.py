@@ -9,7 +9,8 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
-from Utility.Resource import openWebLinkInBrowser, postEventToFrame, resourcePath
+from Utility.Resource import (openWebLinkInBrowser, postEventToFrame,
+                              resourcePath, setElmTheme)
 
 
 class Console(wx.Frame):
@@ -83,7 +84,7 @@ class Console(wx.Frame):
         self.loggingList.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
-        self.SetBackgroundColour(Color.darkGrey.value)
+        setElmTheme(self)
         self.Centre()
         self.Show()
 
