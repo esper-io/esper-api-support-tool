@@ -1319,7 +1319,7 @@ class NewFrameLayout(wx.Frame):
             cmdResults = []
             if (
                 action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
-                # or action == GeneralActions.MOVE_GROUP.value
+                or action == GeneralActions.MOVE_GROUP.value
                 or action == GridActions.MOVE_GROUP.value
             ):
                 if threads == Globals.THREAD_POOL.threads:
@@ -1813,6 +1813,9 @@ class NewFrameLayout(wx.Frame):
                     self.setCursorDefault()
                     self.toggleEnabledState(True)
                     return
+        if actionClientData == GeneralActions.MOVE_GROUP.value:
+            self.moveGroup()
+            return
         if (
             self.sidePanel.selectedGroupsList
             and actionSelection > 0

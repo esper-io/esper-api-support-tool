@@ -113,7 +113,7 @@ GENERAL_ACTIONS = {
     + "General Actions "
     + "* " * NUM_STARS: -1,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
-    # "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
+    "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
 }
 
 GRID_ACTIONS = {

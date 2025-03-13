@@ -14,7 +14,7 @@ class GeneralActions(Enum):
 
     # Actions
     REMOVE_NON_WHITELIST_AP = 55
-    # MOVE_GROUP = 56
+    MOVE_GROUP = 56
 
 
 class GridActions(Enum):
