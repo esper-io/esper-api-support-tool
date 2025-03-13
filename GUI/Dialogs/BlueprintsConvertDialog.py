@@ -164,6 +164,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.Layout()
 
         # Bind Events
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.text_ctrl_1.Bind(
             wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
         )
@@ -191,10 +192,16 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.combo_box_1.Clear()
 
         Globals.THREAD_POOL.join(tolerance=1)
+        if not self:
+            return
         enabled = disabled = self.configMenuOpt.keys()
         for choice in enabled:
+            if not self:
+                return
             self.combo_box_1.Append(choice)
         for choice in disabled:
+            if not self:
+                return
             self.combo_box_3.Append(choice)
         self.combo_box_3.Enable(True)
         self.combo_box_1.Enable(True)
@@ -257,6 +264,9 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def OnClose(self, event):
+        if not self.combo_box_3.Enabled or not self.combo_box_1.Enabled:
+            return
+
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():

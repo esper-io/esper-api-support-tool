@@ -162,6 +162,7 @@ class BlueprintsDialog(wx.Dialog):
         self.Layout()
 
         # Bind Events
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.text_ctrl_1.Bind(
             wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
         )
@@ -187,11 +188,17 @@ class BlueprintsDialog(wx.Dialog):
                 self.getBlueprintEnabledEndpoints,
             )
             return
+        if not self:
+            return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
         Globals.THREAD_POOL.join(tolerance=1)
+        if not self:
+            return
         choices = self.configMenuOpt.keys()
         for choice in choices:
+            if not self:
+                return
             self.combo_box_3.Append(choice)
             self.combo_box_1.Append(choice)
         self.combo_box_3.Enable(True)
@@ -334,6 +341,11 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def OnClose(self, event):
+        if (
+            not self.combo_box_1.Enabled
+            or not self.combo_box_3.Enabled
+        ):
+            return
         if self.IsModal():
             self.EndModal(event.EventObject.Id)
         elif self.IsShown():

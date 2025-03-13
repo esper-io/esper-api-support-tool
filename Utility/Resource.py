@@ -560,7 +560,7 @@ def setElmTheme(elm):
     if (
         isDarkMode 
         and (
-            isinstance(elm, wx.SearchCtrl) 
+            isinstance(elm, wx.SearchCtrl)
             or (
                 isinstance(elm, wx.TextCtrl)
                 and isinstance(elm.GetParent(), wx.SearchCtrl)
@@ -568,6 +568,9 @@ def setElmTheme(elm):
             )
         ):
         bgColor = enum.Color.grey.value
+    elif (isDarkMode and isinstance(elm, wx.RadioBox)):
+        bgColor = enum.Color.darkGrey.value
+        fgColor = enum.Color.black.value
     elif ( not isDarkMode 
         and (
             isinstance(elm, wx.SearchCtrl) 
