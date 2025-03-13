@@ -8,7 +8,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import displayFileDialog
+from Utility.Resource import displayFileDialog, setElmTheme
 
 
 class WidgetPicker(wx.Dialog):
@@ -177,6 +177,7 @@ class WidgetPicker(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.applyFontSize()
+        setElmTheme(self)
         self.Layout()
 
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
