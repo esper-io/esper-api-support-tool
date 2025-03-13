@@ -186,6 +186,8 @@ class WidgetPicker(wx.Dialog):
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+
     @api_tool_decorator()
     def onEscapePressed(self, event):
         keycode = event.GetKeyCode()
