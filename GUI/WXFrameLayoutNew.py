@@ -1319,7 +1319,7 @@ class NewFrameLayout(wx.Frame):
             cmdResults = []
             if (
                 action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
-                or action == GeneralActions.MOVE_GROUP.value
+                # or action == GeneralActions.MOVE_GROUP.value
                 or action == GridActions.MOVE_GROUP.value
             ):
                 if threads == Globals.THREAD_POOL.threads:
