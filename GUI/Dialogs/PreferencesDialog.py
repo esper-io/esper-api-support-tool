@@ -825,7 +825,6 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
         self.btn_appFilter.Bind(wx.EVT_BUTTON, self.appFilterDlg)
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.Fit()
 
