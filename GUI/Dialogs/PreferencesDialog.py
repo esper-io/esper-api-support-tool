@@ -352,6 +352,9 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_10.SetMax(72)
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
+        themeChoice = ["Light", "Dark", "System"]
+        if platform().system() == "Darwin":
+            themeChoice = ["System"]
         (
             _,
             _,
@@ -362,7 +365,7 @@ class PreferencesDialog(wx.Dialog):
             "Theme",
             wx.ComboBox,
             "Theme of the application.",
-            choice=["Light", "Dark", "System"],
+            choice=themeChoice,
         )
         self.combo_theme.SetSelection(2)
 
