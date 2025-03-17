@@ -27,7 +27,7 @@ class NewEndpointDialog(wx.Dialog):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
-        sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 10)
 
         sizer_3 = wx.StaticBoxSizer(
             wx.StaticBox(self.panel_1, wx.ID_ANY, "Add New Tenant"), wx.VERTICAL
