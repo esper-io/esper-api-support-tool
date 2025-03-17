@@ -245,7 +245,7 @@ class NewFrameLayout(wx.Frame):
 
     def onLaunch(self):
         self.loadPref()
-        self.Show()
+        determineDoHereorMainThread(self.Show)
 
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
