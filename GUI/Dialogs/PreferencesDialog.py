@@ -1172,6 +1172,7 @@ class PreferencesDialog(wx.Dialog):
         if "theme" in self.prefs:
             self.combo_theme.SetValue(self.prefs["theme"])
             Globals.THEME = self.prefs["theme"]
+        if self.Parent and hasattr(self.Parent, "onThemeChange"):
             self.Parent.onThemeChange(None)
 
         if "colVisibility" in self.prefs:

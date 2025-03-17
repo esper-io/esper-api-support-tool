@@ -287,7 +287,7 @@ class SlackUtils:
                 if data:
                     blocks = self.get_summary_operations_block(data)
 
-                    upload = self.client.files_upload(file=self.operations_path, filename=self.filename)
+                    upload = self.client.files_upload_v2(file=self.operations_path, filename=self.filename)
                     message = message+"<"+upload['file']['permalink']+"| >"
                     resp = self.client.chat_postMessage(
                         channel=self.channel_id,
