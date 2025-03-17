@@ -619,6 +619,9 @@ def isInThemeBlacklist(elm):
 
 
 def setElementTheme(elm, bgColor, fgColor):
+    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+        determineDoHereorMainThread(setElementTheme, elm, bgColor, fgColor)
+        return
     if hasattr(elm, "SetThemeEnabled"):
         elm.SetThemeEnabled(False)
     if hasattr(elm, "SetBackgroundColour"):
