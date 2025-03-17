@@ -22,7 +22,7 @@
                 "--debug",
                 "true",
                 "--do_extra_logging",
-                "true"
+                "false"
             ],
             "env": {
                 "PYDEVD_DISABLE_FILE_VALIDATION": "1"
