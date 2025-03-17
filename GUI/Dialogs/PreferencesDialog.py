@@ -353,7 +353,7 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
         themeChoice = ["Light", "Dark", "System"]
-        if platform().system() == "Darwin":
+        if platform.system() == "Darwin":
             themeChoice = ["System"]
         (
             _,
