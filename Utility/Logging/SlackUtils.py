@@ -198,15 +198,7 @@ class SlackUtils:
                     "r": resp
                 }
             )
-            try:
-                with open(self.operations_path, "a", newline="", encoding="utf-8") as f:
-                    writer = csv.writer(f)
-                    for entry in self.messages_and_blocks:
-                        writer.writerow([entry["t"], entry["o"], entry["d"], entry["r"]])
-
-                self.messages_and_blocks = []
-            except Exception as e:
-                return
+            self.saveStoredMessageBlocks()
 
     def get_summary_operations_block(self, data):
         blocks = [
@@ -298,10 +290,23 @@ class SlackUtils:
             ApiToolLog().LogError(e)
         return resp
 
+    def saveStoredMessageBlocks(self):
+        try:
+            if self.messages_and_blocks:
+                with open(self.operations_path, "a", newline="", encoding="utf-8") as f:
+                    writer = csv.writer(f)
+                    for entry in self.messages_and_blocks:
+                        writer.writerow([entry["t"], entry["o"], entry["d"], entry["r"]])
+
+                self.messages_and_blocks = []
+        except Exception as e:
+            return
+
     def send_stored_operations(self, reset=True):
         # Avoid sending messages when debugging
         if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
+        self.saveStoredMessageBlocks()
         self.postMessageWithFile("East Usage")
         if reset:
             self.reset_operations_file()
