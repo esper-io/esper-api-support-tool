@@ -127,7 +127,7 @@ class SlackUtils:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Date:* %s\t\t\tEAST Version:%s"
+                    "text": "*Date:* %s\t\t\tEAST Version: %s"
                     % (
                         datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S"),
                         Globals.VERSION,
@@ -223,7 +223,7 @@ class SlackUtils:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)\t\t\t*Platform:* %s %s\t\t\tEAST Version:%s"
+                    "text": "*Tenant:* %s\t\t*User:* %s (*ID:* %s)\t\t*Platform:* %s %s\t\tEAST Version: %s"
                     % (
                         Globals.configuration.host.replace(
                             "https://", ""
