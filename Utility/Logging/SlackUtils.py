@@ -307,7 +307,7 @@ class SlackUtils:
         if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
         self.saveStoredMessageBlocks()
-        self.postMessageWithFile("East Usage")
-        if reset:
+        resp = self.postMessageWithFile("East Usage")
+        if reset and resp:
             self.reset_operations_file()
 
