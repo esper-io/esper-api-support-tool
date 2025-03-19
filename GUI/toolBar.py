@@ -41,9 +41,6 @@ class ToolsToolBar(wx.ToolBar):
         self.cmdtool = self.addToolBarItem(
             "Images/command.png", size, "Run Command", "Run Command"
         )
-        self.uploadApp = self.addToolBarItem(
-            "Images/upload.png", size, "Upload App (APK)", "Upload App (APK)"
-        )
 
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)
@@ -84,7 +81,6 @@ class ToolsToolBar(wx.ToolBar):
         self.Bind(wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
         self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
         self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
-        self.Bind(wx.EVT_TOOL, self.Parent.uploadApplication, self.uploadApp)
 
         self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
         self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
@@ -135,5 +131,4 @@ class ToolsToolBar(wx.ToolBar):
         self.EnableTool(self.atool.Id, state)  # Add Tenant
         self.EnableTool(self.otool.Id, state)  # Open Spreadsheet
         self.EnableTool(self.stool.Id, state)  # Save
-        self.EnableTool(self.uploadApp.Id, state)  # Upload App
         self.search.Enable(state)
