@@ -345,11 +345,19 @@ class GridTable(gridlib.Grid):
             currentDate = datetime.now()
             for rowNum in range(numRows):
                 value = self.GetCellValue(rowNum, colNum)
-                datePattern = (
-                    "%Y/%m/%d %H:%M:%S.%f"
-                    if "." in value
-                    else "%Y-%m-%dT%H:%MZ"
-                )
+                datePattern = ""
+                if "/" in value and "." in value:
+                    datePattern = "%Y/%m/%d %H:%M:%S.%f"
+                elif "/" in value:
+                    datePattern = "%Y/%m/%d %H:%M:%S"
+                elif "-" in value and "." in value and value.endswith("Z"):
+                    datePattern = "%Y-%m-%dT%H:%M:%S.%fZ"
+                elif "-" in value and "." in value:
+                    datePattern = "%Y-%m-%d %H:%M:%S.%f"
+                elif "-" in value and value.endswith("Z"):
+                    datePattern = "%Y-%m-%dT%H:%MZ"
+                elif "-" in value:
+                    datePattern = "%Y-%m-%d %H:%M:%S"
                 parsedDateTime = None
                 differenceInMinutes = None
                 try:

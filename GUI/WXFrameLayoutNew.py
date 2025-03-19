@@ -75,7 +75,7 @@ from Utility.Resource import (checkEsperInternetConnection,
                               checkForInternetAccess,
                               checkIfCurrentThreadStopped, correctSaveFileName,
                               createNewFile, determineDoHereorMainThread,
-                              displayFileDialog, displayMessageBox,
+                              displayFileDialog, displayMessageBox, isDarkMode,
                               joinThreadList, openWebLinkInBrowser,
                               postEventToFrame, processFunc, resourcePath,
                               setElmTheme, splitListIntoChunks,
@@ -1922,10 +1922,11 @@ class NewFrameLayout(wx.Frame):
                         '---> Attempting to run grid action, "%s".'
                         % actionLabel
                     )
+                    color = Color.white.value if (Globals.THEME == "Light" or not isDarkMode()) else Color.lightGrey.value
                     self.gridPanel.applyTextColorToDevice(
                         None,
                         Color.black.value,
-                        bgColor=Color.white.value,
+                        bgColor=color,
                         applyAll=True,
                     )
                     self.gridPanel.disableGridProperties()
@@ -2120,7 +2121,7 @@ class NewFrameLayout(wx.Frame):
                     Globals.THEME == "Dark"
                     or (
                         Globals.THEME == "System" 
-                        and wx.SystemSettings.GetAppearance().IsDark()
+                        and isDarkMode()
                     )):
                     self.statusBar.sbText.SetForegroundColour(Color.white.value)
                 else:
@@ -2666,6 +2667,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorBusy()
         self.gridPanel.setGridsCursor(wx.Cursor(wx.CURSOR_WAIT))
         self.gridPanel.disableGridProperties()
+        defaultCellColor = Color.darkdarkGrey.value if Globals.THEME == "Dark" or isDarkMode() else Color.white.value
         if (
             hasattr(event, "EventType")
             and (
@@ -2676,20 +2678,21 @@ class NewFrameLayout(wx.Frame):
             or wx.EVT_CHAR.typeId == event
         ):
             determineDoHereorMainThread(
-                self.applySearchColor, queryString, Color.white.value, True
+                self.applySearchColor, queryString, defaultCellColor, True
             )
         if queryString:
+            searchColor = Color.darkdarkYellow.value if Globals.THEME == "Dark" or isDarkMode() else Color.lightYellow.value
             determineDoHereorMainThread(
                 self.applySearchColor,
                 queryString,
-                Color.lightYellow.value,
+                searchColor,
                 True,
             )
             self.Logging("--> Search for %s completed" % queryString)
         else:
             self.frame_toolbar.search.SetValue("")
             determineDoHereorMainThread(
-                self.applySearchColor, queryString, Color.white.value, True
+                self.applySearchColor, queryString, defaultCellColor, True
             )
             self.Logging("--> Search Clearing completed")
         self.setCursorDefault()

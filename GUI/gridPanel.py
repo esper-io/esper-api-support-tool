@@ -13,15 +13,10 @@ from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    acquireLocks,
-    checkIfCurrentThreadStopped,
-    determineDoHereorMainThread,
-    postEventToFrame,
-    releaseLocks,
-    resourcePath,
-    scale_bitmap,
-)
+from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
+                              determineDoHereorMainThread, isDarkMode,
+                              postEventToFrame, releaseLocks, resourcePath,
+                              scale_bitmap)
 
 
 class GridPanel(wx.Panel):
@@ -174,12 +169,16 @@ class GridPanel(wx.Panel):
         originalValue = originalListing[indx]
         if y == indx:
             if deviceValue == originalValue:
+                color = Color.white.value if (Globals.THEME == "Light" or not isDarkMode()) else Color.darkdarkGrey.value
                 self.device_grid.SetCellBackgroundColour(
                     x, y, Color.white.value
                 )
             else:
+                color = Color.darkBlue.value if (
+                    Globals.THEME == "Dark" or (Globals.THEME == "System" and isDarkMode())
+                ) else Color.lightBlue.value
                 self.device_grid.SetCellBackgroundColour(
-                    x, y, Color.lightBlue.value
+                    x, y, color
                 )
 
     @api_tool_decorator()
@@ -192,7 +191,7 @@ class GridPanel(wx.Panel):
         cols = grid.Table.data.columns
         rowsToHighlight = []
         for col in cols:
-            results = grid.Table.data[col].str.contains(
+            results = grid.Table.data[col].astype("str").str.contains(
                 combinedQueryStr, case=False, na=True
             )
             for num in range(len(results)):
@@ -201,12 +200,18 @@ class GridPanel(wx.Panel):
         for rowNum in rowsToHighlight:
             for colNum in range(len(cols)):
                 if colNum < grid.GetNumberCols() and (
+                    (grid.GetCellBackgroundColour(rowNum, colNum)
+                    == Color.white.value 
+                    or 
                     grid.GetCellBackgroundColour(rowNum, colNum)
-                    == Color.white.value
+                    == Color.darkdarkGrey.value) 
                     or (
                         applyAll
-                        and grid.GetCellBackgroundColour(rowNum, colNum)
+                        and (grid.GetCellBackgroundColour(rowNum, colNum)
                         == Color.lightYellow.value
+                        or grid.GetCellBackgroundColour(rowNum, colNum)
+                        == Color.darkdarkYellow.value
+                        )
                     )
                 ):
                     grid.SetCellBackgroundColour(rowNum, colNum, bgColor)

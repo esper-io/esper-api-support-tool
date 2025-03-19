@@ -64,6 +64,8 @@ class Color(Enum):
     darkGrey = wx.Colour(100, 100, 100)
     darkMedGrey = wx.Colour(80, 80, 80)
     darkdarkGrey = wx.Colour(63, 63, 63)
+    darkBlue = wx.Colour(0, 0, 139)
+    darkdarkYellow = wx.Colour(139, 139, 0)
 
     lightBlue = wx.Colour(204, 255, 255)
     lightYellow = wx.Colour(255, 255, 224)

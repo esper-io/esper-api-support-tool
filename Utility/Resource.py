@@ -543,22 +543,26 @@ def displayFileDialog(
     return None
 
 
+def isDarkMode():
+    return wx.SystemSettings.GetAppearance().IsDark()
+
+
 def setElmTheme(elm):
-    isDarkMode = wx.SystemSettings.GetAppearance().IsDark()
+    isDarkModeVar = isDarkMode()
     bgColor = enum.Color.darkdarkGrey.value
     fgColor = enum.Color.white.value
 
     if Globals.THEME == "Dark":
-        isDarkMode = True
+        isDarkModeVar = True
     elif Globals.THEME == "Light":
-        isDarkMode = False
+        isDarkModeVar = False
 
-    if not isDarkMode:
+    if not isDarkModeVar:
         bgColor = enum.Color.lightGrey.value
         fgColor = enum.Color.black.value
 
     if (
-        isDarkMode 
+        isDarkModeVar 
         and (
             isinstance(elm, wx.SearchCtrl)
             or (
@@ -568,10 +572,10 @@ def setElmTheme(elm):
             )
         ):
         bgColor = enum.Color.grey.value
-    elif (isDarkMode and isinstance(elm, wx.RadioBox)):
+    elif (isDarkModeVar and isinstance(elm, wx.RadioBox)):
         bgColor = enum.Color.darkGrey.value
         fgColor = enum.Color.black.value
-    elif (not isDarkMode 
+    elif (not isDarkModeVar 
         and (
             isinstance(elm, wx.SearchCtrl) 
             or isinstance(elm, wx.TextCtrl)
@@ -588,7 +592,7 @@ def setElmTheme(elm):
         if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
             elm, "SetBackgroundColour"
         ):
-            if isDarkMode:
+            if isDarkModeVar:
                 elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
                 elm.SetForegroundColour(enum.Color.white.value)
             else:
