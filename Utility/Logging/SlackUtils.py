@@ -307,6 +307,11 @@ class SlackUtils:
         if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
         self.saveStoredMessageBlocks()
+        
+        # Avoid sending if file is empty
+        if os.path.getsize(self.operations_path) == 0:
+            return
+
         resp = self.postMessageWithFile("East Usage")
         if reset and resp:
             self.reset_operations_file()
