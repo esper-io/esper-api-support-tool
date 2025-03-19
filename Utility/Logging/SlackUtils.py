@@ -278,6 +278,8 @@ class SlackUtils:
 
                 if data:
                     blocks = self.get_summary_operations_block(data)
+                    if "foo" in blocks[2]["text"]["text"]:
+                        return resp
 
                     upload = self.client.files_upload_v2(file=self.operations_path, filename=self.filename)
                     message = message+"<"+upload['file']['permalink']+"| >"

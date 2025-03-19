@@ -1043,8 +1043,6 @@ class NewFrameLayout(wx.Frame):
 
         self.firstRun = False
 
-        self.audit.postStoredOperations()
-
         if ApiTracker.API_REQUEST_SESSION_TRACKER > 0:
             thread = ApiToolLog().LogApiRequestOccurrence(
                 None, ApiTracker.API_REQUEST_TRACKER, True
@@ -1120,6 +1118,7 @@ class NewFrameLayout(wx.Frame):
             prefix = "Bearer"
 
         if host and key and prefix and entId:
+            self.audit.postStoredOperations()
             self.sidePanel.configList.AppendText("API Host = " + host + "\n")
             self.sidePanel.configList.ShowPosition(0)
             Globals.IS_TOKEN_VALID = False
