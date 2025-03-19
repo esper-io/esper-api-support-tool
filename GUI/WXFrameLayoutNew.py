@@ -1922,7 +1922,7 @@ class NewFrameLayout(wx.Frame):
                         '---> Attempting to run grid action, "%s".'
                         % actionLabel
                     )
-                    color = Color.white.value if (Globals.THEME == "Light" or not isDarkMode()) else Color.lightGrey.value
+                    color = Color.white.value if (Globals.THEME == "Light" or not isDarkMode()) else Color.darkdarkGrey.value
                     self.gridPanel.applyTextColorToDevice(
                         None,
                         Color.black.value,
