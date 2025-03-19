@@ -311,7 +311,7 @@ class SlackUtils:
         self.saveStoredMessageBlocks()
         
         # Avoid sending if file is empty
-        if os.path.exists(self.operations_path) and os.path.getsize(self.operations_path) == 0:
+        if not os.path.exists(self.operations_path) or os.path.getsize(self.operations_path) == 0:
             return
 
         resp = self.postMessageWithFile("East Usage")
