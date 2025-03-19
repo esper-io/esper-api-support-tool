@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import webbrowser
+import zipfile
 
 import Common.Globals as Globals
 from Utility.Resource import installRequiredModules, isModuleInstalled
@@ -241,6 +242,16 @@ if __name__ == "__main__":
                 dispath + "/Main.app",
                 dispath + "/" + app_name,
             )
+
+        # Try to zip executable
+        zipFileName = app_name.split(".")[0] + ".zip"
+        with zipfile.ZipFile(dispath + "/" + zipFileName, "w") as zipObj:
+            if os.path.exists(dispath + "/" + app_name):
+                zipObj.write(dispath + "/" + app_name, app_name)
+            else:
+                print(">>>\tFAILED to generate/find executeable")
+
+        # Open File location
         if os.path.exists(dispath + "/" + app_name):
             webbrowser.open(dispath)
         else:
