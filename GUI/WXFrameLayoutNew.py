@@ -520,6 +520,7 @@ class NewFrameLayout(wx.Frame):
     def OnQuit(self, e):
         """Actions to take when frame is closed"""
         self.kill = True
+        self.Hide()
         if os.path.exists(self.authPath):
             if self.key and crypto().isFileDecrypt(self.authPath, self.key):
                 crypto().encryptFile(self.authPath, self.key)
@@ -532,17 +533,16 @@ class NewFrameLayout(wx.Frame):
             if e.EventType != wx.EVT_CLOSE.typeId:
                 self.Close()
         self.closeDestroyLater(self.groupManage)
-        thread = ApiToolLog().LogApiRequestOccurrence(
+        ApiToolLog().LogApiRequestOccurrence(
             None, ApiTracker.API_REQUEST_TRACKER, True
         )
-        self.savePrefs(self.prefDialog)
-        if thread:
-            thread.join()
+        Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
+        Globals.THREAD_POOL.enqueue(self.audit.postStoredOperations)
+        Globals.THREAD_POOL.join(timeout=2 * 60)
         if hasattr(self, "internetCheck") and self.internetCheck:
             self.internetCheck.stop()
         if hasattr(self, "errorTracker") and self.errorTracker:
             self.errorTracker.stop()
-        self.audit.postStoredOperations()
         self.Destroy()
         for item in list(wx.GetTopLevelWindows()):
             if not isinstance(item, NewFrameLayout):
@@ -2109,6 +2109,7 @@ class NewFrameLayout(wx.Frame):
                 self.statusBar
                 and hasattr(self.statusBar, "sbText")
                 and self.statusBar.sbText
+                and not self.kill
             ):
                 self.statusBar.sbText.SetLabel(status)
                 if orgingalMsg:
