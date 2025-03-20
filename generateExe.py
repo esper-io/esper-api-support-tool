@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import sys
 import webbrowser
-import zipfile
 
 import Common.Globals as Globals
 from Utility.Resource import installRequiredModules, isModuleInstalled
