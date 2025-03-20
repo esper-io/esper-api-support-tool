@@ -171,6 +171,14 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
         self.checkPageButton()
 
+        exitId = wx.NewId()
+        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        accel_table = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('W'), exitId),
+            (wx.ACCEL_CMD, ord('W'), exitId),
+        ])
+        self.SetAcceleratorTable(accel_table)
+
         self.applyFontSize()
 
         self.Fit()

@@ -352,9 +352,9 @@ class PreferencesDialog(wx.Dialog):
         self.spin_ctrl_10.SetMax(72)
         self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
-        themeChoice = ["Light", "Dark", "System"]
+        self.themeChoice = ["Light", "Dark", "System"]
         if platform.system() == "Darwin":
-            themeChoice = ["System"]
+            self.themeChoice = ["System"]
         (
             _,
             _,
@@ -365,9 +365,9 @@ class PreferencesDialog(wx.Dialog):
             "Theme",
             wx.ComboBox,
             "Theme of the application.",
-            choice=themeChoice,
+            choice=self.themeChoice,
         )
-        self.combo_theme.SetSelection(2)
+        self.combo_theme.SetSelection(self.themeChoice.index("System"))
 
         # Save Options
         self.save = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
@@ -829,6 +829,14 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
         self.btn_appFilter.Bind(wx.EVT_BUTTON, self.appFilterDlg)
 
+        exitId = wx.NewId()
+        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        accel_table = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('W'), exitId),
+            (wx.ACCEL_CMD, ord('W'), exitId),
+        ])
+        self.SetAcceleratorTable(accel_table)
+
         self.Fit()
 
     @api_tool_decorator()
@@ -1173,8 +1181,13 @@ class PreferencesDialog(wx.Dialog):
             self.spin_ctrl_10.SetValue(Globals.FONT_SIZE)
 
         if "theme" in self.prefs:
-            self.combo_theme.SetValue(self.prefs["theme"])
-            Globals.THEME = self.prefs["theme"]
+            val = self.prefs["theme"]
+            if val in self.themeChoice:
+                self.combo_theme.SetSelection(self.themeChoice.index(val))
+                Globals.THEME = self.prefs["theme"]
+            else:
+                self.combo_theme.SetSelection(self.themeChoice.index("System"))
+                Globals.THEME = "System"
         if self.Parent and hasattr(self.Parent, "onThemeChange"):
             self.Parent.onThemeChange(None)
 

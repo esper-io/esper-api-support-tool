@@ -84,6 +84,14 @@ class Console(wx.Frame):
         self.loggingList.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
+        exitId = wx.NewId()
+        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        accel_table = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('W'), exitId),
+            (wx.ACCEL_CMD, ord('W'), exitId),
+        ])
+        self.SetAcceleratorTable(accel_table)
+
         setElmTheme(self)
         self.Centre()
         self.Show()

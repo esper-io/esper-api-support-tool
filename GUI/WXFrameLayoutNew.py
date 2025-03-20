@@ -519,38 +519,39 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def OnQuit(self, e):
         """Actions to take when frame is closed"""
-        self.kill = True
-        self.Hide()
-        if os.path.exists(self.authPath):
-            if self.key and crypto().isFileDecrypt(self.authPath, self.key):
-                crypto().encryptFile(self.authPath, self.key)
-        self.closeDestroyLater(self.consoleWin)
-        self.consoleWin = None
-        self.closeDestroyLater(self.prefDialog)
-        self.closeDestroyLater(self.notification)
-        self.closeDestroyLater(self.menubar.uc)
-        if e:
-            if e.EventType != wx.EVT_CLOSE.typeId:
-                self.Close()
-        self.closeDestroyLater(self.groupManage)
-        ApiToolLog().LogApiRequestOccurrence(
-            None, ApiTracker.API_REQUEST_TRACKER, True
-        )
-        Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
-        Globals.THREAD_POOL.enqueue(self.audit.postStoredOperations)
-        Globals.THREAD_POOL.join(timeout=2 * 60)
-        if hasattr(self, "internetCheck") and self.internetCheck:
-            self.internetCheck.stop()
-        if hasattr(self, "errorTracker") and self.errorTracker:
-            self.errorTracker.stop()
-        self.Destroy()
-        for item in list(wx.GetTopLevelWindows()):
-            if not isinstance(item, NewFrameLayout):
-                if item and isinstance(item, wx.Dialog):
-                    item.Destroy()
-                item.Close()
-        Globals.THREAD_POOL.abort()
-        wx.Exit()
+        if not self.kill:
+            self.kill = True
+            self.Hide()
+            if os.path.exists(self.authPath):
+                if self.key and crypto().isFileDecrypt(self.authPath, self.key):
+                    crypto().encryptFile(self.authPath, self.key)
+            self.closeDestroyLater(self.consoleWin)
+            self.consoleWin = None
+            self.closeDestroyLater(self.prefDialog)
+            self.closeDestroyLater(self.notification)
+            self.closeDestroyLater(self.menubar.uc)
+            if e:
+                if e.EventType != wx.EVT_CLOSE.typeId:
+                    self.Close()
+            self.closeDestroyLater(self.groupManage)
+            ApiToolLog().LogApiRequestOccurrence(
+                None, ApiTracker.API_REQUEST_TRACKER, True
+            )
+            Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
+            Globals.THREAD_POOL.enqueue(self.audit.postStoredOperations)
+            Globals.THREAD_POOL.join(timeout=2 * 60)
+            if hasattr(self, "internetCheck") and self.internetCheck:
+                self.internetCheck.stop()
+            if hasattr(self, "errorTracker") and self.errorTracker:
+                self.errorTracker.stop()
+            self.Destroy()
+            for item in list(wx.GetTopLevelWindows()):
+                if not isinstance(item, NewFrameLayout):
+                    if item and isinstance(item, wx.Dialog):
+                        item.Destroy()
+                    item.Close()
+            Globals.THREAD_POOL.abort()
+            wx.Exit()
 
     def closeDestroyLater(self, elm):
         try:

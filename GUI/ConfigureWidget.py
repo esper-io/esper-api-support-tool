@@ -186,6 +186,12 @@ class WidgetPicker(wx.Dialog):
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
+        accel_table = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('W'), self.button_CANCEL.GetId()),
+            (wx.ACCEL_CMD, ord('W'), self.button_CANCEL.GetId()),
+        ])
+        self.SetAcceleratorTable(accel_table)
+
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
     @api_tool_decorator()
