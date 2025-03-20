@@ -244,12 +244,26 @@ if __name__ == "__main__":
             )
 
         # Try to zip executable
-        zipFileName = app_name.split(".")[0] + ".zip"
-        with zipfile.ZipFile(dispath + "/" + zipFileName, "w") as zipObj:
-            if os.path.exists(dispath + "/" + app_name):
-                zipObj.write(dispath + "/" + app_name, app_name)
-            else:
-                print(">>>\tFAILED to generate/find executeable")
+        zip_filename = dispath + "/" + app_name.split(".")[0] + ".zip"
+        filepath_to_add = dispath + "/" + app_name
+        arcname = app_name
+        try:
+            with zipfile.ZipFile(zip_filename, 'a', zipfile.ZIP_DEFLATED) as zipf:
+                if arcname is None:
+                    arcname = os.path.basename(filepath_to_add)
+                if os.path.isdir(filepath_to_add):
+                    for root, dirs, files in os.walk(filepath_to_add):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.relpath(file_path, filepath_to_add)
+                            zipf.write(file_path, arcname)
+                else:
+                    zipf.write(filepath_to_add, arcname)
+            print(f"Successfully added '{filepath_to_add}' to '{zip_filename}' as '{arcname}'")
+        except FileNotFoundError:
+            print(f"Error: File '{filepath_to_add}' not found.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
         # Open File location
         if os.path.exists(dispath + "/" + app_name):
