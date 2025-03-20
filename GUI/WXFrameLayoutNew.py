@@ -1923,9 +1923,10 @@ class NewFrameLayout(wx.Frame):
                         % actionLabel
                     )
                     color = Color.white.value if (Globals.THEME == "Light" or not isDarkMode()) else Color.darkdarkGrey.value
+                    textColor = Color.black.value if color == Color.white.value else Color.white.value
                     self.gridPanel.applyTextColorToDevice(
                         None,
-                        Color.black.value,
+                        textColor,
                         bgColor=color,
                         applyAll=True,
                     )
