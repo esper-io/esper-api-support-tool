@@ -829,6 +829,14 @@ class PreferencesDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
         self.btn_appFilter.Bind(wx.EVT_BUTTON, self.appFilterDlg)
 
+        exitId = wx.NewId()
+        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        accel_table = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('W'), exitId),
+            (wx.ACCEL_CMD, ord('W'), exitId),
+        ])
+        self.SetAcceleratorTable(accel_table)
+
         self.Fit()
 
     @api_tool_decorator()

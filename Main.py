@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+import atexit
 import locale
+import os
+import signal
 import sys
 
+import keyboard
 import wx
 
 import Common.Globals as Globals
@@ -25,6 +29,16 @@ class MyApp(wx.App):
                     "Another instance is running!", style=wx.ICON_ERROR
                 )
                 return False
+            
+            keyboard.add_hotkey("alt+f4", on_alt_f4)
+            atexit.register(OnExit)
+
+            # Register signal handlers for common termination signals (optional, but recommended)
+            signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+            signal.signal(signal.SIGTERM, signal_handler) # Termination signal
+            # On Windows, also handle these signals:
+            if os.name == 'nt':
+                signal.signal(signal.SIGBREAK, signal_handler)
 
             Globals.frame = FrameLayout()
             self.SetTopWindow(Globals.frame)
@@ -40,6 +54,15 @@ class MyApp(wx.App):
     def MacNewFile(self):
         Globals.frame.MacNewFile()
 
+def on_alt_f4():
+    OnExit()
+
+def OnExit():
+    if Globals.frame:
+        Globals.frame.OnQuit(None)
+
+def signal_handler(signal, frame):
+    OnExit()
 
 @api_tool_decorator(displayPrompt=False)
 def main():
