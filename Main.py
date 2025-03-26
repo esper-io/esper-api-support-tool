@@ -10,6 +10,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from GUI.Splashscreen import MySplashScreen as SplashScreen
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Logging.SentryUtils import SentryUtils
@@ -37,9 +38,8 @@ class MyApp(wx.App):
             if os.name == 'nt':
                 signal.signal(signal.SIGBREAK, signal_handler)
 
-            Globals.frame = FrameLayout()
+            SplashScreen()
             self.SetTopWindow(Globals.frame)
-            # Globals.frame.Show()
         except Exception as e:
             ApiToolLog().LogError(e)
             raise e

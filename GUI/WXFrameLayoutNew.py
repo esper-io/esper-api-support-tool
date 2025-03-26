@@ -83,7 +83,7 @@ from Utility.Resource import (checkEsperInternetConnection,
 
 
 class NewFrameLayout(wx.Frame):
-    def __init__(self):
+    def __init__(self, splashscreen=None):
         self.prefPath = ""
         self.authPath = ""
 
@@ -92,6 +92,7 @@ class NewFrameLayout(wx.Frame):
         self.preferences = None
         self.auth_data = None
         self.sleepInhibitor = SleepInhibitor()
+        self.splash = splashscreen
 
         self.WINDOWS = True
         self.isBusy = False
@@ -246,6 +247,8 @@ class NewFrameLayout(wx.Frame):
     def onLaunch(self):
         self.loadPref()
         determineDoHereorMainThread(self.Show)
+        if self.splash:
+            determineDoHereorMainThread(self.splash.Hide)
 
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
@@ -1063,6 +1066,14 @@ class NewFrameLayout(wx.Frame):
             selectedConfig = self.sidePanel.configChoice[
                 self.configMenuItem.GetItemLabelText()
             ]
+
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "Load Tenant Configuraton",
+                    "data": selectedConfig.get("apiHost", "Unknown"),
+                },
+            )
 
             indx = 0
             found = False
