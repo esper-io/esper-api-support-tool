@@ -8,17 +8,14 @@ from Utility.Resource import resourcePath, scale_bitmap
 
 class MySplashScreen(SplashScreen):
     def __init__(self, parent=None):
-        # bitmap = wx.Bitmap(name=resourcePath("Images/icon.png"), type=wx.BITMAP_  TYPE_PNG)
-        image = wx.Image(resourcePath("Images/splash.png"))
-        image = image.Scale(1000, 372, wx.IMAGE_QUALITY_HIGH)
-        bitmap = wx.Bitmap(image)
+        bitmap = scale_bitmap(resourcePath("Images/splash.png"), 1000, 372)
         splash = wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_NO_TIMEOUT
         duration = 3000 # milliseconds
 
         super(MySplashScreen, self).__init__(bitmap=bitmap,
                                               splashStyle=splash,
                                               milliseconds=duration,
-                                              parent=None,
+                                              parent=None,  
                                               id=-1,
                                               pos=wx.DefaultPosition,
                                               size=wx.DefaultSize,
