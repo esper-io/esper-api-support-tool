@@ -15,13 +15,12 @@ class MySplashScreen(SplashScreen):
         super(MySplashScreen, self).__init__(bitmap=bitmap,
                                               splashStyle=splash,
                                               milliseconds=duration,
-                                              parent=None,  
+                                              parent=None,
                                               id=-1,
                                               pos=wx.DefaultPosition,
                                               size=wx.DefaultSize,
                                               style=wx.STAY_ON_TOP |
                                                     wx.BORDER_NONE)
-        
 
         self.CenterOnScreen(wx.BOTH)
         self.Show()
