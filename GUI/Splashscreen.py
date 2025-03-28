@@ -29,4 +29,5 @@ class MySplashScreen(SplashScreen):
 
     def OnExit(self, event):
          event.Skip()
-         Globals.frame = FrameLayout(self)
+         if not Globals.frame:
+            Globals.frame = FrameLayout(self)
