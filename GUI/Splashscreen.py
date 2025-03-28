@@ -9,7 +9,7 @@ from Utility.Resource import resourcePath, scale_bitmap
 class MySplashScreen(SplashScreen):
     def __init__(self, parent=None):
         bitmap = scale_bitmap(resourcePath("Images/splash.png"), 1000, 372)
-        splash = wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_NO_TIMEOUT
+        splash = wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT
         duration = 3000 # milliseconds
 
         super(MySplashScreen, self).__init__(bitmap=bitmap,

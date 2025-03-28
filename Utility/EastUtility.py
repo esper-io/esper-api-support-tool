@@ -936,6 +936,9 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
             deviceInfo["Mode"] = "Multi"
 
     kioskModeApp = getValueFromLatestEvent(latestEventData, "kioskAppName")
+    if not kioskModeApp:
+        kioskModeApp = deviceInfo.get("kiosk_app_name", None)
+
     if kioskModeApp is not None and kioskModeApp:
         deviceInfo["KioskApp"] = str(kioskModeApp)
         deviceInfo["Mode"] = "Kiosk"
