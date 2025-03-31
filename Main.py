@@ -38,8 +38,7 @@ class MyApp(wx.App):
             if os.name == 'nt':
                 signal.signal(signal.SIGBREAK, signal_handler)
 
-            # splash = SplashScreen()
-            splash = None
+            splash = SplashScreen()
             if not Globals.frame:
                 Globals.frame = FrameLayout(splash)
             self.SetTopWindow(Globals.frame)

@@ -8,7 +8,14 @@ from Utility.Resource import resourcePath, scale_bitmap
 
 class MySplashScreen(SplashScreen):
     def __init__(self, parent=None):
-        bitmap = scale_bitmap(resourcePath("Images/splash.png"), 1000, 372)
+        width, _= wx.GetDisplaySize()
+        rPath = resourcePath("Images/splash.png")
+        bitmap = wx.Bitmap(rPath, wx.BITMAP_TYPE_PNG)
+        if width < 1080:
+            newWidth = int(width * 0.8)
+            ratio = width / 1080
+            newHeight = int(bitmap.GetHeight() * ratio)
+            bitmap = scale_bitmap(rPath, newWidth, newHeight)
         splash = wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_NO_TIMEOUT
         duration = 3000 # milliseconds
 
