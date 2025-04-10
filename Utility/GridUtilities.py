@@ -200,13 +200,13 @@ def convertColumnTypes(data, headers):
                         ApiToolLog().LogError(e, postStatus=post)
                 elif gridColType == "category":
                     data[col] = data[col].astype("category")
-                elif hasattr(hasattr(data[col], "astype")):
+                elif hasattr(data[col], "astype"):
                     data[col] = data[col].astype(pd.StringDtype())
 
                 end_col_type = data[col].dtype if hasattr(data[col], "dtype") else ""
                 if init_col_type != end_col_type:
                     break
-            if init_col_type != end_col_type and hasattr(hasattr(data[col], "astype")):
+            if init_col_type == end_col_type and hasattr(data[col], "astype"):
                 data[col] = data[col].astype(pd.StringDtype())
     return data
 
