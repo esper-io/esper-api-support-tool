@@ -108,6 +108,8 @@ class GridTable(gridlib.Grid):
             return
 
         try:
+            if not self:
+                return
             self.SetCursor(wx.Cursor(wx.CURSOR_ARROWWAIT))
             self.Freeze()
             self.logToParentFrame("Loading Grid Data...")

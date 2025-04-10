@@ -218,6 +218,7 @@ class GeofenceDialog(wx.Dialog):
             self.reset_grid.applyNewDataFrame(
                 df, checkColumns=False, resetPosition=True
             )
+        self.setCursorBusy()
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
@@ -264,10 +265,12 @@ class GeofenceDialog(wx.Dialog):
             data = pd.DataFrame(
                 expandedGroupData, columns=self.gridHeaderLabels
             )
-            self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
-            self.applyGridSettings()
-            if self.geofence_grid.IsFrozen():
-                self.geofence_grid.Thaw()
+            if self:
+                self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
+                self.applyGridSettings()
+                if self.geofence_grid.IsFrozen():
+                    self.geofence_grid.Thaw()
+                self.setCursorDefault()
 
     @api_tool_decorator()
     def createGeofence(self, event):
