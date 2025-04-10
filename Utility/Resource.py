@@ -504,6 +504,12 @@ def determineDoHereorMainThread(func, *args, **kwargs):
             (func, args),
         )
 
+def determineListDoHereorMainThread(funcList):
+    for f in funcList:
+        if type(f) == tuple:
+            determineDoHereorMainThread(*f)
+        else:
+            determineDoHereorMainThread(f)
 
 def checkIfCurrentThreadStopped():
     isAbortSet = False
@@ -642,3 +648,55 @@ def setElementTheme(elm, bgColor, fgColor):
     if hasattr(elm, "SetItemForegroundColour"):
         for n in range(0, len(elm.GetItems())):
             elm.SetItemForegroundColour(n, fgColor)
+
+def getResultsFromThreads(src=None, results=[]):
+    if src == Globals.THREAD_POOL.threads:
+        src = Globals.THREAD_POOL.results()
+
+    for t in src:
+        res = t
+        if t and hasattr(t, "result") and t.result:
+            res = t.result
+        if type(res) == list:
+            results = results + res
+        else:
+            results.append(res)
+    return results
+
+def getFont(style):
+    if style == enum.FontStyles.NORMAL_BOLD.value:
+        return wx.Font(
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "Normal",
+        )
+    elif style == enum.FontStyles.HEADER.value:
+        return wx.Font(
+            Globals.HEADER_FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Header",
+        )
+    elif style == enum.FontStyles.HEADER_BOLD.value:
+        return wx.Font(
+                Globals.HEADER_FONT_SIZE,
+                wx.FONTFAMILY_DEFAULT,
+                wx.FONTSTYLE_NORMAL,
+                wx.FONTWEIGHT_BOLD,
+                0,
+                "HeaderBold",
+            )
+    else:
+        return wx.Font(
+                    Globals.FONT_SIZE,
+                    wx.FONTFAMILY_DEFAULT,
+                    wx.FONTSTYLE_NORMAL,
+                    wx.FONTWEIGHT_NORMAL,
+                    0,
+                    "Normal",
+                )

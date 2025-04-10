@@ -8,13 +8,13 @@ import wx.grid as gridlib
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
-from Common.enum import Color
+from Common.enum import Color, FontStyles
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
-                              determineDoHereorMainThread, isDarkMode,
+                              determineDoHereorMainThread, getFont, isDarkMode,
                               postEventToFrame, releaseLocks, resourcePath,
                               scale_bitmap)
 
@@ -49,14 +49,7 @@ class GridPanel(wx.Panel):
         grid_sizer_2.Add(self.notebook_2, 1, wx.EXPAND, 0)
 
         self.notebook_2.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "GridNotebook",
-            )
+            getFont(FontStyles.NORMAL_BOLD.value)
         )
 
         self.panel_14 = wx.Panel(self.notebook_2, wx.ID_ANY)
@@ -180,6 +173,14 @@ class GridPanel(wx.Panel):
                 self.device_grid.SetCellBackgroundColour(
                     x, y, color
                 )
+
+    def applyTextColorToGrids(self, query: str, bgColor, applyAll=False):
+        self.applyTextColorMatchingGridRow(
+            self.device_grid, query, bgColor, applyAll)
+        self.applyTextColorMatchingGridRow(
+            self.network_grid, query, bgColor, applyAll)
+        self.applyTextColorMatchingGridRow(
+            self.app_grid, query, bgColor, applyAll)
 
     @api_tool_decorator()
     def applyTextColorMatchingGridRow(

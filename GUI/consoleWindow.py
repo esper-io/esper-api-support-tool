@@ -8,8 +8,8 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
-from Common.enum import Color
-from Utility.Resource import (openWebLinkInBrowser, postEventToFrame,
+from Common.enum import Color, FontStyles
+from Utility.Resource import (getFont, openWebLinkInBrowser, postEventToFrame,
                               resourcePath, setElmTheme)
 
 
@@ -51,14 +51,7 @@ class Console(wx.Frame):
         )
 
         self.loggingList.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
+            getFont(FontStyles.NORMAL.value)
         )
 
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)

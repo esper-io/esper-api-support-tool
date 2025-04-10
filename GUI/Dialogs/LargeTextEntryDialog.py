@@ -114,14 +114,7 @@ class LargeTextEntryDialog(wx.Dialog):
             widget.WriteText(data.GetText())
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
 
         self.applyFontHelper(self, normalFont)
 

@@ -353,22 +353,8 @@ class TemplateDialog(wx.Dialog):
                 self.list_box_1.Append(template["name"])
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
         self.applyFontHelper(self, normalFont, normalBoldFont)
 

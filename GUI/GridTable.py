@@ -10,11 +10,12 @@ import wx.grid as gridlib
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Common.enum import Color
+from Common.enum import Color, FontStyles
 from GUI.GridDataTable import GridDataTable
 from Utility.GridUtilities import convertColumnTypes
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
+from Utility.Resource import (determineDoHereorMainThread, getFont,
+                              getStrRatioSimilarity)
 
 
 class GridTable(gridlib.Grid):
@@ -58,24 +59,10 @@ class GridTable(gridlib.Grid):
         self.DisableDragRowSize()
         self.EnableDragColMove(True)
         self.SetLabelFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
+            getFont(FontStyles.NORMAL_BOLD.value)
         )
         self.SetDefaultCellFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
+            getFont(FontStyles.NORMAL.value)
         )
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)

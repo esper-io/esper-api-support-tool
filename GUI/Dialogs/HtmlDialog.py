@@ -2,7 +2,8 @@ import wx
 import wx.html as html
 
 import Common.Globals as Globals
-from Utility.Resource import setElmTheme
+from Common.enum import FontStyles
+from Utility.Resource import getFont, setElmTheme
 
 
 class HtmlDialog(wx.Dialog):
@@ -58,14 +59,7 @@ class HtmlDialog(wx.Dialog):
         return self.checkbox_1.IsChecked() if self.checkbox_1 else False
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
 
         self.applyFontHelper(self, normalFont)
 

@@ -11,7 +11,8 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import setElmTheme
+from Common.enum import FontStyles
+from Utility.Resource import getFont, setElmTheme
 
 
 class CommandDialog(wx.Dialog):
@@ -65,14 +66,7 @@ class CommandDialog(wx.Dialog):
             self.window_1_pane_1, wx.ID_ANY, "Enter Cmd Args JSON:"
         )
         label_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_LIGHT,
-                0,
-                "Normal",
-            )
+            getFont(FontStyles.NORMAL.value)
         )
         sizer_7.Add(label_1, 0, wx.ALL, 5)
 
@@ -95,14 +89,7 @@ class CommandDialog(wx.Dialog):
             self.window_1_pane_2, wx.ID_ANY, "Enter Schedule Args JSON:"
         )
         label_3.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_LIGHT,
-                0,
-                "Normal",
-            )
+            getFont(FontStyles.NORMAL.value)
         )
         sizer_8.Add(label_3, 0, wx.ALL, 5)
 
@@ -123,14 +110,7 @@ class CommandDialog(wx.Dialog):
 
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Command Type")
         label_2.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_LIGHT,
-                0,
-                "Normal",
-            )
+            getFont(FontStyles.NORMAL.value)
         )
         sizer_5.Add(label_2, 0, wx.ALL, 5)
 
@@ -788,14 +768,7 @@ class CommandDialog(wx.Dialog):
             self.Close()
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
 
         self.applyFontHelper(self, normalFont)
 

@@ -5,9 +5,10 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from Utility.FileUtility import write_data_to_csv
-from Utility.Resource import resourcePath, scale_bitmap
+from Utility.Resource import getFont, resourcePath, scale_bitmap
 
 
 class SidePanel(wx.Panel):
@@ -396,22 +397,8 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GRID_ACTIONS[action]
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
         self.applyFontHelper(self, normalFont, normalBoldFont)
 
@@ -454,3 +441,13 @@ class SidePanel(wx.Panel):
             if not found:
                 friendlyNames.append(deviceId)
         return friendlyNames
+
+    def reset_panel(self):
+        self.groups = {}
+        self.devices = {}
+        self.groupDeviceCount = {}
+        self.clearSelections()
+        self.destroyMultiChoiceDialogs()
+        self.deviceChoice.Enable(False)
+        self.removeEndpointBtn.Enable(False)
+        self.notebook_1.SetSelection(0)

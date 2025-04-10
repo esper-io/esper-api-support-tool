@@ -77,3 +77,16 @@ class Color(Enum):
 
     errorBg = wx.Colour(255, 235, 234)
     warnBg = wx.Colour(255, 241, 216)
+
+class WaitThreadCodes(Enum):
+    CONFIG = 0
+    DEVICE = 1
+    FILE = 2
+    PROCESS = 3
+
+class FontStyles(Enum):
+    NORMAL = "Normal"
+    NORMAL_BOLD = "NormalBold"
+    HEADER = "Header"
+    HEADER_BOLD = "HeaderBold"
+

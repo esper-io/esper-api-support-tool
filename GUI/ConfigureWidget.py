@@ -6,9 +6,10 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import displayFileDialog, setElmTheme
+from Utility.Resource import displayFileDialog, getFont, setElmTheme
 
 
 class WidgetPicker(wx.Dialog):
@@ -299,22 +300,8 @@ class WidgetPicker(wx.Dialog):
         )
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
         self.applyFontHelper(self, normalFont, normalBoldFont)
 

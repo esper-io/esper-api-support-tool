@@ -18,7 +18,7 @@ DO_EXTRA_LOGGING = True
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195266"
+VERSION = "v0.195267"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
@@ -180,6 +180,7 @@ CSV_TAG_ATTR_NAME = {
     "Hardware Chip Set": "hardware",
     "OS": "os",
     "OS Version": ["androidVersion", "os_version"],
+    "State": ["Status"],
     "Build Number": ["androidBuildNumber", "os_build_number"],
     "Registered On": ["provisioned_on", "onboarded_on"],
     "Updated On": ["updated_on", "updated_at"],

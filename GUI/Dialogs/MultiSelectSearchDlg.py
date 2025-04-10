@@ -9,9 +9,10 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import (determineDoHereorMainThread,
+from Utility.Resource import (determineDoHereorMainThread, getFont,
                               getStrRatioSimilarity, resourcePath,
                               scale_bitmap, setElmTheme)
 
@@ -612,22 +613,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.setCursorDefault()
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldHeaderFont = wx.Font(
-            Globals.HEADER_FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        normalBoldHeaderFont = getFont(FontStyles.NORMAL_BOLD.value)
         self.label_elm.SetFont(normalBoldHeaderFont)
         self.checkbox_1.SetFont(normalFont)
         self.search.SetFont(normalFont)

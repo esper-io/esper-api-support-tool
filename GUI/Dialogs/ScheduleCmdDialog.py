@@ -6,7 +6,8 @@ import wx
 import wx.adv
 
 import Common.Globals as Globals
-from Utility.Resource import setElmTheme
+from Common.enum import FontStyles
+from Utility.Resource import getFont, setElmTheme
 
 
 class ScheduleCmdDialog(wx.Dialog):
@@ -28,17 +29,10 @@ class ScheduleCmdDialog(wx.Dialog):
 
         grid_sizer_1 = wx.FlexGridSizer(3, 1, 0, 0)
 
+        headerBold = getFont(FontStyles.HEADER_BOLD.value)
+        normalBold = getFont(FontStyles.NORMAL_BOLD.value)
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Schedule Command")
-        label_1.SetFont(
-            wx.Font(
-                12,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_1.SetFont(headerBold)
         grid_sizer_1.Add(label_1, 0, wx.EXPAND | wx.LEFT | wx.TOP, 2)
 
         self.radio_box_1 = wx.RadioBox(
@@ -74,16 +68,7 @@ class ScheduleCmdDialog(wx.Dialog):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
         label_2 = wx.StaticText(self.panel_3, wx.ID_ANY, "Days to Repeat On:")
-        label_2.SetFont(
-            wx.Font(
-                9,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_2.SetFont(normalBold)
         sizer_3.Add(label_2, 0, wx.LEFT, 2)
 
         self.check_list_box_1 = wx.CheckListBox(
@@ -110,16 +95,7 @@ class ScheduleCmdDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
 
         label_3 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Start Date:")
-        label_3.SetFont(
-            wx.Font(
-                9,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_3.SetFont(normalBold)
         sizer_4.Add(label_3, 0, wx.LEFT, 2)
 
         self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(
@@ -132,16 +108,7 @@ class ScheduleCmdDialog(wx.Dialog):
         grid_sizer_2.Add(sizer_6, 1, wx.EXPAND, 0)
 
         label_5 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "End Date:")
-        label_5.SetFont(
-            wx.Font(
-                9,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_5.SetFont(normalBold)
         sizer_6.Add(label_5, 0, wx.LEFT, 2)
 
         self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(
@@ -156,16 +123,7 @@ class ScheduleCmdDialog(wx.Dialog):
         label_4 = wx.StaticText(
             self.window_1_pane_2, wx.ID_ANY, "Start Time  (24 hour format):"
         )
-        label_4.SetFont(
-            wx.Font(
-                9,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_4.SetFont(normalBold)
         sizer_5.Add(label_4, 0, wx.LEFT, 2)
 
         self.text_ctrl_1 = wx.adv.TimePickerCtrl(
@@ -180,16 +138,7 @@ class ScheduleCmdDialog(wx.Dialog):
         label_6 = wx.StaticText(
             self.window_1_pane_2, wx.ID_ANY, "End Time (24 hour format):"
         )
-        label_6.SetFont(
-            wx.Font(
-                9,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "",
-            )
-        )
+        label_6.SetFont(normalBold)
         sizer_7.Add(label_6, 0, wx.LEFT, 2)
 
         self.text_ctrl_2 = wx.adv.TimePickerCtrl(

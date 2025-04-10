@@ -10,12 +10,14 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
 from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
-                              displayMessageBox, getHeader, setElmTheme)
+                              displayMessageBox, getFont, getHeader,
+                              setElmTheme)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -468,22 +470,8 @@ class GeofenceDialog(wx.Dialog):
         self.SetCursor(myCursor)
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        headerBold = wx.Font(
-            Globals.HEADER_FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "HeaderBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        headerBold = getFont(FontStyles.HEADER_BOLD.value)
 
         self.applyFontHelper(self, normalFont, headerBold)
 

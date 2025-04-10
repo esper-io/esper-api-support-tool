@@ -22,7 +22,8 @@ import Utility.API.EsperTemplateUtil as templateUtil
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
-from Common.enum import Color, GeneralActions, GridActions
+from Common.enum import (Color, FontStyles, GeneralActions, GridActions,
+                         WaitThreadCodes)
 from Common.SleepInhibitor import SleepInhibitor
 from GUI.ConfigureWidget import WidgetPicker
 from GUI.consoleWindow import Console
@@ -75,7 +76,9 @@ from Utility.Resource import (checkEsperInternetConnection,
                               checkForInternetAccess,
                               checkIfCurrentThreadStopped, correctSaveFileName,
                               createNewFile, determineDoHereorMainThread,
-                              displayFileDialog, displayMessageBox, isDarkMode,
+                              determineListDoHereorMainThread,
+                              displayFileDialog, displayMessageBox, getFont,
+                              getResultsFromThreads, isDarkMode,
                               joinThreadList, openWebLinkInBrowser,
                               postEventToFrame, processFunc, resourcePath,
                               setElmTheme, splitListIntoChunks,
@@ -246,9 +249,9 @@ class NewFrameLayout(wx.Frame):
 
     def onLaunch(self):
         self.loadPref()
-        determineDoHereorMainThread(self.Show)
+        actionList = [self.Show, self.showDisclaimer]
         if self.splash:
-            determineDoHereorMainThread(self.splash.Hide)
+            actionList.append((self.splash.Hide))
 
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
@@ -257,7 +260,7 @@ class NewFrameLayout(wx.Frame):
                 "data": "API Tool Launched",
             },
         )
-        determineDoHereorMainThread(self.showDisclaimer)
+        determineListDoHereorMainThread(actionList)
 
     def showDisclaimer(self):
         # Display disclaimer unless they have opt'd out.
@@ -303,11 +306,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def setFontSizeForLabels(self, parent=None):
-        children = None
-        if not parent:
-            children = self.GetChildren()
-        else:
-            children = parent.GetChildren()
+        children = self.GetChildren() if not parent else parent.GetChildren()
         for child in children:
             if hasattr(child, "applyFontSize"):
                 child.applyFontSize()
@@ -322,36 +321,15 @@ class NewFrameLayout(wx.Frame):
                     boldNormalFontSize = ["GridNotebook", "NormalBold"]
                     if child.GetFaceName() in boldNormalFontSize:
                         child.SetFont(
-                            wx.Font(
-                                Globals.FONT_SIZE,
-                                currentFont.GetFamily(),
-                                currentFont.GetStyle(),
-                                currentFont.GetWeight(),
-                                0,
-                                "GridNotebook",
-                            )
+                            getFont(FontStyles.NORMAL.value)
                         )
                     else:
                         child.SetFont(
-                            wx.Font(
-                                Globals.HEADER_FONT_SIZE,
-                                currentFont.GetFamily(),
-                                currentFont.GetStyle(),
-                                currentFont.GetWeight(),
-                                0,
-                                "Header",
-                            )
+                            getFont(FontStyles.HEADER.value)
                         )
                 else:
                     child.SetFont(
-                        wx.Font(
-                            Globals.FONT_SIZE,
-                            currentFont.GetFamily(),
-                            currentFont.GetStyle(),
-                            currentFont.GetWeight(),
-                            0,
-                            "Normal",
-                        )
+                        getFont(FontStyles.NORMAL.value)
                     )
             if child.GetChildren():
                 self.setFontSizeForLabels(parent=child)
@@ -608,10 +586,7 @@ class NewFrameLayout(wx.Frame):
                 return True
             else:  # Either the cancel button was pressed or the window was closed
                 self.isSaving = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
-                if self.isRunning:
-                    self.isRunning = False
+                self.toggleIsRunning(False)
                 return False
         else:
             displayMessageBox(
@@ -842,25 +817,28 @@ class NewFrameLayout(wx.Frame):
                 # Proceed loading the file chosen by the user
                 csv_auth_path = fileDialog.GetPath()
                 self.defaultDir = Path(fileDialog.GetPath()).parent
-                self.Logging(
-                    "--->Attempting to load device data from %s" % csv_auth_path
-                )
-                self.toggleEnabledState(False)
-                if self.WINDOWS:
-                    Globals.THREAD_POOL.enqueue(
-                        self.openDeviceSpreadsheet, csv_auth_path
-                    )
-                else:
-                    self.openDeviceSpreadsheet(csv_auth_path)
-                Globals.THREAD_POOL.enqueue(
-                    self.waitForThreadsThenSetCursorDefault,
-                    Globals.THREAD_POOL.threads,
-                    2,
-                    tolerance=1,
-                )
+                self.uploadSpreadsheet(csv_auth_path)
             elif result == wx.ID_CANCEL:
                 self.setCursorDefault()
                 return  # the user changed their mind
+
+    def uploadSpreadsheet(self, csv_auth_path):
+        self.Logging(
+            "--->Attempting to load device data from %s" % csv_auth_path
+        )
+        self.toggleEnabledState(False)
+        if self.WINDOWS:
+            Globals.THREAD_POOL.enqueue(
+                self.openDeviceSpreadsheet, csv_auth_path
+            )
+        else:
+            self.openDeviceSpreadsheet(csv_auth_path)
+        Globals.THREAD_POOL.enqueue(
+            self.waitForThreadsThenSetCursorDefault,
+            Globals.THREAD_POOL.threads,
+            WaitThreadCodes.FILE.value,
+            tolerance=1,
+        )
 
     def openDeviceSpreadsheet(self, csv_auth_path):
         self.isUploading = True
@@ -1031,14 +1009,7 @@ class NewFrameLayout(wx.Frame):
         except:
             pass
         # Reset Side Panel
-        self.sidePanel.groups = {}
-        self.sidePanel.devices = {}
-        self.sidePanel.groupDeviceCount = {}
-        self.sidePanel.clearSelections()
-        self.sidePanel.destroyMultiChoiceDialogs()
-        self.sidePanel.deviceChoice.Enable(False)
-        self.sidePanel.removeEndpointBtn.Enable(False)
-        self.sidePanel.notebook_1.SetSelection(0)
+        self.sidePanel.reset_panel()
         # Clear Search Input
         self.frame_toolbar.search.SetValue("")
         # Disable other options
@@ -1168,7 +1139,7 @@ class NewFrameLayout(wx.Frame):
                 Globals.THREAD_POOL.enqueue(
                     self.waitForThreadsThenSetCursorDefault,
                     threads,
-                    0,
+                    WaitThreadCodes.CONFIG.value,
                     tolerance=1,
                 )
                 return True
@@ -1275,13 +1246,13 @@ class NewFrameLayout(wx.Frame):
     def processWaitForThreadsThenSetCursorDefault(
         self, threads, source=None, action=None, tolerance=0
     ):
-        if source == 0:
+        if source == WaitThreadCodes.CONFIG.value:
             self.gridPanel.setColVisibility()
             self.sidePanel.groupChoice.Enable(True)
             self.sidePanel.actionChoice.Enable(True)
             self.sidePanel.removeEndpointBtn.Enable(True)
             self.handleScheduleReportPref()
-        if source == 1:
+        if source == WaitThreadCodes.DEVICE.value:
             if not self.sidePanel.devices:
                 self.sidePanel.selectedDevices.Append("No Devices Found", "")
                 self.sidePanel.deviceChoice.Enable(False)
@@ -1305,49 +1276,36 @@ class NewFrameLayout(wx.Frame):
             else:
                 self.sidePanel.deviceChoice.Enable(False)
             self.displayNotification("Finished loading devices", "")
-        if source == 2:
+        if source == WaitThreadCodes.FILE.value:
             indx = self.sidePanel.actionChoice.GetItems().index(
                 list(Globals.GRID_ACTIONS.keys())[0]
             )
             self.isUploading = False
             if self.sidePanel.actionChoice.GetSelection() < indx:
                 self.sidePanel.actionChoice.SetSelection(indx)
-            determineDoHereorMainThread(self.gridPanel.autoSizeGridsColumns)
-            determineDoHereorMainThread(self.sidePanel.groupChoice.Enable, True)
-            determineDoHereorMainThread(
-                self.sidePanel.deviceChoice.Enable, True
+            determineListDoHereorMainThread(
+                [
+                    (self.gridPanel.autoSizeGridsColumns),
+                    (self.sidePanel.groupChoice.Enable, True),
+                    (self.sidePanel.deviceChoice.Enable, True),
+                    (self.gridPanel.enableGridProperties),
+                    (self.gridPanel.thawGridsIfFrozen)
+                ]
             )
-            determineDoHereorMainThread(self.gridPanel.enableGridProperties)
-            determineDoHereorMainThread(self.gridPanel.thawGridsIfFrozen)
-
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
             postEventToFrame(
                 eventUtil.myEVT_DISPLAY_NOTIFICATION,
                 ("E.A.S.T.", "Device Spreadsheet Upload Complete"),
             )
             self.Logging("Upload Complete.")
-        if source == 3:
+        if source == WaitThreadCodes.PROCESS.value:
             cmdResults = []
             if (
                 action == GeneralActions.REMOVE_NON_WHITELIST_AP.value
                 or action == GeneralActions.MOVE_GROUP.value
                 or action == GridActions.MOVE_GROUP.value
             ):
-                if threads == Globals.THREAD_POOL.threads:
-                    resp = Globals.THREAD_POOL.results()
-                    for t in resp:
-                        if t:
-                            if type(t) == list:
-                                cmdResults = cmdResults + t
-                            else:
-                                cmdResults.append(t)
-                else:
-                    for t in threads:
-                        if t.result:
-                            if type(t.result) == list:
-                                cmdResults = cmdResults + t.result
-                            else:
-                                cmdResults.append(t.result)
+                getResultsFromThreads(threads, cmdResults)
             self.onComplete((True, action, cmdResults))
         self.toggleEnabledState(not self.isRunning and not self.isSavingPrefs)
         self.setCursorDefault()
@@ -1515,7 +1473,7 @@ class NewFrameLayout(wx.Frame):
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
-            1,
+            WaitThreadCodes.DEVICE.value,
             tolerance=1,
         )
 
@@ -1665,12 +1623,9 @@ class NewFrameLayout(wx.Frame):
             or self.isBusy
         ) and time.time() < end_time:
             time.sleep(1)
-        self.setCursorBusy()
-        self.isRunning = True
+        self.toggleIsRunning(True)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-        self.toggleEnabledState(False)
         self.AppState = None
-        self.sleepInhibitor.inhibit()
 
         self.gridPanel.UnsetSortingColumns()
 
@@ -1803,10 +1758,7 @@ class NewFrameLayout(wx.Frame):
                         Globals.OPEN_DIALOGS.append(textDialog2)
                         if textDialog2.ShowModal() != wx.ID_OK:
                             Globals.OPEN_DIALOGS.remove(textDialog2)
-                            self.sleepInhibitor.uninhibit()
-                            self.isRunning = False
-                            self.setCursorDefault()
-                            self.toggleEnabledState(True)
+                            self.toggleIsRunning(False)
                             return
                         else:
                             postEventToFrame(
@@ -1819,10 +1771,7 @@ class NewFrameLayout(wx.Frame):
                         Globals.OPEN_DIALOGS.remove(textDialog2)
                 else:
                     Globals.OPEN_DIALOGS.remove(textDialog)
-                    self.sleepInhibitor.uninhibit()
-                    self.isRunning = False
-                    self.setCursorDefault()
-                    self.toggleEnabledState(True)
+                    self.toggleIsRunning(False)
                     return
         if actionClientData == GeneralActions.MOVE_GROUP.value:
             self.moveGroup()
@@ -1948,10 +1897,7 @@ class NewFrameLayout(wx.Frame):
                         iterateThroughGridRows, self, actionClientData
                     )
                 else:
-                    self.sleepInhibitor.uninhibit()
-                    self.isRunning = False
-                    self.setCursorDefault()
-                    self.toggleEnabledState(True)
+                    self.toggleIsRunning(False)
             else:
                 displayMessageBox(
                     (
@@ -1959,10 +1905,7 @@ class NewFrameLayout(wx.Frame):
                         wx.OK | wx.ICON_ERROR,
                     )
                 )
-                self.sleepInhibitor.uninhibit()
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+                self.toggleIsRunning(False)
         else:
             displayMessageBox(
                 (
@@ -1970,10 +1913,7 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_ERROR,
                 )
             )
-            self.sleepInhibitor.uninhibit()
-            self.isRunning = False
-            self.setCursorDefault()
-            self.toggleEnabledState(True)
+            self.toggleIsRunning(False)
 
     @api_tool_decorator()
     def showConsole(self, event):
@@ -2219,7 +2159,7 @@ class NewFrameLayout(wx.Frame):
         Globals.THREAD_POOL.enqueue(
             self.waitForThreadsThenSetCursorDefault,
             Globals.THREAD_POOL.threads,
-            3,
+            WaitThreadCodes.PROCESS.value,
             action,
             tolerance=1,
         )
@@ -2282,12 +2222,7 @@ class NewFrameLayout(wx.Frame):
                 msg = "Action has completed."
         if self.IsFrozen():
             self.Thaw()
-        self.gridPanel.thawGridsIfFrozen()
-        if self.gridPanel.disableProperties:
-            self.gridPanel.enableGridProperties()
-        if self.isRunning or enable:
-            self.toggleEnabledState(True)
-        self.isRunning = False
+        self.toggleIsRunning(False)
         if (
             action == GeneralActions.GENERATE_INFO_REPORT.value
             or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
@@ -2445,53 +2380,7 @@ class NewFrameLayout(wx.Frame):
 
         self.isUploading = True
         for file in event.Files:
-            if file.endswith(".csv"):
-                data = read_data_from_csv(file)
-                if (
-                    "apiHost" in data[0]
-                    and "apiKey" in data[0]
-                    and "apiPrefix" in data[0]
-                    and "enterprise" in data[0]
-                ):
-                    self.PopulateConfig(auth=file)
-                else:
-                    if not Globals.enterprise_id:
-                        displayMessageBox(
-                            (
-                                "Please load a configuration first!",
-                                wx.OK | wx.ICON_ERROR,
-                            )
-                        )
-                        return
-                    self.toggleEnabledState(False)
-                    if self.WINDOWS:
-                        Globals.THREAD_POOL.enqueue(
-                            self.processDeviceCSVUpload, data
-                        )
-                        Globals.THREAD_POOL.enqueue(
-                            self.waitForThreadsThenSetCursorDefault,
-                            Globals.THREAD_POOL.threads,
-                            2,
-                            tolerance=1,
-                        )
-                    else:
-                        self.processDeviceCSVUpload(data)
-                        postEventToFrame(eventUtil.myEVT_COMPLETE, True)
-            elif file.endswith(".xlxs"):
-                self.toggleEnabledState(False)
-                if self.WINDOWS:
-                    Globals.THREAD_POOL.enqueue(
-                        self.openDeviceSpreadsheet, file
-                    )
-                    Globals.THREAD_POOL.enqueue(
-                        self.waitForThreadsThenSetCursorDefault,
-                        Globals.THREAD_POOL.threads,
-                        2,
-                        tolerance=1,
-                    )
-                else:
-                    self.openDeviceSpreadsheet(file)
-                    postEventToFrame(eventUtil.myEVT_COMPLETE, True)
+            self.uploadSpreadsheet(file)
 
     @api_tool_decorator()
     def onClone(self, event):
@@ -2507,9 +2396,7 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def prepareClone(self, tmpDialog):
-        self.setCursorBusy()
-        self.isRunning = True
-        self.statusBar.gauge.Pulse()
+        self.toggleIsRunning(True)
         util = templateUtil.EsperTemplateUtil(*tmpDialog.getInputSelections())
         Globals.THREAD_POOL.enqueue(
             util.prepareTemplate,
@@ -2546,9 +2433,7 @@ class NewFrameLayout(wx.Frame):
                 False,
             )
         else:
-            self.isRunning = False
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-            self.setCursorDefault()
+            self.toggleIsRunning(False)
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_DIALOG = False
             self.preferences["templateDialog"] = Globals.SHOW_TEMPLATE_DIALOG
@@ -2582,9 +2467,7 @@ class NewFrameLayout(wx.Frame):
                 True,
             )
         else:
-            self.isRunning = False
-            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-            self.setCursorDefault()
+            self.toggleIsRunning(False)
         if result and result.getCheckBoxValue():
             Globals.SHOW_TEMPLATE_UPDATE = False
             self.preferences["templateUpdate"] = Globals.SHOW_TEMPLATE_UPDATE
@@ -2638,7 +2521,7 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_ERROR,
                 )
             )
-        self.isRunning = False
+        self.toggleIsRunning(False)
         postEventToFrame(eventUtil.myEVT_COMPLETE, True)
 
     @api_tool_decorator()
@@ -2713,41 +2596,27 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.enableGridProperties()
 
     def applySearchColor(self, queryString, color, applyAll=False):
-        self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.device_grid, queryString, color, applyAll
-        )
-        self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.network_grid, queryString, color, applyAll
-        )
-        self.gridPanel.applyTextColorMatchingGridRow(
-            self.gridPanel.app_grid, queryString, color, applyAll
-        )
+        self.gridPanel.applyTextColorToGrids(queryString, color, applyAll)
 
     @api_tool_decorator()
     def toggleEnabledState(self, state):
-        determineDoHereorMainThread(self.sidePanel.runBtn.Enable, state)
-        determineDoHereorMainThread(self.sidePanel.actionChoice.Enable, state)
-        determineDoHereorMainThread(
-            self.sidePanel.removeEndpointBtn.Enable, state
-        )
-
-        determineDoHereorMainThread(
-            self.frame_toolbar.toggleMajorityToolsState, state
-        )
-
-        # Toggle Menu Bar Items
-        determineDoHereorMainThread(self.menubar.fileOpenAuth.Enable, state)
+        stateList = [
+                (self.sidePanel.runBtn.Enable, state),
+                (self.sidePanel.actionChoice.Enable, state),
+                (self.sidePanel.removeEndpointBtn.Enable, state),
+                (self.frame_toolbar.toggleMajorityToolsState, state),
+                (self.menubar.fileOpenAuth.Enable, state),
+                (self.menubar.fileOpenConfig.Enable, state),
+                (self.menubar.pref.Enable, state),
+                (self.menubar.run.Enable, state),
+                (self.menubar.installedDevices.Enable, state),
+                (self.menubar.command.Enable, state),
+                (self.menubar.groupSubMenu.Enable, state),
+                (self.menubar.setSaveMenuOptionsEnableState, state)
+            ]
         for option in self.menubar.sensitiveMenuOptions:
-            determineDoHereorMainThread(self.menubar.EnableTop, option, state)
-        determineDoHereorMainThread(self.menubar.fileOpenConfig.Enable, state)
-        determineDoHereorMainThread(self.menubar.pref.Enable, state)
-        determineDoHereorMainThread(self.menubar.run.Enable, state)
-        determineDoHereorMainThread(self.menubar.installedDevices.Enable, state)
-        determineDoHereorMainThread(self.menubar.command.Enable, state)
-        determineDoHereorMainThread(self.menubar.groupSubMenu.Enable, state)
-        determineDoHereorMainThread(
-            self.menubar.setSaveMenuOptionsEnableState, state
-        )
+            stateList.append((self.menubar.EnableTop, option, state))
+        determineListDoHereorMainThread(stateList)
 
     @api_tool_decorator()
     def onInstalledDevices(self, event):
@@ -2779,12 +2648,7 @@ class NewFrameLayout(wx.Frame):
                             defaultFile=defaultFileName,
                         )
                         if inFile:
-                            self.onClearGrids()
-                            self.statusBar.gauge.Pulse()
-                            self.setCursorBusy()
-                            self.isRunning = True
-                            self.toggleEnabledState(False)
-                            self.sleepInhibitor.inhibit()
+                            self.toggleIsRunning(True)
                             reset = False
                             Globals.THREAD_POOL.enqueue(
                                 fetchInstalledDevices, app, version, inFile
@@ -2860,9 +2724,7 @@ class NewFrameLayout(wx.Frame):
                 return
             else:
                 Globals.OPEN_DIALOGS.remove(groupMultiDialog)
-                self.isRunning = False
-                self.setCursorDefault()
-                self.toggleEnabledState(True)
+                self.toggleIsRunning(False)
                 return
         else:
             displayMessageBox(
@@ -2871,9 +2733,7 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_ERROR,
                 )
             )
-            self.isRunning = False
-            self.setCursorDefault()
-            self.toggleEnabledState(True)
+            self.toggleIsRunning(False)
 
     @api_tool_decorator()
     def callSetGaugeLater(self, event):
@@ -3596,3 +3456,20 @@ class NewFrameLayout(wx.Frame):
 
     def onThemeChange(self, event=None):
         setElmTheme(self)
+
+    def toggleIsRunning(self, running):
+        self.isRunning = running
+        if running:
+            self.onClearGrids()
+            self.statusBar.gauge.Pulse()
+            self.setCursorBusy()
+            self.toggleEnabledState(False)
+            self.sleepInhibitor.inhibit()
+        else:
+            self.setCursorDefault()
+            self.toggleEnabledState(True)
+            self.sleepInhibitor.uninhibit()
+            postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+            self.gridPanel.thawGridsIfFrozen()
+            if self.gridPanel.disableProperties:
+                self.gridPanel.enableGridProperties()

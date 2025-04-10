@@ -9,12 +9,13 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from Utility.API.BlueprintUtility import (checkFeatureFlags,
                                           getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
 from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
-                              openWebLinkInBrowser, setElmTheme)
+                              getFont, openWebLinkInBrowser, setElmTheme)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -360,22 +361,8 @@ class BlueprintsDialog(wx.Dialog):
         return self.group
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
         self.applyFontHelper(self, normalFont, normalBoldFont)
 

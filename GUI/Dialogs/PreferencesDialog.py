@@ -9,8 +9,9 @@ import wx.adv as wxadv
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.Resource import determineDoHereorMainThread
+from Utility.Resource import determineDoHereorMainThread, getFont
 
 
 class PreferencesDialog(wx.Dialog):
@@ -98,14 +99,7 @@ class PreferencesDialog(wx.Dialog):
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
         self.list_box_1.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                self.list_box_1.GetFont().GetFamily(),
-                self.list_box_1.GetFont().GetStyle(),
-                self.list_box_1.GetFont().GetWeight(),
-                0,
-                "Normal",
-            )
+           getFont(FontStyles.NORMAL.value)
         )
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
 
@@ -1549,14 +1543,7 @@ class PreferencesDialog(wx.Dialog):
         )
         label.SetToolTip(toolTip)
         currentFont = label.GetFont()
-        wxFont = wx.Font(
-            Globals.FONT_SIZE,
-            currentFont.GetFamily(),
-            currentFont.GetStyle(),
-            currentFont.GetWeight(),
-            0,
-            "Normal",
-        )
+        wxFont = getFont(FontStyles.NORMAL.value)
         label.SetFont(wxFont)
         sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
 
