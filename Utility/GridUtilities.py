@@ -132,7 +132,8 @@ def convertColumnTypes(data, headers):
     for col in headers:
         if len(data[col]) > 0:
             gridColType = Globals.GRID_COL_TYPES.get(col, "string").lower()
-            col_type = data[col].dtype
+            init_col_type = data[col].dtype if hasattr(data[col], "dtype") else ""
+            end_col_type = None
             for _ in range(Globals.MAX_RETRY):
                 if gridColType == "date":
                     data[col] = pd.to_datetime(
@@ -158,7 +159,7 @@ def convertColumnTypes(data, headers):
 
                         isDigit = False
                         hasDecimal = False
-                        if str(col_type)[:3] != "int":
+                        if str(init_col_type)[:3] != "int":
                             try:
                                 isDigit = data[col].str.isdigit().any()
                                 hasDecimal = data[col].str.contains(".").any()
@@ -176,7 +177,7 @@ def convertColumnTypes(data, headers):
                                     .any()
                                 )
 
-                        if str(col_type)[:3] == "int" or (
+                        if str(init_col_type)[:3] == "int" or (
                             isDigit and not hasDecimal
                         ):
                             if __attempt_cast__(c_min, c_max, np.int8):
@@ -199,12 +200,13 @@ def convertColumnTypes(data, headers):
                         ApiToolLog().LogError(e, postStatus=post)
                 elif gridColType == "category":
                     data[col] = data[col].astype("category")
-                else:
+                elif hasattr(hasattr(data[col], "astype")):
                     data[col] = data[col].astype(pd.StringDtype())
 
-                if col_type != data[col].dtype:
+                end_col_type = data[col].dtype if hasattr(data[col], "dtype") else ""
+                if init_col_type != end_col_type:
                     break
-            if col_type == data[col].dtype:
+            if init_col_type != end_col_type and hasattr(hasattr(data[col], "astype")):
                 data[col] = data[col].astype(pd.StringDtype())
     return data
 
