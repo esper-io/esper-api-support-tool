@@ -515,11 +515,12 @@ class InstalledDevicesDlg(wx.Dialog):
         self.applyFontHelper(self, normalFont, normalBold)
 
     def applyFontHelper(self, elm, normalFont, boldFont):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if isinstance(child, wx.StaticText):
-                    child.SetFont(boldFont)
-                else:
-                    child.SetFont(normalFont)
-            self.applyFontHelper(child, normalFont, boldFont)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if isinstance(child, wx.StaticText):
+                        child.SetFont(boldFont)
+                    else:
+                        child.SetFont(normalFont)
+                self.applyFontHelper(child, normalFont, boldFont)

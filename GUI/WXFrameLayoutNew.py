@@ -1953,12 +1953,15 @@ class NewFrameLayout(wx.Frame):
                     Globals.OPEN_DIALOGS.remove(cmdDialog)
                     if result == wx.ID_OK:
                         try:
-                            (
-                                cmdArgs,
-                                commandType,
-                                schArgs,
-                                schType,
-                            ) = cmdDialog.GetValue()
+                            values = cmdDialog.GetValue()
+                            cmdArgs = commandType = schArgs = schType = None
+                            if values:
+                                (
+                                    cmdArgs,
+                                    commandType,
+                                    schArgs,
+                                    schType,
+                                ) = values
                             if cmdArgs is not None:
                                 createCommand(
                                     self,

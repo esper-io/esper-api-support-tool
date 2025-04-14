@@ -287,6 +287,12 @@ def ipv6Tomac(ipv6):
 
 @api_tool_decorator(locks=[Globals.msg_lock])
 def displayMessageBox(event):
+    if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+            determineDoHereorMainThread(displayMessageBox, event)
+            return
     value = None
     if hasattr(event, "GetValue"):
         value = event.GetValue()
@@ -303,6 +309,8 @@ def displayMessageBox(event):
             sty = value[1]
     elif isinstance(value, str):
         msg = value
+    if (sty & wx.CENTRE) != wx.CENTRE:
+        sty |= wx.CENTRE
 
     res = None
     Globals.msg_lock.acquire()

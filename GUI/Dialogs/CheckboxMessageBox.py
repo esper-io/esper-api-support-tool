@@ -101,8 +101,9 @@ class CheckboxMessageBox(wx.Dialog):
         self.applyFontHelper(self, normalFont)
 
     def applyFontHelper(self, elm, font):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                child.SetFont(font)
-            self.applyFontHelper(child, font)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    child.SetFont(font)
+                self.applyFontHelper(child, font)

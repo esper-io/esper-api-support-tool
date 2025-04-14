@@ -11,8 +11,7 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Common.enum import FontStyles
-from Utility.Resource import getFont, setElmTheme
+from Utility.Resource import displayMessageBox, setElmTheme
 
 
 class CommandDialog(wx.Dialog):
@@ -661,8 +660,18 @@ class CommandDialog(wx.Dialog):
                 self.choice_6.GetStringSelection(),
             )
         else:
-            cmdConfig = json.loads(self.text_ctrl_1.GetValue())
-            scheduleConfig = json.loads(self.text_ctrl_2.GetValue())
+            try:
+                cmdConfig = json.loads(self.text_ctrl_1.GetValue())
+                scheduleConfig = json.loads(self.text_ctrl_2.GetValue())
+            except Exception as e:
+                displayMessageBox(
+                    (
+                        "Invalid JSON format",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+                )
+                return None
+
             otherConfig = {}
             for key in cmdConfig.keys():
                 if key not in Globals.COMMAND_ARGS:
@@ -773,8 +782,9 @@ class CommandDialog(wx.Dialog):
         self.applyFontHelper(self, normalFont)
 
     def applyFontHelper(self, elm, font):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                child.SetFont(font)
-            self.applyFontHelper(child, font)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    child.SetFont(font)
+                self.applyFontHelper(child, font)

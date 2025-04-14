@@ -220,6 +220,7 @@ class GeofenceDialog(wx.Dialog):
             self.reset_grid.applyNewDataFrame(
                 df, checkColumns=False, resetPosition=True
             )
+        self.setCursorBusy()
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
@@ -266,10 +267,12 @@ class GeofenceDialog(wx.Dialog):
             data = pd.DataFrame(
                 expandedGroupData, columns=self.gridHeaderLabels
             )
-            self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
-            self.applyGridSettings()
-            if self.geofence_grid.IsFrozen():
-                self.geofence_grid.Thaw()
+            if self:
+                self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
+                self.applyGridSettings()
+                if self.geofence_grid.IsFrozen():
+                    self.geofence_grid.Thaw()
+                self.setCursorDefault()
 
     @api_tool_decorator()
     def createGeofence(self, event):
@@ -476,15 +479,16 @@ class GeofenceDialog(wx.Dialog):
         self.applyFontHelper(self, normalFont, headerBold)
 
     def applyFontHelper(self, elm, font, headerBold):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if (
-                    hasattr(child, "GetLabelText")
-                    and self.dialog_title == child.GetLabelText()
-                ):
-                    child.SetFont(headerBold)
-                else:
-                    child.SetFont(font)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if (
+                        hasattr(child, "GetLabelText")
+                        and self.dialog_title == child.GetLabelText()
+                    ):
+                        child.SetFont(headerBold)
+                    else:
+                        child.SetFont(font)
 
-            self.applyFontHelper(child, font, headerBold)
+                self.applyFontHelper(child, font, headerBold)
