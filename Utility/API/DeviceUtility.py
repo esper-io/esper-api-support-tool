@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import time
 
-from esperclient.rest import ApiException
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
@@ -10,11 +8,9 @@ from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getHeader, postEventToFrame
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    handleRequestError,
-    performGetRequestWithRetry,
-)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     handleRequestError,
+                                     performGetRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -92,7 +88,7 @@ def getAllDevices(
             EventUtility.myEVT_LOG, "---> Device API Request Finished"
         )
         return api_response
-    except ApiException as e:
+    except Exception as e:
         raise Exception(
             "Exception when calling DeviceApi->get_all_devices: %s\n" % e
         )
@@ -299,7 +295,7 @@ def getDeviceById(
                 EventUtility.myEVT_LOG, "---> Device API Request Finished"
             )
         return api_response
-    except ApiException as e:
+    except Exception as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
         ApiToolLog().LogError(e, postIssue=False)
 

@@ -1376,7 +1376,7 @@ class NewFrameLayout(wx.Frame):
     def fetchAllKnownBlueprints(self):
         resp = getAllBlueprints(tolerance=1, useThreadPool=False)
         if resp:
-            for item in resp.get("content").get("results", []):
+            for item in resp.get("content", resp).get("results", []):
                 Globals.knownBlueprints[item["id"]] = item
 
     @api_tool_decorator()

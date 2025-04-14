@@ -356,7 +356,7 @@ def fetchInstalledDevices(app, version, inFile):
     Globals.THREAD_POOL.results()  # reset results to ensure no additional data is processed
     resp = getInstallDevices(version, app, tolarance=1)
     res = []
-    for r in resp.results:
+    for r in resp["results"]:
         if r and hasattr(r, "to_dict"):
             res.append(r.to_dict())
         elif r and type(r) is dict:

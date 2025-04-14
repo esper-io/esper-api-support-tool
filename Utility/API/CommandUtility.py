@@ -13,8 +13,9 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (displayMessageBox, getHeader, logBadResponse,
-                              postEventToFrame, splitListIntoChunks)
+from Utility.Resource import (displayMessageBox, getHeader, getTenant,
+                              logBadResponse, postEventToFrame,
+                              splitListIntoChunks)
 from Utility.Web.WebRequests import (performGetRequestWithRetry,
                                      performPostRequestWithRetry)
 
@@ -481,9 +482,7 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
         headers = getHeader()
         url = (
             "https://%s-api.esper.cloud/api/commands/v0/commands/"
-            % Globals.configuration.host.split("-api")[0].replace(
-                "https://", ""
-            )
+            % getTenant()
         )
         resp = performPostRequestWithRetry(
             url, headers=headers, json=command_data, maxRetry=maxAttempt
@@ -507,7 +506,7 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
 
 def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
     url = "https://%s-api.esper.cloud/api/commands/v0/commands/%s/stats/" % (
-        Globals.configuration.host.split("-api")[0].replace("https://", ""),
+        getTenant(),
         command_id,
     )
     json_resp = None

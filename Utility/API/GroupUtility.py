@@ -10,18 +10,12 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    handleRequestError,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
+                              postEventToFrame)
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     handleRequestError,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
@@ -157,6 +151,17 @@ def fetchGroupName(groupURL, returnJson=False):
     return None
 
 
+def getGroupApiUrl(limit=Globals.limit, offset=0, name=""):
+    url =  "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
+            tenant=Globals.configuration.host,
+            enterprise=Globals.enterprise_id,
+            lim=limit,
+            page=offset,
+        )
+    if name:
+        url += "&name={}".format(name)
+    return url
+
 @api_tool_decorator(locks=[Globals.token_lock])
 def getAllGroups(
     name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0
@@ -181,14 +186,7 @@ def getAllGroupsHelper(
     if not offset:
         offset = Globals.offset
     try:
-        url = "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
-            tenant=Globals.configuration.host,
-            enterprise=Globals.enterprise_id,
-            lim=limit,
-            page=offset,
-        )
-        if name:
-            url += "&name={}".format(name)
+        url = getGroupApiUrl(limit, offset, name)
         api_response = performGetRequestWithRetry(url, getHeader())
         if api_response and api_response.status_code < 300:
             api_response = api_response.json()
@@ -211,13 +209,8 @@ def get_all_groups(
     maxAttempt=Globals.MAX_RETRY,
     tolerance=0,
 ):
-    response = getAllGroupsHelper(name, limit, offset, maxAttempt)
-    groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
-    if type(response) is dict and "results" in response and groups:
-        response["results"] = response["results"] + groups
-        response["next"] = None
-        response["prev"] = None
-    return response
+    url = getGroupApiUrl(limit, offset, name)
+    return fetchRequestWithOffsets(url, tolerance=tolerance)
 
 
 @api_tool_decorator()

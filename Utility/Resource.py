@@ -726,3 +726,8 @@ def applyFontHelper(fontRuleSet, parent, elm):
                             break
                     child.SetFont(font)
                 applyFontHelper(fontRuleSet, parent, child)
+
+def getTenant():
+    return Globals.configuration.host.replace("https://", "").replace(
+        "-api.esper.cloud/api", ""
+    )

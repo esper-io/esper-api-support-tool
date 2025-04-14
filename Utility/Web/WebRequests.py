@@ -7,12 +7,8 @@ import requests
 import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    enforceRateLimit,
-    getHeader,
-    postEventToFrame,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, enforceRateLimit,
+                              getHeader, postEventToFrame)
 
 
 def performRequestWithRetry(
@@ -196,4 +192,20 @@ def perform_web_requests(content):
 
     if resp:
         resp = resp.json()
+    return resp
+
+def fetchRequestWithOffsets(url, tolerance=0, useThreadPool=True):
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        respJson = resp.json()
+        if respJson and "content" in respJson:
+            respJson = respJson["content"]
+        offsetResponses = getAllFromOffsetsRequests(
+            respJson, tolarance=tolerance, useThreadPool=useThreadPool
+        )
+        if type(offsetResponses) is dict and "results" in offsetResponses:
+            respJson["results"] = respJson["results"] + offsetResponses["results"]
+            respJson["next"] = None
+            respJson["prev"] = None
+        return respJson
     return resp

@@ -10,32 +10,20 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
-from Utility.API.AppUtilities import (
-    getAllApplicationsForHost,
-    getAllAppVersionsForHost,
-    uploadApplicationForHost,
-)
+from Utility.API.AppUtilities import (getAllApplicationsForHost,
+                                      getAllAppVersionsForHost,
+                                      uploadApplicationForHost)
 from Utility.API.CommandUtility import postEsperCommand
-from Utility.API.ContentUtility import (
-    getAllContentFromHost,
-    uploadContentToHost,
-)
-from Utility.API.FeatureFlag import getFeatureFlags, getFeatureFlagsForTenant
+from Utility.API.ContentUtility import (getAllContentFromHost,
+                                        uploadContentToHost)
+from Utility.API.FeatureFlag import getFeatureFlagsForTenant
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    deleteFile,
-    displayMessageBox,
-    download,
-    getEsperConfig,
-    getHeader,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    performGetRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (deleteFile, displayMessageBox, download,
+                              getEsperConfig, getHeader, postEventToFrame)
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 def checkFeatureFlags(data):
@@ -69,41 +57,27 @@ def getAllBlueprints(tolerance=0, useThreadPool=True):
         baseUrl=Globals.configuration.host,
         limit=Globals.limit,
     )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    if resp:
-        respJson = resp.json()
-        blueprints = getAllFromOffsetsRequests(
-            respJson, tolarance=tolerance, useThreadPool=useThreadPool
-        )
-        if type(blueprints) is dict and "results" in blueprints:
-            respJson["results"] = respJson["results"] + blueprints["results"]
-            respJson["next"] = None
-            respJson["prev"] = None
-        return respJson
+    resp = fetchRequestWithOffsets(url, tolerance=tolerance, useThreadPool=True)
     return resp
 
 
 @api_tool_decorator()
 def getAllBlueprintsFromHost(host, key, enterprise):
-    response = getAllBlueprintsFromHostHelper(
-        host, key, enterprise, Globals.limit, 0
+    url = getAllBlueprintsFromHostAPIUrl(host, key, enterprise, Globals.limit, 0)
+    return fetchRequestWithOffsets(url, tolerance=1)
+
+
+def getAllBlueprintsFromHostAPIUrl(host, key, enterprise, limit, offset):
+    return "{baseUrl}/v2/blueprints/?limit={limit}&offset={offset}".format(
+        baseUrl=host, limit=limit, offset=offset
     )
-    blueprints = getAllFromOffsetsRequests(response, tolarance=1)
-    if type(response) is dict and "results" in response:
-        response["results"] = response["results"] + blueprints
-        response["next"] = None
-        response["prev"] = None
-        print(len(response["results"]))
-    return response
 
 
 @api_tool_decorator()
 def getAllBlueprintsFromHostHelper(
     host, key, enterprise, limit=Globals.limit, offset=0, responses=None
 ):
-    url = "{baseUrl}/v2/blueprints/?limit={limit}&offset={offset}".format(
-        baseUrl=host, limit=limit, offset=offset
-    )
+    url = getAllBlueprintsFromHostAPIUrl(host, key, enterprise, limit, offset)
     resp = performGetRequestWithRetry(
         url,
         headers={

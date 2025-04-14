@@ -3,7 +3,6 @@
 
 import json
 import string
-import time
 from datetime import datetime, timedelta
 
 import esperclient
@@ -15,11 +14,9 @@ from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import postEsperCommand, waitForCommandToFinish
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (
-    handleRequestError,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Web.WebRequests import (handleRequestError,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 @api_tool_decorator()
