@@ -491,15 +491,16 @@ class GeofenceDialog(wx.Dialog):
         self.applyFontHelper(self, normalFont, headerBold)
 
     def applyFontHelper(self, elm, font, headerBold):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if (
-                    hasattr(child, "GetLabelText")
-                    and self.dialog_title == child.GetLabelText()
-                ):
-                    child.SetFont(headerBold)
-                else:
-                    child.SetFont(font)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if (
+                        hasattr(child, "GetLabelText")
+                        and self.dialog_title == child.GetLabelText()
+                    ):
+                        child.SetFont(headerBold)
+                    else:
+                        child.SetFont(font)
 
-            self.applyFontHelper(child, font, headerBold)
+                self.applyFontHelper(child, font, headerBold)
