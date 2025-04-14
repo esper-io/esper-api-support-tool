@@ -708,3 +708,16 @@ def getFont(style):
                     0,
                     "Normal",
                 )
+    
+def applyFontHelper(fontRuleSet, parent, elm):
+        if parent:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    font = getFont(enum.FontStyles.NORMAL.value)
+                    for item, val in fontRuleSet.items():
+                        if isinstance(child, item):
+                            font = val
+                            break
+                    child.SetFont(font)
+                applyFontHelper(fontRuleSet, parent, child)

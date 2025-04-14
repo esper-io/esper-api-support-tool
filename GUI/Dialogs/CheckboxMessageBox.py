@@ -5,7 +5,7 @@ import wx
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import getFont, setElmTheme
+from Utility.Resource import applyFontHelper, getFont, setElmTheme
 
 
 class CheckboxMessageBox(wx.Dialog):
@@ -96,14 +96,5 @@ class CheckboxMessageBox(wx.Dialog):
         self.DestroyLater()
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
-
-        self.applyFontHelper(self, normalFont)
-
-    def applyFontHelper(self, elm, font):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    child.SetFont(font)
-                self.applyFontHelper(child, font)
+        fontRules = {}
+        applyFontHelper(fontRules, self, self)

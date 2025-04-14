@@ -6,7 +6,8 @@ from Common import Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.TabPanel import TabPanel
-from Utility.Resource import getFont, getStrRatioSimilarity, setElmTheme
+from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
+                              setElmTheme)
 
 
 class ColumnVisibility(wx.Dialog):
@@ -264,18 +265,9 @@ class ColumnVisibility(wx.Dialog):
         return self.selected
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
         normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBoldFont)
-
-    def applyFontHelper(self, elm, font, bold):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if isinstance(child, wx.Notebook):
-                        child.SetFont(bold)
-                    else:
-                        child.SetFont(font)
-                self.applyFontHelper(child, font, bold)
+        fontRules = {
+            wx.Notebook: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)

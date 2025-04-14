@@ -7,7 +7,7 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import openWebLinkInBrowser, setElmTheme
+from Utility.Resource import applyFontHelper, openWebLinkInBrowser, setElmTheme
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -197,14 +197,5 @@ class NewEndpointDialog(wx.Dialog):
             self.button_APPLY.Enable(False)
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
-
-        self.applyFontHelper(self, normalFont)
-
-    def applyFontHelper(self, elm, font):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    child.SetFont(font)
-                self.applyFontHelper(child, font)
+        fontRules = {}
+        applyFontHelper(fontRules, self, self)

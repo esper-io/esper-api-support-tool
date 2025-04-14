@@ -10,9 +10,10 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (determineDoHereorMainThread,
-                              getStrRatioSimilarity, openWebLinkInBrowser,
-                              setElmTheme)
+from Common.enum import FontStyles
+from Utility.Resource import (applyFontHelper, determineDoHereorMainThread,
+                              getFont, getStrRatioSimilarity,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class TemplateDialog(wx.Dialog):
@@ -353,18 +354,9 @@ class TemplateDialog(wx.Dialog):
                 self.list_box_1.Append(template["name"])
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
         normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBoldFont)
-
-    def applyFontHelper(self, elm, font, normalBoldFont):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if isinstance(child, wx.StaticText):
-                        child.SetFont(normalBoldFont)
-                    else:
-                        child.SetFont(font)
-                self.applyFontHelper(child, font, normalBoldFont)
+        fontRules = {
+            wx.StaticText: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)

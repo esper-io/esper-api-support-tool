@@ -8,7 +8,8 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from Utility.FileUtility import write_data_to_csv
-from Utility.Resource import getFont, resourcePath, scale_bitmap
+from Utility.Resource import (applyFontHelper, getFont, resourcePath,
+                              scale_bitmap)
 
 
 class SidePanel(wx.Panel):
@@ -397,25 +398,14 @@ class SidePanel(wx.Panel):
                 clientData = Globals.GRID_ACTIONS[action]
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
         normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBoldFont)
-
-    def applyFontHelper(self, elm, font, normalBoldFont):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if (
-                        isinstance(child, wx.StaticText)
-                        or isinstance(child, wx.Notebook)
-                        or isinstance(child, wx.Button)
-                    ):
-                        child.SetFont(normalBoldFont)
-                    else:
-                        child.SetFont(font)
-                self.applyFontHelper(child, font, normalBoldFont)
+        fontRules = {
+            wx.StaticText: normalBoldFont,
+            wx.Notebook: normalBoldFont,
+            wx.Button: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)
 
     def getFriendlySelectedGroupNames(self):
         friendlyNames = []

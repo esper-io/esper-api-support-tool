@@ -14,8 +14,9 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags,
                                           getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
-                              getFont, openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (applyFontHelper, determineDoHereorMainThread,
+                              getEsperConfig, getFont, openWebLinkInBrowser,
+                              setElmTheme)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -361,18 +362,9 @@ class BlueprintsDialog(wx.Dialog):
         return self.group
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
         normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBoldFont)
-
-    def applyFontHelper(self, elm, font, normalBoldFont):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if isinstance(child, wx.StaticText):
-                        child.SetFont(normalBoldFont)
-                    else:
-                        child.SetFont(font)
-                self.applyFontHelper(child, font, normalBoldFont)
+        fontRules = {
+            wx.StaticText: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)

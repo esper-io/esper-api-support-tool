@@ -6,7 +6,8 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import getFont, openWebLinkInBrowser, setElmTheme
+from Utility.Resource import (applyFontHelper, getFont, openWebLinkInBrowser,
+                              setElmTheme)
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -103,14 +104,5 @@ class ConfirmTextDialog(wx.Dialog):
         self.DestroyLater()
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
-
-        self.applyFontHelper(self, normalFont)
-
-    def applyFontHelper(self, elm, font):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    child.SetFont(font)
-                self.applyFontHelper(child, font)
+        fontRules = {}
+        applyFontHelper(fontRules, self, self)

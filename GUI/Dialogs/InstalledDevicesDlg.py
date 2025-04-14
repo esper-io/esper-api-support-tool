@@ -6,7 +6,8 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.AppUtilities import getAppVersions
-from Utility.Resource import getFont, getStrRatioSimilarity, setElmTheme
+from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
+                              setElmTheme)
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -509,18 +510,9 @@ class InstalledDevicesDlg(wx.Dialog):
             return None
 
     def applyFontSize(self):
-        normalFont = getFont(FontStyles.NORMAL.value)
-        normalBold = getFont(FontStyles.NORMAL_BOLD.value)
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBold)
-
-    def applyFontHelper(self, elm, normalFont, boldFont):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if isinstance(child, wx.StaticText):
-                        child.SetFont(boldFont)
-                    else:
-                        child.SetFont(normalFont)
-                self.applyFontHelper(child, normalFont, boldFont)
+        fontRules = {
+            wx.StaticText: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)
