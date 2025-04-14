@@ -288,10 +288,8 @@ def ipv6Tomac(ipv6):
 @api_tool_decorator(locks=[Globals.msg_lock])
 def displayMessageBox(event):
     if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(displayMessageBox, event)
         ):
-            determineDoHereorMainThread(displayMessageBox, event)
             return
     value = None
     if hasattr(event, "GetValue"):
@@ -486,6 +484,14 @@ def processFunc(event):
         else:
             fun[0](fun[1])
 
+def uiThreadCheck(func, *args, **kwargs):
+    if (
+            platform.system() == "Darwin"
+            and "main" not in threading.current_thread().name.lower()
+        ):
+        determineDoHereorMainThread(func, *args, **kwargs)
+        return True
+    return False
 
 @api_tool_decorator()
 def determineDoHereorMainThread(func, *args, **kwargs):
@@ -494,7 +500,7 @@ def determineDoHereorMainThread(func, *args, **kwargs):
 
     if (
         platform.system() == "Windows"
-        and "main" in threading.current_thread().name.lower()
+        or "main" in threading.current_thread().name.lower()
     ):
         # do here
         if args and kwargs:
@@ -637,8 +643,7 @@ def isInThemeBlacklist(elm):
 
 
 def setElementTheme(elm, bgColor, fgColor):
-    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
-        determineDoHereorMainThread(setElementTheme, elm, bgColor, fgColor)
+    if uiThreadCheck(setElementTheme, elm, bgColor, fgColor):
         return
     if hasattr(elm, "SetThemeEnabled"):
         elm.SetThemeEnabled(False)

@@ -14,7 +14,7 @@ from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import (determineDoHereorMainThread, getFont,
                               getStrRatioSimilarity, resourcePath,
-                              scale_bitmap, setElmTheme)
+                              scale_bitmap, setElmTheme, uiThreadCheck)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -297,10 +297,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     @api_tool_decorator()
     def onSelectEvent(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.onSelectEvent)
         ):
-            determineDoHereorMainThread(self.onSelectEvent)
             return
         if self.checkbox_1.IsChecked():
             if (
@@ -373,10 +371,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def processNext(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.processNext)
         ):
-            determineDoHereorMainThread(self.processNext)
             return
         self.button_1.Enable(False)
         self.button_2.Enable(False)
@@ -400,10 +396,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def processPrev(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.processPrev)
         ):
-            determineDoHereorMainThread(self.processPrev)
             return
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
@@ -422,10 +416,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def checkPageButton(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.checkPageButton)
         ):
-            determineDoHereorMainThread(self.checkPageButton)
             return
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
@@ -490,10 +482,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def setCursorBusy(self):
         """Set cursor icon to busy state"""
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.setCursorBusy)
         ):
-            determineDoHereorMainThread(self.setCursorBusy)
             return
 
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
@@ -502,10 +492,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def setCursorDefault(self):
         """Set cursor icon to busy state"""
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.setCursorDefault)
         ):
-            determineDoHereorMainThread(self.setCursorDefault)
             return
 
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
@@ -556,10 +544,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def selectAllDevices(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.selectAllDevices)
         ):
-            determineDoHereorMainThread(self.selectAllDevices)
             return
         self.setCursorBusy()
         self.button_1.Enable(False)

@@ -1,6 +1,3 @@
-import platform
-import sys
-import threading
 from datetime import datetime
 from distutils.version import LooseVersion
 
@@ -14,8 +11,7 @@ from Common.enum import Color, FontStyles
 from GUI.GridDataTable import GridDataTable
 from Utility.GridUtilities import convertColumnTypes
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (determineDoHereorMainThread, getFont,
-                              getStrRatioSimilarity)
+from Utility.Resource import getFont, getStrRatioSimilarity, uiThreadCheck
 
 
 class GridTable(gridlib.Grid):
@@ -44,13 +40,7 @@ class GridTable(gridlib.Grid):
         return df
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
-                self.ApplyGridStyle, autosize, resetPosition
-            )
+        if uiThreadCheck(self.ApplyGridStyle, autosize, resetPosition):
             return
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
@@ -82,16 +72,14 @@ class GridTable(gridlib.Grid):
         self, data, checkColumns=True, autosize=False, resetPosition=False
     ):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
+            uiThreadCheck(
                 self.applyNewDataFrame,
                 data,
                 checkColumns,
                 autosize,
                 resetPosition,
             )
+        ):
             return
 
         try:
@@ -418,43 +406,35 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def SetCellTextColour(self, rowNum, colNum, color):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
+            uiThreadCheck(
                 super().SetCellTextColour, rowNum, colNum, color
             )
+        ):
             return
         super().SetCellTextColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def SetCellBackgroundColour(self, rowNum, colNum, color):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
+            uiThreadCheck(
                 super().SetCellBackgroundColour, rowNum, colNum, color
             )
+        ):
             return
         super().SetCellBackgroundColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def ForceRefresh(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(super().ForceRefresh)
         ):
-            determineDoHereorMainThread(super().ForceRefresh)
             return
         return super().ForceRefresh()
 
     @api_tool_decorator()
     def AutoSizeColumns(self, setAsMin=True):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(super().AutoSizeColumns, setAsMin)
         ):
-            determineDoHereorMainThread(super().AutoSizeColumns, setAsMin)
             return
         return super().AutoSizeColumns(setAsMin)

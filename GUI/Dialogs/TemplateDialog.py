@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import json
-import platform
-import threading
 
 import wx
 import wx.html as wxHtml
@@ -11,9 +9,8 @@ import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, determineDoHereorMainThread,
-                              getFont, getStrRatioSimilarity,
-                              openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
+                              openWebLinkInBrowser, setElmTheme, uiThreadCheck)
 
 
 class TemplateDialog(wx.Dialog):
@@ -242,10 +239,8 @@ class TemplateDialog(wx.Dialog):
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.populateSourceTempaltes, srcName)
         ):
-            determineDoHereorMainThread(self.populateSourceTempaltes, srcName)
             return
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
@@ -267,10 +262,8 @@ class TemplateDialog(wx.Dialog):
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.fetchDestTempaltes, destName)
         ):
-            determineDoHereorMainThread(self.fetchDestTempaltes, destName)
             return
         if destName:
             self.destTemplate = self.getTemplates(self.configMenuOpt[destName])

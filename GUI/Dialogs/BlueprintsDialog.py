@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import platform
-import threading
 
 import wx
 import wx.html as wxHtml
@@ -10,13 +8,11 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.API.BlueprintUtility import (checkFeatureFlags,
-                                          getAllBlueprintsFromHost,
+from Utility.API.BlueprintUtility import (getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (applyFontHelper, determineDoHereorMainThread,
-                              getEsperConfig, getFont, openWebLinkInBrowser,
-                              setElmTheme)
+from Utility.Resource import (applyFontHelper, getEsperConfig, getFont,
+                              openWebLinkInBrowser, setElmTheme, uiThreadCheck)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -184,12 +180,8 @@ class BlueprintsDialog(wx.Dialog):
 
     def getBlueprintEnabledEndpoints(self):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.getBlueprintEnabledEndpoints)
         ):
-            determineDoHereorMainThread(
-                self.getBlueprintEnabledEndpoints,
-            )
             return
         if not self:
             return
@@ -230,10 +222,8 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadGroupHelper(self, config):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.loadGroupHelper, config)
         ):
-            determineDoHereorMainThread(self.loadGroupHelper, config)
             return
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]),
@@ -296,12 +286,10 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadBlueprintHelper(self, event, match, config):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
+            uiThreadCheck(
                 self.loadBlueprintHelper, event, match, config
             )
+        ):
             return
         revision = getGroupBlueprintDetailForHost(
             config["apiHost"],

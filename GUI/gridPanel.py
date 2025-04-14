@@ -6,17 +6,13 @@ import wx
 import wx.grid as gridlib
 
 import Common.Globals as Globals
-import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, FontStyles
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
-from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
-                              determineDoHereorMainThread, getFont, isDarkMode,
-                              postEventToFrame, releaseLocks, resourcePath,
-                              scale_bitmap)
+from Utility.Resource import (acquireLocks, determineDoHereorMainThread,
+                              getFont, isDarkMode, releaseLocks)
 
 
 class GridPanel(wx.Panel):

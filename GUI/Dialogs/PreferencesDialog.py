@@ -2,7 +2,6 @@
 
 import os
 import platform
-import threading
 
 import wx
 import wx.adv as wxadv
@@ -11,7 +10,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.Resource import determineDoHereorMainThread, getFont
+from Utility.Resource import getFont, uiThreadCheck
 
 
 class PreferencesDialog(wx.Dialog):
@@ -984,10 +983,8 @@ class PreferencesDialog(wx.Dialog):
     @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
         if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+            uiThreadCheck(self.SetPrefs, prefs, onBoot)
         ):
-            determineDoHereorMainThread(self.SetPrefs, prefs, onBoot)
             return
 
         self.prefs = prefs
