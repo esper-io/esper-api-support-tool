@@ -13,17 +13,10 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    displayMessageBox,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-    splitListIntoChunks,
-)
-from Utility.Web.WebRequests import (
-    performGetRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (displayMessageBox, getHeader, logBadResponse,
+                              postEventToFrame, splitListIntoChunks)
+from Utility.Web.WebRequests import (performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -440,13 +433,14 @@ def waitForCommandToFinish(
                 status = getCommandRequestStats(
                     request_id, maxAttempt=maxAttempt
                 )
-                queuedStatus = list(
-                    filter(lambda x: x["state"] == cmdQueued, status)
-                )
-                if queuedStatus:
-                    queuedStatus = queuedStatus[0]
-                else:
-                    break
+                if status and "status" in status and status["status"]:
+                    queuedStatus = list(
+                        filter(lambda x: x["state"] == cmdQueued, status["status"])
+                    )
+                    if queuedStatus:
+                        queuedStatus = queuedStatus[0]
+                    else:
+                        break
             return status
         else:
             status = response["status"][0]

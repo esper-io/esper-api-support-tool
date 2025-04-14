@@ -283,11 +283,12 @@ class ColumnVisibility(wx.Dialog):
         self.applyFontHelper(self, normalFont, normalBoldFont)
 
     def applyFontHelper(self, elm, font, bold):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if isinstance(child, wx.Notebook):
-                    child.SetFont(bold)
-                else:
-                    child.SetFont(font)
-            self.applyFontHelper(child, font, bold)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if isinstance(child, wx.Notebook):
+                        child.SetFont(bold)
+                    else:
+                        child.SetFont(font)
+                self.applyFontHelper(child, font, bold)

@@ -373,11 +373,12 @@ class TemplateDialog(wx.Dialog):
         self.applyFontHelper(self, normalFont, normalBoldFont)
 
     def applyFontHelper(self, elm, font, normalBoldFont):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if isinstance(child, wx.StaticText):
-                    child.SetFont(normalBoldFont)
-                else:
-                    child.SetFont(font)
-            self.applyFontHelper(child, font, normalBoldFont)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if isinstance(child, wx.StaticText):
+                        child.SetFont(normalBoldFont)
+                    else:
+                        child.SetFont(font)
+                self.applyFontHelper(child, font, normalBoldFont)

@@ -416,18 +416,19 @@ class SidePanel(wx.Panel):
         self.applyFontHelper(self, normalFont, normalBoldFont)
 
     def applyFontHelper(self, elm, font, normalBoldFont):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if (
-                    isinstance(child, wx.StaticText)
-                    or isinstance(child, wx.Notebook)
-                    or isinstance(child, wx.Button)
-                ):
-                    child.SetFont(normalBoldFont)
-                else:
-                    child.SetFont(font)
-            self.applyFontHelper(child, font, normalBoldFont)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if (
+                        isinstance(child, wx.StaticText)
+                        or isinstance(child, wx.Notebook)
+                        or isinstance(child, wx.Button)
+                    ):
+                        child.SetFont(normalBoldFont)
+                    else:
+                        child.SetFont(font)
+                self.applyFontHelper(child, font, normalBoldFont)
 
     def getFriendlySelectedGroupNames(self):
         friendlyNames = []
