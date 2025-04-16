@@ -374,7 +374,7 @@ def getAppDictEntry(app, update=True):
         }
     elif type(app) == dict and "app_name" in app:
         appName = app["app_name"]
-        appPkgName = appName + (" (%s)" % app["package_name"])
+        appPkgName = appName + (" (%s)" % app.get("package_name", ""))
         entry = {
             "app_name": app["app_name"],
             appName: app["package_name"],
