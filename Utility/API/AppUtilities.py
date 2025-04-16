@@ -270,23 +270,6 @@ def getAppVersionsEnterpriseAndPlayStore(application_id):
     return jsonResp
 
 
-def getAppsEnterpriseAndPlayStore(package_name=""):
-    url = ""
-    jsonResp = {}
-    if package_name:
-        url = "https://{tenant}-api.esper.cloud/api/v1/enterprise/{ent_id}/application/?package_name={pkg}".format(
-            tenant=getTenant(),
-            ent_id=Globals.enterprise_id,
-            pkg=package_name,
-        )
-        resp = performGetRequestWithRetry(url, headers=getHeader())
-        jsonResp = resp.json()
-        logBadResponse(url, resp, jsonResp, displayMsgBox=True)
-    else:
-        jsonResp = getAllInstallableApps()
-    return jsonResp
-
-
 def getInstallDevices(
     version_id, application_id, maxAttempt=Globals.MAX_RETRY, tolarance=0
 ):
@@ -327,12 +310,6 @@ def getInstalledDevicesApiUrl(version_id, application_id, limit=Globals.limit, o
         lim=limit,
         page=offset,
     )
-
-def get_installed_devices_api(
-    version_id, application_id, limit, offset, maxAttempt=Globals.MAX_RETRY
-):
-    url = getInstalledDevicesApiUrl(version_id, application_id, limit, offset)
-    return performGetRequestWithRetry(url, headers=getHeader(), maxRetry=maxAttempt)
 
 
 def getAppDictEntry(app, update=True):

@@ -268,7 +268,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         selectionStr = self.check_list_box_1.GetString(selection)
         if self.single_selection:
             checked = list(self.check_list_box_1.GetCheckedItems())
-            for check in checked:
+            for _ in checked:
                 self.check_list_box_1.SetCheckedItems(tuple())
 
         self.onBoxCalledPrior = True

@@ -46,7 +46,7 @@ def performRequestWithRetry(
 
 def handleRequestError(attempt, e, maxRetry, raiseError=False):
     if attempt == maxRetry - 1:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
         if raiseError:
             raise e
     if "429" not in str(e) and "Too Many Requests" not in str(e):

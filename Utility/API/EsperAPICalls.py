@@ -150,7 +150,7 @@ def validateConfiguration(
             return True
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return False
 
 
@@ -176,7 +176,7 @@ def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
                 handleRequestError(attempt, e, maxAttempt, raiseError=True)
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return api_response
 
 

@@ -297,7 +297,7 @@ def getDeviceById(
         return api_response
     except Exception as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
 
 
 def getDeviceByIdHelper(
@@ -322,10 +322,6 @@ def getDeviceByIdHelper(
         api_response_list.append(api_response)
 
     return api_response, api_response_list
-
-
-def setDeviceDisabled(deviceId):
-    return patchInfo("", deviceId, jsonData={"state": 20})
 
 
 def searchForDevice(

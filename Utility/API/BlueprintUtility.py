@@ -74,24 +74,6 @@ def getAllBlueprintsFromHostAPIUrl(host, key, enterprise, limit, offset):
 
 
 @api_tool_decorator()
-def getAllBlueprintsFromHostHelper(
-    host, key, enterprise, limit=Globals.limit, offset=0, responses=None
-):
-    url = getAllBlueprintsFromHostAPIUrl(host, key, enterprise, limit, offset)
-    resp = performGetRequestWithRetry(
-        url,
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-        },
-    )
-    if resp.status_code < 300 and responses is not None:
-        api_response = resp.json()
-        responses.append(api_response)
-    return resp
-
-
-@api_tool_decorator()
 def getBlueprint(id):
     url = "{baseUrl}/v0/enterprise/{enterprise_id}/blueprint/{id}/".format(
         baseUrl=Globals.configuration.host,
@@ -100,16 +82,6 @@ def getBlueprint(id):
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
     return resp.json()
-
-
-def getBlueprintVersions(bpId):
-    url = "{base}/v2/blueprints/{blueprint_id}/versions/".format(
-        baseUrl=Globals.configuration.host,
-        blueprint_id=bpId,
-    )
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-    return resp
-
 
 @api_tool_decorator()
 def getGroupBlueprintDetailForHost(host, key, enterprise, groupId, blueprintId):

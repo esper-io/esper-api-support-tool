@@ -91,7 +91,6 @@ class NewFrameLayout(wx.Frame):
         self.authPath = ""
 
         self.consoleWin = None
-        self.refresh = None
         self.preferences = None
         self.auth_data = None
         self.sleepInhibitor = SleepInhibitor()
@@ -108,7 +107,6 @@ class NewFrameLayout(wx.Frame):
         self.defaultDir = os.getcwd()
         self.groups = None
         self.groupManage = None
-        self.AppState = None
         self.searchThreads = []
         self.previousGroupFetchThread = None
         self.firstRun = True
@@ -205,9 +203,7 @@ class NewFrameLayout(wx.Frame):
         self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
         self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
         self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
-        self.Bind(
-            eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault
-        )
+        self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
         self.Bind(eventUtil.EVT_PROCESS_FUNCTION, processFunc)
         self.Bind(eventUtil.EVT_AUDIT, self.audit.postOperation)
         self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
@@ -1625,7 +1621,6 @@ class NewFrameLayout(wx.Frame):
             time.sleep(1)
         self.toggleIsRunning(True)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
-        self.AppState = None
 
         self.gridPanel.UnsetSortingColumns()
 

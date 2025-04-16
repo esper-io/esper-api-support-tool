@@ -500,7 +500,7 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
         )
         logBadResponse(url, resp, json_resp)
     except Exception as e:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return resp, json_resp
 
 
@@ -521,7 +521,7 @@ def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
             json_resp = json_resp["content"]
         logBadResponse(url, resp, json_resp)
     except Exception as e:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return json_resp
 
 

@@ -459,7 +459,6 @@ def processInstallDevices(deviceList):
         "---> Gathered Basic Device Info for Installed Devices",
     )
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-    # processCollectionDevices({"results": newDeviceList})
     return newDeviceList
 
 
@@ -467,47 +466,6 @@ def processInstallDevicesHelper(device, newDeviceList, tolerance=1):
     id = device["id"]
     deviceListing = getDeviceById(id, tolerance=tolerance, log=False)
     newDeviceList.append(deviceListing)
-
-
-@api_tool_decorator()
-def processCollectionDevices(collectionList):
-    if "results" in collectionList and collectionList["results"]:
-        maxThread = int(Globals.MAX_THREAD_COUNT * (2 / 3))
-        splitResults = splitListIntoChunks(
-            collectionList["results"], maxThread=maxThread
-        )
-        if splitResults:
-            number_of_devices = 0
-            postEventToFrame(
-                eventUtil.myEVT_LOG,
-                "---> Gathering Device's Network and App Info",
-            )
-            for chunk in splitResults:
-                Globals.THREAD_POOL.enqueue(
-                    fillInDeviceInfoDict, chunk, number_of_devices
-                )
-                number_of_devices += len(chunk)
-
-            res = wxThread.waitTillThreadsFinish(
-                Globals.THREAD_POOL.threads,
-                GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
-                Globals.enterprise_id,
-                3,
-                tolerance=1,
-            )
-            postEventToFrame(
-                eventUtil.myEVT_FETCH,
-                res,
-            )
-    else:
-        if Globals.frame:
-            Globals.frame.Logging("---> No devices found for EQL query")
-            Globals.frame.isRunning = False
-        postEventToFrame(
-            eventUtil.myEVT_MESSAGE_BOX,
-            ("No devices found for EQL query.", wx.ICON_INFORMATION),
-        )
-        postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
 
 
 @api_tool_decorator()

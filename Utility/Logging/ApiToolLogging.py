@@ -13,13 +13,10 @@ from esperclient.rest import ApiException
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 from Utility.FileUtility import getToolDataPath, write_content_to_file
-from Utility.Logging.IssueTracker import IssueTracker
 
 
 class ApiToolLog:
     def __init__(self):
-        self.tracker_lock = threading.Lock()
-
         basePath = getToolDataPath()
         self.logPath = "%s/ApiTool.log" % basePath
         self.placePath = "%s/ApiToolPlace.log" % basePath
@@ -66,7 +63,6 @@ class ApiToolLog:
         exc_type=None,
         exc_value=None,
         exc_traceback=None,
-        postIssue=True,
         postStatus=True,
     ):
         try:

@@ -7,17 +7,6 @@ from Utility.Web.WebRequests import performGetRequestWithRetry
 
 
 @api_tool_decorator()
-def getFeatureFlags(returnJson=False):
-    url = "{baseUrl}/feature-flags/".format(baseUrl=Globals.configuration.host)
-    resp = performGetRequestWithRetry(url, headers=getHeader())
-
-    if returnJson:
-        return resp.json()
-    else:
-        return resp
-
-
-@api_tool_decorator()
 def getFeatureFlagsForTenant(host, header, returnJson=False):
     url = "{baseUrl}/feature-flags/".format(baseUrl=host)
     resp = performGetRequestWithRetry(url, headers=header, maxRetry=2)

@@ -81,7 +81,7 @@ def download(url, file_name, overwrite=True, raiseError=True):
             os.remove(file_name)
     except Exception as e:
         print(e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     # open in binary mode
     try:
         with open(file_name, "wb") as file:
@@ -90,7 +90,7 @@ def download(url, file_name, overwrite=True, raiseError=True):
             # write to file
             file.write(response.content)
     except Exception as e:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
         if raiseError:
             raise e
         else:
@@ -184,8 +184,7 @@ def downloadFileFromUrl(
                 )
         return fullPath
     except Exception as e:
-        print(e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return None
 
 
@@ -196,7 +195,7 @@ def deleteFile(file):
             return True
     except Exception as e:
         print(e)
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return False
 
 
@@ -410,7 +409,7 @@ def getStrRatioSimilarity(s, t, usePartial=False):
             elif hasattr(fuzz, "partial_ratio"):
                 return fuzz.partial_ratio(s.lower(), t.lower())
     except Exception as e:
-        ApiToolLog().LogError(e, postIssue=False, postStatus=False)
+        ApiToolLog().LogError(e, postStatus=False)
     return 0
 
 
