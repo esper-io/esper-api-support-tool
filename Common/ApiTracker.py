@@ -22,6 +22,8 @@ API_REQUEST_TRACKER = {
     "/wallpaper": 0,
     "OtherAPI": 0,
     "/devicetemplate": 0,
+    "/itunesapps": 0,
+    "/tenant-apps": 0,
 }
 
 API_FUNCTIONS = {
@@ -81,4 +83,5 @@ API_FUNCTIONS = {
     "feature_flags": "/feature-flags",
     "authz": "/authz2/",
     "tenant-apps": "/tenant-apps",
+    "itunesapps": "/itunesapps",
 }

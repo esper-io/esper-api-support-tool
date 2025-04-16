@@ -38,8 +38,10 @@ def getAllAndroidInstallableApps(tolerance=0):
 @api_tool_decorator()
 def getAllIosInstallableApps(tolerance=0):
     enterprise_apps = getEnterpriseIosApps(tolerance=tolerance)
-    vppApps = getVppIosApps(tolerance=tolerance)
-    return { "results": vppApps["results"] + enterprise_apps["results"] }
+    vppApps = {}
+    if Globals.FETCH_VPP:
+        vppApps = getVppIosApps(tolerance=tolerance)
+    return { "results": vppApps.get("results", []) + enterprise_apps.get("results", []) }
 
 
 @api_tool_decorator()
