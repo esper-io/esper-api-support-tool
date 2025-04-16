@@ -143,18 +143,6 @@ class PreferencesDialog(wx.Dialog):
             "When checking for updates, include Pre-Releases.",
         )
 
-        (
-            _,
-            _,
-            self.checkbox_27,
-        ) = self.addPrefToPanel(
-            self.general,
-            sizer_6,
-            "Allow Auto-Posting of Issues",
-            wx.CheckBox,
-            "Allow EAST to automatically report issues raised and relayed back to the user (most Error dialogs).",
-        )
-
         ### Report Options
         self.report = wx.Panel(self.window_1_pane_2, wx.ID_ANY)
         self.report.Hide()
@@ -919,7 +907,6 @@ class PreferencesDialog(wx.Dialog):
             "prereleaseUpdate": self.checkbox_25.IsChecked(),
             "appFilter": self.combobox_2.GetValue(),
             "maxSplitFileSize": self.spin_ctrl_12.GetValue(),
-            "allowAutoIssuePost": self.checkbox_27.IsChecked(),
             "appColFilter": self.appColFilter,
             "scheduleSaveLocation": self.file_location,
             "scheduleSaveType": self.reportSaveType.GetValue(),
@@ -966,7 +953,6 @@ class PreferencesDialog(wx.Dialog):
             Globals.SHEET_CHUNK_SIZE = Globals.MIN_SHEET_CHUNK_SIZE
         elif Globals.SHEET_CHUNK_SIZE > Globals.MAX_SHEET_CHUNK_SIZE:
             Globals.SHEET_CHUNK_SIZE = Globals.MAX_SHEET_CHUNK_SIZE
-        Globals.AUTO_REPORT_ISSUES = self.prefs["allowAutoIssuePost"]
         Globals.APP_COL_FILTER = self.appColFilter
         Globals.SHOW_DISCLAIMER = self.prefs["showDisclaimer"]
         Globals.SHOW_APP_FILTER_DIALOG = self.prefs["showAppFilter"]
@@ -1055,9 +1041,8 @@ class PreferencesDialog(wx.Dialog):
                     size = (size[0], screenSize[1])
                 self.parent.SetSize(size)
 
-        if "isMaximized" in self.prefs and self.prefs["isMaximized"] and onBoot:
-            if self.parent:
-                self.parent.Maximize(self.prefs["isMaximized"])
+        if "isMaximized" in self.prefs and isinstance(self.prefs["isMaximized"], bool) and onBoot and self.parent:
+            self.parent.Maximize(self.prefs["isMaximized"])
 
         if (
             "windowPosition" in self.prefs
@@ -1070,7 +1055,7 @@ class PreferencesDialog(wx.Dialog):
                 else:
                     if not self.parent.IsMaximized():
                         pos = tuple(self.prefs["windowPosition"])
-                        if pos[0] > screenSize[0] or pos[1] > screenSize[1]:
+                        if pos[0] > screenSize[0] or pos[1] > screenSize[1] or pos[0] < 0 or pos[1] < 0:
                             pos = (0, 0)
                         self.parent.SetPosition(wx.Point(pos[0], pos[1]))
 
@@ -1085,6 +1070,7 @@ class PreferencesDialog(wx.Dialog):
         if self.Parent and hasattr(self.Parent, "onThemeChange"):
             self.Parent.onThemeChange(None)
 
+        self.colVisibilty = []
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
             if self.prefs["colVisibility"]:
@@ -1144,7 +1130,6 @@ class PreferencesDialog(wx.Dialog):
         Globals.SHOW_GROUP_PATH = self.checkBooleanValuePrefAndSet("showGroupPath", self.checkbox_24)
         Globals.CHECK_PRERELEASES = self.checkBooleanValuePrefAndSet("prereleaseUpdate", self.checkbox_25)
         Globals.SCHEDULE_ENABLED =  self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26)
-        Globals.AUTO_REPORT_ISSUES = self.checkBooleanValuePrefAndSet("allowAutoIssuePost", self.checkbox_27)
         Globals.GET_DEVICE_LANGUAGE = self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29)
         Globals.SHOW_DISCLAIMER =  self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, wx.CHK_UNCHECKED)
         Globals.SHOW_APP_FILTER_DIALOG = self.checkBooleanValuePrefAndSet("showAppFilter", self.checkbox_31, wx.CHK_CHECKED)
@@ -1237,6 +1222,7 @@ class PreferencesDialog(wx.Dialog):
 
         self.prefs["windowPosition"] = self.getDefaultKeyValue("windowPosition")
         self.prefs["windowSize"] = self.getDefaultKeyValue("windowSize")
+        self.prefs["isMaximized"] = self.getDefaultKeyValue("isMaximized")
 
         for key in self.prefKeys:
             defaultVal = self.getDefaultKeyValue(key)
@@ -1324,8 +1310,6 @@ class PreferencesDialog(wx.Dialog):
             return Globals.APP_FILTER
         elif key == "maxSplitFileSize":
             return Globals.SHEET_CHUNK_SIZE
-        elif key == "allowAutoIssuePost":
-            return Globals.AUTO_REPORT_ISSUES
         elif key == "appColFilter":
             return Globals.APP_COL_FILTER
         elif key == "scheduleSaveLocation":

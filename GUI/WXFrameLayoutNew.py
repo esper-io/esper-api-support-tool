@@ -64,7 +64,6 @@ from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
                                  getAllDeviceInfo, getUserFromToken,
                                  removeNonWhitelisted, uploadAppToEndpoint)
 from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
-                                 read_data_from_csv,
                                  read_data_from_csv_as_dict,
                                  read_excel_via_openpyxl, read_json_file,
                                  save_csv_pandas, save_excel_pandas_xlxswriter,
@@ -155,6 +154,8 @@ class NewFrameLayout(wx.Frame):
 
         self.panel_1.SetSizer(sizer_4)
 
+        self.Bind(wx.EVT_SIZE, self.onMaximize)
+        self.Bind(wx.EVT_FULLSCREEN, self.onFullscreen)
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
         self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQuit)
         self.Bind(wx.EVT_END_SESSION, self.OnQuit)
@@ -2092,15 +2093,12 @@ class NewFrameLayout(wx.Frame):
             Globals.THREAD_POOL.enqueue(
                 self.processFetch,
                 action,
-                entId,
                 deviceList,
-                True,
-                len(deviceList) * 3,
             )
 
     @api_tool_decorator()
     def processFetch(
-        self, action, entId, deviceList, updateGauge=False, maxGauge=None
+        self, action, deviceList,
     ):
         """Given device data perform the specified action"""
         if action <= GeneralActions.GENERATE_APP_REPORT.value:
@@ -3471,3 +3469,16 @@ class NewFrameLayout(wx.Frame):
             self.gridPanel.thawGridsIfFrozen()
             if self.gridPanel.disableProperties:
                 self.gridPanel.enableGridProperties()
+
+    def onMaximize(self, event):
+        if not self.IsMaximized():
+            self.Center(wx.BOTH)
+        event.Skip()
+
+    def onFullscreen(self, event):
+        if self.IsFullScreen():
+            self.ShowFullScreen(False, style=wx.FULLSCREEN_NOBORDER)
+            self.Center(wx.BOTH)
+        else:
+            self.ShowFullScreen(True, style=wx.FULLSCREEN_NOBORDER)
+        event.Skip()

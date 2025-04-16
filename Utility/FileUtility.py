@@ -18,13 +18,6 @@ def read_from_file(filePath, mode="r") -> list:
     return content
 
 
-def read_lines_from_file(filePath, mode="r") -> list:
-    content = None
-    with open(filePath, mode) as file:
-        content = file.readlines()
-    return content
-
-
 def read_json_file(filePath) -> dict:
     content = None
     with open(filePath, "r") as file:
@@ -49,34 +42,12 @@ def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
             file.write(data)
 
 
-def read_data_from_csv(filePath: str) -> list:
-    fileData = None
-    if filePath.endswith("csv"):
-        try:
-            fileData = __read_data_from_csv_helper__(filePath, "utf-8-sig")
-        except:
-            fileData = __read_data_from_csv_helper__(filePath, "utf-8")
-    return fileData
-
-
 def read_data_from_csv_as_dict(filePath: str) -> list:
     fileData = None
     if filePath.endswith("csv"):
         with open(filePath, "r") as csvFile:
             csv_reader = csv.DictReader(csvFile)
             fileData = list(csv_reader)
-    return fileData
-
-
-def __read_data_from_csv_helper__(
-    filePath, encoding, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-):
-    fileData = None
-    with open(filePath, "r", encoding=encoding) as csvFile:
-        reader = csv.reader(
-            csvFile, quoting=quoting, skipinitialspace=skipinitialspace
-        )
-        fileData = list(reader)
     return fileData
 
 

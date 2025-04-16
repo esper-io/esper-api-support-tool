@@ -1345,37 +1345,6 @@ def searchForDeviceAndAppendToList(searchTerm, listToAppend):
                     break
 
 
-def getAllDevicesFromOffsets(api_response, devices=[], tolerance=0, timeout=-1):
-    count = None
-    apiNext = None
-    if hasattr(api_response, "count"):
-        count = api_response.count
-        apiNext = api_response.next
-    elif type(api_response) is dict:
-        count = api_response["count"]
-        apiNext = api_response["next"]
-    if apiNext:
-        respOffset = apiNext.split("offset=")[-1].split("&")[0]
-        respOffsetInt = int(respOffset)
-        respLimit = apiNext.split("limit=")[-1].split("&")[0]
-        while int(respOffsetInt) < count and int(respLimit) < count:
-            Globals.THREAD_POOL.enqueue(
-                getAllDevices,
-                Globals.frame.sidePanel.selectedGroupsList,
-                respLimit,
-                respOffset,
-            )
-            respOffsetInt += int(respLimit)
-        Globals.THREAD_POOL.join(tolerance=tolerance, timeout=timeout)
-    res = Globals.THREAD_POOL.results()
-    for thread in res:
-        if hasattr(thread, "results"):
-            devices += thread.results
-        elif type(thread) is dict:
-            devices += thread["results"]
-    return devices
-
-
 def uploadAppToEndpoint(path):
     postEventToFrame(eventUtil.myEVT_LOG, "Attempting to upload app...")
     resp = uploadApplication(path)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from cryptography.fernet import Fernet
-from Utility.FileUtility import read_from_file, write_content_to_file
 
+from Utility.FileUtility import read_from_file, write_content_to_file
 from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
@@ -29,18 +29,6 @@ class crypto:
         # read all file data
         file_data = read_from_file(filename, "rb")
         # encrypt data
-        encrypted_data = f.encrypt(file_data)
-        # write the encrypted file
-        write_content_to_file(filename, encrypted_data, "wb")
-
-    def encryptToFile(self, file_data, filename, key):
-        """
-        Given file data and key (bytes), it encrypts the file and write it to filename (str)
-        """
-        f = Fernet(key)
-        # encrypt data
-        if type(file_data) != bytes:
-            file_data = bytes(file_data)
         encrypted_data = f.encrypt(file_data)
         # write the encrypted file
         write_content_to_file(filename, encrypted_data, "wb")

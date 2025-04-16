@@ -15,13 +15,9 @@ from Common.decorator import api_tool_decorator
 from GUI.Dialogs.HtmlDialog import HtmlDialog
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkForUpdate,
-    downloadFileFromUrl,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    resourcePath,
-)
+from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
+                              openWebLinkInBrowser, postEventToFrame,
+                              resourcePath)
 
 
 class ToolMenuBar(wx.MenuBar):
@@ -194,6 +190,13 @@ class ToolMenuBar(wx.MenuBar):
                 "&Toggle Grid Column Visibility\tCtrl+Shift+V",
             )
         )
+        self.fullscreen = viewMenu.Append(
+            wx.MenuItem(
+                viewMenu,
+                wx.ID_ANY,
+                "&Toggle Fullscreen\tF11",
+            )
+        )
         self.deviceColumns.SetBitmap(
             wx.Bitmap(resourcePath("Images/Menu/view.png"))
         )
@@ -321,6 +324,9 @@ class ToolMenuBar(wx.MenuBar):
             wx.EVT_MENU,
             self.parentFrame.gridPanel.onColumnVisibility,
             self.deviceColumns,
+        )
+        self.Bind(
+            wx.EVT_MENU, self.parentFrame.onFullscreen, self.fullscreen
         )
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
         self.Bind(
