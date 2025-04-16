@@ -98,19 +98,6 @@ def determineErrorDisplay(e):
     return e
 
 
-def displayApiExcpetionMsg(e):
-    Globals.msg_lock.acquire(timeout=10)
-    bodyMsg = json.loads(e.body)["message"]
-    wx.MessageBox(
-        "%s %s: %s" % (e.reason, e.status, bodyMsg),
-        style=wx.OK | wx.ICON_ERROR,
-        parent=Globals.frame,
-    )
-    if Globals.msg_lock.locked():
-        Globals.msg_lock.release()
-    return e
-
-
 def displayGenericErrorMsg(e):
     Globals.msg_lock.acquire(timeout=10)
     wx.MessageBox(
