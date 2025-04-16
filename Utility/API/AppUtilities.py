@@ -88,6 +88,7 @@ def getVppIosApps(tolerance=0):
             if details_resp and details_resp.get("content",{}).get("results", []):
                 app_match = details_resp["content"]["results"][0]
                 app_match["version_id"] = app_match["app_id"]
+                app_match["package_name"] = app_match["bundle_id"]
                 app_match.update(app)
                 app_res["results"].append(details_resp["content"]["results"][0])
     return app_res
