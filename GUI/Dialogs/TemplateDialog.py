@@ -11,7 +11,7 @@ import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Utility.Resource import (determineDoHereorMainThread,
-                              determineKeyEventClose, getStrRatioSimilarity,
+                              getStrRatioSimilarity, onDialogEscape,
                               openWebLinkInBrowser, setElmTheme)
 
 
@@ -386,6 +386,4 @@ class TemplateDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

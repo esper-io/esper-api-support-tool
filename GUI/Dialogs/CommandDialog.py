@@ -11,8 +11,7 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (determineKeyEventClose, displayMessageBox,
-                              setElmTheme)
+from Utility.Resource import displayMessageBox, onDialogEscape, setElmTheme
 
 
 class CommandDialog(wx.Dialog):
@@ -821,6 +820,4 @@ class CommandDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

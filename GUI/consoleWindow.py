@@ -9,7 +9,7 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
-from Utility.Resource import (determineKeyEventClose, openWebLinkInBrowser,
+from Utility.Resource import (onDialogEscape, openWebLinkInBrowser,
                               postEventToFrame, resourcePath, setElmTheme)
 
 
@@ -98,9 +98,7 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)
 
     @api_tool_decorator()
     def onClose(self, event):

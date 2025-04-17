@@ -10,8 +10,7 @@ import wx.adv as wxadv
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.Resource import (determineDoHereorMainThread,
-                              determineKeyEventClose)
+from Utility.Resource import determineDoHereorMainThread, onDialogEscape
 
 
 class PreferencesDialog(wx.Dialog):
@@ -842,9 +841,7 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)
 
     @api_tool_decorator()
     def onClose(self, event):

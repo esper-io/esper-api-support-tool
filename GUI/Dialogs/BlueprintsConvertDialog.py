@@ -12,9 +12,9 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Utility.API.BlueprintUtility import checkFeatureFlags
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread,
-                              determineKeyEventClose, getEsperConfig,
-                              openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              onDialogEscape, openWebLinkInBrowser,
+                              setElmTheme)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -391,6 +391,4 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

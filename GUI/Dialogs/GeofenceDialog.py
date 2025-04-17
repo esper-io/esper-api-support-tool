@@ -14,9 +14,9 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (determineDoHereorMainThread,
-                              determineKeyEventClose, displayFileDialog,
-                              displayMessageBox, getHeader, setElmTheme)
+from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
+                              displayMessageBox, getHeader, onDialogEscape,
+                              setElmTheme)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -509,6 +509,4 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

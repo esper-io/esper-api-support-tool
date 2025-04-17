@@ -658,3 +658,8 @@ def determineKeyEventClose(event) -> bool:
     if keycode == wx.WXK_ESCAPE or (isCmdOrCtrlDown and keycode == wx.WXK_CONTROL_W):
         return True
     return False
+
+def onDialogEscape(elm, event):
+    if hasattr(elm, "onClose") and determineKeyEventClose(event):
+        elm.onClose(event)
+    event.Skip()

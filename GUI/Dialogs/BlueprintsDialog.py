@@ -13,9 +13,9 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags,
                                           getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread,
-                              determineKeyEventClose, getEsperConfig,
-                              openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+                              onDialogEscape, openWebLinkInBrowser,
+                              setElmTheme)
 
 
 class BlueprintsDialog(wx.Dialog):
@@ -394,6 +394,4 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)
