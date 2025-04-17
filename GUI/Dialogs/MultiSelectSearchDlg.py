@@ -12,8 +12,8 @@ from Common.decorator import api_tool_decorator
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
 from Utility.Resource import (determineDoHereorMainThread,
-                              getStrRatioSimilarity, resourcePath,
-                              scale_bitmap, setElmTheme)
+                              determineKeyEventClose, getStrRatioSimilarity,
+                              resourcePath, scale_bitmap, setElmTheme)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -322,8 +322,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        keycode = event.GetKeyCode()
-        if keycode == wx.WXK_ESCAPE:
+        if determineKeyEventClose(event):
             self.onClose(event)
         event.Skip()
 
@@ -336,7 +335,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         # CTRL + V
         elif event.ControlDown() and keycode == 86:
             self.on_paste(event)
-        elif keycode == wx.WXK_ESCAPE:
+        elif determineKeyEventClose(event):
             self.onClose(event)
         else:
             self.onChar(event)

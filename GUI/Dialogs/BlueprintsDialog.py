@@ -13,7 +13,8 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags,
                                           getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (determineDoHereorMainThread, getEsperConfig,
+from Utility.Resource import (determineDoHereorMainThread,
+                              determineKeyEventClose, getEsperConfig,
                               openWebLinkInBrowser, setElmTheme)
 
 
@@ -174,6 +175,7 @@ class BlueprintsDialog(wx.Dialog):
         self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadBlueprints)
         self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadBlueprintPreview)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
@@ -389,3 +391,9 @@ class BlueprintsDialog(wx.Dialog):
                     else:
                         child.SetFont(font)
                 self.applyFontHelper(child, font, normalBoldFont)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

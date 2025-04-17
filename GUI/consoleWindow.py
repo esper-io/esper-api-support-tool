@@ -9,8 +9,8 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color
-from Utility.Resource import (openWebLinkInBrowser, postEventToFrame,
-                              resourcePath, setElmTheme)
+from Utility.Resource import (determineKeyEventClose, openWebLinkInBrowser,
+                              postEventToFrame, resourcePath, setElmTheme)
 
 
 class Console(wx.Frame):
@@ -98,8 +98,7 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        keycode = event.GetKeyCode()
-        if keycode == wx.WXK_ESCAPE:
+        if determineKeyEventClose(event):
             self.onClose(event)
         event.Skip()
 

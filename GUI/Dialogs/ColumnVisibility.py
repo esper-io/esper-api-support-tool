@@ -5,7 +5,8 @@ import wx
 from Common import Globals
 from Common.decorator import api_tool_decorator
 from GUI.TabPanel import TabPanel
-from Utility.Resource import getStrRatioSimilarity, setElmTheme
+from Utility.Resource import (determineKeyEventClose, getStrRatioSimilarity,
+                              setElmTheme)
 
 
 class ColumnVisibility(wx.Dialog):
@@ -82,6 +83,7 @@ class ColumnVisibility(wx.Dialog):
         self.text_ctrl_1.Bind(wx.EVT_CHAR, self.onSearchChar)
         self.text_ctrl_1.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Bind(wx.EVT_LISTBOX, self.OnSelection)
         if (
@@ -292,3 +294,9 @@ class ColumnVisibility(wx.Dialog):
                     else:
                         child.SetFont(font)
                 self.applyFontHelper(child, font, bold)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

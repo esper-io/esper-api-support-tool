@@ -2,7 +2,8 @@ import wx
 import wx.html as html
 
 import Common.Globals as Globals
-from Utility.Resource import setElmTheme
+from Common.decorator import api_tool_decorator
+from Utility.Resource import determineKeyEventClose, setElmTheme
 
 
 class HtmlDialog(wx.Dialog):
@@ -50,6 +51,8 @@ class HtmlDialog(wx.Dialog):
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
 
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+
         self.applyFontSize()
         self.CentreOnParent()
         self.Layout()
@@ -76,3 +79,9 @@ class HtmlDialog(wx.Dialog):
                 if hasattr(child, "SetFont"):
                     child.SetFont(font)
                 self.applyFontHelper(child, font)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

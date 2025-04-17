@@ -14,7 +14,8 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
+from Utility.Resource import (determineDoHereorMainThread,
+                              determineKeyEventClose, displayFileDialog,
                               displayMessageBox, getHeader, setElmTheme)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
@@ -175,6 +176,7 @@ class GeofenceDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.applyGridSettings()
 
@@ -504,3 +506,9 @@ class GeofenceDialog(wx.Dialog):
                         child.SetFont(font)
 
                 self.applyFontHelper(child, font, headerBold)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

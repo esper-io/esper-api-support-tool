@@ -6,7 +6,8 @@ import wx
 import wx.adv
 
 import Common.Globals as Globals
-from Utility.Resource import setElmTheme
+from Common.decorator import api_tool_decorator
+from Utility.Resource import determineKeyEventClose, setElmTheme
 
 
 class ScheduleCmdDialog(wx.Dialog):
@@ -236,6 +237,7 @@ class ScheduleCmdDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         setElmTheme(self)
         self.Layout()
@@ -317,3 +319,9 @@ class ScheduleCmdDialog(wx.Dialog):
             "window_end_time": endtime,
             "days": days,
         }
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

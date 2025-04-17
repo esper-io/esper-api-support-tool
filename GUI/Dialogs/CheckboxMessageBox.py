@@ -4,7 +4,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import setElmTheme
+from Utility.Resource import determineKeyEventClose, setElmTheme
 
 
 class CheckboxMessageBox(wx.Dialog):
@@ -26,6 +26,7 @@ class CheckboxMessageBox(wx.Dialog):
 
         self.okBtn.Bind(wx.EVT_BUTTON, self.OnClose)
         self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnClose)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         setElmTheme(self)
 
@@ -70,6 +71,7 @@ class CheckboxMessageBox(wx.Dialog):
         self.panel_1.SetSizer(grid_sizer_1)
         sizer_1.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
         self.applyFontSize()
         self.Layout()
         self.Centre()
@@ -113,3 +115,9 @@ class CheckboxMessageBox(wx.Dialog):
                 if hasattr(child, "SetFont"):
                     child.SetFont(font)
                 self.applyFontHelper(child, font)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

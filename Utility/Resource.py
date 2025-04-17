@@ -650,3 +650,11 @@ def setElementTheme(elm, bgColor, fgColor):
     if hasattr(elm, "SetItemForegroundColour"):
         for n in range(0, len(elm.GetItems())):
             elm.SetItemForegroundColour(n, fgColor)
+
+
+def determineKeyEventClose(event) -> bool:
+    keycode = event.GetKeyCode()
+    isCmdOrCtrlDown = event.CmdDown() or event.ControlDown()
+    if keycode == wx.WXK_ESCAPE or (isCmdOrCtrlDown and keycode == wx.WXK_CONTROL_W):
+        return True
+    return False

@@ -8,7 +8,8 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import displayFileDialog, setElmTheme
+from Utility.Resource import (determineKeyEventClose, displayFileDialog,
+                              setElmTheme)
 
 
 class WidgetPicker(wx.Dialog):
@@ -193,11 +194,11 @@ class WidgetPicker(wx.Dialog):
         self.SetAcceleratorTable(accel_table)
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        keycode = event.GetKeyCode()
-        if keycode == wx.WXK_ESCAPE:
+        if determineKeyEventClose(event):
             self.onClose(event)
         event.Skip()
 
