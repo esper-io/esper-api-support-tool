@@ -56,13 +56,12 @@ from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
-                                     getAuthRoles)
+                                     getAuthRoles, getUserFromToken)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
 from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
                                  fetchInstalledDevices, filterDeviceList,
-                                 getAllDeviceInfo, getUserFromToken,
-                                 removeNonWhitelisted, uploadAppToEndpoint)
+                                 getAllDeviceInfo, removeNonWhitelisted)
 from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
                                  read_data_from_csv_as_dict,
                                  read_excel_via_openpyxl, read_json_file,
@@ -2778,26 +2777,6 @@ class NewFrameLayout(wx.Frame):
             and hasattr(event, "Veto")
         ):
             event.Veto()
-
-    @api_tool_decorator()
-    def uploadApplication(self, event=None, title="", joinThread=False):
-        with wx.FileDialog(
-            self,
-            "Upload APK" if not title else title,
-            wildcard="APK files (*.apk)|*.apk",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-            defaultDir=str(self.defaultDir),
-        ) as fileDialog:
-            Globals.OPEN_DIALOGS.append(fileDialog)
-            result = fileDialog.ShowModal()
-            Globals.OPEN_DIALOGS.remove(fileDialog)
-            if result == wx.ID_OK:
-                apk_path = fileDialog.GetPath()
-                Globals.THREAD_POOL.enqueue(uploadAppToEndpoint, apk_path)
-                if joinThread:
-                    Globals.THREAD_POOL.join()
-        if event:
-            event.Skip()
 
     @api_tool_decorator()
     def onGeofence(self, event):

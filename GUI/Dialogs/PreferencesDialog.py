@@ -10,7 +10,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.Dialogs.LargeTextEntryDialog import LargeTextEntryDialog
-from Utility.Resource import getFont, uiThreadCheck
+from Utility.Resource import determineKeyEventClose, getFont, uiThreadCheck
 
 
 class PreferencesDialog(wx.Dialog):
@@ -835,8 +835,7 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        keycode = event.GetKeyCode()
-        if keycode == wx.WXK_ESCAPE:
+        if determineKeyEventClose(event):
             self.onClose(event)
         event.Skip()
 

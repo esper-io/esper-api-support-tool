@@ -64,3 +64,12 @@ def getAuthRoles(limit=None, offset=0):
         if resp and hasattr(resp, "status_code") and resp.status_code < 300
         else None
     )
+
+
+def getUserFromToken():
+    try:
+        user_info = getUserInfo()
+        if user_info:
+            Globals.TOKEN_USER = user_info
+    except:
+        pass

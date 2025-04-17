@@ -33,7 +33,7 @@ from Utility.GridUtilities import (constructDeviceAppRowEntry,
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
                               getHeader, ipv6Tomac, postEventToFrame,
-                              splitListIntoChunks, utc_to_local)
+                              splitListIntoChunks, unpackageDict, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -488,30 +488,6 @@ def fillInDeviceInfoDict(
             print(e)
             ApiToolLog().LogError(e)
     return deviceList
-
-
-@api_tool_decorator()
-def unpackageDict(deviceInfo, deviceDict):
-    """Try to merge dicts into one dict, in a single layer"""
-    if not deviceDict:
-        return deviceInfo
-    flatDict = flatten_dict(deviceDict)
-    for k, v in flatDict.items():
-        deviceInfo[k] = v
-    return deviceInfo
-
-
-def flatten_dict(d: dict):
-    return dict(_flatten_dict_gen(d))
-
-
-def _flatten_dict_gen(d):
-    if type(d) is dict:
-        for k, v in d.items():
-            if isinstance(v, dict):
-                yield from flatten_dict(v).items()
-            else:
-                yield k, v
 
 
 @api_tool_decorator()
@@ -1343,31 +1319,3 @@ def searchForDeviceAndAppendToList(searchTerm, listToAppend):
                 ):
                     listToAppend.append(device)
                     break
-
-
-def uploadAppToEndpoint(path):
-    postEventToFrame(eventUtil.myEVT_LOG, "Attempting to upload app...")
-    resp = uploadApplication(path)
-    if resp:
-        postEventToFrame(eventUtil.myEVT_LOG, "App upload succeed!")
-        displayMessageBox(
-            ("Application has been uploaded", wx.ICON_INFORMATION)
-        )
-    else:
-        postEventToFrame(eventUtil.myEVT_LOG, "App upload FAILED!")
-        displayMessageBox(
-            (
-                "ERROR: Failed to upload apk. Please try again!",
-                wx.ICON_ERROR,
-            )
-        )
-    postEventToFrame(eventUtil.myEVT_COMPLETE, True)
-
-
-def getUserFromToken():
-    try:
-        user_info = getUserInfo()
-        if user_info:
-            Globals.TOKEN_USER = user_info
-    except:
-        pass

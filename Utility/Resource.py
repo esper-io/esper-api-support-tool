@@ -730,3 +730,34 @@ def getTenant():
     return Globals.configuration.host.replace("https://", "").replace(
         "-api.esper.cloud/api", ""
     )
+
+
+@api_tool_decorator()
+def unpackageDict(deviceInfo, deviceDict):
+    """Try to merge dicts into one dict, in a single layer"""
+    if not deviceDict:
+        return deviceInfo
+    flatDict = flatten_dict(deviceDict)
+    for k, v in flatDict.items():
+        deviceInfo[k] = v
+    return deviceInfo
+
+
+def flatten_dict(d: dict):
+    return dict(_flatten_dict_gen(d))
+
+
+def _flatten_dict_gen(d):
+    if type(d) is dict:
+        for k, v in d.items():
+            if isinstance(v, dict):
+                yield from flatten_dict(v).items()
+            else:
+                yield k, v
+
+def determineKeyEventClose(event) -> bool:
+    keycode = event.GetKeyCode()
+    isCmdOrCtrlDown = event.CmdDown() or event.ControlDown()
+    if keycode == wx.WXK_ESCAPE or (isCmdOrCtrlDown and keycode == wx.WXK_CONTROL_W):
+        return True
+    return False
