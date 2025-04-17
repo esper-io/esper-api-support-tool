@@ -118,7 +118,7 @@ def getExecutableCommand(doFirst=True):
         "sentry_sdk.integrations.logging",
         "sentry_sdk.integrations.threading",
         "Levenshtein",
-        "thefuzz"
+        "thefuzz",
     ]
     if platform.system() == "Windows":
         if isModuleInstalled("pyinstaller"):
@@ -214,16 +214,11 @@ if __name__ == "__main__":
     cmd = getExecutableCommand()
     if not cmd:
         installRequiredModules()
-        raise Exception(
-            "Required Modules Not Installed. Please install and rerun the script."
-        )
+        raise Exception("Required Modules Not Installed. Please install and rerun the script.")
     test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     output, error = test.communicate()
 
-    if (
-        not os.path.exists(os.path.join(dispath, app_name))
-        and platform.system() != "Windows"
-    ):
+    if not os.path.exists(os.path.join(dispath, app_name)) and platform.system() != "Windows":
         cmd = getExecutableCommand(doFirst=False)
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         output, error = test.communicate()
@@ -248,9 +243,7 @@ if __name__ == "__main__":
         else:
             print(">>>\tFAILED to generate executeable")
     except Exception as e:
-        print(
-            "FAILED to remove old executeable or rename the newly generated executable"
-        )
+        print("FAILED to remove old executeable or rename the newly generated executable")
         print(e)
         pass
 

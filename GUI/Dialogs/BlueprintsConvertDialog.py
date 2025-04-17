@@ -10,9 +10,15 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (applyFontHelper, getEsperConfig, getFont,
-                              onDialogEscape, openWebLinkInBrowser,
-                              setElmTheme, uiThreadCheck)
+from Utility.Resource import (
+    applyFontHelper,
+    getEsperConfig,
+    getFont,
+    onDialogEscape,
+    openWebLinkInBrowser,
+    setElmTheme,
+    uiThreadCheck,
+)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -22,10 +28,7 @@ class BlueprintsConvertDialog(wx.Dialog):
             parent,
             wx.ID_ANY,
             size=sizeTuple,
-            style=wx.DEFAULT_DIALOG_STYLE
-            | wx.MAXIMIZE_BOX
-            | wx.MINIMIZE_BOX
-            | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.RESIZE_BORDER,
         )
         self.parent = parent
         self.SetSize(sizeTuple)
@@ -93,11 +96,7 @@ class BlueprintsConvertDialog(wx.Dialog):
             self.panel_1,
             wx.ID_ANY,
             "",
-            style=wx.HSCROLL
-            | wx.TE_AUTO_URL
-            | wx.TE_MULTILINE
-            | wx.TE_READONLY
-            | wx.TE_WORDWRAP,
+            style=wx.HSCROLL | wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
         )
         grid_sizer_3.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -164,9 +163,7 @@ class BlueprintsConvertDialog(wx.Dialog):
 
         # Bind Events
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.text_ctrl_1.Bind(
-            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
-        )
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
 
@@ -183,9 +180,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.getBlueprintEnabledEndpoints)
 
     def getBlueprintEnabledEndpoints(self):
-        if (
-            uiThreadCheck(self.getBlueprintEnabledEndpoints)
-        ):
+        if uiThreadCheck(self.getBlueprintEnabledEndpoints):
             return
         self.combo_box_3.Clear()
         self.combo_box_1.Clear()
@@ -227,9 +222,7 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def loadGroupHelper(self, config):
-        if (
-            uiThreadCheck(self.loadGroupHelper, config)
-        ):
+        if uiThreadCheck(self.loadGroupHelper, config):
             return
         destinationGroups = getDeviceGroupsForHost(
             getEsperConfig(config["apiHost"], config["apiKey"]),
@@ -254,9 +247,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         else:
             self.button_OK.Enable(False)
         if self.combo_box_2.GetSelection() > -1:
-            self.group = self.combo_box_2.GetClientData(
-                self.combo_box_2.GetSelection()
-            )
+            self.group = self.combo_box_2.GetClientData(self.combo_box_2.GetSelection())
         self.changeCursorToDefault()
 
     @api_tool_decorator()
@@ -283,9 +274,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.SetCursor(myCursor)
         selection = event.GetSelection()
         name = self.combo_box_4.GetString(selection)
-        template = list(
-            filter(lambda x: x["name"] == name, self.sourceTemplate)
-        )
+        template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
 
         if type(template) == list:
             template = template[0]
@@ -293,13 +282,9 @@ class BlueprintsConvertDialog(wx.Dialog):
             self.chosenTemplate = self.getTemplateDetails(template)
             self.text_ctrl_1.Clear()
             if self.chosenTemplate:
-                self.text_ctrl_1.AppendText(
-                    json.dumps(self.chosenTemplate, indent=2)
-                )
+                self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
             else:
-                self.text_ctrl_1.AppendText(
-                    "An ERROR occurred when fetching the template, please try again."
-                )
+                self.text_ctrl_1.AppendText("An ERROR occurred when fetching the template, please try again.")
             self.text_ctrl_1.ShowPosition(0)
         self.checkInputs()
 
@@ -315,9 +300,7 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
-        if (
-            uiThreadCheck(self.populateSourceTempaltes, srcName)
-        ):
+        if uiThreadCheck(self.populateSourceTempaltes, srcName):
             return
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
@@ -330,19 +313,13 @@ class BlueprintsConvertDialog(wx.Dialog):
     @api_tool_decorator()
     def getTemplates(self, dataSrc):
         util = templateUtil.EsperTemplateUtil(dataSrc, None)
-        tempList = util.getTemplates(
-            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
-        )
-        return (
-            tempList["results"] if tempList and "results" in tempList else None
-        )
+        tempList = util.getTemplates(dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"])
+        return tempList["results"] if tempList and "results" in tempList else None
 
     @api_tool_decorator()
     def getTemplateDetails(self, template):
         util = templateUtil.EsperTemplateUtil()
-        dataSrc = self.configMenuOpt[
-            self.combo_box_3.GetString(self.combo_box_3.GetSelection())
-        ]
+        dataSrc = self.configMenuOpt[self.combo_box_3.GetString(self.combo_box_3.GetSelection())]
         return util.getTemplate(
             dataSrc["apiHost"],
             dataSrc["apiKey"],

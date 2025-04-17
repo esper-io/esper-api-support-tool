@@ -9,9 +9,15 @@ import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
-                              onDialogEscape, openWebLinkInBrowser,
-                              setElmTheme, uiThreadCheck)
+from Utility.Resource import (
+    applyFontHelper,
+    getFont,
+    getStrRatioSimilarity,
+    onDialogEscape,
+    openWebLinkInBrowser,
+    setElmTheme,
+    uiThreadCheck,
+)
 
 
 class TemplateDialog(wx.Dialog):
@@ -78,9 +84,7 @@ class TemplateDialog(wx.Dialog):
         grid_sizer_3.Add(sizer_3, 1, wx.BOTTOM | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_2, wx.ID_ANY, "Source Template:")
-        sizer_3.Add(
-            label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.LEFT, 5
-        )
+        sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL | wx.EXPAND | wx.LEFT, 5)
 
         self.templateSearch = wx.SearchCtrl(self.panel_2, wx.ID_ANY, "")
         self.templateSearch.ShowCancelButton(True)
@@ -109,11 +113,7 @@ class TemplateDialog(wx.Dialog):
             self.panel_2,
             wx.ID_ANY,
             "",
-            style=wx.HSCROLL
-            | wx.TE_MULTILINE
-            | wx.TE_READONLY
-            | wx.TE_WORDWRAP
-            | wx.TE_AUTO_URL,
+            style=wx.HSCROLL | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP | wx.TE_AUTO_URL,
         )
         grid_sizer_5.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -164,9 +164,7 @@ class TemplateDialog(wx.Dialog):
         self.templateSearch.Bind(wx.EVT_CHAR, self.onSearchTemplateChar)
         self.templateSearch.Bind(wx.EVT_SEARCH_CANCEL, self.onSearchTemplate)
 
-        self.text_ctrl_1.Bind(
-            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
-        )
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
         self.choice_1.Bind(wx.EVT_CHOICE, self.onChoice1Select)
@@ -196,9 +194,7 @@ class TemplateDialog(wx.Dialog):
     @api_tool_decorator()
     def getInputSelections(self):
         return (
-            self.configMenuOpt[
-                self.choice_2.GetString(self.choice_2.GetSelection())
-            ],
+            self.configMenuOpt[self.choice_2.GetString(self.choice_2.GetSelection())],
             self.list_box_1.GetString(self.list_box_1.GetSelection()),
         )
 
@@ -217,13 +213,9 @@ class TemplateDialog(wx.Dialog):
             self.chosenTemplate = self.getTemplate(template)
             self.text_ctrl_1.Clear()
             if self.chosenTemplate:
-                self.text_ctrl_1.AppendText(
-                    json.dumps(self.chosenTemplate, indent=2)
-                )
+                self.text_ctrl_1.AppendText(json.dumps(self.chosenTemplate, indent=2))
             else:
-                self.text_ctrl_1.AppendText(
-                    "An ERROR occurred when fetching the template, please try again."
-                )
+                self.text_ctrl_1.AppendText("An ERROR occurred when fetching the template, please try again.")
             self.text_ctrl_1.ShowPosition(0)
         self.checkInputValues()
 
@@ -233,16 +225,12 @@ class TemplateDialog(wx.Dialog):
         self.SetCursor(myCursor)
         selection = event.GetSelection()
         name = self.list_box_1.GetString(selection)
-        template = list(
-            filter(lambda x: x["name"] == name, self.sourceTemplate)
-        )
+        template = list(filter(lambda x: x["name"] == name, self.sourceTemplate))
         self.populateTemplatePreview(template)
 
     @api_tool_decorator()
     def populateSourceTempaltes(self, srcName):
-        if (
-            uiThreadCheck(self.populateSourceTempaltes, srcName)
-        ):
+        if uiThreadCheck(self.populateSourceTempaltes, srcName):
             return
         if srcName:
             self.sourceTemplate = self.getTemplates(self.configMenuOpt[srcName])
@@ -263,9 +251,7 @@ class TemplateDialog(wx.Dialog):
 
     @api_tool_decorator()
     def fetchDestTempaltes(self, destName):
-        if (
-            uiThreadCheck(self.fetchDestTempaltes, destName)
-        ):
+        if uiThreadCheck(self.fetchDestTempaltes, destName):
             return
         if destName:
             self.destTemplate = self.getTemplates(self.configMenuOpt[destName])
@@ -276,28 +262,18 @@ class TemplateDialog(wx.Dialog):
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
         self.SetCursor(myCursor)
         self.destTemplate = []
-        Globals.THREAD_POOL.enqueue(
-            self.fetchDestTempaltes, event.String if event.String else False
-        )
+        Globals.THREAD_POOL.enqueue(self.fetchDestTempaltes, event.String if event.String else False)
 
     @api_tool_decorator()
     def getTemplates(self, dataSrc):
         util = templateUtil.EsperTemplateUtil(dataSrc, None)
-        tempList = util.getTemplates(
-            dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"]
-        )
-        return (
-            tempList["results"]
-            if tempList is not None and "results" in tempList
-            else tempList
-        )
+        tempList = util.getTemplates(dataSrc["apiHost"], dataSrc["apiKey"], dataSrc["enterprise"])
+        return tempList["results"] if tempList is not None and "results" in tempList else tempList
 
     @api_tool_decorator()
     def getTemplate(self, template):
         util = templateUtil.EsperTemplateUtil()
-        dataSrc = self.configMenuOpt[
-            self.choice_1.GetString(self.choice_1.GetSelection())
-        ]
+        dataSrc = self.configMenuOpt[self.choice_1.GetString(self.choice_1.GetSelection())]
         return util.getTemplate(
             dataSrc["apiHost"],
             dataSrc["apiKey"],
@@ -308,8 +284,7 @@ class TemplateDialog(wx.Dialog):
     @api_tool_decorator()
     def checkInputValues(self):
         if (
-            self.choice_1.GetString(self.choice_1.GetSelection())
-            == self.choice_2.GetString(self.choice_2.GetSelection())
+            self.choice_1.GetString(self.choice_1.GetSelection()) == self.choice_2.GetString(self.choice_2.GetSelection())
             or not self.choice_1.GetString(self.choice_1.GetSelection())
             or not self.choice_2.GetString(self.choice_2.GetSelection())
             or self.list_box_1.GetSelection() == wx.NOT_FOUND
@@ -337,8 +312,7 @@ class TemplateDialog(wx.Dialog):
         if queryString:
             filteredList = list(
                 filter(
-                    lambda x: queryString.lower() in x["name"].lower()
-                    or getStrRatioSimilarity(x["name"], queryString) > 90,
+                    lambda x: queryString.lower() in x["name"].lower() or getStrRatioSimilarity(x["name"], queryString) > 90,
                     self.sourceTemplate,
                 )
             )

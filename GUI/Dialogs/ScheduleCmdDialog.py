@@ -47,9 +47,7 @@ class ScheduleCmdDialog(wx.Dialog):
         self.radio_box_1.SetSelection(1)
         grid_sizer_1.Add(self.radio_box_1, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.window_1 = wx.SplitterWindow(
-            self.panel_1, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER
-        )
+        self.window_1 = wx.SplitterWindow(self.panel_1, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER)
         self.window_1.SetMinimumPaneSize(50)
         grid_sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
 
@@ -57,9 +55,7 @@ class ScheduleCmdDialog(wx.Dialog):
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        self.checkbox_1 = wx.CheckBox(
-            self.panel_2, wx.ID_ANY, "Recurring schedule"
-        )
+        self.checkbox_1 = wx.CheckBox(self.panel_2, wx.ID_ANY, "Recurring schedule")
         grid_sizer_3.Add(self.checkbox_1, 0, wx.ALL, 5)
         self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.checkInputs)
 
@@ -99,9 +95,7 @@ class ScheduleCmdDialog(wx.Dialog):
         label_3.SetFont(normalBold)
         sizer_4.Add(label_3, 0, wx.LEFT, 2)
 
-        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(
-            self.window_1_pane_2, wx.ID_ANY
-        )
+        self.datepicker_ctrl_1 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
         self.datepicker_ctrl_1.Bind(wx.adv.EVT_DATE_CHANGED, self.checkInputs)
         sizer_4.Add(self.datepicker_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -112,39 +106,29 @@ class ScheduleCmdDialog(wx.Dialog):
         label_5.SetFont(normalBold)
         sizer_6.Add(label_5, 0, wx.LEFT, 2)
 
-        self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(
-            self.window_1_pane_2, wx.ID_ANY
-        )
+        self.datepicker_ctrl_2 = wx.adv.DatePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
         self.datepicker_ctrl_2.Bind(wx.adv.EVT_DATE_CHANGED, self.checkInputs)
         sizer_6.Add(self.datepicker_ctrl_2, 0, wx.ALL | wx.EXPAND, 5)
 
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
 
-        label_4 = wx.StaticText(
-            self.window_1_pane_2, wx.ID_ANY, "Start Time  (24 hour format):"
-        )
+        label_4 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Start Time  (24 hour format):")
         label_4.SetFont(normalBold)
         sizer_5.Add(label_4, 0, wx.LEFT, 2)
 
-        self.text_ctrl_1 = wx.adv.TimePickerCtrl(
-            self.window_1_pane_2, wx.ID_ANY
-        )
+        self.text_ctrl_1 = wx.adv.TimePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
         self.text_ctrl_1.Bind(wx.adv.EVT_TIME_CHANGED, self.verifyTime)
         sizer_5.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
         sizer_7 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_2.Add(sizer_7, 1, wx.EXPAND, 0)
 
-        label_6 = wx.StaticText(
-            self.window_1_pane_2, wx.ID_ANY, "End Time (24 hour format):"
-        )
+        label_6 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "End Time (24 hour format):")
         label_6.SetFont(normalBold)
         sizer_7.Add(label_6, 0, wx.LEFT, 2)
 
-        self.text_ctrl_2 = wx.adv.TimePickerCtrl(
-            self.window_1_pane_2, wx.ID_ANY
-        )
+        self.text_ctrl_2 = wx.adv.TimePickerCtrl(self.window_1_pane_2, wx.ID_ANY)
         self.text_ctrl_2.Bind(wx.adv.EVT_TIME_CHANGED, self.checkInputs)
         sizer_7.Add(self.text_ctrl_2, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -198,17 +182,9 @@ class ScheduleCmdDialog(wx.Dialog):
     def verifyTime(self, event=None):
         time = self.text_ctrl_1.GetTime()
         now = datetime.now().time()
-        if (
-            now.hour >= time[0]
-            and now.minute >= time[1]
-            and now.second >= time[2]
-        ):
-            newTime = datetime.combine(datetime.today(), now) + timedelta(
-                minutes=5
-            )
-            self.text_ctrl_1.SetTime(
-                (newTime.hour, newTime.minute, newTime.second)
-            )
+        if now.hour >= time[0] and now.minute >= time[1] and now.second >= time[2]:
+            newTime = datetime.combine(datetime.today(), now) + timedelta(minutes=5)
+            self.text_ctrl_1.SetTime((newTime.hour, newTime.minute, newTime.second))
 
         self.checkInputs()
 
@@ -255,9 +231,7 @@ class ScheduleCmdDialog(wx.Dialog):
         if self.checkbox_1.IsChecked():
             days = list(self.check_list_box_1.GetCheckedStrings())
 
-        startDateTime, endDateTime, startTime, endtime = (
-            self.getDateTimeStrings()
-        )
+        startDateTime, endDateTime, startTime, endtime = self.getDateTimeStrings()
 
         return {
             "name": "%s Blueprint Update" % str(datetime.now()),

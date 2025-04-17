@@ -32,9 +32,7 @@ class DeviceState(Enum):
     POLICY_APPLICATION_IN_PROGRESS = 50
 
     INACTIVE = 60  # This state is set by cloud, when device is unreachable
-    WIPE_IN_PROGRESS = (
-        70  # State set by cloud, in the 5 minute waiting period for WIPE
-    )
+    WIPE_IN_PROGRESS = 70  # State set by cloud, in the 5 minute waiting period for WIPE
 
     ONBOARDING_IN_PROGRESS = 80
     ONBOARDING_FAILED = 90
@@ -78,15 +76,16 @@ class Color(Enum):
     errorBg = wx.Colour(255, 235, 234)
     warnBg = wx.Colour(255, 241, 216)
 
+
 class WaitThreadCodes(Enum):
     CONFIG = 0
     DEVICE = 1
     FILE = 2
     PROCESS = 3
 
+
 class FontStyles(Enum):
     NORMAL = "Normal"
     NORMAL_BOLD = "NormalBold"
     HEADER = "Header"
     HEADER_BOLD = "HeaderBold"
-

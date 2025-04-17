@@ -69,10 +69,20 @@ class ThemeMessageBox(wx.Dialog):
         descriptionText = wx.StaticText(self, wx.ID_ANY, description)
         descriptionText.Wrap(350)  # Wrap text to a reasonable width
         descriptionText.SetMaxSize((350, -1))  # Limit the width of the text
-        rowFlexGridSizer.Add(descriptionText, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.ALL, 5)
+        rowFlexGridSizer.Add(
+            descriptionText,
+            0,
+            wx.EXPAND | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT | wx.ALL,
+            5,
+        )
 
         captionText = wx.StaticText(self, wx.ID_ANY, caption)
-        baseFlexGridSizer.Add(captionText, 0, wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT | wx.ALL, 5)
+        baseFlexGridSizer.Add(
+            captionText,
+            0,
+            wx.EXPAND | wx.ALIGN_CENTRE_VERTICAL | wx.ALIGN_LEFT | wx.ALL,
+            5,
+        )
 
         # buttons
         self.buttons = []
@@ -117,4 +127,3 @@ class ThemeMessageBox(wx.Dialog):
 
     def applyFontSize(self):
         applyFontHelper({}, self, self)
-

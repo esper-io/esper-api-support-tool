@@ -2,8 +2,7 @@
 
 import Common.Globals as Globals
 from Utility.Resource import getHeader, getTenant
-from Utility.Web.WebRequests import (fetchRequestWithOffsets,
-                                     performGetRequestWithRetry)
+from Utility.Web.WebRequests import fetchRequestWithOffsets, performGetRequestWithRetry
 
 
 def getUserAPIUrl(limit=Globals.limit, offset=0):
@@ -39,31 +38,18 @@ def getUserInfo():
     url = "%s/user_info/" % Globals.configuration.host
     resp = performGetRequestWithRetry(url, headers=getHeader())
 
-    return (
-        resp.json()
-        if resp and hasattr(resp, "status_code") and resp.status_code < 300
-        else None
-    )
+    return resp.json() if resp and hasattr(resp, "status_code") and resp.status_code < 300 else None
 
 
 def getAuthRoles(limit=None, offset=0):
-    url = (
-        "https://%s-api.esper.cloud/api/authz2/v1/roles/?limit=%s&offset=%s"
-        % (
-            Globals.configuration.host.replace("https://", "").replace(
-                "-api.esper.cloud/api", ""
-            ),
-            limit if limit else Globals.limit,
-            offset,
-        )
+    url = "https://%s-api.esper.cloud/api/authz2/v1/roles/?limit=%s&offset=%s" % (
+        Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", ""),
+        limit if limit else Globals.limit,
+        offset,
     )
     resp = performGetRequestWithRetry(url, headers=getHeader())
 
-    return (
-        resp.json()
-        if resp and hasattr(resp, "status_code") and resp.status_code < 300
-        else None
-    )
+    return resp.json() if resp and hasattr(resp, "status_code") and resp.status_code < 300 else None
 
 
 def getUserFromToken():

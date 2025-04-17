@@ -10,11 +10,7 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def constructDeviceAppRowEntry(device, deviceInfo):
-    if (
-        deviceInfo["appObj"]
-        and "results" in deviceInfo["appObj"]
-        and deviceInfo["appObj"]["results"]
-    ):
+    if deviceInfo["appObj"] and "results" in deviceInfo["appObj"] and deviceInfo["appObj"]["results"]:
         deviceInfo["AppsEntry"] = []
         info = {}
         for app in deviceInfo["appObj"]["results"]:
@@ -38,9 +34,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 info = {
                     "Esper Name": esperName,
                     "Serial Number": serialNumber,
-                    "Group": (
-                        deviceInfo["groups"] if "groups" in deviceInfo else ""
-                    ),
+                    "Group": (deviceInfo["groups"] if "groups" in deviceInfo else ""),
                     "Application Name": app["app_name"],
                     "Application Type": app["app_type"],
                     "Application Version Code": app.get("version_code", ""),
@@ -56,15 +50,11 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 info = {
                     "Esper Name": esperName,
                     "Serial Number": serialNumber,
-                    "Group": (
-                        deviceInfo["groups"] if "groups" in deviceInfo else ""
-                    ),
+                    "Group": (deviceInfo["groups"] if "groups" in deviceInfo else ""),
                     "Application Name": app["app_name"],
                     "Application Type": app["app_type"],
                     "Application Version Code": "",
-                    "Application Version Name": app.get(
-                        "apple_app_version", ""
-                    ),
+                    "Application Version Name": app.get("apple_app_version", ""),
                     "Package Name": app["bundle_id"],
                     "State": app.get("state", ""),
                     "Whitelisted": app.get("whitelisted", ""),
@@ -76,10 +66,7 @@ def constructDeviceAppRowEntry(device, deviceInfo):
                 info
                 and info not in deviceInfo["AppsEntry"]
                 and info["Package Name"] not in Globals.BLACKLIST_PACKAGE_NAME
-                and (
-                    (Globals.APP_COL_FILTER and appInFilter)
-                    or not Globals.APP_COL_FILTER
-                )
+                and ((Globals.APP_COL_FILTER and appInFilter) or not Globals.APP_COL_FILTER)
             ):
                 deviceInfo["AppsEntry"].append(info)
 
@@ -136,9 +123,7 @@ def convertColumnTypes(data, headers):
             end_col_type = None
             for _ in range(Globals.MAX_RETRY):
                 if gridColType == "date":
-                    data[col] = pd.to_datetime(
-                        data[col], exact=False, errors="coerce"
-                    )
+                    data[col] = pd.to_datetime(data[col], exact=False, errors="coerce")
                     data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
                     data[col] = data[col].fillna("No Data Available")
                 elif gridColType == "bool":
@@ -146,12 +131,8 @@ def convertColumnTypes(data, headers):
                 elif gridColType == "number":
                     data.loc[data[col] == "None", col] = None
                     data.loc[data[col] == "", col] = None
-                    with pd.option_context(
-                        "future.no_silent_downcasting", True
-                    ):
-                        data[col] = (
-                            data[col].fillna(0).infer_objects(copy=False)
-                        )
+                    with pd.option_context("future.no_silent_downcasting", True):
+                        data[col] = data[col].fillna(0).infer_objects(copy=False)
 
                     try:
                         c_min = float(data[col].astype("float64").min())
@@ -164,22 +145,10 @@ def convertColumnTypes(data, headers):
                                 isDigit = data[col].str.isdigit().any()
                                 hasDecimal = data[col].str.contains(".").any()
                             except:
-                                isDigit = (
-                                    data[col]
-                                    .astype(pd.StringDtype())
-                                    .str.isdigit()
-                                    .any()
-                                )
-                                hasDecimal = (
-                                    data[col]
-                                    .astype(pd.StringDtype())
-                                    .str.contains(".")
-                                    .any()
-                                )
+                                isDigit = data[col].astype(pd.StringDtype()).str.isdigit().any()
+                                hasDecimal = data[col].astype(pd.StringDtype()).str.contains(".").any()
 
-                        if str(init_col_type)[:3] == "int" or (
-                            isDigit and not hasDecimal
-                        ):
+                        if str(init_col_type)[:3] == "int" or (isDigit and not hasDecimal):
                             if __attempt_cast__(c_min, c_max, np.int8):
                                 data[col] = data[col].astype(np.int8)
                             elif __attempt_cast__(c_min, c_max, np.int16):

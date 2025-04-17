@@ -23,9 +23,7 @@ class SentryUtils:
             self.readTokenInfo()
 
             if self.dsn:
-                sentry_sdk.init(
-                    self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1
-                )
+                sentry_sdk.init(self.dsn, traces_sample_rate=0.1, profiles_sample_rate=0.1)
         except Exception as e:
             ApiToolLog().LogError(e, postStatus=False)
 

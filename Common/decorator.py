@@ -69,9 +69,7 @@ def api_tool_decorator(locks=None, displayPrompt=True):
             if start and end:
                 duration = end - start
                 if Globals.PRINT_FUNC_DURATION:
-                    print(
-                        "%s executed in %s seconds." % (func.__name__, duration)
-                    )
+                    print("%s executed in %s seconds." % (func.__name__, duration))
             return result
 
         return wrapper

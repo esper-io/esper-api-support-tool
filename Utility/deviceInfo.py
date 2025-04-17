@@ -13,10 +13,7 @@ def getSecurityPatch(device, deviceInfo=None):
                 if device["software"]["security_patch_level"] is not None:
                     patch_ver = device["software"]["security_patch_level"]
         else:
-            if (
-                "securityPatchLevel" in device
-                and device["securityPatchLevel"] is not None
-            ):
+            if "securityPatchLevel" in device and device["securityPatchLevel"] is not None:
                 patch_ver = device["securityPatchLevel"]
     else:
         if hasattr(device, "software_info") and device.software_info:
@@ -24,10 +21,7 @@ def getSecurityPatch(device, deviceInfo=None):
                 if device.software_info["securityPatchLevel"] is not None:
                     patch_ver = device.software_info["securityPatchLevel"]
         else:
-            if (
-                "securityPatchLevel" in device
-                and device["securityPatchLevel"] is not None
-            ):
+            if "securityPatchLevel" in device and device["securityPatchLevel"] is not None:
                 patch_ver = device["securityPatchLevel"]
     return patch_ver
 
@@ -44,38 +38,23 @@ def getWifiStatus(deviceInfo):
 
     if wifi_event:
         # Configured Networks
-        if (
-            "configuredWifiNetworks" in wifi_event
-            and wifi_event["configuredWifiNetworks"]
-        ):
+        if "configuredWifiNetworks" in wifi_event and wifi_event["configuredWifiNetworks"]:
             for access_point in wifi_event["configuredWifiNetworks"]:
                 current_wifi_configurations += access_point + " "
-        if (
-            "wifi_access_points" in wifi_event
-            and wifi_event["wifi_access_points"]
-        ):
+        if "wifi_access_points" in wifi_event and wifi_event["wifi_access_points"]:
             for access_point in wifi_event["wifi_access_points"]:
                 current_wifi_configurations += access_point + " "
 
         # Connected Network
         if "wifiNetworkInfo" in wifi_event and wifi_event["wifiNetworkInfo"]:
-            if (
-                "<unknown ssid>"
-                not in wifi_event["wifiNetworkInfo"]["wifiSSID"]
-            ):
+            if "<unknown ssid>" not in wifi_event["wifiNetworkInfo"]["wifiSSID"]:
                 ssid = wifi_event["wifiNetworkInfo"]["wifiSSID"] + ": Connected"
                 current_wifi_connection = ssid
         if "ssid" in wifi_event:
             ssid = wifi_event["ssid"] + ": Connected"
             current_wifi_connection = ssid
 
-    wifi_string = (
-        "["
-        + current_wifi_configurations
-        + "],["
-        + current_wifi_connection
-        + "]"
-    )
+    wifi_string = "[" + current_wifi_configurations + "],[" + current_wifi_connection + "]"
     return wifi_string
 
 
@@ -99,30 +78,13 @@ def getCellularStatus(deviceInfo):
                 connection_status = cellularNetworkInfo["mobileNetworkStatus"]
             if len(cellularNetworkInfo["simOperator"]) > 0:
                 simoperator = cellularNetworkInfo["simOperator"][0] + ":"
-        cellular_connections = (
-            "["
-            + simoperator
-            + connection_status
-            + "]"
-            + ","
-            + current_active_connection
-        )
+        cellular_connections = "[" + simoperator + connection_status + "]" + "," + current_active_connection
     elif network_event and "cellular" in network_event:
         cellularNetworkInfo = network_event["cellular"]
         connection_status = cellularNetworkInfo["status"]
-        if (
-            "sim_operator" in cellularNetworkInfo
-            and len(cellularNetworkInfo["sim_operator"]) > 0
-        ):
+        if "sim_operator" in cellularNetworkInfo and len(cellularNetworkInfo["sim_operator"]) > 0:
             simoperator = cellularNetworkInfo["sim_operator"][0] + ":"
-        cellular_connections = (
-            "["
-            + simoperator
-            + connection_status
-            + "]"
-            + ","
-            + current_active_connection
-        )
+        cellular_connections = "[" + simoperator + connection_status + "]" + "," + current_active_connection
 
     cellular_connections = "Cellular:" + cellular_connections
     return cellular_connections + "," + current_active_connection
@@ -148,15 +110,9 @@ def constructNetworkInfo(device, deviceInfo):
     deviceInfo["cellularSignalStrength"] = "N/A"
 
     cellularKey = ""
-    if (
-        deviceInfo["network_event"]
-        and "cellularNetworkInfo" in deviceInfo["network_event"]
-    ):
+    if deviceInfo["network_event"] and "cellularNetworkInfo" in deviceInfo["network_event"]:
         cellularKey = "cellularNetworkInfo"
-    elif (
-        deviceInfo["network_event"]
-        and "cellular" in deviceInfo["network_event"]
-    ):
+    elif deviceInfo["network_event"] and "cellular" in deviceInfo["network_event"]:
         cellularKey = "cellular"
     if (
         cellularKey
@@ -167,9 +123,7 @@ def constructNetworkInfo(device, deviceInfo):
         and deviceInfo["network_event"][cellularKey]
         and "signalStrength" in deviceInfo["network_event"][cellularKey]
     ):
-        deviceInfo["cellularSignalStrength"] = deviceInfo["network_event"][
-            cellularKey
-        ]["signalStrength"]
+        deviceInfo["cellularSignalStrength"] = deviceInfo["network_event"][cellularKey]["signalStrength"]
 
     if (
         deviceInfo
@@ -178,9 +132,7 @@ def constructNetworkInfo(device, deviceInfo):
         and deviceInfo["network_event"]["wifiNetworkInfo"]
         and "signalStrength" in deviceInfo["network_event"]["wifiNetworkInfo"]
     ):
-        deviceInfo["networkSignalStrength"] = deviceInfo["network_event"][
-            "wifiNetworkInfo"
-        ]["signalStrength"]
+        deviceInfo["networkSignalStrength"] = deviceInfo["network_event"]["wifiNetworkInfo"]["signalStrength"]
 
     for key, value in Globals.CSV_NETWORK_ATTR_NAME.items():
         if value:

@@ -7,14 +7,16 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (applyFontHelper, onDialogEscape,
-                              openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (
+    applyFontHelper,
+    onDialogEscape,
+    openWebLinkInBrowser,
+    setElmTheme,
+)
 
 
 class NewEndpointDialog(wx.Dialog):
-    def __init__(
-        self, errorMsg=None, name=None, host=None, entId=None, key=None
-    ):
+    def __init__(self, errorMsg=None, name=None, host=None, entId=None, key=None):
         super(NewEndpointDialog, self).__init__(
             Globals.frame,
             wx.ID_ANY,
@@ -30,9 +32,7 @@ class NewEndpointDialog(wx.Dialog):
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_1, 1, wx.ALL | wx.EXPAND, 10)
 
-        sizer_3 = wx.StaticBoxSizer(
-            wx.StaticBox(self.panel_1, wx.ID_ANY, "Add New Tenant"), wx.VERTICAL
-        )
+        sizer_3 = wx.StaticBoxSizer(wx.StaticBox(self.panel_1, wx.ID_ANY, "Add New Tenant"), wx.VERTICAL)
 
         label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Tenant Name")
         sizer_3.Add(label_1, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
@@ -66,9 +66,7 @@ class NewEndpointDialog(wx.Dialog):
         self.text_ctrl_3.Bind(wx.EVT_TEXT, self.checkInputs)
         sizer_3.Add(self.text_ctrl_3, 0, wx.ALL | wx.EXPAND, 5)
 
-        label_4 = wx.StaticText(
-            self.panel_1, wx.ID_ANY, "API Key (Bearer Token)"
-        )
+        label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "API Key (Bearer Token)")
         sizer_3.Add(label_4, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
 
         self.text_ctrl_4 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "")
@@ -88,9 +86,7 @@ class NewEndpointDialog(wx.Dialog):
             "",
             style=wx.TE_AUTO_URL | wx.TE_MULTILINE | wx.TE_READONLY,
         )
-        self.text_ctrl_5.Bind(
-            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
-        )
+        self.text_ctrl_5.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.text_ctrl_5.SetForegroundColour(wx.Colour(255, 0, 0))
         if errorMsg:
             self.text_ctrl_5.SetValue(str(errorMsg))

@@ -21,9 +21,7 @@ def uploadWallpaper(link, key, enterprise_id, bg):
             "Authorization": f"Bearer {key}",
         }
         download(bg["url"], "wallpaper.jpeg")
-        ApiToolLog().LogApiRequestOccurrence(
-            "download", bg["url"], Globals.PRINT_API_LOGS
-        )
+        ApiToolLog().LogApiRequestOccurrence("download", bg["url"], Globals.PRINT_API_LOGS)
         if os.path.exists("wallpaper.jpeg"):
             payload = {
                 "orientation": bg["orientation"],
@@ -36,19 +34,10 @@ def uploadWallpaper(link, key, enterprise_id, bg):
                     link += "enterprise/"
             if not link.endswith("/"):
                 link += "/"
-            url = (
-                link
-                + enterprise_id
-                + "/wallpaper/"
-                + "?limit={num}".format(num=Globals.limit)
-            )
+            url = link + enterprise_id + "/wallpaper/" + "?limit={num}".format(num=Globals.limit)
             files = {"image_file": open("wallpaper.jpeg", "rb")}
-            postEventToFrame(
-                EventUtility.myEVT_LOG, "Attempting to upload wallpaper..."
-            )
-            resp = performPostRequestWithRetry(
-                url, headers=headers, data=payload, files=files
-            )
+            postEventToFrame(EventUtility.myEVT_LOG, "Attempting to upload wallpaper...")
+            resp = performPostRequestWithRetry(url, headers=headers, data=payload, files=files)
             if resp.ok:
                 postEventToFrame(EventUtility.myEVT_LOG, "Wallpaper upload Succeeded!")
                 json_resp = resp.json()

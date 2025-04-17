@@ -113,10 +113,7 @@ def checkEsperInternetConnection():
 def checkForInternetAccess(frame):
     while not frame.kill:
         if frame.IsShownOnScreen() and frame.IsActive():
-            if (
-                not checkEsperInternetConnection()
-                and not checkInternetConnection(Globals.LATEST_UPDATE_LINK)
-            ):
+            if not checkEsperInternetConnection() and not checkInternetConnection(Globals.LATEST_UPDATE_LINK):
                 displayMessageBox(
                     (
                         "ERROR: An internet connection is required when using the tool!",
@@ -149,9 +146,7 @@ def checkForUpdate():
     return None
 
 
-def downloadFileFromUrl(
-    url, fileName, filepath="", redirects=True, chunk_size=1024
-):
+def downloadFileFromUrl(url, fileName, filepath="", redirects=True, chunk_size=1024):
     if not filepath:
         filepath = str(os.path.join(Path.home(), "Downloads"))
     fullPath = os.path.join(filepath, fileName)
@@ -217,9 +212,7 @@ def isModuleInstalled(module):
 
 
 def installRequiredModules():
-    cmd = "%s install -r requirements.txt" % (
-        "pip" if platform.system() == "Windows" else "pip3"
-    )
+    cmd = "%s install -r requirements.txt" % ("pip" if platform.system() == "Windows" else "pip3")
     error = None
     if platform.system() == "Windows":
         _, error = runSubprocessPOpen(cmd)
@@ -286,10 +279,8 @@ def ipv6Tomac(ipv6):
 
 @api_tool_decorator(locks=[Globals.msg_lock])
 def displayMessageBox(event):
-    if (
-            uiThreadCheck(displayMessageBox, event)
-        ):
-            return
+    if uiThreadCheck(displayMessageBox, event):
+        return
     value = None
     if hasattr(event, "GetValue"):
         value = event.GetValue()
@@ -318,9 +309,7 @@ def displayMessageBox(event):
     return res
 
 
-def splitListIntoChunks(
-    mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None
-):
+def splitListIntoChunks(mainList, maxThread=Globals.MAX_THREAD_COUNT, maxChunkSize=None):
     if maxThread <= 0:
         return mainList
     if not mainList:
@@ -331,19 +320,14 @@ def splitListIntoChunks(
     if n == 0:
         n = len(mainList)
     if n > 0:
-        splitResults = [
-            mainList[i * n : (i + 1) * n]
-            for i in range((len(mainList) + n - 1) // n)
-        ]
+        splitResults = [mainList[i * n : (i + 1) * n] for i in range((len(mainList) + n - 1) // n)]
     else:
         splitResults = mainList
     return splitResults
 
 
 def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
-    if Globals.PRINT_RESPONSES or (
-        resp and hasattr(resp, "status_code") and resp.status_code >= 300
-    ):
+    if Globals.PRINT_RESPONSES or (resp and hasattr(resp, "status_code") and resp.status_code >= 300):
         print(url)
         prettyReponse = ""
         if not json_resp:
@@ -352,15 +336,11 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
             except:
                 pass
         if json_resp:
-            prettyReponse = url + "\nResponse {result}".format(
-                result=json.dumps(json_resp, indent=4, sort_keys=True)
-            )
+            prettyReponse = url + "\nResponse {result}".format(result=json.dumps(json_resp, indent=4, sort_keys=True))
         else:
             prettyReponse = str(resp)
         print(prettyReponse)
-        ApiToolLog().LogResponse(
-            "\n%s\t" % datetime.now() + prettyReponse + "\n"
-        )
+        ApiToolLog().LogResponse("\n%s\t" % datetime.now() + prettyReponse + "\n")
         if displayMsgBox:
             displayMessageBox((prettyReponse, wx.ICON_ERROR))
 
@@ -443,11 +423,7 @@ def releaseLocks(locks):
 
 @api_tool_decorator()
 def getHeader():
-    if (
-        Globals.configuration
-        and Globals.configuration.api_key
-        and "Authorization" in Globals.configuration.api_key
-    ):
+    if Globals.configuration and Globals.configuration.api_key and "Authorization" in Globals.configuration.api_key:
         return {
             "Authorization": f"Bearer {Globals.configuration.api_key['Authorization']}",
             "Content-Type": "application/json",
@@ -483,24 +459,20 @@ def processFunc(event):
         else:
             fun[0](fun[1])
 
+
 def uiThreadCheck(func, *args, **kwargs):
-    if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
+    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
         determineDoHereorMainThread(func, *args, **kwargs)
         return True
     return False
+
 
 @api_tool_decorator()
 def determineDoHereorMainThread(func, *args, **kwargs):
     if not callable(func):
         return
 
-    if (
-        platform.system() == "Windows"
-        or "main" in threading.current_thread().name.lower()
-    ):
+    if platform.system() == "Windows" or "main" in threading.current_thread().name.lower():
         # do here
         if args and kwargs:
             func(*args, **kwargs)
@@ -517,12 +489,14 @@ def determineDoHereorMainThread(func, *args, **kwargs):
             (func, args),
         )
 
+
 def determineListDoHereorMainThread(funcList):
     for f in funcList:
         if type(f) == tuple:
             determineDoHereorMainThread(*f)
         else:
             determineDoHereorMainThread(f)
+
 
 def checkIfCurrentThreadStopped():
     isAbortSet = False
@@ -537,9 +511,7 @@ def correctSaveFileName(inFile):
     return re.sub("[#%&{}\\<>*?/$!'\":@+`|=]*", "", inFile)
 
 
-def displayFileDialog(
-    msg, wildcard, defaultFile="", styles=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
-):
+def displayFileDialog(msg, wildcard, defaultFile="", styles=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT):
     Globals.frame.isSaving = True
     inFile = ""
     result = wx.ID_CANCEL
@@ -580,37 +552,26 @@ def setElmTheme(elm):
         bgColor = enum.Color.lightGrey.value
         fgColor = enum.Color.black.value
 
-    if (
-        isDarkModeVar 
-        and (
-            isinstance(elm, wx.SearchCtrl)
-            or (
-                isinstance(elm, wx.TextCtrl)
-                and isinstance(elm.GetParent(), wx.SearchCtrl)
-                )
-            )
-        ):
+    if isDarkModeVar and (
+        isinstance(elm, wx.SearchCtrl) or (isinstance(elm, wx.TextCtrl) and isinstance(elm.GetParent(), wx.SearchCtrl))
+    ):
         bgColor = enum.Color.grey.value
-    elif (isDarkModeVar and isinstance(elm, wx.RadioBox)):
+    elif isDarkModeVar and isinstance(elm, wx.RadioBox):
         bgColor = enum.Color.darkGrey.value
         fgColor = enum.Color.black.value
-    elif (not isDarkModeVar 
-        and (
-            isinstance(elm, wx.SearchCtrl) 
-            or isinstance(elm, wx.TextCtrl)
-            or isinstance(elm, wx.grid.Grid)
-            or isinstance(elm, wx.ListCtrl)
-            or isinstance(elm, wx.ListBox)
-            or isinstance(elm, wx.SpinCtrl)
-        )
+    elif not isDarkModeVar and (
+        isinstance(elm, wx.SearchCtrl)
+        or isinstance(elm, wx.TextCtrl)
+        or isinstance(elm, wx.grid.Grid)
+        or isinstance(elm, wx.ListCtrl)
+        or isinstance(elm, wx.ListBox)
+        or isinstance(elm, wx.SpinCtrl)
     ):
         bgColor = enum.Color.white.value
 
     if platform.system() == "Windows" and sys.getwindowsversion().build < 22000:
         # Windows 10
-        if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(
-            elm, "SetBackgroundColour"
-        ):
+        if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button)) and hasattr(elm, "SetBackgroundColour"):
             if isDarkModeVar:
                 elm.SetBackgroundColour(enum.Color.darkdarkGrey.value)
                 elm.SetForegroundColour(enum.Color.white.value)
@@ -622,10 +583,9 @@ def setElmTheme(elm):
                 setElmTheme(child)
     else:
         # Windows 11 & Mac
-        if ((isinstance(elm, wx.Panel) 
-            or isinstance(elm, wx.Button)
-            or isinstance(elm, wx.Window))
-            and not isInThemeBlacklist(elm)):
+        if (isinstance(elm, wx.Panel) or isinstance(elm, wx.Button) or isinstance(elm, wx.Window)) and not isInThemeBlacklist(
+            elm
+        ):
             setElementTheme(elm, bgColor, fgColor)
         if isinstance(elm, wx.grid.Grid):
             elm.SetDefaultCellBackgroundColour(bgColor)
@@ -636,9 +596,7 @@ def setElmTheme(elm):
 
 
 def isInThemeBlacklist(elm):
-    return (isinstance(elm, wx.grid.Grid)
-            or isinstance(elm, wx.ToolBar)
-            or isinstance(elm, wx.Button))
+    return isinstance(elm, wx.grid.Grid) or isinstance(elm, wx.ToolBar) or isinstance(elm, wx.Button)
 
 
 def setElementTheme(elm, bgColor, fgColor):
@@ -661,6 +619,7 @@ def setElementTheme(elm, bgColor, fgColor):
         for n in range(0, len(elm.GetItems())):
             elm.SetItemForegroundColour(n, fgColor)
 
+
 def getResultsFromThreads(src=None, results=[]):
     if src == Globals.THREAD_POOL.threads:
         src = Globals.THREAD_POOL.results()
@@ -674,6 +633,7 @@ def getResultsFromThreads(src=None, results=[]):
         else:
             results.append(res)
     return results
+
 
 def getFont(style):
     if style == enum.FontStyles.NORMAL_BOLD.value:
@@ -696,40 +656,40 @@ def getFont(style):
         )
     elif style == enum.FontStyles.HEADER_BOLD.value:
         return wx.Font(
-                Globals.HEADER_FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "HeaderBold",
-            )
+            Globals.HEADER_FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_BOLD,
+            0,
+            "HeaderBold",
+        )
     else:
         return wx.Font(
-                    Globals.FONT_SIZE,
-                    wx.FONTFAMILY_DEFAULT,
-                    wx.FONTSTYLE_NORMAL,
-                    wx.FONTWEIGHT_NORMAL,
-                    0,
-                    "Normal",
-                )
-    
+            Globals.FONT_SIZE,
+            wx.FONTFAMILY_DEFAULT,
+            wx.FONTSTYLE_NORMAL,
+            wx.FONTWEIGHT_NORMAL,
+            0,
+            "Normal",
+        )
+
+
 def applyFontHelper(fontRuleSet, parent, elm):
-        if parent:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    font = getFont(enum.FontStyles.NORMAL.value)
-                    for item, val in fontRuleSet.items():
-                        if isinstance(child, item):
-                            font = val
-                            break
-                    child.SetFont(font)
-                applyFontHelper(fontRuleSet, parent, child)
+    if parent:
+        childen = elm.GetChildren()
+        for child in childen:
+            if hasattr(child, "SetFont"):
+                font = getFont(enum.FontStyles.NORMAL.value)
+                for item, val in fontRuleSet.items():
+                    if isinstance(child, item):
+                        font = val
+                        break
+                child.SetFont(font)
+            applyFontHelper(fontRuleSet, parent, child)
+
 
 def getTenant():
-    return Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
+    return Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", "")
 
 
 @api_tool_decorator()
@@ -755,12 +715,14 @@ def _flatten_dict_gen(d):
             else:
                 yield k, v
 
+
 def determineKeyEventClose(event) -> bool:
     keycode = event.GetKeyCode()
     isCmdOrCtrlDown = event.CmdDown() or event.ControlDown()
     if keycode == wx.WXK_ESCAPE or (isCmdOrCtrlDown and keycode == wx.WXK_CONTROL_W):
         return True
     return False
+
 
 def onDialogEscape(elm, event):
     if hasattr(elm, "onClose") and determineKeyEventClose(event):

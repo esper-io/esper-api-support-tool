@@ -12,15 +12,27 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import (determineDoHereorMainThread, getFont,
-                              getStrRatioSimilarity, onDialogEscape,
-                              resourcePath, scale_bitmap, setElmTheme,
-                              uiThreadCheck)
+from Utility.Resource import (
+    determineDoHereorMainThread,
+    getFont,
+    getStrRatioSimilarity,
+    onDialogEscape,
+    resourcePath,
+    scale_bitmap,
+    setElmTheme,
+    uiThreadCheck,
+)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
     def __init__(
-        self, parent, choices, label="", title="", single=False, resp=None,
+        self,
+        parent,
+        choices,
+        label="",
+        title="",
+        single=False,
+        resp=None,
     ):
         size = (500, 400)
         super(MultiSelectSearchDlg, self).__init__(
@@ -94,11 +106,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         grid_sizer_1 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        listStyle = (
-            wx.LB_MULTIPLE | wx.LB_NEEDED_SB | wx.LB_SORT
-            if not single
-            else wx.LB_NEEDED_SB | wx.LB_SORT | wx.LB_SINGLE
-        )
+        listStyle = wx.LB_MULTIPLE | wx.LB_NEEDED_SB | wx.LB_SORT if not single else wx.LB_NEEDED_SB | wx.LB_SORT | wx.LB_SINGLE
         self.check_list_box_1 = wx.CheckListBox(
             self.panel_2,
             wx.ID_ANY,
@@ -108,9 +116,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         grid_sizer_1.Add(self.check_list_box_1, 0, wx.EXPAND, 0)
 
         grid_sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_1.Add(
-            grid_sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND | wx.TOP, 5
-        )
+        grid_sizer_1.Add(grid_sizer_3, 1, wx.ALIGN_RIGHT | wx.EXPAND | wx.TOP, 5)
 
         prev_icon = scale_bitmap(resourcePath("Images/prev.png"), 18, 18)
         self.button_1 = wx.BitmapButton(
@@ -175,10 +181,12 @@ class MultiSelectSearchDlg(wx.Dialog):
 
         exitId = wx.NewId()
         self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
-        accel_table = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('W'), exitId),
-            (wx.ACCEL_CMD, ord('W'), exitId),
-        ])
+        accel_table = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("W"), exitId),
+                (wx.ACCEL_CMD, ord("W"), exitId),
+            ]
+        )
         self.SetAcceleratorTable(accel_table)
 
         self.applyFontSize()
@@ -212,8 +220,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         if queryString:
             sortedList = list(
                 filter(
-                    lambda i: queryString.lower() in i.lower()
-                    or getStrRatioSimilarity(i.lower(), queryString) > 90,
+                    lambda i: queryString.lower() in i.lower() or getStrRatioSimilarity(i.lower(), queryString) > 90,
                     self.originalChoices[self.page],
                 )
             )
@@ -296,15 +303,10 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     @api_tool_decorator()
     def onSelectEvent(self):
-        if (
-            uiThreadCheck(self.onSelectEvent)
-        ):
+        if uiThreadCheck(self.onSelectEvent):
             return
         if self.checkbox_1.IsChecked():
-            if (
-                self.allDeviceStr
-                and self.allDeviceStr in self.originalChoices[self.page]
-            ):
+            if self.allDeviceStr and self.allDeviceStr in self.originalChoices[self.page]:
                 self.selected = [self.allDeviceStr]
             elif "device" in self.label.lower():
                 Globals.THREAD_POOL.enqueue(self.selectAllDevices)
@@ -367,9 +369,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.processNext)
 
     def processNext(self):
-        if (
-            uiThreadCheck(self.processNext)
-        ):
+        if uiThreadCheck(self.processNext):
             return
         self.button_1.Enable(False)
         self.button_2.Enable(False)
@@ -392,9 +392,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         Globals.THREAD_POOL.enqueue(self.processPrev)
 
     def processPrev(self):
-        if (
-            uiThreadCheck(self.processPrev)
-        ):
+        if uiThreadCheck(self.processPrev):
             return
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
@@ -412,9 +410,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.setCursorDefault()
 
     def checkPageButton(self):
-        if (
-            uiThreadCheck(self.checkPageButton)
-        ):
+        if uiThreadCheck(self.checkPageButton):
             return
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
@@ -455,13 +451,9 @@ class MultiSelectSearchDlg(wx.Dialog):
                 resp = getAllGroups(offset=resultOffset, tolerance=1)
             if resp:
                 if hasattr(resp, "results"):
-                    self.originalChoices.append(
-                        self.processDevices(resp.results)
-                    )
+                    self.originalChoices.append(self.processDevices(resp.results))
                 elif type(resp) == dict and "results" in resp:
-                    self.originalChoices.append(
-                        self.processDevices(resp["results"])
-                    )
+                    self.originalChoices.append(self.processDevices(resp["results"]))
 
         determineDoHereorMainThread(self.updateChoicesFromResp, resp)
 
@@ -478,9 +470,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def setCursorBusy(self):
         """Set cursor icon to busy state"""
-        if (
-            uiThreadCheck(self.setCursorBusy)
-        ):
+        if uiThreadCheck(self.setCursorBusy):
             return
 
         myCursor = wx.Cursor(wx.CURSOR_WAIT)
@@ -488,9 +478,7 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def setCursorDefault(self):
         """Set cursor icon to busy state"""
-        if (
-            uiThreadCheck(self.setCursorDefault)
-        ):
+        if uiThreadCheck(self.setCursorDefault):
             return
 
         myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
@@ -502,31 +490,15 @@ class MultiSelectSearchDlg(wx.Dialog):
             name = ""
             if hasattr(device, "hardware_info"):
                 name = "%s %s %s %s" % (
-                    (
-                        device.hardware_info["manufacturer"]
-                        if "model" in device.hardware_info
-                        else ""
-                    ),
-                    (
-                        device.hardware_info["model"]
-                        if "model" in device.hardware_info
-                        else ""
-                    ),
+                    (device.hardware_info["manufacturer"] if "model" in device.hardware_info else ""),
+                    (device.hardware_info["model"] if "model" in device.hardware_info else ""),
                     device.device_name,
                     device.alias_name if device.alias_name else "",
                 )
             else:
                 name = "%s %s %s %s" % (
-                    (
-                        device["hardwareInfo"]["manufacturer"]
-                        if "manufacturer" in device["hardwareInfo"]
-                        else ""
-                    ),
-                    (
-                        device["hardwareInfo"]["model"]
-                        if "model" in device["hardwareInfo"]
-                        else ""
-                    ),
+                    (device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else ""),
+                    (device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else ""),
                     device["device_name"],
                     device["alias_name"] if device["alias_name"] else "",
                 )
@@ -540,9 +512,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         return nameList
 
     def selectAllDevices(self):
-        if (
-            uiThreadCheck(self.selectAllDevices)
-        ):
+        if uiThreadCheck(self.selectAllDevices):
             return
         self.setCursorBusy()
         self.button_1.Enable(False)
@@ -571,13 +541,9 @@ class MultiSelectSearchDlg(wx.Dialog):
             if self.resp:
                 self.check_list_box_1.Clear()
                 if hasattr(self.resp, "results"):
-                    self.originalChoices[0] = self.processDevices(
-                        self.resp.results
-                    )
+                    self.originalChoices[0] = self.processDevices(self.resp.results)
                 elif type(self.resp) == dict and "results" in self.resp:
-                    self.originalChoices[0] = self.processDevices(
-                        self.resp["results"]
-                    )
+                    self.originalChoices[0] = self.processDevices(self.resp["results"])
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
         self.selected = copy.deepcopy(self.originalChoices[0])

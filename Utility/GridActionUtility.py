@@ -46,21 +46,11 @@ def executeDeviceModification(frame, action, maxAttempt=Globals.MAX_RETRY):
     postEventToFrame(
         eventUtil.myEVT_AUDIT,
         {
-            "operation": (
-                "ChangeTags"
-                if action == GridActions.MODIFY_TAGS.value
-                else "ChangeAlias"
-            ),
-            "data": (
-                {"tags": rowTaglist}
-                if action == GridActions.MODIFY_TAGS.value
-                else {"alias": aliasList}
-            ),
+            "operation": ("ChangeTags" if action == GridActions.MODIFY_TAGS.value else "ChangeAlias"),
+            "data": ({"tags": rowTaglist} if action == GridActions.MODIFY_TAGS.value else {"alias": aliasList}),
         },
     )
-    devices = obtainEsperDeviceEntriesFromList(
-        rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasList
-    )
+    devices = obtainEsperDeviceEntriesFromList(rowTaglist if action == GridActions.MODIFY_TAGS.value else aliasList)
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
@@ -97,16 +87,13 @@ def obtainEsperDeviceEntriesFromList(iterList):
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "---> ERROR: Failed to find device with these details: %s"
-                % row,
+                "---> ERROR: Failed to find device with these details: %s" % row,
             )
     return devices
 
 
 @api_tool_decorator()
-def processDeviceModificationForList(
-    action, chunk, tagsFromGrid, aliasDic, maxGaugeAction
-):
+def processDeviceModificationForList(action, chunk, tagsFromGrid, aliasDic, maxGaugeAction):
     tracker = {
         "success": 0,
         "fail": 0,
@@ -118,14 +105,10 @@ def processDeviceModificationForList(
     status = []
     for device in chunk:
         if action == GridActions.MODIFY_TAGS.value:
-            tagStatusMsg = changeTagsForDevice(
-                device, tagsFromGrid, maxGaugeAction, tracker
-            )
+            tagStatusMsg = changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker)
             status.append(tagStatusMsg)
         else:
-            aliasStatusMsg = changeAliasForDevice(
-                device, aliasDic, maxGaugeAction, tracker
-            )
+            aliasStatusMsg = changeAliasForDevice(device, aliasDic, maxGaugeAction, tracker)
             status.append(aliasStatusMsg)
 
     return (tracker, chunk, status)
@@ -141,9 +124,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
         aliasName = device.alias_name
         hardware = device.hardware_info
         network = device.network_info
-        serial = (
-            hardware["serialNumber"] if "serialNumber" in hardware else None
-        )
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
     elif type(device) is dict:
@@ -152,9 +133,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
         aliasName = device["alias_name"]
         hardware = device["hardware_info"]
         network = device["network_info"]
-        serial = (
-            hardware["serialNumber"] if "serialNumber" in hardware else None
-        )
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
 
@@ -172,21 +151,11 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     # Alias modification
     if match:
         match = match[0]
-        deviceName = (
-            match["Esper Name"]
-            if "Esper Name" in match and match["Esper Name"]
-            else deviceName
-        )
-        deviceId = (
-            match["Esper Id"]
-            if "Esper Id" in match and match["Esper Id"]
-            else deviceId
-        )
+        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
+        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
         newName = match["Alias"] if "Alias" in match else ""
 
-        logString = str(
-            "--->" + str(deviceName) + " : " + str(newName) + "--->"
-        )
+        logString = str("--->" + str(deviceName) + " : " + str(newName) + "--->")
         if not newName:
             # Return if no alias specified
             return {
@@ -201,9 +170,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             status = ""
             try:
                 ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
-                resp, status = apiCalls.setdevicename(
-                    deviceId, newName, ignoreQueued
-                )
+                resp, status = apiCalls.setdevicename(deviceId, newName, ignoreQueued)
                 tracker["sent"] += 1
             except Exception as e:
                 ApiToolLog().LogError(e)
@@ -249,15 +216,11 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 tracker["progress"] += 1
                 stateStr = "In-Progress"
             elif "Scheduled" in str(status):
-                logString = (
-                    logString + " <Scheduled> Make sure device is online."
-                )
+                logString = logString + " <Scheduled> Make sure device is online."
                 tracker["progress"] += 1
                 stateStr = "In-Progress"
             elif "in-progress" in str(status):
-                logString = (
-                    logString + " <In-Progress> Make sure device is online."
-                )
+                logString = logString + " <In-Progress> Make sure device is online."
                 tracker["progress"] += 1
                 stateStr = "In-Progress"
             else:
@@ -275,15 +238,10 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
                 "state": None,
             }
         if "Success" in logString or "Queued" in logString:
-            postEventToFrame(
-                eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias")
-            )
+            postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "alias"))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(
-                Globals.frame.statusBar.gauge.GetValue()
-                + 1 / maxGaugeAction * 100
-            ),
+            int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
         postEventToFrame(eventUtil.myEVT_LOG, logString)
     else:
@@ -315,9 +273,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
         deviceId = device.id
         hardware = device.hardware_info
         network = device.network_info
-        serial = (
-            hardware["serialNumber"] if "serialNumber" in hardware else None
-        )
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
     elif type(device) is dict:
@@ -325,9 +281,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
         deviceId = device["id"]
         hardware = device["hardware_info"]
         network = device["network_info"]
-        serial = (
-            hardware["serialNumber"] if "serialNumber" in hardware else None
-        )
+        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
         imei1 = network["imei1"] if "imei1" in network else None
         imei2 = network["imei2"] if "imei2" in network else None
 
@@ -344,16 +298,8 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
     )
     if match:
         match = match[0]
-        deviceName = (
-            match["Esper Name"]
-            if "Esper Name" in match and match["Esper Name"]
-            else deviceName
-        )
-        deviceId = (
-            match["Esper Id"]
-            if "Esper Id" in match and match["Esper Id"]
-            else deviceId
-        )
+        deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
+        deviceId = match["Esper Id"] if "Esper Id" in match and match["Esper Id"] else deviceId
         tagsFromCell = match["Tags"] if "Tags" in match else []
 
         try:
@@ -368,10 +314,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
         postEventToFrame(eventUtil.myEVT_UPDATE_GRID_CONTENT, (device, "tags"))
         postEventToFrame(
             eventUtil.myEVT_UPDATE_GAUGE,
-            int(
-                Globals.frame.statusBar.gauge.GetValue()
-                + 1 / maxGaugeAction * 100
-            ),
+            int(Globals.frame.statusBar.gauge.GetValue() + 1 / maxGaugeAction * 100),
         )
 
         status = {
@@ -392,9 +335,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
 @api_tool_decorator()
 def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     if not deviceIdentifers:
-        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(
-            tolerance=tolerance
-        )
+        deviceIdentifers = Globals.frame.gridPanel.getDeviceIdentifersFromGrid(tolerance=tolerance)
     devices = []
     splitResults = splitListIntoChunks(deviceIdentifers)
     for chunk in splitResults:
@@ -403,9 +344,7 @@ def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
     return devices
 
 
-def getDevicesFromGridHelper(
-    deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY
-):
+def getDevicesFromGridHelper(deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY):
     for entry in deviceIdentifers:
         api_response = apiCalls.searchForMatchingDevices(entry)
         if api_response:
@@ -420,16 +359,12 @@ def getDevicesFromGridHelper(
 @api_tool_decorator()
 def relocateDeviceToNewGroup(frame):
     newGroupList = frame.gridPanel.getDeviceGroupFromGrid()
-    devices = getDevicesFromGrid(
-        newGroupList, tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads()
-    )
+    devices = getDevicesFromGrid(newGroupList, tolerance=Globals.THREAD_POOL.getNumberOfActiveThreads())
 
     splitResults = splitListIntoChunks(devices)
 
     for chunk in splitResults:
-        Globals.THREAD_POOL.enqueue(
-            processDeviceGroupMove, chunk, newGroupList, tolerance=2
-        )
+        Globals.THREAD_POOL.enqueue(processDeviceGroupMove, chunk, newGroupList, tolerance=2)
 
     Globals.THREAD_POOL.enqueue(
         wxThread.waitTillThreadsFinish,
@@ -456,23 +391,15 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             deviceId = device.id
             hardware = device.hardware_info
             network = device.network_info
-            serial = (
-                hardware["serialNumber"] if "serialNumber" in hardware else None
-            )
+            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
             imei1 = network["imei1"] if "imei1" in network else None
             imei2 = network["imei2"] if "imei2" in network else None
         elif type(device) is dict:
-            deviceName = (
-                device["device_name"] if "device_name" in device else ""
-            )
+            deviceName = device["device_name"] if "device_name" in device else ""
             deviceId = device["id"] if "id" in device else ""
-            hardware = (
-                device["hardware_info"] if "hardware_info" in device else ""
-            )
+            hardware = device["hardware_info"] if "hardware_info" in device else ""
             network = device["network_info"] if "network_info" in device else ""
-            serial = (
-                hardware["serialNumber"] if "serialNumber" in hardware else None
-            )
+            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
             imei1 = network["imei1"] if "imei1" in network else None
             imei2 = network["imei2"] if "imei2" in network else None
         elif type(device) is str:
@@ -500,24 +427,14 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                 results[deviceName] = {
                     "Device Name": deviceName,
                     "Device Id": deviceId,
-                    "Status Code": (
-                        resp.status_code
-                        if hasattr(resp, "status_code")
-                        else None
-                    ),
-                    "Response": (
-                        resp.json() if hasattr(resp, "json") else respText
-                    ),
+                    "Status Code": (resp.status_code if hasattr(resp, "status_code") else None),
+                    "Response": (resp.json() if hasattr(resp, "json") else respText),
                 }
             else:
                 # Look up group to see if we know it already, if we don't query it
                 groupId = None
                 for group in Globals.knownGroups.values():
-                    if (
-                        type(group) is dict
-                        and "name" in group
-                        and groupName == group["name"]
-                    ):
+                    if type(group) is dict and "name" in group and groupName == group["name"]:
                         groupId = group["id"]
                         break
                     elif hasattr(group, "name") and groupName == group.name:
@@ -542,8 +459,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                         results[deviceName] = {
                             "Device Name": deviceName,
                             "Device Id": deviceId,
-                            "Error": "Invalid Group Name given, no matches found, '%s'"
-                            % groupName,
+                            "Error": "Invalid Group Name given, no matches found, '%s'" % groupName,
                         }
 
                 if groupId:
@@ -552,14 +468,8 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                     results[deviceName] = {
                         "Device Name": deviceName,
                         "Device Id": deviceId,
-                        "Status Code": (
-                            resp.status_code
-                            if hasattr(resp, "status_code")
-                            else None
-                        ),
-                        "Response": (
-                            resp.json() if hasattr(resp, "json") else respText
-                        ),
+                        "Status Code": (resp.status_code if hasattr(resp, "status_code") else None),
+                        "Response": (resp.json() if hasattr(resp, "json") else respText),
                     }
         else:
             results[deviceName] = {
@@ -569,7 +479,5 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             }
 
     if not results:
-        results["error"] = {
-            "Error": "Failed to find devices to move, check tenant."
-        }
+        results["error"] = {"Error": "Failed to find devices to move, check tenant."}
     return results

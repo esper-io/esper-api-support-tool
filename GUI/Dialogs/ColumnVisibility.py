@@ -6,8 +6,13 @@ from Common import Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.TabPanel import TabPanel
-from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
-                              onDialogEscape, setElmTheme)
+from Utility.Resource import (
+    applyFontHelper,
+    getFont,
+    getStrRatioSimilarity,
+    onDialogEscape,
+    setElmTheme,
+)
 
 
 class ColumnVisibility(wx.Dialog):
@@ -42,9 +47,7 @@ class ColumnVisibility(wx.Dialog):
 
         self.text_ctrl_1 = wx.SearchCtrl(self, wx.ID_ANY, "")
         self.text_ctrl_1.ShowCancelButton(True)
-        grid_sizer_1.Add(
-            self.text_ctrl_1, 0, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5
-        )
+        grid_sizer_1.Add(self.text_ctrl_1, 0, wx.ALIGN_RIGHT | wx.ALL | wx.EXPAND, 5)
 
         self.notebook_1 = wx.Notebook(self, wx.ID_ANY)
         self.notebook_1.SetThemeEnabled(False)
@@ -87,10 +90,7 @@ class ColumnVisibility(wx.Dialog):
         self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Bind(wx.EVT_LISTBOX, self.OnSelection)
-        if (
-            hasattr(self.Parent.parentFrame, "WINDOWS")
-            and self.Parent.parentFrame.WINDOWS
-        ):
+        if hasattr(self.Parent.parentFrame, "WINDOWS") and self.Parent.parentFrame.WINDOWS:
             self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
 
         for page in pageGridDict.keys():
@@ -120,9 +120,7 @@ class ColumnVisibility(wx.Dialog):
             try:
                 isShown = grid.IsColShown(num)
                 if colLabel in self.choiceDataDict[label]:
-                    self.checkBoxes[label].Check(
-                        self.choiceDataDict[label].index(colLabel), isShown
-                    )
+                    self.checkBoxes[label].Check(self.choiceDataDict[label].index(colLabel), isShown)
                     self.selected[label][colLabel] = isShown
             except:
                 pass
@@ -133,9 +131,7 @@ class ColumnVisibility(wx.Dialog):
 
         sizer = wx.GridSizer(1, 1, 0, 0)
 
-        choice = (
-            self.choiceDataDict[label] if label in self.choiceDataDict else []
-        )
+        choice = self.choiceDataDict[label] if label in self.choiceDataDict else []
         if not choice:
             grid = self.pageGridDict[label]
             exemptCols = self.colLabelException[label]
@@ -145,9 +141,7 @@ class ColumnVisibility(wx.Dialog):
                     continue
                 choice.append(colLabel)
             self.choiceDataDict[label] = choice
-        check_list_box = wx.CheckListBox(
-            notebook_panel, wx.ID_ANY, choices=choice
-        )
+        check_list_box = wx.CheckListBox(notebook_panel, wx.ID_ANY, choices=choice)
         sizer.Add(check_list_box, 0, wx.ALL | wx.EXPAND, 3)
         self.checkBoxes[label] = check_list_box
         check_list_box.Bind(wx.EVT_CHECKLISTBOX, self.OnSelection)
@@ -198,8 +192,7 @@ class ColumnVisibility(wx.Dialog):
         if queryString:
             listToProcess = list(
                 filter(
-                    lambda i: queryString.lower() in i.lower()
-                    or getStrRatioSimilarity(i.lower(), queryString) > 90,
+                    lambda i: queryString.lower() in i.lower() or getStrRatioSimilarity(i.lower(), queryString) > 90,
                     self.choiceDataDict[label],
                 )
             )
@@ -222,15 +215,11 @@ class ColumnVisibility(wx.Dialog):
         itemName = checkbox.GetString(selection)
         checkbox.Deselect(selection)
         checked = list(checkbox.GetCheckedItems())
-        if (
-            event.EventType == wx.EVT_LISTBOX.typeId
-            or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId
-        ) and selection in checked:
+        if (event.EventType == wx.EVT_LISTBOX.typeId or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId) and selection in checked:
             checked.remove(selection)
             self.selected[self.current_page][itemName] = False
         elif (
-            event.EventType == wx.EVT_LISTBOX.typeId
-            or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId
+            event.EventType == wx.EVT_LISTBOX.typeId or event.EventType == wx.EVT_LISTBOX_DCLICK.typeId
         ) and selection not in checked:
             checked.append(selection)
             self.selected[self.current_page][itemName] = True

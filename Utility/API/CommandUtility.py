@@ -13,21 +13,24 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CmdConfirmDialog import CmdConfirmDialog
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (displayMessageBox, getHeader, getTenant,
-                              logBadResponse, postEventToFrame,
-                              splitListIntoChunks)
-from Utility.Web.WebRequests import (performGetRequestWithRetry,
-                                     performPostRequestWithRetry)
+from Utility.Resource import (
+    displayMessageBox,
+    getHeader,
+    getTenant,
+    logBadResponse,
+    postEventToFrame,
+    splitListIntoChunks,
+)
+from Utility.Web.WebRequests import (
+    performGetRequestWithRetry,
+    performPostRequestWithRetry,
+)
 
 
 @api_tool_decorator()
-def createCommand(
-    frame, command_args, commandType, schedule, schType, combineRequests=False
-):
+def createCommand(frame, command_args, commandType, schedule, schType, combineRequests=False):
     """Attempt to apply a Command given user specifications"""
-    result, isGroup = confirmCommand(
-        command_args, commandType, schedule, schType
-    )
+    result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
 
     if schType.lower() == "immediate":
         schType = esperclient.V0CommandScheduleEnum.IMMEDIATE
@@ -93,9 +96,7 @@ def confirmCommand(cmd, commandType, schedule, schType):
         isGroup = True
     modal = wx.NO
     if label:
-        with CmdConfirmDialog(
-            commandType, cmdFormatted, schType, schFormatted, applyTo, label
-        ) as dialog:
+        with CmdConfirmDialog(commandType, cmdFormatted, schType, schFormatted, applyTo, label) as dialog:
             Globals.OPEN_DIALOGS.append(dialog)
             res = dialog.ShowModal()
             Globals.OPEN_DIALOGS.remove(dialog)
@@ -349,9 +350,7 @@ def sendCommandToDevice(
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     _, last_status = postEsperCommand(body, maxAttempt=maxAttempt)
     if last_status:
-        last_status = waitForCommandToFinish(
-            last_status["id"], ignoreQueue=ignoreQueued
-        )
+        last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -380,9 +379,7 @@ def sendCommandToGroup(
     ignoreQueued = False if Globals.REACH_QUEUED_ONLY else True
     _, last_status = postEsperCommand(body, maxAttempt=maxAttempt)
     if last_status:
-        last_status = waitForCommandToFinish(
-            last_status["id"], ignoreQueue=ignoreQueued
-        )
+        last_status = waitForCommandToFinish(last_status["id"], ignoreQueue=ignoreQueued)
     return last_status
 
 
@@ -410,13 +407,9 @@ def waitForCommandToFinish(
             stateList.remove(cmdQueued)
         if type(response["status"]) is list:
             status = response["status"]
-            postEventToFrame(
-                eventUtil.myEVT_LOG, "---> Command state: %s" % str(status)
-            )
+            postEventToFrame(eventUtil.myEVT_LOG, "---> Command state: %s" % str(status))
             start = time.perf_counter()
-            queuedStatus = list(
-                filter(lambda x: x["state"] == cmdQueued, status)
-            )
+            queuedStatus = list(filter(lambda x: x["state"] == cmdQueued, status))
             if queuedStatus:
                 queuedStatus = queuedStatus[0]
             else:
@@ -427,17 +420,12 @@ def waitForCommandToFinish(
                 if duration >= timeout:
                     postEventToFrame(
                         eventUtil.myEVT_LOG,
-                        "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
-                        % str(status),
+                        "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)" % str(status),
                     )
                     break
-                status = getCommandRequestStats(
-                    request_id, maxAttempt=maxAttempt
-                )
+                status = getCommandRequestStats(request_id, maxAttempt=maxAttempt)
                 if status and "status" in status and status["status"]:
-                    queuedStatus = list(
-                        filter(lambda x: x["state"] == cmdQueued, status["status"])
-                    )
+                    queuedStatus = list(filter(lambda x: x["state"] == cmdQueued, status["status"]))
                     if queuedStatus:
                         queuedStatus = queuedStatus[0]
                     else:
@@ -461,9 +449,7 @@ def waitForCommandToFinish(
                         % str(status.state),
                     )
                     break
-                status = getCommandRequestStats(
-                    request_id, maxAttempt=maxAttempt
-                )
+                status = getCommandRequestStats(request_id, maxAttempt=maxAttempt)
                 postEventToFrame(
                     eventUtil.myEVT_LOG,
                     "---> Command state: %s" % str(status.state),
@@ -480,13 +466,8 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
     resp = None
     try:
         headers = getHeader()
-        url = (
-            "https://%s-api.esper.cloud/api/commands/v0/commands/"
-            % getTenant()
-        )
-        resp = performPostRequestWithRetry(
-            url, headers=headers, json=command_data, maxRetry=maxAttempt
-        )
+        url = "https://%s-api.esper.cloud/api/commands/v0/commands/" % getTenant()
+        resp = performPostRequestWithRetry(url, headers=headers, json=command_data, maxRetry=maxAttempt)
         json_resp = resp.json() if resp else None
         if json_resp and "content" in json_resp:
             json_resp = json_resp["content"]
@@ -513,9 +494,7 @@ def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
     resp = None
     try:
         headers = getHeader()
-        resp = performGetRequestWithRetry(
-            url, headers=headers, maxRetry=maxAttempt
-        )
+        resp = performGetRequestWithRetry(url, headers=headers, maxRetry=maxAttempt)
         json_resp = resp.json() if resp else None
         if json_resp and "content" in json_resp:
             json_resp = json_resp["content"]
@@ -528,11 +507,5 @@ def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
 @api_tool_decorator()
 def sendPowerDownCommand():
     """Send a Power Down Command to the selected Devices"""
-    command_args = V0CommandArgs(
-        custom_settings_config={
-            "dpcParams": [{"key": "powerOff", "value": "true"}]
-        }
-    )
-    createCommand(
-        Globals.frame, command_args, "UPDATE_DEVICE_CONFIG", None, "immediate"
-    )
+    command_args = V0CommandArgs(custom_settings_config={"dpcParams": [{"key": "powerOff", "value": "true"}]})
+    createCommand(Globals.frame, command_args, "UPDATE_DEVICE_CONFIG", None, "immediate")

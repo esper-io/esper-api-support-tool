@@ -29,7 +29,7 @@
 # End Of Comments
 # --------------------------------------------------------------------------- #
 
-""" Description:
+"""Description:
 
 EnhancedStatusBar Is A Slight Modification (Actually A Subclassing) Of wx.StatusBar.
 It Allows You To Add Almost Any Widget You Like To The wx.StatusBar Of Your Main
@@ -48,7 +48,7 @@ What It Can Do:
      And Can Be ESB_EXACT_FIT, ESB_ALIGN_CENTER_VERTICAL, ESB_ALIGN_BOTTOM And
      ESB_ALIGN_LEFT;
 
-EnhancedStatusBar Is Freeware And Distributed Under The wxPython License. 
+EnhancedStatusBar Is Freeware And Distributed Under The wxPython License.
 
 Latest Revision: 21 September 2005, 19.57.20 GMT+2
 Latest Revision before Latest Revision: 21 September 2005, 18.29.35 GMT+2
@@ -92,9 +92,7 @@ class EnhancedStatusBarItem(object):
 
 
 class EnhancedStatusBar(wx.StatusBar):
-    def __init__(
-        self, parent, id=wx.ID_ANY, style=wx.STB_SIZEGRIP, name="EnhancedStatusBar"
-    ):
+    def __init__(self, parent, id=wx.ID_ANY, style=wx.STB_SIZEGRIP, name="EnhancedStatusBar"):
         """Default Class Constructor.
 
         EnhancedStatusBar.__init__(self, parent, id=wx.ID_ANY,
@@ -270,9 +268,7 @@ class EnhancedStatusBar(wx.StatusBar):
         except KeyError:
             pass
 
-        self._items[pos] = EnhancedStatusBarItem(
-            widget, pos, horizontalalignment, verticalalignment
-        )
+        self._items[pos] = EnhancedStatusBarItem(widget, pos, horizontalalignment, verticalalignment)
 
         wx.CallAfter(self.OnSize, None)
 
@@ -291,7 +287,7 @@ class EnhancedStatusBar(wx.StatusBar):
 
     @api_tool_decorator(locks=[Globals.gauge_lock])
     def setGaugeValue(self, value):
-        """ Attempt to set Gauge to the specififed value """
+        """Attempt to set Gauge to the specififed value"""
         if Globals.gauge_lock.locked():
             return
         Globals.gauge_lock.acquire()
@@ -304,9 +300,7 @@ class EnhancedStatusBar(wx.StatusBar):
             if value < 0:
                 value = 0
             if value >= 0 and value <= maxValue:
-                self.gauge.SetToolTip(
-                    f"Progress ({int(value)}%): {str(value)} / {str(maxValue)}"
-                )
+                self.gauge.SetToolTip(f"Progress ({int(value)}%): {str(value)} / {str(maxValue)}")
                 self.gauge.SetValue(value)
         if Globals.gauge_lock.locked():
             Globals.gauge_lock.release()

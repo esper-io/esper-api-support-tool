@@ -6,8 +6,13 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.AppUtilities import getAppVersions
-from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
-                              onDialogEscape, setElmTheme)
+from Utility.Resource import (
+    applyFontHelper,
+    getFont,
+    getStrRatioSimilarity,
+    onDialogEscape,
+    setElmTheme,
+)
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -57,9 +62,7 @@ class InstalledDevicesDlg(wx.Dialog):
         grid_sizer_3.Add(label_1, 0, wx.LEFT, 3)
 
         sizer_3 = wx.FlexGridSizer(1, 2, 0, 0)
-        grid_sizer_3.Add(
-            sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5
-        )
+        grid_sizer_3.Add(sizer_3, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL | wx.EXPAND, 5)
 
         label_3 = wx.StaticText(self.panel_1, wx.ID_ANY, "App Search")
         sizer_3.Add(label_3, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -100,9 +103,7 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_2 = wx.FlexGridSizer(3, 1, 0, 0)
             grid_sizer_1.Add(grid_sizer_2, 1, wx.EXPAND, 0)
 
-            label_2 = wx.StaticText(
-                self.panel_1, wx.ID_ANY, "Available App Versions:"
-            )
+            label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Available App Versions:")
             grid_sizer_2.Add(label_2, 0, wx.LEFT, 5)
 
             self.list_box_2 = wx.ListBox(
@@ -119,17 +120,11 @@ class InstalledDevicesDlg(wx.Dialog):
                 grid_sizer_2.Add(sizer_6, 1, wx.ALIGN_RIGHT | wx.EXPAND, 0)
 
                 self.button_2 = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-                sizer_6.Add(
-                    self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
-                )
-                self.button_2.Bind(
-                    wx.EVT_BUTTON, self.RemoveBlueprintChangeList
-                )
+                sizer_6.Add(self.button_2, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+                self.button_2.Bind(wx.EVT_BUTTON, self.RemoveBlueprintChangeList)
 
                 self.button_1 = wx.Button(self.panel_1, wx.ID_ADD, "")
-                sizer_6.Add(
-                    self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
-                )
+                sizer_6.Add(self.button_1, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
                 self.button_1.Bind(wx.EVT_BUTTON, self.AddToBlueprintChangeList)
 
         if showBlueprintInput:
@@ -144,9 +139,7 @@ class InstalledDevicesDlg(wx.Dialog):
             grid_sizer_6 = wx.FlexGridSizer(3, 1, 0, 0)
 
             static_line_1 = wx.StaticLine(self.panel_5, wx.ID_ANY)
-            grid_sizer_6.Add(
-                static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5
-            )
+            grid_sizer_6.Add(static_line_1, 0, wx.BOTTOM | wx.EXPAND | wx.TOP, 5)
 
             sizer_5 = wx.FlexGridSizer(2, 1, 0, 0)
             grid_sizer_6.Add(sizer_5, 1, wx.EXPAND, 0)
@@ -268,11 +261,7 @@ class InstalledDevicesDlg(wx.Dialog):
             if "id" in match:
                 id = match["id"]
                 versions = getAppVersions(id, getPlayStore=True)
-                self.versions = (
-                    versions.results
-                    if not type(versions) == dict
-                    else versions["results"]
-                )
+                self.versions = versions.results if not type(versions) == dict else versions["results"]
                 for version in self.versions:
                     if hasattr(version, "version_code"):
                         self.list_box_2.Append(version.version_code, version.id)
@@ -321,15 +310,8 @@ class InstalledDevicesDlg(wx.Dialog):
         if self.list_box_1.GetSelection() >= 0:
             matches = list(
                 filter(
-                    lambda x: x["app_name"]
-                    == self.list_box_1.GetString(self.list_box_1.GetSelection())
-                    or (
-                        "appPkgName" in x
-                        and x["appPkgName"]
-                        == self.list_box_1.GetString(
-                            self.list_box_1.GetSelection()
-                        )
-                    ),
+                    lambda x: x["app_name"] == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    or ("appPkgName" in x and x["appPkgName"] == self.list_box_1.GetString(self.list_box_1.GetSelection())),
                     self.apps,
                 )
             )
@@ -392,8 +374,7 @@ class InstalledDevicesDlg(wx.Dialog):
         if queryString:
             sortedList = list(
                 filter(
-                    lambda i: queryString.lower() in i.lower()
-                    or getStrRatioSimilarity(i.lower(), queryString) > 90,
+                    lambda i: queryString.lower() in i.lower() or getStrRatioSimilarity(i.lower(), queryString) > 90,
                     self.appNameList,
                 )
             )
@@ -432,15 +413,8 @@ class InstalledDevicesDlg(wx.Dialog):
 
             matches = list(
                 filter(
-                    lambda x: x["app_name"]
-                    == self.list_box_1.GetString(self.list_box_1.GetSelection())
-                    or (
-                        "appPkgName" in x
-                        and x["appPkgName"]
-                        == self.list_box_1.GetString(
-                            self.list_box_1.GetSelection()
-                        )
-                    ),
+                    lambda x: x["app_name"] == self.list_box_1.GetString(self.list_box_1.GetSelection())
+                    or ("appPkgName" in x and x["appPkgName"] == self.list_box_1.GetString(self.list_box_1.GetSelection())),
                     self.apps,
                 )
             )
@@ -517,6 +491,7 @@ class InstalledDevicesDlg(wx.Dialog):
             wx.StaticText: normalBoldFont,
         }
         applyFontHelper(fontRules, self, self)
+
     @api_tool_decorator()
     def onEscapePressed(self, event):
         onDialogEscape(self, event)

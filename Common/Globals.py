@@ -100,27 +100,18 @@ OPEN_DIALOGS = []
 """ Actions """
 NUM_STARS = 8 if platform.system() == "Windows" else 3
 GENERAL_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "")
-    + "* " * NUM_STARS
-    + "Generate Report "
-    + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "Generate Report " + "* " * NUM_STARS: -1,
     "Generate All Reports": GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value,
     "Generate Device Report": GeneralActions.GENERATE_DEVICE_REPORT.value,
     "Generate Device & Network Report": GeneralActions.GENERATE_INFO_REPORT.value,
     "Generate App Report": GeneralActions.GENERATE_APP_REPORT.value,
-    ("\t" if platform.system() == "Windows" else "")
-    + "* " * NUM_STARS
-    + "General Actions "
-    + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "General Actions " + "* " * NUM_STARS: -1,
     "Action -> Remove Non-Whitelisted Wifi Access Point": GeneralActions.REMOVE_NON_WHITELIST_AP.value,
     "Action -> Move Selected Device(s) to new Group": GeneralActions.MOVE_GROUP.value,
 }
 
 GRID_ACTIONS = {
-    ("\t" if platform.system() == "Windows" else "")
-    + "* " * NUM_STARS
-    + "Grid Actions "
-    + "* " * NUM_STARS: -1,
+    ("\t" if platform.system() == "Windows" else "") + "* " * NUM_STARS + "Grid Actions " + "* " * NUM_STARS: -1,
     "Action -> Modify Device Alias": GridActions.MODIFY_ALIAS.value,
     "Action -> Modify Device Tags": GridActions.MODIFY_TAGS.value,
     "Action -> Move Device(s) to new Group": GridActions.MOVE_GROUP.value,
@@ -156,16 +147,12 @@ JSON_COMMAND_TYPES = [
 ESPER_LINK = "https://esper.io/"
 HELP_LINK = "https://github.com/esper-io/esper-api-support-tool/wiki"
 LATEST_UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases/latest"
-UPDATE_LINK = (
-    "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
-)
+UPDATE_LINK = "https://api.github.com/repos/esper-io/esper-api-support-tool/releases"
 BASE_REQUEST_URL = "{configuration_host}/enterprise/{enterprise_id}/"
 BASE_DEVICE_URL = BASE_REQUEST_URL + "device/{device_id}/"
 BASE_REQUEST_EXTENSION = "/?&format=json"
 DEVICE_STATUS_REQUEST_EXTENSION = "status/?&format=json&latest_event=0"
-DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = (
-    "app/?limit={limit}&app_type=ENTERPRISE"
-)
+DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&app_type=ENTERPRISE"
 DEVICE_APP_LIST_REQUEST_EXTENSION = "app/?limit={limit}&format=json"
 
 """ CSV Headers """

@@ -8,19 +8,8 @@ from Utility.Resource import applyFontHelper, onDialogEscape, setElmTheme
 
 
 class LargeTextEntryDialog(wx.Dialog):
-    def __init__(
-        self,
-        parent,
-        label,
-        title="",
-        textPlaceHolder="",
-        enableEdit=True,
-        *args,
-        **kwds
-    ):
-        kwds["style"] = (
-            kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
-        )
+    def __init__(self, parent, label, title="", textPlaceHolder="", enableEdit=True, *args, **kwds):
+        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER
         wx.Dialog.__init__(self, parent, *args, **kwds)
         self.SetSize((400, 300))
         self.SetTitle(title)
@@ -33,16 +22,12 @@ class LargeTextEntryDialog(wx.Dialog):
 
         sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
 
-        label_1 = wx.StaticText(
-            self.panel_1, wx.ID_ANY, label, style=wx.ST_ELLIPSIZE_END
-        )
+        label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, label, style=wx.ST_ELLIPSIZE_END)
         label_1.Wrap(500)
         label_1.SetToolTip(label)
         sizer_3.Add(label_1, 0, wx.ALL, 5)
 
-        self.text_ctrl_1 = wx.TextCtrl(
-            self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP
-        )
+        self.text_ctrl_1 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP)
         self.text_ctrl_1.SetValue(str(textPlaceHolder))
         self.text_ctrl_1.SetEditable(enableEdit)
         sizer_3.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)

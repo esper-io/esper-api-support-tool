@@ -97,14 +97,10 @@ class PreferencesDialog(wx.Dialog):
             choices=[],
             style=wx.LB_NEEDED_SB | wx.LB_SINGLE,
         )
-        self.list_box_1.SetFont(
-           getFont(FontStyles.NORMAL.value)
-        )
+        self.list_box_1.SetFont(getFont(FontStyles.NORMAL.value))
         sizer_4.Add(self.list_box_1, 0, wx.EXPAND, 5)
 
-        self.window_1_pane_2 = wx.ScrolledWindow(
-            self.window_1, wx.ID_ANY, style=wx.BORDER_SIMPLE | wx.TAB_TRAVERSAL
-        )
+        self.window_1_pane_2 = wx.ScrolledWindow(self.window_1, wx.ID_ANY, style=wx.BORDER_SIMPLE | wx.TAB_TRAVERSAL)
         self.window_1_pane_2.SetScrollRate(10, 10)
 
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
@@ -127,9 +123,7 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Try to prevent the device from Sleeping while running a job.",
         )
-        self.checkbox_21.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
-        )
+        self.checkbox_21.Set3StateValue(wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED)
 
         (
             _,
@@ -204,11 +198,7 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Show device entries for device that are disabled (e.g. Devices that have been wiped).",
         )
-        self.checkbox_18.Set3StateValue(
-            wx.CHK_UNCHECKED
-            if not Globals.SHOW_DISABLED_DEVICES
-            else wx.CHK_CHECKED
-        )
+        self.checkbox_18.Set3StateValue(wx.CHK_UNCHECKED if not Globals.SHOW_DISABLED_DEVICES else wx.CHK_CHECKED)
 
         (
             _,
@@ -221,11 +211,7 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "Fetches Language from the Initial Template used to provision the device.\nWill increase report generation speed.\nNot applicable for Blueprint Tenants.",
         )
-        self.checkbox_29.Set3StateValue(
-            wx.CHK_UNCHECKED
-            if not Globals.GET_DEVICE_LANGUAGE
-            else wx.CHK_CHECKED
-        )
+        self.checkbox_29.Set3StateValue(wx.CHK_UNCHECKED if not Globals.GET_DEVICE_LANGUAGE else wx.CHK_CHECKED)
 
         (
             _,
@@ -306,8 +292,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_10,
             "API Request Limit",
             wx.SpinCtrl,
-            "Maximum amount of results that the API will return. Min: %s Max: %s"
-            % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
+            "Maximum amount of results that the API will return. Min: %s Max: %s" % (Globals.MIN_LIMIT, Globals.MAX_LIMIT),
         )
         self.spin_ctrl_1.SetMin(Globals.MIN_LIMIT)
         self.spin_ctrl_1.SetMax(Globals.MAX_LIMIT)
@@ -378,9 +363,7 @@ class PreferencesDialog(wx.Dialog):
             wx.CheckBox,
             "When saving a xlxs file combine the device and network sheets.",
         )
-        self.checkbox_23.Set3StateValue(
-            wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED
-        )
+        self.checkbox_23.Set3StateValue(wx.CHK_UNCHECKED if not Globals.INHIBIT_SLEEP else wx.CHK_CHECKED)
 
         static_line_5 = wx.StaticLine(self.save, wx.ID_ANY)
         sizer_12.Add(
@@ -499,8 +482,7 @@ class PreferencesDialog(wx.Dialog):
             sizer_14,
             "Date Delta for Alias Command",
             wx.SpinCtrl,
-            "Time difference for when the Alias command schedule should end. Min: %s Max: %s"
-            % (0, Globals.ALIAS_MAX_DAY_DELTA),
+            "Time difference for when the Alias command schedule should end. Min: %s Max: %s" % (0, Globals.ALIAS_MAX_DAY_DELTA),
         )
         self.spin_ctrl_9.SetMin(0)
         self.spin_ctrl_9.SetMax(Globals.ALIAS_MAX_DAY_DELTA)
@@ -794,9 +776,7 @@ class PreferencesDialog(wx.Dialog):
 
         self.window_1_pane_1.SetSizer(sizer_4)
 
-        self.window_1.SplitVertically(
-            self.window_1_pane_1, self.window_1_pane_2
-        )
+        self.window_1.SplitVertically(self.window_1_pane_1, self.window_1_pane_2)
 
         panel_1.SetSizer(sizer_3)
 
@@ -825,10 +805,12 @@ class PreferencesDialog(wx.Dialog):
 
         exitId = wx.NewId()
         self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
-        accel_table = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('W'), exitId),
-            (wx.ACCEL_CMD, ord('W'), exitId),
-        ])
+        accel_table = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("W"), exitId),
+                (wx.ACCEL_CMD, ord("W"), exitId),
+            ]
+        )
         self.SetAcceleratorTable(accel_table)
 
         self.Fit()
@@ -869,16 +851,8 @@ class PreferencesDialog(wx.Dialog):
             "templateDialog": self.checkbox_7.IsChecked(),
             "templateUpdate": self.checkbox_7.IsChecked(),
             "commandTimeout": self.spin_ctrl_6.GetValue(),
-            "windowSize": (
-                tuple(self.parent.GetSize())
-                if self.parent
-                else Globals.MIN_SIZE
-            ),
-            "windowPosition": (
-                tuple(self.parent.GetPosition())
-                if self.parent
-                else str(wx.CENTRE)
-            ),
+            "windowSize": (tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE),
+            "windowPosition": (tuple(self.parent.GetPosition()) if self.parent else str(wx.CENTRE)),
             "isMaximized": self.parent.IsMaximized() if self.parent else False,
             "getAllApps": self.checkbox_2.IsChecked(),
             "fetchVPP": self.checkbox_33.IsChecked(),
@@ -936,12 +910,8 @@ class PreferencesDialog(wx.Dialog):
         Globals.LAST_SEEN_AS_DATE = self.prefs["lastSeenAsDate"]
         Globals.APPS_IN_DEVICE_GRID = self.prefs["appsInDeviceGrid"]
         Globals.INHIBIT_SLEEP = self.prefs["inhibitSleep"]
-        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs[
-            "appVersionNameInsteadOfCode"
-        ]
-        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs[
-            "combineDeviceAndNetworkSheets"
-        ]
+        Globals.VERSON_NAME_INSTEAD_OF_CODE = self.prefs["appVersionNameInsteadOfCode"]
+        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.prefs["combineDeviceAndNetworkSheets"]
         Globals.SHOW_GROUP_PATH = self.prefs["showGroupPath"]
         Globals.CHECK_PRERELEASES = self.prefs["prereleaseUpdate"]
         Globals.APP_FILTER = self.combobox_2.GetValue().lower()
@@ -980,9 +950,7 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
-        if (
-            uiThreadCheck(self.SetPrefs, prefs, onBoot)
-        ):
+        if uiThreadCheck(self.SetPrefs, prefs, onBoot):
             return
 
         self.prefs = prefs
@@ -997,16 +965,10 @@ class PreferencesDialog(wx.Dialog):
         else:
             self.checkbox_32.Set3StateValue(wx.CHK_CHECKED)
 
-        if (
-            "templateDialog" in self.prefs
-            and type(self.prefs["templateDialog"]) == bool
-        ):
+        if "templateDialog" in self.prefs and type(self.prefs["templateDialog"]) == bool:
             Globals.SHOW_TEMPLATE_DIALOG = self.prefs["templateDialog"]
 
-        if (
-            "templateUpdate" in self.prefs
-            and type(self.prefs["templateUpdate"]) == bool
-        ):
+        if "templateUpdate" in self.prefs and type(self.prefs["templateUpdate"]) == bool:
             Globals.SHOW_TEMPLATE_UPDATE = self.prefs["templateUpdate"]
 
         state = wx.CHK_CHECKED if Globals.SHOW_TEMPLATE_UPDATE and Globals.SHOW_TEMPLATE_DIALOG else wx.CHK_UNCHECKED
@@ -1018,11 +980,7 @@ class PreferencesDialog(wx.Dialog):
                 try:
                     size = tuple(
                         int(num)
-                        for num in self.prefs["windowSize"]
-                        .replace("(", "")
-                        .replace(")", "")
-                        .replace("...", "")
-                        .split(", ")
+                        for num in self.prefs["windowSize"].replace("(", "").replace(")", "").replace("...", "").split(", ")
                     )
                 except:
                     sizes = tuple(int(num) for num in self.prefs["windowSize"])
@@ -1041,11 +999,7 @@ class PreferencesDialog(wx.Dialog):
         if "isMaximized" in self.prefs and isinstance(self.prefs["isMaximized"], bool) and onBoot and self.parent:
             self.parent.Maximize(self.prefs["isMaximized"])
 
-        if (
-            "windowPosition" in self.prefs
-            and self.prefs["windowPosition"]
-            and onBoot
-        ):
+        if "windowPosition" in self.prefs and self.prefs["windowPosition"] and onBoot:
             if self.parent:
                 if self.prefs["windowPosition"] == "1":
                     self.parent.Centre()
@@ -1071,32 +1025,19 @@ class PreferencesDialog(wx.Dialog):
         if "colVisibility" in self.prefs:
             self.colVisibilty = self.prefs["colVisibility"]
             if self.prefs["colVisibility"]:
-                self.parent.gridPanel.grid1ColVisibility = self.prefs[
-                    "colVisibility"
-                ][0]
-            if (
-                self.prefs["colVisibility"]
-                and len(self.prefs["colVisibility"]) > 1
-            ):
-                self.parent.gridPanel.grid2ColVisibility = self.prefs[
-                    "colVisibility"
-                ][1]
+                self.parent.gridPanel.grid1ColVisibility = self.prefs["colVisibility"][0]
+            if self.prefs["colVisibility"] and len(self.prefs["colVisibility"]) > 1:
+                self.parent.gridPanel.grid2ColVisibility = self.prefs["colVisibility"][1]
 
         if "last_endpoint" in self.prefs and self.prefs["last_endpoint"]:
             Globals.LAST_OPENED_ENDPOINT = self.prefs["last_endpoint"]
         else:
             Globals.LAST_OPENED_ENDPOINT = 0
 
-        if (
-            "appColFilter" in self.prefs
-            and type(self.prefs["appColFilter"]) is list
-        ):
+        if "appColFilter" in self.prefs and type(self.prefs["appColFilter"]) is list:
             Globals.APP_COL_FILTER = self.prefs["appColFilter"]
 
-        if (
-            "scheduleSaveLocation" in self.prefs
-            and self.prefs["scheduleSaveLocation"]
-        ):
+        if "scheduleSaveLocation" in self.prefs and self.prefs["scheduleSaveLocation"]:
             self.file_location = self.prefs["scheduleSaveLocation"]
             Globals.SCHEDULE_LOCATION = self.prefs["scheduleSaveLocation"]
         else:
@@ -1104,9 +1045,7 @@ class PreferencesDialog(wx.Dialog):
 
         if "scheduleSaveType" in self.prefs and self.prefs["scheduleSaveType"]:
             Globals.SCHEDULE_SAVE = self.prefs["scheduleSaveType"]
-            self.reportSaveType.SetSelection(
-                self.reportSaveTypes.index(Globals.SCHEDULE_SAVE)
-            )
+            self.reportSaveType.SetSelection(self.reportSaveTypes.index(Globals.SCHEDULE_SAVE))
 
         # Set Checkbox Values
         self.checkBooleanValuePrefAndSet("enableDevice", self.checkbox_1, wx.CHK_UNCHECKED)
@@ -1118,47 +1057,79 @@ class PreferencesDialog(wx.Dialog):
         Globals.COMMAND_JSON_INPUT = self.checkBooleanValuePrefAndSet("useJsonForCmd", self.checkbox_12, wx.CHK_CHECKED)
         Globals.SAVE_VISIBILITY = self.checkBooleanValuePrefAndSet("saveColVisibility", self.checkbox_16, wx.CHK_UNCHECKED)
         Globals.REPLACE_SERIAL = self.checkBooleanValuePrefAndSet("replaceSerial", self.checkbox_17)
-        Globals.SHOW_DISABLED_DEVICES =  self.checkBooleanValuePrefAndSet("showDisabledDevices", self.checkbox_18, wx.CHK_UNCHECKED)
+        Globals.SHOW_DISABLED_DEVICES = self.checkBooleanValuePrefAndSet(
+            "showDisabledDevices", self.checkbox_18, wx.CHK_UNCHECKED
+        )
         Globals.LAST_SEEN_AS_DATE = self.checkBooleanValuePrefAndSet("lastSeenAsDate", self.checkbox_19, wx.CHK_CHECKED)
         Globals.APPS_IN_DEVICE_GRID = self.checkBooleanValuePrefAndSet("appsInDeviceGrid", self.checkbox_20, wx.CHK_CHECKED)
         Globals.INHIBIT_SLEEP = self.checkBooleanValuePrefAndSet("inhibitSleep", self.checkbox_21)
         Globals.VERSON_NAME_INSTEAD_OF_CODE = self.checkBooleanValuePrefAndSet("appVersionNameInsteadOfCode", self.checkbox_22)
-        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.checkBooleanValuePrefAndSet("combineDeviceAndNetworkSheets", self.checkbox_23)
+        Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS = self.checkBooleanValuePrefAndSet(
+            "combineDeviceAndNetworkSheets", self.checkbox_23
+        )
         Globals.SHOW_GROUP_PATH = self.checkBooleanValuePrefAndSet("showGroupPath", self.checkbox_24)
         Globals.CHECK_PRERELEASES = self.checkBooleanValuePrefAndSet("prereleaseUpdate", self.checkbox_25)
-        Globals.SCHEDULE_ENABLED =  self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26)
+        Globals.SCHEDULE_ENABLED = self.checkBooleanValuePrefAndSet("scheduleEnabled", self.checkbox_26)
         Globals.GET_DEVICE_LANGUAGE = self.checkBooleanValuePrefAndSet("getTemplateLanguage", self.checkbox_29)
-        Globals.SHOW_DISCLAIMER =  self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, wx.CHK_UNCHECKED)
+        Globals.SHOW_DISCLAIMER = self.checkBooleanValuePrefAndSet("showDisclaimer", self.checkbox_30, wx.CHK_UNCHECKED)
         Globals.SHOW_APP_FILTER_DIALOG = self.checkBooleanValuePrefAndSet("showAppFilter", self.checkbox_31, wx.CHK_CHECKED)
         Globals.FETCH_VPP = self.checkBooleanValuePrefAndSet("fetchVPP", self.checkbox_33, wx.CHK_UNCHECKED)
 
         # Set Combobox values
-        Globals.SCHEDULE_TYPE = self.checkStringValPrefAndSet("scheduleReportType", self.reportType, self.prefs["scheduleReportType"]).lower()
-        Globals.APP_FILTER = self.checkStringValPrefAndSet("appFilter", self.combobox_2, self.prefs["appFilter"], isValueUpper=True)
-        Globals.CMD_DEVICE_TYPE =  self.checkStringValPrefAndSet(
-            "runCommandOn", self.combobox_1, self.prefs["runCommandOn"], isValCapital=True
+        Globals.SCHEDULE_TYPE = self.checkStringValPrefAndSet(
+            "scheduleReportType", self.reportType, self.prefs["scheduleReportType"]
+        ).lower()
+        Globals.APP_FILTER = self.checkStringValPrefAndSet(
+            "appFilter", self.combobox_2, self.prefs["appFilter"], isValueUpper=True
+        )
+        Globals.CMD_DEVICE_TYPE = self.checkStringValPrefAndSet(
+            "runCommandOn",
+            self.combobox_1,
+            self.prefs["runCommandOn"],
+            isValCapital=True,
         ).lower()
 
         # Set SpinCtrl values
         Globals.SCHEDULE_INTERVAL = self.checkNumberValPrefAndSet(
-            "scheduleInterval", self.spin_ctrl_13, Globals.SCHEDULE_INTERVAL, 
-            Globals.MIN_SCHEDULE_INTERVAL, Globals.MAX_SCHEDULE_INTERVAL
+            "scheduleInterval",
+            self.spin_ctrl_13,
+            Globals.SCHEDULE_INTERVAL,
+            Globals.MIN_SCHEDULE_INTERVAL,
+            Globals.MAX_SCHEDULE_INTERVAL,
         )
         Globals.limit = self.checkNumberValPrefAndSet(
-            "limit", self.spin_ctrl_1, Globals.limit, Globals.MIN_LIMIT, Globals.MAX_LIMIT
+            "limit",
+            self.spin_ctrl_1,
+            Globals.limit,
+            Globals.MIN_LIMIT,
+            Globals.MAX_LIMIT,
         )
         Globals.COMMAND_TIMEOUT = self.checkNumberValPrefAndSet(
             "commandTimeout", self.spin_ctrl_6, Globals.COMMAND_TIMEOUT, 0, 100
         )
         Globals.FONT_SIZE = self.checkNumberValPrefAndSet(
-            "fontSize", self.spin_ctrl_10, Globals.FONT_SIZE, Globals.MIN_FONT_SIZE, Globals.MAX_FONT_SIZE
+            "fontSize",
+            self.spin_ctrl_10,
+            Globals.FONT_SIZE,
+            Globals.MIN_FONT_SIZE,
+            Globals.MAX_FONT_SIZE,
         )
-        Globals.SHEET_CHUNK_SIZE = self.checkNumberValPrefAndSet(
-            "maxSplitFileSize", self.spin_ctrl_12, Globals.SHEET_CHUNK_SIZE / 1000, 
-            Globals.MIN_SHEET_CHUNK_SIZE / 1000, Globals.MAX_SHEET_CHUNK_SIZE / 1000
-        ) * 1000
+        Globals.SHEET_CHUNK_SIZE = (
+            self.checkNumberValPrefAndSet(
+                "maxSplitFileSize",
+                self.spin_ctrl_12,
+                Globals.SHEET_CHUNK_SIZE / 1000,
+                Globals.MIN_SHEET_CHUNK_SIZE / 1000,
+                Globals.MAX_SHEET_CHUNK_SIZE / 1000,
+            )
+            * 1000
+        )
         Globals.ALIAS_DAY_DELTA = self.checkNumberValPrefAndSet(
-            "aliasDayDelta", self.spin_ctrl_9, Globals.ALIAS_DAY_DELTA, 0, Globals.ALIAS_MAX_DAY_DELTA
+            "aliasDayDelta",
+            self.spin_ctrl_9,
+            Globals.ALIAS_DAY_DELTA,
+            0,
+            Globals.ALIAS_MAX_DAY_DELTA,
         )
 
     def checkStringValPrefAndSet(self, key, combobox, default, isValueUpper=False, isValCapital=False) -> str:
@@ -1178,10 +1149,7 @@ class PreferencesDialog(wx.Dialog):
     def checkBooleanValuePrefAndSet(self, key, checkbox, default=wx.CHK_UNCHECKED):
         isEnabled = default
         if key in self.prefs:
-            if (
-                isinstance(self.prefs[key], str)
-                and self.prefs[key].lower() == "true"
-            ) or self.prefs[key] is True:
+            if (isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true") or self.prefs[key] is True:
                 checkbox.Set3StateValue(wx.CHK_CHECKED)
                 isEnabled = True
             else:
@@ -1196,7 +1164,7 @@ class PreferencesDialog(wx.Dialog):
                 isEnabled = True
 
         return isEnabled
-    
+
     def checkNumberValPrefAndSet(self, key, spinCtrl, default=0, min=0, max=None) -> int:
         if key in self.prefs and self.prefs[key]:
             try:
@@ -1250,19 +1218,11 @@ class PreferencesDialog(wx.Dialog):
         elif key == "commandTimeout":
             return Globals.COMMAND_TIMEOUT
         elif key == "windowSize":
-            return (
-                tuple(self.parent.GetSize())
-                if self.parent
-                else Globals.MIN_SIZE
-            )
+            return tuple(self.parent.GetSize()) if self.parent else Globals.MIN_SIZE
         elif key == "isMaximized":
             return self.parent.IsMaximized() if self.parent else False
         elif key == "windowPosition":
-            return (
-                tuple(self.parent.GetPosition())
-                if self.parent
-                else str(wx.CENTRE)
-            )
+            return tuple(self.parent.GetPosition()) if self.parent else str(wx.CENTRE)
         elif key == "getAllApps":
             return Globals.USE_ENTERPRISE_APP
         elif key == "showPkg":
@@ -1403,11 +1363,7 @@ class PreferencesDialog(wx.Dialog):
             textPlaceHolder=(
                 ",".join(self.appColFilter)
                 if self.appColFilter
-                else (
-                    ",".join(Globals.APP_COL_FILTER)
-                    if Globals.APP_COL_FILTER
-                    else ""
-                )
+                else (",".join(Globals.APP_COL_FILTER) if Globals.APP_COL_FILTER else "")
             ),
         ) as textDialog:
             Globals.OPEN_DIALOGS.append(textDialog)

@@ -5,8 +5,12 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (applyFontHelper, onDialogEscape,
-                              openWebLinkInBrowser, setElmTheme)
+from Utility.Resource import (
+    applyFontHelper,
+    onDialogEscape,
+    openWebLinkInBrowser,
+    setElmTheme,
+)
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -36,9 +40,7 @@ class ConfirmTextDialog(wx.Dialog):
         static_line_2 = wx.StaticLine(self.panel_8, wx.ID_ANY)
         sizer_9.Add(static_line_2, 0, wx.EXPAND, 0)
 
-        label_5 = wx.StaticText(
-            self.panel_8, wx.ID_ANY, label, style=wx.ALIGN_LEFT
-        )
+        label_5 = wx.StaticText(self.panel_8, wx.ID_ANY, label, style=wx.ALIGN_LEFT)
         label_5.Wrap(500)
         sizer_9.Add(label_5, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
 
@@ -46,13 +48,7 @@ class ConfirmTextDialog(wx.Dialog):
             self,
             wx.ID_ANY,
             detail,
-            style=wx.HSCROLL
-            | wx.TE_LEFT
-            | wx.TE_MULTILINE
-            | wx.TE_READONLY
-            | wx.TE_WORDWRAP
-            | wx.TE_BESTWRAP
-            | wx.TE_AUTO_URL,
+            style=wx.HSCROLL | wx.TE_LEFT | wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP | wx.TE_BESTWRAP | wx.TE_AUTO_URL,
         )
         sizer_7.Add(self.text_ctrl_1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -85,9 +81,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-        self.text_ctrl_1.Bind(
-            wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser
-        )
+        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)

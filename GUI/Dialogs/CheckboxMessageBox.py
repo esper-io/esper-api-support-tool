@@ -60,9 +60,7 @@ class CheckboxMessageBox(wx.Dialog):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Do not show again")
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
-        sizer_2.Add(
-            sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5
-        )
+        sizer_2.Add(sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
         sizer_5.Add(self.okBtn, 0, wx.ALL, 5)
         sizer_5.Add(self.cancelBtn, 0, wx.ALL, 5)
         sizer_2.Add(sizer_5, 1, wx.ALIGN_BOTTOM | wx.ALL, 5)

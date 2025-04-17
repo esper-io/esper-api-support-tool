@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
 
-
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getHeader, postEventToFrame
-from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
-                                     handleRequestError,
-                                     performGetRequestWithRetry)
+from Utility.Web.WebRequests import (
+    getAllFromOffsetsRequests,
+    handleRequestError,
+    performGetRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -84,37 +85,23 @@ def getAllDevices(
                 tolarance,
                 timeout,
             )
-        postEventToFrame(
-            EventUtility.myEVT_LOG, "---> Device API Request Finished"
-        )
+        postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except Exception as e:
-        raise Exception(
-            "Exception when calling DeviceApi->get_all_devices: %s\n" % e
-        )
+        raise Exception("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
 
 
-def get_all_devices_helper(
-    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
-):
-    config = Globals.frame.sidePanel.configChoice[
-        Globals.frame.configMenuItem.GetItemLabelText()
-    ]
+def get_all_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
+    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
     iosEnabled = config["isIosEnabled"]
 
     if iosEnabled and Globals.PULL_APPLE_DEVICES:
-        return get_all_ios_devices_helper(
-            groupToUse, limit, offset, maxAttempt, responses
-        )
+        return get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt, responses)
     else:
-        return get_all_android_devices_helper(
-            groupToUse, limit, offset, maxAttempt, responses
-        )
+        return get_all_android_devices_helper(groupToUse, limit, offset, maxAttempt, responses)
 
 
-def get_all_android_devices_helper(
-    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
-):
+def get_all_android_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
     extention = "device/?limit=%s&offset=%s" % (limit, offset)
     if groupToUse.strip():
         extention = "device/?group=%s&limit=%s&offset=%s" % (
@@ -129,31 +116,22 @@ def get_all_android_devices_helper(
         )
         + extention
     )
-    api_response = performGetRequestWithRetry(
-        url, getHeader(), maxRetry=maxAttempt
-    )
+    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response and api_response.status_code < 300:
         api_response = api_response.json()
         if type(responses) == list:
             responses.append(api_response)
     else:
-        raise Exception(
-            "HTTP Response %s:\t\n%s"
-            % (api_response.status_code, api_response.content)
-        )
+        raise Exception("HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content))
     return api_response
 
 
-def get_all_ios_devices_helper(
-    groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None
-):
+def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
     extention = "?limit=%s&offset=%s" % (limit, offset)
     if groupToUse.strip():
         extention += "&group_multi=%s" % (groupToUse.strip(),)
     url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
-    api_response = performGetRequestWithRetry(
-        url, getHeader(), maxRetry=maxAttempt
-    )
+    api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
         api_response = api_response.json()
         if "content" in api_response:
@@ -161,10 +139,7 @@ def get_all_ios_devices_helper(
         if type(responses) == list:
             responses.append(api_response)
     else:
-        raise Exception(
-            "HTTP Response %s:\t\n%s"
-            % (api_response.status_code, api_response.content)
-        )
+        raise Exception("HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content))
     return api_response
 
 
@@ -198,15 +173,11 @@ def fetchDevicesFromGroup(
 ):
     api_response = None
     for group in groupToUse:
-        resp = fetchDevicesFromGroupHelper(
-            group, limit, offset, fetchAll, maxAttempt, tolarance, timeout
-        )
+        resp = fetchDevicesFromGroupHelper(group, limit, offset, fetchAll, maxAttempt, tolarance, timeout)
 
         if not api_response:
             api_response = resp
-        elif hasattr(api_response, "result") and hasattr(
-            api_response.result, "results"
-        ):
+        elif hasattr(api_response, "result") and hasattr(api_response.result, "results"):
             api_response.results += resp.results
         else:
             if resp and "content" in resp:
@@ -230,9 +201,7 @@ def fetchDevicesFromGroupHelper(
 ):
     api_response = None
     for _ in range(maxAttempt):
-        response = get_all_devices(
-            group, limit, offset, fetchAll, maxAttempt, tolarance, timeout
-        )
+        response = get_all_devices(group, limit, offset, fetchAll, maxAttempt, tolarance, timeout)
         if api_response:
             for device in response.results:
                 if device not in api_response.results:
@@ -266,17 +235,11 @@ def getDeviceById(
                     maxAttempt,
                 )
         else:
-            api_response, api_response_list = getDeviceByIdHelper(
-                deviceToUse, api_response_list, api_response, maxAttempt
-            )
+            api_response, api_response_list = getDeviceByIdHelper(deviceToUse, api_response_list, api_response, maxAttempt)
         if do_join:
             Globals.THREAD_POOL.join(tolerance=tolerance)
         Globals.THREAD_POOL.results()
-        if (
-            api_response
-            and api_response_list
-            and hasattr(api_response, "results")
-        ):
+        if api_response and api_response_list and hasattr(api_response, "results"):
             api_response.results = api_response_list
         elif api_response and hasattr(api_response, "results"):
             api_response.results = [api_response]
@@ -291,18 +254,14 @@ def getDeviceById(
                 "previous": None,
             }
         if log:
-            postEventToFrame(
-                EventUtility.myEVT_LOG, "---> Device API Request Finished"
-            )
+            postEventToFrame(EventUtility.myEVT_LOG, "---> Device API Request Finished")
         return api_response
     except Exception as e:
         print("Exception when calling DeviceApi->get_device_by_id: %s\n" % e)
         ApiToolLog().LogError(e, postStatus=False)
 
 
-def getDeviceByIdHelper(
-    device, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY
-):
+def getDeviceByIdHelper(device, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY):
     for attempt in range(maxAttempt):
         try:
             url = Globals.BASE_DEVICE_URL.format(
@@ -310,9 +269,7 @@ def getDeviceByIdHelper(
                 enterprise_id=Globals.enterprise_id,
                 device_id=device,
             )
-            api_response = performGetRequestWithRetry(
-                url, getHeader(), maxRetry=maxAttempt
-            )
+            api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
             if api_response.status_code < 300:
                 api_response = api_response.json()
             break
@@ -390,10 +347,7 @@ def searchForDevice(
         if "content" in api_response:
             api_response = api_response["content"]
     else:
-        raise Exception(
-            "HTTP Response %s:\t\n%s"
-            % (api_response.status_code, api_response.content)
-        )
+        raise Exception("HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content))
     return api_response
 
 
@@ -404,10 +358,6 @@ def getProperDeviceId(devices):
             properDeviceList.append(device)
         else:
             json_rsp = searchForDevice(search=device)
-            if (
-                "results" in json_rsp
-                and json_rsp["results"]
-                and "id" in json_rsp["results"][0]["id"]
-            ):
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
                 properDeviceList.append(json_rsp["results"][0]["id"])
     return devices

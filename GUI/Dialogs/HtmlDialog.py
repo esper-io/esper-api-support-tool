@@ -7,13 +7,7 @@ from Utility.Resource import applyFontHelper, onDialogEscape
 
 
 class HtmlDialog(wx.Dialog):
-    def __init__(
-        self,
-        showCheckbox=False,
-        checkboxLabel="Don't show this again",
-        *args,
-        **kwds
-    ):
+    def __init__(self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds):
         super(HtmlDialog, self).__init__(
             Globals.frame,
             wx.ID_ANY,

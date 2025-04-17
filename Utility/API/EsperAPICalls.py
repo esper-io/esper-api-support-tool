@@ -14,9 +14,11 @@ from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import postEsperCommand, waitForCommandToFinish
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (handleRequestError,
-                                     performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
+from Utility.Web.WebRequests import (
+    handleRequestError,
+    performGetRequestWithRetry,
+    performPatchRequestWithRetry,
+)
 
 
 @api_tool_decorator()
@@ -61,9 +63,7 @@ def patchInfo(request_extension, deviceid, data=None, jsonData=None, tags=None):
         except Exception as e:
             print(e)
 
-    resp = performPatchRequestWithRetry(
-        url, headers=headers, data=requestData, json=jsonData
-    )
+    resp = performPatchRequestWithRetry(url, headers=headers, data=requestData, json=jsonData)
     json_resp = resp.json()
     logBadResponse(url, resp, json_resp)
     return json_resp
@@ -112,23 +112,17 @@ def setdevicename(
         ),
     )
     resp, status = postEsperCommand(command.to_dict(), maxAttempt=maxAttempt)
-    return resp.json(), waitForCommandToFinish(
-        status["id"], ignoreQueue=ignoreQueue
-    )
+    return resp.json(), waitForCommandToFinish(status["id"], ignoreQueue=ignoreQueue)
 
 
 @api_tool_decorator()
-def validateConfiguration(
-    host, entId, key, prefix="Bearer", maxAttempt=Globals.MAX_RETRY
-):
+def validateConfiguration(host, entId, key, prefix="Bearer", maxAttempt=Globals.MAX_RETRY):
     configuration = esperclient.Configuration()
     configuration.host = host
     configuration.api_key["Authorization"] = key
     configuration.api_key_prefix["Authorization"] = prefix
 
-    api_instance = esperclient.EnterpriseApi(
-        esperclient.ApiClient(configuration)
-    )
+    api_instance = esperclient.EnterpriseApi(esperclient.ApiClient(configuration))
     enterprise_id = entId
 
     try:
@@ -155,17 +149,13 @@ def validateConfiguration(
 
 
 def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.EnterpriseApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
+    api_instance = esperclient.EnterpriseApi(esperclient.ApiClient(Globals.configuration))
     try:
         api_response = None
         for attempt in range(maxAttempt):
             try:
                 enforceRateLimit()
-                api_response = api_instance.get_enterprise(
-                    Globals.enterprise_id
-                )
+                api_response = api_instance.get_enterprise(Globals.enterprise_id)
                 ApiToolLog().LogApiRequestOccurrence(
                     "validateConfiguration",
                     api_instance.get_enterprise,
@@ -181,9 +171,7 @@ def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
 
 
 @api_tool_decorator()
-def getIosDeviceApps(
-    deviceId, limit=None, offset=0, appType=None, createAppListArg=True
-):
+def getIosDeviceApps(deviceId, limit=None, offset=0, appType=None, createAppListArg=True):
     url = "%s/v2/devices/%s/device-apps/" % (
         Globals.configuration.host,
         deviceId,
@@ -205,15 +193,9 @@ def getIosDeviceApps(
 def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
     """Retrieves List Of Installed Apps"""
     extention = (
-        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION
-        if useEnterprise
-        else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
+        Globals.DEVICE_ENTERPRISE_APP_LIST_REQUEST_EXTENSION if useEnterprise else Globals.DEVICE_APP_LIST_REQUEST_EXTENSION
     )
-    hasFormat = [
-        tup[1]
-        for tup in string.Formatter().parse(extention)
-        if tup[1] is not None
-    ]
+    hasFormat = [tup[1] for tup in string.Formatter().parse(extention) if tup[1] is not None]
     if hasFormat:
         if "limit" in hasFormat:
             extention = extention.format(limit=Globals.limit)
@@ -224,54 +206,31 @@ def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
 
 def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
     applist = []
-    if (
-        json_resp
-        and "results" in json_resp
-        and json_resp["results"]
-        and len(json_resp["results"])
-    ):
+    if json_resp and "results" in json_resp and json_resp["results"] and len(json_resp["results"]):
         for app in json_resp["results"]:
-            if (
-                "install_state" in app
-                and "uninstall" in app["install_state"].lower()
-            ) or (
-                hasattr(app, "install_state")
-                and "uninstall" in app.install_state.lower()
+            if ("install_state" in app and "uninstall" in app["install_state"].lower()) or (
+                hasattr(app, "install_state") and "uninstall" in app.install_state.lower()
             ):
                 continue
             if "application" in app:
                 pkgName = app["application"]["package_name"]
-                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and pkgName not in Globals.APP_COL_FILTER
-                ):
+                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (filterData and pkgName not in Globals.APP_COL_FILTER):
                     continue
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
-                        app["application"]["version"]["version_name"][
-                            1 : len(
-                                app["application"]["version"]["version_name"]
-                            )
-                        ]
+                        app["application"]["version"]["version_name"][1 : len(app["application"]["version"]["version_name"])]
                         if (
                             app["application"]["version"]["version_name"]
-                            and app["application"]["version"][
-                                "version_name"
-                            ].startswith("v")
+                            and app["application"]["version"]["version_name"].startswith("v")
                         )
                         else app["application"]["version"]["version_name"]
                     )
                 else:
                     version = (
-                        app["application"]["version"]["version_code"][
-                            1 : len(
-                                app["application"]["version"]["version_code"]
-                            )
-                        ]
+                        app["application"]["version"]["version_code"][1 : len(app["application"]["version"]["version_code"])]
                         if (
                             app["application"]["version"]["version_code"]
-                            and app["application"]["version"][
-                                "version_code"
-                            ].startswith("v")
+                            and app["application"]["version"]["version_code"].startswith("v")
                         )
                         else app["application"]["version"]["version_code"]
                     )
@@ -280,34 +239,26 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 applist.append(constructAppPkgVerStr(appName, pkgName, version))
             elif app.get("package_name") is not None and not isAppleApp(app):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData
-                    and app["package_name"] not in Globals.APP_COL_FILTER
+                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 version = None
                 if Globals.VERSON_NAME_INSTEAD_OF_CODE:
                     version = (
                         app["version_name"][1 : len(app["version_name"])]
-                        if app["version_name"]
-                        and app["version_name"].startswith("v")
+                        if app["version_name"] and app["version_name"].startswith("v")
                         else app["version_name"]
                     )
                 else:
                     version = (
                         app["version_code"][1 : len(app["version_code"])]
-                        if app["version_code"]
-                        and app["version_code"].startswith("v")
+                        if app["version_code"] and app["version_code"].startswith("v")
                         else app["version_code"]
                     )
-                applist.append(
-                    constructAppPkgVerStr(
-                        app["app_name"], app["package_name"], version
-                    )
-                )
+                applist.append(constructAppPkgVerStr(app["app_name"], app["package_name"], version))
             elif app.get("package_name") is not None and isAppleApp(app):
                 if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData
-                    and app["package_name"] not in Globals.APP_COL_FILTER
+                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 applist.append(
@@ -319,8 +270,7 @@ def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
                 )
             elif app.get("bundle_id") is not None and isAppleApp(app):
                 if app["bundle_id"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData
-                    and app["bundle_id"] not in Globals.APP_COL_FILTER
+                    filterData and app["bundle_id"] not in Globals.APP_COL_FILTER
                 ):
                     continue
                 applist.append(
@@ -342,9 +292,7 @@ def isAppleApp(app):
 
 
 def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
+    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
     api_response = None
     for attempt in range(maxAttempt):
         try:

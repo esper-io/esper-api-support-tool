@@ -8,8 +8,7 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from Utility.FileUtility import write_data_to_csv
-from Utility.Resource import (applyFontHelper, getFont, resourcePath,
-                              scale_bitmap)
+from Utility.Resource import applyFontHelper, getFont, resourcePath, scale_bitmap
 
 
 class SidePanel(wx.Panel):
@@ -68,9 +67,7 @@ class SidePanel(wx.Panel):
             "",
             style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
-        sizer_2.Add(
-            self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3
-        )
+        sizer_2.Add(self.configList, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 3)
 
         static_line_4 = wx.StaticLine(self, wx.ID_ANY)
         sizer_1.Add(
@@ -90,9 +87,7 @@ class SidePanel(wx.Panel):
         grid_sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
         self.groupChoice = wx.Button(self.panel_8, wx.ID_ANY, "Select Group(s)")
-        self.groupChoice.SetToolTip(
-            "Select which group(s) you wish to run an action on."
-        )
+        self.groupChoice.SetToolTip("Select which group(s) you wish to run an action on.")
         self.groupChoice.SetFocus()
         grid_sizer_6.Add(self.groupChoice, 0, wx.EXPAND | wx.TOP, 5)
 
@@ -101,9 +96,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_8 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedGroups = wx.ListBox(
-            self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
-        )
+        self.selectedGroups = wx.ListBox(self.panel_13, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
         self.selectedGroups.SetToolTip("Currently Selected Group(s)")
         grid_sizer_8.Add(self.selectedGroups, 0, wx.EXPAND, 0)
 
@@ -112,12 +105,8 @@ class SidePanel(wx.Panel):
 
         grid_sizer_3 = wx.BoxSizer(wx.VERTICAL)
 
-        self.deviceChoice = wx.Button(
-            self.panel_9, wx.ID_ANY, "Select Device(s) [Optional]"
-        )
-        self.deviceChoice.SetToolTip(
-            "Select which device(s) you specifically wish to run an action on, optional."
-        )
+        self.deviceChoice = wx.Button(self.panel_9, wx.ID_ANY, "Select Device(s) [Optional]")
+        self.deviceChoice.SetToolTip("Select which device(s) you specifically wish to run an action on, optional.")
         grid_sizer_3.Add(self.deviceChoice, 0, wx.EXPAND | wx.TOP, 5)
 
         self.panel_12 = wx.Panel(self.panel_9, wx.ID_ANY)
@@ -125,9 +114,7 @@ class SidePanel(wx.Panel):
 
         grid_sizer_7 = wx.GridSizer(1, 1, 0, 0)
 
-        self.selectedDevices = wx.ListBox(
-            self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL
-        )
+        self.selectedDevices = wx.ListBox(self.panel_12, wx.ID_ANY, choices=[], style=wx.LB_HSCROLL)
         self.selectedDevices.SetToolTip("Currently Selected Device(s)")
         grid_sizer_7.Add(self.selectedDevices, 0, wx.EXPAND, 0)
 
@@ -209,27 +196,18 @@ class SidePanel(wx.Panel):
         self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
         self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
 
-        self.deviceChoice.Bind(
-            wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice
-        )
+        self.deviceChoice.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
 
     @api_tool_decorator()
     def RemoveEndpoint(self, event):
         value = None
-        if (
-            event.GetEventType() == wx.EVT_BUTTON.typeId
-            and event.Id == wx.ID_DELETE
-        ) or event.KeyCode == wx.WXK_DELETE:
+        if (event.GetEventType() == wx.EVT_BUTTON.typeId and event.Id == wx.ID_DELETE) or event.KeyCode == wx.WXK_DELETE:
             value = self.configList.GetValue()
             value = value.split("\n")
             # TODO: Search for entry based on host url instead of enterprise id
             if len(value) > 0:
                 value = value[0].replace("API Host = ", "").strip()
-            result = list(
-                filter(
-                    lambda x: value == x["apiHost"], self.parentFrame.auth_data
-                )
-            )
+            result = list(filter(lambda x: value == x["apiHost"], self.parentFrame.auth_data))
             if result:
                 result = result[0]
             if value:
@@ -242,9 +220,7 @@ class SidePanel(wx.Panel):
                 if res == wx.YES:
                     if result in self.parentFrame.auth_data:
                         self.parentFrame.auth_data.remove(result)
-                    data = [
-                        ["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]
-                    ]
+                    data = [["name", "apiHost", "enterprise", "apiKey", "apiPrefix"]]
                     for entry in self.parentFrame.auth_data:
                         authEntry = []
                         num = 0
@@ -256,13 +232,8 @@ class SidePanel(wx.Panel):
                         if authEntry not in data:
                             data.append(authEntry)
                     write_data_to_csv(self.parentFrame.authPath, data)
-                    for (
-                        child
-                    ) in self.parentFrame.menubar.configMenu.GetMenuItems():
-                        if (
-                            value
-                            in self.configChoice[child.GetItemLabel()].values()
-                        ):
+                    for child in self.parentFrame.menubar.configMenu.GetMenuItems():
+                        if value in self.configChoice[child.GetItemLabel()].values():
                             self.parentFrame.menubar.configMenu.Delete(child)
                     self.parentFrame.PopulateConfig()
                     wx.MessageBox(
@@ -296,10 +267,7 @@ class SidePanel(wx.Panel):
             newChoices = []
             for choice in choices:
                 match = self.groupDeviceCount.get(choice)
-                if (
-                    match is not None
-                    and choice != Globals.ALL_DEVICES_IN_TENANT
-                ):
+                if match is not None and choice != Globals.ALL_DEVICES_IN_TENANT:
                     newChoices.append("%s (Device Count: %s)" % (choice, match))
                 elif choice == Globals.ALL_DEVICES_IN_TENANT:
                     newChoices.append(Globals.ALL_DEVICES_IN_TENANT)
@@ -323,11 +291,7 @@ class SidePanel(wx.Panel):
                 if selections:
                     for groupName in selections:
                         groupNameProper = groupName.split(" (Device Count:")[0]
-                        groupId = (
-                            self.groups[groupNameProper]
-                            if groupNameProper in self.groups
-                            else groupNameProper
-                        )
+                        groupId = self.groups[groupNameProper] if groupNameProper in self.groups else groupNameProper
                         self.selectedGroups.Append(groupName)
                         if groupNameProper.lower() == "all devices":
                             self.selectedGroups.Clear()
