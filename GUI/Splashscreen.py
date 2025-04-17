@@ -27,7 +27,7 @@ class MySplashScreen(SplashScreen):
             id=-1,
             pos=wx.DefaultPosition,
             size=wx.DefaultSize,
-            style=wx.STAY_ON_TOP | wx.BORDER_NONE,
+            style=wx.BORDER_NONE,
         )
 
         self.CenterOnScreen(wx.BOTH)
@@ -36,6 +36,5 @@ class MySplashScreen(SplashScreen):
         self.Bind(wx.EVT_CLOSE, self.OnExit)
 
     def OnExit(self, event):
-        event.Skip()
         if not Globals.frame:
             Globals.frame = FrameLayout(self)
