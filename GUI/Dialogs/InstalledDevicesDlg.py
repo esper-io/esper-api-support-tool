@@ -6,8 +6,8 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.AppUtilities import getAppVersions
-from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
-                              setElmTheme)
+from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
+                              getStrRatioSimilarity, setElmTheme)
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -238,6 +238,7 @@ class InstalledDevicesDlg(wx.Dialog):
         if self.otherPkgInput:
             self.otherPkgInput.Bind(wx.EVT_CHAR, self.onOtherPkgInput)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
     @api_tool_decorator()
     def onClose(self, event):
@@ -516,3 +517,8 @@ class InstalledDevicesDlg(wx.Dialog):
             wx.StaticText: normalBoldFont,
         }
         applyFontHelper(fontRules, self, self)
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

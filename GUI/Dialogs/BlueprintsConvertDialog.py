@@ -10,8 +10,9 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (applyFontHelper, getEsperConfig, getFont,
-                              openWebLinkInBrowser, setElmTheme, uiThreadCheck)
+from Utility.Resource import (applyFontHelper, determineKeyEventClose,
+                              getEsperConfig, getFont, openWebLinkInBrowser,
+                              setElmTheme, uiThreadCheck)
 
 
 class BlueprintsConvertDialog(wx.Dialog):
@@ -174,6 +175,7 @@ class BlueprintsConvertDialog(wx.Dialog):
         self.combo_box_3.Bind(wx.EVT_COMBOBOX, self.loadTemplates)
         self.combo_box_4.Bind(wx.EVT_COMBOBOX, self.loadTemplatePreview)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.changeCursorToWait()
         self.combo_box_3.Enable(False)
@@ -355,3 +357,9 @@ class BlueprintsConvertDialog(wx.Dialog):
             wx.StaticText: normalBoldFont,
         }
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

@@ -9,8 +9,9 @@ import Common.Globals as Globals
 import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
-                              openWebLinkInBrowser, setElmTheme, uiThreadCheck)
+from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
+                              getStrRatioSimilarity, openWebLinkInBrowser,
+                              setElmTheme, uiThreadCheck)
 
 
 class TemplateDialog(wx.Dialog):
@@ -174,6 +175,7 @@ class TemplateDialog(wx.Dialog):
         if hasattr(self.parent, "WINDOWS") and self.parent.WINDOWS:
             self.list_box_1.Bind(wx.EVT_LISTBOX_DCLICK, self.OnSelection)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.__set_properties()
 
@@ -353,3 +355,9 @@ class TemplateDialog(wx.Dialog):
             wx.StaticText: normalBoldFont,
         }
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

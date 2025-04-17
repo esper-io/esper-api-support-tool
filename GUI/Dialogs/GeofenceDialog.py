@@ -12,8 +12,9 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (displayFileDialog, displayMessageBox, getFont,
-                              getHeader, setElmTheme, uiThreadCheck)
+from Utility.Resource import (determineKeyEventClose, displayFileDialog,
+                              displayMessageBox, getFont, getHeader,
+                              setElmTheme, uiThreadCheck)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -173,6 +174,7 @@ class GeofenceDialog(wx.Dialog):
         self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.applyGridSettings()
 
@@ -468,15 +470,22 @@ class GeofenceDialog(wx.Dialog):
         self.applyFontHelper(self, normalFont, headerBold)
 
     def applyFontHelper(self, elm, font, headerBold):
-        childen = elm.GetChildren()
-        for child in childen:
-            if hasattr(child, "SetFont"):
-                if (
-                    hasattr(child, "GetLabelText")
-                    and self.dialog_title == child.GetLabelText()
-                ):
-                    child.SetFont(headerBold)
-                else:
-                    child.SetFont(font)
+        if self:
+            childen = elm.GetChildren()
+            for child in childen:
+                if hasattr(child, "SetFont"):
+                    if (
+                        hasattr(child, "GetLabelText")
+                        and self.dialog_title == child.GetLabelText()
+                    ):
+                        child.SetFont(headerBold)
+                    else:
+                        child.SetFont(font)
 
-            self.applyFontHelper(child, font, headerBold)
+                self.applyFontHelper(child, font, headerBold)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

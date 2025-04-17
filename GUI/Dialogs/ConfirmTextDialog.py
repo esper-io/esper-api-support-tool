@@ -6,8 +6,8 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, getFont, openWebLinkInBrowser,
-                              setElmTheme)
+from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -92,6 +92,7 @@ class ConfirmTextDialog(wx.Dialog):
         self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
         self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Fit()
 
@@ -106,3 +107,9 @@ class ConfirmTextDialog(wx.Dialog):
     def applyFontSize(self):
         fontRules = {}
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

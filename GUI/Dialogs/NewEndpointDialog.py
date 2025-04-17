@@ -7,7 +7,8 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import applyFontHelper, openWebLinkInBrowser, setElmTheme
+from Utility.Resource import (applyFontHelper, determineKeyEventClose,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -120,6 +121,7 @@ class NewEndpointDialog(wx.Dialog):
         self.Centre()
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Fit()
 
@@ -199,3 +201,9 @@ class NewEndpointDialog(wx.Dialog):
     def applyFontSize(self):
         fontRules = {}
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

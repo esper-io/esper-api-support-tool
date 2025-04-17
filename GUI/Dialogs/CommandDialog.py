@@ -11,7 +11,9 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import applyFontHelper, displayMessageBox, setElmTheme
+from Common.enum import FontStyles
+from Utility.Resource import (applyFontHelper, determineKeyEventClose,
+                              displayMessageBox, getFont, setElmTheme)
 
 
 class CommandDialog(wx.Dialog):
@@ -37,6 +39,7 @@ class CommandDialog(wx.Dialog):
         self.Fit()
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
     def createJsonWindowView(self, title, value):
         self.SetSize((500, 400))
@@ -779,3 +782,9 @@ class CommandDialog(wx.Dialog):
     def applyFontSize(self):
         fontRules = {}
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

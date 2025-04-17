@@ -4,7 +4,8 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import applyFontHelper, setElmTheme
+from Utility.Resource import (applyFontHelper, determineKeyEventClose,
+                              setElmTheme)
 
 
 class LargeTextEntryDialog(wx.Dialog):
@@ -69,6 +70,7 @@ class LargeTextEntryDialog(wx.Dialog):
         self.SetEscapeId(self.button_CANCEL.GetId())
         self.text_ctrl_1.Bind(wx.EVT_KEY_DOWN, self.onKey)
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.applyFontSize()
         setElmTheme(self)
@@ -116,3 +118,9 @@ class LargeTextEntryDialog(wx.Dialog):
     def applyFontSize(self):
         fontRules = {}
         applyFontHelper(fontRules, self, self)
+
+    @api_tool_decorator()
+    def onEscapePressed(self, event):
+        if determineKeyEventClose(event):
+            self.onClose(event)
+        event.Skip()

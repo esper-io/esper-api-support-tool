@@ -195,6 +195,7 @@ class WidgetPicker(wx.Dialog):
         self.SetAcceleratorTable(accel_table)
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
