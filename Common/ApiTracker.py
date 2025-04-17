@@ -24,6 +24,7 @@ API_REQUEST_TRACKER = {
     "/devicetemplate": 0,
     "/itunesapps": 0,
     "/tenant-apps": 0,
+    "/authz2": 0
 }
 
 API_FUNCTIONS = {
@@ -81,7 +82,7 @@ API_FUNCTIONS = {
     "get_token_info": "/token",
     "renew_token": "/token",
     "feature_flags": "/feature-flags",
-    "authz": "/authz2/",
+    "authz": "/authz2",
     "tenant-apps": "/tenant-apps",
     "itunesapps": "/itunesapps",
 }
