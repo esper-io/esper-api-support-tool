@@ -4,8 +4,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (applyFontHelper, determineKeyEventClose,
-                              setElmTheme)
+from Utility.Resource import applyFontHelper, onDialogEscape, setElmTheme
 
 
 class LargeTextEntryDialog(wx.Dialog):
@@ -121,6 +120,4 @@ class LargeTextEntryDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

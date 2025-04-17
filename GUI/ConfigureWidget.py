@@ -9,8 +9,8 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (applyFontHelper, determineKeyEventClose,
-                              displayFileDialog, getFont, setElmTheme)
+from Utility.Resource import (applyFontHelper, displayFileDialog, getFont,
+                              onDialogEscape, setElmTheme)
 
 
 class WidgetPicker(wx.Dialog):
@@ -199,9 +199,7 @@ class WidgetPicker(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)
 
     @api_tool_decorator()
     def onClose(self, event):

@@ -10,8 +10,8 @@ import Utility.API.EsperTemplateUtil as templateUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (applyFontHelper, determineKeyEventClose,
-                              getEsperConfig, getFont, openWebLinkInBrowser,
+from Utility.Resource import (applyFontHelper, getEsperConfig, getFont,
+                              onDialogEscape, openWebLinkInBrowser,
                               setElmTheme, uiThreadCheck)
 
 
@@ -360,6 +360,4 @@ class BlueprintsConvertDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

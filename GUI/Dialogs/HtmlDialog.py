@@ -3,9 +3,7 @@ import wx.html as html
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
-                              setElmTheme)
+from Utility.Resource import applyFontHelper, onDialogEscape
 
 
 class HtmlDialog(wx.Dialog):
@@ -68,6 +66,4 @@ class HtmlDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

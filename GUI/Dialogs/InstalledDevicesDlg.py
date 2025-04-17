@@ -6,8 +6,8 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.AppUtilities import getAppVersions
-from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
-                              getStrRatioSimilarity, setElmTheme)
+from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
+                              onDialogEscape, setElmTheme)
 
 
 class InstalledDevicesDlg(wx.Dialog):
@@ -519,6 +519,4 @@ class InstalledDevicesDlg(wx.Dialog):
         applyFontHelper(fontRules, self, self)
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

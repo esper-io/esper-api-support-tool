@@ -11,8 +11,8 @@ from Common.enum import FontStyles
 from Utility.API.BlueprintUtility import (getAllBlueprintsFromHost,
                                           getGroupBlueprintDetailForHost)
 from Utility.API.GroupUtility import getDeviceGroupsForHost
-from Utility.Resource import (applyFontHelper, determineKeyEventClose,
-                              getEsperConfig, getFont, openWebLinkInBrowser,
+from Utility.Resource import (applyFontHelper, getEsperConfig, getFont,
+                              onDialogEscape, openWebLinkInBrowser,
                               setElmTheme, uiThreadCheck)
 
 
@@ -361,6 +361,4 @@ class BlueprintsDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

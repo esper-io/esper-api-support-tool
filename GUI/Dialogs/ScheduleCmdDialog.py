@@ -8,7 +8,7 @@ import wx.adv
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import determineKeyEventClose, getFont, setElmTheme
+from Utility.Resource import getFont, onDialogEscape, setElmTheme
 
 
 class ScheduleCmdDialog(wx.Dialog):
@@ -271,6 +271,4 @@ class ScheduleCmdDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

@@ -12,8 +12,8 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (applyFontHelper, determineKeyEventClose,
-                              displayMessageBox, getFont, setElmTheme)
+from Utility.Resource import (applyFontHelper, displayMessageBox, getFont,
+                              onDialogEscape, setElmTheme)
 
 
 class CommandDialog(wx.Dialog):
@@ -785,6 +785,4 @@ class CommandDialog(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)

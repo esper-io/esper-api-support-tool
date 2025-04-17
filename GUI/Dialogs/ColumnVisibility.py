@@ -6,8 +6,8 @@ from Common import Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.TabPanel import TabPanel
-from Utility.Resource import (applyFontHelper, determineKeyEventClose, getFont,
-                              getStrRatioSimilarity, setElmTheme)
+from Utility.Resource import (applyFontHelper, getFont, getStrRatioSimilarity,
+                              onDialogEscape, setElmTheme)
 
 
 class ColumnVisibility(wx.Dialog):
@@ -275,6 +275,4 @@ class ColumnVisibility(wx.Dialog):
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
-        if determineKeyEventClose(event):
-            self.onClose(event)
-        event.Skip()
+        onDialogEscape(self, event)
