@@ -15,6 +15,7 @@ from Utility.Resource import getFont, onDialogEscape, uiThreadCheck
 
 class PreferencesDialog(wx.Dialog):
     def __init__(self, parent=None):
+        self.ready = False
         self.size = (900, 500)
         super(PreferencesDialog, self).__init__(
             parent,
@@ -814,6 +815,7 @@ class PreferencesDialog(wx.Dialog):
         self.SetAcceleratorTable(accel_table)
 
         self.Fit()
+        self.ready = True
 
     @api_tool_decorator()
     def onEscapePressed(self, event):
@@ -950,6 +952,10 @@ class PreferencesDialog(wx.Dialog):
 
     @api_tool_decorator()
     def SetPrefs(self, prefs, onBoot=True):
+        if not self.ready:
+            wx.CallLater(100, self.SetPrefs, prefs, onBoot)
+            return
+
         if uiThreadCheck(self.SetPrefs, prefs, onBoot):
             return
 
