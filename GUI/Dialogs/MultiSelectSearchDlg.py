@@ -333,7 +333,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         # CTRL + V
         elif event.ControlDown() and keycode == 86:
             self.on_paste(event)
-        elif onDialogEscape(event):
+        elif onDialogEscape(self, event):
             self.onClose(event)
         else:
             self.onChar(event)
