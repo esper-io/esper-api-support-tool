@@ -117,97 +117,99 @@ class EnhancedStatusBar(wx.StatusBar):
 
         Actually, All The Calculations Linked To HorizontalAlignment And
         VerticalAlignment Are Done In This Function."""
+        try:
+            for pos in list(self._items):
+                item = self._items[pos]
+                widget, horizontalalignment, verticalalignment = (
+                    item.widget,
+                    item.horizontalalignment,
+                    item.verticalalignment,
+                )
 
-        for pos in list(self._items):
-            item = self._items[pos]
-            widget, horizontalalignment, verticalalignment = (
-                item.widget,
-                item.horizontalalignment,
-                item.verticalalignment,
-            )
+                rect = self.GetFieldRect(pos)
+                # widgetpos = widget.GetPosition()
+                widgetsize = widget.GetSize()
 
-            rect = self.GetFieldRect(pos)
-            # widgetpos = widget.GetPosition()
-            widgetsize = widget.GetSize()
+                rect = self.GetFieldRect(pos)
 
-            rect = self.GetFieldRect(pos)
+                if horizontalalignment == ESB_EXACT_FIT:
 
-            if horizontalalignment == ESB_EXACT_FIT:
-
-                if verticalalignment == ESB_EXACT_FIT:
-                    widget.SetSize((rect.width - 2, rect.height - 2))
-                    widget.SetPosition((rect.x - 1, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
-                    if widgetsize[1] < rect.width - 1:
-                        diffs = (rect.height - widgetsize[1]) / 2
-                        widget.SetSize((rect.width - 2, widgetsize[1]))
-                        widget.SetPosition((rect.x - 1, rect.y + diffs))
-                    else:
-                        widget.SetSize((rect.width - 2, widgetsize[1]))
+                    if verticalalignment == ESB_EXACT_FIT:
+                        widget.SetSize((rect.width - 2, rect.height - 2))
                         widget.SetPosition((rect.x - 1, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_TOP:
-                    widget.SetSize((rect.width - 2, widgetsize[1]))
-                    widget.SetPosition((rect.x - 1, rect.y))
-                elif verticalalignment == ESB_ALIGN_BOTTOM:
-                    widget.SetSize((rect.width - 2, widgetsize[1]))
-                    widget.SetPosition((rect.x - 1, rect.height - widgetsize[1]))
+                    elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
+                        if widgetsize[1] < rect.width - 1:
+                            diffs = (rect.height - widgetsize[1]) / 2
+                            widget.SetSize((rect.width - 2, widgetsize[1]))
+                            widget.SetPosition((rect.x - 1, rect.y + diffs))
+                        else:
+                            widget.SetSize((rect.width - 2, widgetsize[1]))
+                            widget.SetPosition((rect.x - 1, rect.y - 1))
+                    elif verticalalignment == ESB_ALIGN_TOP:
+                        widget.SetSize((rect.width - 2, widgetsize[1]))
+                        widget.SetPosition((rect.x - 1, rect.y))
+                    elif verticalalignment == ESB_ALIGN_BOTTOM:
+                        widget.SetSize((rect.width - 2, widgetsize[1]))
+                        widget.SetPosition((rect.x - 1, rect.height - widgetsize[1]))
 
-            elif horizontalalignment == ESB_ALIGN_LEFT:
+                elif horizontalalignment == ESB_ALIGN_LEFT:
 
-                xpos = rect.x - 1
-                if verticalalignment == ESB_EXACT_FIT:
-                    widget.SetSize((widgetsize[0], rect.height - 2))
-                    widget.SetPosition((xpos, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
-                    if widgetsize[1] < rect.height - 1:
-                        diffs = (rect.height - widgetsize[1]) / 2
-                        widget.SetPosition((xpos, rect.y + diffs))
-                    else:
+                    xpos = rect.x - 1
+                    if verticalalignment == ESB_EXACT_FIT:
                         widget.SetSize((widgetsize[0], rect.height - 2))
                         widget.SetPosition((xpos, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_TOP:
-                    widget.SetPosition((xpos, rect.y))
-                elif verticalalignment == ESB_ALIGN_BOTTOM:
-                    widget.SetPosition((xpos, rect.height - widgetsize[1]))
+                    elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
+                        if widgetsize[1] < rect.height - 1:
+                            diffs = (rect.height - widgetsize[1]) / 2
+                            widget.SetPosition((xpos, rect.y + diffs))
+                        else:
+                            widget.SetSize((widgetsize[0], rect.height - 2))
+                            widget.SetPosition((xpos, rect.y - 1))
+                    elif verticalalignment == ESB_ALIGN_TOP:
+                        widget.SetPosition((xpos, rect.y))
+                    elif verticalalignment == ESB_ALIGN_BOTTOM:
+                        widget.SetPosition((xpos, rect.height - widgetsize[1]))
 
-            elif horizontalalignment == ESB_ALIGN_RIGHT:
+                elif horizontalalignment == ESB_ALIGN_RIGHT:
 
-                xpos = rect.x + rect.width - widgetsize[0] - 1
-                if verticalalignment == ESB_EXACT_FIT:
-                    widget.SetSize((widgetsize[0], rect.height - 2))
-                    widget.SetPosition((xpos, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
-                    if widgetsize[1] < rect.height - 1:
-                        diffs = (rect.height - widgetsize[1]) / 2
-                        widget.SetPosition((xpos, rect.y + diffs))
-                    else:
+                    xpos = rect.x + rect.width - widgetsize[0] - 1
+                    if verticalalignment == ESB_EXACT_FIT:
                         widget.SetSize((widgetsize[0], rect.height - 2))
                         widget.SetPosition((xpos, rect.y - 1))
-                elif verticalalignment == ESB_ALIGN_TOP:
-                    widget.SetPosition((xpos, rect.y))
-                elif verticalalignment == ESB_ALIGN_BOTTOM:
-                    widget.SetPosition((xpos, rect.height - widgetsize[1]))
+                    elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
+                        if widgetsize[1] < rect.height - 1:
+                            diffs = (rect.height - widgetsize[1]) / 2
+                            widget.SetPosition((xpos, rect.y + diffs))
+                        else:
+                            widget.SetSize((widgetsize[0], rect.height - 2))
+                            widget.SetPosition((xpos, rect.y - 1))
+                    elif verticalalignment == ESB_ALIGN_TOP:
+                        widget.SetPosition((xpos, rect.y))
+                    elif verticalalignment == ESB_ALIGN_BOTTOM:
+                        widget.SetPosition((xpos, rect.height - widgetsize[1]))
 
-            elif horizontalalignment == ESB_ALIGN_CENTER_HORIZONTAL:
+                elif horizontalalignment == ESB_ALIGN_CENTER_HORIZONTAL:
 
-                xpos = rect.x + (rect.width - widgetsize[0]) / 2 - 1
-                if verticalalignment == ESB_EXACT_FIT:
-                    widget.SetSize((widgetsize[0], rect.height))
-                    widget.SetPosition((xpos, rect.y))
-                elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
-                    if widgetsize[1] < rect.height - 1:
-                        diffs = (rect.height - widgetsize[1]) / 2
-                        widget.SetPosition((xpos, rect.y + diffs))
-                    else:
-                        widget.SetSize((widgetsize[0], rect.height - 1))
-                        widget.SetPosition((xpos, rect.y + 1))
-                elif verticalalignment == ESB_ALIGN_TOP:
-                    widget.SetPosition((xpos, rect.y))
-                elif verticalalignment == ESB_ALIGN_BOTTOM:
-                    widget.SetPosition((xpos, rect.height - widgetsize[1]))
+                    xpos = rect.x + (rect.width - widgetsize[0]) / 2 - 1
+                    if verticalalignment == ESB_EXACT_FIT:
+                        widget.SetSize((widgetsize[0], rect.height))
+                        widget.SetPosition((xpos, rect.y))
+                    elif verticalalignment == ESB_ALIGN_CENTER_VERTICAL:
+                        if widgetsize[1] < rect.height - 1:
+                            diffs = (rect.height - widgetsize[1]) / 2
+                            widget.SetPosition((xpos, rect.y + diffs))
+                        else:
+                            widget.SetSize((widgetsize[0], rect.height - 1))
+                            widget.SetPosition((xpos, rect.y + 1))
+                    elif verticalalignment == ESB_ALIGN_TOP:
+                        widget.SetPosition((xpos, rect.y))
+                    elif verticalalignment == ESB_ALIGN_BOTTOM:
+                        widget.SetPosition((xpos, rect.height - widgetsize[1]))
 
-        if event is not None:
-            event.Skip()
+            if event is not None:
+                event.Skip()
+        except Exception as e:
+            wx.CallLater(100, self.OnSize, event)
 
     def AddWidget(
         self,
