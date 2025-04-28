@@ -1138,24 +1138,26 @@ class PreferencesDialog(wx.Dialog):
                 self.checkbox_12.Set3StateValue(wx.CHK_CHECKED)
 
         if "runCommandOn" in self.prefs and self.prefs["runCommandOn"]:
-            if isinstance(self.prefs["runCommandOn"], str):
-                indx = self.combobox_1.GetItems().index(
-                    self.prefs["runCommandOn"].capitalize()
-                )
+            value = self.prefs["runCommandOn"].capitalize()
+            if isinstance(self.prefs["runCommandOn"], str) and value in self.combobox_1.Items:
+                indx = self.combobox_1.GetItems().index(value)
                 self.combobox_1.SetSelection(indx)
-            else:
+            elif type(self.prefs["runCommandOn"]) == int:
                 self.combobox_1.SetSelection(self.prefs["runCommandOn"])
+            elif len(self.combobox_1.Items) > 0:
+                self.combobox_1.SetSelection(0)
             Globals.CMD_DEVICE_TYPE = self.combobox_1.GetValue().lower()
 
         if "appFilter" in self.prefs and self.prefs["appFilter"]:
-            if isinstance(self.prefs["appFilter"], str):
-                indx = self.combobox_2.GetItems().index(
-                    self.prefs["appFilter"].upper()
-                )
+            value = self.prefs["appFilter"].upper()
+            if isinstance(self.prefs["appFilter"], str) and value in self.combobox_2.Items:
+                indx = self.combobox_2.GetItems().index(value)
                 self.combobox_2.SetSelection(indx)
-            else:
+            elif type(self.prefs["appFilter"]) == int:
                 self.combobox_2.SetSelection(self.prefs["appFilter"])
-            Globals.APP_FILTER = self.combobox_1.GetValue().lower()
+            elif len(self.combobox_2.Items) > 0:
+                self.combobox_2.SetSelection(0)
+            Globals.APP_FILTER = self.combobox_2.GetValue().lower()
 
         if self.checkBooleanValuePrefAndSet(
             "reachQueueStateOnly", self.checkbox_5, True
