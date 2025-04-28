@@ -1675,9 +1675,11 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.UnsetSortingColumns()
 
         actionSelection = self.sidePanel.actionChoice.GetSelection()
-        actionClientData = self.sidePanel.actionChoice.GetClientData(
-            actionSelection
-        )
+        actionClientData = None
+        if actionSelection and actionSelection < len(self.sidePanel.actionChoice.Items) and actionSelection >= 0:
+            actionClientData = self.sidePanel.actionChoice.GetClientData(
+                actionSelection
+            )
 
         allDevicesSelected = (
             True
