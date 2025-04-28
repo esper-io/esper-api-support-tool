@@ -15,13 +15,9 @@ from Common.decorator import api_tool_decorator
 from GUI.Dialogs.HtmlDialog import HtmlDialog
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkForUpdate,
-    downloadFileFromUrl,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    resourcePath,
-)
+from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
+                              openWebLinkInBrowser, postEventToFrame,
+                              resourcePath)
 
 
 class ToolMenuBar(wx.MenuBar):
@@ -502,11 +498,13 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def disableConfigMenu(self):
-        self.EnableTop(self.ConfigMenuPosition, False)
+        if self and self.ConfigMenuPosition:
+            self.EnableTop(self.ConfigMenuPosition, False)
 
     @api_tool_decorator()
     def enableConfigMenu(self):
-        self.EnableTop(self.ConfigMenuPosition, True)
+        if self and self.ConfigMenuPosition:
+            self.EnableTop(self.ConfigMenuPosition, True)
 
     def setSaveMenuOptionsEnableState(self, state):
         self.fileSave.Enable(state)
