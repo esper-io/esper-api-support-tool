@@ -1140,10 +1140,15 @@ class PreferencesDialog(wx.Dialog):
                     val = val.upper()
                 if isValCapital:
                     val = val.capitalize()
-                indx = combobox.GetItems().index(val)
-                combobox.SetSelection(indx)
-            else:
-                combobox.SetSelection(default)
+                if val in combobox.Items():
+                    indx = combobox.GetItems().index(val)
+                    combobox.SetSelection(indx)
+            elif type(self.prefs[key]) == int:
+                combobox.SetSelection(self.prefs[key])
+            elif default and default in combobox.Items():
+                combobox.SetTextSelection(default)
+            elif len(combobox.Items()) > 0:
+                combobox.SetSelection(0)
         return combobox.GetValue()
 
     def checkBooleanValuePrefAndSet(self, key, checkbox, default=wx.CHK_UNCHECKED):

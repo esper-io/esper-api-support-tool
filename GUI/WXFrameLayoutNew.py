@@ -22,7 +22,8 @@ import Utility.API.EsperTemplateUtil as templateUtil
 import Utility.EventUtility as eventUtil
 import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
-from Common.enum import Color, FontStyles, GeneralActions, GridActions, WaitThreadCodes
+from Common.enum import (Color, FontStyles, GeneralActions, GridActions,
+                         WaitThreadCodes)
 from Common.SleepInhibitor import SleepInhibitor
 from GUI.ConfigureWidget import WidgetPicker
 from GUI.consoleWindow import Console
@@ -45,70 +46,41 @@ from GUI.sidePanel import SidePanel
 from GUI.toolBar import ToolsToolBar
 from Utility.API.AppUtilities import getAllInstallableApps, getAppDictEntry
 from Utility.API.AuditPosting import AuditPosting
-from Utility.API.BlueprintUtility import (
-    checkFeatureFlags,
-    getAllBlueprints,
-    modifyAppsInBlueprints,
-    prepareBlueprintClone,
-    prepareBlueprintConversion,
-    pushBlueprintUpdate,
-)
+from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
+                                          modifyAppsInBlueprints,
+                                          prepareBlueprintClone,
+                                          prepareBlueprintConversion,
+                                          pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
 from Utility.API.GroupUtility import getAllGroups, moveGroup
-from Utility.API.UserUtility import (
-    getAllPendingUsers,
-    getAllUsers,
-    getAuthRoles,
-    getUserFromToken,
-)
+from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
+                                     getAuthRoles, getUserFromToken)
 from Utility.API.WidgetUtility import setWidget
 from Utility.crypto import crypto
-from Utility.EastUtility import (
-    TakeAction,
-    clearKnownGlobalVariables,
-    fetchInstalledDevices,
-    filterDeviceList,
-    getAllDeviceInfo,
-    removeNonWhitelisted,
-)
-from Utility.FileUtility import (
-    getToolDataPath,
-    read_csv_via_pandas,
-    read_data_from_csv_as_dict,
-    read_excel_via_openpyxl,
-    read_json_file,
-    save_csv_pandas,
-    save_excel_pandas_xlxswriter,
-    write_data_to_csv,
-    write_json_file,
-)
+from Utility.EastUtility import (TakeAction, clearKnownGlobalVariables,
+                                 fetchInstalledDevices, filterDeviceList,
+                                 getAllDeviceInfo, removeNonWhitelisted)
+from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
+                                 read_data_from_csv_as_dict,
+                                 read_excel_via_openpyxl, read_json_file,
+                                 save_csv_pandas, save_excel_pandas_xlxswriter,
+                                 write_data_to_csv, write_json_file)
 from Utility.GridActionUtility import iterateThroughGridRows
 from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkEsperInternetConnection,
-    checkForInternetAccess,
-    checkIfCurrentThreadStopped,
-    correctSaveFileName,
-    createNewFile,
-    determineDoHereorMainThread,
-    determineListDoHereorMainThread,
-    displayFileDialog,
-    displayMessageBox,
-    getFont,
-    getResultsFromThreads,
-    isDarkMode,
-    joinThreadList,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    processFunc,
-    resourcePath,
-    setElmTheme,
-    splitListIntoChunks,
-    updateErrorTracker,
-)
+from Utility.Resource import (checkEsperInternetConnection,
+                              checkForInternetAccess,
+                              checkIfCurrentThreadStopped, correctSaveFileName,
+                              createNewFile, determineDoHereorMainThread,
+                              determineListDoHereorMainThread,
+                              displayFileDialog, displayMessageBox, getFont,
+                              getResultsFromThreads, isDarkMode,
+                              joinThreadList, openWebLinkInBrowser,
+                              postEventToFrame, processFunc, resourcePath,
+                              setElmTheme, splitListIntoChunks,
+                              updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -1454,7 +1426,11 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.UnsetSortingColumns()
 
         actionSelection = self.sidePanel.actionChoice.GetSelection()
-        actionClientData = self.sidePanel.actionChoice.GetClientData(actionSelection)
+        actionClientData = None
+        if actionSelection and actionSelection < len(self.sidePanel.actionChoice.Items) and actionSelection >= 0:
+            actionClientData = self.sidePanel.actionChoice.GetClientData(
+                actionSelection
+            )
 
         allDevicesSelected = (
             True

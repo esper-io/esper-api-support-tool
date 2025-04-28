@@ -57,8 +57,8 @@ Latest Revision before Latest Revision before Latest Revision: 31 May 2005, 23.1
 """
 
 import wx
-import Common.Globals as Globals
 
+import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 
 # Horizontal Alignment Constants
@@ -118,7 +118,8 @@ class EnhancedStatusBar(wx.StatusBar):
         Actually, All The Calculations Linked To HorizontalAlignment And
         VerticalAlignment Are Done In This Function."""
 
-        for pos, item in self._items.items():
+        for pos in list(self._items):
+            item = self._items[pos]
             widget, horizontalalignment, verticalalignment = (
                 item.widget,
                 item.horizontalalignment,
