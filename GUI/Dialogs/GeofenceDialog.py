@@ -12,15 +12,10 @@ from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (
-    displayFileDialog,
-    displayMessageBox,
-    getFont,
-    getHeader,
-    onDialogEscape,
-    setElmTheme,
-    uiThreadCheck,
-)
+from Utility.Resource import (displayFileDialog, displayMessageBox, getFont,
+                              getHeader, onDialogEscape, setCursorBusy,
+                              setCursorDefault, setCursorIcon, setElmTheme,
+                              uiThreadCheck)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -284,7 +279,7 @@ class GeofenceDialog(wx.Dialog):
             )
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
-                self.setCursorBusy()
+                setCursorBusy()
                 Globals.THREAD_POOL.enqueue(
                     self.processCreateGeoFenceRequest,
                     properGroupIdList,
@@ -373,7 +368,7 @@ class GeofenceDialog(wx.Dialog):
                     )
                 )
         self.button_APPLY.Enable(True)
-        self.setCursorDefault()
+        setCursorDefault()
 
     @api_tool_decorator()
     def createApplyGeofence(
@@ -411,22 +406,6 @@ class GeofenceDialog(wx.Dialog):
         Disable native headers ability to hide columns when clicking an entry from the context menu
         """
         return
-
-    @api_tool_decorator()
-    def setCursorDefault(self):
-        """Set cursor icon to default state"""
-        try:
-            self.isBusy = False
-            myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-            self.SetCursor(myCursor)
-        except:
-            pass
-
-    def setCursorBusy(self):
-        """Set cursor icon to busy state"""
-        self.isBusy = True
-        myCursor = wx.Cursor(wx.CURSOR_WAIT)
-        self.SetCursor(myCursor)
 
     def applyFontSize(self):
         normalFont = getFont(FontStyles.NORMAL.value)

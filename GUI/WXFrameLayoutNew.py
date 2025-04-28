@@ -79,6 +79,7 @@ from Utility.Resource import (checkEsperInternetConnection,
                               getResultsFromThreads, isDarkMode,
                               joinThreadList, openWebLinkInBrowser,
                               postEventToFrame, processFunc, resourcePath,
+                              setCursorBusy, setCursorDefault, setCursorIcon,
                               setElmTheme, splitListIntoChunks,
                               updateErrorTracker)
 
@@ -768,19 +769,16 @@ class NewFrameLayout(wx.Frame):
             dfs = pd.concat([dfs], ignore_index=True)
             if not hasattr(dfs, "dropna"):
                 dfs = dfs.dropna(axis=0, how="all", subset=None)
-            self.processSpreadsheetUpload(dfs)
+            self.SpreadsheetUploaded = True
+            self.toggleEnabledState(False)
+            self.sidePanel.groupChoice.Enable(False)
+            self.sidePanel.deviceChoice.Enable(False)
+            self.gridPanel.disableGridProperties()
+            self.gridPanel.freezeGrids()
+            self.Logging("Processing Spreadsheet data...")
+            self.gridPanel.device_grid.applyNewDataFrame(dfs, resetPosition=True)
+            self.gridPanel.device_grid_contents = dfs.copy(deep=True)
         self.gridPanel.notebook_2.SetSelection(0)
-
-    def processSpreadsheetUpload(self, data):
-        self.SpreadsheetUploaded = True
-        self.toggleEnabledState(False)
-        self.sidePanel.groupChoice.Enable(False)
-        self.sidePanel.deviceChoice.Enable(False)
-        self.gridPanel.disableGridProperties()
-        self.gridPanel.freezeGrids()
-        self.Logging("Processing Spreadsheet data...")
-        self.gridPanel.device_grid.applyNewDataFrame(data, resetPosition=True)
-        self.gridPanel.device_grid_contents = data.copy(deep=True)
 
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, getItemForName=None):
@@ -874,19 +872,14 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def setCursorDefault(self):
         """Set cursor icon to default state"""
-        try:
-            self.isBusy = False
-            myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-            self.SetCursor(myCursor)
-        except:
-            pass
+        setCursorBusy(self)
+        self.isBusy = False
 
     @api_tool_decorator()
     def setCursorBusy(self):
         """Set cursor icon to busy state"""
         self.isBusy = True
-        myCursor = wx.Cursor(wx.CURSOR_WAIT)
-        self.SetCursor(myCursor)
+        setCursorDefault(self)
 
     @api_tool_decorator()
     def loadConfiguartion(self, event, *args, **kwargs):

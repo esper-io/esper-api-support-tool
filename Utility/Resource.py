@@ -728,3 +728,23 @@ def onDialogEscape(elm, event):
     if hasattr(elm, "onClose") and determineKeyEventClose(event):
         elm.onClose(event)
     event.Skip()
+
+@api_tool_decorator()
+def setCursorIcon(elm, icon=wx.CURSOR_DEFAULT):
+    try:
+        if hasattr(elm, "SetCursor"):
+            elm.SetCursor(wx.Cursor(icon))
+    except:
+        pass
+
+def setCursorBusy(elm):
+    """Set cursor icon to busy state"""
+    if uiThreadCheck(setCursorBusy):
+        return
+    setCursorIcon(elm, wx.CURSOR_WAIT)
+
+def setCursorDefault(elm):
+    """Set cursor icon to busy state"""
+    if uiThreadCheck(setCursorDefault):
+        return
+    setCursorIcon(elm, wx.CURSOR_DEFAULT)

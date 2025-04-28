@@ -12,16 +12,11 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.API.DeviceUtility import getAllDevices
 from Utility.API.GroupUtility import getAllGroups
-from Utility.Resource import (
-    determineDoHereorMainThread,
-    getFont,
-    getStrRatioSimilarity,
-    onDialogEscape,
-    resourcePath,
-    scale_bitmap,
-    setElmTheme,
-    uiThreadCheck,
-)
+from Utility.Resource import (determineDoHereorMainThread, getFont,
+                              getStrRatioSimilarity, onDialogEscape,
+                              resourcePath, scale_bitmap, setCursorBusy,
+                              setCursorDefault, setCursorIcon, setElmTheme,
+                              uiThreadCheck)
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -360,7 +355,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             widget.WriteText(data.GetText())
 
     def onNext(self, event):
-        self.setCursorBusy()
+        setCursorBusy()
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
@@ -382,10 +377,10 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        self.setCursorDefault()
+        setCursorDefault()
 
     def onPrev(self, event):
-        self.setCursorBusy()
+        setCursorBusy()
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
@@ -407,7 +402,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        self.setCursorDefault()
+        setCursorDefault()
 
     def checkPageButton(self):
         if uiThreadCheck(self.checkPageButton):
@@ -468,22 +463,6 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
 
-    def setCursorBusy(self):
-        """Set cursor icon to busy state"""
-        if uiThreadCheck(self.setCursorBusy):
-            return
-
-        myCursor = wx.Cursor(wx.CURSOR_WAIT)
-        self.SetCursor(myCursor)
-
-    def setCursorDefault(self):
-        """Set cursor icon to busy state"""
-        if uiThreadCheck(self.setCursorDefault):
-            return
-
-        myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-        self.SetCursor(myCursor)
-
     def processDevices(self, chunk):
         nameList = []
         for device in chunk:
@@ -514,7 +493,7 @@ class MultiSelectSearchDlg(wx.Dialog):
     def selectAllDevices(self):
         if uiThreadCheck(self.selectAllDevices):
             return
-        self.setCursorBusy()
+        setCursorBusy()
         self.button_1.Enable(False)
         self.button_2.Enable(False)
         self.button_OK.Enable(False)
@@ -559,7 +538,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        self.setCursorDefault()
+        setCursorDefault()
 
     def applyFontSize(self):
         normalFont = getFont(FontStyles.NORMAL.value)
