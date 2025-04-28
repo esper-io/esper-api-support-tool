@@ -1424,6 +1424,15 @@ class NewFrameLayout(wx.Frame):
             actionClientData = self.sidePanel.actionChoice.GetClientData(
                 actionSelection
             )
+        if not actionClientData or actionClientData == -1:
+            displayMessageBox(
+                (
+                    "Please select an action to run!",
+                    wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                )
+            )
+            self.toggleIsRunning(False)
+            return
 
         allDevicesSelected = (
             True
