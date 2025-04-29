@@ -429,16 +429,16 @@ def utc_to_local(utc_dt):
 def acquireLocks(locks, timeout=5):
     if type(locks) == list:
         for lock in locks:
-            if type(locks) == threading.Lock:
-                locks.acquire(timeout=5)
+            if type(lock) == threading.Lock:
+                lock.acquire(timeout=timeout)
     elif type(locks) == threading.Lock:
-        locks.acquire(timeout=5)
+        locks.acquire(timeout=timeout)
 
 
 def releaseLocks(locks):
     if type(locks) == list:
         for lock in locks:
-            if type(locks) == threading.Lock and lock.locked():
+            if type(lock) == threading.Lock and lock.locked():
                 lock.release()
     elif type(locks) == threading.Lock and locks.locked():
         locks.release()
