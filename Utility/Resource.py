@@ -407,9 +407,9 @@ def acquireLocks(locks, timeout=5):
     if type(locks) == list:
         for lock in locks:
             if type(lock) == threading.Lock:
-                lock.acquire(timeout=5)
+                lock.acquire(timeout=timeout)
     elif type(locks) == threading.Lock:
-        locks.acquire(timeout=5)
+        locks.acquire(timeout=timeout)
 
 
 def releaseLocks(locks):
