@@ -2059,8 +2059,7 @@ class NewFrameLayout(wx.Frame):
             return
 
         self.isUploading = True
-        for file in event.Files:
-            self.uploadSpreadsheet(file)
+        self.uploadSpreadsheet(event.Files[-1])
 
     @api_tool_decorator()
     def onClone(self, event):
