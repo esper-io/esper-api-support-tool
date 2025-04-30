@@ -261,12 +261,15 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def tryToMakeActive(self):
-        self.Raise()
-        self.Iconize(False)
-        style = self.GetWindowStyle()
-        self.SetWindowStyle(style | wx.STAY_ON_TOP)
-        self.SetFocus()
-        self.SetWindowStyle(style)
+        try:
+            self.Raise()
+            self.Iconize(False)
+            style = self.GetWindowStyle()
+            self.SetWindowStyle(style | wx.STAY_ON_TOP)
+            self.SetFocus()
+            self.SetWindowStyle(style)
+        except:
+            pass
 
     @api_tool_decorator()
     def __set_properties(self):
@@ -1876,10 +1879,7 @@ class NewFrameLayout(wx.Frame):
         """Called when the doc icon is clicked, and ???"""
         self.onActivate(self, event, skip=False)
         if event.GetActive():
-            try:
-                self.GetTopWindow().Raise()
-            except:
-                self.tryToMakeActive()
+            self.tryToMakeActive()
         event.Skip()
 
     @api_tool_decorator()
@@ -1893,7 +1893,6 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def onComplete(self, event, isError=False):
         """Things that should be done once an Action is completed"""
-        enable = False
         action = None
         cmdResults = None
         if event:
@@ -1903,13 +1902,10 @@ class NewFrameLayout(wx.Frame):
             else:
                 eventVal = event
             if type(eventVal) == tuple:
-                enable = eventVal[0]
                 if len(eventVal) > 1:
                     action = eventVal[1]
                 if len(eventVal) > 2:
                     cmdResults = eventVal[2]
-            else:
-                enable = eventVal
         self.setCursorDefault()
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 100)
         title = "Action Completed"
@@ -1958,6 +1954,8 @@ class NewFrameLayout(wx.Frame):
                     window.Raise()
                 elif window and hasattr(window, "tryToMakeActive") and not self.isSaving:
                     window.tryToMakeActive()
+        else:
+            self.tryToMakeActive()
         if self.notification:
             self.notification.Close()
         self.Refresh()
