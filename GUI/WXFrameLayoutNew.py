@@ -2478,30 +2478,7 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.disableGridProperties()
         users = getAllUsers(tolerance=1)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-        data = [
-            [
-                "User Id",
-                "Username",
-                "Email",
-                "First Name",
-                "Last Name",
-                "Full Name",
-                "Is Active",
-                "Is Staff",
-                "Is Superuser",
-                "EMM",
-                "Has EMM",
-                "Token",
-                "Profile Role",
-                "Authz Role ID",
-                "Authz Role",
-                "Groups",
-                "Profile",
-                "Created On",
-                "Updated On",
-                "Last Login",
-            ]
-        ]
+        data = [list(Globals.USER_REPORT_FIELDS.keys())]
         num = 1
         bannedRoles = [
             "enterprise device",
@@ -2522,26 +2499,7 @@ class NewFrameLayout(wx.Frame):
             if matchingRole:
                 matchingRole = matchingRole.get("name", "Unknown")
 
-            entry.append(user["id"])
-            entry.append(user["username"])
-            entry.append(user["email"])
-            entry.append(user["first_name"])
-            entry.append(user["last_name"])
-            entry.append(user["full_name"])
-            entry.append(user["is_active"])
-            entry.append(user["is_staff"])
-            entry.append(user["is_superuser"])
-            entry.append(user["emm"])
-            entry.append(user["has_emm"])
-            entry.append(user["token"])
-            entry.append(user["profile"]["role"])
-            entry.append(user["profile"]["authz_role_id"])
-            entry.append(matchingRole)
-            entry.append(user["profile"]["groups"])
-            entry.append(user["profile"])
-            entry.append(user["profile"]["created_on"])
-            entry.append(user["profile"]["updated_on"])
-            entry.append(user["last_login"])
+            entry = self.getUserEntryForReport(Globals.USER_REPORT_FIELDS, matchingRole, user)
             data.append(entry)
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE,
@@ -2591,19 +2549,8 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.disableGridProperties()
         users = getAllPendingUsers(tolerance=1)
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
-        data = [
-            [
-                "User Id",
-                "Email",
-                "Is Active",
-                "Role",
-                "Authz Role",
-                "Groups",
-                "Created On",
-                "Updated On",
-            ]
-        ]
         num = 1
+        data = [list(Globals.PENDING_USER_REPORT_FIELDS.keys())]
         for user in users["userinvites"]:
             entry = []
 
@@ -2619,25 +2566,7 @@ class NewFrameLayout(wx.Frame):
             else:
                 matchingRole = ""
 
-            newGroups = []
-            if "groups" in user["meta"]["profile"]:
-                for group in user["meta"]["profile"]["groups"]:
-                    newGroups.append(
-                        {
-                            "id": group,
-                            "name": Globals.knownGroups.get(group, {}).get("name", ""),
-                            "path": Globals.knownGroups.get(group, {}).get("path", ""),
-                        }
-                    )
-
-            entry.append(user["id"])
-            entry.append(user["email"])
-            entry.append(user["meta"]["is_active"])
-            entry.append(user["meta"]["profile"]["role"])
-            entry.append(matchingRole)
-            entry.append(user["meta"]["profile"]["groups"] if "groups" in user["meta"]["profile"] else "")
-            entry.append(user["created_at"])
-            entry.append(user["updated_at"])
+            entry = self.getUserEntryForReport(Globals.PENDING_USER_REPORT_FIELDS, matchingRole, user)
             data.append(entry)
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE,
@@ -2664,6 +2593,24 @@ class NewFrameLayout(wx.Frame):
         if res == wx.YES:
             parentDirectory = Path(inFile).parent.absolute()
             openWebLinkInBrowser(parentDirectory, isfile=True)
+
+    def getUserEntryForReport(self, fields, authzRole, userData):
+        entry = []
+        for col, fields in fields.items():
+            if col == "Authz Role":
+                entry.append(authzRole)
+            elif type(fields) == list:
+                subData = {}
+                for subfield in fields:
+                    if not subData and subfield in userData:
+                        subData = userData[subfield]
+                    elif type(subData) == dict:
+                        subData = subData.get(subfield, {})
+                entry.append(subData)
+            else:
+                entry.append(userData[fields])
+        return entry
+
 
     @api_tool_decorator()
     def onConvertTemplate(self, event):

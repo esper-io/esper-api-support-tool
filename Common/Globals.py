@@ -436,3 +436,37 @@ SCHEDULE_SAVE = "xlsx"
 
 limit = MAX_LIMIT  # Number of results to return per page
 offset = 0  # The initial index from which to return the results
+
+# User Report Fields
+USER_REPORT_FIELDS = {
+    "User Id": "id",
+    "Username": "username",
+    "Email": "email",
+    "First Name": "first_name",
+    "Last Name": "last_name",
+    "Full Name": "full_name",
+    "Is Active": "is_active",
+    "Is Staff": "is_staff",
+    "Is Superuser": "is_superuser",
+    "EMM": "emm",
+    "Has EMM": "has_emm",
+    "Token": "token",
+    "Profile Role": ["profile", "role"],
+    "Authz Role ID": ["profile", "authz_role_id"],
+    "Authz Role": None,
+    "Groups": ["profile", "groups"],
+    "Profile": "profile",
+    "Created On": ["profile", "created_on"],
+    "Updated On": ["profile", "updated_on"],
+    "Last Login": "last_login",
+}
+PENDING_USER_REPORT_FIELDS = {
+    "User Id": "id",
+    "Email": "email",
+    "Is Active": ["meta", "is_active"],
+    "Role": ["meta", "profile", "role"],
+    "Authz Role": None,
+    "Groups": ["meta", "profile", "groups"],
+    "Created On": "created_at",
+    "Updated On": "updated_at",
+}
