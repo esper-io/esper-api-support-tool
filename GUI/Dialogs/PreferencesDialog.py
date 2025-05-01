@@ -1146,14 +1146,14 @@ class PreferencesDialog(wx.Dialog):
                     val = val.upper()
                 if isValCapital:
                     val = val.capitalize()
-                if val in combobox.Items():
+                if val in combobox.Items:
                     indx = combobox.GetItems().index(val)
                     combobox.SetSelection(indx)
             elif type(self.prefs[key]) == int:
                 combobox.SetSelection(self.prefs[key])
             elif default and default in combobox.Items():
                 combobox.SetTextSelection(default)
-            elif len(combobox.Items()) > 0:
+            elif len(combobox.Items) > 0:
                 combobox.SetSelection(0)
         return combobox.GetValue()
 
