@@ -2611,7 +2611,6 @@ class NewFrameLayout(wx.Frame):
                 entry.append(userData[fields])
         return entry
 
-
     @api_tool_decorator()
     def onConvertTemplate(self, event):
         with BlueprintsConvertDialog(self.sidePanel.configChoice, parent=self) as dlg:
