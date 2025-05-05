@@ -13,40 +13,24 @@ from esperclient.rest import ApiException
 import Common.Globals as Globals
 import Utility.API.EsperAPICalls as apiCalls
 import Utility.EventUtility as eventUtil
-import Utility.Threading.wxThread as wxThread
 from Common.decorator import api_tool_decorator
 from Common.enum import DeviceState, GeneralActions
-from Utility.API.AppUtilities import (
-    getDeviceAppsApiUrl,
-    getInstallDevices,
-    uploadApplication,
-)
+from Utility.API.AppUtilities import getDeviceAppsApiUrl, getInstallDevices
 from Utility.API.BlueprintUtility import getBlueprint
-from Utility.API.CommandUtility import executeCommandOnDevice, executeCommandOnGroup
-from Utility.API.DeviceUtility import (
-    getAllDevices,
-    getDeviceById,
-    getDeviceDetail,
-    getLatestEvent,
-    getLatestEventApiUrl,
-    searchForDevice,
-)
+from Utility.API.CommandUtility import (executeCommandOnDevice,
+                                        executeCommandOnGroup)
+from Utility.API.DeviceUtility import (getAllDevices, getDeviceById,
+                                       getDeviceDetail, getLatestEvent,
+                                       getLatestEventApiUrl, searchForDevice)
 from Utility.API.GroupUtility import fetchGroupName, getGroupByIdURL
-from Utility.API.UserUtility import getUserInfo
 from Utility.deviceInfo import constructNetworkInfo, getDeviceInitialTemplate
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import constructDeviceAppRowEntry, createDataFrameFromDict
+from Utility.GridUtilities import (constructDeviceAppRowEntry,
+                                   createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    displayMessageBox,
-    getHeader,
-    ipv6Tomac,
-    postEventToFrame,
-    splitListIntoChunks,
-    unpackageDict,
-    utc_to_local,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
+                              getHeader, ipv6Tomac, postEventToFrame,
+                              splitListIntoChunks, unpackageDict, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
 
@@ -210,33 +194,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
     getLatestEvents = (
         action == GeneralActions.GENERATE_INFO_REPORT.value or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
     )
-
-    if hasattr(api_response, "results") and len(api_response.results):
-        if not Globals.SHOW_DISABLED_DEVICES:
-            api_response.results = list(filter(filterDeviceList, api_response.results))
-
-        deviceList = {}
-        indx = 0
-        Globals.THREAD_POOL.enqueue(updateGaugeForObtainingDeviceInfo, deviceList, api_response.results)
-        for device in api_response.results:
-            Globals.THREAD_POOL.enqueue(
-                processDeviceInDeviceList,
-                device,
-                device.id,
-                getApps,
-                getLatestEvents,
-                deviceList,
-                indx,
-            )
-            indx += 1
-
-        Globals.THREAD_POOL.join(tolerance=1)
-
-        postEventToFrame(
-            eventUtil.myEVT_FETCH,
-            (action, entId, deviceList),
-        )
-    elif type(api_response) is dict and "results" in api_response and api_response["results"]:
+    if type(api_response) is dict and "results" in api_response and api_response["results"]:
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
 
