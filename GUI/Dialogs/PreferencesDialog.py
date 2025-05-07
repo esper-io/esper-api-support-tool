@@ -1149,6 +1149,10 @@ class PreferencesDialog(wx.Dialog):
                 if val in combobox.Items:
                     indx = combobox.GetItems().index(val)
                     combobox.SetSelection(indx)
+                elif default and default in combobox.Items():
+                    combobox.SetTextSelection(default)
+                elif len(combobox.Items) > 0:
+                    combobox.SetSelection(0)
             elif type(self.prefs[key]) == int:
                 combobox.SetSelection(self.prefs[key])
             elif default and default in combobox.Items():
