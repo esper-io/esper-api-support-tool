@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import esperclient
+import pandas as pd
 import requests
 import wx
 import wx.grid
@@ -748,3 +749,9 @@ def setCursorDefault(elm):
     if uiThreadCheck(setCursorDefault):
         return
     setCursorIcon(elm, wx.CURSOR_DEFAULT)
+
+def setPandasOption(key, value):
+    try:
+        pd.set_option(key, value)
+    except Exception as e:
+        ApiToolLog().LogError(e)

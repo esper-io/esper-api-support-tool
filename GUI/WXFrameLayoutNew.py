@@ -80,8 +80,8 @@ from Utility.Resource import (checkEsperInternetConnection,
                               joinThreadList, openWebLinkInBrowser,
                               postEventToFrame, processFunc, resourcePath,
                               setCursorBusy, setCursorDefault, setCursorIcon,
-                              setElmTheme, splitListIntoChunks,
-                              updateErrorTracker)
+                              setElmTheme, setPandasOption,
+                              splitListIntoChunks, updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -129,8 +129,8 @@ class NewFrameLayout(wx.Frame):
         self.authPath = "%s/auth.csv" % basePath
         self.keyPath = "%s/east.key" % basePath
 
-        self.setPandasOption("mode.copy_on_write", True)
-        self.setPandasOption("display.precision", 2)
+        setPandasOption("mode.copy_on_write", True)
+        setPandasOption("display.precision", 2)
 
         wx.Frame.__init__(self, None, title=Globals.TITLE, style=wx.DEFAULT_FRAME_STYLE)
         self.SetSize(Globals.MIN_SIZE)
@@ -252,12 +252,6 @@ class NewFrameLayout(wx.Frame):
         if Globals.SHOW_DISCLAIMER:
             self.preferences["showDisclaimer"] = self.menubar.onDisclaimer(showCheckBox=True)
             Globals.SHOW_DISCLAIMER = self.preferences["showDisclaimer"]
-
-    def setPandasOption(self, key, value):
-        try:
-            pd.set_option(key, value)
-        except Exception as e:
-            ApiToolLog().LogError(e)
 
     @api_tool_decorator()
     def tryToMakeActive(self):
