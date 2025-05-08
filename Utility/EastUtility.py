@@ -859,7 +859,6 @@ def compileDeviceAppData(deviceInfo, appData):
     apps = (
         apiCalls.createAppList(
             appData,
-            obtainAppDictEntry=False,
             filterData=(True if Globals.APP_COL_FILTER and not any(len(s) == 0 for s in Globals.APP_COL_FILTER) else False),
         )
         if appData

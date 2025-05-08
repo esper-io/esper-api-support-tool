@@ -14,11 +14,9 @@ from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
 from Utility.API.CommandUtility import postEsperCommand, waitForCommandToFinish
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
-from Utility.Web.WebRequests import (
-    handleRequestError,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Web.WebRequests import (handleRequestError,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -204,7 +202,7 @@ def getAndroidDeviceApps(deviceid, createAppListArg=True, useEnterprise=False):
     return applist, json_resp
 
 
-def createAppList(json_resp, obtainAppDictEntry=True, filterData=False):
+def createAppList(json_resp, filterData=False):
     applist = []
     if json_resp and "results" in json_resp and json_resp["results"] and len(json_resp["results"]):
         for app in json_resp["results"]:
