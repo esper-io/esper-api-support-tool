@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-import csv
-import platform
-import threading
 
 import pandas as pd
 import wx
@@ -10,13 +7,15 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (determineDoHereorMainThread, displayFileDialog,
-                              displayMessageBox, getHeader, onDialogEscape,
-                              setElmTheme)
+from Utility.Resource import (displayFileDialog, displayMessageBox, getFont,
+                              getHeader, onDialogEscape, setCursorBusy,
+                              setCursorDefault, setCursorIcon, setElmTheme,
+                              uiThreadCheck)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -90,9 +89,7 @@ class GeofenceDialog(wx.Dialog):
         label_4 = wx.StaticText(self.panel_1, wx.ID_ANY, "Radius (Meters):")
         grid_sizer_8.Add(label_4, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.spin_ctrl_1 = wx.SpinCtrl(
-            self.panel_1, wx.ID_ANY, "100", min=100, max=10000
-        )
+        self.spin_ctrl_1 = wx.SpinCtrl(self.panel_1, wx.ID_ANY, "100", min=100, max=10000)
         grid_sizer_8.Add(self.spin_ctrl_1, 0, wx.EXPAND, 0)
 
         grid_sizer_9 = wx.FlexGridSizer(3, 1, 0, 0)
@@ -113,9 +110,7 @@ class GeofenceDialog(wx.Dialog):
         label_6 = wx.StaticText(self.panel_1, wx.ID_ANY, "Description:")
         grid_sizer_10.Add(label_6, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
 
-        self.text_ctrl_4 = wx.TextCtrl(
-            self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP
-        )
+        self.text_ctrl_4 = wx.TextCtrl(self.panel_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_WORDWRAP)
         grid_sizer_10.Add(self.text_ctrl_4, 0, wx.EXPAND | wx.LEFT, 10)
 
         grid_sizer_3 = wx.FlexGridSizer(2, 1, 0, 0)
@@ -183,17 +178,13 @@ class GeofenceDialog(wx.Dialog):
     def applyGridSettings(self):
         self.geofence_grid.UseNativeColHeader()
         self.geofence_grid.AutoSizeColumns()
-        self.geofence_grid.Bind(
-            wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem
-        )
+        self.geofence_grid.Bind(wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
 
     @api_tool_decorator()
     def onClose(self, event):
         if Globals.frame:
             Globals.frame.isRunning = False
-            Globals.frame.toggleEnabledState(
-                not Globals.frame.isRunning and not Globals.frame.isSavingPrefs
-            )
+            Globals.frame.toggleEnabledState(not Globals.frame.isRunning and not Globals.frame.isSavingPrefs)
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
         self.DestroyLater()
@@ -209,18 +200,11 @@ class GeofenceDialog(wx.Dialog):
 
     @api_tool_decorator()
     def processUpload(self, filePath):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(self.processUpload, filePath)
+        if uiThreadCheck(self.processUpload, filePath):
             return
         if self.geofence_grid.GetNumberRows() > 0:
             df = pd.DataFrame(columns=self.gridHeaderLabels)
-            self.reset_grid.applyNewDataFrame(
-                df, checkColumns=False, resetPosition=True
-            )
-        self.setCursorBusy()
+            self.reset_grid.applyNewDataFrame(df, checkColumns=False, resetPosition=True)
         # Read data from given CSV file
         data = None
         if filePath.endswith(".csv"):
@@ -247,32 +231,20 @@ class GeofenceDialog(wx.Dialog):
                     groups = getAllGroups(name=entry, maxAttempt=2, tolerance=1)
                     if groups:
                         for groupRes in groups["results"]:
-                            if groupRes["name"] == str(entry) or groupRes[
-                                "path"
-                            ] == str(entry):
+                            if groupRes["name"] == str(entry) or groupRes["path"] == str(entry):
                                 group = groupRes
                                 break
                 if group:
-                    expandedGroupData[self.gridHeaderLabels[1]].append(
-                        group["path"]
-                    )
-                    expandedGroupData[self.gridHeaderLabels[2]].append(
-                        group["id"]
-                    )
+                    expandedGroupData[self.gridHeaderLabels[1]].append(group["path"])
+                    expandedGroupData[self.gridHeaderLabels[2]].append(group["id"])
                 else:
-                    expandedGroupData[self.gridHeaderLabels[1]].append(
-                        "<Could Not Find Group>"
-                    )
+                    expandedGroupData[self.gridHeaderLabels[1]].append("<Could Not Find Group>")
                     expandedGroupData[self.gridHeaderLabels[2]].append("")
-            data = pd.DataFrame(
-                expandedGroupData, columns=self.gridHeaderLabels
-            )
-            if self:
-                self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
-                self.applyGridSettings()
-                if self.geofence_grid.IsFrozen():
-                    self.geofence_grid.Thaw()
-                self.setCursorDefault()
+            data = pd.DataFrame(expandedGroupData, columns=self.gridHeaderLabels)
+            self.geofence_grid.applyNewDataFrame(data, resetPosition=True)
+            self.applyGridSettings()
+            if self.geofence_grid.IsFrozen():
+                self.geofence_grid.Thaw()
 
     @api_tool_decorator()
     def createGeofence(self, event):
@@ -297,14 +269,7 @@ class GeofenceDialog(wx.Dialog):
                 properGroupIdList.append(identifier)
 
         # Ensure that inputs are vaild before calling API
-        if (
-            name
-            and latitude
-            and description
-            and longitude
-            and radius
-            and actionsList
-        ):
+        if name and latitude and description and longitude and radius and actionsList:
             dialog = displayMessageBox(
                 (
                     "Found group ids for %s out of %s uploaded entries. Would you like to proceed?"
@@ -314,7 +279,7 @@ class GeofenceDialog(wx.Dialog):
             )
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
-                self.setCursorBusy()
+                setCursorBusy()
                 Globals.THREAD_POOL.enqueue(
                     self.processCreateGeoFenceRequest,
                     properGroupIdList,
@@ -344,20 +309,16 @@ class GeofenceDialog(wx.Dialog):
         radius,
         actionsList,
     ):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+        if uiThreadCheck(
+            self.processCreateGeoFenceRequest,
+            properGroupIdList,
+            name,
+            description,
+            latitude,
+            longitude,
+            radius,
+            actionsList,
         ):
-            determineDoHereorMainThread(
-                self.processCreateGeoFenceRequest,
-                properGroupIdList,
-                name,
-                description,
-                latitude,
-                longitude,
-                radius,
-                actionsList,
-            )
             return
         deviceList = []
         for groupId in properGroupIdList:
@@ -373,10 +334,7 @@ class GeofenceDialog(wx.Dialog):
                 deviceList,
             )
         )
-        deviceIdList = [
-            device.id if hasattr(device, "id") else device["id"]
-            for device in deviceList
-        ]
+        deviceIdList = [device.id if hasattr(device, "id") else device["id"] for device in deviceList]
         if not deviceIdList:
             displayMessageBox(
                 (
@@ -395,12 +353,7 @@ class GeofenceDialog(wx.Dialog):
                 actions=actionsList,
             )
             # You can choose to do something with the response, e.g. showcase the user the results of the API
-            if (
-                resp
-                and hasattr(resp, "status_code")
-                and resp.status_code < 300
-                and resp.status_code >= 200
-            ):
+            if resp and hasattr(resp, "status_code") and resp.status_code < 300 and resp.status_code >= 200:
                 displayMessageBox(
                     (
                         "Successfully created Geofence.",
@@ -415,7 +368,7 @@ class GeofenceDialog(wx.Dialog):
                     )
                 )
         self.button_APPLY.Enable(True)
-        self.setCursorDefault()
+        setCursorDefault()
 
     @api_tool_decorator()
     def createApplyGeofence(
@@ -429,9 +382,7 @@ class GeofenceDialog(wx.Dialog):
         radiusUnit="METERS",
         actions=["lock_down", "beep"],
     ):
-        tenant = Globals.configuration.host.replace("https://", "").replace(
-            "-api.esper.cloud/api", ""
-        )
+        tenant = Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", "")
         url = "https://{endpoint}-api.esper.cloud/api/v0/enterprise/{enterprise_id}/create-apply-geo-fence/".format(
             endpoint=tenant, enterprise_id=Globals.enterprise_id
         )
@@ -456,39 +407,9 @@ class GeofenceDialog(wx.Dialog):
         """
         return
 
-    @api_tool_decorator()
-    def setCursorDefault(self):
-        """Set cursor icon to default state"""
-        try:
-            self.isBusy = False
-            myCursor = wx.Cursor(wx.CURSOR_DEFAULT)
-            self.SetCursor(myCursor)
-        except:
-            pass
-
-    def setCursorBusy(self):
-        """Set cursor icon to busy state"""
-        self.isBusy = True
-        myCursor = wx.Cursor(wx.CURSOR_WAIT)
-        self.SetCursor(myCursor)
-
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        headerBold = wx.Font(
-            Globals.HEADER_FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "HeaderBold",
-        )
+        normalFont = getFont(FontStyles.NORMAL.value)
+        headerBold = getFont(FontStyles.HEADER_BOLD.value)
 
         self.applyFontHelper(self, normalFont, headerBold)
 
@@ -497,10 +418,7 @@ class GeofenceDialog(wx.Dialog):
             childen = elm.GetChildren()
             for child in childen:
                 if hasattr(child, "SetFont"):
-                    if (
-                        hasattr(child, "GetLabelText")
-                        and self.dialog_title == child.GetLabelText()
-                    ):
+                    if hasattr(child, "GetLabelText") and self.dialog_title == child.GetLabelText():
                         child.SetFont(headerBold)
                     else:
                         child.SetFont(font)

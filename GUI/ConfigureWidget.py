@@ -6,9 +6,16 @@ import wx.grid
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import displayFileDialog, onDialogEscape, setElmTheme
+from Utility.Resource import (
+    applyFontHelper,
+    displayFileDialog,
+    getFont,
+    onDialogEscape,
+    setElmTheme,
+)
 
 
 class WidgetPicker(wx.Dialog):
@@ -34,18 +41,14 @@ class WidgetPicker(wx.Dialog):
         self.panel_2 = wx.Panel(self, wx.ID_ANY)
         sizer_1.Add(self.panel_2, 1, wx.ALL | wx.EXPAND, 5)
 
-        sizer_3 = wx.StaticBoxSizer(
-            wx.StaticBox(self.panel_2, wx.ID_ANY, ""), wx.HORIZONTAL
-        )
+        sizer_3 = wx.StaticBoxSizer(wx.StaticBox(self.panel_2, wx.ID_ANY, ""), wx.HORIZONTAL)
 
         self.window_1 = wx.SplitterWindow(self.panel_2, wx.ID_ANY, style=0)
         self.window_1.SetMinimumPaneSize(200)
         self.window_1.SetSashGravity(0.5)
         sizer_3.Add(self.window_1, 1, wx.EXPAND, 0)
 
-        self.panel_1 = wx.ScrolledWindow(
-            self.window_1, wx.ID_ANY, style=wx.TAB_TRAVERSAL
-        )
+        self.panel_1 = wx.ScrolledWindow(self.window_1, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
         self.panel_1.SetScrollRate(10, 10)
 
         grid_sizer_1 = wx.FlexGridSizer(4, 1, 0, 0)
@@ -61,13 +64,9 @@ class WidgetPicker(wx.Dialog):
             majorDimension=1,
             style=wx.RA_SPECIFY_ROWS,
         )
-        self.radio_box_1.SetToolTip(
-            "Select whether a the Widget feature should be Enabled or Disabled on a device."
-        )
+        self.radio_box_1.SetToolTip("Select whether a the Widget feature should be Enabled or Disabled on a device.")
         self.radio_box_1.SetSelection(1)
-        grid_sizer_1.Add(
-            self.radio_box_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
-        )
+        grid_sizer_1.Add(self.radio_box_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
         label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Widget Class Name:")
         grid_sizer_1.Add(label_2, 0, wx.ALL, 5)
@@ -75,21 +74,15 @@ class WidgetPicker(wx.Dialog):
         grid_sizer_4 = wx.GridSizer(1, 1, 0, 0)
         grid_sizer_1.Add(grid_sizer_4, 1, wx.EXPAND, 0)
 
-        self.default_text = (
-            "Example: com.android.alarmclock.AnalogAppWidgetProvider"
-        )
+        self.default_text = "Example: com.android.alarmclock.AnalogAppWidgetProvider"
         self.text_ctrl_1 = wx.TextCtrl(
             self.panel_1,
             wx.ID_ANY,
             self.default_text,
             style=wx.TE_MULTILINE | wx.TE_WORDWRAP,
         )
-        self.text_ctrl_1.SetToolTip(
-            "Widget Package Name. %s" % self.default_text
-        )
-        grid_sizer_4.Add(
-            self.text_ctrl_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10
-        )
+        self.text_ctrl_1.SetToolTip("Widget Package Name. %s" % self.default_text)
+        grid_sizer_4.Add(self.text_ctrl_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
         self.text_ctrl_1.Enable(False)
 
         self.panel_3 = wx.Panel(self.window_1, wx.ID_ANY)
@@ -122,9 +115,7 @@ class WidgetPicker(wx.Dialog):
         )
 
         self.button_1 = wx.Button(self.panel_3, wx.ID_ANY, "Upload")
-        self.button_1.SetToolTip(
-            "Upload Identifers that should be targetted for the Widget Command."
-        )
+        self.button_1.SetToolTip("Upload Identifers that should be targetted for the Widget Command.")
         grid_sizer_3.Add(
             self.button_1,
             0,
@@ -186,10 +177,12 @@ class WidgetPicker(wx.Dialog):
         self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
         self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
 
-        accel_table = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('W'), self.button_CANCEL.GetId()),
-            (wx.ACCEL_CMD, ord('W'), self.button_CANCEL.GetId()),
-        ])
+        accel_table = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("W"), self.button_CANCEL.GetId()),
+                (wx.ACCEL_CMD, ord("W"), self.button_CANCEL.GetId()),
+            ]
+        )
         self.SetAcceleratorTable(accel_table)
 
         self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
@@ -203,9 +196,7 @@ class WidgetPicker(wx.Dialog):
     def onClose(self, event):
         if Globals.frame:
             Globals.frame.isRunning = False
-            Globals.frame.toggleEnabledState(
-                not Globals.frame.isRunning and not Globals.frame.isSavingPrefs
-            )
+            Globals.frame.toggleEnabledState(not Globals.frame.isRunning and not Globals.frame.isSavingPrefs)
         if event.EventType != wx.EVT_CLOSE.typeId:
             self.Close()
         self.EndModal(wx.EVT_CLOSE.typeId)
@@ -215,12 +206,7 @@ class WidgetPicker(wx.Dialog):
         selection = self.radio_box_1.GetSelection()
         numRows = self.widget_grid.GetNumberRows() - 1
         textValue = self.text_ctrl_1.GetValue()
-        if (
-            selection == 0
-            and textValue
-            and textValue != self.default_text
-            and numRows > 0
-        ) or (selection == 1 and numRows > 0):
+        if (selection == 0 and textValue and textValue != self.default_text and numRows > 0) or (selection == 1 and numRows > 0):
             self.button_APPLY.Enable(True)
         else:
             self.button_APPLY.Enable(False)
@@ -297,32 +283,9 @@ class WidgetPicker(wx.Dialog):
         )
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-        normalBoldFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_BOLD,
-            0,
-            "NormalBold",
-        )
+        normalBoldFont = getFont(FontStyles.NORMAL_BOLD.value)
 
-        self.applyFontHelper(self, normalFont, normalBoldFont)
-
-    def applyFontHelper(self, elm, font, normalBoldFont):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    if isinstance(child, wx.StaticText):
-                        child.SetFont(normalBoldFont)
-                    else:
-                        child.SetFont(font)
-                self.applyFontHelper(child, font, normalBoldFont)
+        fontRules = {
+            wx.StaticText: normalBoldFont,
+        }
+        applyFontHelper(fontRules, self, self)

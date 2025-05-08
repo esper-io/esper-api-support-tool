@@ -3,17 +3,11 @@ import wx.html as html
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import onDialogEscape, setElmTheme
+from Utility.Resource import applyFontHelper, onDialogEscape
 
 
 class HtmlDialog(wx.Dialog):
-    def __init__(
-        self,
-        showCheckbox=False,
-        checkboxLabel="Don't show this again",
-        *args,
-        **kwds
-    ):
+    def __init__(self, showCheckbox=False, checkboxLabel="Don't show this again", *args, **kwds):
         super(HtmlDialog, self).__init__(
             Globals.frame,
             wx.ID_ANY,
@@ -61,24 +55,8 @@ class HtmlDialog(wx.Dialog):
         return self.checkbox_1.IsChecked() if self.checkbox_1 else False
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-
-        self.applyFontHelper(self, normalFont)
-
-    def applyFontHelper(self, elm, font):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    child.SetFont(font)
-                self.applyFontHelper(child, font)
+        fontRules = {}
+        applyFontHelper(fontRules, self, self)
 
     @api_tool_decorator()
     def onEscapePressed(self, event):

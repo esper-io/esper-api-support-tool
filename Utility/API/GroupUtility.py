@@ -17,7 +17,7 @@ from Utility.Resource import (
     postEventToFrame,
 )
 from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
+    fetchRequestWithOffsets,
     handleRequestError,
     performGetRequestWithRetry,
     performPatchRequestWithRetry,
@@ -25,9 +25,7 @@ from Utility.Web.WebRequests import (
 
 
 def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
+    tenant = Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", "")
     url = "https://{tenant}-api.esper.cloud/api/enterprise/{enterprise}/devicegroup/{group}/?action=add".format(
         tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
     )
@@ -42,89 +40,6 @@ def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
     postEventToFrame(
         EventUtility.myEVT_AUDIT,
         {"operation": "moveGroup", "data": body, "resp": resp},
-    )
-    return resp
-
-
-def createGroup(groupName, groupParent, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceGroupApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    data = esperclient.DeviceGroupUpdate(name=groupName, parent=groupParent)
-    try:
-        # Create a device group
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.create_group(
-                    Globals.enterprise_id, data
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "create_group",
-                    api_instance.create_group,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt)
-                if attempt == maxAttempt - 1:
-                    return json.loads(e.body)
-        postEventToFrame(
-            EventUtility.myEVT_AUDIT,
-            {"operation": "createGroup", "data": data, "resp": api_response},
-        )
-        return api_response
-    except ApiException as e:
-        print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
-
-
-def deleteGroup(group_id, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceGroupApi(
-        esperclient.ApiClient(Globals.configuration)
-    )
-    try:
-        # Create a device group
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_instance.delete_group(group_id, Globals.enterprise_id)
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllGroups",
-                    api_instance.get_all_groups,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt)
-                if attempt == maxAttempt - 1:
-                    return json.loads(e.body)
-        postEventToFrame(
-            EventUtility.myEVT_AUDIT,
-            {
-                "operation": "deleteGroup",
-                "data": group_id,
-                "resp": api_response,
-            },
-        )
-        return api_response
-    except ApiException as e:
-        print("Exception when calling DeviceGroupApi->create_group: %s\n" % e)
-
-
-def renameGroup(groupId, newName):
-    tenant = Globals.configuration.host.replace("https://", "").replace(
-        "-api.esper.cloud/api", ""
-    )
-    url = "https://{tenant}-api.esper.cloud/api/enterprise/{enterprise}/devicegroup/{group}/".format(
-        tenant=tenant, enterprise=Globals.enterprise_id, group=groupId
-    )
-    body = {"name": newName}
-    resp = performPatchRequestWithRetry(url, headers=getHeader(), json=body)
-    postEventToFrame(
-        EventUtility.myEVT_AUDIT,
-        {"operation": "renameGroup", "data": body, "resp": resp},
     )
     return resp
 
@@ -152,56 +67,27 @@ def fetchGroupName(groupURL, returnJson=False):
                 else:
                     return json_resp["name"]
     except Exception as e:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
         logBadResponse(groupURL, resp, None)
     return None
 
 
+def getGroupApiUrl(limit=Globals.limit, offset=0, name=""):
+    url = "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
+        tenant=Globals.configuration.host,
+        enterprise=Globals.enterprise_id,
+        lim=limit,
+        page=offset,
+    )
+    if name:
+        url += "&name={}".format(name)
+    return url
+
+
 @api_tool_decorator(locks=[Globals.token_lock])
-def getAllGroups(
-    name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0
-):
+def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0):
     """Make a API call to get all Groups belonging to the Enterprise"""
     return get_all_groups(name, limit, offset, maxAttempt, tolerance=tolerance)
-
-
-def getAllGroupsHelper(
-    name="",
-    limit=None,
-    offset=None,
-    maxAttempt=Globals.MAX_RETRY,
-    responses=None,
-):
-    Globals.token_lock.acquire()
-    Globals.token_lock.release()
-    if not Globals.IS_TOKEN_VALID:
-        return
-    if not limit:
-        limit = Globals.limit
-    if not offset:
-        offset = Globals.offset
-    try:
-        url = "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
-            tenant=Globals.configuration.host,
-            enterprise=Globals.enterprise_id,
-            lim=limit,
-            page=offset,
-        )
-        if name:
-            url += "&name={}".format(name)
-        api_response = performGetRequestWithRetry(url, getHeader())
-        if api_response and api_response.status_code < 300:
-            api_response = api_response.json()
-            if api_response and responses is not None:
-                responses.append(api_response)
-        postEventToFrame(
-            EventUtility.myEVT_LOG, "---> Group API Request Finished"
-        )
-        return api_response
-    except ApiException as e:
-        raise Exception(
-            "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
-        )
 
 
 def get_all_groups(
@@ -211,28 +97,19 @@ def get_all_groups(
     maxAttempt=Globals.MAX_RETRY,
     tolerance=0,
 ):
-    response = getAllGroupsHelper(name, limit, offset, maxAttempt)
-    groups = getAllFromOffsetsRequests(response, tolarance=tolerance)
-    if type(response) is dict and "results" in response and groups:
-        response["results"] = response["results"] + groups
-        response["next"] = None
-        response["prev"] = None
-    return response
+    url = getGroupApiUrl(limit, offset, name)
+    return fetchRequestWithOffsets(url, tolerance=tolerance)
 
 
 @api_tool_decorator()
-def getGroupById(
-    group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY
-):
+def getGroupById(group_id, limit=None, offset=None, maxAttempt=Globals.MAX_RETRY):
     """Make a API call to get all Groups belonging to the Enterprise"""
     if not limit:
         limit = Globals.limit
     if not offset:
         offset = Globals.offset
     try:
-        api_instance = esperclient.DeviceGroupApi(
-            esperclient.ApiClient(Globals.configuration)
-        )
+        api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(Globals.configuration))
         api_response = None
         for attempt in range(maxAttempt):
             try:
@@ -251,20 +128,14 @@ def getGroupById(
                 break
             except Exception as e:
                 handleRequestError(attempt, e, maxAttempt, raiseError=True)
-        postEventToFrame(
-            EventUtility.myEVT_LOG, "---> Group API Request Finished"
-        )
+        postEventToFrame(EventUtility.myEVT_LOG, "---> Group API Request Finished")
         return api_response
     except ApiException as e:
-        raise Exception(
-            "Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e
-        )
+        raise Exception("Exception when calling DeviceGroupApi->get_all_groups: %s\n" % e)
 
 
 @api_tool_decorator()
-def getDeviceGroupsForHost(
-    config, enterprise_id, maxAttempt=Globals.MAX_RETRY, tolerance=0
-):
+def getDeviceGroupsForHost(config, enterprise_id, maxAttempt=Globals.MAX_RETRY, tolerance=0):
     try:
         api_response = getDeviceGroupsForHostHelper(config, enterprise_id)
         if api_response and hasattr(api_response, "next") and api_response.next:
@@ -289,9 +160,7 @@ def getDeviceGroupsForHost(
             if remainder > 0:
                 offset -= int(Globals.limit)
                 offset += 1
-                resp = getDeviceGroupsForHostHelper(
-                    config, enterprise_id, Globals.limit, offset, maxAttempt
-                )
+                resp = getDeviceGroupsForHostHelper(config, enterprise_id, Globals.limit, offset, maxAttempt)
                 if resp and hasattr(resp, "next") and resp.next:
                     api_response.results += resp.results
         return api_response
@@ -311,9 +180,7 @@ def getDeviceGroupsForHostHelper(
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                api_response = api_instance.get_all_groups(
-                    enterprise_id, limit=limit, offset=offset
-                )
+                api_response = api_instance.get_all_groups(enterprise_id, limit=limit, offset=offset)
                 ApiToolLog().LogApiRequestOccurrence(
                     "getDeviceGroupsForHost",
                     api_instance.get_all_groups,
@@ -328,17 +195,13 @@ def getDeviceGroupsForHostHelper(
 
 
 @api_tool_decorator()
-def createDeviceGroupForHost(
-    config, enterprise_id, group, maxAttempt=Globals.MAX_RETRY
-):
+def createDeviceGroupForHost(config, enterprise_id, group, maxAttempt=Globals.MAX_RETRY):
     try:
         api_instance = esperclient.DeviceGroupApi(esperclient.ApiClient(config))
         api_response = None
         for attempt in range(maxAttempt):
             try:
-                api_response = api_instance.create_group(
-                    enterprise_id, data={"name": group}
-                )
+                api_response = api_instance.create_group(enterprise_id, data={"name": group})
                 ApiToolLog().LogApiRequestOccurrence(
                     "createDeviceGroupForHost",
                     api_instance.create_group,
@@ -359,10 +222,6 @@ def getProperGroupId(groups):
             properGroupList.append(group)
         else:
             json_rsp = get_all_groups(name=group)
-            if (
-                "results" in json_rsp
-                and json_rsp["results"]
-                and "id" in json_rsp["results"][0]["id"]
-            ):
+            if "results" in json_rsp and json_rsp["results"] and "id" in json_rsp["results"][0]["id"]:
                 properGroupList.append(json_rsp["results"][0]["id"])
     return properGroupList

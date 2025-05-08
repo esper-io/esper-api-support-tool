@@ -43,9 +43,7 @@ class ToolMenuBar(wx.MenuBar):
         self.fileOpenAuth = fileMenu.Append(foa)
 
         fileMenu.Append(wx.ID_SEPARATOR)
-        foc = wx.MenuItem(
-            fileMenu, wx.ID_APPLY, "&Open Device Spreadsheet\tCtrl+O"
-        )
+        foc = wx.MenuItem(fileMenu, wx.ID_APPLY, "&Open Device Spreadsheet\tCtrl+O")
         foc.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/open.png")))
         self.fileOpenConfig = fileMenu.Append(foc)
 
@@ -70,9 +68,7 @@ class ToolMenuBar(wx.MenuBar):
 
         # Tenant Menu
         self.configMenu = wx.Menu()
-        self.defaultConfigVal = self.configMenu.Append(
-            wx.ID_NONE, "No Loaded Tenants", "No Loaded Tenants"
-        )
+        self.defaultConfigVal = self.configMenu.Append(wx.ID_NONE, "No Loaded Tenants", "No Loaded Tenants")
         self.configMenuOptions.append(self.defaultConfigVal)
 
         # Edit Menu
@@ -87,22 +83,16 @@ class ToolMenuBar(wx.MenuBar):
         runItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/run.png")))
         self.run = runMenu.Append(runItem)
         runMenu.Append(wx.ID_SEPARATOR)
-        commandItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C"
-        )
+        commandItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Execute Command\tCtrl+Shift+C")
         commandItem.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/cmd.png")))
         self.command = runMenu.Append(commandItem)
-        powerDownItem = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Power Down Devices (Knox Only)"
-        )
+        powerDownItem = wx.MenuItem(runMenu, wx.ID_ANY, "&Power Down Devices (Knox Only)")
         self.powerDown = runMenu.Append(powerDownItem)
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.cloneSubMenu = wx.Menu()
 
-        cloneItem = wx.MenuItem(
-            self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T"
-        )
+        cloneItem = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Clone Template\tCtrl+Shift+T")
         self.clone = self.cloneSubMenu.Append(cloneItem)
         self.clone.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clone.png")))
 
@@ -116,69 +106,43 @@ class ToolMenuBar(wx.MenuBar):
 
         self.cloneSubMenu.Append(wx.ID_SEPARATOR)
 
-        convertTemplate = wx.MenuItem(
-            self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint"
-        )
+        convertTemplate = wx.MenuItem(self.cloneSubMenu, wx.ID_ANY, "&Convert Template to Blueprint")
         self.convert = self.cloneSubMenu.Append(convertTemplate)
 
-        self.cloneSubMenu = runMenu.Append(
-            wx.ID_ANY, "&Clone", self.cloneSubMenu
-        )
+        self.cloneSubMenu = runMenu.Append(wx.ID_ANY, "&Clone", self.cloneSubMenu)
 
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.appSubMenu = wx.Menu()
-        self.installedDevices = self.appSubMenu.Append(
-            wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I"
-        )
+        self.installedDevices = self.appSubMenu.Append(wx.ID_ANY, "&Get Installed Devices\tCtrl+Shift+I")
         self.appSubMenu.Append(wx.ID_SEPARATOR)
-        self.newBlueprintApp = self.appSubMenu.Append(
-            wx.ID_ANY, "&Push new app to Blueprints"
-        )
-        self.appSubMenu = runMenu.Append(
-            wx.ID_ANY, "&Applications", self.appSubMenu
-        )
-        self.appSubMenu.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/apps.png"))
-        )
+        self.newBlueprintApp = self.appSubMenu.Append(wx.ID_ANY, "&Push new app to Blueprints")
+        self.appSubMenu = runMenu.Append(wx.ID_ANY, "&Applications", self.appSubMenu)
+        self.appSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/apps.png")))
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.groupSubMenu = wx.Menu()
-        self.moveGroup = self.groupSubMenu.Append(
-            wx.ID_ANY, "&Move Device(s)\tCtrl+M"
-        )
-        self.downloadGroups = self.groupSubMenu.Append(
-            wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G"
-        )
-        self.groupSubMenu = runMenu.Append(
-            wx.ID_ANY, "&Groups", self.groupSubMenu
-        )
-        self.groupSubMenu.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/groups.png"))
-        )
+        self.moveGroup = self.groupSubMenu.Append(wx.ID_ANY, "&Move Device(s)\tCtrl+M")
+        self.downloadGroups = self.groupSubMenu.Append(wx.ID_ANY, "&Download CSV of Groups\tCtrl+Shift+G")
+        self.groupSubMenu = runMenu.Append(wx.ID_ANY, "&Groups", self.groupSubMenu)
+        self.groupSubMenu.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/groups.png")))
         runMenu.Append(wx.ID_SEPARATOR)
 
         geo = wx.MenuItem(runMenu, wx.ID_ANY, "&Create Geofence")
         self.geoMenu = runMenu.Append(geo)
         runMenu.Append(wx.ID_SEPARATOR)
 
-        widgetMenu = wx.MenuItem(
-            runMenu, wx.ID_ANY, "&Configure Widgets\tCtrl+Shift+W"
-        )
+        widgetMenu = wx.MenuItem(runMenu, wx.ID_ANY, "&Configure Widgets\tCtrl+Shift+W")
         self.configureWidgets = runMenu.Append(widgetMenu)
 
         runMenu.Append(wx.ID_SEPARATOR)
 
         self.userSubMenu = wx.Menu()
 
-        userReport = wx.MenuItem(
-            self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U"
-        )
+        userReport = wx.MenuItem(self.userSubMenu, wx.ID_ANY, "&Get User Report\tCtrl+Shift+U")
         self.userReportItem = self.userSubMenu.Append(userReport)
 
-        pendingUserReport = wx.MenuItem(
-            self.userSubMenu, wx.ID_ANY, "&Get Pending User Report\tCtrl+Alt+U"
-        )
+        pendingUserReport = wx.MenuItem(self.userSubMenu, wx.ID_ANY, "&Get Pending User Report\tCtrl+Alt+U")
         self.pendingUserReportItem = self.userSubMenu.Append(pendingUserReport)
 
         # View Menu
@@ -190,9 +154,14 @@ class ToolMenuBar(wx.MenuBar):
                 "&Toggle Grid Column Visibility\tCtrl+Shift+V",
             )
         )
-        self.deviceColumns.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/view.png"))
+        self.fullscreen = viewMenu.Append(
+            wx.MenuItem(
+                viewMenu,
+                wx.ID_ANY,
+                "&Toggle Fullscreen\tF11",
+            )
         )
+        self.deviceColumns.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/view.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.consoleView = viewMenu.Append(
             wx.MenuItem(
@@ -202,28 +171,14 @@ class ToolMenuBar(wx.MenuBar):
                 kind=wx.ITEM_CHECK,
             )
         )
-        self.clearConsole = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log")
-        )
+        self.clearConsole = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log"))
         viewMenu.Append(wx.ID_SEPARATOR)
-        self.colSize = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns")
-        )
-        self.colSize.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/resize.png"))
-        )
-        self.gridRefresh = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids")
-        )
-        self.gridRefresh.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/refresh.png"))
-        )
-        self.clearGrids = viewMenu.Append(
-            wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids")
-        )
-        self.clearGrids.SetBitmap(
-            wx.Bitmap(resourcePath("Images/Menu/clear.png"))
-        )
+        self.colSize = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns"))
+        self.colSize.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/resize.png")))
+        self.gridRefresh = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Refresh Grids"))
+        self.gridRefresh.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/refresh.png")))
+        self.clearGrids = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Grids"))
+        self.clearGrids.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/clear.png")))
         viewMenu.Append(wx.ID_SEPARATOR)
 
         # Help Menu
@@ -243,9 +198,7 @@ class ToolMenuBar(wx.MenuBar):
 
         helpMenu.Append(wx.ID_SEPARATOR)
 
-        tnc = helpMenu.Append(
-            wx.ID_ANY, "Terms and Conditions", "&Terms and Conditions"
-        )
+        tnc = helpMenu.Append(wx.ID_ANY, "Terms and Conditions", "&Terms and Conditions")
         self.Bind(wx.EVT_MENU, self.onDisclaimer, tnc)
 
         about = helpMenu.Append(wx.ID_HELP, "About", "&About")
@@ -275,9 +228,7 @@ class ToolMenuBar(wx.MenuBar):
 
         self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
         self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal
-        )
+        self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
         self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
         self.Bind(
             wx.EVT_MENU,
@@ -318,14 +269,11 @@ class ToolMenuBar(wx.MenuBar):
             self.parentFrame.gridPanel.onColumnVisibility,
             self.deviceColumns,
         )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onFullscreen, self.fullscreen)
         self.Bind(wx.EVT_MENU, self.parentFrame.moveGroup, self.moveGroup)
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.downloadGroups, self.downloadGroups
-        )
+        self.Bind(wx.EVT_MENU, self.parentFrame.downloadGroups, self.downloadGroups)
         self.Bind(wx.EVT_MENU, self.parentFrame.onGeofence, self.geoMenu)
-        self.Bind(
-            wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem
-        )
+        self.Bind(wx.EVT_MENU, self.parentFrame.onUserReport, self.userReportItem)
         self.Bind(
             wx.EVT_MENU,
             self.parentFrame.onPendingUserReport,
@@ -343,9 +291,7 @@ class ToolMenuBar(wx.MenuBar):
         """About Dialog"""
         info = adv.AboutDialogInfo()
 
-        info.SetIcon(
-            wx.Icon(resourcePath("Images/logo.png"), wx.BITMAP_TYPE_PNG)
-        )
+        info.SetIcon(wx.Icon(resourcePath("Images/logo.png"), wx.BITMAP_TYPE_PNG))
         info.SetName(Globals.TITLE)
         info.SetVersion(Globals.VERSION)
         info.SetDescription(Globals.DESCRIPTION)
@@ -413,9 +359,7 @@ class ToolMenuBar(wx.MenuBar):
         else:
             msg = "An error occurred while downloading the update. Please try again later."
         if msg:
-            self.parentFrame.Logging(
-                msg, isError=True if "error" in msg.lower() else False
-            )
+            self.parentFrame.Logging(msg, isError=True if "error" in msg.lower() else False)
         self.isCheckingForUpdates = False
 
     def displayUpdateOnMain(self, downloadURL, name, showDlg):
@@ -427,13 +371,9 @@ class ToolMenuBar(wx.MenuBar):
         )
         if dlg == wx.ID_YES or dlg == wx.YES:
             self.parentFrame.statusBar.gauge.Pulse()
-            thread = wxThread.GUIThread(
-                None, downloadFileFromUrl, (downloadURL, name)
-            )
+            thread = wxThread.GUIThread(None, downloadFileFromUrl, (downloadURL, name))
             thread.startWithRetry()
-            Globals.THREAD_POOL.enqueue(
-                self.processUpdateResult, thread, showDlg
-            )
+            Globals.THREAD_POOL.enqueue(self.processUpdateResult, thread, showDlg)
 
     def processUpdateResult(self, thread, showDlg):
         icon = wx.ICON_INFORMATION
@@ -442,8 +382,7 @@ class ToolMenuBar(wx.MenuBar):
         result = thread.result
         if result:
             msg = (
-                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!"
-                % result
+                "Download Succeeded!\n\nFile should be located at:\n%s\n\nPlease open the executable from the download!" % result
             )
         else:
             icon = wx.ICON_ERROR
@@ -459,9 +398,7 @@ class ToolMenuBar(wx.MenuBar):
                 atexit.register(lambda file=__file__: self.deleteFile(file))
                 Globals.frame.OnQuit(None)
         elif msg:
-            self.parentFrame.Logging(
-                msg, isError=True if "error" in msg.lower() else False
-            )
+            self.parentFrame.Logging(msg, isError=True if "error" in msg.lower() else False)
         self.isCheckingForUpdates = False
 
     def deleteFile(self, file_path):

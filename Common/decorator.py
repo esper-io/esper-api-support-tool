@@ -69,9 +69,7 @@ def api_tool_decorator(locks=None, displayPrompt=True):
             if start and end:
                 duration = end - start
                 if Globals.PRINT_FUNC_DURATION:
-                    print(
-                        "%s executed in %s seconds." % (func.__name__, duration)
-                    )
+                    print("%s executed in %s seconds." % (func.__name__, duration))
             return result
 
         return wrapper
@@ -95,19 +93,6 @@ def determineErrorDisplay(e):
         displayGenericErrorMsg(e)
     if Globals.error_lock.locked():
         Globals.error_lock.release()
-    return e
-
-
-def displayApiExcpetionMsg(e):
-    Globals.msg_lock.acquire(timeout=10)
-    bodyMsg = json.loads(e.body)["message"]
-    wx.MessageBox(
-        "%s %s: %s" % (e.reason, e.status, bodyMsg),
-        style=wx.OK | wx.ICON_ERROR,
-        parent=Globals.frame,
-    )
-    if Globals.msg_lock.locked():
-        Globals.msg_lock.release()
     return e
 
 

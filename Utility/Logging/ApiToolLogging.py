@@ -13,13 +13,10 @@ from esperclient.rest import ApiException
 import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 from Utility.FileUtility import getToolDataPath, write_content_to_file
-from Utility.Logging.IssueTracker import IssueTracker
 
 
 class ApiToolLog:
     def __init__(self):
-        self.tracker_lock = threading.Lock()
-
         basePath = getToolDataPath()
         self.logPath = "%s/ApiTool.log" % basePath
         self.placePath = "%s/ApiToolPlace.log" % basePath
@@ -29,9 +26,7 @@ class ApiToolLog:
                 os.makedirs(parentPath)
             write_content_to_file(self.logPath, "")
         if not os.path.exists(self.placePath) and Globals.RECORD_PLACE:
-            parentPath = os.path.abspath(
-                os.path.join(self.placePath, os.pardir)
-            )
+            parentPath = os.path.abspath(os.path.join(self.placePath, os.pardir))
             if not os.path.exists(parentPath):
                 os.makedirs(parentPath)
             write_content_to_file(self.placePath, "")
@@ -46,7 +41,7 @@ class ApiToolLog:
             "Failed to load configuration",
             "Read-only file system",
             "ApiException",
-            "'error': 'ratelimited'"
+            "'error': 'ratelimited'",
         ]
 
     def limitLogFileSizes(self):
@@ -54,10 +49,7 @@ class ApiToolLog:
         self.limitFileSize(self.placePath)
 
     def limitFileSize(self, file, maxFileSizeInMb=5):
-        if (
-            os.path.exists(file)
-            and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb
-        ):
+        if os.path.exists(file) and (os.path.getsize(file) / (1024 * 1024)) > maxFileSizeInMb:
             write_content_to_file(file, "")
 
     def LogError(
@@ -66,7 +58,6 @@ class ApiToolLog:
         exc_type=None,
         exc_value=None,
         exc_traceback=None,
-        postIssue=True,
         postStatus=True,
     ):
         try:
@@ -98,7 +89,7 @@ class ApiToolLog:
         for line in exc_traceback:
             parts = line.split('",')
             entry = "".join(parts[1:]) if len(parts) > 1 else parts[0]
-            entry = entry.replace('\n', "").replace("^", "").strip()
+            entry = entry.replace("\n", "").replace("^", "").strip()
             entry = "\t%s" % entry
             if entry:
                 content.append(entry)
@@ -114,9 +105,7 @@ class ApiToolLog:
             if (
                 Globals.frame.audit
                 and not self.should_skip(content)
-                and (
-                    not last_error_time or minutes > Globals.MAX_ERROR_TIME_DIFF
-                )
+                and (not last_error_time or minutes > Globals.MAX_ERROR_TIME_DIFF)
             ):
                 Globals.frame.audit.postOperation(
                     {
@@ -137,14 +126,10 @@ class ApiToolLog:
                 myfile.write("%s\n" % msg)
 
     def LogPlace(self, str_place):
-        write_content_to_file(
-            self.placePath, "%s\t: %s\n" % (datetime.now(), str_place), "a"
-        )
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), str_place), "a")
 
     def LogResponse(self, response):
-        write_content_to_file(
-            self.placePath, "%s\t: %s\n" % (datetime.now(), response), "a"
-        )
+        write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), response), "a")
 
     def excepthook(self, type, value, tb):
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -154,11 +139,7 @@ class ApiToolLog:
             "".join(traceback.format_exception(type, value, tb)),
             "Exc Type:\t%s" % str(exc_type) if str(exc_type) else type,
             "Exc Value:\t%s" % str(exc_value) if str(exc_value) else value,
-            (
-                "Exc Traceback:\t%s" % str(exc_traceback)
-                if str(exc_traceback)
-                else tb
-            ),
+            ("Exc Traceback:\t%s" % str(exc_traceback) if str(exc_traceback) else tb),
             "Esper Tool Version: " + Globals.VERSION,
         ]
         print_exc()
@@ -182,55 +163,32 @@ class ApiToolLog:
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():
-            Globals.THREAD_POOL.enqueue(
-                self.LogApiRequest, src, api_func, writeToFile
-            )
+            Globals.THREAD_POOL.enqueue(self.LogApiRequest, src, api_func, writeToFile)
         else:
             self.LogApiRequest(src, api_func, writeToFile)
 
     def LogApiRequest(self, src, api_func, writeToFile=False):
         strToWrite = ""
         if api_func and type(api_func) == dict:
-            strToWrite = (
-                "Session API Summary:\t%s\tTotal Requests: %s"
-                % (
-                    (
-                        str(api_func)
-                        if api_func != ApiTracker.API_REQUEST_TRACKER
-                        else json.dumps(ApiTracker.API_REQUEST_TRACKER)
-                    ),
-                    ApiTracker.API_REQUEST_SESSION_TRACKER,
-                )
+            strToWrite = "Session API Summary:\t%s\tTotal Requests: %s" % (
+                (str(api_func) if api_func != ApiTracker.API_REQUEST_TRACKER else json.dumps(ApiTracker.API_REQUEST_TRACKER)),
+                ApiTracker.API_REQUEST_SESSION_TRACKER,
             )
         else:
             ApiTracker.API_REQUEST_SESSION_TRACKER += 1
             incremented = False
             for key in ApiTracker.API_REQUEST_TRACKER.keys():
-                if (
-                    api_func
-                    and hasattr(api_func, "__name__")
-                    and key.replace("/", "") in api_func.__name__
-                ):
+                if api_func and hasattr(api_func, "__name__") and key.replace("/", "") in api_func.__name__:
                     ApiTracker.API_REQUEST_TRACKER[key] += 1
                     incremented = True
-                elif (
-                    api_func
-                    and type(api_func) == str
-                    and (key in api_func or api_func.endswith(key))
-                ):
+                elif api_func and type(api_func) == str and (key in api_func or api_func.endswith(key)):
                     ApiTracker.API_REQUEST_TRACKER[key] += 1
                     incremented = True
                 if incremented:
                     break
             if not incremented:
-                if (
-                    api_func
-                    and hasattr(api_func, "__name__")
-                    and api_func.__name__ in ApiTracker.API_FUNCTIONS.keys()
-                ):
-                    ApiTracker.API_REQUEST_TRACKER[
-                        ApiTracker.API_FUNCTIONS[api_func.__name__]
-                    ] += 1
+                if api_func and hasattr(api_func, "__name__") and api_func.__name__ in ApiTracker.API_FUNCTIONS.keys():
+                    ApiTracker.API_REQUEST_TRACKER[ApiTracker.API_FUNCTIONS[api_func.__name__]] += 1
                 else:
                     ApiTracker.API_REQUEST_TRACKER["OtherAPI"] += 1
                     writeToFile = True
@@ -243,21 +201,12 @@ class ApiToolLog:
                         str(Globals.configuration.host),
                         (
                             str(Globals.TOKEN_USER["username"])
-                            if Globals.TOKEN_USER
-                            and "username" in Globals.TOKEN_USER
+                            if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
                             else "Unknown"
                         ),
-                        (
-                            str(Globals.TOKEN_USER["id"])
-                            if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                            else "Unknown"
-                        ),
+                        (str(Globals.TOKEN_USER["id"]) if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown"),
                         str(src),
-                        (
-                            str(api_func)
-                            if not hasattr(api_func, "__name__")
-                            else api_func.__name__
-                        ),
+                        (str(api_func) if not hasattr(api_func, "__name__") else api_func.__name__),
                         ApiTracker.API_REQUEST_SESSION_TRACKER,
                     )
                 )
@@ -265,14 +214,8 @@ class ApiToolLog:
             self.limitLogFileSizes()
             try:
                 write_content_to_file(self.logPath, strToWrite, "a")
-                if (
-                    "Summary" in strToWrite
-                    and Globals.frame.audit
-                    and "foo" not in Globals.configuration.host
-                ):
-                    Globals.frame.audit.postOperation(
-                        {"operation": "API Usage Summary", "data": strToWrite}
-                    )
+                if "Summary" in strToWrite and Globals.frame.audit and "foo" not in Globals.configuration.host:
+                    Globals.frame.audit.postOperation({"operation": "API Usage Summary", "data": strToWrite})
             except:
                 pass
             finally:

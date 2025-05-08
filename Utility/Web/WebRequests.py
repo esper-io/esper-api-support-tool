@@ -29,17 +29,11 @@ def performRequestWithRetry(
         try:
             enforceRateLimit()
             if files:
-                resp = method(
-                    url, headers=headers, json=json, data=data, files=files
-                )
+                resp = method(url, headers=headers, json=json, data=data, files=files)
             else:
                 resp = method(url, headers=headers, json=json, data=data)
-            ApiToolLog().LogApiRequestOccurrence(
-                method.__name__, url, Globals.PRINT_API_LOGS
-            )
-            if resp.status_code < 300 or (
-                resp.status_code == 500 and attempt >= 2
-            ):
+            ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
+            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
                 break
             if resp.status_code == 429:
                 doExponentialBackoff(attempt)
@@ -50,7 +44,7 @@ def performRequestWithRetry(
 
 def handleRequestError(attempt, e, maxRetry, raiseError=False):
     if attempt == maxRetry - 1:
-        ApiToolLog().LogError(e, postIssue=False)
+        ApiToolLog().LogError(e, postStatus=False)
         if raiseError:
             raise e
     if "429" not in str(e) and "Too Many Requests" not in str(e):
@@ -72,41 +66,23 @@ def doExponentialBackoff(attempt):
             EventUtility.myEVT_LOG,
             "Rate Limit Encountered retrying in %s minutes" % (attempt + 1),
         )
-    time.sleep(
-        Globals.RETRY_SLEEP * 20 * (attempt + 1)
-    )  # Sleep for a minute * retry number
+    time.sleep(Globals.RETRY_SLEEP * 20 * (attempt + 1))  # Sleep for a minute * retry number
 
 
-def performGetRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    return performRequestWithRetry(
-        url, requests.get, headers, json, data, maxRetry=maxRetry
-    )
+def performGetRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
+    return performRequestWithRetry(url, requests.get, headers, json, data, maxRetry=maxRetry)
 
 
-def performPatchRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    return performRequestWithRetry(
-        url, requests.patch, headers, json, data, maxRetry=maxRetry
-    )
+def performPatchRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
+    return performRequestWithRetry(url, requests.patch, headers, json, data, maxRetry=maxRetry)
 
 
-def performPutRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    return performRequestWithRetry(
-        url, requests.put, headers, json, data, maxRetry=maxRetry
-    )
+def performPutRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
+    return performRequestWithRetry(url, requests.put, headers, json, data, maxRetry=maxRetry)
 
 
-def performDeleteRequestWithRetry(
-    url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY
-):
-    return performRequestWithRetry(
-        url, requests.delete, headers, json, data, maxRetry=maxRetry
-    )
+def performDeleteRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
+    return performRequestWithRetry(url, requests.delete, headers, json, data, maxRetry=maxRetry)
 
 
 def performPostRequestWithRetry(
@@ -117,14 +93,10 @@ def performPostRequestWithRetry(
     files=None,
     maxRetry=Globals.MAX_RETRY,
 ):
-    return performRequestWithRetry(
-        url, requests.post, headers, json, data, files, maxRetry=maxRetry
-    )
+    return performRequestWithRetry(url, requests.post, headers, json, data, files, maxRetry=maxRetry)
 
 
-def getAllFromOffsetsRequests(
-    api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True
-):
+def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True):
     count = None
     resultList = []
     if not results:
@@ -149,17 +121,11 @@ def getAllFromOffsetsRequests(
         while int(respOffsetInt) < count and int(respLimit) < count:
             if checkIfCurrentThreadStopped():
                 return
-            url = apiNext.replace(
-                "offset=%s" % respOffset, "offset=%s" % str(respOffsetInt)
-            )
+            url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
             if useThreadPool:
-                Globals.THREAD_POOL.enqueue(
-                    perform_web_requests, (url, getHeader(), "GET", None)
-                )
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
             else:
-                resp_json = perform_web_requests(
-                    (url, getHeader(), "GET", None)
-                )
+                resp_json = perform_web_requests((url, getHeader(), "GET", None))
                 resultList.append(resp_json)
             respOffsetInt += int(respLimit)
 
@@ -196,4 +162,19 @@ def perform_web_requests(content):
 
     if resp:
         resp = resp.json()
+    return resp
+
+
+def fetchRequestWithOffsets(url, tolerance=0, useThreadPool=True):
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        respJson = resp.json()
+        if respJson and "content" in respJson:
+            respJson = respJson["content"]
+        offsetResponses = getAllFromOffsetsRequests(respJson, tolarance=tolerance, useThreadPool=useThreadPool)
+        if type(offsetResponses) is dict and "results" in offsetResponses:
+            respJson["results"] = respJson["results"] + offsetResponses["results"]
+            respJson["next"] = None
+            respJson["prev"] = None
+        return respJson
     return resp

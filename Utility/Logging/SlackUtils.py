@@ -98,20 +98,13 @@ class SlackUtils:
                     "type": "mrkdwn",
                     "text": "*Tenant:* %s\t\t\t*User:* %s (*ID:* %s)"
                     % (
-                        Globals.configuration.host.replace(
-                            "https://", ""
-                        ).replace("-api.esper.cloud/api", ""),
+                        Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", ""),
                         (
                             Globals.TOKEN_USER["username"]
-                            if Globals.TOKEN_USER
-                            and "username" in Globals.TOKEN_USER
+                            if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
                             else "Unknown"
                         ),
-                        (
-                            Globals.TOKEN_USER["id"]
-                            if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                            else "Unknown"
-                        ),
+                        (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown"),
                     ),
                 },
             },
@@ -119,8 +112,7 @@ class SlackUtils:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Operation:* %s\t\t\t*Platform:* %s %s"
-                    % (operation, platform.system(), platform.release()),
+                    "text": "*Operation:* %s\t\t\t*Platform:* %s %s" % (operation, platform.system(), platform.release()),
                 },
             },
             {
@@ -171,17 +163,8 @@ class SlackUtils:
         return True
 
     def append_message_and_blocks(self, operation, data, resp):
-        username = (
-            Globals.TOKEN_USER["username"]
-            if Globals.TOKEN_USER
-            and "username" in Globals.TOKEN_USER
-            else "Unknown"
-        )
-        userid =(
-            Globals.TOKEN_USER["id"]
-            if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-            else "Unknown"
-        )
+        username = Globals.TOKEN_USER["username"] if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER else "Unknown"
+        userid = Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown"
         if "error" in operation.lower():
             # Send error message immediately
             self.post_block_message(
@@ -190,12 +173,13 @@ class SlackUtils:
             )
         else:
             # Save operation details to file so we can send latter
-            self.messages_and_blocks.append({
+            self.messages_and_blocks.append(
+                {
                     "t": datetime.now(tz=pytz.utc).strftime("%Y-%m-%d_%H:%M:%S"),
                     "u": "%s (*ID:* %s)" % (username, userid),
                     "o": operation,
                     "d": data,
-                    "r": resp
+                    "r": resp,
                 }
             )
             self.saveStoredMessageBlocks()
@@ -217,21 +201,16 @@ class SlackUtils:
                     "type": "mrkdwn",
                     "text": "*Tenant:* %s\t\t*User:* %s (*ID:* %s)\t\t*Platform:* %s %s\t\tEAST Version: %s"
                     % (
-                        Globals.configuration.host.replace(
-                            "https://", ""
-                        ).replace("-api.esper.cloud/api", ""),
+                        Globals.configuration.host.replace("https://", "").replace("-api.esper.cloud/api", ""),
                         (
                             Globals.TOKEN_USER["username"]
-                            if Globals.TOKEN_USER
-                            and "username" in Globals.TOKEN_USER
+                            if Globals.TOKEN_USER and "username" in Globals.TOKEN_USER
                             else "Unknown"
                         ),
-                        (
-                            Globals.TOKEN_USER["id"]
-                            if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER
-                            else "Unknown"
-                        ),
-                        platform.system(), platform.release(), Globals.VERSION,
+                        (Globals.TOKEN_USER["id"] if Globals.TOKEN_USER and "id" in Globals.TOKEN_USER else "Unknown"),
+                        platform.system(),
+                        platform.release(),
+                        Globals.VERSION,
                     ),
                 },
             },
@@ -251,18 +230,8 @@ class SlackUtils:
                         operation_dict[operation] += 1
                     else:
                         operation_dict[operation] = 1
-            blocks.append(
-                    self.add_rich_text_section(
-                        "Operation Summary",
-                        operation_dict
-                    )
-                )
-            blocks.append(
-                self.add_rich_text_section(
-                    "API Summary",
-                    re.sub("[\\t\\n]", " ", api_summary_str).strip()
-                )
-            )
+            blocks.append(self.add_rich_text_section("Operation Summary", operation_dict))
+            blocks.append(self.add_rich_text_section("API Summary", re.sub("[\\t\\n]", " ", api_summary_str).strip()))
         return blocks
 
     def postMessageWithFile(self, message):
@@ -282,7 +251,7 @@ class SlackUtils:
                         return resp
 
                     upload = self.client.files_upload_v2(file=self.operations_path, filename=self.filename)
-                    message = message+"<"+upload['file']['permalink']+"| >"
+                    message = message + "<" + upload["file"]["permalink"] + "| >"
                     resp = self.client.chat_postMessage(
                         channel=self.channel_id,
                         text=message,
@@ -309,7 +278,7 @@ class SlackUtils:
         if Globals.IS_DEBUG and not Globals.DO_EXTRA_LOGGING:
             return
         self.saveStoredMessageBlocks()
-        
+
         # Avoid sending if file is empty
         if not os.path.exists(self.operations_path) or os.path.getsize(self.operations_path) == 0:
             return
@@ -317,4 +286,3 @@ class SlackUtils:
         resp = self.postMessageWithFile("East Usage")
         if reset and resp:
             self.reset_operations_file()
-

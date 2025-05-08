@@ -18,13 +18,6 @@ def read_from_file(filePath, mode="r") -> list:
     return content
 
 
-def read_lines_from_file(filePath, mode="r") -> list:
-    content = None
-    with open(filePath, mode) as file:
-        content = file.readlines()
-    return content
-
-
 def read_json_file(filePath) -> dict:
     content = None
     with open(filePath, "r") as file:
@@ -49,16 +42,6 @@ def write_content_to_file(filePath, data, mode="w", encoding="utf-8") -> None:
             file.write(data)
 
 
-def read_data_from_csv(filePath: str) -> list:
-    fileData = None
-    if filePath.endswith("csv"):
-        try:
-            fileData = __read_data_from_csv_helper__(filePath, "utf-8-sig")
-        except:
-            fileData = __read_data_from_csv_helper__(filePath, "utf-8")
-    return fileData
-
-
 def read_data_from_csv_as_dict(filePath: str) -> list:
     fileData = None
     if filePath.endswith("csv"):
@@ -68,25 +51,9 @@ def read_data_from_csv_as_dict(filePath: str) -> list:
     return fileData
 
 
-def __read_data_from_csv_helper__(
-    filePath, encoding, quoting=csv.QUOTE_MINIMAL, skipinitialspace=True
-):
-    fileData = None
-    with open(filePath, "r", encoding=encoding) as csvFile:
-        reader = csv.reader(
-            csvFile, quoting=quoting, skipinitialspace=skipinitialspace
-        )
-        fileData = list(reader)
-    return fileData
-
-
-def write_data_to_csv(
-    filePath: str, data, mode="w", encoding="utf-8", newline=""
-) -> None:
+def write_data_to_csv(filePath: str, data, mode="w", encoding="utf-8", newline="") -> None:
     try:
-        with open(
-            filePath, mode, newline=newline, encoding=encoding
-        ) as csvfile:
+        with open(filePath, mode, newline=newline, encoding=encoding) as csvfile:
             writer = csv.writer(csvfile, quoting=csv.QUOTE_NONNUMERIC)
             if type(data) is dict:
                 writer.writerow(list(data.values()))
@@ -103,9 +70,7 @@ def write_data_to_csv(
 
 
 def getToolDataPath():
-    basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace(
-        "Local", "Roaming"
-    ).replace("Temp", "")
+    basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
 
     if platform.system() != "Windows":
         basePath = "%s/EsperApiTool/" % os.path.expanduser("~/Desktop/")
@@ -119,12 +84,7 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
     rows = []
     headers = None
     for sheet in workbook.sheetnames:
-        if (
-            "Device & Network" in sheet
-            or "Device and Network" in sheet
-            or "Device" in sheet
-            or readAnySheet
-        ):
+        if "Device & Network" in sheet or "Device and Network" in sheet or "Device" in sheet or readAnySheet:
             # Select the worksheet
             worksheet = workbook[sheet]
             # Extract the data
@@ -141,9 +101,7 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
 def read_csv_via_pandas(path: str) -> pd.DataFrame:
     data = None
     try:
-        data = pd.read_csv(
-            path, sep=",", header=0, keep_default_na=False, chunksize=1000
-        )
+        data = pd.read_csv(path, sep=",", header=0, keep_default_na=False, chunksize=1000)
     except:
         try:
             # Try to decode ANSI encoded CSV files
@@ -185,19 +143,13 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                         max_len = (
                             max(
                                 (
-                                    series.astype(str)
-                                    .map(len)
-                                    .max(),  # len of largest item
-                                    len(
-                                        str(series.name)
-                                    ),  # len of column name/header
+                                    series.astype(str).map(len).max(),  # len of largest item
+                                    len(str(series.name)),  # len of column name/header
                                 )
                             )
                             + 1
                         )  # adding a little extra space
-                        worksheet.set_column(
-                            idx, idx, max_len
-                        )  # set column width
+                        worksheet.set_column(idx, idx, max_len)  # set column width
         except Exception as e:
             pass
         finally:
@@ -206,11 +158,7 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
             if hasattr(writer, "close"):
                 writer.close()
     else:
-        split_dict_list = list(
-            __split_dict_into_chunks__(
-                df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE
-            )
-        )
+        split_dict_list = list(__split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE))
         for i in range(0, len(split_dict_list)):
             if i == 0:
                 path = path[:-5] + "_{}.xlsx".format(i)

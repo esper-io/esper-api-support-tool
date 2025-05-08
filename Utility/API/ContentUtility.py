@@ -11,9 +11,7 @@ from Utility.Web.WebRequests import (
 
 @api_tool_decorator()
 def getAllContentFromHost(host, enterprise, key):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/".format(
-        baseUrl=host, enterprise_id=enterprise
-    )
+    url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/".format(baseUrl=host, enterprise_id=enterprise)
     resp = performGetRequestWithRetry(
         url,
         headers={
@@ -25,9 +23,7 @@ def getAllContentFromHost(host, enterprise, key):
 
 
 def uploadContentToHost(host, enterprise, key, file):
-    url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/upload/".format(
-        baseUrl=host, enterprise_id=enterprise
-    )
+    url = "{baseUrl}/v0/enterprise/{enterprise_id}/content/upload/".format(baseUrl=host, enterprise_id=enterprise)
     file = {
         "Content-Disposition": 'form-data; name="key"; filename="%s"' % file,
         "key": open(file, "rb"),

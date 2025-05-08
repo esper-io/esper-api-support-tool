@@ -28,13 +28,8 @@ class GridDataTable(wx.grid.GridTableBase):
     def SetValue(self, row, col, value):
         if hasattr(self, "data"):
             if str(self.data.dtypes[self.data.columns[col]]) == "category":
-                if (
-                    value
-                    not in self.data[self.data.columns[col]].cat.categories
-                ):
-                    self.data[self.data.columns[col]] = self.data[
-                        self.data.columns[col]
-                    ].cat.add_categories(value)
+                if value not in self.data[self.data.columns[col]].cat.categories:
+                    self.data[self.data.columns[col]] = self.data[self.data.columns[col]].cat.add_categories(value)
             self.data.iloc[row, col] = value
 
     def GetColLabelValue(self, col):

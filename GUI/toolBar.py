@@ -20,27 +20,17 @@ class ToolsToolBar(wx.ToolBar):
 
         self.SetThemeEnabled(False)
 
-        self.qtool = self.addToolBarItem(
-            "Images/exit.png", size, "Quit", "Quit"
-        )
-        self.atool = self.addToolBarItem(
-            "Images/add.png", size, "Add New Tenant", "Add New Tenant"
-        )
+        self.qtool = self.addToolBarItem("Images/exit.png", size, "Quit", "Quit")
+        self.atool = self.addToolBarItem("Images/add.png", size, "Add New Tenant", "Add New Tenant")
         self.otool = self.addToolBarItem(
             "Images/open.png",
             size,
             "Open Device Spreadsheet",
             "Open Device Spreadsheet",
         )
-        self.stool = self.addToolBarItem(
-            "Images/save.png", size, "Save All Reports", "Save All Reports"
-        )
-        self.rtool = self.addToolBarItem(
-            "Images/run.png", size, "Run Action", "Run Action"
-        )
-        self.cmdtool = self.addToolBarItem(
-            "Images/command.png", size, "Run Command", "Run Command"
-        )
+        self.stool = self.addToolBarItem("Images/save.png", size, "Save All Reports", "Save All Reports")
+        self.rtool = self.addToolBarItem("Images/run.png", size, "Run Action", "Run Action")
+        self.cmdtool = self.addToolBarItem("Images/command.png", size, "Run Command", "Run Command")
 
         self.AddStretchableSpace()
         self.search = wx.SearchCtrl(self)

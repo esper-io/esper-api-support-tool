@@ -4,7 +4,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import onDialogEscape, setElmTheme
+from Utility.Resource import applyFontHelper, onDialogEscape, setElmTheme
 
 
 class CheckboxMessageBox(wx.Dialog):
@@ -60,9 +60,7 @@ class CheckboxMessageBox(wx.Dialog):
         label_1 = wx.StaticText(self.panel_3, wx.ID_ANY, "Do not show again")
         label_1.Bind(wx.EVT_LEFT_DOWN, self.toggleCheckbox)
         sizer_4.Add(label_1, 0, wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
-        sizer_2.Add(
-            sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5
-        )
+        sizer_2.Add(sizer_4, 1, wx.ALIGN_BOTTOM | wx.BOTTOM | wx.RIGHT | wx.TOP, 5)
         sizer_5.Add(self.okBtn, 0, wx.ALL, 5)
         sizer_5.Add(self.cancelBtn, 0, wx.ALL, 5)
         sizer_2.Add(sizer_5, 1, wx.ALIGN_BOTTOM | wx.ALL, 5)
@@ -97,24 +95,8 @@ class CheckboxMessageBox(wx.Dialog):
         self.DestroyLater()
 
     def applyFontSize(self):
-        normalFont = wx.Font(
-            Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
-            wx.FONTSTYLE_NORMAL,
-            wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
-        )
-
-        self.applyFontHelper(self, normalFont)
-
-    def applyFontHelper(self, elm, font):
-        if self:
-            childen = elm.GetChildren()
-            for child in childen:
-                if hasattr(child, "SetFont"):
-                    child.SetFont(font)
-                self.applyFontHelper(child, font)
+        fontRules = {}
+        applyFontHelper(fontRules, self, self)
 
     @api_tool_decorator()
     def onEscapePressed(self, event):

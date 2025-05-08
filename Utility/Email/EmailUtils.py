@@ -32,9 +32,7 @@ class EmailUtils:
         server.send_message(sentMsg)
 
     def _sendEmailViaSSl(self, subject, msg):
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com", self.ssl_port, context=self.context
-        ) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", self.ssl_port, context=self.context) as server:
             self.do_ssl = True
             self._sendEmailFromServer(server, subject, msg)
 

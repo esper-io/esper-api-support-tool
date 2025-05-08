@@ -1,6 +1,3 @@
-import platform
-import sys
-import threading
 from datetime import datetime
 from distutils.version import LooseVersion
 
@@ -10,11 +7,11 @@ import wx.grid as gridlib
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Common.enum import Color
+from Common.enum import Color, FontStyles
 from GUI.GridDataTable import GridDataTable
 from Utility.GridUtilities import convertColumnTypes
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import determineDoHereorMainThread, getStrRatioSimilarity
+from Utility.Resource import getFont, getStrRatioSimilarity, uiThreadCheck
 
 
 class GridTable(gridlib.Grid):
@@ -27,9 +24,7 @@ class GridTable(gridlib.Grid):
         if data is None:
             data = self.createEmptyDataFrame()
         self.CreateGrid(len(data), len(data.columns))
-        self.applyNewDataFrame(
-            data, checkColumns=False, autosize=True, resetPosition=True
-        )
+        self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
 
         self.sortedColumn = None
         self.sortAcesnding = True
@@ -43,13 +38,7 @@ class GridTable(gridlib.Grid):
         return df
 
     def ApplyGridStyle(self, autosize=False, resetPosition=False):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
-                self.ApplyGridStyle, autosize, resetPosition
-            )
+        if uiThreadCheck(self.ApplyGridStyle, autosize, resetPosition):
             return
         self.SetThemeEnabled(False)
         self.GetGridWindow().SetThemeEnabled(False)
@@ -57,26 +46,8 @@ class GridTable(gridlib.Grid):
         self.UseNativeColHeader()
         self.DisableDragRowSize()
         self.EnableDragColMove(True)
-        self.SetLabelFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_BOLD,
-                0,
-                "NormalBold",
-            )
-        )
-        self.SetDefaultCellFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
+        self.SetLabelFont(getFont(FontStyles.NORMAL_BOLD.value))
+        self.SetDefaultCellFont(getFont(FontStyles.NORMAL.value))
 
         self.Bind(gridlib.EVT_GRID_LABEL_LEFT_CLICK, self.SortColumn)
         self.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.toogleViewMenuItem)
@@ -91,20 +62,14 @@ class GridTable(gridlib.Grid):
             self.AutoSizeColumns()
             self.ForceRefresh()
 
-    def applyNewDataFrame(
-        self, data, checkColumns=True, autosize=False, resetPosition=False
-    ):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
+    def applyNewDataFrame(self, data, checkColumns=True, autosize=False, resetPosition=False):
+        if uiThreadCheck(
+            self.applyNewDataFrame,
+            data,
+            checkColumns,
+            autosize,
+            resetPosition,
         ):
-            determineDoHereorMainThread(
-                self.applyNewDataFrame,
-                data,
-                checkColumns,
-                autosize,
-                resetPosition,
-            )
             return
 
         try:
@@ -125,9 +90,7 @@ class GridTable(gridlib.Grid):
                                 renameColumns[column] = expectedCol
                                 matchingColumns.append(expectedCol)
                                 break
-                    missingColumns = list(
-                        set(self.headersLabels) - set(matchingColumns)
-                    )
+                    missingColumns = list(set(self.headersLabels) - set(matchingColumns))
                     for missingColumn in missingColumns:
                         data[missingColumn] = ""
                     data = data.rename(columns=renameColumns)
@@ -176,9 +139,7 @@ class GridTable(gridlib.Grid):
     def EmptyGrid(self):
         if not self.table.data.empty:
             data = self.createEmptyDataFrame()
-            self.applyNewDataFrame(
-                data, checkColumns=False, autosize=True, resetPosition=True
-            )
+            self.applyNewDataFrame(data, checkColumns=False, autosize=True, resetPosition=True)
 
     def SortColumn(self, event):
         col = None
@@ -196,52 +157,31 @@ class GridTable(gridlib.Grid):
             self.SetSortingColumn(self.sortedColumn, self.sortAcesnding)
             colName = self.GetColLabelValue(col)
             self.logToParentFrame(
-                'Sorting Grid on Column: "%s" Order: %s'
-                % (colName, "Ascending" if self.sortAcesnding else "Descending")
+                'Sorting Grid on Column: "%s" Order: %s' % (colName, "Ascending" if self.sortAcesnding else "Descending")
             )
             if colName in Globals.SEMANTIC_VERSION_COL:
                 try:
-                    df = self.table.data.iloc[
-                        self.table.data[colName].apply(LooseVersion).argsort()
-                    ].reset_index(drop=True)
+                    df = self.table.data.iloc[self.table.data[colName].apply(LooseVersion).argsort()].reset_index(drop=True)
 
                     if not self.sortAcesnding:
                         df = df.iloc[::-1]
                 except:
-                    df = self.table.data.sort_values(
-                        colName, ascending=self.sortAcesnding
-                    )
+                    df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             elif colName in Globals.DATE_COL.keys():
                 try:
                     # convert column to datetime
-                    self.table.data[colName] = pd.to_datetime(
-                        self.table.data[colName], exact=False, errors="coerce"
-                    )
-                    self.table.data[colName] = self.table.data[
-                        colName
-                    ].dt.strftime(Globals.DATE_COL[colName])
-                    self.table.data[colName] = self.table.data[colName].fillna(
-                        "No Data Available"
-                    )
+                    self.table.data[colName] = pd.to_datetime(self.table.data[colName], exact=False, errors="coerce")
+                    self.table.data[colName] = self.table.data[colName].dt.strftime(Globals.DATE_COL[colName])
+                    self.table.data[colName] = self.table.data[colName].fillna("No Data Available")
                     # sort by datetime
-                    df = self.table.data.sort_values(
-                        colName, ascending=self.sortAcesnding
-                    )
+                    df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
                     # convert column back to string
-                    self.table.data[colName] = self.table.data[colName].astype(
-                        pd.StringDtype()
-                    )
+                    self.table.data[colName] = self.table.data[colName].astype(pd.StringDtype())
                 except Exception as e:
-                    df = self.table.data.sort_values(
-                        colName, ascending=self.sortAcesnding
-                    )
+                    df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             else:
-                df = self.table.data.sort_values(
-                    colName, ascending=self.sortAcesnding
-                )
-            Globals.THREAD_POOL.enqueue(
-                self.applyNewDataFrame, df, checkColumns=False, autosize=True
-            )
+                df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
+            Globals.THREAD_POOL.enqueue(self.applyNewDataFrame, df, checkColumns=False, autosize=True)
             self.GoToCell(0, col)
 
     @api_tool_decorator()
@@ -266,17 +206,9 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
-        if (
-            self.currentlySelectedCell
-            and self.currentlySelectedCell[0] >= 0
-            and self.currentlySelectedCell[1] >= 0
-        ):
+        if self.currentlySelectedCell and self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
             data = wx.TextDataObject()
-            data.SetText(
-                widget.GetCellValue(
-                    self.currentlySelectedCell[0], self.currentlySelectedCell[1]
-                )
-            )
+            data.SetText(widget.GetCellValue(self.currentlySelectedCell[0], self.currentlySelectedCell[1]))
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(data)
                 wx.TheClipboard.Close()
@@ -294,9 +226,7 @@ class GridTable(gridlib.Grid):
             success
             and self.currentlySelectedCell[0] >= 0
             and self.currentlySelectedCell[1] >= 0
-            and not widget.IsReadOnly(
-                self.currentlySelectedCell[0], self.currentlySelectedCell[1]
-            )
+            and not widget.IsReadOnly(self.currentlySelectedCell[0], self.currentlySelectedCell[1])
         ):
             widget.SetCellValue(
                 self.currentlySelectedCell[0],
@@ -310,11 +240,7 @@ class GridTable(gridlib.Grid):
         if self.disableProperties:
             event.Skip()
             return
-        validIndexes = [
-            self.headersLabels.index(col)
-            for col in Globals.CSV_EDITABLE_COL
-            if col in self.headersLabels
-        ]
+        validIndexes = [self.headersLabels.index(col) for col in Globals.CSV_EDITABLE_COL if col in self.headersLabels]
 
         grid_win = self.GetTargetWindow()
 
@@ -338,11 +264,7 @@ class GridTable(gridlib.Grid):
     def SetStatusCellColor(self):
         # Check to see if rows exsist
         numRows = self.GetNumberRows()
-        if (
-            numRows > 0
-            and "Last Seen" in self.headersLabels
-            and not Globals.frame.SpreadsheetUploaded
-        ):
+        if numRows > 0 and "Last Seen" in self.headersLabels and not Globals.frame.SpreadsheetUploaded:
             colNum = self.headersLabels.index("Last Seen")
             currentDate = datetime.now()
             for rowNum in range(numRows):
@@ -363,58 +285,34 @@ class GridTable(gridlib.Grid):
                 parsedDateTime = None
                 differenceInMinutes = None
                 try:
-                    parsedDateTime = (
-                        datetime.strptime(value, datePattern)
-                        if "ago" not in value
-                        else None
-                    )
+                    parsedDateTime = datetime.strptime(value, datePattern) if "ago" not in value else None
                 except:
                     pass
                 if parsedDateTime:
-                    differenceInMinutes = (
-                        currentDate - parsedDateTime
-                    ).total_seconds() / 60
+                    differenceInMinutes = (currentDate - parsedDateTime).total_seconds() / 60
                 if value == "Less than 1 minute ago":
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightGreen.value
-                    )
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
                 elif " minutes ago" in value:
                     minutes = int(value.split(" ")[0])
                     if minutes < 30:
-                        self.SetCellTextColour(
-                            rowNum, colNum, Color.green.value
-                        )
-                        self.SetCellBackgroundColour(
-                            rowNum, colNum, Color.lightGreen.value
-                        )
+                        self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
                     else:
-                        self.SetCellTextColour(
-                            rowNum, colNum, Color.orange.value
-                        )
-                        self.SetCellBackgroundColour(
-                            rowNum, colNum, Color.lightYellow.value
-                        )
+                        self.SetCellTextColour(rowNum, colNum, Color.orange.value)
+                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
                 elif " days ago" in value:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightRed.value
-                    )
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
                 elif differenceInMinutes and differenceInMinutes < 30:
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightGreen.value
-                    )
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
                 elif differenceInMinutes and differenceInMinutes < 1440:
                     self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightYellow.value
-                    )
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
                 elif differenceInMinutes and differenceInMinutes > 1440:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
-                    self.SetCellBackgroundColour(
-                        rowNum, colNum, Color.lightRed.value
-                    )
+                    self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)
 
     def logToParentFrame(self, msg, isError=False):
         if Globals.frame and hasattr(Globals.frame, "Logging"):
@@ -430,44 +328,24 @@ class GridTable(gridlib.Grid):
 
     @api_tool_decorator()
     def SetCellTextColour(self, rowNum, colNum, color):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
-                super().SetCellTextColour, rowNum, colNum, color
-            )
+        if uiThreadCheck(super().SetCellTextColour, rowNum, colNum, color):
             return
         super().SetCellTextColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def SetCellBackgroundColour(self, rowNum, colNum, color):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(
-                super().SetCellBackgroundColour, rowNum, colNum, color
-            )
+        if uiThreadCheck(super().SetCellBackgroundColour, rowNum, colNum, color):
             return
         super().SetCellBackgroundColour(rowNum, colNum, color)
 
     @api_tool_decorator()
     def ForceRefresh(self):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(super().ForceRefresh)
+        if uiThreadCheck(super().ForceRefresh):
             return
         return super().ForceRefresh()
 
     @api_tool_decorator()
     def AutoSizeColumns(self, setAsMin=True):
-        if (
-            platform.system() == "Darwin"
-            and "main" not in threading.current_thread().name.lower()
-        ):
-            determineDoHereorMainThread(super().AutoSizeColumns, setAsMin)
+        if uiThreadCheck(super().AutoSizeColumns, setAsMin):
             return
         return super().AutoSizeColumns(setAsMin)

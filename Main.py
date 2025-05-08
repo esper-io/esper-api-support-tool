@@ -25,17 +25,15 @@ class MyApp(wx.App):
             self.instance = wx.SingleInstanceChecker(self.name)
 
             if self.instance.IsAnotherRunning() and not Globals.IS_DEBUG:
-                wx.MessageBox(
-                    "Another instance is running!", style=wx.ICON_ERROR
-                )
+                wx.MessageBox("Another instance is running!", style=wx.ICON_ERROR)
                 return False
             atexit.register(OnExit)
 
             # Register signal handlers for common termination signals (optional, but recommended)
             signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
-            signal.signal(signal.SIGTERM, signal_handler) # Termination signal
+            signal.signal(signal.SIGTERM, signal_handler)  # Termination signal
             # On Windows, also handle these signals:
-            if os.name == 'nt':
+            if os.name == "nt":
                 signal.signal(signal.SIGBREAK, signal_handler)
 
             splash = SplashScreen()
@@ -53,12 +51,15 @@ class MyApp(wx.App):
     def MacNewFile(self):
         Globals.frame.MacNewFile()
 
+
 def OnExit():
     if Globals.frame:
         Globals.frame.OnQuit(None)
 
+
 def signal_handler(signal, frame):
     OnExit()
+
 
 @api_tool_decorator(displayPrompt=False)
 def main():
@@ -77,9 +78,11 @@ def main():
     except Exception as e:
         ApiToolLog().LogError(e)
 
+
 def is_arg_enabled(val):
     val = val.lower() if hasattr(val, "lower") else val
-    return (val == "true" or val == "t" or val == "y")
+    return val == "true" or val == "t" or val == "y"
+
 
 if __name__ == "__main__":
     command = " ".join(sys.argv)

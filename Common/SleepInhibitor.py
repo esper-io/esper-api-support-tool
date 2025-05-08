@@ -22,11 +22,9 @@ class SleepInhibitor:
         if platform.system() == "Windows" and Globals.INHIBIT_SLEEP:
             import ctypes
 
-            ctypes.windll.kernel32.SetThreadExecutionState(
-                SleepInhibitor.ES_CONTINUOUS | SleepInhibitor.ES_SYSTEM_REQUIRED
-            )
+            ctypes.windll.kernel32.SetThreadExecutionState(SleepInhibitor.ES_CONTINUOUS | SleepInhibitor.ES_SYSTEM_REQUIRED)
         elif platform.system() == "Darwin" and Globals.INHIBIT_SLEEP:
-            self.process = Popen([u"caffeinate"], stdin=PIPE, stdout=PIPE)
+            self.process = Popen(["caffeinate"], stdin=PIPE, stdout=PIPE)
 
     def uninhibit(self):
         if platform.system() == "Windows" and Globals.INHIBIT_SLEEP:

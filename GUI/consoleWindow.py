@@ -8,9 +8,15 @@ import wx.html as wxHtml
 import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
-from Common.enum import Color
-from Utility.Resource import (onDialogEscape, openWebLinkInBrowser,
-                              postEventToFrame, resourcePath, setElmTheme)
+from Common.enum import Color, FontStyles
+from Utility.Resource import (
+    getFont,
+    onDialogEscape,
+    openWebLinkInBrowser,
+    postEventToFrame,
+    resourcePath,
+    setElmTheme,
+)
 
 
 class Console(wx.Frame):
@@ -23,22 +29,11 @@ class Console(wx.Frame):
         else:
             self.WINDOWS = False
 
-        no_sys_menu = (
-            wx.MINIMIZE_BOX
-            | wx.MAXIMIZE_BOX
-            | wx.RESIZE_BORDER
-            | wx.CAPTION
-            | wx.CLIP_CHILDREN
-            | wx.CLOSE_BOX
-        )
-        wx.Frame.__init__(
-            self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu
-        )
+        no_sys_menu = wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.CAPTION | wx.CLIP_CHILDREN | wx.CLOSE_BOX
+        wx.Frame.__init__(self, title=self.title, parent=parent, size=(500, 700), style=no_sys_menu)
         self.SetThemeEnabled(False)
         icon = wx.Icon()
-        icon.CopyFromBitmap(
-            wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG)
-        )
+        icon.CopyFromBitmap(wx.Bitmap(resourcePath("Images/icon.png"), wx.BITMAP_TYPE_PNG))
         self.SetIcon(icon)
 
         panel = wx.Panel(self, wx.ID_ANY)
@@ -50,16 +45,7 @@ class Console(wx.Frame):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_AUTO_URL | wx.TE_BESTWRAP,
         )
 
-        self.loggingList.SetFont(
-            wx.Font(
-                Globals.FONT_SIZE,
-                wx.FONTFAMILY_DEFAULT,
-                wx.FONTSTYLE_NORMAL,
-                wx.FONTWEIGHT_NORMAL,
-                0,
-                "Normal",
-            )
-        )
+        self.loggingList.SetFont(getFont(FontStyles.NORMAL.value))
 
         grid_sizer_2 = wx.GridSizer(1, 1, 0, 0)
         grid_sizer_2.Add(self.loggingList, 0, wx.ALL | wx.EXPAND, 5)
@@ -86,10 +72,12 @@ class Console(wx.Frame):
 
         exitId = wx.NewId()
         self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
-        accel_table = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('W'), exitId),
-            (wx.ACCEL_CMD, ord('W'), exitId),
-        ])
+        accel_table = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("W"), exitId),
+                (wx.ACCEL_CMD, ord("W"), exitId),
+            ]
+        )
         self.SetAcceleratorTable(accel_table)
 
         setElmTheme(self)
