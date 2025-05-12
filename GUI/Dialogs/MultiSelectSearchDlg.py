@@ -355,7 +355,7 @@ class MultiSelectSearchDlg(wx.Dialog):
             widget.WriteText(data.GetText())
 
     def onNext(self, event):
-        setCursorBusy()
+        setCursorBusy(self)
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
@@ -380,7 +380,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         setCursorDefault()
 
     def onPrev(self, event):
-        setCursorBusy()
+        setCursorBusy(self)
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
         if self.page > 0:
             self.page -= 1
@@ -493,7 +493,7 @@ class MultiSelectSearchDlg(wx.Dialog):
     def selectAllDevices(self):
         if uiThreadCheck(self.selectAllDevices):
             return
-        setCursorBusy()
+        setCursorBusy(self)
         self.button_1.Enable(False)
         self.button_2.Enable(False)
         self.button_OK.Enable(False)
