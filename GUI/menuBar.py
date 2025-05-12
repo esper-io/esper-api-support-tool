@@ -17,7 +17,7 @@ from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
                               openWebLinkInBrowser, postEventToFrame,
-                              resourcePath)
+                              resourcePath, uiThreadCheck)
 
 
 class ToolMenuBar(wx.MenuBar):
@@ -302,6 +302,12 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def onDisclaimer(self, event=None, showCheckBox=False):
+        if uiThreadCheck(
+            self.onDisclaimer,
+            event,
+            showCheckBox,
+        ):
+            return
         showDisclaimer = True
         with HtmlDialog(showCheckbox=showCheckBox) as dialog:
             Globals.OPEN_DIALOGS.append(dialog)
