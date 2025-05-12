@@ -1188,7 +1188,7 @@ class PreferencesDialog(wx.Dialog):
                     val = min
                 elif max and val > max:
                     val = max
-                spinCtrl.SetValue(val)
+                spinCtrl.SetValue(int(val))
             except ValueError:
                 spinCtrl.SetValue(default)
         else:

@@ -306,7 +306,7 @@ class NewFrameLayout(wx.Frame):
                 self.setFontSizeForLabels(parent=child)
 
         for dlg in Globals.OPEN_DIALOGS:
-            if hasattr(dlg, "applyFontSize"):
+            if dlg and hasattr(dlg, "applyFontSize"):
                 dlg.applyFontSize()
         determineDoHereorMainThread(self.Refresh)
 
