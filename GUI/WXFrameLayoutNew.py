@@ -81,7 +81,8 @@ from Utility.Resource import (checkEsperInternetConnection,
                               postEventToFrame, processFunc, resourcePath,
                               setCursorBusy, setCursorDefault, setCursorIcon,
                               setElmTheme, setPandasOption,
-                              splitListIntoChunks, updateErrorTracker)
+                              splitListIntoChunks, uiThreadCheck,
+                              updateErrorTracker)
 
 
 class NewFrameLayout(wx.Frame):
@@ -1050,6 +1051,9 @@ class NewFrameLayout(wx.Frame):
             Globals.token_lock.release()
 
     def promptForNewToken(self):
+        if uiThreadCheck(self.promptForNewToken, enforceRegardless=True):
+            return
+
         newToken = ""
         while not newToken:
             with TextEntryDialog(

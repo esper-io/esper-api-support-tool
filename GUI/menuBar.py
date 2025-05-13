@@ -306,6 +306,7 @@ class ToolMenuBar(wx.MenuBar):
             self.onDisclaimer,
             event,
             showCheckBox,
+            enforceRegardless=True,
         ):
             return
         showDisclaimer = True

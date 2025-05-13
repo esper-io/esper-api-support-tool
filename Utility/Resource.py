@@ -52,6 +52,8 @@ def createNewFile(filePath, fileData=None):
 
 
 def scale_bitmap(bitmap, width, height):
+    if not bitmap:
+        return wx.NullBitmap
     try:
         image = wx.Image(bitmap)
         image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
@@ -462,7 +464,8 @@ def processFunc(event):
 
 
 def uiThreadCheck(func, *args, **kwargs):
-    if platform.system() == "Darwin" and "main" not in threading.current_thread().name.lower():
+    enforceRegardless = kwargs.get("enforceRegardless", False)
+    if (platform.system() == "Darwin" or enforceRegardless) and "main" not in threading.current_thread().name.lower():
         determineDoHereorMainThread(func, *args, **kwargs)
         return True
     return False
@@ -473,7 +476,9 @@ def determineDoHereorMainThread(func, *args, **kwargs):
     if not callable(func):
         return
 
-    if platform.system() == "Windows" or "main" in threading.current_thread().name.lower():
+    enforceRegardless = kwargs.get("enforceRegardless", False)
+    kwargs.pop('enforceRegardless', None)
+    if (platform.system() == "Windows" and not enforceRegardless) or "main" in threading.current_thread().name.lower():
         # do here
         if args and kwargs:
             func(*args, **kwargs)
