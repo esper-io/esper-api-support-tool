@@ -279,7 +279,7 @@ class GeofenceDialog(wx.Dialog):
             )
             if dialog == wx.YES:
                 self.button_APPLY.Enable(False)
-                setCursorBusy()
+                setCursorBusy(self)
                 Globals.THREAD_POOL.enqueue(
                     self.processCreateGeoFenceRequest,
                     properGroupIdList,
