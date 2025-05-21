@@ -474,12 +474,17 @@ class MultiSelectSearchDlg(wx.Dialog):
                     device.device_name,
                     device.alias_name if device.alias_name else "",
                 )
-            else:
+            elif "hardwareInfo" in device:
                 name = "%s %s %s %s" % (
                     (device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else ""),
                     (device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else ""),
                     device["device_name"],
                     device["alias_name"] if device["alias_name"] else "",
+                )
+            else:
+                name = "%s %s" % (
+                    device.get("device_name", ""),
+                    device.get("alias_name", "")
                 )
             if name and name not in self.Parent.sidePanel.devicesExtended:
                 if hasattr(device, "id"):
