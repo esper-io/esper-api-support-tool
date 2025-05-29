@@ -7,12 +7,8 @@ import requests
 import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    checkIfCurrentThreadStopped,
-    enforceRateLimit,
-    getHeader,
-    postEventToFrame,
-)
+from Utility.Resource import (checkIfCurrentThreadStopped, enforceRateLimit,
+                              getHeader, postEventToFrame)
 
 
 def performRequestWithRetry(
@@ -176,5 +172,7 @@ def fetchRequestWithOffsets(url, tolerance=0, useThreadPool=True):
             respJson["results"] = respJson["results"] + offsetResponses["results"]
             respJson["next"] = None
             respJson["prev"] = None
+        elif type(offsetResponses) is list:
+            respJson["results"] = respJson["results"] + offsetResponses
         return respJson
     return resp

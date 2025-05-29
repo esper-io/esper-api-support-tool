@@ -10,18 +10,12 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    fetchRequestWithOffsets,
-    handleRequestError,
-    performGetRequestWithRetry,
-    performPatchRequestWithRetry,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
+                              postEventToFrame)
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     handleRequestError,
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
 
 
 def moveGroup(groupId, deviceList, maxAttempt=Globals.MAX_RETRY):
@@ -76,8 +70,8 @@ def getGroupApiUrl(limit=Globals.limit, offset=0, name=""):
     url = "{tenant}/enterprise/{enterprise}/devicegroup/?limit={lim}&offset={page}".format(
         tenant=Globals.configuration.host,
         enterprise=Globals.enterprise_id,
-        lim=limit,
-        page=offset,
+        lim=limit if limit else Globals.limit,
+        page=offset if offset else 0,
     )
     if name:
         url += "&name={}".format(name)
@@ -85,7 +79,7 @@ def getGroupApiUrl(limit=Globals.limit, offset=0, name=""):
 
 
 @api_tool_decorator(locks=[Globals.token_lock])
-def getAllGroups(name="", limit=None, offset=None, maxAttempt=Globals.MAX_RETRY, tolerance=0):
+def getAllGroups(name="", limit=Globals.limit, offset=0, maxAttempt=Globals.MAX_RETRY, tolerance=0):
     """Make a API call to get all Groups belonging to the Enterprise"""
     return get_all_groups(name, limit, offset, maxAttempt, tolerance=tolerance)
 
