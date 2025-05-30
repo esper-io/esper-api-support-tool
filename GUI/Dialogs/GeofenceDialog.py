@@ -368,7 +368,7 @@ class GeofenceDialog(wx.Dialog):
                     )
                 )
         self.button_APPLY.Enable(True)
-        setCursorDefault()
+        setCursorDefault(self)
 
     @api_tool_decorator()
     def createApplyGeofence(

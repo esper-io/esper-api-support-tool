@@ -377,7 +377,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        setCursorDefault()
+        setCursorDefault(self)
 
     def onPrev(self, event):
         setCursorBusy(self)
@@ -402,7 +402,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        setCursorDefault()
+        setCursorDefault(self)
 
     def checkPageButton(self):
         if uiThreadCheck(self.checkPageButton):
@@ -543,7 +543,7 @@ class MultiSelectSearchDlg(wx.Dialog):
         self.check_list_box_1.Enable(True)
         self.search.Enable(True)
         self.button_OK.Enable(True)
-        setCursorDefault()
+        setCursorDefault(self)
 
     def applyFontSize(self):
         normalFont = getFont(FontStyles.NORMAL.value)
