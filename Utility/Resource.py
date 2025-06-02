@@ -745,12 +745,16 @@ def setCursorIcon(elm, icon=wx.CURSOR_DEFAULT):
 
 def setCursorBusy(elm):
     """Set cursor icon to busy state"""
+    if not elm:
+        return
     if uiThreadCheck(setCursorBusy):
         return
     setCursorIcon(elm, wx.CURSOR_WAIT)
 
 def setCursorDefault(elm):
     """Set cursor icon to busy state"""
+    if not elm:
+        return
     if uiThreadCheck(setCursorDefault):
         return
     setCursorIcon(elm, wx.CURSOR_DEFAULT)

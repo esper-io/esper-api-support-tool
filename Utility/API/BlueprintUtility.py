@@ -10,29 +10,20 @@ import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from GUI.Dialogs.CheckboxMessageBox import CheckboxMessageBox
 from Utility import EventUtility
-from Utility.API.AppUtilities import (
-    getAllApplicationsForHost,
-    getAllAppVersionsForHost,
-    uploadApplicationForHost,
-)
+from Utility.API.AppUtilities import (getAllApplicationsForHost,
+                                      getAllAppVersionsForHost,
+                                      uploadApplicationForHost)
 from Utility.API.CommandUtility import postEsperCommand
-from Utility.API.ContentUtility import getAllContentFromHost, uploadContentToHost
+from Utility.API.ContentUtility import (getAllContentFromHost,
+                                        uploadContentToHost)
 from Utility.API.FeatureFlag import getFeatureFlagsForTenant
 from Utility.API.WallpaperUtility import uploadWallpaper
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    deleteFile,
-    displayMessageBox,
-    download,
-    getEsperConfig,
-    getHeader,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    fetchRequestWithOffsets,
-    performGetRequestWithRetry,
-    performPostRequestWithRetry,
-)
+from Utility.Resource import (deleteFile, displayMessageBox, download,
+                              getEsperConfig, getHeader, postEventToFrame)
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     performGetRequestWithRetry,
+                                     performPostRequestWithRetry)
 
 
 def checkFeatureFlags(data):
@@ -718,6 +709,8 @@ def convertTemplateToBlueprint(template):
     appList = []
     if templateSection["application"]["apps"]:
         for app in templateSection["application"]["apps"]:
+            if "downloadUrl" not in app:
+                continue  # Skip apps without download URL
             appList.append(
                 {
                     "id": app["id"],

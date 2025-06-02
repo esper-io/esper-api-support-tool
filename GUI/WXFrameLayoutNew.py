@@ -870,14 +870,20 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def setCursorDefault(self):
         """Set cursor icon to default state"""
-        setCursorBusy(self)
+        try:
+            setCursorIcon(self, wx.CURSOR_DEFAULT)
+        except:
+            pass
         self.isBusy = False
 
     @api_tool_decorator()
     def setCursorBusy(self):
         """Set cursor icon to busy state"""
         self.isBusy = True
-        setCursorDefault(self)
+        try:
+            setCursorIcon(self, wx.CURSOR_WAIT)
+        except:
+            pass
 
     @api_tool_decorator()
     def loadConfiguartion(self, event, *args, **kwargs):
