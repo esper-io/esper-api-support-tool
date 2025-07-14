@@ -7,11 +7,9 @@ from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import getHeader, postEventToFrame
-from Utility.Web.WebRequests import (
-    getAllFromOffsetsRequests,
-    handleRequestError,
-    performGetRequestWithRetry,
-)
+from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
+                                     handleRequestError,
+                                     performGetRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -130,7 +128,7 @@ def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX
     extention = "?limit=%s&offset=%s" % (limit, offset)
     if groupToUse.strip():
         extention += "&group_multi=%s" % (groupToUse.strip(),)
-    url = "%s/device/v0/devices/%s" % (Globals.configuration.host, extention)
+    url = "%s/v2/devices/%s" % (Globals.configuration.host, extention)
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
         api_response = api_response.json()
@@ -340,7 +338,7 @@ def searchForDevice(
         else:
             extention += "&tags=%s" % (tags)
 
-    url = ("%s/device/v0/devices/" % Globals.configuration.host) + extention
+    url = ("%s/v2/devices/" % Globals.configuration.host) + extention
     api_response = performGetRequestWithRetry(url, getHeader())
     if api_response.status_code < 300:
         api_response = api_response.json()

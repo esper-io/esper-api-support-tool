@@ -34,7 +34,10 @@ class GridDataTable(wx.grid.GridTableBase):
 
     def GetColLabelValue(self, col):
         if hasattr(self, "data"):
-            return str(self.data.columns[col])
+            try:
+                return str(self.data.columns[col])
+            except:
+                return ""
         return ""
 
     def GetTypeName(self, row, col):
