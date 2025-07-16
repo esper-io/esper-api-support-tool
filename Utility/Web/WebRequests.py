@@ -3,12 +3,26 @@
 import time
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import Common.Globals as Globals
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkIfCurrentThreadStopped, enforceRateLimit,
                               getHeader, postEventToFrame)
+
+session = requests.Session()
+
+retries = Retry(
+    total=Globals.MAX_RETRY,
+    backoff_factor=3,       # 3, 6, 12, 24, 48...seconds
+    status_forcelist=[500, 502, 503, 504],
+    allowed_methods=["GET", "POST"]
+)
+
+adapter = HTTPAdapter(max_retries=retries)
+session.mount("https://", adapter)
 
 
 def performRequestWithRetry(
@@ -18,6 +32,7 @@ def performRequestWithRetry(
     json=None,
     data=None,
     files=None,
+    requestTimeout=(10, 30), # connect, read
     maxRetry=Globals.MAX_RETRY,
 ):
     resp = None
@@ -25,14 +40,21 @@ def performRequestWithRetry(
         try:
             enforceRateLimit()
             if files:
-                resp = method(url, headers=headers, json=json, data=data, files=files)
+                resp = method(url, headers=headers, json=json, data=data, files=files, timeout=requestTimeout)
             else:
-                resp = method(url, headers=headers, json=json, data=data)
+                resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
-            if resp.status_code < 300 or (resp.status_code == 500 and attempt >= 2):
+            code = resp.status_code if resp else -1
+            if code < 300 or (str(code).startswith("5") and attempt >= int(maxRetry / 2)):
                 break
-            if resp.status_code == 429:
+            elif code == 429:
                 doExponentialBackoff(attempt)
+            else:
+                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
+                    url, attempt + 1, maxRetry, code, resp.text
+                )
+                ApiToolLog().LogError(err_msg, postStatus=False)
+                postEventToFrame(EventUtility.myEVT_LOG, err_msg)
         except Exception as e:
             handleRequestError(attempt, e, maxRetry)
     return resp
