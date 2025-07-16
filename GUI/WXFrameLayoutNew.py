@@ -325,7 +325,7 @@ class NewFrameLayout(wx.Frame):
     def Logging(self, entry, isError=False):
         """Frame UI Logging"""
         try:
-            entry = entry.replace("\n", " ")
+            entry = entry.replace("\n", " ").replace("--->", "").strip()
             shortMsg = entry
             Globals.LOGLIST.append(entry)
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
@@ -1806,7 +1806,7 @@ class NewFrameLayout(wx.Frame):
             if self.statusBar and hasattr(self.statusBar, "sbText") and self.statusBar.sbText and not self.kill:
                 self.statusBar.sbText.SetLabel(status)
                 if orgingalMsg:
-                    self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", ""))
+                    self.statusBar.sbText.SetToolTip(orgingalMsg.replace("--->", "").strip())
                 if isError:
                     self.statusBar.sbText.SetForegroundColour(Color.red.value)
                 elif Globals.THEME == "Dark" or (Globals.THEME == "System" and isDarkMode()):
