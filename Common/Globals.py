@@ -84,16 +84,12 @@ token_lock = threading.Lock()
 app_lock = threading.Lock()
 join_lock = threading.Lock()
 
-# Known Group Var
-knownGroups = {}
-
-# Known Blueprints
-knownBlueprints = {}
-
-# Known Custom User Roles
-knownUserRoles = {}
-
-knownApplications = []
+# Variables that contain data we fetch once and expand on a per-need basis
+knownGroups = {}        # Known Groups
+knownBlueprints = {}    # Known Blueprints
+knownUserRoles = {}     # Known Custom User Roles
+knownApplications = []  # Known Applications
+knownTags = {}          # Known Tags
 
 OPEN_DIALOGS = []
 

@@ -6,7 +6,7 @@ from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import getHeader, postEventToFrame
+from Utility.Resource import getHeader, is_uuid, postEventToFrame
 from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
                                      handleRequestError,
                                      performGetRequestWithRetry)
@@ -352,7 +352,7 @@ def searchForDevice(
 def getProperDeviceId(devices):
     properDeviceList = []
     for device in devices:
-        if len(device.split("-")) == 5:
+        if is_uuid(device):  # len(device.split("-")) == 5:
             properDeviceList.append(device)
         else:
             json_rsp = searchForDevice(search=device)

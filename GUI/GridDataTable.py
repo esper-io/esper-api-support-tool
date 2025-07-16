@@ -33,7 +33,7 @@ class GridDataTable(wx.grid.GridTableBase):
             self.data.iloc[row, col] = value
 
     def GetColLabelValue(self, col):
-        if hasattr(self, "data"):
+        if hasattr(self, "data") and pd.notna(col) and col < len(self.data.columns):
             try:
                 return str(self.data.columns[col])
             except:

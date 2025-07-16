@@ -9,6 +9,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
@@ -764,3 +765,10 @@ def setPandasOption(key, value):
         pd.set_option(key, value)
     except Exception as e:
         ApiToolLog().LogError(e)
+
+def is_uuid(id: str) -> bool:
+    try:
+        uuid.UUID(id)
+        return True
+    except Exception as e:
+        return False

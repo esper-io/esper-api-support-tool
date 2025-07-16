@@ -10,8 +10,8 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (enforceRateLimit, getHeader, logBadResponse,
-                              postEventToFrame)
+from Utility.Resource import (enforceRateLimit, getHeader, is_uuid,
+                              logBadResponse, postEventToFrame)
 from Utility.Web.WebRequests import (fetchRequestWithOffsets,
                                      handleRequestError,
                                      performGetRequestWithRetry,
@@ -212,7 +212,7 @@ def createDeviceGroupForHost(config, enterprise_id, group, maxAttempt=Globals.MA
 def getProperGroupId(groups):
     properGroupList = []
     for group in groups:
-        if len(group.split("-")) == 5:
+        if is_uuid(group): #len(group.split("-")) == 5:
             properGroupList.append(group)
         else:
             json_rsp = get_all_groups(name=group)

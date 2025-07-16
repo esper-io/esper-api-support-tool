@@ -29,7 +29,7 @@ from Utility.GridUtilities import (constructDeviceAppRowEntry,
                                    createDataFrameFromDict)
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkIfCurrentThreadStopped, displayMessageBox,
-                              getHeader, ipv6Tomac, postEventToFrame,
+                              getHeader, ipv6Tomac, is_uuid, postEventToFrame,
                               splitListIntoChunks, unpackageDict, utc_to_local)
 from Utility.Web.WebRequests import perform_web_requests
 
@@ -728,8 +728,23 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
             deviceInfo["Custom Serial"] = ""
 
     if bool(deviceTags):
+        processedTags = []
+        for entry in deviceTags:
+            if is_uuid(entry):
+                if entry in Globals.knownTags:
+                    processedTags.append(Globals.knownTags[entry])
+                else:
+                    tagResp = apiCalls.getTenantTagById(entry)
+                    if tagResp and type(tagResp) is dict and "tag" in tagResp:
+                        tagId = tagResp.get("id", "")
+                        tag = tagResp.get("tag", "")
+                        Globals.knownTags[tagId] = tag
+                        processedTags.append(tag)
+                    else:
+                        processedTags.append(entry)
+
         # Add Functionality For Modifying Multiple Tags
-        deviceInfo["Tags"] = deviceTags
+        deviceInfo["Tags"] = processedTags
     else:
         deviceInfo["Tags"] = ""
 
@@ -1012,6 +1027,8 @@ def clearKnownGlobalVariables():
     Globals.knownGroups.clear()
     Globals.knownBlueprints.clear()
     Globals.knownApplications = []
+    Globals.knownTags.clear()
+    Globals.knownUserRoles.clear()
 
 
 def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):

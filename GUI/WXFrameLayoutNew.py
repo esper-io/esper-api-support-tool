@@ -53,7 +53,8 @@ from Utility.API.BlueprintUtility import (checkFeatureFlags, getAllBlueprints,
                                           pushBlueprintUpdate)
 from Utility.API.CommandUtility import createCommand, sendPowerDownCommand
 from Utility.API.DeviceUtility import getAllDevices
-from Utility.API.EsperAPICalls import getCompanySettings, validateConfiguration
+from Utility.API.EsperAPICalls import (getCompanySettings, getTenantTags,
+                                       validateConfiguration)
 from Utility.API.GroupUtility import getAllGroups, moveGroup
 from Utility.API.UserUtility import (getAllPendingUsers, getAllUsers,
                                      getAuthRoles, getUserFromToken)
@@ -2460,6 +2461,15 @@ class NewFrameLayout(wx.Frame):
         resp = getAuthRoles()
         Globals.knownUserRoles = resp.get("roles", []) if resp else []
         self.Logging("---> Custom User Roles fetched.")
+
+        self.Logging("---> Attempting to Saved Tags...")
+        tagsResp = getTenantTags()
+        if tagsResp and type(tagsResp) == list:
+            for entry in tagsResp:
+                tagId = entry.get("id", "")
+                tag = entry.get("tag", "")
+                Globals.knownTags[tagId] = tag
+        self.Logging("---> Saved Tags fetched.")
 
     @api_tool_decorator()
     def onUserReport(self, event):

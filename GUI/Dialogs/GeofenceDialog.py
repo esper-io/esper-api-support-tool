@@ -13,9 +13,9 @@ from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
 from Utility.Resource import (displayFileDialog, displayMessageBox, getFont,
-                              getHeader, onDialogEscape, setCursorBusy,
-                              setCursorDefault, setCursorIcon, setElmTheme,
-                              uiThreadCheck)
+                              getHeader, is_uuid, onDialogEscape,
+                              setCursorBusy, setCursorDefault, setCursorIcon,
+                              setElmTheme, uiThreadCheck)
 from Utility.Web.WebRequests import performPostRequestWithRetry
 
 
@@ -224,7 +224,7 @@ class GeofenceDialog(wx.Dialog):
                 expandedGroupData[self.gridHeaderLabels[0]].append(entry)
 
                 group = None
-                if len(entry[0].split("-")) == 5:
+                if is_uuid(entry[0]):  # len(entry[0].split("-")) == 5:
                     expandedGroupData[self.gridHeaderLabels[2]].append(entry)
                     group = getGroupById(str(entry[0]))
                 else:
@@ -265,7 +265,7 @@ class GeofenceDialog(wx.Dialog):
         properGroupIdList = []
         for rowNum in range(self.geofence_grid.GetNumberRows()):
             identifier = self.geofence_grid.GetCellValue(rowNum, 2)
-            if len(identifier.split("-")) == 5:
+            if is_uuid(identifier) and identifier not in properGroupIdList:  # len(identifier.split("-")) == 5:
                 properGroupIdList.append(identifier)
 
         # Ensure that inputs are vaild before calling API

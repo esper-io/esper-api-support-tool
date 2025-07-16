@@ -351,3 +351,24 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
         except Exception as e:
             handleRequestError(attempt, e, maxAttempt, raiseError=True)
     return api_response
+
+
+def getTenantTags(searchTag=None):
+    url = "%s/enterprise/%s/tags/?ordering=tag" % (Globals.configuration.host, Globals.enterprise_id)
+    if searchTag:
+        url += "&search=%s" % searchTag
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        json_resp = resp.json()
+        if "results" in json_resp:
+            return json_resp["results"]
+    return []
+
+
+def getTenantTagById(tagId):
+    url = "%s/enterprise/%s/tags/%s/" % (Globals.configuration.host, Globals.enterprise_id, tagId)
+    resp = performGetRequestWithRetry(url, headers=getHeader())
+    if resp:
+        json_resp = resp.json()
+        return json_resp
+    return None
