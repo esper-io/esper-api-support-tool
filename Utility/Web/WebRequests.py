@@ -18,7 +18,7 @@ retries = Retry(
     total=Globals.MAX_RETRY,
     backoff_factor=3,       # 3, 6, 12, 24, 48...seconds
     status_forcelist=[500, 502, 503, 504],
-    allowed_methods=["GET", "POST"]
+    allowed_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
 )
 
 adapter = HTTPAdapter(max_retries=retries)
