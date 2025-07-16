@@ -429,7 +429,7 @@ def populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestE
     config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
     iosEnabled = config["isIosEnabled"]
     if device.get("os") is not None and device.get("os").lower() == "android" and iosEnabled:
-        androidDeviceInfo = getDeviceById(device.get("id"), do_join=False)
+        androidDeviceInfo = getDeviceById(device.get("id"), do_join=False, log=False)
         unpackageDict(deviceInfo, androidDeviceInfo)
 
     deviceInfo = compileDeviceGroupData(deviceInfo)

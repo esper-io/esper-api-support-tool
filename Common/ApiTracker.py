@@ -9,6 +9,7 @@ API_REQUEST_TRACKER = {
     "/command": 0,
     "/content": 0,
     "/device/": 0,
+    "/devices/": 0,
     "/devicegroup": 0,
     "directory_record": 0,
     "/feature-flags": 0,
@@ -24,7 +25,8 @@ API_REQUEST_TRACKER = {
     "/devicetemplate": 0,
     "/itunesapps": 0,
     "/tenant-apps": 0,
-    "/authz2": 0
+    "/authz2": 0,
+    "/tags/": 0,
 }
 
 API_FUNCTIONS = {
