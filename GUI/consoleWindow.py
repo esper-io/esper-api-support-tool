@@ -9,14 +9,8 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Common.enum import Color, FontStyles
-from Utility.Resource import (
-    getFont,
-    onDialogEscape,
-    openWebLinkInBrowser,
-    postEventToFrame,
-    resourcePath,
-    setElmTheme,
-)
+from Utility.Resource import (getFont, onDialogEscape, openWebLinkInBrowser,
+                              postEventToFrame, resourcePath, setElmTheme)
 
 
 class Console(wx.Frame):
@@ -54,15 +48,12 @@ class Console(wx.Frame):
         while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
             Globals.LOGLIST.pop(0)
 
-        self.totalPosition = 0
+        self.firstLine = True
         for entry in Globals.LOGLIST:
-            self.loggingList.AppendText(entry)
-            self.loggingList.AppendText("\n\n")
-            self.totalPosition = len(entry + "\n\n")
-        if self.WINDOWS:
-            position = int((self.totalPosition) * 0.75)
-            position = 0 if position < 0 else position
-            self.loggingList.ShowPosition(position)
+            self.Logging(entry.strip(), scrollToEnd=False)
+            if self.firstLine:
+                self.firstLine = False
+        self.scrollToEnd()
 
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
@@ -100,19 +91,22 @@ class Console(wx.Frame):
         self.loggingList.Clear()
         Globals.LOGLIST.clear()
 
+    def scrollToEnd(self):
+        self.loggingList.SetInsertionPointEnd()
+        self.loggingList.ShowPosition(self.loggingList.GetInsertionPoint())
+
     @api_tool_decorator()
-    def Logging(self, entry):
+    def Logging(self, entry, scrollToEnd=True):
         """Logs Infromation To Frame UI"""
         if self.loggingList:
+            if not entry.startswith("\n") and not self.firstLine:
+                entry = "\n\n" + entry
             self.loggingList.AppendText(entry)
-            self.loggingList.AppendText("\n\n")
-            self.totalPosition = len(entry + "\n\n")
-            if self.WINDOWS:
-                position = int((self.totalPosition) * 0.75)
-                position = 0 if position < 0 else position
-                self.loggingList.ShowPosition(position)
+        if scrollToEnd:
+            self.scrollToEnd()
         if entry:
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)
-            Globals.LOGLIST.append(entry.strip())
+            if entry.strip() not in Globals.LOGLIST:
+                Globals.LOGLIST.append(entry.strip())
         return
