@@ -32,7 +32,7 @@ def performRequestWithRetry(
     json=None,
     data=None,
     files=None,
-    requestTimeout=(10, 30), # connect, read
+    requestTimeout=(20, 40), # connect, read
     maxRetry=Globals.MAX_RETRY,
 ):
     resp = None
