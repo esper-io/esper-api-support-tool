@@ -167,11 +167,11 @@ class ToolMenuBar(wx.MenuBar):
             wx.MenuItem(
                 viewMenu,
                 wx.ID_ANY,
-                "&Show Console Log\tCtrl+L",
+                "&Show Logs\tCtrl+L",
                 kind=wx.ITEM_CHECK,
             )
         )
-        self.clearConsole = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Console Log"))
+        self.clearConsole = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Clear Logs"))
         viewMenu.Append(wx.ID_SEPARATOR)
         self.colSize = viewMenu.Append(wx.MenuItem(viewMenu, wx.ID_ANY, "Auto-Size Grids' Columns"))
         self.colSize.SetBitmap(wx.Bitmap(resourcePath("Images/Menu/resize.png")))

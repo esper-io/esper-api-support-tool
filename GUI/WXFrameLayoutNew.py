@@ -335,7 +335,7 @@ class NewFrameLayout(wx.Frame):
             if "error" in entry.lower():
                 isError = True
             if len(entry) >= Globals.MAX_STATUS_CHAR:
-                longEntryMsg = "....(See console for details)"
+                longEntryMsg = "....(See Logs for details)"
                 shortMsg = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
                 shortMsg += longEntryMsg
             self.setStatus(shortMsg, entry, isError)

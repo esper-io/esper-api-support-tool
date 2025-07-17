@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import platform
+import re
+from datetime import datetime
 
 import wx
 import wx.html as wxHtml
@@ -15,7 +17,7 @@ from Utility.Resource import (getFont, onDialogEscape, openWebLinkInBrowser,
 
 class Console(wx.Frame):
     def __init__(self, parent=None):
-        self.title = "Console"
+        self.title = "Logs"
         self.WINDOWS = True
         self.parent = parent
         if platform.system() == "Windows":
@@ -98,9 +100,14 @@ class Console(wx.Frame):
     @api_tool_decorator()
     def Logging(self, entry, scrollToEnd=True):
         """Logs Infromation To Frame UI"""
+        pattern = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
+
         if self.loggingList:
             if not entry.startswith("\n") and not self.firstLine:
                 entry = "\n\n" + entry
+            match = re.search(pattern, entry)
+            if not match:
+                entry = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + entry
             self.loggingList.AppendText(entry)
         if scrollToEnd:
             self.scrollToEnd()
@@ -108,5 +115,5 @@ class Console(wx.Frame):
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)
             if entry.strip() not in Globals.LOGLIST:
-                Globals.LOGLIST.append(entry.strip())
+                Globals.LOGLIST.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + entry.strip())
         return
