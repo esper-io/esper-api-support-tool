@@ -42,6 +42,7 @@ class ApiToolLog:
             "Read-only file system",
             "ApiException",
             "'error': 'ratelimited'",
+            "RateLimitException"
         ]
 
     def limitLogFileSizes(self):
