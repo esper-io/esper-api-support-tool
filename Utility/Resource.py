@@ -443,10 +443,14 @@ def sleep_and_retry_with_logging(func):
             try:
                 return func(*args, **kwargs)
             except RateLimitException as e:
-                msg = f"Rate limit hit, sleeping for {e.period_remaining:.2f} seconds"
+                msg = f"Internal Rate limit hit, sleeping for {e.period_remaining:.2f} seconds"
                 ApiToolLog().LogError(msg, postStatus=False)
                 postEventToFrame(EventUtility.myEVT_LOG, msg)
-                time.sleep(e.period_remaining)
+                if "main" in threading.current_thread().name.lower():
+                    wx.CallLater(int(e.period_remaining * 1000), sleep_and_retry_with_logging, func)
+                    break
+                else:
+                    time.sleep(e.period_remaining)
     return wrapper
 
 @sleep_and_retry_with_logging
