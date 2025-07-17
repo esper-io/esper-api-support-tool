@@ -92,6 +92,10 @@ def getAdditionalDeviceInfo(
 ):
     appResp = latestEvent = None
     if getApps:
+        postEventToFrame(
+            eventUtil.myEVT_LOG,
+            "Fetching additional App Info for %s" % deviceId,
+        )
         config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
         iosEnabled = config["isIosEnabled"]
         if (
@@ -163,6 +167,10 @@ def getAdditionalDeviceInfo(
                             vppApp = vppResp["results"][0]
                             app.update(vppApp)
     if getLatestEvents:
+        postEventToFrame(
+            eventUtil.myEVT_LOG,
+            "Fetching additional Latest Event Info for %s" % deviceId,
+        )
         latestEvent = perform_web_requests(
             (
                 getLatestEventApiUrl(deviceId),
@@ -429,6 +437,10 @@ def populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestE
     config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
     iosEnabled = config["isIosEnabled"]
     if device.get("os") is not None and device.get("os").lower() == "android" and iosEnabled:
+        postEventToFrame(
+            eventUtil.myEVT_LOG,
+            "Fetching additional Android Device Info for %s" % device.get("id", ""),
+        )
         androidDeviceInfo = getDeviceById(device.get("id"), do_join=False, log=False)
         unpackageDict(deviceInfo, androidDeviceInfo)
 
