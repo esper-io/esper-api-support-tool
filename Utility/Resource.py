@@ -437,24 +437,8 @@ def getHeader():
         return {}
 
 
-def sleep_and_retry_with_logging(func):
-    def wrapper(*args, **kwargs):
-        while True:
-            try:
-                return func(*args, **kwargs)
-            except RateLimitException as e:
-                msg = f"Internal Rate limit hit, sleeping for {e.period_remaining:.2f} seconds"
-                ApiToolLog().LogError(msg, postStatus=False)
-                postEventToFrame(EventUtility.myEVT_LOG, msg)
-                if "main" in threading.current_thread().name.lower():
-                    wx.CallLater(int(e.period_remaining * 1000), sleep_and_retry_with_logging, func)
-                    break
-                else:
-                    time.sleep(e.period_remaining)
-    return wrapper
-
-@sleep_and_retry_with_logging
-@limits(calls=4000, period=(5 * 60))
+@sleep_and_retry
+@limits(calls=8000, period=(5 * 60))
 def enforceRateLimit():
     pass
 
