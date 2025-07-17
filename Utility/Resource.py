@@ -19,7 +19,7 @@ import pandas as pd
 import requests
 import wx
 import wx.grid
-from ratelimit import limits, sleep_and_retry
+from ratelimit import RateLimitException, limits, sleep_and_retry
 from thefuzz import fuzz, process
 
 import Common.Globals as Globals
@@ -437,7 +437,19 @@ def getHeader():
         return {}
 
 
-@sleep_and_retry
+def sleep_and_retry_with_logging(func):
+    def wrapper(*args, **kwargs):
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except RateLimitException as e:
+                msg = f"Rate limit hit, sleeping for {e.period_remaining:.2f} seconds"
+                ApiToolLog().LogError(msg, postStatus=False)
+                postEventToFrame(EventUtility.myEVT_LOG, msg)
+                time.sleep(e.period_remaining)
+    return wrapper
+
+@sleep_and_retry_with_logging
 @limits(calls=4000, period=(5 * 60))
 def enforceRateLimit():
     pass
