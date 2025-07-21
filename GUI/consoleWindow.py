@@ -95,7 +95,7 @@ class Console(wx.Frame):
 
     def scrollToEnd(self):
         self.loggingList.SetInsertionPointEnd()
-        self.loggingList.ShowPosition(self.loggingList.GetInsertionPoint())
+        wx.CallAfter(self.loggingList.ShowPosition, self.loggingList.GetInsertionPoint())
 
     @api_tool_decorator()
     def Logging(self, entry, scrollToEnd=True):
