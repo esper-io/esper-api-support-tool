@@ -103,11 +103,11 @@ class Console(wx.Frame):
         pattern = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
 
         if self.loggingList:
-            if not entry.startswith("\n") and not self.firstLine:
-                entry = "\n\n" + entry
             match = re.search(pattern, entry)
             if not match:
                 entry = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + entry
+            if not entry.startswith("\n") and not self.firstLine:
+                entry = "\n\n" + entry
             self.loggingList.AppendText(entry)
         if scrollToEnd:
             self.scrollToEnd()
