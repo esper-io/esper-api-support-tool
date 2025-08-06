@@ -115,7 +115,9 @@ def split_dataframe(df, chunk_size):
     return chunks
 
 
-def convertColumnTypes(data, headers):
+def convertColumnTypes(data, headers=None):
+    if not headers:
+        headers = data.columns.tolist() if hasattr(data, "columns") else list(data.keys())
     for col in headers:
         if len(data[col]) > 0:
             gridColType = Globals.GRID_COL_TYPES.get(col, "string").lower()
