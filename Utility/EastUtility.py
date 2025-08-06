@@ -166,7 +166,7 @@ def getAdditionalDeviceInfo(
                         if vppResp and "results" in vppResp:
                             vppApp = vppResp["results"][0]
                             app.update(vppApp)
-    if getLatestEvents:
+    if getLatestEvents and device["platform"] != "APPLE":
         postEventToFrame(
             eventUtil.myEVT_LOG,
             "Fetching additional Latest Event Info for %s" % deviceId,
@@ -570,14 +570,14 @@ def compileDeviceGroupData(deviceInfo):
         deviceInfo["isSupervisorPluginActive"] = "False"
 
     if "isKnoxActive" not in deviceInfo:
-        deviceInfo["isKnoxActive"] = "N/A"
+        deviceInfo["isKnoxActive"] = False
     elif "isSupervisorPluginActive" not in deviceInfo:
-        deviceInfo["isSupervisorPluginActive"] = "N/A"
+        deviceInfo["isSupervisorPluginActive"] = False
 
     if "isCSDKActive" not in deviceInfo:
-        deviceInfo["isCSDKActive"] = "N/A"
+        deviceInfo["isCSDKActive"] = False
     elif not deviceInfo["isCSDKActive"]:
-        deviceInfo["isCSDKActive"] = "False"
+        deviceInfo["isCSDKActive"] = False
 
     return deviceInfo
 
