@@ -704,23 +704,30 @@ def unpackageDict(deviceInfo, deviceDict):
     """Try to merge dicts into one dict, in a single layer"""
     if not deviceDict:
         return deviceInfo
-    flatDict = flatten_dict(deviceDict)
+    flatDict = flatten_dict(deviceDict, {})
     for k, v in flatDict.items():
-        deviceInfo[k] = v
+        if k not in deviceInfo or not deviceInfo[k]:
+            deviceInfo[k] = v
     return deviceInfo
 
+def flatten_dict(d, items, parent_key='', sep='.'):
+    """Flattens dictionary level by level: stores same-level keys before recursing into sub-dicts."""
+    sub_dicts = []
 
-def flatten_dict(d: dict):
-    return dict(_flatten_dict_gen(d))
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if not k in items:
+            new_key = k
+        if isinstance(v, dict):
+            sub_dicts.append((new_key, v))
+        else:
+            items[new_key] = v
 
+    # After all current-level keys are handled, recurse into sub-dictionaries
+    for new_key, sub_d in sub_dicts:
+        items.update(flatten_dict(sub_d, items, new_key, sep=sep))
 
-def _flatten_dict_gen(d):
-    if type(d) is dict:
-        for k, v in d.items():
-            if isinstance(v, dict):
-                yield from flatten_dict(v).items()
-            else:
-                yield k, v
+    return items
 
 
 def determineKeyEventClose(event) -> bool:

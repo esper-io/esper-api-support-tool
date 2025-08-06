@@ -69,7 +69,8 @@ from Utility.FileUtility import (getToolDataPath, read_csv_via_pandas,
                                  save_csv_pandas, save_excel_pandas_xlxswriter,
                                  write_data_to_csv, write_json_file)
 from Utility.GridActionUtility import iterateThroughGridRows
-from Utility.GridUtilities import createDataFrameFromDict, split_dataframe
+from Utility.GridUtilities import (convertColumnTypes, createDataFrameFromDict,
+                                   split_dataframe)
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkEsperInternetConnection,
                               checkForInternetAccess,
@@ -639,7 +640,7 @@ class NewFrameLayout(wx.Frame):
                     result = pd.merge(
                         deviceData,
                         networkData,
-                        on=["Esper Name", "Group"],
+                        on=["Esper Name", "Group", "Serial Number"],
                         how="outer",
                     )
                     result = result.dropna(
@@ -652,7 +653,7 @@ class NewFrameLayout(wx.Frame):
                     deviceNetworkResults = pd.merge(
                         self.gridPanel.device_grid.createEmptyDataFrame(),
                         self.gridPanel.network_grid.createEmptyDataFrame(),
-                        on=["Esper Name", "Group"],
+                        on=["Esper Name", "Group", "Serial Number"],
                         how="outer",
                     )
                     df_dict = self.subdivideSheetData("Device & Network", deviceNetworkResults, df_dict)
@@ -694,6 +695,7 @@ class NewFrameLayout(wx.Frame):
         self.setCursorDefault()
 
     def subdivideSheetData(self, sheetName, sheetData, sheetContainer):
+        sheetData = convertColumnTypes(sheetData)
         if len(sheetData) > Globals.SHEET_CHUNK_SIZE:
             df_list = split_dataframe(sheetData, Globals.SHEET_CHUNK_SIZE)
             num = 1

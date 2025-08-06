@@ -450,6 +450,11 @@ def populateDeviceInfoDictionaryComplieData(device, deviceInfo, appData, latestE
     deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
     deviceInfo = enforceGridData(device, deviceInfo, latestEventData, appData)
 
+    if deviceInfo.get("platform", "") == "APPLE":
+        # Fill in Brand and Manufacturer for Apple Devices
+        deviceInfo["brand"] = "Apple"
+        deviceInfo["manufacturer"] = "Apple"
+
     return deviceInfo
 
 
@@ -565,14 +570,14 @@ def compileDeviceGroupData(deviceInfo):
             deviceInfo["is_current_blueprint_version_latest"] = False
 
     if "isSupervisorPluginActive" not in deviceInfo:
-        deviceInfo["isSupervisorPluginActive"] = "N/A"
+        deviceInfo["isSupervisorPluginActive"] = False
     elif not deviceInfo["isSupervisorPluginActive"]:
-        deviceInfo["isSupervisorPluginActive"] = "False"
+        deviceInfo["isSupervisorPluginActive"] = False
 
     if "isKnoxActive" not in deviceInfo:
         deviceInfo["isKnoxActive"] = False
-    elif "isSupervisorPluginActive" not in deviceInfo:
-        deviceInfo["isSupervisorPluginActive"] = False
+    elif not deviceInfo["isKnoxActive"]:
+        deviceInfo["isKnoxActive"] = False
 
     if "isCSDKActive" not in deviceInfo:
         deviceInfo["isCSDKActive"] = False

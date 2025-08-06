@@ -1,3 +1,4 @@
+import math
 import sys
 import warnings
 
@@ -129,7 +130,21 @@ def convertColumnTypes(data, headers=None):
                     data[col] = data[col].dt.strftime(Globals.DATE_COL[col])
                     data[col] = data[col].fillna("No Data Available")
                 elif gridColType == "bool":
-                    data[col] = data[col].astype("bool")
+                    dMap = {
+                        "True": True,
+                        "true": True,
+                        "False": False,
+                        "false": False,
+                        "1": True,
+                        "0": False,
+                        True: True,
+                        False: False,
+                        "": False,
+                        pd.NA: False,
+                        np.nan: False,
+                        "None": False,
+                    }
+                    data[col] = data[col].map(dMap).astype("bool")
                 elif gridColType == "number":
                     data.loc[data[col] == "None", col] = None
                     data.loc[data[col] == "", col] = None
