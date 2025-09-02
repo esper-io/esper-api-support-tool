@@ -1120,46 +1120,91 @@ class NewFrameLayout(wx.Frame):
         )
 
     def processWaitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
+        # Check if the frame is being deleted to prevent accessing destroyed UI objects
+        if self.IsBeingDeleted():
+            return
+            
         if source == WaitThreadCodes.CONFIG.value:
-            self.gridPanel.setColVisibility()
-            self.sidePanel.groupChoice.Enable(True)
-            self.sidePanel.actionChoice.Enable(True)
-            self.sidePanel.removeEndpointBtn.Enable(True)
-            self.handleScheduleReportPref()
+            try:
+                if hasattr(self, 'gridPanel') and self.gridPanel:
+                    self.gridPanel.setColVisibility()
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'groupChoice') and self.sidePanel.groupChoice):
+                    self.sidePanel.groupChoice.Enable(True)
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'actionChoice') and self.sidePanel.actionChoice):
+                    self.sidePanel.actionChoice.Enable(True)
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'removeEndpointBtn') and self.sidePanel.removeEndpointBtn):
+                    self.sidePanel.removeEndpointBtn.Enable(True)
+                self.handleScheduleReportPref()
+            except RuntimeError:
+                # UI object has been deleted, ignore the error
+                pass
         if source == WaitThreadCodes.DEVICE.value:
-            if not self.sidePanel.devices:
-                self.sidePanel.selectedDevices.Append("No Devices Found", "")
-                self.sidePanel.deviceChoice.Enable(False)
-                self.menubar.setSaveMenuOptionsEnableState(False)
-                self.menubar.enableConfigMenu()
-                self.Logging("---> No Devices found")
-            else:
-                self.sidePanel.deviceChoice.Enable(True)
-                self.Logging("---> Application list populated")
-                if not self.isRunning:
-                    self.menubar.enableConfigMenu()
-                self.menubar.setSaveMenuOptionsEnableState(True)
-            if (
-                not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
-            ) and self.sidePanel.devices:
-                self.sidePanel.deviceChoice.Enable(True)
-            else:
-                self.sidePanel.deviceChoice.Enable(False)
-            self.displayNotification("Finished loading devices", "")
+            try:
+                if not self.sidePanel.devices:
+                    if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                        hasattr(self.sidePanel, 'selectedDevices') and self.sidePanel.selectedDevices):
+                        self.sidePanel.selectedDevices.Append("No Devices Found", "")
+                    if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                        hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
+                        self.sidePanel.deviceChoice.Enable(False)
+                    if hasattr(self, 'menubar') and self.menubar:
+                        self.menubar.setSaveMenuOptionsEnableState(False)
+                        self.menubar.enableConfigMenu()
+                    self.Logging("---> No Devices found")
+                else:
+                    if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                        hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
+                        self.sidePanel.deviceChoice.Enable(True)
+                    self.Logging("---> Application list populated")
+                    if not self.isRunning and hasattr(self, 'menubar') and self.menubar:
+                        self.menubar.enableConfigMenu()
+                        self.menubar.setSaveMenuOptionsEnableState(True)
+                if (
+                    not self.preferences or ("enableDevice" in self.preferences and self.preferences["enableDevice"])
+                ) and self.sidePanel.devices:
+                    if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                        hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
+                        self.sidePanel.deviceChoice.Enable(True)
+                else:
+                    if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                        hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
+                        self.sidePanel.deviceChoice.Enable(False)
+                self.displayNotification("Finished loading devices", "")
+            except RuntimeError:
+                # UI object has been deleted, ignore the error
+                pass
         if source == WaitThreadCodes.FILE.value:
-            indx = self.sidePanel.actionChoice.GetItems().index(list(Globals.GRID_ACTIONS.keys())[0])
-            self.isUploading = False
-            if self.sidePanel.actionChoice.GetSelection() < indx:
-                self.sidePanel.actionChoice.SetSelection(indx)
-            determineListDoHereorMainThread(
-                [
-                    (self.gridPanel.autoSizeGridsColumns),
-                    (self.sidePanel.groupChoice.Enable, True),
-                    (self.sidePanel.deviceChoice.Enable, True),
-                    (self.gridPanel.enableGridProperties),
-                    (self.gridPanel.thawGridsIfFrozen),
-                ]
-            )
+            try:
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'actionChoice') and self.sidePanel.actionChoice):
+                    indx = self.sidePanel.actionChoice.GetItems().index(list(Globals.GRID_ACTIONS.keys())[0])
+                    self.isUploading = False
+                    if self.sidePanel.actionChoice.GetSelection() < indx:
+                        self.sidePanel.actionChoice.SetSelection(indx)
+                
+                # Use a list comprehension to only include valid UI operations
+                ui_operations = []
+                if hasattr(self, 'gridPanel') and self.gridPanel:
+                    ui_operations.extend([
+                        (self.gridPanel.autoSizeGridsColumns),
+                        (self.gridPanel.enableGridProperties),
+                        (self.gridPanel.thawGridsIfFrozen),
+                    ])
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'groupChoice') and self.sidePanel.groupChoice):
+                    ui_operations.append((self.sidePanel.groupChoice.Enable, True))
+                if (hasattr(self, 'sidePanel') and self.sidePanel and 
+                    hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
+                    ui_operations.append((self.sidePanel.deviceChoice.Enable, True))
+                
+                if ui_operations:
+                    determineListDoHereorMainThread(ui_operations)
+            except RuntimeError:
+                # UI object has been deleted, ignore the error
+                pass
             postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE_LATER, (3000, 0))
             postEventToFrame(
                 eventUtil.myEVT_DISPLAY_NOTIFICATION,
@@ -1423,8 +1468,7 @@ class NewFrameLayout(wx.Frame):
             self.isRunning or self.isRunningUpdate or self.isSavingPrefs or self.isUploading or self.isBusy
         ) and time.time() < end_time:
             time.sleep(1)
-        self.toggleIsRunning(True)
-        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
+        
 
         self.gridPanel.UnsetSortingColumns()
 
@@ -1434,6 +1478,8 @@ class NewFrameLayout(wx.Frame):
             actionClientData = self.sidePanel.actionChoice.GetClientData(
                 actionSelection
             )
+        self.toggleIsRunning(True, actionClientData)
+        postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 0)
         if not actionClientData or actionClientData == -1:
             displayMessageBox(
                 (
@@ -3003,10 +3049,11 @@ class NewFrameLayout(wx.Frame):
     def onThemeChange(self, event=None):
         setElmTheme(self)
 
-    def toggleIsRunning(self, running):
+    def toggleIsRunning(self, running, actionClientData=None):
         self.isRunning = running
         if running:
-            self.onClearGrids()
+            if not actionClientData or actionClientData <= GeneralActions.GENERATE_APP_REPORT.value:
+                self.onClearGrids()
             self.statusBar.gauge.Pulse()
             self.setCursorBusy()
             self.toggleEnabledState(False)

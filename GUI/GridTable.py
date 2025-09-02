@@ -349,3 +349,9 @@ class GridTable(gridlib.Grid):
         if uiThreadCheck(super().AutoSizeColumns, setAsMin):
             return
         return super().AutoSizeColumns(setAsMin)
+    
+    def GetNumberCols(self):
+        return self.table.GetNumberCols()
+    
+    def GetNumberRows(self):
+        return self.table.GetNumberRows()
