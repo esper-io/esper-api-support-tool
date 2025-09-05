@@ -27,8 +27,12 @@ def getAllInstallableApps(tolerance=0):
     androidApps = getAllAndroidInstallableApps(tolerance=tolerance)
     iosApps = getAllIosInstallableApps(tolerance=tolerance)
 
+    if androidApps is None:
+        androidApps = {}
+    if iosApps is None:
+        iosApps = {}
     resp = {
-        "results": androidApps["results"] + iosApps["results"],
+        "results": androidApps.get("results", []) + iosApps.get("results", []),
     }
     return resp
 
