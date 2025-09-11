@@ -60,6 +60,7 @@ import wx
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 # Horizontal Alignment Constants
 ESB_ALIGN_CENTER_VERTICAL = 1
@@ -291,19 +292,25 @@ class EnhancedStatusBar(wx.StatusBar):
     @api_tool_decorator(locks=[Globals.gauge_lock])
     def setGaugeValue(self, value):
         """Attempt to set Gauge to the specififed value"""
-        if Globals.gauge_lock.locked():
-            return
-        Globals.gauge_lock.acquire()
-        if hasattr(value, "GetValue"):
-            value = value.GetValue()
-        if bool(self.gauge):
-            maxValue = self.gauge.GetRange()
-            if value > maxValue:
-                value = maxValue
-            if value < 0:
-                value = 0
-            if value >= 0 and value <= maxValue:
-                self.gauge.SetToolTip(f"Progress ({int(value)}%): {str(value)} / {str(maxValue)}")
-                self.gauge.SetValue(value)
-        if Globals.gauge_lock.locked():
-            Globals.gauge_lock.release()
+        # Use with statement for safer lock handling
+        try:
+            if Globals.gauge_lock.locked():
+                return
+            with Globals.gauge_lock:
+                if hasattr(value, "GetValue"):
+                    value = value.GetValue()
+                if bool(self.gauge):
+                    maxValue = self.gauge.GetRange()
+                    if value > maxValue:
+                        value = maxValue
+                    if value < 0:
+                        value = 0
+                    if value >= 0 and value <= maxValue:
+                        # Use CallAfter to ensure GUI updates happen on main thread
+                        def update_gauge():
+                            if self.gauge:  # Check if still exists
+                                self.gauge.SetToolTip(f"Progress ({int(value)}%): {str(value)} / {str(maxValue)}")
+                                self.gauge.SetValue(value)
+                        wx.CallAfter(update_gauge)
+        except Exception as e:
+            ApiToolLog().LogError(f"Error updating gauge value: {str(e)}")

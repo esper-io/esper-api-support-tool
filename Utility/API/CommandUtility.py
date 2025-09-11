@@ -86,22 +86,43 @@ def confirmCommand(cmd, commandType, schedule, schType):
     label = ""
     applyTo = ""
     commaSeperated = ", "
-    if len(Globals.frame.sidePanel.selectedDevicesList) > 0:
-        selections = Globals.frame.sidePanel.selectedDevicesList
-        label = ""
-        for device in selections:
-            label += device + commaSeperated
-        if label.endswith(", "):
-            label = label[0 : len(label) - len(commaSeperated)]
-        applyTo = "device"
-    elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
-        selections = Globals.frame.sidePanel.selectedGroupsList
-        label = ""
-        for group in selections:
-            if group:
-                label += group + commaSeperated
-        if label.endswith(", "):
-            label = label[0 : len(label) - len(commaSeperated)]
+    # Safe access to frame selections
+    selections = []
+    
+    try:
+        if (Globals.frame and 
+            hasattr(Globals.frame, 'sidePanel') and
+            hasattr(Globals.frame.sidePanel, 'selectedDevicesList') and
+            len(Globals.frame.sidePanel.selectedDevicesList) > 0):
+            
+            selections = Globals.frame.sidePanel.selectedDevicesList
+            label = ""
+            for device in selections:
+                if device:  # Ensure device is not None
+                    label += str(device) + commaSeperated
+            if label.endswith(", "):
+                label = label[0 : len(label) - len(commaSeperated)]
+            applyTo = "device"
+            
+        elif (Globals.frame and 
+              hasattr(Globals.frame, 'sidePanel') and
+              hasattr(Globals.frame.sidePanel, 'selectedGroupsList') and
+              len(Globals.frame.sidePanel.selectedGroupsList) >= 0):
+              
+            selections = Globals.frame.sidePanel.selectedGroupsList
+            label = ""
+            for group in selections:
+                if group:
+                    label += str(group) + commaSeperated
+            if label.endswith(", "):
+                label = label[0 : len(label) - len(commaSeperated)]
+        else:
+            ApiToolLog().LogError("Frame or side panel not properly initialized")
+            
+    except (AttributeError, TypeError) as e:
+        ApiToolLog().LogError(f"Error accessing frame selections: {str(e)}")
+        selections = []
+        label = "Unknown"
         applyTo = "group"
         isGroup = True
     modal = wx.NO
@@ -442,14 +463,21 @@ def waitForCommandToFinish(
                         break
             return status
         else:
-            status = response["status"][0]
-            postEventToFrame(
-                eventUtil.myEVT_LOG,
-                "---> Command state: %s" % str(status["state"]),
-            )
+            # Safe access to status array
+            status_list = response.get("status", [])
+            if status_list:
+                status = status_list[0]
+                state = status.get("state", "UNKNOWN") if isinstance(status, dict) else "INVALID"
+                postEventToFrame(
+                    eventUtil.myEVT_LOG,
+                    "---> Command state: %s" % str(state),
+                )
+            else:
+                ApiToolLog().LogError("No status found in command response")
+                status = None
 
             start = time.perf_counter()
-            while status["state"] not in stateList:
+            while status and isinstance(status, dict) and status.get("state") not in stateList:
                 end = time.perf_counter()
                 duration = end - start
                 if duration >= timeout:
@@ -478,9 +506,17 @@ def postEsperCommand(command_data, maxAttempt=Globals.MAX_RETRY):
         headers = getHeader()
         url = "https://%s-api.esper.cloud/api/commands/v0/commands/" % getTenant()
         resp = performPostRequestWithRetry(url, headers=headers, json=command_data, maxRetry=maxAttempt)
-        json_resp = resp.json() if resp else None
-        if json_resp and "content" in json_resp:
-            json_resp = json_resp["content"]
+        json_resp = None
+        
+        # Safe JSON parsing with proper error handling
+        if resp:
+            try:
+                json_resp = resp.json()
+                if json_resp and isinstance(json_resp, dict) and "content" in json_resp:
+                    json_resp = json_resp["content"]
+            except (ValueError, TypeError, AttributeError) as e:
+                ApiToolLog().LogError(f"Failed to parse command response JSON: {str(e)}")
+                json_resp = None
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
             {
@@ -505,9 +541,17 @@ def getCommandRequestStats(command_id, maxAttempt=Globals.MAX_RETRY):
     try:
         headers = getHeader()
         resp = performGetRequestWithRetry(url, headers=headers, maxRetry=maxAttempt)
-        json_resp = resp.json() if resp else None
-        if json_resp and "content" in json_resp:
-            json_resp = json_resp["content"]
+        json_resp = None
+        
+        # Safe JSON parsing with proper error handling
+        if resp:
+            try:
+                json_resp = resp.json()
+                if json_resp and isinstance(json_resp, dict) and "content" in json_resp:
+                    json_resp = json_resp["content"]
+            except (ValueError, TypeError, AttributeError) as e:
+                ApiToolLog().LogError(f"Failed to parse command stats response JSON: {str(e)}")
+                json_resp = None
         logBadResponse(url, resp, json_resp)
     except Exception as e:
         ApiToolLog().LogError(e, postStatus=False)

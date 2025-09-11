@@ -199,8 +199,13 @@ def prepareBlueprintClone(blueprint, toConfig, fromConfig, group):
             )
             respJson = resp.json()
             if "message" in respJson and "Enterprise not enrolled into EMM." in respJson["message"]:
-                if "managed_google_play_disabled" in blueprint["latest_revision"]["google_services"]:
-                    del blueprint["latest_revision"]["google_services"]["managed_google_play_disabled"]
+                # Safe access to nested blueprint structure
+                try:
+                    google_services = blueprint.get("latest_revision", {}).get("google_services", {})
+                    if "managed_google_play_disabled" in google_services:
+                        del blueprint["latest_revision"]["google_services"]["managed_google_play_disabled"]
+                except (KeyError, TypeError):
+                    ApiToolLog().LogError("Failed to access blueprint google_services structure")
                 resp = createBlueprintForHost(
                     toConfig["apiHost"],
                     toConfig["apiKey"],
@@ -244,11 +249,18 @@ def uploadMissingWallpaper(blueprint, host, key, enterprise, progress):
             50,
             "Attempting to process wallpapers",
         )
-        if blueprint and blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+        # Safe access to wallpapers structure
+        wallpapers = None
+        try:
+            wallpapers = blueprint.get("latest_revision", {}).get("display_branding", {}).get("wallpapers")
+        except (KeyError, TypeError, AttributeError):
+            ApiToolLog().LogError("Failed to access blueprint wallpapers structure")
+            
+        if blueprint and wallpapers:
             bgList = []
-            numTotal = len(blueprint["latest_revision"]["display_branding"]["wallpapers"])
+            numTotal = len(wallpapers)
             num = 1
-            for bg in blueprint["latest_revision"]["display_branding"]["wallpapers"]:
+            for bg in wallpapers:
                 newBg = uploadWallpaper(host, key, enterprise, bg)
                 if newBg:
                     newBg["enterprise"] = enterprise
@@ -896,52 +908,78 @@ def modifyAppsInBlueprints(blueprints, apps, changedList, addToAppListIfNotPrese
             resp = resp.json()
             changed = False
             appStr = ""
+            
+            # Safe access to blueprint apps
+            blueprint_apps = []
+            try:
+                blueprint_apps = resp.get("latest_revision", {}).get("application", {}).get("apps", [])
+            except (KeyError, TypeError, AttributeError):
+                ApiToolLog().LogError("Failed to access blueprint application apps structure")
+                continue  # Skip this blueprint if structure is invalid
+            
             for app in apps:
                 match = list(
                     filter(
-                        lambda x: app["package"] == x["package_name"],
-                        resp["latest_revision"]["application"]["apps"],
+                        lambda x: app.get("package") == x.get("package_name"),
+                        blueprint_apps,
                     )
                 )
 
                 if match:
-                    appStr += "%s, " % app["name"]
+                    appStr += "%s, " % app.get("name", "Unknown App")
                     # Check each blueprint to see if app is present, update entry
                     appList = []
-                    for bpApp in resp["latest_revision"]["application"]["apps"]:
-                        if bpApp["package_name"] == app["package"]:
+                    for bpApp in blueprint_apps:
+                        if bpApp.get("package_name") == app.get("package"):
                             changed = True
                             appList.append(
                                 {
-                                    "is_g_play": app["isPlayStore"],
-                                    "app_version": app["versionId"],
-                                    "state": bpApp["state"],
-                                    "application_name": app["name"],
-                                    "version_codes": app["codes"],
-                                    "package_name": app["package"],
-                                    "installation_rule": bpApp["installation_rule"],
-                                    "release_name": app["releaseName"],
+                                    "is_g_play": app.get("isPlayStore", False),
+                                    "app_version": app.get("versionId"),
+                                    "state": bpApp.get("state", "UNKNOWN"),
+                                    "application_name": app.get("name", "Unknown"),
+                                    "version_codes": app.get("codes", []),
+                                    "package_name": app.get("package"),
+                                    "installation_rule": bpApp.get("installation_rule", "INSTALL_AND_DISABLE"),
+                                    "release_name": app.get("releaseName", ""),
                                 }
                             )
                         else:
                             appList.append(bpApp)
-                    resp["latest_revision"]["application"]["apps"] = appList
+                    # Safe update of blueprint apps
+                    try:
+                        if "latest_revision" not in resp:
+                            resp["latest_revision"] = {}
+                        if "application" not in resp["latest_revision"]:
+                            resp["latest_revision"]["application"] = {}
+                        resp["latest_revision"]["application"]["apps"] = appList
+                    except (KeyError, TypeError):
+                        ApiToolLog().LogError("Failed to update blueprint application apps")
                 elif addToAppListIfNotPresent:
-                    appStr += "%s, " % app["name"]
+                    appStr += "%s, " % app.get("name", "Unknown App")
                     # Go through and add or update app entry
-                    resp["latest_revision"]["application"]["apps"].append(
+                    try:
+                        if "latest_revision" not in resp:
+                            resp["latest_revision"] = {}
+                        if "application" not in resp["latest_revision"]:
+                            resp["latest_revision"]["application"] = {}
+                        if "apps" not in resp["latest_revision"]["application"]:
+                            resp["latest_revision"]["application"]["apps"] = []
+                        resp["latest_revision"]["application"]["apps"].append(
                         {
-                            "is_g_play": app["isPlayStore"],
-                            "app_version": app["versionId"],
+                            "is_g_play": app.get("isPlayStore", False),
+                            "app_version": app.get("versionId"),
                             "state": "SHOW",
-                            "application_name": app["name"],
-                            "version_codes": app["codes"],
-                            "package_name": app["package"],
+                            "application_name": app.get("name", "Unknown"),
+                            "version_codes": app.get("codes", []),
+                            "package_name": app.get("package"),
                             "installation_rule": "DURING",
-                            "release_name": app["releaseName"],
+                            "release_name": app.get("releaseName", ""),
                         }
                     )
-                    changed = True
+                        changed = True
+                    except (KeyError, TypeError):
+                        ApiToolLog().LogError("Failed to add app to blueprint")
             if changed:
                 total += 1
                 if appStr.endswith(", "):

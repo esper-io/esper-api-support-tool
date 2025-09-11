@@ -33,7 +33,9 @@ def getLatestEvent(deviceId):
     json_resp = getInfo(Globals.DEVICE_STATUS_REQUEST_EXTENSION, deviceId)
     respData = None
     if json_resp and "results" in json_resp and json_resp["results"]:
-        respData = json_resp["results"][0]["data"]
+        results = json_resp["results"]
+        if len(results) > 0 and isinstance(results[0], dict) and "data" in results[0]:
+            respData = results[0]["data"]
     return respData
 
 
@@ -90,8 +92,21 @@ def getAllDevices(
 
 
 def get_all_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
-    config = Globals.frame.sidePanel.configChoice[Globals.frame.configMenuItem.GetItemLabelText()]
-    iosEnabled = config["isIosEnabled"]
+    # Safe access to frame configuration
+    iosEnabled = False
+    try:
+        if (Globals.frame and 
+            hasattr(Globals.frame, 'sidePanel') and 
+            hasattr(Globals.frame.sidePanel, 'configChoice') and
+            hasattr(Globals.frame, 'configMenuItem') and
+            Globals.frame.configMenuItem):
+            
+            config_name = Globals.frame.configMenuItem.GetItemLabelText()
+            config = Globals.frame.sidePanel.configChoice.get(config_name, {})
+            iosEnabled = config.get("isIosEnabled", False)
+    except (AttributeError, KeyError, TypeError) as e:
+        ApiToolLog().LogError(f"Error accessing configuration: {str(e)}")
+        iosEnabled = False
 
     if iosEnabled and Globals.PULL_APPLE_DEVICES:
         return get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt, responses)
@@ -116,11 +131,17 @@ def get_all_android_devices_helper(groupToUse, limit, offset, maxAttempt=Globals
     )
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response and api_response.status_code < 300:
-        api_response = api_response.json()
-        if type(responses) == list:
-            responses.append(api_response)
+        try:
+            api_response = api_response.json()
+            if type(responses) == list:
+                responses.append(api_response)
+        except (ValueError, TypeError, AttributeError) as e:
+            ApiToolLog().LogError(f"Failed to parse device response JSON: {str(e)}")
+            raise Exception(f"Failed to parse JSON response: {str(e)}")
     else:
-        raise Exception("HTTP Response %s:\t\n%s" % (api_response.status_code, api_response.content))
+        status_code = getattr(api_response, 'status_code', 'Unknown')
+        content = getattr(api_response, 'content', 'No content')
+        raise Exception("HTTP Response %s:\t\n%s" % (status_code, content))
     return api_response
 
 
@@ -131,9 +152,13 @@ def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX
     url = "%s/v2/devices/%s" % (Globals.configuration.host, extention)
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
-        api_response = api_response.json()
-        if "content" in api_response:
-            api_response = api_response["content"]
+        try:
+            api_response = api_response.json()
+            if "content" in api_response:
+                api_response = api_response["content"]
+        except (ValueError, TypeError, AttributeError) as e:
+            ApiToolLog().LogError(f"Failed to parse iOS device response JSON: {str(e)}")
+            raise Exception(f"Failed to parse JSON response: {str(e)}")
         if type(responses) == list:
             responses.append(api_response)
     else:

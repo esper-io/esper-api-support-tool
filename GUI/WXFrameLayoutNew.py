@@ -227,10 +227,26 @@ class NewFrameLayout(wx.Frame):
         if self.kill:
             return
 
-        self.internetCheck = wxThread.GUIThread(self, checkForInternetAccess, (self), name="InternetCheck")
-        self.internetCheck.startWithRetry()
-        self.errorTracker = wxThread.GUIThread(self, updateErrorTracker, None, name="updateErrorTracker")
-        self.errorTracker.startWithRetry()
+        # Initialize background threads with proper error handling
+        try:
+            self.internetCheck = wxThread.GUIThread(self, checkForInternetAccess, (self), name="InternetCheck")
+            if self.internetCheck:
+                self.internetCheck.startWithRetry()
+            else:
+                self.Logging("Failed to create InternetCheck thread")
+        except Exception as e:
+            self.Logging(f"Error starting InternetCheck thread: {str(e)}")
+            self.internetCheck = None
+        
+        try:
+            self.errorTracker = wxThread.GUIThread(self, updateErrorTracker, None, name="updateErrorTracker")
+            if self.errorTracker:
+                self.errorTracker.startWithRetry()
+            else:
+                self.Logging("Failed to create updateErrorTracker thread")
+        except Exception as e:
+            self.Logging(f"Error starting updateErrorTracker thread: {str(e)}")
+            self.errorTracker = None
         self.menubar.onUpdateCheck(showDlg=True)
 
         self.Logging("Welcome to Esper API Tool! Version: %s" % Globals.VERSION)
@@ -318,7 +334,11 @@ class NewFrameLayout(wx.Frame):
         """Event trying to log data"""
         evtValue = event.GetValue()
         if type(evtValue) is tuple:
-            self.Logging(evtValue[0], evtValue[1])
+            # Safe tuple access
+            if len(evtValue) >= 2:
+                self.Logging(evtValue[0], evtValue[1])
+            elif len(evtValue) == 1:
+                self.Logging(evtValue[0])
         else:
             self.Logging(evtValue)
 
@@ -411,8 +431,10 @@ class NewFrameLayout(wx.Frame):
                         self.auth_data,
                     )
                 )
-                if matchingConfig:
+                if matchingConfig and len(matchingConfig) > 0:
                     matchingConfig = matchingConfig[0]
+                else:
+                    matchingConfig = None
             if (not self.auth_data or csvRow not in self.auth_data) and not matchingConfig:
                 write_data_to_csv(self.authPath, csvRow, "a")
                 Globals.csv_auth_path = self.authPath
@@ -1101,11 +1123,13 @@ class NewFrameLayout(wx.Frame):
     def waitForThreadsThenSetCursorDefault(self, threads, source=None, action=None, tolerance=0):
         if hasattr(threads, "GetValue"):
             evtVal = threads.GetValue()
-            threads = evtVal[0]
-            if len(evtVal) > 1:
-                source = evtVal[1]
-            if len(evtVal) > 2:
-                action = evtVal[2]
+            # Safe tuple access
+            if isinstance(evtVal, tuple) and len(evtVal) > 0:
+                threads = evtVal[0]
+                if len(evtVal) > 1:
+                    source = evtVal[1]
+                if len(evtVal) > 2:
+                    action = evtVal[2]
         if threads == Globals.THREAD_POOL.threads:
             time.sleep(3)
             Globals.THREAD_POOL.join(tolerance=tolerance)
@@ -2079,9 +2103,13 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def savePrefs(self, dialog):
         """Save Preferences"""
-        self.preferences = dialog.GetPrefs()
-        write_json_file(self.prefPath, self.preferences)
-        postEventToFrame(eventUtil.myEVT_LOG, "---> Preferences' Saved")
+        try:
+            self.preferences = dialog.GetPrefs()
+            write_json_file(self.prefPath, self.preferences)
+            postEventToFrame(eventUtil.myEVT_LOG, "---> Preferences' Saved")
+        except Exception as e:
+            ApiToolLog().LogError(f"Failed to save preferences: {str(e)}")
+            postEventToFrame(eventUtil.myEVT_LOG, ("Failed to save preferences", True))
 
     @api_tool_decorator()
     def onPref(self, event):
