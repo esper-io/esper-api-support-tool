@@ -2962,7 +2962,7 @@ class NewFrameLayout(wx.Frame):
         else:
             displayMessageBox(
                 (
-                    "Successfully changed %s of %s Blueprints." & (success, total),
+                    "Successfully changed %s of %s Blueprints." % (success, total),
                     wx.ICON_INFORMATION,
                 )
             )
