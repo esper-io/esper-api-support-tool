@@ -344,21 +344,31 @@ class NewFrameLayout(wx.Frame):
 
     @api_tool_decorator()
     def Logging(self, entry, isError=False):
-        """Frame UI Logging"""
+        """Frame UI Logging with duplicate prevention"""
         try:
             entry = entry.replace("\n", " ").replace("--->", "").strip()
             shortMsg = entry
-            Globals.LOGLIST.append(entry)
+            
+            # IMPROVED: Add duplicate prevention for global list
+            if entry not in Globals.LOGLIST:
+                Globals.LOGLIST.append(entry)
+                
+            # Maintain list size limit
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
                 Globals.LOGLIST.pop(0)
+                
+            # Send to console window for display (console no longer manages global list)
             if self.consoleWin:
                 self.consoleWin.Logging(entry)
+                
             if "error" in entry.lower():
                 isError = True
+                
             if len(entry) >= Globals.MAX_STATUS_CHAR:
                 longEntryMsg = "....(See Logs for details)"
                 shortMsg = entry[0 : Globals.MAX_STATUS_CHAR - len(longEntryMsg)]
                 shortMsg += longEntryMsg
+                
             self.setStatus(shortMsg, entry, isError)
         except:
             pass
@@ -1763,6 +1773,7 @@ class NewFrameLayout(wx.Frame):
         """Clear Console"""
         if self.consoleWin:
             self.consoleWin.onClear()
+
 
     @api_tool_decorator()
     def onCommand(self, event, value="{\n\n}", level=0):

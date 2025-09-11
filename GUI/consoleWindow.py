@@ -99,21 +99,78 @@ class Console(wx.Frame):
 
     @api_tool_decorator()
     def Logging(self, entry, scrollToEnd=True):
-        """Logs Infromation To Frame UI"""
+        """Display log entry in console UI (global list management handled by main frame)"""
         pattern = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
 
         if self.loggingList:
-            match = re.search(pattern, entry)
+            # Prepare entry for display
+            display_entry = entry
+            match = re.search(pattern, display_entry)
             if not match:
-                entry = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + entry
-            if not entry.startswith("\n") and not self.firstLine:
-                entry = "\n\n" + entry
-            self.loggingList.AppendText(entry)
+                display_entry = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + display_entry
+            if not display_entry.startswith("\n") and not self.firstLine:
+                display_entry = "\n\n" + display_entry
+            
+            # FIXED: Only append to display, don't modify global list
+            self.loggingList.AppendText(display_entry)
+            
         if scrollToEnd:
             self.scrollToEnd()
-        if entry:
-            while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
-                Globals.LOGLIST.pop(0)
-            if entry.strip() not in Globals.LOGLIST:
-                Globals.LOGLIST.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + entry.strip())
+            
+        # REMOVED: Global list management - this is handled by the main frame
+        # This eliminates the duplicate entries in Globals.LOGLIST
         return
+        
+    def clear_duplicates_from_display(self):
+        """Clear and refresh console display to remove any existing duplicates"""
+        try:
+            if self.loggingList:
+                # Clear the display
+                self.loggingList.Clear()
+                
+                # Remove duplicates from global list
+                seen = set()
+                unique_entries = []
+                for entry in Globals.LOGLIST:
+                    if entry not in seen:
+                        seen.add(entry)
+                        unique_entries.append(entry)
+                
+                # Update global list with unique entries
+                Globals.LOGLIST.clear()
+                Globals.LOGLIST.extend(unique_entries)
+                
+                # Redisplay unique entries
+                self.firstLine = True
+                for entry in unique_entries:
+                    self.Logging(entry.strip(), scrollToEnd=False)
+                    if self.firstLine:
+                        self.firstLine = False
+                        
+                self.scrollToEnd()
+                
+                # Log the cleanup
+                cleanup_msg = f"Console cleaned - removed duplicates, showing {len(unique_entries)} unique entries"
+                if self.parent:
+                    self.parent.Logging(cleanup_msg)
+                    
+        except Exception as e:
+            if self.parent:
+                self.parent.Logging(f"Error clearing console duplicates: {str(e)}", isError=True)
+                
+    def get_console_stats(self):
+        """Debug method to get console statistics"""
+        try:
+            display_lines = self.loggingList.GetNumberOfLines() if self.loggingList else 0
+            global_entries = len(Globals.LOGLIST)
+            
+            stats_msg = f"Console Stats - Display lines: {display_lines}, Global entries: {global_entries}"
+            if self.parent:
+                self.parent.Logging(stats_msg)
+                
+            return display_lines, global_entries
+            
+        except Exception as e:
+            if self.parent:
+                self.parent.Logging(f"Error getting console stats: {str(e)}", isError=True)
+            return 0, 0
