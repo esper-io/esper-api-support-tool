@@ -30,6 +30,16 @@ from Utility.Web.WebRequests import (
 @api_tool_decorator()
 def createCommand(frame, command_args, commandType, schedule, schType, combineRequests=False):
     """Attempt to apply a Command given user specifications"""
+    
+    # Audit log command initiation
+    postEventToFrame(
+        eventUtil.myEVT_AUDIT,
+        {
+            "operation": commandType,
+            "data": f"Command: {commandType} Schedule: {schType} Args: {str(command_args) if command_args else 'None'}",
+        },
+    )
+    
     result, isGroup = confirmCommand(command_args, commandType, schedule, schType)
 
     if schType.lower() == "immediate":

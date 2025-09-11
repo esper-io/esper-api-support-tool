@@ -2160,6 +2160,13 @@ class NewFrameLayout(wx.Frame):
                 toEntId,
                 False,
             )
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "CloneTemplateAcrossTenants",
+                    "data": "Action: %s" % ("Clone Template Across Tenants"),
+                },
+            )
         else:
             self.toggleIsRunning(False)
         if result and result.getCheckBoxValue():
@@ -2191,6 +2198,13 @@ class NewFrameLayout(wx.Frame):
                 toKey,
                 toEntId,
                 True,
+            )
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "UpdateTemplateAcrossTenants",
+                    "data": "Action: %s" % ("Update Template Across Tenants"),
+                },
             )
         else:
             self.toggleIsRunning(False)
@@ -2341,6 +2355,13 @@ class NewFrameLayout(wx.Frame):
                 Globals.OPEN_DIALOGS.remove(dlg)
                 if res == wx.ID_OK:
                     app, version = dlg.getAppValues()
+                    postEventToFrame(
+                        eventUtil.myEVT_AUDIT,
+                        {
+                            "operation": "InstalledDevicesReport",
+                            "data": "Action: %s App: %s Version: %s" % ("Installed Devices Report", app, version),
+                        },
+                    )
                     if app and version:
                         defaultFileName = "%s_%s_installed_devices.xlsx" % (
                             dlg.selectedAppName.strip().replace(" ", "-").lower(),
@@ -2579,6 +2600,14 @@ class NewFrameLayout(wx.Frame):
         self.toggleEnabledState(True)
         self.gridPanel.enableGridProperties()
 
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "UserReport",
+                "data": "Action: %s" % ("User Report"),
+            },
+        )
+
         res = displayMessageBox(
             (
                 "User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,
@@ -2645,6 +2674,14 @@ class NewFrameLayout(wx.Frame):
         self.toggleEnabledState(True)
         self.gridPanel.enableGridProperties()
 
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "PendingUserReport",
+                "data": "Action: %s" % ("Pending User Report"),
+            },
+        )
+
         res = displayMessageBox(
             (
                 "Pending User Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,
@@ -2680,6 +2717,13 @@ class NewFrameLayout(wx.Frame):
             result = dlg.ShowModal()
             Globals.OPEN_DIALOGS.remove(dlg)
             if result == wx.ID_OK:
+                postEventToFrame(
+                    eventUtil.myEVT_AUDIT,
+                    {
+                        "operation": "TemplateToBlueprintConversion",
+                        "data": "Action: %s" % ("Template to Blueprint Conversion"),
+                    },
+                )
                 prepareBlueprintConversion(
                     dlg.getTemplate(),
                     dlg.toConfig,
@@ -2751,6 +2795,14 @@ class NewFrameLayout(wx.Frame):
             self.toggleEnabledState(True)
             self.gridPanel.enableGridProperties()
 
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "GroupReport",
+                    "data": "Action: %s" % ("Group Report"),
+                },
+            )
+
             res = displayMessageBox(
                 (
                     "Group Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,
@@ -2789,6 +2841,13 @@ class NewFrameLayout(wx.Frame):
                         self.changedBlueprints,
                         addToAppListIfNotPresent=selection,
                     )
+                    postEventToFrame(
+                        eventUtil.myEVT_AUDIT,
+                        {
+                            "operation": "UpdateBlueprintApp",
+                            "data": "Action: %s Target: %s App: %s" % ("Update Blueprint Apps", selection, apps),
+                        },
+                    )
         else:
             displayMessageBox(
                 (
@@ -2826,6 +2885,13 @@ class NewFrameLayout(wx.Frame):
                 return None
             elif opt == options[0]:
                 # Push immediately
+                postEventToFrame(
+                    eventUtil.myEVT_AUDIT,
+                    {
+                        "operation": "ImmediateConverge",
+                        "data": "Action: %s" % ("Immediate Converge"),
+                    },
+                )
                 num = 1
                 for bp in self.changedBlueprints:
                     updateResp, _ = pushBlueprintUpdate(bp["id"], bp["group"])
@@ -2847,6 +2913,13 @@ class NewFrameLayout(wx.Frame):
                     num += 1
             elif opt == options[1]:
                 # prompt for schedule
+                postEventToFrame(
+                    eventUtil.myEVT_AUDIT,
+                    {
+                        "operation": "ScheduledConverge",
+                        "data": "Action: %s" % ("Scheduled Converge"),
+                    },
+                )
                 schedule = None
                 scheduleType = "WINDOW"
                 with ScheduleCmdDialog() as dlg:
@@ -3021,6 +3094,13 @@ class NewFrameLayout(wx.Frame):
             Globals.OPEN_DIALOGS.remove(dlg)
         if res == wx.ID_APPLY:
             self.statusBar.gauge.Pulse()
+            postEventToFrame(
+                eventUtil.myEVT_AUDIT,
+                {
+                    "operation": "SetWidget",
+                    "data": "Action: %s Widget: %s Targets: %s - %s" % ("Set Widget", className, commandTarget, deviceList),
+                },
+            )
             if commandTarget == 0:
                 self.Logging("Creating Widget Command for selected devices")
                 Globals.THREAD_POOL.enqueue(setWidget, enable, widgetName=className, devices=deviceList)

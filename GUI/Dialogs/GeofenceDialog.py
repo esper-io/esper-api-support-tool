@@ -11,9 +11,10 @@ from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.API.DeviceUtility import get_all_devices
 from Utility.API.GroupUtility import getAllGroups, getGroupById
+from Utility.EventUtility import myEVT_AUDIT
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
 from Utility.Resource import (displayFileDialog, displayMessageBox, getFont,
-                              getHeader, is_uuid, onDialogEscape,
+                              getHeader, is_uuid, onDialogEscape, postEventToFrame,
                               setCursorBusy, setCursorDefault, setCursorIcon,
                               setElmTheme, uiThreadCheck)
 from Utility.Web.WebRequests import performPostRequestWithRetry
@@ -289,6 +290,21 @@ class GeofenceDialog(wx.Dialog):
                     longitude,
                     radius,
                     actionsList,
+                )
+                postEventToFrame(
+                    myEVT_AUDIT,
+                    {
+                        "operation": "Create Geofence",
+                        "data": {
+                            "name": name,
+                            "description": description,
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "radius": radius,
+                            "actionsList": actionsList,
+                            "properGroupIdList": properGroupIdList,
+                        } 
+                    },
                 )
         else:
             displayMessageBox(

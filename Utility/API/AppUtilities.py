@@ -73,10 +73,19 @@ def getEnterpriseIosApps(limit=None, offset=0, app_name="", tolerance=0):
             )
             details_resp = performGetRequestWithRetry(app_details_url, headers=getHeader())
             if details_resp:
-                details_json = details_resp.json()
-                details_json["content"]["results"][0]["version_id"] = details_json["content"]["results"][0]["id"]
-                details_json["content"]["results"][0].update(app)
-                app_res["results"].append(details_json["content"]["results"][0])
+                try:
+                    details_json = details_resp.json()
+                    if (details_json and 
+                        "content" in details_json and 
+                        "results" in details_json["content"] and 
+                        len(details_json["content"]["results"]) > 0):
+                        details_json["content"]["results"][0]["version_id"] = details_json["content"]["results"][0]["id"]
+                        details_json["content"]["results"][0].update(app)
+                        app_res["results"].append(details_json["content"]["results"][0])
+                except (KeyError, IndexError, TypeError, ValueError) as e:
+                    # Log the error but continue processing other apps
+                    ApiToolLog().LogError(f"Error processing app details for app {app.get('id', 'unknown')}: {str(e)}")
+                    continue
     return app_res
 
 
@@ -93,11 +102,18 @@ def getVppIosApps(tolerance=0):
         for app in resp["results"]:
             details_resp = getVppIosAppDetails(app["app_id"])
             if details_resp and details_resp.get("content", {}).get("results", []):
-                app_match = details_resp["content"]["results"][0]
-                app_match["version_id"] = app_match["app_id"]
-                app_match["package_name"] = app_match["bundle_id"]
-                app_match.update(app)
-                app_res["results"].append(details_resp["content"]["results"][0])
+                try:
+                    results = details_resp["content"]["results"]
+                    if len(results) > 0:
+                        app_match = results[0]
+                        app_match["version_id"] = app_match["app_id"]
+                        app_match["package_name"] = app_match["bundle_id"]
+                        app_match.update(app)
+                        app_res["results"].append(app_match)
+                except (KeyError, IndexError, TypeError) as e:
+                    # Log the error but continue processing other apps
+                    ApiToolLog().LogError(f"Error processing VPP app details for app {app.get('app_id', 'unknown')}: {str(e)}")
+                    continue
     return app_res
 
 

@@ -166,7 +166,7 @@ def getAdditionalDeviceInfo(
                         if vppResp and "results" in vppResp:
                             vppApp = vppResp["results"][0]
                             app.update(vppApp)
-    if getLatestEvents and device["platform"] != "APPLE":
+    if getLatestEvents and device and device.get("os", "ANDROID") != "APPLE":
         postEventToFrame(
             eventUtil.myEVT_LOG,
             "Fetching additional Latest Event Info for %s" % deviceId,
