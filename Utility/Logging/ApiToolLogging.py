@@ -87,13 +87,16 @@ class ApiToolLog:
             errorLine,
             "\tEsper Tool Version: %s" % Globals.VERSION,
         ]
-        for line in exc_traceback:
-            parts = line.split('",')
-            entry = "".join(parts[1:]) if len(parts) > 1 else parts[0]
-            entry = entry.replace("\n", "").replace("^", "").strip()
-            entry = "\t%s" % entry
-            if entry:
-                content.append(entry)
+        if isinstance(exc_traceback, list):
+            for line in exc_traceback:
+                parts = line.split('",')
+                entry = "".join(parts[1:]) if len(parts) > 1 else parts[0]
+                entry = entry.replace("\n", "").replace("^", "").strip()
+                entry = "\t%s" % entry
+                if entry:
+                    content.append(entry)
+        elif isinstance(exc_traceback, str):
+            content.append("\t%s" % exc_traceback.replace("\n", "").replace("^", "").strip())
 
         self.Log(content)
 
