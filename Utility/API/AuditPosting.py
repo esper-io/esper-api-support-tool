@@ -47,12 +47,13 @@ class AuditPosting:
         if os.path.exists(filePath):
             tokenJson = {}
             tokenJson = read_json_file(filePath)
-            if "email_to" in tokenJson:
-                self.to_addr = tokenJson["email_to"]
-            if "email_login" in tokenJson:
-                self.login = tokenJson["email_login"]
-            if "email_to" in tokenJson:
-                self.pw = tokenJson["email_pw"]
+            if tokenJson and isinstance(tokenJson, dict):
+                if "email_to" in tokenJson:
+                    self.to_addr = tokenJson.get("email_to", "")
+                if "email_login" in tokenJson:
+                    self.login = tokenJson.get("email_login", "")
+                if "email_pw" in tokenJson:
+                    self.pw = tokenJson.get("email_pw", "")
 
     def postOperation(self, event):
         values = None

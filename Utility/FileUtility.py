@@ -19,9 +19,14 @@ def read_from_file(filePath, mode="r") -> list:
 
 
 def read_json_file(filePath) -> dict:
-    content = None
-    with open(filePath, "r") as file:
-        content = json.load(file)
+    content = {}
+    try:
+        with open(filePath, "r") as file:
+            content = json.load(file)
+            if content is None:
+                content = {}
+    except (FileNotFoundError, json.JSONDecodeError, Exception):
+        content = {}
     return content
 
 

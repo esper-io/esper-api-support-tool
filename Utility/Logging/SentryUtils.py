@@ -41,4 +41,7 @@ class SentryUtils:
         if os.path.exists(filePath):
             tokenJson = {}
             tokenJson = read_json_file(filePath)
-            self.dsn = tokenJson.get("sentry_dsn", "")
+            if tokenJson and isinstance(tokenJson, dict):
+                self.dsn = tokenJson.get("sentry_dsn", "")
+            else:
+                self.dsn = ""

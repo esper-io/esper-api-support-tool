@@ -8,18 +8,11 @@ import Common.Globals as Globals
 import Utility.EventUtility as eventUtil
 from Common.decorator import api_tool_decorator
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import (
-    enforceRateLimit,
-    getHeader,
-    getTenant,
-    logBadResponse,
-    postEventToFrame,
-)
-from Utility.Web.WebRequests import (
-    fetchRequestWithOffsets,
-    handleRequestError,
-    performGetRequestWithRetry,
-)
+from Utility.Resource import (enforceRateLimit, getHeader, getTenant,
+                              logBadResponse, postEventToFrame)
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     handleRequestError,
+                                     performGetRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -52,7 +45,14 @@ def getAllIosInstallableApps(tolerance=0):
     vppApps = {}
     if Globals.FETCH_VPP:
         vppApps = getVppIosApps(tolerance=tolerance)
-    return {"results": vppApps.get("results", []) + enterprise_apps.get("results", [])}
+    if vppApps and enterprise_apps:
+        return {"results": vppApps.get("results", []) + enterprise_apps.get("results", [])}
+    elif vppApps:
+        return {"results": vppApps.get("results", [])}
+    elif enterprise_apps:
+        return {"results": enterprise_apps.get("results", [])}
+    else:
+        return {"results": []}
 
 
 @api_tool_decorator()
