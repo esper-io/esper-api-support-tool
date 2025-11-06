@@ -1078,7 +1078,6 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
         api_response = getAllDevices(
             groupId,
             tolarance=tolarance,
-            timeout=3 * 60,
         )
         if api_response:
             if api_response and hasattr(api_response, "results") and api_response.results:
@@ -1088,8 +1087,9 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,
-                "---> ERROR: Failed to get devices",
+                "---> ERROR: Failed to get devices or no devices found",
             )
+            return
 
     if not Globals.SHOW_DISABLED_DEVICES:
         devices = list(filter(filterDeviceList, devices))

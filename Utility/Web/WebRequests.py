@@ -45,10 +45,20 @@ def performRequestWithRetry(
                 resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
             code = resp.status_code if resp is not None and hasattr(resp, 'status_code') else -1
-            if (code > 0 and code < 300) or (str(code).startswith("5") and attempt >= int(maxRetry / 2)):
+            if (code > 0 and code < 300):
                 break
             elif code == 429:
-                doExponentialBackoff(attempt)
+                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
+                    url, attempt + 1, maxRetry, code, resp.text
+                )
+                ApiToolLog().LogError(err_msg, postStatus=False)
+                doExponentialBackoff(attempt, url)
+            elif "timeout" in resp.text.lower() or "timing out" in resp.text.lower() or "too many requests" in resp.text.lower():
+                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
+                    url, attempt + 1, maxRetry, code, resp.text
+                )
+                ApiToolLog().LogError(err_msg, postStatus=False)
+                doExponentialBackoff(attempt, url, False)
             else:
                 err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
                     url, attempt + 1, maxRetry, code, resp.text
@@ -56,38 +66,41 @@ def performRequestWithRetry(
                 ApiToolLog().LogError(err_msg, postStatus=False)
                 postEventToFrame(EventUtility.myEVT_LOG, err_msg)
         except Exception as e:
-            handleRequestError(attempt, e, maxRetry)
+            handleRequestError(attempt, e, maxRetry, url)
     return resp
 
 
-def handleRequestError(attempt, e, maxRetry, raiseError=False):
+def handleRequestError(attempt, e, maxRetry, raiseError=False, url=""):
     if attempt == maxRetry - 1:
         ApiToolLog().LogError(e, postStatus=False)
         if raiseError:
             raise e
     if "429" in str(e) or "Too Many Requests" in str(e):
-        ApiToolLog().LogError("Response returned 429, Rate Limit, waiting %s seconds" % Globals.RETRY_SLEEP, postStatus=False)
-        time.sleep(Globals.RETRY_SLEEP)
+        doExponentialBackoff(attempt, url)
     else:
-        doExponentialBackoff(attempt)
+        time.sleep(Globals.RETRY_SLEEP)
     postEventToFrame(EventUtility.myEVT_LOG, str(e))
 
 
-def doExponentialBackoff(attempt):
+def doExponentialBackoff(attempt, url, isRateLimit=True):
     # If we run into a Rate Limit error, do an exponential backoff
     sleepTime = Globals.RETRY_SLEEP * 20 * (attempt + 1)
+    errorType = "Rate Limit" if isRateLimit else "Error"
     if attempt == 0:
         postEventToFrame(
             EventUtility.myEVT_LOG,
-            "Rate Limit Encountered retrying in 1 minute",
+            "%s Encountered (%s) retrying in 1 minute" % (errorType, url),
         )
         
     else:
         postEventToFrame(
             EventUtility.myEVT_LOG,
-            "Rate Limit Encountered retrying in %s minutes" % (attempt + 1),
+            "%s Encountered (%s) retrying in %s minutes" % (errorType, url, attempt + 1),
         )
-    ApiToolLog().LogError("Response returned 429, Rate Limit, waiting %s seconds" % sleepTime, postStatus=False)
+    if isRateLimit:
+        ApiToolLog().LogError("Response returned 429, Rate Limit, waiting %s seconds" % sleepTime, postStatus=False)
+    else:
+        ApiToolLog().LogError("Error encountered, waiting %s seconds" % sleepTime, postStatus=False)
     time.sleep(sleepTime)  # Sleep for a minute * retry number
 
 
@@ -161,6 +174,8 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
             results += resp.results
         elif type(resp) is dict and "results" in resp and resp["results"]:
             results += resp["results"]
+        else:
+            raise Exception("Failed to get valid response: %s" % str(resp))
     return results
 
 
