@@ -584,6 +584,13 @@ class NewFrameLayout(wx.Frame):
         self.sleepInhibitor.inhibit()
         self.Logging("Obtaining Device data....")
         deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices, tolarance=tolarance)
+
+        if not deviceList or len(deviceList) == 0:
+            self.Logging("No device information obtained. Aborting save operation.")
+            postEventToFrame(eventUtil.myEVT_COMPLETE, (False, -1))
+            self.sleepInhibitor.uninhibit()
+            return
+
         num = 1
         self.Logging("Processing device information for file")
         if (
