@@ -144,22 +144,25 @@ def performPostRequestWithRetry(
 
 def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True):
     count = None
-    resultList = []
-    if not results:
+    if results is None:
         results = []
+
     if hasattr(api_response, "content"):
         api_response = api_response.content
     elif type(api_response) is dict and "content" in api_response:
         api_response = api_response["content"]
+
     if hasattr(api_response, "count"):
         count = api_response.count
     elif type(api_response) is dict and "count" in api_response:
         count = api_response["count"]
+
     apiNext = None
     if hasattr(api_response, "next"):
         apiNext = api_response.next
     elif type(api_response) is dict and "next" in api_response:
         apiNext = api_response["next"]
+
     if apiNext:
         respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
@@ -193,7 +196,7 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
     return results
 
 
-def _process_threaded_responses_with_fail_fast(total_requests, results, tolerance, timeout):
+def _process_threaded_responses_with_fail_fast(total_requests, results, tolerance=0, timeout=-1):
     """Process threaded responses as they become available with true fail-fast behavior."""
     import time
     processed_count = 0
@@ -223,17 +226,11 @@ def _process_threaded_responses_with_fail_fast(total_requests, results, toleranc
     Globals.THREAD_POOL.join(tolerance)
 
 
-def _process_responses_with_fail_fast(resultList, results):
-    """Process all responses from thread pool with fail-fast on invalid responses."""
-    for resp in resultList:
-        _validate_and_process_single_response(resp, results)
-
-
 def _validate_and_process_single_response(resp, results):
     """Validate a single response and add its results to the results list, failing fast on invalid responses."""
     if "content" in resp:
         resp = resp["content"]
-    
+
     if resp and hasattr(resp, "results") and resp.results:
         results += resp.results
     elif type(resp) is dict and "results" in resp and resp["results"]:
