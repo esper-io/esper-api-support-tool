@@ -44,30 +44,41 @@ def performRequestWithRetry(
             else:
                 resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
+
             code = resp.status_code if resp is not None and hasattr(resp, 'status_code') else -1
             if (code > 0 and code < 300):
                 break
-            elif code == 429:
-                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
-                    url, attempt + 1, maxRetry, code, resp.text
-                )
-                ApiToolLog().LogError(err_msg, postStatus=False)
-                doExponentialBackoff(attempt, url)
-            elif "timeout" in resp.text.lower() or "timing out" in resp.text.lower() or "too many requests" in resp.text.lower():
-                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
-                    url, attempt + 1, maxRetry, code, resp.text
-                )
-                ApiToolLog().LogError(err_msg, postStatus=False)
-                doExponentialBackoff(attempt, url, False)
             else:
-                err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
-                    url, attempt + 1, maxRetry, code, resp.text
-                )
-                ApiToolLog().LogError(err_msg, postStatus=False)
-                postEventToFrame(EventUtility.myEVT_LOG, err_msg)
+                _handle_non_success_response(resp, attempt, maxRetry, url)
         except Exception as e:
             handleRequestError(attempt, e, maxRetry, url)
     return resp
+
+
+def _handle_non_success_response(resp, attempt, maxRetry, url):
+    """Handle non-2XX HTTP status codes with appropriate retry logic."""
+    code = resp.status_code
+    response_text = getattr(resp, 'text', '')
+    
+    err_msg = "ERROR: %s Request Failed (Attempt %s of %s) %s %s" % (
+        url, attempt + 1, maxRetry, code, response_text
+    )
+    ApiToolLog().LogError(err_msg, postStatus=False)
+    
+    # Rate limiting (429) - use exponential backoff
+    if code == 429:
+        doExponentialBackoff(attempt, url)
+    # Timeout-related responses - use exponential backoff without rate limit logging
+    elif _is_timeout_related_response(response_text):
+        doExponentialBackoff(attempt, url, False)
+
+    postEventToFrame(EventUtility.myEVT_LOG, err_msg)
+
+
+def _is_timeout_related_response(response_text):
+    """Check if the response indicates a timeout or rate limiting issue."""
+    timeout_indicators = ["timeout", "timing out", "too many requests"]
+    return any(indicator in response_text.lower() for indicator in timeout_indicators)
 
 
 def handleRequestError(attempt, e, maxRetry, raiseError=False, url=""):
