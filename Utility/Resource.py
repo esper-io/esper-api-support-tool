@@ -3,6 +3,7 @@
 import json
 import os
 import platform
+import random
 import re
 import shlex
 import subprocess
@@ -439,9 +440,11 @@ def getHeader():
 
 @sleep_and_retry
 @limits(calls=8000, period=(5 * 60))
-def enforceRateLimit():
-    pass
-
+def enforceRateLimit(sleepMin=0, sleepMax=0):
+    if sleepMax != 0 and sleepMin > 0 and sleepMin < sleepMax:
+        # Do a random sleep between sleepMin and sleepMax seconds to avoid hitting the limit too quickly
+        sleepTime = random.uniform(sleepMin, sleepMax)
+        time.sleep(sleepTime)
 
 def getEsperConfig(host, apiKey, auth="Bearer"):
     configuration = esperclient.Configuration()

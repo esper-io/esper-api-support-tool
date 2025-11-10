@@ -18,11 +18,11 @@ DO_EXTRA_LOGGING = True
 API_LOGGER = None
 
 """ Constants """
-VERSION = "v0.195279"
+VERSION = "v0.195280"
 TITLE = "Esper API Support Tool"
 RECORD_PLACE = False
 MIN_LIMIT = 50
-MAX_LIMIT = 250
+MAX_LIMIT = 1000
 MIN_SIZE = (900, 700)
 MAX_TAGS = 5
 error_tracker = {}

@@ -34,18 +34,21 @@ def performRequestWithRetry(
     files=None,
     requestTimeout=(30, 60), # connect, read
     maxRetry=Globals.MAX_RETRY,
+    sleepMin=0,
+    sleepMax=0,
 ):
     resp = None
     for attempt in range(maxRetry):
         try:
-            enforceRateLimit()
+            enforceRateLimit(sleepMin, sleepMax)
             if files:
                 resp = method(url, headers=headers, json=json, data=data, files=files, timeout=requestTimeout)
             else:
                 resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
-            # ApiToolLog().Log("%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s" % (
-            #     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), method.__name__, url, resp.status_code
-            # ))
+            if Globals.IS_DEBUG:
+                ApiToolLog().Log("%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s" % (
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), method.__name__, url, resp.status_code
+                ))
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
 
             code = resp.status_code if resp is not None and hasattr(resp, 'status_code') else -1
@@ -75,7 +78,8 @@ def _handle_non_success_response(resp, attempt, maxRetry, url):
     elif _is_timeout_related_response(response_text):
         doExponentialBackoff(attempt, url, False)
 
-    postEventToFrame(EventUtility.myEVT_LOG, err_msg)
+    if code == 429:
+        postEventToFrame(EventUtility.myEVT_LOG, err_msg)
 
 
 def _is_timeout_related_response(response_text):
@@ -100,17 +104,18 @@ def doExponentialBackoff(attempt, url, isRateLimit=True):
     # If we run into a Rate Limit error, do an exponential backoff
     sleepTime = (Globals.RETRY_SLEEP * 20) * (2 ** (attempt))
     errorType = "Rate Limit" if isRateLimit else "Error"
-    if attempt == 0:
-        postEventToFrame(
-            EventUtility.myEVT_LOG,
-            "%s Encountered (%s) retrying in 1 minute" % (errorType, url),
-        )
-        
-    else:
-        postEventToFrame(
-            EventUtility.myEVT_LOG,
-            "%s Encountered (%s) retrying in %s minutes" % (errorType, url, attempt + 1),
-        )
+    if isRateLimit:
+        if attempt == 0:
+            postEventToFrame(
+                EventUtility.myEVT_LOG,
+                "%s Encountered (%s) retrying in 1 minute" % (errorType, url),
+            )
+            
+        else:
+            postEventToFrame(
+                EventUtility.myEVT_LOG,
+                "%s Encountered (%s) retrying in %s minutes" % (errorType, url, attempt + 1),
+            )
     if isRateLimit:
         ApiToolLog().LogError("Response returned 429, Rate Limit, waiting %s seconds" % sleepTime, postStatus=False)
     else:
@@ -118,21 +123,19 @@ def doExponentialBackoff(attempt, url, isRateLimit=True):
     time.sleep(sleepTime)  # Sleep for a minute * retry number
 
 
-def performGetRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
-    return performRequestWithRetry(url, requests.get, headers, json, data, maxRetry=maxRetry)
+def performGetRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY, sleepMin=0, sleepMax=0):
+    return performRequestWithRetry(url, requests.get, headers, json, data, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
 
-def performPatchRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
-    return performRequestWithRetry(url, requests.patch, headers, json, data, maxRetry=maxRetry)
+def performPatchRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY, sleepMin=0, sleepMax=0):
+    return performRequestWithRetry(url, requests.patch, headers, json, data, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
 
-def performPutRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
-    return performRequestWithRetry(url, requests.put, headers, json, data, maxRetry=maxRetry)
+def performPutRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY, sleepMin=0, sleepMax=0):
+    return performRequestWithRetry(url, requests.put, headers, json, data, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
-
-def performDeleteRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY):
-    return performRequestWithRetry(url, requests.delete, headers, json, data, maxRetry=maxRetry)
-
+def performDeleteRequestWithRetry(url, headers=None, json=None, data=None, maxRetry=Globals.MAX_RETRY, sleepMin=0, sleepMax=0):
+    return performRequestWithRetry(url, requests.delete, headers, json, data, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
 def performPostRequestWithRetry(
     url,
@@ -141,8 +144,10 @@ def performPostRequestWithRetry(
     data=None,
     files=None,
     maxRetry=Globals.MAX_RETRY,
+    sleepMin=0,
+    sleepMax=0,
 ):
-    return performRequestWithRetry(url, requests.post, headers, json, data, files, maxRetry=maxRetry)
+    return performRequestWithRetry(url, requests.post, headers, json, data, files, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
 
 def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True):
@@ -170,6 +175,12 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
         respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
+        if "v2/devices/" in apiNext:
+            minSleep = 25
+            maxSleep = 45
+        else:
+            minSleep = 0
+            maxSleep = 0
         
         if useThreadPool:
             # Queue all requests first
@@ -178,7 +189,7 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
                 if checkIfCurrentThreadStopped():
                     return
                 url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None))
+                Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
                 respOffsetInt += int(respLimit)
                 total_requests += 1
             
@@ -190,7 +201,7 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
                 if checkIfCurrentThreadStopped():
                     return
                 url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
-                resp_json = perform_web_requests((url, getHeader(), "GET", None))
+                resp_json = perform_web_requests((url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
                 
                 # Fail fast on invalid response
                 _validate_and_process_single_response(resp_json, results)
@@ -246,19 +257,22 @@ def perform_web_requests(content):
     url = content[0].strip()
     header = content[1]
     method = content[2]
-    json = content[3] if len(content) > 2 else None
+    json = content[3] if len(content) > 3 else None
+    retry = content[4] if len(content) > 4 and content[4] is not None else Globals.MAX_RETRY
+    min = content[5] if len(content) > 5 and content[5] is not None else 0
+    max = content[6] if len(content) > 6 and content[6] is not None else 0
     resp = None
 
     if method == "GET":
-        resp = performGetRequestWithRetry(url, header, json)
+        resp = performGetRequestWithRetry(url, header, json, maxRetry=retry, sleepMin=min, sleepMax=max)
     elif method == "POST":
-        resp = performPostRequestWithRetry(url, header, json)
+        resp = performPostRequestWithRetry(url, header, json, maxRetry=retry, sleepMin=min, sleepMax=max)
     elif method == "DELETE":
-        resp = performDeleteRequestWithRetry(url, header, json)
+        resp = performDeleteRequestWithRetry(url, header, json, maxRetry=retry, sleepMin=min, sleepMax=max)
     elif method == "PATCH":
-        resp = performPatchRequestWithRetry(url, header, json)
+        resp = performPatchRequestWithRetry(url, header, json, maxRetry=retry, sleepMin=min, sleepMax=max)
     elif method == "PUT":
-        resp = performPutRequestWithRetry(url, header, json)
+        resp = performPutRequestWithRetry(url, header, json, maxRetry=retry, sleepMin=min, sleepMax=max)
 
     if resp:
         resp = resp.json()

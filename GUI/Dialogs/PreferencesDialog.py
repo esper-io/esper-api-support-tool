@@ -889,6 +889,7 @@ class PreferencesDialog(wx.Dialog):
             "showDisclaimer": self.checkbox_30.IsChecked(),
             "showAppFilter": self.checkbox_31.IsChecked(),
             "getTemplateLanguage": self.checkbox_29.IsChecked(),
+            "hasResetLimit": True,
         }
 
         Globals.THEME = self.prefs["theme"]
@@ -1110,6 +1111,11 @@ class PreferencesDialog(wx.Dialog):
             Globals.MIN_LIMIT,
             Globals.MAX_LIMIT,
         )
+        if not self.prefs.get("hasResetLimit", False):
+            # pref not present, reset limit to default
+            self.prefs["hasResetLimit"] = True
+            Globals.limit = Globals.MAX_LIMIT
+
         Globals.COMMAND_TIMEOUT = self.checkNumberValPrefAndSet(
             "commandTimeout", self.spin_ctrl_6, Globals.COMMAND_TIMEOUT, 0, 100
         )
