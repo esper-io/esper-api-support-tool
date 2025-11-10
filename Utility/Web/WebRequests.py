@@ -43,6 +43,9 @@ def performRequestWithRetry(
                 resp = method(url, headers=headers, json=json, data=data, files=files, timeout=requestTimeout)
             else:
                 resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
+            # ApiToolLog().Log("%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s" % (
+            #     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), method.__name__, url, resp.status_code
+            # ))
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
 
             code = resp.status_code if resp is not None and hasattr(resp, 'status_code') else -1
@@ -95,7 +98,7 @@ def handleRequestError(attempt, e, maxRetry, raiseError=False, url=""):
 
 def doExponentialBackoff(attempt, url, isRateLimit=True):
     # If we run into a Rate Limit error, do an exponential backoff
-    sleepTime = Globals.RETRY_SLEEP * 20 * (attempt + 1)
+    sleepTime = (Globals.RETRY_SLEEP * 20) * (2 ** (attempt))
     errorType = "Rate Limit" if isRateLimit else "Error"
     if attempt == 0:
         postEventToFrame(
