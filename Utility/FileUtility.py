@@ -3,12 +3,26 @@ import json
 import os
 import platform
 import tempfile
+import threading
 from itertools import islice
 
 import openpyxl
 import pandas as pd
 
 import Common.Globals as Globals
+
+
+def checkIfCurrentThreadStopped():
+    """Check if the current thread has been asked to stop/abort.
+    This function is defined here to avoid circular dependency with Utility.Resource"""
+    isAbortSet = False
+    if hasattr(threading.current_thread(), "abort"):
+        isAbortSet = threading.current_thread().abort.is_set()
+    elif hasattr(threading.current_thread(), "isStopped"):
+        isAbortSet = threading.current_thread().isStopped()
+    elif hasattr(threading.current_thread(), "stopCurrentTask"):
+        isAbortSet = threading.current_thread().stopCurrentTask.is_set()
+    return isAbortSet
 
 
 def read_from_file(filePath, mode="r") -> list:
@@ -125,6 +139,10 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
 
 
 def save_excel_pandas_xlxswriter(path, df_dict: dict):
+    # Check abort before starting
+    if checkIfCurrentThreadStopped():
+        return
+    
     if len(df_dict) <= Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
         writer = pd.ExcelWriter(
             path,
@@ -134,16 +152,30 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         sheetNames = []
         try:
             for sheet, df in df_dict.items():
+                # Check abort before processing each sheet
+                if checkIfCurrentThreadStopped():
+                    # Close writer if abort is detected
+                    if hasattr(writer, "close"):
+                        writer.close()
+                    return
+                
                 sheetNames.append(sheet)
                 df.to_excel(writer, sheet_name=sheet, index=False)
 
             # Auto adjust column width
             for s in sheetNames:
+                # Check abort before adjusting each sheet's column width
+                if checkIfCurrentThreadStopped():
+                    break
+                    
                 worksheet = writer.sheets[s]
                 if hasattr(worksheet, "autofit"):
                     worksheet.autofit()
                 else:
                     for idx, col in enumerate(df):  # loop through all columns
+                        # Check abort during column width adjustment
+                        if checkIfCurrentThreadStopped():
+                            break
                         series = df[col]
                         max_len = (
                             max(
@@ -165,6 +197,10 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
     else:
         split_dict_list = list(__split_dict_into_chunks__(df_dict, Globals.MAX_NUMBER_OF_SHEETS_PER_FILE))
         for i in range(0, len(split_dict_list)):
+            # Check abort before processing each split file
+            if checkIfCurrentThreadStopped():
+                return
+                
             if i == 0:
                 path = path[:-5] + "_{}.xlsx".format(i)
             else:
@@ -179,6 +215,12 @@ def __split_dict_into_chunks__(data, size):
 
 
 def save_csv_pandas(path, df):
+    # Check abort before starting the save operation
+    # Note: pandas to_csv is a blocking operation that can't be interrupted mid-write,
+    # but checking here allows the thread to exit before starting a long write operation
+    if checkIfCurrentThreadStopped():
+        return
+    
     df.to_csv(
         path,
         sep=",",
