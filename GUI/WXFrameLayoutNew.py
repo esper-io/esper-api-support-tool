@@ -2518,6 +2518,15 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def displayNotification(self, title, msg, displayActive=False):
         if not self.IsActive() or displayActive:
+            # Close any existing notification before creating a new one
+            # This prevents HWND association errors when multiple notifications are created
+            if self.notification:
+                try:
+                    self.notification.Close()
+                except:
+                    pass
+                self.notification = None
+            
             self.notification = wxadv.NotificationMessage(title, msg, self)
             if self.notification:
                 if hasattr(self.notification, "MSWUseToasts"):
