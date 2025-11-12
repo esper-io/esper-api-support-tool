@@ -98,6 +98,14 @@ class Pool:
 
     def abort(self, block=False):
         """Tell each worker that its done working"""
+        # Clear the queue immediately to prevent new tasks from being processed
+        self.clearQueue()
+        
+        # Set stopCurrentTask flag to interrupt any currently running tasks
+        for thread in self.threads:
+            if hasattr(thread, 'stopCurrentTask'):
+                thread.stopCurrentTask.set()
+        
         # tell the threads to stop after they are done with what they are currently doing
         for a in self.aborts:
             if a:
@@ -106,7 +114,7 @@ class Pool:
                 print(a)
         # wait for them to finish if requested
         while block and self.alive():
-            time.sleep(1)
+            time.sleep(0.1)  # Reduced sleep time for faster response
 
     def alive(self):
         """Returns True if any threads are currently running"""
@@ -139,13 +147,19 @@ class Pool:
 
     def abortCurrentTasks(self, waitForIdle=True, clearFlagAtEnd=True):
         self.abortJoin.set()
+        
+        # Clear the queue immediately to prevent new tasks from being processed
+        self.clearQueue()
 
+        # Set stopCurrentTask flag for all threads to interrupt currently running tasks
         for thread in self.threads:
             thread.stopCurrentTask.set()
 
         if waitForIdle:
-            while self.idle() is False:
-                self.queue.queue.clear()
+            # Wait for threads to finish, but with a timeout to prevent hanging
+            max_wait_time = 5.0  # Maximum 5 seconds to wait
+            start_time = time.perf_counter()
+            while self.idle() is False and (time.perf_counter() - start_time) < max_wait_time:
                 time.sleep(0.01)
         
         if clearFlagAtEnd:

@@ -521,7 +521,6 @@ class NewFrameLayout(wx.Frame):
                         item.Destroy()
                     item.Close()
             for pool in Globals.POOLS:
-                pool.abortCurrentTasks(waitForIdle=False, clearFlagAtEnd=False)
                 pool.abort()
             wx.Exit()
 
