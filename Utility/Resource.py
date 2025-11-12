@@ -306,6 +306,8 @@ def displayMessageBox(event):
         sty |= wx.CENTRE
 
     res = None
+    if checkIfCurrentThreadStopped():
+        return res
     Globals.msg_lock.acquire()
     if msg:
         res = wx.MessageBox(msg, style=sty, parent=Globals.frame)
@@ -514,6 +516,8 @@ def checkIfCurrentThreadStopped():
         isAbortSet = threading.current_thread().abort.is_set()
     elif hasattr(threading.current_thread(), "isStopped"):
         isAbortSet = threading.current_thread().isStopped()
+    elif hasattr(threading.current_thread(), "stopCurrentTask"):
+        isAbortSet = threading.current_thread().stopCurrentTask.is_set()
     return isAbortSet
 
 

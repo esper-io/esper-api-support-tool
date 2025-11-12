@@ -20,6 +20,7 @@ class Pool:
         self.idles = []
         self.threads = []
         self.thread_name = thread_name
+        self.abortJoin = Event()
 
     def __del__(self):
         """Tell my threads to quit"""
@@ -89,7 +90,9 @@ class Pool:
                     (timeout > 0 and time.perf_counter() - startTime >= timeout)
                     or self.isDoneWithinTolerance(queueTolerance=tolerance)
                     or isAbortSet
+                    or self.abortJoin.is_set()
                 ):
+                    self.abortJoin.clear()
                     break
                 time.sleep(0.01)
 
@@ -133,3 +136,18 @@ class Pool:
         except:
             pass
         return results
+
+    def abortCurrentTasks(self, waitForIdle=True, clearFlagAtEnd=True):
+        self.abortJoin.set()
+
+        for thread in self.threads:
+            thread.stopCurrentTask.set()
+
+        if waitForIdle:
+            while self.idle() is False:
+                self.queue.queue.clear()
+                time.sleep(0.01)
+        
+        if clearFlagAtEnd:
+            for thread in self.threads:
+                thread.stopCurrentTask.clear()

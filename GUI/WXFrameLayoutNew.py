@@ -506,6 +506,7 @@ class NewFrameLayout(wx.Frame):
                     self.Close()
             self.closeDestroyLater(self.groupManage)
             ApiToolLog().LogApiRequestOccurrence(None, ApiTracker.API_REQUEST_TRACKER, True)
+            Globals.THREAD_POOL.abortCurrentTasks()
             Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
             Globals.THREAD_POOL.enqueue(self.audit.postStoredOperations)
             Globals.THREAD_POOL.join(timeout=2 * 60)
@@ -519,7 +520,9 @@ class NewFrameLayout(wx.Frame):
                     if item and isinstance(item, wx.Dialog):
                         item.Destroy()
                     item.Close()
-            Globals.THREAD_POOL.abort()
+            for pool in Globals.POOLS:
+                pool.abortCurrentTasks(waitForIdle=False, clearFlagAtEnd=False)
+                pool.abort()
             wx.Exit()
 
     def closeDestroyLater(self, elm):
@@ -585,6 +588,11 @@ class NewFrameLayout(wx.Frame):
         self.Logging("Obtaining Device data....")
         deviceList = getAllDeviceInfo(self, action=action, allDevices=allDevices, tolarance=tolarance)
 
+        # Check if thread was asked to stop
+        if checkIfCurrentThreadStopped():
+            self.sleepInhibitor.uninhibit()
+            return
+
         if not deviceList or len(deviceList) == 0:
             self.Logging("No device information obtained. Aborting save operation.")
             postEventToFrame(eventUtil.myEVT_COMPLETE, (False, -1))
@@ -615,6 +623,10 @@ class NewFrameLayout(wx.Frame):
             df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input, True)
             self.gridPanel.app_grid_contents = df
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 50)
+
+        if checkIfCurrentThreadStopped():
+            self.sleepInhibitor.uninhibit()
+            return
 
         self.Logging("Finished compiling information. Saving to file...")
         postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 85)
@@ -656,6 +668,9 @@ class NewFrameLayout(wx.Frame):
                     how="outer",
                 )
                 result = result.dropna(axis=0, how="all", subset=None)
+                if checkIfCurrentThreadStopped():
+                    self.sleepInhibitor.uninhibit()
+                    return
                 save_csv_pandas(inFile, result)
             if (
                 not action
@@ -671,11 +686,17 @@ class NewFrameLayout(wx.Frame):
                 or action == GeneralActions.SHOW_ALL_AND_GENERATE_REPORT.value
                 or action == GeneralActions.GENERATE_APP_REPORT.value
             ) and len(appData) > 0:
+                if checkIfCurrentThreadStopped():
+                    self.sleepInhibitor.uninhibit()
+                    return
                 save_csv_pandas(inFile, appData)
         elif inFile.endswith(".xlsx"):
             df_dict = {}
             if not action or action <= GeneralActions.GENERATE_DEVICE_REPORT.value and Globals.COMBINE_DEVICE_AND_NETWORK_SHEETS:
                 if deviceData is not None and networkData is not None:
+                    if checkIfCurrentThreadStopped():
+                        self.sleepInhibitor.uninhibit()
+                        return
                     result = pd.merge(
                         deviceData,
                         networkData,
@@ -689,6 +710,9 @@ class NewFrameLayout(wx.Frame):
                     )
                     df_dict = self.subdivideSheetData("Device & Network", result, df_dict)
                 else:
+                    if checkIfCurrentThreadStopped():
+                        self.sleepInhibitor.uninhibit()
+                        return
                     deviceNetworkResults = pd.merge(
                         self.gridPanel.device_grid.createEmptyDataFrame(),
                         self.gridPanel.network_grid.createEmptyDataFrame(),
@@ -697,6 +721,9 @@ class NewFrameLayout(wx.Frame):
                     )
                     df_dict = self.subdivideSheetData("Device & Network", deviceNetworkResults, df_dict)
             elif deviceData is not None and len(deviceData) > 0:
+                if checkIfCurrentThreadStopped():
+                    self.sleepInhibitor.uninhibit()
+                    return
                 df_dict = self.subdivideSheetData("Device", deviceData, df_dict)
                 if not action or action <= GeneralActions.GENERATE_INFO_REPORT.value:
                     df_dict = self.subdivideSheetData("Network", networkData, df_dict)
@@ -710,6 +737,9 @@ class NewFrameLayout(wx.Frame):
                 and appData is not None
                 and len(appData) > 0
             ):
+                if checkIfCurrentThreadStopped():
+                    self.sleepInhibitor.uninhibit()
+                    return
                 df_dict = self.subdivideSheetData("Application", appData, df_dict)
             save_excel_pandas_xlxswriter(inFile, df_dict)
 
@@ -720,6 +750,9 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.enableGridProperties()
 
         if showDlg:
+            if checkIfCurrentThreadStopped():
+                self.sleepInhibitor.uninhibit()
+                return
             res = displayMessageBox(
                 (
                     "Report Saved\n\n File saved at: %s\n\nWould you like to navigate to the file?" % inFile,

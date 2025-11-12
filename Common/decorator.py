@@ -28,6 +28,10 @@ def api_tool_decorator(locks=None, displayPrompt=True):
             logPlace(func, *args, **kwargs)
             if not Globals.API_LOGGER:
                 Globals.API_LOGGER = ApiToolLog()
+
+            if isCurrentThreadStopped():
+                return result
+
             try:
                 result = func(*args, **kwargs)
                 logPlaceDone(func, *args, **kwargs)
@@ -65,6 +69,7 @@ def api_tool_decorator(locks=None, displayPrompt=True):
                         for lock in locks:
                             if lock.locked():
                                 lock.release()
+
             end = time.perf_counter()
             if start and end:
                 duration = end - start
@@ -149,3 +154,14 @@ def construct_log_place_str(prefix, func, *args, **kwargs):
         place += str(func)
 
     return place
+
+
+def isCurrentThreadStopped():
+    isAbortSet = False
+    if hasattr(threading.current_thread(), "abort"):
+        isAbortSet = threading.current_thread().abort.is_set()
+    elif hasattr(threading.current_thread(), "isStopped"):
+        isAbortSet = threading.current_thread().isStopped()
+    elif hasattr(threading.current_thread(), "stopCurrentTask"):
+        isAbortSet = threading.current_thread().stopCurrentTask.is_set()
+    return isAbortSet

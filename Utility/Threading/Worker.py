@@ -2,7 +2,8 @@
 
 import asyncio
 import ctypes
-from threading import Thread
+from threading import Event, Thread
+
 import Common.Globals as Globals
 
 
@@ -15,6 +16,7 @@ class Worker(Thread):
         self.queue = queue
         self.results = results
         self.abort = abort
+        self.stopCurrentTask = Event()
         self.idle = idle
         self.daemon = True
         self.setLoop = setLoop
