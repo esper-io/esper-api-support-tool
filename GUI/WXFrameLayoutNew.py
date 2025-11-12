@@ -883,7 +883,7 @@ class NewFrameLayout(wx.Frame):
             if type(Globals.LAST_OPENED_ENDPOINT) is str:
                 found = False
                 for item in self.menubar.configMenuOptions:
-                    if item.GetItemLabelText() == Globals.LAST_OPENED_ENDPOINT:
+                    if item is not None and item.GetItemLabelText() == Globals.LAST_OPENED_ENDPOINT:
                         found = True
                         break
                     indx += 1
@@ -960,8 +960,9 @@ class NewFrameLayout(wx.Frame):
             ApiTracker.API_REQUEST_TRACKER = resetDict
             ApiTracker.API_REQUEST_SESSION_TRACKER = 0
         try:
-            self.Logging("--->Attempting to load configuration: %s." % self.configMenuItem.GetItemLabelText())
-            selectedConfig = self.sidePanel.configChoice[self.configMenuItem.GetItemLabelText()]
+            menuItemLabel = self.configMenuItem.GetItemLabelText() if self.configMenuItem else "Unknown"
+            self.Logging("--->Attempting to load configuration: %s." % menuItemLabel)
+            selectedConfig = self.sidePanel.configChoice[menuItemLabel]
 
             postEventToFrame(
                 eventUtil.myEVT_AUDIT,
@@ -974,16 +975,17 @@ class NewFrameLayout(wx.Frame):
             indx = 0
             found = False
             foundItem = None
-            for item in self.configMenuItem.Menu.MenuItems:
-                if item != self.configMenuItem:
-                    item.Check(False)
-                else:
-                    item.Check(True)
-                    found = True
-                    foundItem = item
-                if not found:
-                    indx += 1
-            Globals.LAST_OPENED_ENDPOINT = foundItem.GetItemLabelText()
+            if self.configMenuItem:
+                for item in self.configMenuItem.Menu.MenuItems:
+                    if item != self.configMenuItem:
+                        item.Check(False)
+                    else:
+                        item.Check(True)
+                        found = True
+                        foundItem = item
+                    if not found:
+                        indx += 1
+            Globals.LAST_OPENED_ENDPOINT = foundItem.GetItemLabelText() if foundItem is not None else ""
             if self.prefDialog:
                 self.prefDialog.SetPref("last_endpoint", Globals.LAST_OPENED_ENDPOINT)
                 Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
@@ -1104,10 +1106,11 @@ class NewFrameLayout(wx.Frame):
 
         newToken = ""
         while not newToken:
+            menuItemLabel = self.configMenuItem.GetItemLabelText() if self.configMenuItem else "Unknown"
             with TextEntryDialog(
                 self,
                 "Please enter a new API Token for %s" % Globals.configuration.host,
-                "%s - API Token has expired or is invalid!" % self.configMenuItem.GetItemLabelText(),
+                "%s - API Token has expired or is invalid!" % menuItemLabel,
             ) as dlg:
                 Globals.OPEN_DIALOGS.append(dlg)
                 if dlg.ShowModal() == wx.ID_OK:
@@ -1119,14 +1122,14 @@ class NewFrameLayout(wx.Frame):
             newToken = newToken.strip()
             if newToken:
                 csvRow = [
-                    self.configMenuItem.GetItemLabelText(),
+                    menuItemLabel,
                     Globals.configuration.host,
                     Globals.enterprise_id,
                     newToken,
                     Globals.configuration.api_key_prefix["Authorization"],
                 ]
                 valid = self.addEndpointEntry(
-                    self.configMenuItem.GetItemLabelText(),
+                    menuItemLabel,
                     Globals.configuration.host,
                     Globals.enterprise_id,
                     newToken,
