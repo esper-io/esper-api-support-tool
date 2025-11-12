@@ -13,7 +13,6 @@ from Common.decorator import api_tool_decorator
 from GUI.Splashscreen import MySplashScreen as SplashScreen
 from GUI.WXFrameLayoutNew import NewFrameLayout as FrameLayout
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Logging.SentryUtils import SentryUtils
 
 
 class MyApp(wx.App):
@@ -65,10 +64,6 @@ def signal_handler(signal, frame):
 def main():
     """Launches Main App"""
     logger = ApiToolLog()
-    try:
-        SentryUtils()
-    except Exception as e:
-        ApiToolLog().LogError(e)
     sys.excepthook = logger.excepthook
 
     logger.limitLogFileSizes()
