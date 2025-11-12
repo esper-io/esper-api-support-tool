@@ -148,6 +148,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
             aliasList,
         )
     )
+    resp = {}
     # Alias modification
     if match:
         match = match[0]
