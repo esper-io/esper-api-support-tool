@@ -67,7 +67,7 @@ def main():
     sys.excepthook = logger.excepthook
 
     if Globals.THREAD_POOL:
-        Globals.THREAD_POOL.enqueueTask(logger.limitLogFileSizes)
+        Globals.THREAD_POOL.enqueue(logger.limitLogFileSizes)
     else:
         logger.limitLogFileSizes()
 
