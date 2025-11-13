@@ -80,7 +80,7 @@ def _handle_non_success_response(resp, attempt, maxRetry, url):
     elif _is_timeout_related_response(response_text):
         doExponentialBackoff(attempt, url, False)
 
-    if code == 429:
+    if code == 429 or attempt == maxRetry - 1:
         postEventToFrame(EventUtility.myEVT_LOG, err_msg)
 
 
