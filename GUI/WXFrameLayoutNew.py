@@ -251,6 +251,7 @@ class NewFrameLayout(wx.Frame):
 
         self.Logging("Welcome to Esper API Tool! Version: %s" % Globals.VERSION)
 
+    @api_tool_decorator()
     def onLaunch(self):
         self.loadPref()
         actionList = [self.Show, self.showDisclaimer]
@@ -266,6 +267,7 @@ class NewFrameLayout(wx.Frame):
         )
         determineListDoHereorMainThread(actionList)
 
+    @api_tool_decorator()
     def showDisclaimer(self):
         # Display disclaimer unless they have opt'd out.
         if Globals.SHOW_DISCLAIMER:
