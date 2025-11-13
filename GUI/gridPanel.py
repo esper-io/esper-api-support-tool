@@ -11,13 +11,9 @@ from Common.enum import Color, FontStyles
 from GUI.Dialogs.ColumnVisibility import ColumnVisibility
 from GUI.GridTable import GridTable
 from Utility.GridUtilities import areDataFramesTheSame
-from Utility.Resource import (
-    acquireLocks,
-    determineDoHereorMainThread,
-    getFont,
-    isDarkMode,
-    releaseLocks,
-)
+from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
+                              determineDoHereorMainThread, getFont, isDarkMode,
+                              releaseLocks)
 
 
 class GridPanel(wx.Panel):
@@ -164,6 +160,8 @@ class GridPanel(wx.Panel):
         cols = grid.Table.data.columns
         rowsToHighlight = []
         for col in cols:
+            if checkIfCurrentThreadStopped():
+                return
             results = grid.Table.data[col].astype("str").str.contains(combinedQueryStr, case=False, na=True)
             for num in range(len(results)):
                 if results[num] and num not in rowsToHighlight:

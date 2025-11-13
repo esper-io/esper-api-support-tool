@@ -2,6 +2,7 @@
 
 import csv
 import json
+import os
 import os.path
 import platform
 import sys
@@ -105,6 +106,7 @@ class NewFrameLayout(wx.Frame):
         self.isRunningUpdate = False
         self.isUploading = False
         self.kill = False
+        self.isInitializing = True
         self.SpreadsheetUploaded = False
         self.defaultDir = os.getcwd()
         self.groups = None
@@ -120,6 +122,7 @@ class NewFrameLayout(wx.Frame):
         self.delayScheduleReport = True
         self.scheduleReportRunning = False
         self.scheduleCallLater = []
+        self.guiThreadTracker = []
 
         self.isSaving = False
 
@@ -230,6 +233,7 @@ class NewFrameLayout(wx.Frame):
         # Initialize background threads with proper error handling
         try:
             self.internetCheck = wxThread.GUIThread(self, checkForInternetAccess, (self), name="InternetCheck")
+            self.guiThreadTracker.append(self.internetCheck)
             if self.internetCheck:
                 self.internetCheck.startWithRetry()
             else:
@@ -240,6 +244,7 @@ class NewFrameLayout(wx.Frame):
         
         try:
             self.errorTracker = wxThread.GUIThread(self, updateErrorTracker, None, name="updateErrorTracker")
+            self.guiThreadTracker.append(self.errorTracker)
             if self.errorTracker:
                 self.errorTracker.startWithRetry()
             else:
@@ -492,12 +497,23 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def OnQuit(self, e):
         """Actions to take when frame is closed"""
+        # Set kill flags immediately
         if not self.kill:
             self.kill = True
+            Globals.KILL = True
+
+        # Start a failsafe timer immediately - if cleanup takes too long, force exit
+        failsafe_timer = threading.Timer(30.0, self._exitNow)
+        failsafe_timer.daemon = False
+        failsafe_timer.start()
+        
+        try:
             self.Hide()
+
             if os.path.exists(self.authPath):
                 if self.key and crypto().isFileDecrypt(self.authPath, self.key):
                     crypto().encryptFile(self.authPath, self.key)
+            
             self.closeDestroyLater(self.consoleWin)
             self.consoleWin = None
             self.closeDestroyLater(self.prefDialog)
@@ -507,24 +523,80 @@ class NewFrameLayout(wx.Frame):
                 if e.EventType != wx.EVT_CLOSE.typeId:
                     self.Close()
             self.closeDestroyLater(self.groupManage)
+
             ApiToolLog().LogApiRequestOccurrence(None, ApiTracker.API_REQUEST_TRACKER, True)
-            Globals.THREAD_POOL.abortCurrentTasks()
-            Globals.THREAD_POOL.enqueue(self.savePrefs, self.prefDialog)
-            Globals.THREAD_POOL.enqueue(self.audit.postStoredOperations)
-            Globals.THREAD_POOL.join(timeout=2 * 60)
-            if hasattr(self, "internetCheck") and self.internetCheck:
-                self.internetCheck.stop()
-            if hasattr(self, "errorTracker") and self.errorTracker:
-                self.errorTracker.stop()
-            self.Destroy()
+
+            # Stop GUI threads first
+            for thread in self.guiThreadTracker:
+                if thread and hasattr(thread, "stop"):
+                    thread.stop()
+
+            # Set abort flags to stop processing new tasks from queue
+            for thread in Globals.THREAD_POOL.threads:
+                if hasattr(thread, 'stopCurrentTask'):
+                    thread.stopCurrentTask.set()
+
+            # Clear pending tasks and add final cleanup
+            try:
+                Globals.THREAD_POOL.clearQueue()
+            except:
+                pass
+            
+            # Reset stop flags temporarily so final tasks can run
+            for thread in Globals.THREAD_POOL.threads:
+                if hasattr(thread, 'stopCurrentTask'):
+                    thread.stopCurrentTask.clear()
+            
+            # Enqueue critical final tasks
+            self.quitCriticalTasks()
+
+            # Force abort all thread pools without blocking
+            try:
+                Globals.THREAD_POOL.abort(block=False)
+            except:
+                pass
+            for pool in Globals.POOLS:
+                try:
+                    pool.abort(block=False)
+                except:
+                    pass
+
+            # Close all top-level windows
             for item in list(wx.GetTopLevelWindows()):
                 if not isinstance(item, NewFrameLayout):
                     if item and isinstance(item, wx.Dialog):
                         item.Destroy()
                     item.Close()
-            for pool in Globals.POOLS:
-                pool.abort()
-            wx.Exit()
+
+            # Destroy this frame
+            self.Destroy()
+            
+        except Exception:
+            pass
+
+        try:
+            failsafe_timer.cancel()
+        except:
+            pass
+        
+        # Exit immediately now that cleanup is done
+        self._exitNow()
+
+    def quitCriticalTasks(self):
+        stats = threading.Thread(target=self.audit.postStoredOperations)
+        stats.start()
+        prefs = threading.Thread(target=self.savePrefs, args=(self.prefDialog,))
+        prefs.start()
+
+        # Wait briefly for final tasks
+        stats.join(timeout=5)
+        prefs.join(timeout=5)
+
+    def _exitNow(self):
+        """Force immediate process termination"""
+        if threading.current_thread() is not threading.main_thread():
+            self.quitCriticalTasks()
+        os._exit(0)
 
     def closeDestroyLater(self, elm):
         try:
@@ -857,6 +929,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def PopulateConfig(self, auth=None, getItemForName=None):
         """Populates Configuration From CSV"""
+        # Check if the frame is being deleted or closing
+        if self.IsBeingDeleted() or getattr(self, 'kill', False):
+            return
         self.Logging("--->Loading Tenants from %s" % Globals.csv_auth_path)
         if auth:
             if Globals.csv_auth_path != auth:
@@ -1089,6 +1164,7 @@ class NewFrameLayout(wx.Frame):
                         config,
                         name="loadConfigCheckBlueprint",
                     )
+                    self.guiThreadTracker.append(blueprints)
                     blueprints.start()
                     threads = [self.groupThread, self.appThread, blueprints]
                 Globals.THREAD_POOL.enqueue(
@@ -1135,6 +1211,10 @@ class NewFrameLayout(wx.Frame):
             Globals.token_lock.release()
 
     def promptForNewToken(self):
+        # Check if the frame is being deleted or closing
+        if self.IsBeingDeleted() or getattr(self, 'kill', False):
+            return
+
         if uiThreadCheck(self.promptForNewToken, enforceRegardless=True):
             return
 
@@ -1219,6 +1299,9 @@ class NewFrameLayout(wx.Frame):
             except RuntimeError:
                 # UI object has been deleted, ignore the error
                 pass
+            if self.isInitializing:
+                self.isInitializing = False
+                self.Logging("Ready for use!")
         if source == WaitThreadCodes.DEVICE.value:
             try:
                 if not self.sidePanel.devices:
@@ -1327,6 +1410,7 @@ class NewFrameLayout(wx.Frame):
             eventType=eventUtil.myEVT_GROUP,
             name="PopulateGroupsGetAll",
         )
+        self.guiThreadTracker.append(thread)
         thread.startWithRetry()
         self.previousGroupFetchThread = thread
         return thread
@@ -1338,6 +1422,7 @@ class NewFrameLayout(wx.Frame):
             (),
             name="FetchApplications",
         )
+        self.guiThreadTracker.append(thread)
         thread.startWithRetry()
         self.appThread = thread
         return thread
@@ -1355,6 +1440,8 @@ class NewFrameLayout(wx.Frame):
                 if appResp:
                     appList = appResp.get("results", [])
                     for app in appList:
+                        if checkIfCurrentThreadStopped():
+                            return
                         entry = getAppDictEntry(app)
                         if entry and entry not in Globals.knownApplications and ("isValid" in entry and entry["isValid"]):
                             Globals.knownApplications.append(entry)
@@ -1364,6 +1451,8 @@ class NewFrameLayout(wx.Frame):
         resp = getAllBlueprints(tolerance=1, useThreadPool=False)
         if resp:
             for item in resp.get("content", resp).get("results", []):
+                if checkIfCurrentThreadStopped():
+                    return
                 Globals.knownBlueprints[item["id"]] = item
 
     @api_tool_decorator()
@@ -1386,6 +1475,9 @@ class NewFrameLayout(wx.Frame):
             results.insert(0, Globals.ALL_DEVICES_IN_TENANT)
         if results and len(results):
             for group in results:
+                if checkIfCurrentThreadStopped():
+                    return
+
                 if type(group) is dict:
                     if Globals.enterprise_id not in group["enterprise"]:
                         return
@@ -2362,6 +2454,7 @@ class NewFrameLayout(wx.Frame):
             args=(event, queryString),
             name="processSearch",
         )
+        self.guiThreadTracker.addThread(t)
         t.startWithRetry()
         self.searchThreads.append(t)
 
@@ -2403,6 +2496,9 @@ class NewFrameLayout(wx.Frame):
         self.gridPanel.enableGridProperties()
 
     def applySearchColor(self, queryString, color, applyAll=False):
+        # Check if the frame is being deleted or closing
+        if self.IsBeingDeleted() or getattr(self, 'kill', False):
+            return
         self.gridPanel.applyTextColorToGrids(queryString, color, applyAll)
 
     @api_tool_decorator()
@@ -3072,6 +3168,7 @@ class NewFrameLayout(wx.Frame):
                 None,
                 name="ScheduledReportThread",
             )
+            self.guiThreadTracker.addThread(self.scheduleReport)
             self.scheduleReport.startWithRetry()
         elif self.scheduleReport:
             # Stop report thread as it should be disabled

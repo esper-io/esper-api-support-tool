@@ -6,6 +6,7 @@ import time
 from threading import Event, Thread
 
 import Common.Globals as Globals
+from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 # class for workers
@@ -31,13 +32,13 @@ class Worker(Thread):
             asyncio.set_event_loop(loop)
         while not self.abort.is_set():
             # Check abort before attempting to get a task
-            if self.abort.is_set() or self.stopCurrentTask.is_set():
+            if self.abort.is_set() or Globals.KILL:
                 break
-            
+            if self.stopCurrentTask.is_set():
+                continue
+
             try:
-                # Use a short timeout so we can check abort flags more frequently
-                # This allows threads to exit immediately when abort is called
-                func, args, kwargs = self.queue.get(timeout=0.1)
+                func, args, kwargs = self.queue.get(block=False)
                 self.idle.clear()
             except:
                 # no work to do
@@ -47,10 +48,12 @@ class Worker(Thread):
                 continue
 
             # Check abort again after getting task but before executing
-            if self.abort.is_set() or self.stopCurrentTask.is_set():
-                # Mark task as done even though we're not executing it
+            if self.abort.is_set() or Globals.KILL:
                 self.queue.task_done()
                 break
+            if self.stopCurrentTask.is_set():
+                self.queue.task_done()
+                continue
 
             try:
                 # the function may raise

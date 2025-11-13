@@ -116,22 +116,25 @@ def checkEsperInternetConnection():
 
 
 def checkForInternetAccess(frame):
-    while not frame.kill:
-        if frame.IsShownOnScreen() and frame.IsActive():
-            if not checkEsperInternetConnection() and not checkInternetConnection(Globals.LATEST_UPDATE_LINK):
-                displayMessageBox(
-                    (
-                        "ERROR: An internet connection is required when using the tool!",
-                        wx.OK | wx.ICON_ERROR | wx.CENTRE,
+    num = 0
+    while not frame.kill and checkIfCurrentThreadStopped() is False:
+        if num % 15 == 0 or not Globals.HAS_INTERNET:
+            if frame.IsShownOnScreen() and frame.IsActive():
+                if not checkEsperInternetConnection() and not checkInternetConnection(Globals.LATEST_UPDATE_LINK):
+                    displayMessageBox(
+                        (
+                            "ERROR: An internet connection is required when using the tool!",
+                            wx.OK | wx.ICON_ERROR | wx.CENTRE,
+                        )
                     )
-                )
-                Globals.HAS_INTERNET = False
-            else:
-                if Globals.HAS_INTERNET is None and Globals.frame:
-                    Globals.frame.loadPref()
-                Globals.HAS_INTERNET = True
-        time.sleep(15 if Globals.HAS_INTERNET else 30)
-
+                    Globals.HAS_INTERNET = False
+                else:
+                    if Globals.HAS_INTERNET is None and Globals.frame:
+                        Globals.frame.loadPref()
+                    Globals.HAS_INTERNET = True
+            num = 0
+            time.sleep(1)
+        num += 1
 
 def checkForUpdate():
     try:
@@ -362,25 +365,29 @@ def openWebLinkInBrowser(link, isfile=False):
 
 @api_tool_decorator(locks=[Globals.error_lock])
 def updateErrorTracker():
-    while Globals.frame and not Globals.frame.kill:
+    num = 0
+    while Globals.frame and not Globals.frame.kill and checkIfCurrentThreadStopped() is False:
         try:
-            Globals.error_lock.acquire()
-            if Globals.error_tracker:
-                new_tracker = {}
-                for key, value in Globals.error_tracker.items():
-                    timeDiff = datetime.now() - value
-                    minutes = timeDiff.total_seconds() / 60
-                    if minutes <= Globals.MAX_ERROR_TIME_DIFF:
-                        new_tracker[key] = value
-                Globals.error_tracker = new_tracker
-            if Globals.error_lock.locked():
-                Globals.error_lock.release()
+            if num % 60 == 0:
+                Globals.error_lock.acquire()
+                if Globals.error_tracker:
+                    new_tracker = {}
+                    for key, value in Globals.error_tracker.items():
+                        timeDiff = datetime.now() - value
+                        minutes = timeDiff.total_seconds() / 60
+                        if minutes <= Globals.MAX_ERROR_TIME_DIFF:
+                            new_tracker[key] = value
+                    Globals.error_tracker = new_tracker
+                if Globals.error_lock.locked():
+                    Globals.error_lock.release()
+                num = 0
+            num += 1
         except Exception as e:
             ApiToolLog().LogError(e)
         finally:
             if Globals.error_lock.locked():
                 Globals.error_lock.release()
-            time.sleep(60)
+            time.sleep(1)
             if checkIfCurrentThreadStopped():
                 break
 

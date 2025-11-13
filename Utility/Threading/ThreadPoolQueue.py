@@ -5,6 +5,7 @@ import time
 from queue import Queue
 from threading import Event, current_thread
 
+from Utility.FileUtility import checkIfCurrentThreadStopped
 from Utility.Threading.Worker import Worker
 
 
@@ -67,7 +68,22 @@ class Pool:
         return True
 
     def clearQueue(self):
-        self.queue.queue.clear()
+        """Clear the queue and mark all pending tasks as done"""
+        try:
+            # Directly reset the queue state to prevent task_done() from hanging
+            with self.queue.mutex:
+                # Clear all items from the queue
+                self.queue.queue.clear()
+                # Directly reset the unfinished_tasks counter to 0
+                # This prevents join() from hanging and avoids calling task_done() repeatedly
+                self.queue.unfinished_tasks = 0
+                # Notify all threads waiting on join()
+                self.queue.all_tasks_done.notify_all()
+        except Exception as e:
+            # If clearing fails, log it but don't crash
+            import Common.Globals as Globals
+            if Globals.API_LOGGER:
+                Globals.API_LOGGER.LogError(f"Error clearing queue: {e}")
 
     def enqueue(self, func, *args, **kargs):
         """Add a task to the queue"""
@@ -91,6 +107,7 @@ class Pool:
                     or self.isDoneWithinTolerance(queueTolerance=tolerance)
                     or isAbortSet
                     or self.abortJoin.is_set()
+                    or checkIfCurrentThreadStopped()
                 ):
                     self.abortJoin.clear()
                     break
