@@ -64,7 +64,8 @@ def obtainAppName():
     elif bit.endswith("64"):
         bit = "x64"
 
-    return "%s_%s_%s_EsperApiSupportTool.%s" % (
+    return "%s%s_%s_%s_EsperApiSupportTool.%s" % (
+        "debug_" if Globals.IS_DEBUG else "",
         system[0:3].lower() if system == "Windows" else "mac",
         bit,
         Globals.VERSION.replace(".", "-"),
