@@ -66,7 +66,11 @@ def main():
     logger = ApiToolLog()
     sys.excepthook = logger.excepthook
 
-    logger.limitLogFileSizes()
+    if Globals.THREAD_POOL:
+        Globals.THREAD_POOL.enqueueTask(logger.limitLogFileSizes)
+    else:
+        logger.limitLogFileSizes()
+
     try:
         Globals.app = MyApp(0)
         Globals.app.MainLoop()
