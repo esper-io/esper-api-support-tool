@@ -2594,6 +2594,7 @@ class NewFrameLayout(wx.Frame):
             )
             Globals.OPEN_DIALOGS.append(groupMultiDialog)
             if groupMultiDialog.ShowModal() == wx.ID_OK:
+                groupMultiDialog.Hide()
                 Globals.OPEN_DIALOGS.remove(groupMultiDialog)
                 user_selection = groupMultiDialog.GetSelections()
                 groupMultiDialog.Close()
