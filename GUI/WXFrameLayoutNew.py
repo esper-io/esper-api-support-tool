@@ -2596,6 +2596,7 @@ class NewFrameLayout(wx.Frame):
             if groupMultiDialog.ShowModal() == wx.ID_OK:
                 Globals.OPEN_DIALOGS.remove(groupMultiDialog)
                 user_selection = groupMultiDialog.GetSelections()
+                groupMultiDialog.Close()
                 if user_selection:
                     selection = user_selection[0]
                     groupId = self.sidePanel.groups[selection] if selection in self.sidePanel.groups else None
