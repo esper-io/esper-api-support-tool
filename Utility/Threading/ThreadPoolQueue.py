@@ -87,9 +87,6 @@ class Pool:
             try:
                 # Directly reset the queue state to prevent task_done() from hanging
                 with self.queue.mutex:
-                    # Get the number of items being cleared to track for task_done calls
-                    num_cleared = self.queue.qsize()
-                    
                     # Clear all items from the queue
                     self.queue.queue.clear()
                     
