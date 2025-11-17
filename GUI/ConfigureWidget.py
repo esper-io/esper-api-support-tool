@@ -252,16 +252,22 @@ class WidgetPicker(wx.Dialog):
             elif inFile.endswith(".xlsx"):
                 try:
                     dfs = read_excel_via_openpyxl(inFile, readAnySheet=True)
-                except:
+                except Exception:
+                    # Excel file reading failed, will try other methods or skip
                     pass
             if dfs is not None and len(dfs) > 0:
                 gridTableData = {
                     self.gridHeader[0]: [],
                 }
-                identifers = dfs[dfs.columns.values.tolist()[0]].tolist()
-                self.addIdToDeviceList(identifers, gridTableData)
-                df = pd.DataFrame(gridTableData, columns=self.gridHeader)
-                self.widget_grid.applyNewDataFrame(df, resetPosition=True)
+                # Safe column access with validation
+                columns = dfs.columns.values.tolist()
+                if columns and len(columns) > 0:
+                    identifers = dfs[columns[0]].tolist()
+                    self.addIdToDeviceList(identifers, gridTableData)
+                    df = pd.DataFrame(gridTableData, columns=self.gridHeader)
+                    self.widget_grid.applyNewDataFrame(df, resetPosition=True)
+                else:
+                    raise ValueError("DataFrame has no columns")
         except Exception as e:
             raise e
         finally:

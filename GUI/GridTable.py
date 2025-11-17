@@ -84,13 +84,21 @@ class GridTable(gridlib.Grid):
                 if checkColumns:
                     renameColumns = {}
                     matchingColumns = []
+                    # OPTIMIZED: Break inner loop early and use set for missingColumns
                     for column in data.columns:
+                        # Skip if already matched
+                        if column in renameColumns:
+                            continue
                         for expectedCol in self.headersLabels:
+                            # Skip if this expected column already matched
+                            if expectedCol in matchingColumns:
+                                continue
                             if getStrRatioSimilarity(column, expectedCol) >= 95:
                                 renameColumns[column] = expectedCol
                                 matchingColumns.append(expectedCol)
                                 break
-                    missingColumns = list(set(self.headersLabels) - set(matchingColumns))
+                    # OPTIMIZED: Use set operations for missing columns
+                    missingColumns = set(self.headersLabels) - set(matchingColumns)
                     for missingColumn in missingColumns:
                         data[missingColumn] = ""
                     data = data.rename(columns=renameColumns)
@@ -165,7 +173,8 @@ class GridTable(gridlib.Grid):
 
                     if not self.sortAcesnding:
                         df = df.iloc[::-1]
-                except:
+                except (ValueError, TypeError, AttributeError):
+                    # Fallback to standard sorting if version sorting fails
                     df = self.table.data.sort_values(colName, ascending=self.sortAcesnding)
             elif colName in Globals.DATE_COL.keys():
                 try:
@@ -206,7 +215,10 @@ class GridTable(gridlib.Grid):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
-        if self.currentlySelectedCell and self.currentlySelectedCell[0] >= 0 and self.currentlySelectedCell[1] >= 0:
+        if (self.currentlySelectedCell and 
+            len(self.currentlySelectedCell) >= 2 and 
+            self.currentlySelectedCell[0] >= 0 and 
+            self.currentlySelectedCell[1] >= 0):
             data = wx.TextDataObject()
             data.SetText(widget.GetCellValue(self.currentlySelectedCell[0], self.currentlySelectedCell[1]))
             if wx.TheClipboard.Open():
@@ -224,6 +236,8 @@ class GridTable(gridlib.Grid):
             wx.TheClipboard.Close()
         if (
             success
+            and self.currentlySelectedCell
+            and len(self.currentlySelectedCell) >= 2
             and self.currentlySelectedCell[0] >= 0
             and self.currentlySelectedCell[1] >= 0
             and not widget.IsReadOnly(self.currentlySelectedCell[0], self.currentlySelectedCell[1])
@@ -286,7 +300,8 @@ class GridTable(gridlib.Grid):
                 differenceInMinutes = None
                 try:
                     parsedDateTime = datetime.strptime(value, datePattern) if "ago" not in value else None
-                except:
+                except (ValueError, TypeError):
+                    # Date parsing failed, skip color coding
                     pass
                 if parsedDateTime:
                     differenceInMinutes = (currentDate - parsedDateTime).total_seconds() / 60
@@ -294,13 +309,19 @@ class GridTable(gridlib.Grid):
                     self.SetCellTextColour(rowNum, colNum, Color.green.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
                 elif " minutes ago" in value:
-                    minutes = int(value.split(" ")[0])
-                    if minutes < 30:
-                        self.SetCellTextColour(rowNum, colNum, Color.green.value)
-                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
-                    else:
-                        self.SetCellTextColour(rowNum, colNum, Color.orange.value)
-                        self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                    try:
+                        parts = value.split(" ")
+                        if parts and parts[0].isdigit():
+                            minutes = int(parts[0])
+                            if minutes < 30:
+                                self.SetCellTextColour(rowNum, colNum, Color.green.value)
+                                self.SetCellBackgroundColour(rowNum, colNum, Color.lightGreen.value)
+                            else:
+                                self.SetCellTextColour(rowNum, colNum, Color.orange.value)
+                                self.SetCellBackgroundColour(rowNum, colNum, Color.lightYellow.value)
+                    except (ValueError, IndexError):
+                        # Parsing failed, skip color coding
+                        pass
                 elif " days ago" in value:
                     self.SetCellTextColour(rowNum, colNum, Color.red.value)
                     self.SetCellBackgroundColour(rowNum, colNum, Color.lightRed.value)

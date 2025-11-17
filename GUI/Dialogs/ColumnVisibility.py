@@ -122,7 +122,8 @@ class ColumnVisibility(wx.Dialog):
                 if colLabel in self.choiceDataDict[label]:
                     self.checkBoxes[label].Check(self.choiceDataDict[label].index(colLabel), isShown)
                     self.selected[label][colLabel] = isShown
-            except:
+            except (AttributeError, ValueError, IndexError):
+                # Column may not be in choice dict or grid doesn't support visibility
                 pass
 
     def addColumnVisiblityPage(self, label):

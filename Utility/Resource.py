@@ -61,7 +61,8 @@ def scale_bitmap(bitmap, width, height):
         image = image.Scale(width, height, wx.IMAGE_QUALITY_HIGH)
         result = wx.Bitmap(image)
         return result
-    except:
+    except Exception:
+        # Return a minimal valid bitmap if scaling fails
         data = bytearray((0, 0, 0))
         alpha = bytearray((0,))
         image = wx.Image(1, 1, data, alpha)
@@ -343,7 +344,8 @@ def logBadResponse(url, resp, json_resp=None, displayMsgBox=False):
         if not json_resp:
             try:
                 json_resp = resp.json()
-            except:
+            except (ValueError, AttributeError, Exception):
+                # Response is not JSON or doesn't have json() method
                 pass
         if json_resp:
             prettyReponse = url + "\nResponse {result}".format(result=json.dumps(json_resp, indent=4, sort_keys=True))
@@ -762,7 +764,8 @@ def setCursorIcon(elm, icon=wx.CURSOR_DEFAULT):
     try:
         if hasattr(elm, "SetCursor"):
             elm.SetCursor(wx.Cursor(icon))
-    except:
+    except Exception:
+        # Element may not support cursor changes, silently ignore
         pass
 
 def setCursorBusy(elm):

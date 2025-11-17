@@ -21,7 +21,8 @@ def api_tool_decorator(locks=None, displayPrompt=True):
             start = None
             try:
                 start = time.perf_counter()
-            except:
+            except Exception:
+                # If performance counter fails, continue without timing
                 pass
             result = None
             excpt = None

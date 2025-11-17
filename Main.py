@@ -19,7 +19,15 @@ class MyApp(wx.App):
     def OnInit(self):
         try:
             self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
-            locale.setlocale(locale.LC_ALL, "en_US")
+            try:
+                locale.setlocale(locale.LC_ALL, "en_US")
+            except locale.Error:
+                # Fallback to system default locale if en_US is not available
+                try:
+                    locale.setlocale(locale.LC_ALL, "")
+                except locale.Error:
+                    # If all else fails, continue without setting locale
+                    pass
             self.name = "EAST-%s" % wx.GetUserId()
             self.instance = wx.SingleInstanceChecker(self.name)
 
@@ -56,7 +64,8 @@ def OnExit():
         Globals.frame.OnQuit(None)
 
 
-def signal_handler(signal, frame):
+def signal_handler(sig, frame):
+    """Handle termination signals gracefully"""
     OnExit()
 
 
@@ -88,6 +97,10 @@ if __name__ == "__main__":
     cmdList = command.split("--")
     for cmd in cmdList:
         parts = cmd.split(" ")
+        # Ensure parts has at least 2 elements before accessing parts[1]
+        if len(parts) < 2:
+            continue
+            
         if parts[0] == "record_place":
             if is_arg_enabled(parts[1]):
                 Globals.RECORD_PLACE = True

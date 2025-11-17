@@ -10,61 +10,13 @@ from esperclient.rest import ApiException
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.API.AppUtilities import constructAppPkgVerStr, getAppDictEntry
+from Utility.API.AppUtilities import constructAppPkgVerStr
 from Utility.API.CommandUtility import postEsperCommand, waitForCommandToFinish
+from Utility.API.DeviceUtility import get_all_ios_devices_helper, getInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import enforceRateLimit, getHeader, logBadResponse
+from Utility.Resource import enforceRateLimit, getHeader
 from Utility.Web.WebRequests import (handleRequestError,
-                                     performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
-
-
-@api_tool_decorator()
-def getInfo(request_extension, deviceid):
-    """Sends Request For Device Info JSON"""
-    headers = getHeader()
-    url = (
-        Globals.BASE_DEVICE_URL.format(
-            configuration_host=Globals.configuration.host,
-            enterprise_id=Globals.enterprise_id,
-            device_id=deviceid,
-        )
-        + request_extension
-    )
-    resp = performGetRequestWithRetry(url, headers=headers)
-    json_resp = None
-    try:
-        json_resp = resp.json()
-    except:
-        pass
-    logBadResponse(url, resp, json_resp)
-
-    return json_resp
-
-
-@api_tool_decorator()
-def patchInfo(request_extension, deviceid, data=None, jsonData=None, tags=None):
-    """Pushes Data To Device Info JSON"""
-    headers = getHeader()
-    url = (
-        Globals.BASE_DEVICE_URL.format(
-            configuration_host=Globals.configuration.host,
-            enterprise_id=Globals.enterprise_id,
-            device_id=deviceid,
-        )
-        + request_extension
-    )
-    requestData = data
-    if tags:
-        try:
-            requestData = json.dumps({"tags": tags})
-        except Exception as e:
-            print(e)
-
-    resp = performPatchRequestWithRetry(url, headers=headers, data=requestData, json=jsonData)
-    json_resp = resp.json()
-    logBadResponse(url, resp, json_resp)
-    return json_resp
+                                     performGetRequestWithRetry)
 
 
 @api_tool_decorator()
@@ -211,73 +163,89 @@ def createAppList(json_resp, filterData=False):
             ):
                 continue
             if "application" in app:
-                pkgName = app["application"]["package_name"]
-                if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (filterData and pkgName not in Globals.APP_COL_FILTER):
-                    continue
-                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
-                    version = (
-                        app["application"]["version"]["version_name"][1 : len(app["application"]["version"]["version_name"])]
-                        if (
-                            app["application"]["version"]["version_name"]
-                            and app["application"]["version"]["version_name"].startswith("v")
-                        )
-                        else app["application"]["version"]["version_name"]
-                    )
-                else:
-                    version = (
-                        app["application"]["version"]["version_code"][1 : len(app["application"]["version"]["version_code"])]
-                        if (
-                            app["application"]["version"]["version_code"]
-                            and app["application"]["version"]["version_code"].startswith("v")
-                        )
-                        else app["application"]["version"]["version_code"]
-                    )
+                # Safe nested dictionary access
+                try:
+                    pkgName = app["application"].get("package_name", "")
+                    if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (filterData and pkgName not in Globals.APP_COL_FILTER):
+                        continue
+                    
+                    version_info = app["application"].get("version", {})
+                    if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                        version_name = version_info.get("version_name", "")
+                        if version_name and version_name.startswith("v") and len(version_name) > 1:
+                            version = version_name[1:]
+                        else:
+                            version = version_name
+                    else:
+                        version_code = version_info.get("version_code", "")
+                        if version_code and version_code.startswith("v") and len(version_code) > 1:
+                            version = version_code[1:]
+                        else:
+                            version = version_code
 
-                appName = app["application"]["application_name"]
-                applist.append(constructAppPkgVerStr(appName, pkgName, version))
+                    appName = app["application"].get("application_name", "Unknown")
+                    applist.append(constructAppPkgVerStr(appName, pkgName, version))
+                except (KeyError, TypeError, AttributeError):
+                    # Skip malformed app entries
+                    continue
             elif app.get("package_name") is not None and not isAppleApp(app):
-                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
-                ):
+                try:
+                    pkgName = app.get("package_name", "")
+                    if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
+                        filterData and pkgName not in Globals.APP_COL_FILTER
+                    ):
+                        continue
+                    version = None
+                    if Globals.VERSON_NAME_INSTEAD_OF_CODE:
+                        version_name = app.get("version_name", "")
+                        if version_name and version_name.startswith("v") and len(version_name) > 1:
+                            version = version_name[1:]
+                        else:
+                            version = version_name
+                    else:
+                        version_code = app.get("version_code", "")
+                        if version_code and version_code.startswith("v") and len(version_code) > 1:
+                            version = version_code[1:]
+                        else:
+                            version = version_code
+                    applist.append(constructAppPkgVerStr(app.get("app_name", "Unknown"), pkgName, version))
+                except (KeyError, TypeError, AttributeError):
+                    # Skip malformed app entries
                     continue
-                version = None
-                if Globals.VERSON_NAME_INSTEAD_OF_CODE:
-                    version = (
-                        app["version_name"][1 : len(app["version_name"])]
-                        if app["version_name"] and app["version_name"].startswith("v")
-                        else app["version_name"]
-                    )
-                else:
-                    version = (
-                        app["version_code"][1 : len(app["version_code"])]
-                        if app["version_code"] and app["version_code"].startswith("v")
-                        else app["version_code"]
-                    )
-                applist.append(constructAppPkgVerStr(app["app_name"], app["package_name"], version))
             elif app.get("package_name") is not None and isAppleApp(app):
-                if app["package_name"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["package_name"] not in Globals.APP_COL_FILTER
-                ):
-                    continue
-                applist.append(
-                    constructAppPkgVerStr(
-                        app["app_name"],
-                        app["package_name"],
-                        app["version_name"],
+                try:
+                    pkgName = app.get("package_name", "")
+                    if pkgName in Globals.BLACKLIST_PACKAGE_NAME or (
+                        filterData and pkgName not in Globals.APP_COL_FILTER
+                    ):
+                        continue
+                    applist.append(
+                        constructAppPkgVerStr(
+                            app.get("app_name", "Unknown"),
+                            pkgName,
+                            app.get("version_name", ""),
+                        )
                     )
-                )
+                except (KeyError, TypeError, AttributeError):
+                    # Skip malformed app entries
+                    continue
             elif app.get("bundle_id") is not None and isAppleApp(app):
-                if app["bundle_id"] in Globals.BLACKLIST_PACKAGE_NAME or (
-                    filterData and app["bundle_id"] not in Globals.APP_COL_FILTER
-                ):
-                    continue
-                applist.append(
-                    constructAppPkgVerStr(
-                        app["app_name"],
-                        app["bundle_id"],
-                        app["apple_app_version"],
+                try:
+                    bundleId = app.get("bundle_id", "")
+                    if bundleId in Globals.BLACKLIST_PACKAGE_NAME or (
+                        filterData and bundleId not in Globals.APP_COL_FILTER
+                    ):
+                        continue
+                    applist.append(
+                        constructAppPkgVerStr(
+                            app.get("app_name", "Unknown"),
+                            bundleId,
+                            app.get("apple_app_version", ""),
+                        )
                     )
-                )
+                except (KeyError, TypeError, AttributeError):
+                    # Skip malformed app entries
+                    continue
     return applist
 
 
@@ -289,64 +257,35 @@ def isAppleApp(app):
     )
 
 
-def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
-    api_instance = esperclient.DeviceApi(esperclient.ApiClient(Globals.configuration))
+def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):    
     api_response = None
+    # OPTIMIZED: Determine search parameters once before retry loop
+    search_params = {}
+    
+    # OPTIMIZED: Use dict lookup instead of if-elif chain
+    if isinstance(entry, dict):
+        identifier_map = {
+            "Esper Name": "search",
+            "Serial Number": "serial",
+            "Custom Serial Number": "search",
+            "IMEI 1": "search",
+            "IMEI 2": "search"
+        }
+        
+        for key, param_name in identifier_map.items():
+            if key in entry:
+                search_params[param_name] = entry.get(key, "")
+                break
+        else:
+            # No specific key found, use generic search
+            search_params['search'] = entry
+    else:
+        search_params['search'] = entry
+    
     for attempt in range(maxAttempt):
         try:
             enforceRateLimit()
-            if type(entry) is dict and "Esper Name" in entry.keys():
-                identifier = entry["Esper Name"]
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    name=identifier,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            elif type(entry) is dict and "Serial Number" in entry.keys():
-                identifier = entry["Serial Number"]
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    serial=identifier,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            elif type(entry) is dict and "Custom Serial Number" in entry.keys():
-                identifier = entry["Custom Serial Number"]
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    search=identifier,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            elif type(entry) is dict and "IMEI 1" in entry.keys():
-                identifier = entry["IMEI 1"]
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    imei=identifier,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            elif type(entry) is dict and "IMEI 2" in entry.keys():
-                identifier = entry["IMEI 2"]
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    imei=identifier,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            else:
-                api_response = api_instance.get_all_devices(
-                    Globals.enterprise_id,
-                    search=entry,
-                    limit=Globals.limit,
-                    offset=Globals.offset,
-                )
-            ApiToolLog().LogApiRequestOccurrence(
-                "getAllDevices",
-                api_instance.get_all_devices,
-                Globals.PRINT_API_LOGS,
-            )
+            api_response = get_all_ios_devices_helper("", Globals.limit, 0, searchParamsDict=search_params)
             break
         except Exception as e:
             handleRequestError(attempt, e, maxAttempt, raiseError=True)

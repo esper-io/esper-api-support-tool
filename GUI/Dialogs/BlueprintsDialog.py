@@ -287,7 +287,8 @@ class BlueprintsDialog(wx.Dialog):
         formattedRes = ""
         try:
             formattedRes = json.dumps(revision.json(), indent=2).replace("\\n", "\n")
-        except:
+        except (ValueError, TypeError, AttributeError):
+            # Fallback if json() method fails
             formattedRes = json.dumps(str(revision.json()), indent=2).replace("\\n", "\n")
         self.text_ctrl_1.SetValue(formattedRes)
         self.checkInputs()

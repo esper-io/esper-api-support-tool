@@ -36,7 +36,8 @@ class GridDataTable(wx.grid.GridTableBase):
         if hasattr(self, "data") and pd.notna(col) and col < len(self.data.columns):
             try:
                 return str(self.data.columns[col])
-            except:
+            except (IndexError, KeyError, AttributeError):
+                # Column index out of range or data structure issue
                 return ""
         return ""
 

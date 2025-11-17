@@ -13,21 +13,31 @@ from Utility.Threading.Worker import Worker
 class Pool:
     def __init__(self, thread_count, batch_mode=False, thread_name="thread"):
         """Pool of threads consuming tasks from a queue"""
+        # Validate thread_count parameter
+        try:
+            self.thread_count = int(thread_count)
+            if self.thread_count <= 0:
+                raise ValueError("thread_count must be positive")
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"Invalid thread_count: {thread_count}. Must be a positive integer.") from e
+        
         # batch mode means block when adding tasks if no threads available to process
-        self.queue = Queue(thread_count if batch_mode else 0)
+        self.queue = Queue(self.thread_count if batch_mode else 0)
         self.resultQueue = Queue(0)
-        self.thread_count = int(thread_count)
         self.aborts = []
         self.idles = []
         self.threads = []
         self.thread_name = thread_name
         self.abortJoin = Event()
+        self._started = False
+        self._clear_lock = threading.Lock()  # Lock to synchronize queue clearing
 
     def __del__(self):
         """Tell my threads to quit"""
         try:
             self.abort()
-        except:
+        except Exception:
+            # Suppress all exceptions during cleanup to prevent issues during interpreter shutdown
             pass
 
     def run(self, block=False):
@@ -39,11 +49,14 @@ class Pool:
                 time.sleep(1)
                 if time.perf_counter() - time_waiting > 60:
                     for t in self.threads:
-                        if t.is_alive():
+                        if t.is_alive() and hasattr(t, 'raise_exception'):
                             try:
                                 t.raise_exception()
-                            except:
-                                pass
+                            except Exception as e:
+                                # Log but continue with other threads
+                                import Common.Globals as Globals
+                                if Globals.API_LOGGER and hasattr(Globals.API_LOGGER, 'LogError'):
+                                    Globals.API_LOGGER.LogError(f"Failed to raise exception in thread: {e}")
         elif self.alive():
             return False
 
@@ -65,25 +78,33 @@ class Pool:
                     idle,
                 )
             )
+        self._started = True
         return True
 
     def clearQueue(self):
         """Clear the queue and mark all pending tasks as done"""
-        try:
-            # Directly reset the queue state to prevent task_done() from hanging
-            with self.queue.mutex:
-                # Clear all items from the queue
-                self.queue.queue.clear()
-                # Directly reset the unfinished_tasks counter to 0
-                # This prevents join() from hanging and avoids calling task_done() repeatedly
-                self.queue.unfinished_tasks = 0
-                # Notify all threads waiting on join()
-                self.queue.all_tasks_done.notify_all()
-        except Exception as e:
-            # If clearing fails, log it but don't crash
-            import Common.Globals as Globals
-            if Globals.API_LOGGER:
-                Globals.API_LOGGER.LogError(f"Error clearing queue: {e}")
+        with self._clear_lock:
+            try:
+                # Directly reset the queue state to prevent task_done() from hanging
+                with self.queue.mutex:
+                    # Get the number of items being cleared to track for task_done calls
+                    num_cleared = self.queue.qsize()
+                    
+                    # Clear all items from the queue
+                    self.queue.queue.clear()
+                    
+                    # Safely reset the unfinished_tasks counter
+                    # Ensure it doesn't go negative if some task_done() calls are already in progress
+                    if hasattr(self.queue, 'unfinished_tasks'):
+                        self.queue.unfinished_tasks = 0
+                    
+                    # Notify all threads waiting on join()
+                    self.queue.all_tasks_done.notify_all()
+            except Exception as e:
+                # If clearing fails, log it but don't crash
+                import Common.Globals as Globals
+                if Globals.API_LOGGER and hasattr(Globals.API_LOGGER, 'LogError'):
+                    Globals.API_LOGGER.LogError(f"Error clearing queue: {e}")
 
     def enqueue(self, func, *args, **kargs):
         """Add a task to the queue"""
@@ -137,12 +158,16 @@ class Pool:
         """Returns True if any threads are currently running"""
         return True in [t.is_alive() for t in self.threads]
 
-    def idle(self, tolarance=0):
+    def idle(self, tolerance=0):
         """Returns True if all threads are waiting for work"""
+        if not self._started or not self.idles:
+            return True  # No threads running, so technically idle
         numActive = [i.is_set() for i in self.idles].count(False)
-        return numActive <= tolarance
+        return numActive <= tolerance
 
     def getNumberOfActiveThreads(self):
+        if not self._started or not self.idles:
+            return 0  # No threads running
         numActive = [i.is_set() for i in self.idles].count(False)
         return numActive
 
@@ -158,7 +183,8 @@ class Pool:
                 # get a result, raises empty exception immediately if none available
                 results.append(self.resultQueue.get(False))
                 self.resultQueue.task_done()
-        except:
+        except Exception:
+            # Queue.Empty or any other exception means no more results
             pass
         return results
 
@@ -170,7 +196,8 @@ class Pool:
 
         # Set stopCurrentTask flag for all threads to interrupt currently running tasks
         for thread in self.threads:
-            thread.stopCurrentTask.set()
+            if hasattr(thread, 'stopCurrentTask'):
+                thread.stopCurrentTask.set()
 
         if waitForIdle:
             # Wait for threads to finish, but with a timeout to prevent hanging
@@ -181,4 +208,5 @@ class Pool:
         
         if clearFlagAtEnd:
             for thread in self.threads:
-                thread.stopCurrentTask.clear()
+                if hasattr(thread, 'stopCurrentTask'):
+                    thread.stopCurrentTask.clear()

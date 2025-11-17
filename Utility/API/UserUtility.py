@@ -57,5 +57,6 @@ def getUserFromToken():
         user_info = getUserInfo()
         if user_info:
             Globals.TOKEN_USER = user_info
-    except:
+    except Exception:
+        # If user info cannot be retrieved, silently continue
         pass

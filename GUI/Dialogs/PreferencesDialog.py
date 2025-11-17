@@ -989,7 +989,8 @@ class PreferencesDialog(wx.Dialog):
                         int(num)
                         for num in self.prefs["windowSize"].replace("(", "").replace(")", "").replace("...", "").split(", ")
                     )
-                except:
+                except (ValueError, AttributeError, IndexError):
+                    # Fallback parsing if string format is different
                     sizes = tuple(int(num) for num in self.prefs["windowSize"])
                     size = (sizes[0], sizes[1])
                 if size[0] < Globals.MIN_SIZE[0]:

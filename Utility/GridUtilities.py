@@ -104,7 +104,8 @@ def areDataFramesTheSame(df1, df2):
     try:
         assert_frame_equal(df1, df2)
         return True
-    except:
+    except (AssertionError, ValueError, TypeError, Exception):
+        # DataFrames are not equal or comparison failed
         return False
 
 
@@ -160,7 +161,8 @@ def convertColumnTypes(data, headers=None):
                             try:
                                 isDigit = data[col].str.isdigit().any()
                                 hasDecimal = data[col].str.contains(".").any()
-                            except:
+                            except (AttributeError, TypeError):
+                                # Fallback if column doesn't support str methods
                                 isDigit = data[col].astype(pd.StringDtype()).str.isdigit().any()
                                 hasDecimal = data[col].astype(pd.StringDtype()).str.contains(".").any()
 
@@ -203,6 +205,7 @@ def __attempt_cast__(min, max, type):
                 return True
             if w:
                 return False
-    except:
+    except (ValueError, TypeError, OverflowError):
+        # Cast would fail or exceed type bounds
         pass
     return False

@@ -121,7 +121,7 @@ def read_csv_via_pandas(path: str) -> pd.DataFrame:
     data = None
     try:
         data = pd.read_csv(path, sep=",", header=0, keep_default_na=False, chunksize=1000)
-    except:
+    except (UnicodeDecodeError, pd.errors.ParserError) as e:
         try:
             # Try to decode ANSI encoded CSV files
             data = pd.read_csv(

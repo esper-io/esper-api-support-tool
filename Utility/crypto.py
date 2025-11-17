@@ -43,7 +43,8 @@ class crypto:
                 # decrypt data
                 f.decrypt(encrypted_data)
                 return False
-            except:
+            except Exception:
+                # If decryption fails, file is not encrypted or invalid
                 pass
         return True
 
@@ -57,7 +58,8 @@ class crypto:
                 # decrypt data
                 f.decrypt(encrypted_data)
                 return True
-            except:
+            except Exception:
+                # If decryption fails, file is not encrypted properly
                 pass
         return False
 

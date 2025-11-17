@@ -288,7 +288,8 @@ class NewFrameLayout(wx.Frame):
             self.SetWindowStyle(style | wx.STAY_ON_TOP)
             self.SetFocus()
             self.SetWindowStyle(style)
-        except:
+        except Exception:
+            # Window may not support these operations in some environments
             pass
 
     @api_tool_decorator()
@@ -356,13 +357,18 @@ class NewFrameLayout(wx.Frame):
             entry = entry.replace("\n", " ").replace("--->", "").strip()
             shortMsg = entry
             
-            # IMPROVED: Add duplicate prevention for global list
-            if entry not in Globals.LOGLIST:
+            # OPTIMIZED: Use a set for O(1) duplicate checking
+            if not hasattr(Globals, 'LOG_SET'):
+                Globals.LOG_SET = set(Globals.LOGLIST)
+            
+            if entry not in Globals.LOG_SET:
                 Globals.LOGLIST.append(entry)
+                Globals.LOG_SET.add(entry)
                 
             # Maintain list size limit
             while len(Globals.LOGLIST) > Globals.MAX_LOG_LIST_SIZE:
-                Globals.LOGLIST.pop(0)
+                removed = Globals.LOGLIST.pop(0)
+                Globals.LOG_SET.discard(removed)
                 
             # Send to console window for display (console no longer manages global list)
             if self.consoleWin:
@@ -377,7 +383,8 @@ class NewFrameLayout(wx.Frame):
                 shortMsg += longEntryMsg
                 
             self.setStatus(shortMsg, entry, isError)
-        except:
+        except Exception:
+            # If logging fails, silently continue to avoid error loops
             pass
 
     @api_tool_decorator()
@@ -461,7 +468,10 @@ class NewFrameLayout(wx.Frame):
             elif csvRow in self.auth_data or matchingConfig:
                 self.auth_data_tmp = []
                 for entry in self.auth_data:
-                    if entry["apiHost"] == matchingConfig["apiHost"]:
+                    # Safe dictionary access
+                    if (isinstance(entry, dict) and 
+                        isinstance(matchingConfig, dict) and 
+                        entry.get("apiHost") == matchingConfig.get("apiHost")):
                         self.auth_data_tmp.append(csvRow)
                     else:
                         self.auth_data_tmp.append(entry)
@@ -539,7 +549,8 @@ class NewFrameLayout(wx.Frame):
             # Clear pending tasks and add final cleanup
             try:
                 Globals.THREAD_POOL.clearQueue()
-            except:
+            except Exception:
+                # Queue may already be cleared or inaccessible
                 pass
             
             # Reset stop flags temporarily so final tasks can run
@@ -553,12 +564,14 @@ class NewFrameLayout(wx.Frame):
             # Force abort all thread pools without blocking
             try:
                 Globals.THREAD_POOL.abort(block=False)
-            except:
+            except Exception:
+                # Thread pool may already be aborted
                 pass
             for pool in Globals.POOLS:
                 try:
                     pool.abort(block=False)
-                except:
+                except Exception:
+                    # Pool may already be aborted
                     pass
 
             # Close all top-level windows
@@ -575,7 +588,8 @@ class NewFrameLayout(wx.Frame):
 
         try:
             failsafe_timer.cancel()
-        except:
+        except (NameError, AttributeError):
+            # Timer may not exist or already cancelled
             pass
         
         # Exit immediately now that cleanup is done
@@ -604,7 +618,8 @@ class NewFrameLayout(wx.Frame):
                     elm.Close()
                 if hasattr(elm, "DestroyLater"):
                     elm.DestroyLater()
-        except:
+        except Exception:
+            # Element may already be destroyed or invalid
             pass
 
     @api_tool_decorator()
@@ -940,7 +955,8 @@ class NewFrameLayout(wx.Frame):
         for item in self.menubar.configMenuOptions:
             try:
                 self.menubar.configMenu.Delete(item)
-            except:
+            except Exception:
+                # Menu item may already be deleted
                 pass
         self.menubar.configMenuOptions = []
 
@@ -999,8 +1015,8 @@ class NewFrameLayout(wx.Frame):
                     indx = 0
             else:
                 indx = Globals.LAST_OPENED_ENDPOINT
-                if indx > len(self.menubar.configMenuOptions):
-                    indx = len(self.menubar.configMenuOptions) - 1
+                if indx >= len(self.menubar.configMenuOptions):
+                    indx = max(0, len(self.menubar.configMenuOptions) - 1)
                     Globals.LAST_OPENED_ENDPOINT = indx
             if indx >= 0 and len(self.menubar.configMenuOptions) > indx:
                 defaultConfigItem = self.menubar.configMenuOptions[indx]
@@ -1022,7 +1038,8 @@ class NewFrameLayout(wx.Frame):
         """Set cursor icon to default state"""
         try:
             setCursorIcon(self, wx.CURSOR_DEFAULT)
-        except:
+        except Exception:
+            # Cursor change may fail on some platforms
             pass
         self.isBusy = False
 
@@ -1032,7 +1049,8 @@ class NewFrameLayout(wx.Frame):
         self.isBusy = True
         try:
             setCursorIcon(self, wx.CURSOR_WAIT)
-        except:
+        except Exception:
+            # Cursor change may fail on some platforms
             pass
 
     @api_tool_decorator()
@@ -1046,7 +1064,8 @@ class NewFrameLayout(wx.Frame):
         try:
             if self.groupManage:
                 self.groupManage.Destroy()
-        except:
+        except Exception:
+            # Group manager may already be destroyed
             pass
         # Reset Side Panel
         self.sidePanel.reset_panel()
@@ -1070,6 +1089,9 @@ class NewFrameLayout(wx.Frame):
         try:
             menuItemLabel = self.configMenuItem.GetItemLabelText() if self.configMenuItem else "Unknown"
             self.Logging("--->Attempting to load configuration: %s." % menuItemLabel)
+            # Safe dictionary access with validation
+            if menuItemLabel not in self.sidePanel.configChoice:
+                raise KeyError(f"Configuration '{menuItemLabel}' not found in configChoice")
             selectedConfig = self.sidePanel.configChoice[menuItemLabel]
 
             postEventToFrame(
@@ -1118,15 +1140,18 @@ class NewFrameLayout(wx.Frame):
         self.sidePanel.configList.Clear()
         host = key = entId = prefix = ""
         if type(config) is dict or isinstance(config, dict):
-            host = config["apiHost"]
-            key = config["apiKey"]
-            prefix = config["apiPrefix"]
-            entId = config["enterprise"]
+            # Safe dictionary access
+            host = config.get("apiHost", "")
+            key = config.get("apiKey", "")
+            prefix = config.get("apiPrefix", "")
+            entId = config.get("enterprise", "")
         elif type(config) is tuple or isinstance(config, tuple):
-            host = config[0]
-            key = config[1]
-            prefix = config[2]
-            entId = config[3]
+            # Safe tuple access with bounds checking
+            if len(config) >= 4:
+                host = config[0] if len(config) > 0 else ""
+                key = config[1] if len(config) > 1 else ""
+                prefix = config[2] if len(config) > 2 else ""
+                entId = config[3] if len(config) > 3 else ""
 
         if not prefix:
             prefix = "Bearer"
@@ -1183,7 +1208,8 @@ class NewFrameLayout(wx.Frame):
         res = None
         try:
             res = getCompanySettings(maxAttempt=2)
-        except:
+        except Exception:
+            # Company settings retrieval failed, token may be invalid
             pass
         Globals.IS_TOKEN_VALID = True
         if (
@@ -1234,12 +1260,17 @@ class NewFrameLayout(wx.Frame):
                 Globals.OPEN_DIALOGS.remove(dlg)
             newToken = newToken.strip()
             if newToken:
+                # Safe configuration access with validation
+                if not Globals.configuration:
+                    newToken = ""
+                    continue
+                
                 csvRow = [
                     menuItemLabel,
-                    Globals.configuration.host,
-                    Globals.enterprise_id,
+                    Globals.configuration.host if Globals.configuration.host else "",
+                    Globals.enterprise_id if Globals.enterprise_id else "",
                     newToken,
-                    Globals.configuration.api_key_prefix["Authorization"],
+                    Globals.configuration.api_key_prefix.get("Authorization", "Bearer") if Globals.configuration.api_key_prefix else "Bearer",
                 ]
                 valid = self.addEndpointEntry(
                     menuItemLabel,
@@ -1584,38 +1615,37 @@ class NewFrameLayout(wx.Frame):
     def processAddDeviceToChoice(self, chunk):
         if not chunk:
             return
+        # OPTIMIZED: Pre-create device dictionary reference for faster lookups
+        devices_dict = self.sidePanel.devices
+        
         for device in chunk:
             name = ""
+            # OPTIMIZED: Use f-strings and extract common logic
             if hasattr(device, "hardware_info"):
-                name = "%s ~ %s ~ %s %s" % (
-                    (
-                        device.hardware_info["manufacturer"]
-                        if device.hardware_info and "manufacturer" in device.hardware_info
-                        else ""
-                    ),
-                    (device.hardware_info["model"] if device.hardware_info and "model" in device.hardware_info else ""),
-                    device.device_name,
-                    "~ %s" % device.alias_name if device.alias_name else "",
-                )
+                hw_info = device.hardware_info or {}
+                manufacturer = hw_info.get("manufacturer", "")
+                model = hw_info.get("model", "")
+                device_name = device.device_name
+                alias = f"~ {device.alias_name}" if device.alias_name else ""
+                name = f"{manufacturer} ~ {model} ~ {device_name} {alias}"
             elif "hardwareInfo" in device:
-                name = "%s ~ %s ~ %s %s" % (
-                    (device["hardwareInfo"]["manufacturer"] if "manufacturer" in device["hardwareInfo"] else ""),
-                    (device["hardwareInfo"]["model"] if "model" in device["hardwareInfo"] else ""),
-                    device["device_name"],
-                    ("~ %s" % device["alias_name"] if device["alias_name"] else ""),
-                )
+                hw_info = device.get("hardwareInfo", {})
+                manufacturer = hw_info.get("manufacturer", "")
+                model = hw_info.get("model", "")
+                device_name = device.get("device_name", "")
+                alias = f"~ {device['alias_name']}" if device.get("alias_name") else ""
+                name = f"{manufacturer} ~ {model} ~ {device_name} {alias}"
             elif "hardware_info" in device:
-                name = "%s ~ %s ~ %s %s" % (
-                    (device["hardware_info"]["brand"] if device["hardware_info"] and "brand" in device["hardware_info"] else ""),
-                    (device["hardware_info"]["model"] if device["hardware_info"] and "model" in device["hardware_info"] else ""),
-                    device["name"],
-                    "~ %s" % device["alias"] if device["alias"] else "",
-                )
-            if name and name not in self.sidePanel.devices:
-                if hasattr(device, "id"):
-                    self.sidePanel.devices[name] = device.id
-                else:
-                    self.sidePanel.devices[name] = device["id"]
+                hw_info = device.get("hardware_info", {})
+                brand = hw_info.get("brand", "") if hw_info else ""
+                model = hw_info.get("model", "") if hw_info else ""
+                device_name = device.get("name", "")
+                alias = f"~ {device['alias']}" if device.get("alias") else ""
+                name = f"{brand} ~ {model} ~ {device_name} {alias}"
+            
+            # OPTIMIZED: Single check and assignment
+            if name and name not in devices_dict:
+                devices_dict[name] = device.id if hasattr(device, "id") else device.get("id")
 
     @api_tool_decorator()
     def onRun(self, event=None):
@@ -1661,7 +1691,10 @@ class NewFrameLayout(wx.Frame):
 
         allDevicesSelected = (
             True
-            if self.sidePanel.deviceResp and len(self.sidePanel.selectedDevicesList) == len(self.sidePanel.deviceResp["results"])
+            if (self.sidePanel.deviceResp and 
+                isinstance(self.sidePanel.deviceResp, dict) and 
+                "results" in self.sidePanel.deviceResp and
+                len(self.sidePanel.selectedDevicesList) == len(self.sidePanel.deviceResp["results"]))
             else False
         )
 
@@ -1818,21 +1851,38 @@ class NewFrameLayout(wx.Frame):
 
             isDevice = False
             if not self.sidePanel.selectedDevicesList or allDevicesSelected:
-                groupLabel = ""
+                # OPTIMIZED: Create reverse lookup dict once outside loop
+                group_id_to_name = {v: k for k, v in self.sidePanel.groups.items()}
+                
                 for groupId in self.sidePanel.selectedGroupsList:
-                    groupLabel = list(self.sidePanel.groups.keys())[list(self.sidePanel.groups.values()).index(groupId)]
-                    self.Logging('---> Attempting to run action, "%s", on group, %s.' % (actionLabel, groupLabel))
+                    groupLabel = group_id_to_name.get(groupId, groupId)
+                    if groupLabel == groupId:
+                        # ID not found in map, log with ID
+                        self.Logging('---> Attempting to run action, "%s", on group ID, %s.' % (actionLabel, groupId))
+                    else:
+                        self.Logging('---> Attempting to run action, "%s", on group, %s.' % (actionLabel, groupLabel))
             else:
                 isDevice = True
+                # OPTIMIZED: Create reverse lookup dicts once outside loop
+                device_id_to_name = {v: k for k, v in self.sidePanel.devices.items()}
+                extended_device_id_to_name = {}
+                if hasattr(self.sidePanel, 'devicesExtended'):
+                    extended_device_id_to_name = {v: k for k, v in self.sidePanel.devicesExtended.items()}
+                
                 for deviceId in self.sidePanel.selectedDevicesList:
-                    deviceLabel = None
-                    try:
-                        deviceLabel = list(self.sidePanel.devices.keys())[list(self.sidePanel.devices.values()).index(deviceId)]
-                    except:
-                        deviceLabel = list(self.sidePanel.devicesExtended.keys())[
-                            list(self.sidePanel.devicesExtended.values()).index(deviceId)
-                        ]
-                    self.Logging('---> Attempting to run action, "%s", on device, %s.' % (actionLabel, deviceLabel))
+                    # Try main device list first
+                    deviceLabel = device_id_to_name.get(deviceId)
+                    
+                    # If not found, try extended list
+                    if not deviceLabel and extended_device_id_to_name:
+                        deviceLabel = extended_device_id_to_name.get(deviceId, deviceId)
+                    
+                    # Fallback to device ID
+                    if not deviceLabel:
+                        deviceLabel = deviceId
+                    
+                    if deviceLabel:
+                        self.Logging('---> Attempting to run action, "%s", on device, %s.' % (actionLabel, deviceLabel))
             self.statusBar.gauge.Pulse()
             Globals.THREAD_POOL.enqueue(
                 TakeAction,
@@ -1997,7 +2047,8 @@ class NewFrameLayout(wx.Frame):
                 formattedRes = ""
                 try:
                     formattedRes = json.dumps(res, indent=2).replace("\\n", "\n")
-                except:
+                except (ValueError, TypeError):
+                    # Fallback if JSON serialization fails
                     formattedRes = json.dumps(str(res), indent=2).replace("\\n", "\n")
                 if formattedRes:
                     result += formattedRes
@@ -2285,8 +2336,12 @@ class NewFrameLayout(wx.Frame):
         if self.isRunning:
             return
 
-        self.isUploading = True
-        self.uploadSpreadsheet(event.Files[-1])
+        # Safe file access with validation
+        if hasattr(event, 'Files') and event.Files and len(event.Files) > 0:
+            self.isUploading = True
+            self.uploadSpreadsheet(event.Files[-1])
+        else:
+            self.Logging("ERROR: No files provided in drop event", isError=True)
 
     @api_tool_decorator()
     def onClone(self, event):
@@ -2409,11 +2464,22 @@ class NewFrameLayout(wx.Frame):
                     wx.OK | wx.ICON_INFORMATION,
                 )
             )
-        elif (type(res) == dict and "errors" in res and res["errors"] and "EMM" in res["errors"][0] and level < 2) or (
+        elif (type(res) == dict and "errors" in res and res["errors"] and 
+              len(res["errors"]) > 0 and "EMM" in str(res["errors"][0]) and level < 2) or (
             isinstance(res, Exception) and "EMM" in str(res)
         ):
-            del templateFound["template"]["application"]["managed_google_play_disabled"]
-            self.createClone(util, templateFound, toApi, toKey, toEntId, update, level + 1)
+            # Safe nested dictionary access
+            try:
+                if ("template" in templateFound and 
+                    "application" in templateFound["template"] and 
+                    "managed_google_play_disabled" in templateFound["template"]["application"]):
+                    del templateFound["template"]["application"]["managed_google_play_disabled"]
+                self.createClone(util, templateFound, toApi, toKey, toEntId, update, level + 1)
+            except (KeyError, TypeError):
+                # Template structure doesn't match expected format
+                self.Logging("ERROR: Failed to process Template structure.")
+                self.toggleIsRunning(False)
+                postEventToFrame(eventUtil.myEVT_COMPLETE, True)
         else:
             action = "recreate" if not update else "update"
             self.Logging("ERROR: Failed to %s Template.%s" % (action, res))
@@ -2654,7 +2720,8 @@ class NewFrameLayout(wx.Frame):
             if self.notification:
                 try:
                     self.notification.Close()
-                except:
+                except Exception:
+                    # Notification may already be closed or invalid
                     pass
                 self.notification = None
             
@@ -2663,7 +2730,8 @@ class NewFrameLayout(wx.Frame):
                 if hasattr(self.notification, "MSWUseToasts"):
                     try:
                         self.notification.MSWUseToasts()
-                    except:
+                    except Exception:
+                        # MSW toasts may not be supported on this platform
                         pass
             try:
                 self.notification.Show()

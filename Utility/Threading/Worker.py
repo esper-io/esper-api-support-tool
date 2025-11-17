@@ -41,8 +41,8 @@ class Worker(Thread):
             try:
                 func, args, kwargs = self.queue.get(block=False)
                 self.idle.clear()
-            except:
-                # no work to do
+            except Exception:
+                # Queue is empty, no work to do
                 self.idle.set()
                 # Small sleep to prevent busy-waiting, but short enough for responsive abort
                 time.sleep(0.01)
@@ -75,8 +75,23 @@ class Worker(Thread):
         self.idle.set()
 
     def raise_exception(self):
+        """Forcefully raise an exception in this thread to terminate it"""
         thread_id = self.ident
+        
+        # Validate thread_id before attempting to raise exception
+        if thread_id is None:
+            raise RuntimeError("Cannot raise exception: thread has not been started or has no valid thread ID")
+        
+        # Ensure thread_id is a valid C long integer
+        try:
+            thread_id = ctypes.c_long(thread_id)
+        except (TypeError, ValueError) as e:
+            raise RuntimeError(f"Invalid thread ID: {thread_id}") from e
+        
         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
-        if res > 1:
+        if res == 0:
+            raise RuntimeError(f"Thread ID {thread_id} not found")
+        elif res > 1:
+            # If more than one thread was affected, revert the action
             ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-            print("Exception raise failure")
+            raise RuntimeError("Exception raise failure: multiple threads affected")

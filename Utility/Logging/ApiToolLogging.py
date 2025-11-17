@@ -65,7 +65,8 @@ class ApiToolLog:
             stack = traceback.extract_stack()
             if str(stack).count("LogError") > 5:
                 return  # Prevent infinite recursion
-        except:
+        except Exception:
+            # If stack extraction fails, continue with logging
             pass
 
         if exc_type is None or exc_value is None or exc_traceback is None:
@@ -77,7 +78,8 @@ class ApiToolLog:
                     exc_traceback = traceback.format_exc()
                 if not exc_traceback:
                     exc_traceback = traceback.extract_stack()
-            except:
+            except Exception:
+                # If exception info extraction fails, continue with what we have
                 pass
 
         self.limitLogFileSizes()
@@ -220,7 +222,8 @@ class ApiToolLog:
                 write_content_to_file(self.logPath, strToWrite, "a")
                 if "Summary" in strToWrite and Globals.frame.audit and "foo" not in Globals.configuration.host:
                     Globals.frame.audit.postOperation({"operation": "API Usage Summary", "data": strToWrite})
-            except:
+            except (IOError, OSError, AttributeError, Exception):
+                # If file write or audit post fails, silently continue
                 pass
             finally:
                 if Globals.api_log_lock.locked():

@@ -348,8 +348,10 @@ def getDevicesFromGrid(deviceIdentifers=None, tolerance=0):
 def getDevicesFromGridHelper(deviceIdentifers, devices, maxAttempt=Globals.MAX_RETRY):
     for entry in deviceIdentifers:
         api_response = apiCalls.searchForMatchingDevices(entry)
-        if api_response:
+        if api_response and hasattr(api_response, "results"):
             devices += api_response.results
+        elif api_response and type(api_response) is dict and "results" in api_response:
+            devices += api_response["results"]
         else:
             postEventToFrame(
                 eventUtil.myEVT_LOG,

@@ -1,15 +1,72 @@
 #!/usr/bin/env python
 
 
+import json
+
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility import EventUtility
-from Utility.API.EsperAPICalls import getInfo, patchInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
-from Utility.Resource import getHeader, is_uuid, postEventToFrame
+from Utility.Resource import (getHeader, is_uuid, logBadResponse,
+                              postEventToFrame)
 from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
                                      handleRequestError,
-                                     performGetRequestWithRetry)
+                                     performGetRequestWithRetry,
+                                     performPatchRequestWithRetry)
+
+
+@api_tool_decorator()
+def getInfo(request_extension, deviceid):
+    """Sends Request For Device Info JSON"""
+    headers = getHeader()
+    url = (
+        Globals.BASE_DEVICE_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            device_id=deviceid,
+        )
+        + request_extension
+    )
+    resp = performGetRequestWithRetry(url, headers=headers)
+    json_resp = None
+    try:
+        json_resp = resp.json()
+    except (ValueError, AttributeError):
+        # Response is not JSON or doesn't have json() method
+        pass
+    logBadResponse(url, resp, json_resp)
+
+    return json_resp
+
+
+@api_tool_decorator()
+def patchInfo(request_extension, deviceid, data=None, jsonData=None, tags=None):
+    """Pushes Data To Device Info JSON"""
+    headers = getHeader()
+    url = (
+        Globals.BASE_DEVICE_URL.format(
+            configuration_host=Globals.configuration.host,
+            enterprise_id=Globals.enterprise_id,
+            device_id=deviceid,
+        )
+        + request_extension
+    )
+    requestData = data
+    if tags:
+        try:
+            requestData = json.dumps({"tags": tags})
+        except Exception as e:
+            print(e)
+
+    resp = performPatchRequestWithRetry(url, headers=headers, data=requestData, json=jsonData)
+    json_resp = None
+    try:
+        json_resp = resp.json()
+    except (ValueError, AttributeError):
+        # Response is not JSON or doesn't have json() method
+        pass
+    logBadResponse(url, resp, json_resp)
+    return json_resp
 
 
 @api_tool_decorator()
@@ -145,10 +202,13 @@ def get_all_android_devices_helper(groupToUse, limit, offset, maxAttempt=Globals
     return api_response
 
 
-def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None):
+def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None, searchParamsDict=None):
     extention = "?limit=%s&offset=%s" % (limit, offset)
     if groupToUse.strip():
         extention += "&group_multi=%s" % (groupToUse.strip(),)
+    if searchParamsDict:
+        for key, value in searchParamsDict.items():
+            extention += "&%s=%s" % (key, value)
     url = "%s/v2/devices/%s" % (Globals.configuration.host, extention)
     api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
     if api_response.status_code < 300:
