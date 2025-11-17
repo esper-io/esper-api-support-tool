@@ -1057,7 +1057,7 @@ class PreferencesDialog(wx.Dialog):
 
         # Set Checkbox Values
         self.checkBooleanValuePrefAndSet("enableDevice", self.checkbox_1, wx.CHK_UNCHECKED)
-        Globals.USE_ENTERPRISE_APP = self.checkBooleanValuePrefAndSet("getAllApps", self.checkbox_2, wx.CHK_UNCHECKED)
+        Globals.USE_ENTERPRISE_APP =  bool(not self.checkBooleanValuePrefAndSet("getAllApps", self.checkbox_2, wx.CHK_UNCHECKED))
         Globals.SHOW_PKG_NAME = self.checkBooleanValuePrefAndSet("showPkg", self.checkbox_4, wx.CHK_CHECKED)
         Globals.REACH_QUEUED_ONLY = self.checkBooleanValuePrefAndSet("reachQueueStateOnly", self.checkbox_5, wx.CHK_CHECKED)
         Globals.SHOW_GRID_DIALOG = self.checkBooleanValuePrefAndSet("getgridDialogAllApps", self.checkbox_8, wx.CHK_UNCHECKED)
@@ -1168,15 +1168,22 @@ class PreferencesDialog(wx.Dialog):
                 combobox.SetSelection(0)
         return combobox.GetValue()
 
-    def checkBooleanValuePrefAndSet(self, key, checkbox, default=wx.CHK_UNCHECKED):
+    def checkBooleanValuePrefAndSet(self, key, checkbox, default=wx.CHK_UNCHECKED, doOpposite=False) -> bool:
         isEnabled = default
         if key in self.prefs:
-            if (isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true") or self.prefs[key] is True:
+            isEnabled = (isinstance(self.prefs[key], str) and self.prefs[key].lower() == "true") or self.prefs[key] is True
+            if isEnabled and not doOpposite:
                 checkbox.Set3StateValue(wx.CHK_CHECKED)
                 isEnabled = True
-            else:
+            elif not isEnabled and not doOpposite:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)
                 isEnabled = False
+            elif isEnabled and doOpposite:
+                checkbox.Set3StateValue(wx.CHK_UNCHECKED)
+                isEnabled = False
+            else:
+                checkbox.Set3StateValue(wx.CHK_CHECKED)
+                isEnabled = True
         else:
             if default == wx.CHK_UNCHECKED:
                 checkbox.Set3StateValue(wx.CHK_UNCHECKED)

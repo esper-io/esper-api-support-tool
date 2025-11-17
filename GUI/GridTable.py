@@ -109,9 +109,7 @@ class GridTable(gridlib.Grid):
                 if str(data[col].dtype)[:3] == "cat":
                     if "" not in data[col].cat.categories:
                         data[col] = data[col].cat.add_categories("")
-                    data[col] = data[col].fillna("")
-                else:
-                    data[col] = data[col].fillna("")
+                data[col] = data[col].fillna("")
             self.table = GridDataTable(data)
 
             # The second parameter means that the grid is to take ownership of the
