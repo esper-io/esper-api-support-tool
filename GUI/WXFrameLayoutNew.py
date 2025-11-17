@@ -570,7 +570,6 @@ class NewFrameLayout(wx.Frame):
 
             # Destroy this frame
             self.Destroy()
-            
         except Exception:
             pass
 
