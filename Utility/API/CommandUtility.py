@@ -481,17 +481,22 @@ def waitForCommandToFinish(
                 end = time.perf_counter()
                 duration = end - start
                 if duration >= timeout:
+                    statusState = status.get("state", "UNKNOWN") if isinstance(status, dict) else "UNKNOWN"
+                    statusState = statusState if not hasattr(status, "state") else status.state
                     postEventToFrame(
                         eventUtil.myEVT_LOG,
                         "---> Skipping wait for Command, last logged Command state: %s (Device may be offline)"
-                        % str(status.state),
+                        % str(statusState),
                     )
                     break
                 status = getCommandRequestStats(request_id, maxAttempt=maxAttempt)
-                postEventToFrame(
-                    eventUtil.myEVT_LOG,
-                    "---> Command state: %s" % str(status.state),
-                )
+                if status and isinstance(status, dict):
+                    statusState = status.get("state", "UNKNOWN") if isinstance(status, dict) else "UNKNOWN"
+                    statusState = statusState if not hasattr(status, "state") else status.state
+                    postEventToFrame(
+                        eventUtil.myEVT_LOG,
+                        "---> Command state: %s" % str(statusState),
+                    )
                 time.sleep(3)
         return status
     else:

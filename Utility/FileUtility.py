@@ -27,8 +27,12 @@ def checkIfCurrentThreadStopped():
 
 def read_from_file(filePath, mode="r") -> list:
     content = None
-    with open(filePath, mode) as file:
-        content = file.read()
+    try:
+        with open(filePath, mode) as file:
+            content = file.read()
+    except (FileNotFoundError, PermissionError, IOError) as e:
+        print(f"Error reading file {filePath}: {e}")
+        content = None
     return content
 
 
@@ -113,7 +117,11 @@ def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
                 # Try to avoid shape mismatch
                 if len(row) == len(headers):
                     rows.append(row)
-    df = pd.DataFrame(rows[1:], columns=rows[0])
+    df = None
+    if len(rows) > 0:
+        df = pd.DataFrame(rows[1:], columns=rows[0])
+    else:
+        df = pd.DataFrame()
     return df
 
 

@@ -702,9 +702,11 @@ class NewFrameLayout(wx.Frame):
             input = []
             for item in deviceList.values():
                 input.extend(item["AppsEntry"] if "AppsEntry" in item else [])
+                deviceListLen = len(deviceList.values())
+                gaugeValue = (int(num / deviceListLen) * 35) + 50 if deviceListLen > 0 else 50
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
-                    (int(num / len(deviceList.values())) * 35) + 50,
+                    gaugeValue,
                 )
                 num += 1
             df = createDataFrameFromDict(Globals.CSV_APP_ATTR_NAME, input, True)
@@ -975,9 +977,10 @@ class NewFrameLayout(wx.Frame):
                     return
 
                 for row in auth_csv_reader:
+                    gaugeValue = int(float(num / maxRow) * 25) if maxRow > 0 else 0
                     postEventToFrame(
                         eventUtil.myEVT_UPDATE_GAUGE,
-                        int(float(num / maxRow) * 25),
+                        gaugeValue,
                     )
                     num += 1
                     if "name" in row:
@@ -1535,9 +1538,11 @@ class NewFrameLayout(wx.Frame):
                     if group not in Globals.knownGroups:
                         Globals.knownGroups[group] = ""
                     self.sidePanel.groupDeviceCount[group] = -1
+                resultsLen = len(results)
+                gaugeValue = 50 + int(float(num / resultsLen) * 25) if resultsLen > 0 else 50
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
-                    50 + int(float(num / len(results)) * 25),
+                    gaugeValue,
                 )
                 num += 1
         self.Logging("--->Finished Processing groups...")
@@ -2825,7 +2830,7 @@ class NewFrameLayout(wx.Frame):
             "shoonya admin",
         ]
         for user in users["results"]:
-            if user["profile"]["role"].lower() in bannedRoles:
+            if user.get("profile", {}).get("role", "").lower() in bannedRoles:
                 continue
             entry = []
 
@@ -2841,9 +2846,11 @@ class NewFrameLayout(wx.Frame):
 
             entry = self.getUserEntryForReport(Globals.USER_REPORT_FIELDS, matchingRole, user)
             data.append(entry)
+            usersResultsLen = len(users["results"])
+            gaugeValue = int(num / usersResultsLen * 90) if usersResultsLen > 0 else 0
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE,
-                int(num / len(users["results"]) * 90),
+                gaugeValue,
             )
             num += 1
         createNewFile(inFile)
@@ -2916,9 +2923,11 @@ class NewFrameLayout(wx.Frame):
 
             entry = self.getUserEntryForReport(Globals.PENDING_USER_REPORT_FIELDS, matchingRole, user)
             data.append(entry)
+            userInvitesLen = len(users["userinvites"])
+            gaugeValue = int(num / userInvitesLen * 90) if userInvitesLen > 0 else 0
             postEventToFrame(
                 eventUtil.myEVT_UPDATE_GAUGE,
-                int(num / len(users["userinvites"]) * 90),
+                gaugeValue,
             )
             num += 1
         createNewFile(inFile)
@@ -3037,9 +3046,11 @@ class NewFrameLayout(wx.Frame):
                 entry.append(group["created_on"])
                 entry.append(group["updated_on"])
                 data.append(entry)
+                groupsResultsLen = len(self.sidePanel.groupsResp["results"])
+                gaugeValue = int(num / groupsResultsLen * 90) if groupsResultsLen > 0 else 0
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
-                    int(num / len(self.sidePanel.groupsResp["results"]) * 90),
+                    gaugeValue,
                 )
                 num += 1
             createNewFile(inFile)
@@ -3163,9 +3174,11 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
+                    changedBlueprintsLen = len(self.changedBlueprints)
+                    gaugeValue = int(num / changedBlueprintsLen * 100) if changedBlueprintsLen > 0 else 0
                     postEventToFrame(
                         eventUtil.myEVT_UPDATE_GAUGE,
-                        int(num / len(self.changedBlueprints) * 100),
+                        gaugeValue,
                     )
                     num += 1
             elif opt == options[1]:
@@ -3209,9 +3222,11 @@ class NewFrameLayout(wx.Frame):
                             "Response": updateResp.text,
                         }
                     )
+                    changedBlueprintsLen = len(self.changedBlueprints)
+                    gaugeValue = int(num / changedBlueprintsLen * 100) if changedBlueprintsLen > 0 else 0
                     postEventToFrame(
                         eventUtil.myEVT_UPDATE_GAUGE,
-                        int(num / len(self.changedBlueprints) * 100),
+                        gaugeValue,
                     )
                     num += 1
 

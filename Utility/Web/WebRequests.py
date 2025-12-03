@@ -48,8 +48,9 @@ def performRequestWithRetry(
                 resp = method(url, headers=headers, json=json, data=data, timeout=requestTimeout)
             if Globals.IS_DEBUG:
                 timeElapsed = resp.elapsed.total_seconds() if resp is not None and hasattr(resp, 'elapsed') else 'N/A'
+                respCode = resp.status_code if resp is not None and hasattr(resp, 'status_code') else 'N/A'
                 ApiToolLog().Log("%s\tThread:%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s\tResponse Time: %s" % (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), threading.current_thread().name, method.__name__, url, resp.status_code, timeElapsed
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), threading.current_thread().name, method.__name__, url, respCode, timeElapsed
                 ))
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
 
