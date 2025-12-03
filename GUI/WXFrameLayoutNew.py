@@ -2519,7 +2519,7 @@ class NewFrameLayout(wx.Frame):
             args=(event, queryString),
             name="processSearch",
         )
-        self.guiThreadTracker.addThread(t)
+        self.guiThreadTracker.append(t)
         t.startWithRetry()
         self.searchThreads.append(t)
 
@@ -3237,7 +3237,7 @@ class NewFrameLayout(wx.Frame):
                 None,
                 name="ScheduledReportThread",
             )
-            self.guiThreadTracker.addThread(self.scheduleReport)
+            self.guiThreadTracker.append(self.scheduleReport)
             self.scheduleReport.startWithRetry()
         elif self.scheduleReport:
             # Stop report thread as it should be disabled
