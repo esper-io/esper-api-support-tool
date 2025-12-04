@@ -221,11 +221,23 @@ class NewFrameLayout(wx.Frame):
 
         Globals.frame = self
 
-        Globals.THREAD_POOL.enqueue(self.onLaunch)
         self.__set_properties()
         self.Layout()
         self.Centre()
+        
+        # Show window ASAP for perceived faster startup
+        self.Show()
+        if self.splash:
+            self.splash.Hide()
+        
+        # Force window to draw immediately
+        self.Update()
+        wx.SafeYield()
+        
         self.tryToMakeActive()
+        
+        # Now do remaining initialization in background
+        Globals.THREAD_POOL.enqueue(self.onLaunch)
 
         if self.kill:
             return
@@ -252,16 +264,18 @@ class NewFrameLayout(wx.Frame):
         except Exception as e:
             self.Logging(f"Error starting updateErrorTracker thread: {str(e)}")
             self.errorTracker = None
-        self.menubar.onUpdateCheck(showDlg=True)
+        
+        # Defer update check to after window is shown (non-blocking)
+        wx.CallAfter(self.menubar.onUpdateCheck, showDlg=True)
 
         self.Logging("Welcome to Esper API Tool! Version: %s" % Globals.VERSION)
 
     @api_tool_decorator()
     def onLaunch(self):
         self.loadPref()
-        actionList = [self.Show, self.showDisclaimer]
-        if self.splash:
-            actionList.append((self.splash.Hide))
+        actionList = [self.showDisclaimer]
+        # if self.splash:
+        #     actionList.append((self.splash.Hide))
 
         postEventToFrame(
             eventUtil.myEVT_AUDIT,
@@ -755,6 +769,8 @@ class NewFrameLayout(wx.Frame):
                     networkData,
                     on=["Esper Name", "Group"],
                     how="outer",
+                    sort=False,  # Skip sorting for better performance
+                    copy=False,  # Avoid unnecessary copying
                 )
                 result = result.dropna(axis=0, how="all", subset=None)
                 if checkIfCurrentThreadStopped():
@@ -791,6 +807,8 @@ class NewFrameLayout(wx.Frame):
                         networkData,
                         on=["Esper Name", "Group", "Serial Number"],
                         how="outer",
+                        sort=False,  # Skip sorting for better performance
+                        copy=False,  # Avoid unnecessary copying
                     )
                     result = result.dropna(
                         axis=0,
@@ -807,6 +825,8 @@ class NewFrameLayout(wx.Frame):
                         self.gridPanel.network_grid.createEmptyDataFrame(),
                         on=["Esper Name", "Group", "Serial Number"],
                         how="outer",
+                        sort=False,  # Skip sorting for better performance
+                        copy=False,  # Avoid unnecessary copying
                     )
                     df_dict = self.subdivideSheetData("Device & Network", deviceNetworkResults, df_dict)
             elif deviceData is not None and len(deviceData) > 0:

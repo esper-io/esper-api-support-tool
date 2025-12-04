@@ -96,6 +96,11 @@ def getExecutableCommand(doFirst=True):
                 dispath,
                 "--version-file",
                 curDirPath + "/file_version_info.txt",
+                # Optimization flags for faster startup
+                "--noupx",  # Don't use UPX compression (faster extraction)
+                "--exclude-module", "matplotlib",  # Exclude unused heavy modules
+                "--exclude-module", "PIL",
+                "--exclude-module", "tkinter",
                 *getHiddenImportsParams(*hidden_imports),
                 "--icon",
                 curDirPath + "/Images/icon.ico",
@@ -122,6 +127,11 @@ def getExecutableCommand(doFirst=True):
                 app_name.replace(".app", ""),
                 "--osx-bundle-identifier",
                 "com.esper.esperapisupporttool",
+                # Optimization flags for faster startup
+                "--noupx",  # Don't use UPX compression (faster extraction)
+                "--exclude-module", "matplotlib",  # Exclude unused heavy modules
+                "--exclude-module", "PIL",
+                "--exclude-module", "tkinter",
                 *getHiddenImportsParams(*hidden_imports),
                 "--distpath",
                 dispath,

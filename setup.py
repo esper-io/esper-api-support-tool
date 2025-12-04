@@ -53,6 +53,8 @@ OPTIONS = {
         "CFBundleShortVersionString": Globals.VERSION,
         "NSHumanReadableCopyright": "No Copyright © 2022",
         "NSRequiresAquaSystemAppearance": "No",
+        # Usage descriptions (optional, but good practice)
+        "NSNetworkUsageDescription": "This app needs network access to communicate with Esper APIs.",
     },
 }
 

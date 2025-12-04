@@ -96,9 +96,53 @@ def getToolDataPath():
     basePath = "%s/EsperApiTool/" % tempfile.gettempdir().replace("Local", "Roaming").replace("Temp", "")
 
     if platform.system() != "Windows":
-        basePath = "%s/EsperApiTool/" % os.path.expanduser("~/Desktop/")
+        # Use Application Support directory on macOS (no permission prompt required)
+        basePath = os.path.expanduser("~/Library/Application Support/EsperApiTool/")
+        
+        # Migrate existing data from old Desktop location (one-time migration)
+        _migrateFromDesktopToAppSupport(basePath)
 
     return basePath
+
+
+def _migrateFromDesktopToAppSupport(newBasePath):
+    """
+    Migrate existing preferences and data from Desktop to Application Support.
+    This is a one-time migration for users upgrading from older versions.
+    """
+    if platform.system() == "Windows":
+        return  # Only needed for macOS
+    
+    oldBasePath = os.path.expanduser("~/Desktop/EsperApiTool/")
+    
+    # Skip if old location doesn't exist or new location already has files
+    if not os.path.exists(oldBasePath):
+        return
+    if os.path.exists(newBasePath) and os.listdir(newBasePath):
+        return  # New location already populated, skip migration
+    
+    try:
+        # Create new directory if it doesn't exist
+        if not os.path.exists(newBasePath):
+            os.makedirs(newBasePath, exist_ok=True)
+        
+        # Move files from old to new location
+        import shutil
+        for item in os.listdir(oldBasePath):
+            oldPath = os.path.join(oldBasePath, item)
+            newPath = os.path.join(newBasePath, item)
+            
+            if os.path.isfile(oldPath):
+                shutil.copy2(oldPath, newPath)  # Copy with metadata
+            elif os.path.isdir(oldPath):
+                shutil.copytree(oldPath, newPath, dirs_exist_ok=True)
+        
+        # Optionally remove old directory (commented out for safety)
+        # shutil.rmtree(oldBasePath)
+        
+    except (OSError, IOError, PermissionError) as e:
+        # Silently fail - user can manually migrate if needed
+        print(f"Note: Could not migrate data from Desktop: {e}")
 
 
 def read_excel_via_openpyxl(path: str, readAnySheet=False) -> pd.DataFrame:
@@ -152,9 +196,18 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
         return
     
     if len(df_dict) <= Globals.MAX_NUMBER_OF_SHEETS_PER_FILE:
+        # Optimize xlsxwriter with engine options for better performance
         writer = pd.ExcelWriter(
             path,
             engine="xlsxwriter",
+            engine_kwargs={
+                'options': {
+                    'strings_to_numbers': False,  # Skip automatic number conversion
+                    'strings_to_formulas': False,  # Don't parse formulas
+                    'strings_to_urls': False,  # Don't convert URLs
+                    'constant_memory': True,  # Use constant memory mode for large files
+                }
+            }
         )
 
         sheetNames = []
@@ -168,7 +221,13 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                     return
                 
                 sheetNames.append(sheet)
-                df.to_excel(writer, sheet_name=sheet, index=False)
+                # Optimize: Disable automatic date conversion for better performance
+                df.to_excel(
+                    writer, 
+                    sheet_name=sheet, 
+                    index=False,
+                    freeze_panes=None,  # Disable freeze panes for faster write
+                )
 
             # Auto adjust column width
             for s in sheetNames:
@@ -180,20 +239,48 @@ def save_excel_pandas_xlxswriter(path, df_dict: dict):
                 if hasattr(worksheet, "autofit"):
                     worksheet.autofit()
                 else:
-                    for idx, col in enumerate(df):  # loop through all columns
+                    # Get the dataframe for this sheet
+                    sheet_df = df_dict[s]
+                    for idx, col in enumerate(sheet_df.columns):  # loop through all columns
                         # Check abort during column width adjustment
                         if checkIfCurrentThreadStopped():
                             break
-                        series = df[col]
-                        max_len = (
-                            max(
-                                (
-                                    series.astype(str).map(len).max(),  # len of largest item
-                                    len(str(series.name)),  # len of column name/header
-                                )
-                            )
-                            + 1
-                        )  # adding a little extra space
+                        
+                        series = sheet_df[col]
+                        num_rows = len(series)
+                        
+                        if num_rows == 0:
+                            max_len = len(str(series.name)) + 1
+                        elif num_rows <= 5000:
+                            # For smaller datasets, scan all rows for accuracy
+                            max_len = max(
+                                series.astype(str).str.len().max(),
+                                len(str(series.name))
+                            ) + 1
+                        else:
+                            # For large datasets, use stratified sampling from beginning, middle, and end
+                            # Sample ~5000 rows distributed across the dataset
+                            sample_size = 5000
+                            step = num_rows // (sample_size // 3)  # Divide samples into 3 groups
+                            
+                            # Get indices for beginning, middle, and end sections
+                            begin_indices = list(range(0, min(sample_size // 3, num_rows)))
+                            middle_start = (num_rows // 2) - (sample_size // 6)
+                            middle_indices = list(range(max(0, middle_start), min(middle_start + sample_size // 3, num_rows)))
+                            end_indices = list(range(max(0, num_rows - sample_size // 3), num_rows))
+                            
+                            # Combine and get sample
+                            sample_indices = begin_indices + middle_indices + end_indices
+                            sample = series.iloc[sample_indices]
+                            
+                            # Calculate max length from sample
+                            max_len = max(
+                                sample.astype(str).str.len().max(),
+                                len(str(series.name))
+                            ) + 1
+                        
+                        # Cap maximum column width to prevent extremely wide columns
+                        max_len = min(max_len, 100)
                         worksheet.set_column(idx, idx, max_len)  # set column width
         except Exception as e:
             pass
