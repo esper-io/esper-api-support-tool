@@ -81,8 +81,11 @@ def obtainEsperDeviceEntriesFromList(iterList):
             continue
 
         api_response = apiCalls.searchForMatchingDevices(row)
-        if api_response:
+        if api_response and hasattr(api_response, "results"):
             devices += api_response.results
+            api_response = None
+        elif api_response and type(api_response) is dict and "results" in api_response:
+            devices += api_response["results"]
             api_response = None
         else:
             postEventToFrame(
