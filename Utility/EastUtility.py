@@ -288,7 +288,7 @@ def updateGaugeForObtainingDeviceInfo(processed, deviceList):
 
 def filterDeviceList(device):
     deviceStatus = DeviceState.DISABLED.value
-    if hasattr(device, "state"):
+    if hasattr(device, "status"):
         deviceStatus = device.status
     elif type(device) == dict and "state" in device:
         deviceStatus = device["state"]
@@ -301,11 +301,12 @@ def fetchInstalledDevices(app, version, inFile):
     Globals.THREAD_POOL.results()  # reset results to ensure no additional data is processed
     resp = getInstallDevices(version, app, tolarance=1)
     res = []
-    for r in resp["results"]:
-        if r and hasattr(r, "to_dict"):
-            res.append(r.to_dict())
-        elif r and type(r) is dict:
-            res.append(r)
+    if type(resp) is dict and "results" in resp:
+        for r in resp["results"]:
+            if r and hasattr(r, "to_dict"):
+                res.append(r.to_dict())
+            elif r and type(r) is dict:
+                res.append(r)
     postEventToFrame(
         eventUtil.myEVT_LOG,
         "---> Get Installed Devices API Request Finished. Gathering Device Info...",
@@ -597,19 +598,12 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
             if "audioStream" in audio and "volumeLevel" in audio:
                 deviceInfo[audio["audioStream"]] = audio["volumeLevel"]
 
-    if location_info:
-        if (
-            "n/a" not in location_info["locationAlts"].lower()
-            and "n/a" not in location_info["locationLats"].lower()
-            and "n/a" not in location_info["locationLongs"].lower()
-        ):
-            location_info = "%s, %s, %s" % (
-                location_info["locationAlts"],
-                location_info["locationLats"],
-                location_info["locationLongs"],
-            )
-        else:
-            location_info = "Unknown"
+    if location_info and type(location_info) is dict:
+        location_info = "%s, %s, %s" % (
+            location_info.get("locationAlts", ""),
+            location_info.get("locationLats", ""),
+            location_info.get("locationLongs", ""),
+        )
     else:
         location_info = "Unknown"
 
@@ -663,8 +657,8 @@ def compileDeviceNetworkData(device, deviceInfo, latestEvent):
 
 
 def compileDeviceHardwareData(device, deviceInfo, latestEventData):
-    deviceId = device["id"]
-    deviceStatus = device["state"]
+    deviceId = device.get("id", "")
+    deviceStatus = device.get("status", "")
     deviceTags = device.get("tags", [])
 
     deviceAlias = None
@@ -940,7 +934,7 @@ def enforceGridData(device, deviceInfo, latestEventData, appData):
                         deviceInfo[key] = str(attrValue)
 
     deviceInfo["AppsEntry"] = []
-    if appData and "results" in deviceInfo["appObj"]:
+    if appData and "results" in deviceInfo.get("appObj", {}):
         constructDeviceAppRowEntry(device, deviceInfo)
 
     return deviceInfo
@@ -996,7 +990,7 @@ def populateDeviceInfoDictionary(device, deviceInfo, getApps=True, getLatestEven
 
     deviceInfo = compileDeviceNetworkData(device, deviceInfo, latestEventData)
 
-    deviceInfo = enforceGridData(device, deviceInfo, latestEventData, deviceInfo["appObj"])
+    deviceInfo = enforceGridData(device, deviceInfo, latestEventData, deviceInfo.get("appObj", {}))
 
     return deviceInfo
 
@@ -1015,11 +1009,11 @@ def removeNonWhitelisted(deviceId, deviceInfo=None, isGroup=False):
         detailInfo = getDeviceDetail(deviceId)
     else:
         detailInfo = deviceInfo
-    wifiAP = detailInfo["wifi_access_points"]
+    wifiAP = detailInfo.get("wifi_access_points", "")
     removeList = []
     for ap in wifiAP:
-        ssid = ap["wifi_ssid"]
-        if ssid not in Globals.WHITELIST_AP:
+        ssid = ap.get("wifi_ssid", "")
+        if ssid and ssid not in Globals.WHITELIST_AP:
             removeList.append(ssid)
     command_args = V0CommandArgs(
         wifi_access_points=removeList,
