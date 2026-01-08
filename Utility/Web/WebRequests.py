@@ -192,6 +192,7 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
                 if checkIfCurrentThreadStopped():
                     return
                 url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
+                url = validateUrl(url)
                 Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
                 respOffsetInt += int(respLimit)
                 total_requests += 1
@@ -204,6 +205,7 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
                 if checkIfCurrentThreadStopped():
                     return
                 url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
+                url = validateUrl(url)
                 resp_json = perform_web_requests((url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
                 
                 # Fail fast on invalid response
@@ -211,6 +213,19 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
                 respOffsetInt += int(respLimit)
     
     return results
+
+def validateUrl(url):
+    # check to ensure URL is https not http
+    if url.startswith("http://"):
+        url = url.replace("http://", "https://", 1)
+    if ".esper.cloud" in url:
+        # check to see if URL has the correct API endpoint
+        host = Globals.configuration.host.replace("https://", "").replace("http://", "")
+        if host not in url:
+            properHost = host.split(".esper.cloud")[0]
+            invalidHost = url.split("//")[1].split(".esper.cloud")[0]
+            url = url.replace(invalidHost, properHost)
+    return url
 
 
 def _process_threaded_responses_with_fail_fast(total_requests, results, tolerance=0, timeout=-1):
