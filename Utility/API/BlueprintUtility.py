@@ -51,7 +51,7 @@ def checkIosEnabled(data, jsonResp):
 def getAllBlueprints(tolerance=0, useThreadPool=True):
     url = "{baseUrl}/v2/blueprints/?limit={limit}".format(
         baseUrl=Globals.configuration.host,
-        limit=Globals.limit,
+        limit=20,
     )
     resp = fetchRequestWithOffsets(url, tolerance=tolerance, useThreadPool=True)
     return resp
