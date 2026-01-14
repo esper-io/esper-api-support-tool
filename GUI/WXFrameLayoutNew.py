@@ -527,7 +527,18 @@ class NewFrameLayout(wx.Frame):
             self.closeDestroyLater(self.consoleWin)
             self.consoleWin = None
             self.closeDestroyLater(self.prefDialog)
-            self.closeDestroyLater(self.notification)
+            # Handle notification cleanup more carefully
+            if hasattr(self, 'notification') and self.notification:
+                try:
+                    if hasattr(self.notification, 'IsValid') and self.notification.IsValid():
+                        self.notification.Close()
+                    elif hasattr(self.notification, 'Close'):
+                        self.notification.Close()
+                except (AttributeError, RuntimeError, wx.wxAssertionError):
+                    # Notification may already be closed, invalid, or destroyed
+                    pass
+                finally:
+                    self.notification = None
             self.closeDestroyLater(self.menubar.uc)
             if e:
                 if e.EventType != wx.EVT_CLOSE.typeId:
@@ -2235,8 +2246,17 @@ class NewFrameLayout(wx.Frame):
                     window.tryToMakeActive()
         else:
             self.tryToMakeActive()
-        if self.notification:
-            self.notification.Close()
+        if hasattr(self, 'notification') and self.notification:
+            try:
+                if hasattr(self.notification, 'IsValid') and self.notification.IsValid():
+                    self.notification.Close()
+                elif hasattr(self.notification, 'Close'):
+                    self.notification.Close()
+            except (AttributeError, RuntimeError, wx.wxAssertionError):
+                # Notification may already be closed, invalid, or destroyed
+                pass
+            finally:
+                self.notification = None
         self.Refresh()
         if skip:
             event.Skip()
@@ -2722,26 +2742,48 @@ class NewFrameLayout(wx.Frame):
         if not self.IsActive() or displayActive:
             # Close any existing notification before creating a new one
             # This prevents HWND association errors when multiple notifications are created
-            if self.notification:
+            if hasattr(self, 'notification') and self.notification:
                 try:
-                    self.notification.Close()
-                except Exception:
-                    # Notification may already be closed or invalid
+                    if hasattr(self.notification, 'IsValid') and self.notification.IsValid():
+                        self.notification.Close()
+                    elif hasattr(self.notification, 'Close'):
+                        self.notification.Close()
+                except (AttributeError, RuntimeError, wx.wxAssertionError):
+                    # Notification may already be closed, invalid, or destroyed
                     pass
-                self.notification = None
+                finally:
+                    self.notification = None
             
-            self.notification = wxadv.NotificationMessage(title, msg, self)
-            if self.notification:
-                if hasattr(self.notification, "MSWUseToasts"):
-                    try:
-                        self.notification.MSWUseToasts()
-                    except Exception:
-                        # MSW toasts may not be supported on this platform
-                        pass
+            try:
+                self.notification = wxadv.NotificationMessage(title, msg, self)
+                if self.notification:
+                    if hasattr(self.notification, "MSWUseToasts"):
+                        try:
+                            self.notification.MSWUseToasts()
+                        except Exception:
+                            # MSW toasts may not be supported on this platform
+                            pass
+                    # Use CallAfter to show notification on next GUI event loop iteration
+                    # This helps prevent reference counting issues
+                    wx.CallAfter(self._showNotification)
+            except (RuntimeError, wx.wxAssertionError) as e:
+                ApiToolLog().LogError(f"Failed to create notification: {e}")
+                self.notification = None
+            except Exception as e:
+                ApiToolLog().LogError(f"Unexpected error creating notification: {e}")
+                self.notification = None
+
+    def _showNotification(self):
+        """Helper method to show notification safely in GUI thread"""
+        if hasattr(self, 'notification') and self.notification:
             try:
                 self.notification.Show()
+            except (RuntimeError, wx.wxAssertionError) as e:
+                ApiToolLog().LogError(f"Failed to show notification: {e}")
+                self.notification = None
             except Exception as e:
-                ApiToolLog().LogError(e)
+                ApiToolLog().LogError(f"Unexpected error showing notification: {e}")
+                self.notification = None
 
     @api_tool_decorator()
     def onSuspend(self, event):

@@ -33,14 +33,77 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 
 
 def resourcePath(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
+    """Get absolute path to resource, works for dev, PyInstaller, and Nuitka"""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        # Check for various frozen executable scenarios
+        if getattr(sys, 'frozen', False):
+            # We're running as a frozen executable (PyInstaller, cx_Freeze, etc.)
+            if hasattr(sys, '_MEIPASS'):
+                # PyInstaller
+                base_path = sys._MEIPASS
+            else:
+                # Other freezers - use executable directory
+                base_path = os.path.dirname(sys.executable)
+        elif hasattr(sys, '_NUITKA_FROZEN') or getattr(sys, '__nuitka_binary_dir', None):
+            # Nuitka specific detection - for onefile mode, resources are in the temp extraction dir
+            if hasattr(sys, '__nuitka_binary_dir'):
+                base_path = sys.__nuitka_binary_dir
+            else:
+                # Fallback - use executable directory
+                base_path = os.path.dirname(sys.executable)
+        elif __file__.find('.exe') != -1 or sys.executable.endswith('Main.exe') or os.path.basename(sys.executable).startswith('Main'):
+            # Likely running from a Nuitka onefile build
+            # For onefile mode, check if we can find the temp extraction directory
+            exe_dir = os.path.dirname(sys.executable)
+            
+            # Check common Nuitka onefile temp patterns
+            potential_paths = [
+                exe_dir,  # Direct executable directory
+                os.path.join(exe_dir, ".."),  # Parent directory
+                os.path.join(os.path.dirname(__file__), "..") if '__file__' in globals() else exe_dir,
+            ]
+            
+            # Also check for NUITKA_ONEFILE_PARENT environment variable
+            if 'NUITKA_ONEFILE_PARENT' in os.environ:
+                potential_paths.insert(0, os.environ['NUITKA_ONEFILE_PARENT'])
+            
+            # Look for a directory containing the Images folder
+            for potential_path in potential_paths:
+                if os.path.exists(os.path.join(potential_path, "Images")):
+                    base_path = potential_path
+                    break
+            else:
+                # If Images directory not found, use executable directory as fallback
+                base_path = exe_dir
+        else:
+            # Development mode - use current working directory
+            base_path = os.path.abspath(".")
 
-    return os.path.join(base_path, relative_path)
+    # Construct the full path
+    full_path = os.path.join(base_path, relative_path)
+    
+    # Ensure the path exists, log if it doesn't for debugging
+    if not os.path.exists(full_path):
+        try:
+            ApiToolLog().Log(f"Warning: Resource path does not exist: {full_path}")
+            ApiToolLog().Log(f"Base path: {base_path}")
+            ApiToolLog().Log(f"Relative path: {relative_path}")
+            ApiToolLog().Log(f"Current working directory: {os.getcwd()}")
+            ApiToolLog().Log(f"Executable path: {sys.executable}")
+            ApiToolLog().Log(f"Frozen: {getattr(sys, 'frozen', False)}")
+            ApiToolLog().Log(f"Nuitka frozen: {hasattr(sys, '_NUITKA_FROZEN')}")
+            ApiToolLog().Log(f"Nuitka binary dir: {getattr(sys, '__nuitka_binary_dir', 'Not set')}")
+            ApiToolLog().Log(f"NUITKA_ONEFILE_PARENT env: {os.environ.get('NUITKA_ONEFILE_PARENT', 'Not set')}")
+            if os.path.exists(base_path):
+                ApiToolLog().Log(f"Contents of base_path: {os.listdir(base_path)}")
+        except Exception as e:
+            # Ignore logging errors to prevent crashes
+            pass
+    
+    return full_path
 
 
 @api_tool_decorator()

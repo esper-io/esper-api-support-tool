@@ -812,29 +812,46 @@ def compileDeviceHardwareData(device, deviceInfo, latestEventData):
 def parseDeviceState(state):
     returnVal = ""
     stringState = str(state)
+    numeric_state = state
 
     if isinstance(state, str):
         state = state.lower()
+        # Try to convert string to integer for numeric comparisons
+        if state.isdigit():
+            numeric_state = int(state)
+        else:
+            # Handle string representations of numeric values
+            try:
+                numeric_state = int(state)
+            except ValueError:
+                # If conversion fails, it's a textual state
+                numeric_state = None
+                return "Unknown"
+    elif isinstance(state, (int, float)):
+        numeric_state = int(state)
+    else:
+        numeric_state = None
+        return "Unknown"
 
-    if stringState == "online" or stringState == "active" or state == DeviceState.ACTIVE.value:
+    if stringState == "online" or stringState == "active" or numeric_state == DeviceState.ACTIVE.value:
         returnVal = "Active"
-    elif "unspecified" in stringState or state == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
+    elif "unspecified" in stringState or numeric_state == DeviceState.DEVICE_STATE_UNSPECIFIED.value:
         returnVal = "Unspecified"
     elif (
         "provisioning" in stringState
-        or (state >= DeviceState.PROVISIONING_BEGIN.value and state < DeviceState.INACTIVE.value)
-        or (state >= DeviceState.ONBOARDING_IN_PROGRESS.value and state <= DeviceState.ONBOARDED.value)
+        or (numeric_state is not None and numeric_state >= DeviceState.PROVISIONING_BEGIN.value and numeric_state < DeviceState.INACTIVE.value)
+        or (numeric_state is not None and numeric_state >= DeviceState.ONBOARDING_IN_PROGRESS.value and numeric_state <= DeviceState.ONBOARDED.value)
     ):
         returnVal = "Onboarding"
     elif "blueprint" in stringState or (
-        state >= DeviceState.AFW_ACCOUNT_ADDED.value and state <= DeviceState.CUSTOM_SETTINGS_PROCESSED.value
+        numeric_state is not None and numeric_state >= DeviceState.AFW_ACCOUNT_ADDED.value and numeric_state <= DeviceState.CUSTOM_SETTINGS_PROCESSED.value
     ):
         returnVal = "Applying Blueprint"
-    elif stringState == "offline" or stringState == "inactive" or state == DeviceState.INACTIVE.value:
+    elif stringState == "offline" or stringState == "inactive" or numeric_state == DeviceState.INACTIVE.value:
         returnVal = "Inactive"
-    elif "wipe" in stringState or state == DeviceState.WIPE_IN_PROGRESS.value:
+    elif "wipe" in stringState or numeric_state == DeviceState.WIPE_IN_PROGRESS.value:
         returnVal = "Wipe In-Progress"
-    elif stringState == "disabled" or state == DeviceState.DISABLED.value:
+    elif stringState == "disabled" or numeric_state == DeviceState.DISABLED.value:
         returnVal = "Disabled"
     else:
         returnVal = "Unknown"
