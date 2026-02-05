@@ -30,7 +30,6 @@ class Worker(Thread):
         if self.setLoop:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        taskDoneCalled = False
         while not self.abort.is_set():
             # Check abort before attempting to get a task
             if self.abort.is_set() or Globals.KILL:
@@ -38,8 +37,11 @@ class Worker(Thread):
             if self.stopCurrentTask.is_set():
                 continue
 
+            got_task = False
+            func = args = kwargs = None
             try:
                 func, args, kwargs = self.queue.get(block=False)
+                got_task = True
                 self.idle.clear()
             except Exception:
                 # Queue is empty, no work to do
@@ -50,12 +52,12 @@ class Worker(Thread):
 
             # Check abort again after getting task but before executing
             if self.abort.is_set() or Globals.KILL:
-                self.queue.task_done()
-                taskDoneCalled = True
+                if got_task:
+                    self.queue.task_done()
                 break
             if self.stopCurrentTask.is_set():
-                self.queue.task_done()
-                taskDoneCalled = True
+                if got_task:
+                    self.queue.task_done()
                 continue
 
             try:
@@ -69,9 +71,11 @@ class Worker(Thread):
                     Globals.API_LOGGER.LogError(e)
             finally:
                 # task complete no matter what happened
-                if not taskDoneCalled:
-                    self.queue.task_done()
-                taskDoneCalled = False
+                if got_task:
+                    try:
+                        self.queue.task_done()
+                    except Exception as e:
+                        print(e)
         self.idle.set()
 
     def raise_exception(self):
