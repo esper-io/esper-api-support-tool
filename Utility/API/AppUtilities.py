@@ -361,6 +361,9 @@ def getAppDictEntry(app, update=True):
             "is_ios": app.get("platform", "").lower() == "apple",
         }
 
+    if entry is None:
+        return None
+
     validApp = None
     if type(app) == esperclient.models.application.Application:
         entry["isValid"] = True
