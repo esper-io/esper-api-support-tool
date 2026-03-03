@@ -728,16 +728,62 @@ def font_available(name):
     return name in font_enum.GetFacenames()
 
 
+# Font face names that display symbols/icons instead of letters (e.g. Segoe UI Symbol).
+# Using these for UI text causes letters to appear as symbols in Grid, Buttons, dropdowns.
+SYMBOL_FONT_FACES = frozenset(
+    {
+        "Segoe UI Symbol",
+        "Segoe MDL2 Assets",
+        "Segoe Fluent Icons",
+        "Segoe UI Emoji",
+        "Wingdings",
+        "Wingdings 2",
+        "Wingdings 3",
+        "Webdings",
+    }
+)
+
+
+def _is_symbol_font_face(face_name):
+    """True if the given face name is a known symbol/icon font (would show symbols instead of letters)."""
+    if not face_name:
+        return False
+    return face_name.strip() in SYMBOL_FONT_FACES
+
+
+def _safe_text_font_fallback():
+    """Return a face name and family suitable for UI text when Arial and system default are unusable."""
+    # Prefer fonts that render Latin letters correctly on Windows; avoid symbol fonts
+    for candidate in ("Segoe UI", "Tahoma", "Verdana", "Arial"):
+        if font_available(candidate):
+            return candidate, wx.FONTFAMILY_SWISS
+    systemDefaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+    face_name = systemDefaultFont.GetFaceName()
+    if _is_symbol_font_face(face_name):
+        ApiToolLog().Log(
+            f"System default font '{face_name}' is a symbol font; using fallback to avoid symbols instead of letters."
+        )
+        return "Segoe UI", wx.FONTFAMILY_SWISS  # best-effort fallback name
+    return face_name, systemDefaultFont.GetFamily()
+
+
 def getFont(style):
     # Use Arial for cross-platform compatibility
     face_name = "Arial"
     fontFamily = wx.FONTFAMILY_SWISS
     if not font_available(face_name):
-        # Fallback to default system font if Arial is not available
+        # Fallback: avoid symbol fonts (e.g. Segoe UI Symbol) which show symbols instead of letters
         systemDefaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        face_name = systemDefaultFont.GetFaceName()
-        fontFamily = systemDefaultFont.GetFamily()
-        ApiToolLog().Log(f"Arial font not found. Falling back to system default font: {face_name} {fontFamily}")
+        candidate_face = systemDefaultFont.GetFaceName()
+        if _is_symbol_font_face(candidate_face):
+            face_name, fontFamily = _safe_text_font_fallback()
+            ApiToolLog().Log(
+                f"Arial not found; system default is symbol font '{candidate_face}'. Using: {face_name}"
+            )
+        else:
+            face_name = candidate_face
+            fontFamily = systemDefaultFont.GetFamily()
+            ApiToolLog().Log(f"Arial font not found. Falling back to system default font: {face_name} {fontFamily}")
 
     if style == enum.FontStyles.NORMAL_BOLD.value:
         return wx.Font(
