@@ -7,12 +7,8 @@ import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (
-    applyFontHelper,
-    onDialogEscape,
-    openWebLinkInBrowser,
-    setElmTheme,
-)
+from Utility.Resource import (applyFontHelper, onDialogEscape,
+                              openWebLinkInBrowser, setElmTheme)
 
 
 class NewEndpointDialog(wx.Dialog):
@@ -131,18 +127,18 @@ class NewEndpointDialog(wx.Dialog):
     @api_tool_decorator()
     def getInputValues(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-            hostname = self.text_ctrl_2.GetValue().strip()
-            if hostname:
-                # Extract subdomain from URLs like 'https://siyatasd7.esper.cloud'
-                match = re.match(r"^(?:https?://)?([a-zA-Z0-9-]+)(?:-api)?\.esper\.cloud", hostname)
-                if match:
-                    hostname = match.group(1)
-                else:
-                    # fallback: remove protocol and domain if present
-                    hostname = hostname.replace("https://", "").replace("http://", "")
-                    hostname = re.sub(r"(-api)?\.esper\.cloud.*", "", hostname)
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            # Extract subdomain from URLs like 'https://siyatasd7.esper.cloud'
+            match = re.match(r"^(?:https?://)?([a-zA-Z0-9-]+)(?:-api)?\.esper\.cloud", hostname)
+            if match:
+                hostname = match.group(1)
+            else:
+                # fallback: remove protocol and domain if present
+                hostname = hostname.replace("https://", "").replace("http://", "")
+                hostname = re.sub(r"(-api)?\.esper\.cloud.*", "", hostname)
 
-            host = "https://%s-api.esper.cloud/api" % str(hostname)
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"
@@ -158,18 +154,18 @@ class NewEndpointDialog(wx.Dialog):
     @api_tool_decorator()
     def getCSVRowEntry(self):
         name = str(self.text_ctrl_1.GetValue().strip())
-            hostname = self.text_ctrl_2.GetValue().strip()
-            if hostname:
-                # Extract subdomain from URLs like 'https://siyatasd7.esper.cloud'
-                match = re.match(r"^(?:https?://)?([a-zA-Z0-9-]+)(?:-api)?\.esper\.cloud", hostname)
-                if match:
-                    hostname = match.group(1)
-                else:
-                    # fallback: remove protocol and domain if present
-                    hostname = hostname.replace("https://", "").replace("http://", "")
-                    hostname = re.sub(r"(-api)?\.esper\.cloud.*", "", hostname)
+        hostname = self.text_ctrl_2.GetValue().strip()
+        if hostname:
+            # Extract subdomain from URLs like 'https://siyatasd7.esper.cloud'
+            match = re.match(r"^(?:https?://)?([a-zA-Z0-9-]+)(?:-api)?\.esper\.cloud", hostname)
+            if match:
+                hostname = match.group(1)
+            else:
+                # fallback: remove protocol and domain if present
+                hostname = hostname.replace("https://", "").replace("http://", "")
+                hostname = re.sub(r"(-api)?\.esper\.cloud.*", "", hostname)
 
-            host = "https://%s-api.esper.cloud/api" % str(hostname)
+        host = "https://%s-api.esper.cloud/api" % str(hostname)
         entId = str(self.text_ctrl_3.GetValue().strip())
         key = str(self.text_ctrl_4.GetValue().strip())
         prefix = "Bearer"

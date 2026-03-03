@@ -1073,7 +1073,8 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
         )
         for label in labels:
             labelParts = label.split("~")
-            Globals.THREAD_POOL.enqueue(searchForDeviceAndAppendToList, labelParts[2].strip(), devices)
+            searchTerm = labelParts[2].strip() if len(labelParts) >= 3 else label.strip()
+            Globals.THREAD_POOL.enqueue(searchForDeviceAndAppendToList, searchTerm, devices)
         Globals.THREAD_POOL.join(tolerance=1, timeout=3 * 60)
     elif len(Globals.frame.sidePanel.selectedGroupsList) >= 0:
         groupId = None

@@ -721,42 +721,59 @@ def getResultsFromThreads(src=None, results=[]):
     return results
 
 
+def font_available(name):
+    # Check if the font is available on the system
+    font_enum = wx.FontEnumerator()
+    font_enum.EnumerateFacenames()
+    return name in font_enum.GetFacenames()
+
+
 def getFont(style):
+    # Use Arial for cross-platform compatibility
+    face_name = "Arial"
+    fontFamily = wx.FONTFAMILY_SWISS
+    if not font_available(face_name):
+        # Fallback to default system font if Arial is not available
+        systemDefaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        face_name = systemDefaultFont.GetFaceName()
+        fontFamily = systemDefaultFont.GetFamily()
+        ApiToolLog().Log(f"Arial font not found. Falling back to system default font: {face_name} {fontFamily}")
+
     if style == enum.FontStyles.NORMAL_BOLD.value:
         return wx.Font(
             Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
+            fontFamily,
             wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_BOLD,
-            0,
-            "Normal",
+            False,
+            face_name,
         )
     elif style == enum.FontStyles.HEADER.value:
         return wx.Font(
             Globals.HEADER_FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
+            fontFamily,
             wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_NORMAL,
-            0,
-            "Header",
+            False,
+            face_name,
         )
     elif style == enum.FontStyles.HEADER_BOLD.value:
         return wx.Font(
             Globals.HEADER_FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
+            fontFamily,
             wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_BOLD,
-            0,
-            "HeaderBold",
+            False,
+            face_name,
         )
     else:
         return wx.Font(
             Globals.FONT_SIZE,
-            wx.FONTFAMILY_DEFAULT,
+            fontFamily,
             wx.FONTSTYLE_NORMAL,
             wx.FONTWEIGHT_NORMAL,
-            0,
-            "Normal",
+            False,
+            face_name,
         )
 
 

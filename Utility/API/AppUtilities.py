@@ -308,6 +308,8 @@ def getInstalledDevicesApiUrl(version_id, application_id, limit=Globals.limit, o
 
 
 def getAppDictEntry(app, update=True):
+    if app is None:
+        return None
     entry = None
     appName = None
     appPkgName = None
@@ -365,19 +367,22 @@ def getAppDictEntry(app, update=True):
         return None
 
     validApp = None
-    if type(app) == esperclient.models.application.Application:
-        entry["isValid"] = True
-    else:
-        if type(app) == dict and "id" in app and "install_state" not in app and "device" not in app:
+    try:
+        if type(app) == esperclient.models.application.Application:
             entry["isValid"] = True
+        else:
+            if type(app) == dict and "id" in app and "install_state" not in app and "device" not in app:
+                entry["isValid"] = True
 
-    if hasattr(validApp, "id") or (type(validApp) == dict and "id" in validApp) or (type(app) == dict and "device" in app):
-        entry["id"] = (
-            validApp.id
-            if hasattr(validApp, "id")
-            else (validApp["id"] if (type(validApp) == dict and "id" in validApp) else entry["id"])
-        )
-        entry["isValid"] = True
+        if hasattr(validApp, "id") or (type(validApp) == dict and "id" in validApp) or (type(app) == dict and "device" in app):
+            entry["id"] = (
+                validApp.id
+                if hasattr(validApp, "id")
+                else (validApp["id"] if (type(validApp) == dict and "id" in validApp) else entry["id"])
+            )
+            entry["isValid"] = True
+    except (TypeError, KeyError):
+        return None
 
     return entry
 

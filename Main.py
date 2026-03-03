@@ -20,12 +20,20 @@ class MyApp(wx.App):
         try:
             self.locale = wx.Locale(wx.LANGUAGE_ENGLISH_US)
             try:
+                default_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+                font_enum = wx.FontEnumerator()
+                font_enum.EnumerateFacenames()
+                ApiToolLog().Log(f"Available Fonts: {font_enum.GetFacenames()}")
+                ApiToolLog().Log(f"Default font face name: {default_font.GetFaceName()}")
+
                 locale.setlocale(locale.LC_ALL, "en_US")
-            except locale.Error:
+            except locale.Error as e:
                 # Fallback to system default locale if en_US is not available
+                ApiToolLog().LogError(e)
                 try:
                     locale.setlocale(locale.LC_ALL, "")
-                except locale.Error:
+                except locale.Error as e2:
+                    ApiToolLog().LogError(e2)
                     # If all else fails, continue without setting locale
                     pass
             self.name = "EAST-%s" % wx.GetUserId()

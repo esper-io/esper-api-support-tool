@@ -366,6 +366,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def processNext(self):
         if uiThreadCheck(self.processNext):
             return
+        if self.IsBeingDeleted():
+            return
         self.button_1.Enable(False)
         self.button_2.Enable(False)
         self.button_OK.Enable(False)
@@ -389,6 +391,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def processPrev(self):
         if uiThreadCheck(self.processPrev):
             return
+        if self.IsBeingDeleted():
+            return
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)
         self.search.Enable(False)
@@ -406,6 +410,8 @@ class MultiSelectSearchDlg(wx.Dialog):
 
     def checkPageButton(self):
         if uiThreadCheck(self.checkPageButton):
+            return
+        if self.IsBeingDeleted():
             return
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
             self.button_2.Enable(False)
@@ -453,6 +459,8 @@ class MultiSelectSearchDlg(wx.Dialog):
         determineDoHereorMainThread(self.updateChoicesFromResp, resp)
 
     def updateChoicesFromResp(self, resp):
+        if self.IsBeingDeleted():
+            return
         if resp:
             self.check_list_box_1.Clear()
             choices = self.originalChoices[self.page]
@@ -498,6 +506,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def selectAllDevices(self):
         if uiThreadCheck(self.selectAllDevices):
             return
+        if self.IsBeingDeleted():
+            return
         setCursorBusy(self)
         self.button_1.Enable(False)
         self.button_2.Enable(False)
@@ -530,6 +540,8 @@ class MultiSelectSearchDlg(wx.Dialog):
                     self.originalChoices[0] = self.processDevices(self.resp["results"])
                 for item in self.originalChoices[0]:
                     self.check_list_box_1.Append(item)
+        if self.IsBeingDeleted():
+            return
         self.selected = copy.deepcopy(self.originalChoices[0])
         tmpSelection = []
         num = 0
