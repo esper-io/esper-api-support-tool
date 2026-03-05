@@ -26,7 +26,7 @@ class MyApp(wx.App):
                 ApiToolLog().Log(f"Available Fonts: {font_enum.GetFacenames()}")
                 ApiToolLog().Log(f"Default font face name: {default_font.GetFaceName()}")
 
-                locale.setlocale(locale.LC_ALL, "en_US")
+                locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
             except locale.Error as e:
                 # Fallback to system default locale if en_US is not available
                 ApiToolLog().LogError(e)
