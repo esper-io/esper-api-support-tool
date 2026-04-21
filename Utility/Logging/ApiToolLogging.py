@@ -102,17 +102,19 @@ class ApiToolLog:
 
         self.Log(content)
 
-        if Globals.frame and postStatus:
+        # Unified error limiting logic for Slack posting
+        if Globals.frame:
             last_error_time = Globals.error_tracker.get(errorLine, None)
             minutes = 0
             if last_error_time:
                 timeDiff = datetime.now() - last_error_time
                 minutes = timeDiff.total_seconds() / 60
-            if (
+            should_post = (
                 Globals.frame.audit
                 and not self.should_skip(content)
                 and (not last_error_time or minutes > Globals.MAX_ERROR_TIME_DIFF)
-            ):
+            )
+            if postStatus and should_post:
                 Globals.frame.audit.postOperation(
                     {
                         "operation": "ERROR",
@@ -157,15 +159,28 @@ class ApiToolLog:
                 myfile.write("%s\n" % entry)
             myfile.write("\n")
 
-        Globals.frame.audit.postOperation(
-            {
-                "operation": "ERROR",
-                "data": content,
-            }
-        )
-
-        if Globals.frame and hasattr(Globals.frame, "Logging"):
-            Globals.frame.Logging(str(content), True)
+        # Unified error limiting logic for Slack posting
+        if Globals.frame:
+            errorLine = str(content)
+            last_error_time = Globals.error_tracker.get(errorLine, None)
+            minutes = 0
+            if last_error_time:
+                timeDiff = datetime.now() - last_error_time
+                minutes = timeDiff.total_seconds() / 60
+            should_post = (
+                Globals.frame.audit
+                and (not last_error_time or minutes > Globals.MAX_ERROR_TIME_DIFF)
+            )
+            if should_post:
+                Globals.frame.audit.postOperation(
+                    {
+                        "operation": "ERROR",
+                        "data": content,
+                    }
+                )
+            if hasattr(Globals.frame, "Logging"):
+                Globals.frame.Logging(str(content), True)
+        Globals.error_tracker[errorLine] = datetime.now()
 
     def LogApiRequestOccurrence(self, src, api_func, writeToFile=False):
         if "main" in threading.current_thread().name.lower():

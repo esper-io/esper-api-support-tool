@@ -6,6 +6,7 @@ import wx
 
 from Common.decorator import api_tool_decorator
 from Utility.Resource import resourcePath, scale_bitmap
+from Utility.widgetUtils import safeBind, safeEnable
 
 
 class ToolsToolBar(wx.ToolBar):
@@ -65,15 +66,16 @@ class ToolsToolBar(wx.ToolBar):
         self.EnableTool(self.rtool.Id, False)
         self.EnableTool(self.cmdtool.Id, False)
 
-        self.Bind(wx.EVT_TOOL, self.Parent.OnQuit, self.qtool)
-        self.Bind(wx.EVT_TOOL, self.Parent.AddEndpoint, self.atool)
-        self.Bind(wx.EVT_TOOL, self.Parent.onUploadSpreadsheet, self.otool)
-        self.Bind(wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
-        self.Bind(wx.EVT_TOOL, self.Parent.onRun, self.rtool)
-        self.Bind(wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
+        
+        safeBind(self, wx.EVT_TOOL, self.Parent.OnQuit, self.qtool)
+        safeBind(self, wx.EVT_TOOL, self.Parent.AddEndpoint, self.atool)
+        safeBind(self, wx.EVT_TOOL, self.Parent.onUploadSpreadsheet, self.otool)
+        safeBind(self, wx.EVT_TOOL, self.Parent.onSaveBoth, self.stool)
+        safeBind(self, wx.EVT_TOOL, self.Parent.onRun, self.rtool)
+        safeBind(self, wx.EVT_TOOL, self.Parent.onCommand, self.cmdtool)
 
-        self.search.Bind(wx.EVT_SEARCH, self.Parent.onSearch)
-        self.search.Bind(wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
+        safeBind(self.search, wx.EVT_SEARCH, self.Parent.onSearch)
+        safeBind(self.search, wx.EVT_SEARCH_CANCEL, self.Parent.onSearch)
 
     @api_tool_decorator()
     def onSearchChar(self, event):
@@ -121,4 +123,4 @@ class ToolsToolBar(wx.ToolBar):
         self.EnableTool(self.atool.Id, state)  # Add Tenant
         self.EnableTool(self.otool.Id, state)  # Open Spreadsheet
         self.EnableTool(self.stool.Id, state)  # Save
-        self.search.Enable(state)
+        safeEnable(self.search, state)

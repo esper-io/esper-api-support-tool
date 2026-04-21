@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import platform
 import re
 from datetime import datetime
@@ -13,6 +11,12 @@ from Common.decorator import api_tool_decorator
 from Common.enum import Color, FontStyles
 from Utility.Resource import (getFont, onDialogEscape, openWebLinkInBrowser,
                               postEventToFrame, resourcePath, setElmTheme)
+from Utility.widgetUtils import safeBind
+
+#!/usr/bin/env python
+
+
+
 
 
 class Console(wx.Frame):
@@ -57,14 +61,13 @@ class Console(wx.Frame):
                 self.firstLine = False
         self.scrollToEnd()
 
-        self.Bind(wx.EVT_CLOSE, self.onClose)
-        self.loggingList.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
-
-        self.loggingList.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
-        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        safeBind(self, wx.EVT_CLOSE, self.onClose)
+        safeBind(self.loggingList, wx.EVT_KEY_UP, self.onEscapePressed)
+        safeBind(self.loggingList, wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        safeBind(self, wx.EVT_KEY_UP, self.onEscapePressed)
 
         exitId = wx.NewId()
-        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        safeBind(self, wx.EVT_MENU, self.onClose)
         accel_table = wx.AcceleratorTable(
             [
                 (wx.ACCEL_CTRL, ord("W"), exitId),

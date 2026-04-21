@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import pandas as pd
 import wx
 import wx.grid
@@ -9,13 +7,13 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.GridTable import GridTable
 from Utility.FileUtility import read_csv_via_pandas, read_excel_via_openpyxl
-from Utility.Resource import (
-    applyFontHelper,
-    displayFileDialog,
-    getFont,
-    onDialogEscape,
-    setElmTheme,
-)
+from Utility.Resource import (applyFontHelper, displayFileDialog, getFont,
+                              onDialogEscape, setElmTheme)
+from Utility.widgetUtils import safeBind, safeEnable, safeSetSelection
+
+#!/usr/bin/env python3
+
+
 
 
 class WidgetPicker(wx.Dialog):
@@ -65,7 +63,7 @@ class WidgetPicker(wx.Dialog):
             style=wx.RA_SPECIFY_ROWS,
         )
         self.radio_box_1.SetToolTip("Select whether a the Widget feature should be Enabled or Disabled on a device.")
-        self.radio_box_1.SetSelection(1)
+        safeSetSelection(self.radio_box_1, 1)
         grid_sizer_1.Add(self.radio_box_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
         label_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Widget Class Name:")
@@ -83,7 +81,7 @@ class WidgetPicker(wx.Dialog):
         )
         self.text_ctrl_1.SetToolTip("Widget Package Name. %s" % self.default_text)
         grid_sizer_4.Add(self.text_ctrl_1, 0, wx.BOTTOM | wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
-        self.text_ctrl_1.Enable(False)
+        safeEnable(self.text_ctrl_1, False)
 
         self.panel_3 = wx.Panel(self.window_1, wx.ID_ANY)
 
@@ -103,7 +101,7 @@ class WidgetPicker(wx.Dialog):
             majorDimension=1,
             style=wx.RA_SPECIFY_ROWS,
         )
-        self.radio_box_2.SetSelection(0)
+        safeSetSelection(self.radio_box_2, 0)
         grid_sizer_3.Add(
             self.radio_box_2,
             0,
@@ -171,11 +169,11 @@ class WidgetPicker(wx.Dialog):
         setElmTheme(self)
         self.Layout()
 
-        self.button_1.Bind(wx.EVT_BUTTON, self.onUpload)
-        self.radio_box_1.Bind(wx.EVT_RADIOBOX, self.onRadioSelection)
-        self.text_ctrl_1.Bind(wx.EVT_CHAR_HOOK, self.checkInput)
-        self.button_APPLY.Bind(wx.EVT_BUTTON, self.onClose)
-        self.button_CANCEL.Bind(wx.EVT_BUTTON, self.onClose)
+        safeBind(self.button_1, wx.EVT_BUTTON, self.onUpload)
+        safeBind(self.radio_box_1, wx.EVT_RADIOBOX, self.onRadioSelection)
+        safeBind(self.text_ctrl_1, wx.EVT_CHAR_HOOK, self.checkInput)
+        safeBind(self.button_APPLY, wx.EVT_BUTTON, self.onClose)
+        safeBind(self.button_CANCEL, wx.EVT_BUTTON, self.onClose)
 
         accel_table = wx.AcceleratorTable(
             [

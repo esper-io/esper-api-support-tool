@@ -18,9 +18,11 @@ from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import (checkForUpdate, downloadFileFromUrl,
                               openWebLinkInBrowser, postEventToFrame,
                               resourcePath, uiThreadCheck)
+from Utility.widgetUtils import safeBind, safeEnable
 
 
 class ToolMenuBar(wx.MenuBar):
+
     def __init__(self, parent, style=0):
         super().__init__(style=style)
 
@@ -210,34 +212,26 @@ class ToolMenuBar(wx.MenuBar):
 
     @api_tool_decorator()
     def __set_properties(self):
-        self.run.Enable(False)
-        self.command.Enable(False)
-        self.clearConsole.Enable(False)
-        self.groupSubMenu.Enable(False)
-        self.fileSave.Enable(False)
+        safeEnable(self.run, False)
+        safeEnable(self.command, False)
+        safeEnable(self.clearConsole, False)
+        safeEnable(self.groupSubMenu, False)
+        safeEnable(self.fileSave, False)
 
-        self.Bind(wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
-        self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
-        self.Bind(wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
-        self.Bind(
-            wx.EVT_MENU,
-            self.parentFrame.onUploadSpreadsheet,
-            self.fileOpenConfig,
-        )
-        self.Bind(wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onRun, self.run)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onCommand, self.command)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onClone, self.clone)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
-        self.Bind(wx.EVT_MENU, self.parentFrame.onPref, self.pref)
-        self.Bind(
-            wx.EVT_MENU,
-            self.parentFrame.onInstalledDevices,
-            self.installedDevices,
-        )
+        safeBind(self, wx.EVT_MENU, self.parentFrame.showConsole, self.consoleView)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onClearGrids, self.clearGrids)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.AddEndpoint, self.defaultConfigVal)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.AddEndpoint, self.fileOpenAuth)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onUploadSpreadsheet, self.fileOpenConfig)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.OnQuit, self.fileItem)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onSaveBoth, self.fileSave)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onRun, self.run)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onCommand, self.command)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onClone, self.clone)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onCloneBP, self.cloneBP)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onConvertTemplate, self.convert)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onPref, self.pref)
+        safeBind(self, wx.EVT_MENU, self.parentFrame.onInstalledDevices, self.installedDevices)
         self.Bind(
             wx.EVT_MENU,
             self.parentFrame.onNewBlueprintApp,

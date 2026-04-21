@@ -8,7 +8,9 @@ from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from GUI.Dialogs.MultiSelectSearchDlg import MultiSelectSearchDlg
 from Utility.FileUtility import write_data_to_csv
-from Utility.Resource import applyFontHelper, getFont, resourcePath, scale_bitmap
+from Utility.Resource import (applyFontHelper, getFont, resourcePath,
+                              scale_bitmap)
+from Utility.widgetUtils import safeBind, safeEnable, safeSetSelection
 
 
 class SidePanel(wx.Panel):
@@ -183,20 +185,19 @@ class SidePanel(wx.Panel):
 
     @api_tool_decorator()
     def __set_properties(self):
-        self.actionChoice.SetSelection(1)
+        safeSetSelection(self.actionChoice, 1)
 
-        self.removeEndpointBtn.Enable(False)
-        self.actionChoice.Enable(False)
-        self.deviceChoice.Enable(False)
-        self.groupChoice.Enable(False)
-        self.runBtn.Enable(False)
+        safeEnable(self.removeEndpointBtn, False)
+        safeEnable(self.actionChoice, False)
+        safeEnable(self.deviceChoice, False)
+        safeEnable(self.groupChoice, False)
+        safeEnable(self.runBtn, False)
 
-        self.removeEndpointBtn.Bind(wx.EVT_BUTTON, self.RemoveEndpoint)
-        self.groupChoice.Bind(wx.EVT_BUTTON, self.onGroupSelection)
-        self.deviceChoice.Bind(wx.EVT_BUTTON, self.onDeviceSelection)
-        self.actionChoice.Bind(wx.EVT_COMBOBOX, self.onActionSelection)
-
-        self.deviceChoice.Bind(wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
+        safeBind(self.removeEndpointBtn, wx.EVT_BUTTON, self.RemoveEndpoint)
+        safeBind(self.groupChoice, wx.EVT_BUTTON, self.onGroupSelection)
+        safeBind(self.deviceChoice, wx.EVT_BUTTON, self.onActionSelection)
+        safeBind(self.actionChoice, wx.EVT_COMBOBOX, self.onActionSelection)
+        safeBind(self.deviceChoice, wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
 
     @api_tool_decorator()
     def RemoveEndpoint(self, event):
@@ -252,12 +253,20 @@ class SidePanel(wx.Panel):
     @api_tool_decorator()
     def destroyMultiChoiceDialogs(self):
         if self.groupMultiDialog:
-            self.groupMultiDialog.Close()
-            self.groupMultiDialog.DestroyLater()
+            try:
+                if hasattr(self.groupMultiDialog, "DestroyLater") and self.groupMultiDialog:
+                    self.groupMultiDialog.Close()
+                    self.groupMultiDialog.DestroyLater()
+            except RuntimeError:
+                pass
             self.groupMultiDialog = None
         if self.deviceMultiDialog:
-            self.deviceMultiDialog.Close()
-            self.deviceMultiDialog.DestroyLater()
+            try:
+                if hasattr(self.deviceMultiDialog, "DestroyLater") and self.deviceMultiDialog:
+                    self.deviceMultiDialog.Close()
+                    self.deviceMultiDialog.DestroyLater()
+            except RuntimeError:
+                pass
             self.deviceMultiDialog = None
 
     @api_tool_decorator()

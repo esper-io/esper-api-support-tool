@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import csv
 import json
 import os
@@ -86,6 +84,12 @@ from Utility.Resource import (checkEsperInternetConnection,
                               setElmTheme, setPandasOption,
                               splitListIntoChunks, uiThreadCheck,
                               updateErrorTracker)
+from Utility.widgetUtils import safeBind, safeEnable, safeSetSelection
+
+#!/usr/bin/env python
+
+
+
 
 
 class NewFrameLayout(wx.Frame):
@@ -156,13 +160,13 @@ class NewFrameLayout(wx.Frame):
 
         self.panel_1.SetSizer(sizer_4)
 
-        self.Bind(wx.EVT_SIZE, self.onMaximize)
-        self.Bind(wx.EVT_FULLSCREEN, self.onFullscreen)
-        self.Bind(wx.EVT_CLOSE, self.OnQuit)
-        self.Bind(wx.EVT_QUERY_END_SESSION, self.OnQuit)
-        self.Bind(wx.EVT_END_SESSION, self.OnQuit)
-        self.Bind(wx.EVT_END_PROCESS, self.OnQuit)
-        self.Bind(wx.EVT_BUTTON, self.onRun, self.sidePanel.runBtn)
+        safeBind(self, wx.EVT_SIZE, self.onMaximize)
+        safeBind(self, wx.EVT_FULLSCREEN, self.onFullscreen)
+        safeBind(self, wx.EVT_CLOSE, self.OnQuit)
+        safeBind(self, wx.EVT_QUERY_END_SESSION, self.OnQuit)
+        safeBind(self, wx.EVT_END_SESSION, self.OnQuit)
+        safeBind(self, wx.EVT_END_PROCESS, self.OnQuit)
+        safeBind(self.sidePanel.runBtn, wx.EVT_BUTTON, self.onRun)
 
         # Menu Bar
         self.menubar = ToolMenuBar(self)
@@ -193,26 +197,26 @@ class NewFrameLayout(wx.Frame):
 
         # Bound Events
         self.DragAcceptFiles(True)
-        self.Bind(wx.EVT_DROP_FILES, self.onFileDrop)
-        self.Bind(eventUtil.EVT_FETCH, self.onFetch)
-        self.Bind(eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
-        self.Bind(eventUtil.EVT_COMPLETE, self.onComplete)
-        self.Bind(eventUtil.EVT_LOG, self.onLog)
-        self.Bind(eventUtil.EVT_COMMAND, self.onCommandDone)
-        self.Bind(eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
-        self.Bind(eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
-        self.Bind(eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
-        self.Bind(eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
-        self.Bind(eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
-        self.Bind(eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
-        self.Bind(eventUtil.EVT_PROCESS_FUNCTION, processFunc)
-        self.Bind(eventUtil.EVT_AUDIT, self.audit.postOperation)
-        self.Bind(wx.EVT_ACTIVATE_APP, self.MacReopenApp)
-        self.Bind(wx.EVT_ACTIVATE, self.onActivate)
-        self.Bind(eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
-        self.Bind(eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
-        self.Bind(wx.EVT_POWER_SUSPENDING, self.onSuspend)
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, self.onThemeChange)
+        safeBind(self, wx.EVT_DROP_FILES, self.onFileDrop)
+        safeBind(self, eventUtil.EVT_FETCH, self.onFetch)
+        safeBind(self, eventUtil.EVT_GROUP, self.addGroupsToGroupChoice)
+        safeBind(self, eventUtil.EVT_COMPLETE, self.onComplete)
+        safeBind(self, eventUtil.EVT_LOG, self.onLog)
+        safeBind(self, eventUtil.EVT_COMMAND, self.onCommandDone)
+        safeBind(self, eventUtil.EVT_UPDATE_GAUGE, self.statusBar.setGaugeValue)
+        safeBind(self, eventUtil.EVT_UNCHECK_CONSOLE, self.menubar.uncheckConsole)
+        safeBind(self, eventUtil.EVT_CONFIRM_CLONE, self.confirmClone)
+        safeBind(self, eventUtil.EVT_CONFIRM_CLONE_UPDATE, self.confirmCloneUpdate)
+        safeBind(self, eventUtil.EVT_MESSAGE_BOX, displayMessageBox)
+        safeBind(self, eventUtil.EVT_THREAD_WAIT, self.waitForThreadsThenSetCursorDefault)
+        safeBind(self, eventUtil.EVT_PROCESS_FUNCTION, processFunc)
+        safeBind(self, eventUtil.EVT_AUDIT, self.audit.postOperation)
+        safeBind(self, wx.EVT_ACTIVATE_APP, self.MacReopenApp)
+        safeBind(self, wx.EVT_ACTIVATE, self.onActivate)
+        safeBind(self, eventUtil.EVT_UPDATE_GAUGE_LATER, self.callSetGaugeLater)
+        safeBind(self, eventUtil.EVT_DISPLAY_NOTIFICATION, self.displayNotificationEvent)
+        safeBind(self, wx.EVT_POWER_SUSPENDING, self.onSuspend)
+        safeBind(self, wx.EVT_SYS_COLOUR_CHANGED, self.onThemeChange)
 
         if self.kill:
             return
@@ -1332,13 +1336,13 @@ class NewFrameLayout(wx.Frame):
                     self.gridPanel.setColVisibility()
                 if (hasattr(self, 'sidePanel') and self.sidePanel and 
                     hasattr(self.sidePanel, 'groupChoice') and self.sidePanel.groupChoice):
-                    self.sidePanel.groupChoice.Enable(True)
+                    safeEnable(self.sidePanel.groupChoice, True)
                 if (hasattr(self, 'sidePanel') and self.sidePanel and 
                     hasattr(self.sidePanel, 'actionChoice') and self.sidePanel.actionChoice):
-                    self.sidePanel.actionChoice.Enable(True)
+                    safeEnable(self.sidePanel.actionChoice, True)
                 if (hasattr(self, 'sidePanel') and self.sidePanel and 
                     hasattr(self.sidePanel, 'removeEndpointBtn') and self.sidePanel.removeEndpointBtn):
-                    self.sidePanel.removeEndpointBtn.Enable(True)
+                    safeEnable(self.sidePanel.removeEndpointBtn, True)
                 self.handleScheduleReportPref()
             except RuntimeError:
                 # UI object has been deleted, ignore the error
@@ -1354,7 +1358,7 @@ class NewFrameLayout(wx.Frame):
                         self.sidePanel.selectedDevices.Append("No Devices Found", "")
                     if (hasattr(self, 'sidePanel') and self.sidePanel and 
                         hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
-                        self.sidePanel.deviceChoice.Enable(False)
+                        safeEnable(self.sidePanel.deviceChoice, False)
                     if hasattr(self, 'menubar') and self.menubar:
                         self.menubar.setSaveMenuOptionsEnableState(False)
                         self.menubar.enableConfigMenu()
@@ -1362,7 +1366,7 @@ class NewFrameLayout(wx.Frame):
                 else:
                     if (hasattr(self, 'sidePanel') and self.sidePanel and 
                         hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
-                        self.sidePanel.deviceChoice.Enable(True)
+                        safeEnable(self.sidePanel.deviceChoice, True)
                     self.Logging("---> Application list populated")
                     if not self.isRunning and hasattr(self, 'menubar') and self.menubar:
                         self.menubar.enableConfigMenu()
@@ -1372,11 +1376,11 @@ class NewFrameLayout(wx.Frame):
                 ) and self.sidePanel.devices:
                     if (hasattr(self, 'sidePanel') and self.sidePanel and 
                         hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
-                        self.sidePanel.deviceChoice.Enable(True)
+                        safeEnable(self.sidePanel.deviceChoice, True)
                 else:
                     if (hasattr(self, 'sidePanel') and self.sidePanel and 
                         hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
-                        self.sidePanel.deviceChoice.Enable(False)
+                        safeEnable(self.sidePanel.deviceChoice, False)
                 self.displayNotification("Finished loading devices", "")
             except RuntimeError:
                 # UI object has been deleted, ignore the error
@@ -1388,7 +1392,7 @@ class NewFrameLayout(wx.Frame):
                     indx = self.sidePanel.actionChoice.GetItems().index(list(Globals.GRID_ACTIONS.keys())[0])
                     self.isUploading = False
                     if self.sidePanel.actionChoice.GetSelection() < indx:
-                        self.sidePanel.actionChoice.SetSelection(indx)
+                        safeSetSelection(self.sidePanel.actionChoice, indx)
                 
                 # Use a list comprehension to only include valid UI operations
                 ui_operations = []
@@ -1400,10 +1404,10 @@ class NewFrameLayout(wx.Frame):
                     ])
                 if (hasattr(self, 'sidePanel') and self.sidePanel and 
                     hasattr(self.sidePanel, 'groupChoice') and self.sidePanel.groupChoice):
-                    ui_operations.append((self.sidePanel.groupChoice.Enable, True))
+                    ui_operations.append((safeEnable, self.sidePanel.groupChoice, True))
                 if (hasattr(self, 'sidePanel') and self.sidePanel and 
                     hasattr(self.sidePanel, 'deviceChoice') and self.sidePanel.deviceChoice):
-                    ui_operations.append((self.sidePanel.deviceChoice.Enable, True))
+                    ui_operations.append((safeEnable, self.sidePanel.deviceChoice, True))
                 
                 if ui_operations:
                     determineListDoHereorMainThread(ui_operations)
@@ -1523,7 +1527,7 @@ class NewFrameLayout(wx.Frame):
                     return
 
                 if type(group) is dict:
-                    if Globals.enterprise_id not in group["enterprise"]:
+                    if not group or "enterprise" not in group or Globals.enterprise_id not in group["enterprise"]:
                         return
                     groupEntryId = group["path"]
                     if groupEntryId not in self.sidePanel.groups:

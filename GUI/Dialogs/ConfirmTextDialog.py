@@ -1,16 +1,15 @@
-#!/usr/bin/env python
-
 import wx
 import wx.html as wxHtml
 
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
-from Utility.Resource import (
-    applyFontHelper,
-    onDialogEscape,
-    openWebLinkInBrowser,
-    setElmTheme,
-)
+from Utility.Resource import (applyFontHelper, onDialogEscape,
+                              openWebLinkInBrowser, setElmTheme)
+from Utility.widgetUtils import safeBind
+
+#!/usr/bin/env python
+
+
 
 
 class ConfirmTextDialog(wx.Dialog):
@@ -81,11 +80,11 @@ class ConfirmTextDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-        self.text_ctrl_1.Bind(wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
-        self.button_2.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.button_1.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
-        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        safeBind(self.text_ctrl_1, wxHtml.EVT_HTML_LINK_CLICKED, openWebLinkInBrowser)
+        safeBind(self.button_2, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self.button_1, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self, wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        safeBind(self, wx.EVT_KEY_UP, self.onEscapePressed)
 
         self.Fit()
 

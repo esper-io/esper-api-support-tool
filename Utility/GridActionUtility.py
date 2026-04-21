@@ -386,45 +386,54 @@ def relocateDeviceToNewGroup(frame):
 def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
     groupId = None
     results = {}
+
     for device in deviceChunk:
         groupName = None
         deviceName = None
         deviceId = None
         hardware = None
         network = None
+        serial = None
+        imei1 = None
+        imei2 = None
         if hasattr(device, "device_name"):
-            deviceName = device.device_name
-            deviceId = device.id
-            hardware = device.hardware_info
-            network = device.network_info
-            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-            imei1 = network["imei1"] if "imei1" in network else None
-            imei2 = network["imei2"] if "imei2" in network else None
+            deviceName = getattr(device, "device_name", None)
+            deviceId = getattr(device, "id", None)
+            hardware = getattr(device, "hardware_info", None)
+            network = getattr(device, "network_info", None)
+            serial = hardware["serialNumber"] if hardware and "serialNumber" in hardware else None
+            imei1 = network["imei1"] if network and "imei1" in network else None
+            imei2 = network["imei2"] if network and "imei2" in network else None
         elif type(device) is dict:
-            deviceName = device["device_name"] if "device_name" in device else ""
-            deviceId = device["id"] if "id" in device else ""
-            hardware = device["hardware_info"] if "hardware_info" in device else ""
-            network = device["network_info"] if "network_info" in device else ""
-            serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-            imei1 = network["imei1"] if "imei1" in network else None
-            imei2 = network["imei2"] if "imei2" in network else None
+            deviceName = device.get("device_name", "")
+            deviceId = device.get("id", "")
+            hardware = device.get("hardware_info", None)
+            network = device.get("network_info", None)
+            serial = hardware["serialNumber"] if hardware and "serialNumber" in hardware else None
+            imei1 = network["imei1"] if network and "imei1" in network else None
+            imei2 = network["imei2"] if network and "imei2" in network else None
         elif type(device) is str:
             deviceId = device
 
-        match = list(
-            filter(
-                lambda x: x["Esper Name"] == deviceName
-                or x["Esper Id"] == deviceId
-                or x["Serial Number"] == serial
-                or x["Custom Serial Number"] == serial
-                or x["IMEI 1"] == imei1
-                or x["IMEI 2"] == imei2,
-                groupList,
+
+        match = []
+        if groupList:
+            match = list(
+                filter(
+                    lambda x: (
+                        x.get("Esper Name", None) == deviceName
+                        or x.get("Esper Id", None) == deviceId
+                        or x.get("Serial Number", None) == serial
+                        or x.get("Custom Serial Number", None) == serial
+                        or x.get("IMEI 1", None) == imei1
+                        or x.get("IMEI 2", None) == imei2
+                    ),
+                    groupList,
+                )
             )
-        )
-        if match:
+        if match and len(match) > 0:
             match = match[0]
-            groupName = match["Group"].strip()
+            groupName = match.get("Group", "").strip() if match.get("Group", None) else None
 
         if groupName:
             if isApiKey(groupName):
@@ -440,11 +449,11 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                 # Look up group to see if we know it already, if we don't query it
                 groupId = None
                 for group in Globals.knownGroups.values():
-                    if type(group) is dict and "name" in group and groupName == group["name"]:
+                    if type(group) is dict and group.get("name", None) and groupName == group["name"]:
                         groupId = group["id"]
                         break
-                    elif hasattr(group, "name") and groupName == group.name:
-                        groupId = group.id
+                    elif hasattr(group, "name") and groupName == getattr(group, "name", None):
+                        groupId = getattr(group, "id", None)
                         break
 
                 if not groupId:
@@ -456,7 +465,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
                         groups = groups.results
                     elif type(groups) is dict and "results" in groups:
                         groups = groups["results"]
-                    if groups:
+                    if groups and len(groups) > 0:
                         if hasattr(groups[0], "id"):
                             groupId = groups[0].id
                         elif type(groups[0]) is dict and "id" in groups[0]:

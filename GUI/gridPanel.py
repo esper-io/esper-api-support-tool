@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import re
 
 import wx
@@ -14,6 +12,12 @@ from Utility.GridUtilities import areDataFramesTheSame
 from Utility.Resource import (acquireLocks, checkIfCurrentThreadStopped,
                               determineDoHereorMainThread, getFont, isDarkMode,
                               releaseLocks)
+from Utility.widgetUtils import safeEnable
+
+#!/usr/bin/env python
+
+
+
 
 
 class GridPanel(wx.Panel):
@@ -393,8 +397,8 @@ class GridPanel(wx.Panel):
     def disableGridProperties(self, disableGrid=True, disableColSize=True, disableColMove=True):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock])
         if disableGrid:
-            self.device_grid.Enable(False)
-            self.network_grid.Enable(False)
+            safeEnable(self.device_grid, False)
+            safeEnable(self.network_grid, False)
         if disableColSize:
             self.device_grid.DisableDragColSize()
             self.network_grid.DisableDragColSize()
@@ -411,9 +415,9 @@ class GridPanel(wx.Panel):
     def enableGridProperties(self, enableGrid=True, enableColSize=True, enableColMove=True):
         acquireLocks([Globals.grid1_lock, Globals.grid2_lock, Globals.grid3_lock])
         if enableGrid:
-            self.device_grid.Enable(True)
-            self.network_grid.Enable(True)
-            self.app_grid.Enable(True)
+            safeEnable(self.device_grid, True)
+            safeEnable(self.network_grid, True)
+            safeEnable(self.app_grid, True)
         if enableColSize:
             self.device_grid.EnableDragColSize()
             self.network_grid.EnableDragColSize()

@@ -4,6 +4,7 @@ import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
 from Utility.Resource import applyFontHelper, determineKeyEventClose, getFont
+from Utility.widgetUtils import safeBind
 
 
 class ThemeMessageBox(wx.Dialog):
@@ -103,9 +104,9 @@ class ThemeMessageBox(wx.Dialog):
 
         # Bind
         for btn in self.buttons:
-            btn.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+            safeBind(btn, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self, wx.EVT_CHAR_HOOK, self.onEscapePressed)
+        safeBind(self, wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
 
         self.SetSizer(baseFlexGridSizer)
         self.Layout()

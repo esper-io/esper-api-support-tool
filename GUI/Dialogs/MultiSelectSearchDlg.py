@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import copy
 import math
 import platform
@@ -17,6 +15,12 @@ from Utility.Resource import (determineDoHereorMainThread, getFont,
                               resourcePath, scale_bitmap, setCursorBusy,
                               setCursorDefault, setCursorIcon, setElmTheme,
                               uiThreadCheck)
+from Utility.widgetUtils import safeBind, safeEnable
+
+#!/usr/bin/env python3
+
+
+
 
 
 class MultiSelectSearchDlg(wx.Dialog):
@@ -157,25 +161,25 @@ class MultiSelectSearchDlg(wx.Dialog):
         setElmTheme(self)
         self.Layout()
 
-        self.checkbox_1.Bind(wx.EVT_CHECKBOX, self.onSelectAll)
+        safeBind(self.checkbox_1, wx.EVT_CHECKBOX, self.onSelectAll)
 
-        self.search.Bind(wx.EVT_SEARCH, self.onSearch)
-        self.search.Bind(wx.EVT_SEARCH_CANCEL, self.onSearch)
-        self.search.Bind(wx.EVT_CHAR, self.onKey)
+        safeBind(self.search, wx.EVT_SEARCH, self.onSearch)
+        safeBind(self.search, wx.EVT_SEARCH_CANCEL, self.onSearch)
+        safeBind(self.search, wx.EVT_CHAR, self.onKey)
 
-        self.Bind(wx.EVT_CLOSE, self.onClose)
+        safeBind(self, wx.EVT_CLOSE, self.onClose)
 
-        self.Bind(wx.EVT_LISTBOX, self.OnListSelection)
-        self.Bind(wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
-        self.Bind(wx.EVT_CHAR_HOOK, self.onEscapePressed)
+        safeBind(self, wx.EVT_LISTBOX, self.OnListSelection)
+        safeBind(self, wx.EVT_CHECKLISTBOX, self.OnBoxSelection)
+        safeBind(self, wx.EVT_CHAR_HOOK, self.onEscapePressed)
 
-        self.button_2.Bind(wx.EVT_BUTTON, self.onNext)
-        self.button_1.Bind(wx.EVT_BUTTON, self.onPrev)
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        safeBind(self.button_2, wx.EVT_BUTTON, self.onNext)
+        safeBind(self.button_1, wx.EVT_BUTTON, self.onPrev)
+        safeBind(self, wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
         self.checkPageButton()
 
         exitId = wx.NewId()
-        self.Bind(wx.EVT_MENU, self.onClose, id=exitId)
+        safeBind(self, wx.EVT_MENU, self.onClose)
         accel_table = wx.AcceleratorTable(
             [
                 (wx.ACCEL_CTRL, ord("W"), exitId),
@@ -357,8 +361,8 @@ class MultiSelectSearchDlg(wx.Dialog):
     def onNext(self, event):
         setCursorBusy(self)
         self.checkbox_1.Set3StateValue(wx.CHK_UNCHECKED)
-        self.checkbox_1.Enable(False)
-        self.check_list_box_1.Enable(False)
+        safeEnable(self.checkbox_1, False)
+        safeEnable(self.check_list_box_1, False)
         if self.page < self.limit:
             self.page += 1
         Globals.THREAD_POOL.enqueue(self.processNext)
@@ -368,17 +372,17 @@ class MultiSelectSearchDlg(wx.Dialog):
             return
         if self.IsBeingDeleted():
             return
-        self.button_1.Enable(False)
-        self.button_2.Enable(False)
-        self.button_OK.Enable(False)
-        self.search.Enable(False)
+        safeEnable(self.button_1, False)
+        safeEnable(self.button_2, False)
+        safeEnable(self.button_OK, False)
+        safeEnable(self.search, False)
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
-        self.checkbox_1.Enable(True)
-        self.check_list_box_1.Enable(True)
-        self.search.Enable(True)
-        self.button_OK.Enable(True)
+        safeEnable(self.checkbox_1, True)
+        safeEnable(self.check_list_box_1, True)
+        safeEnable(self.search, True)
+        safeEnable(self.button_OK, True)
         setCursorDefault(self)
 
     def onPrev(self, event):
@@ -393,19 +397,19 @@ class MultiSelectSearchDlg(wx.Dialog):
             return
         if self.IsBeingDeleted():
             return
-        self.checkbox_1.Enable(False)
-        self.check_list_box_1.Enable(False)
-        self.search.Enable(False)
-        self.button_1.Enable(False)
-        self.button_2.Enable(False)
-        self.button_OK.Enable(False)
+        safeEnable(self.checkbox_1, False)
+        safeEnable(self.check_list_box_1, False)
+        safeEnable(self.search, False)
+        safeEnable(self.button_1, False)
+        safeEnable(self.button_2, False)
+        safeEnable(self.button_OK, False)
         self.updateChoices()
         self.checkPageButton()
         self.search.Clear()
-        self.checkbox_1.Enable(True)
-        self.check_list_box_1.Enable(True)
-        self.search.Enable(True)
-        self.button_OK.Enable(True)
+        safeEnable(self.checkbox_1, True)
+        safeEnable(self.check_list_box_1, True)
+        safeEnable(self.search, True)
+        safeEnable(self.button_OK, True)
         setCursorDefault(self)
 
     def checkPageButton(self):
@@ -414,18 +418,18 @@ class MultiSelectSearchDlg(wx.Dialog):
         if self.IsBeingDeleted():
             return
         if self.page == self.limit or (self.page == 0 and self.limit == 1):
-            self.button_2.Enable(False)
+            safeEnable(self.button_2, False)
         elif hasattr(self.resp, "next") and self.resp.next:
-            self.button_2.Enable(True)
+            safeEnable(self.button_2, True)
         elif type(self.resp) == dict and "next" in self.resp:
-            self.button_2.Enable(True)
+            safeEnable(self.button_2, True)
 
         if self.page == 0:
-            self.button_1.Enable(False)
+            safeEnable(self.button_1, False)
         elif hasattr(self.resp, "previous") and self.resp.previous:
-            self.button_1.Enable(True)
+            safeEnable(self.button_1, True)
         elif type(self.resp) == dict and "previous" in self.resp:
-            self.button_1.Enable(True)
+            safeEnable(self.button_1, True)
 
     def updateChoices(self):
         resp = None
@@ -509,9 +513,9 @@ class MultiSelectSearchDlg(wx.Dialog):
         if self.IsBeingDeleted():
             return
         setCursorBusy(self)
-        self.button_1.Enable(False)
-        self.button_2.Enable(False)
-        self.button_OK.Enable(False)
+        safeEnable(self.button_1, False)
+        safeEnable(self.button_2, False)
+        safeEnable(self.button_OK, False)
         self.search.Enable(False)
         self.checkbox_1.Enable(False)
         self.check_list_box_1.Enable(False)

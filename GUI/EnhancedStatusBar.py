@@ -61,6 +61,7 @@ import wx
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Utility.Logging.ApiToolLogging import ApiToolLog
+from Utility.widgetUtils import safeBind
 
 # Horizontal Alignment Constants
 ESB_ALIGN_CENTER_VERTICAL = 1
@@ -110,7 +111,7 @@ class EnhancedStatusBar(wx.StatusBar):
         self.gauge = None
         self.SetThemeEnabled(False)
 
-        self.Bind(wx.EVT_SIZE, self.OnSize)
+        safeBind(self, wx.EVT_SIZE, self.OnSize)
         # wx.CallAfter(self.OnSize, None)
 
     def OnSize(self, event):
@@ -279,7 +280,7 @@ class EnhancedStatusBar(wx.StatusBar):
     def AddStaicTextAndGauge(self):
         self.sbText = wx.StaticText(self, wx.ID_ANY, "")
         self.AddWidget(self.sbText, pos=0, horizontalalignment=ESB_EXACT_FIT)
-        self.sbText.Bind(wx.EVT_LEFT_UP, self.Parent.showConsole)
+        safeBind(self.sbText, wx.EVT_LEFT_UP, self.Parent.showConsole)
 
         self.gauge = wx.Gauge(
             self,

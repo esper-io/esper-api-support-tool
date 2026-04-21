@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import json
 from datetime import datetime
 
@@ -12,13 +10,14 @@ from esperclient.models.v0_command_schedule_args import V0CommandScheduleArgs
 import Common.Globals as Globals
 from Common.decorator import api_tool_decorator
 from Common.enum import FontStyles
-from Utility.Resource import (
-    applyFontHelper,
-    displayMessageBox,
-    getFont,
-    onDialogEscape,
-    setElmTheme,
-)
+from Utility.Resource import (applyFontHelper, displayMessageBox, getFont,
+                              onDialogEscape, setElmTheme)
+from Utility.widgetUtils import safeBind, safeEnable, safeSetSelection
+
+#!/usr/bin/env python
+
+
+
 
 
 class CommandDialog(wx.Dialog):
@@ -40,8 +39,8 @@ class CommandDialog(wx.Dialog):
         setElmTheme(self)
         self.Fit()
 
-        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
-        self.Bind(wx.EVT_KEY_UP, self.onEscapePressed)
+        safeBind(self, wx.EVT_SYS_COLOUR_CHANGED, Globals.frame.onThemeChange)
+        safeBind(self, wx.EVT_KEY_UP, self.onEscapePressed)
 
     def createJsonWindowView(self, title, value):
         self.SetSize((500, 400))
@@ -140,8 +139,8 @@ class CommandDialog(wx.Dialog):
 
         self.panel_1.SetSizer(sizer_2)
 
-        self.okBtn.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.cancelBtn.Bind(wx.EVT_BUTTON, self.OnClose)
+        safeBind(self.okBtn, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self.cancelBtn, wx.EVT_BUTTON, self.OnClose)
 
         self.SetSizer(sizer_1)
 
@@ -187,7 +186,7 @@ class CommandDialog(wx.Dialog):
         sizer_6.Add(label_4, 0, 0, 0)
 
         self.choice_1 = wx.Choice(self.panel_6, wx.ID_ANY, choices=Globals.COMMAND_TYPES)
-        self.choice_1.SetSelection(-1)
+        safeSetSelection(self.choice_1, -1)
         sizer_6.Add(self.choice_1, 0, wx.EXPAND, 0)
 
         self.panel_7 = wx.Panel(self.panel_5, wx.ID_ANY)
@@ -199,7 +198,7 @@ class CommandDialog(wx.Dialog):
         sizer_7.Add(label_5, 0, 0, 0)
 
         self.text_ctrl_2 = wx.TextCtrl(self.panel_7, wx.ID_ANY, "")
-        self.text_ctrl_2.Enable(False)
+        safeEnable(self.text_ctrl_2, False)
         sizer_7.Add(self.text_ctrl_2, 0, wx.EXPAND, 0)
 
         self.panel_4 = wx.Panel(self.panel_18, wx.ID_ANY)
@@ -216,7 +215,7 @@ class CommandDialog(wx.Dialog):
         sizer_5.Add(label_3, 0, 0, 0)
 
         self.text_ctrl_3 = wx.TextCtrl(self.panel_8, wx.ID_ANY, "")
-        self.text_ctrl_3.Enable(False)
+        safeEnable(self.text_ctrl_3, False)
         sizer_5.Add(self.text_ctrl_3, 0, wx.EXPAND, 0)
 
         self.panel_9 = wx.Panel(self.panel_4, wx.ID_ANY)
@@ -228,8 +227,8 @@ class CommandDialog(wx.Dialog):
         sizer_8.Add(label_6, 0, 0, 0)
 
         self.choice_2 = wx.Choice(self.panel_9, wx.ID_ANY, choices=["", "Show", "Hide", "Disable"])
-        self.choice_2.Enable(False)
-        self.choice_2.SetSelection(0)
+        safeEnable(self.choice_2, False)
+        safeSetSelection(self.choice_2, 0)
         sizer_8.Add(self.choice_2, 0, wx.EXPAND, 0)
 
         self.panel_3 = wx.Panel(self.panel_18, wx.ID_ANY)
@@ -246,8 +245,8 @@ class CommandDialog(wx.Dialog):
         sizer_4.Add(label_2, 0, 0, 0)
 
         self.choice_3 = wx.Choice(self.panel_10, wx.ID_ANY, choices=["", "Unlocked", "Locked"])
-        self.choice_3.Enable(False)
-        self.choice_3.SetSelection(0)
+        safeEnable(self.choice_3, False)
+        safeSetSelection(self.choice_3, 0)
         sizer_4.Add(self.choice_3, 0, wx.EXPAND, 0)
 
         self.panel_11 = wx.Panel(self.panel_3, wx.ID_ANY)
@@ -259,7 +258,7 @@ class CommandDialog(wx.Dialog):
         sizer_9.Add(label_7, 0, 0, 0)
 
         self.text_ctrl_4 = wx.TextCtrl(self.panel_11, wx.ID_ANY, "")
-        self.text_ctrl_4.Enable(False)
+        safeEnable(self.text_ctrl_4, False)
         sizer_9.Add(self.text_ctrl_4, 0, wx.EXPAND, 0)
 
         self.panel_12 = wx.Panel(self.panel_18, wx.ID_ANY)
@@ -271,7 +270,7 @@ class CommandDialog(wx.Dialog):
         sizer_3.Add(label_1, 0, 0, 0)
 
         self.text_ctrl_1 = wx.TextCtrl(self.panel_12, wx.ID_ANY, "", style=wx.TE_BESTWRAP | wx.TE_MULTILINE)
-        self.text_ctrl_1.Enable(False)
+        safeEnable(self.text_ctrl_1, False)
         self.text_ctrl_1.SetMinSize((522, 100))
         sizer_3.Add(self.text_ctrl_1, 0, wx.EXPAND, 0)
 
@@ -325,7 +324,7 @@ class CommandDialog(wx.Dialog):
                 "Reocurring",
             ],
         )
-        self.choice_6.SetSelection(0)
+        safeSetSelection(self.choice_6, 0)
         grid_sizer_24.Add(self.choice_6, 0, wx.EXPAND, 0)
 
         grid_sizer_26 = wx.BoxSizer(wx.VERTICAL)
@@ -335,7 +334,7 @@ class CommandDialog(wx.Dialog):
         grid_sizer_26.Add(label_14, 0, 0, 0)
 
         self.choice_7 = wx.Choice(self.panel_17, wx.ID_ANY, choices=["Device", "Console"])
-        self.choice_7.SetSelection(0)
+        safeSetSelection(self.choice_7, 0)
         grid_sizer_26.Add(self.choice_7, 0, wx.EXPAND, 0)
 
         self.panel_16 = wx.Panel(self.panel_13, wx.ID_ANY)
@@ -481,19 +480,18 @@ class CommandDialog(wx.Dialog):
         self.Layout()
         self.Centre()
 
-        self.datepicker_ctrl_1.Enable(False)
-        self.timepicker_ctrl_2.Enable(False)
-        self.datepicker_ctrl_3.Enable(False)
-        self.timepicker_ctrl_4.Enable(False)
-        self.check_list_box_1.Enable(False)
-        self.button_OK.Enable(False)
+        safeEnable(self.datepicker_ctrl_1, False)
+        safeEnable(self.timepicker_ctrl_2, False)
+        safeEnable(self.datepicker_ctrl_3, False)
+        safeEnable(self.timepicker_ctrl_4, False)
+        safeEnable(self.check_list_box_1, False)
+        safeEnable(self.button_OK, False)
 
-        self.choice_1.Bind(wx.EVT_CHOICE, self.onCommandType)
-        self.choice_3.Bind(wx.EVT_CHOICE, self.onDeviceState)
-        self.button_OK.Bind(wx.EVT_BUTTON, self.OnClose)
-        self.button_CANCEL.Bind(wx.EVT_BUTTON, self.OnClose)
-
-        self.choice_6.Bind(wx.EVT_CHOICE, self.onScheduleType)
+        safeBind(self.choice_1, wx.EVT_CHOICE, self.onCommandType)
+        safeBind(self.choice_3, wx.EVT_CHOICE, self.onDeviceState)
+        safeBind(self.button_OK, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self.button_CANCEL, wx.EVT_BUTTON, self.OnClose)
+        safeBind(self.choice_6, wx.EVT_CHOICE, self.onScheduleType)
 
         self.startDate = None
         self.endDate = None
@@ -503,53 +501,53 @@ class CommandDialog(wx.Dialog):
     @api_tool_decorator()
     def onCommandType(self, event):
         type = event.String
-        self.choice_2.Enable(False)
-        self.choice_3.Enable(False)
-        self.text_ctrl_1.Enable(False)
-        self.text_ctrl_2.Enable(False)
-        self.text_ctrl_3.Enable(False)
-        self.text_ctrl_4.Enable(False)
+        safeEnable(self.choice_2, False)
+        safeEnable(self.choice_3, False)
+        safeEnable(self.text_ctrl_1, False)
+        safeEnable(self.text_ctrl_2, False)
+        safeEnable(self.text_ctrl_3, False)
+        safeEnable(self.text_ctrl_4, False)
         if type.lower() == "set_app_state":
-            self.choice_2.Enable(True)
-            self.text_ctrl_2.Enable(True)
-            self.text_ctrl_3.Enable(True)
+            safeEnable(self.choice_2, True)
+            safeEnable(self.text_ctrl_2, True)
+            safeEnable(self.text_ctrl_3, True)
         elif type.lower() == "set_device_lockdown_state":
-            self.choice_3.Enable(True)
+            safeEnable(self.choice_3, True)
         elif type.lower() == "set_kiosk_app":
-            self.text_ctrl_2.Enable(True)
-            self.text_ctrl_3.Enable(True)
+            safeEnable(self.text_ctrl_2, True)
+            safeEnable(self.text_ctrl_3, True)
         elif type.lower() == "update_device_config":
-            self.text_ctrl_1.Enable(True)
+            safeEnable(self.text_ctrl_1, True)
 
-        self.button_OK.Enable(True)
+        safeEnable(self.button_OK, True)
 
     @api_tool_decorator()
     def onDeviceState(self, event):
         state = event.String
         if state.lower() == "locked":
-            self.text_ctrl_4.Enable(True)
+            safeEnable(self.text_ctrl_4, True)
             self.text_ctrl_4.SetFocus()
         else:
-            self.text_ctrl_4.Enable(False)
+            safeEnable(self.text_ctrl_4, False)
             self.text_ctrl_4.SetValue("")
 
     @api_tool_decorator()
     def onScheduleType(self, event):
         type = event.String
-        self.datepicker_ctrl_1.Enable(False)
-        self.timepicker_ctrl_2.Enable(False)
-        self.datepicker_ctrl_3.Enable(False)
-        self.timepicker_ctrl_4.Enable(False)
-        self.check_list_box_1.Enable(False)
+        safeEnable(self.datepicker_ctrl_1, False)
+        safeEnable(self.timepicker_ctrl_2, False)
+        safeEnable(self.datepicker_ctrl_3, False)
+        safeEnable(self.timepicker_ctrl_4, False)
+        safeEnable(self.check_list_box_1, False)
         if type.lower() == "window":
-            self.datepicker_ctrl_1.Enable(True)
-            self.timepicker_ctrl_2.Enable(True)
-            self.datepicker_ctrl_3.Enable(True)
-            self.timepicker_ctrl_4.Enable(True)
+            safeEnable(self.datepicker_ctrl_1, True)
+            safeEnable(self.timepicker_ctrl_2, True)
+            safeEnable(self.datepicker_ctrl_3, True)
+            safeEnable(self.timepicker_ctrl_4, True)
         elif type.lower() == "reocurring":
-            self.datepicker_ctrl_1.Enable(True)
-            self.datepicker_ctrl_3.Enable(True)
-            self.check_list_box_1.Enable(True)
+            safeEnable(self.datepicker_ctrl_1, True)
+            safeEnable(self.datepicker_ctrl_3, True)
+            safeEnable(self.check_list_box_1, True)
         elif type.lower() == "immediate":
             pass
 
