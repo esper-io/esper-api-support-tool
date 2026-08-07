@@ -2,6 +2,7 @@
 
 import threading
 import time
+from queue import Empty, Queue
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -186,19 +187,25 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
             maxSleep = 0
         
         if useThreadPool:
-            # Queue all requests first
+            # Use a local queue so results are isolated from the shared THREAD_POOL
+            # result queue, which is shared across all concurrent tasks.
+            local_queue = Queue(0)
             total_requests = 0
             while int(respOffsetInt) < count and int(respLimit) < count:
                 if checkIfCurrentThreadStopped():
                     return
                 url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
                 url = validateUrl(url)
-                Globals.THREAD_POOL.enqueue(perform_web_requests, (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
+                Globals.THREAD_POOL.enqueue(
+                    _perform_web_request_to_queue,
+                    (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep),
+                    local_queue,
+                )
                 respOffsetInt += int(respLimit)
                 total_requests += 1
-            
-            # Process results as they become available with fail-fast
-            _process_threaded_responses_with_fail_fast(total_requests, results, tolarance, timeout)
+
+            # Drain from the local queue — no cross-task contamination possible
+            _process_local_queue_responses(total_requests, local_queue, results, tolarance, timeout)
         else:
             # Sequential processing with immediate fail-fast
             while int(respOffsetInt) < count and int(respLimit) < count:
@@ -269,6 +276,33 @@ def _validate_and_process_single_response(resp, results):
         results += resp["results"]
     else:
         raise Exception("Failed to get valid response: %s" % str(resp))
+
+
+def _perform_web_request_to_queue(content, local_queue):
+    """Wrapper around perform_web_requests that deposits the result into a caller-owned
+    local queue instead of the shared THREAD_POOL result queue."""
+    resp = perform_web_requests(content)
+    local_queue.put(resp)
+
+
+def _process_local_queue_responses(total_requests, local_queue, results, tolerance=0, timeout=-1):
+    """Drain exactly total_requests responses from a local queue and validate each one.
+    Using a local queue (not the shared THREAD_POOL result queue) prevents cross-task
+    contamination that caused duplicate device records in reports."""
+    start_time = time.time()
+    processed_count = 0
+    while processed_count < total_requests:
+        if checkIfCurrentThreadStopped():
+            return
+        if timeout > 0 and (time.time() - start_time) > timeout:
+            raise Exception("Timeout waiting for paginated responses")
+        try:
+            resp = local_queue.get(block=True, timeout=0.1)
+            _validate_and_process_single_response(resp, results)
+            processed_count += 1
+        except Empty:
+            continue
+    Globals.THREAD_POOL.join(tolerance)
 
 
 def perform_web_requests(content):
