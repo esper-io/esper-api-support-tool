@@ -206,6 +206,16 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         if not Globals.SHOW_DISABLED_DEVICES:
             api_response["results"] = list(filter(filterDeviceList, api_response["results"]))
 
+        # Deduplicate by device ID to prevent duplicate rows in reports
+        seen_ids = set()
+        deduped = []
+        for d in api_response["results"]:
+            dev_id = d.get("id") if type(d) is dict else getattr(d, "id", None)
+            if dev_id not in seen_ids:
+                seen_ids.add(dev_id)
+                deduped.append(d)
+        api_response["results"] = deduped
+
         deviceList = {}
         indx = 0
         Globals.THREAD_POOL.enqueue(
@@ -1105,6 +1115,22 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
 
     if not Globals.SHOW_DISABLED_DEVICES:
         devices = list(filter(filterDeviceList, devices))
+
+    # Deduplicate by device ID to prevent duplicate rows in reports
+    seen_ids = set()
+    unique_devices = []
+    for d in devices:
+        dev_id = d["id"] if type(d) is dict else getattr(d, "id", None)
+        if dev_id not in seen_ids:
+            seen_ids.add(dev_id)
+            unique_devices.append(d)
+    if len(unique_devices) < len(devices):
+        postEventToFrame(
+            eventUtil.myEVT_LOG,
+            "---> Warning: removed %d duplicate device entries from list"
+            % (len(devices) - len(unique_devices)),
+        )
+    devices = unique_devices
 
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 10)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching basic device information")

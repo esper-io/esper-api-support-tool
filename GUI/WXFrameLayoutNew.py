@@ -765,6 +765,8 @@ class NewFrameLayout(wx.Frame):
         deviceData, networkData, appData = self.gridPanel.getGridDataForSave()
         if inFile.endswith(".csv"):
             if (deviceData is not None and len(deviceData) > 0) or (networkData is not None and len(networkData) > 0):
+                deviceData = deviceData.drop_duplicates(subset=["Esper Name"])
+                networkData = networkData.drop_duplicates(subset=["Esper Name"])
                 result = pd.merge(
                     deviceData,
                     networkData,
@@ -801,6 +803,8 @@ class NewFrameLayout(wx.Frame):
                     if checkIfCurrentThreadStopped():
                         self.sleepInhibitor.uninhibit()
                         return
+                    deviceData = deviceData.drop_duplicates(subset=["Esper Name", "Serial Number"])
+                    networkData = networkData.drop_duplicates(subset=["Esper Name", "Serial Number"])
                     result = pd.merge(
                         deviceData,
                         networkData,
