@@ -218,6 +218,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
 
         deviceList = {}
         indx = 0
+        expected = len(api_response["results"])
         Globals.THREAD_POOL.enqueue(
             updateGaugeForObtainingDeviceInfo,
             deviceList,
@@ -235,7 +236,7 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
             )
             indx += 1
 
-        Globals.THREAD_POOL.join(tolerance=1)
+        Globals.THREAD_POOL.wait_for_count(deviceList, expected)
 
         postEventToFrame(
             eventUtil.myEVT_FETCH,
@@ -394,6 +395,7 @@ def processInstallDevices(deviceList):
     postEventToFrame(eventUtil.myEVT_LOG, "---> Getting Device Info for Installed Devices")
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 33)
     newDeviceList = []
+    expected = len(deviceList)
     for device in deviceList:
         Globals.THREAD_POOL.enqueue(
             processInstallDevicesHelper,
@@ -401,8 +403,7 @@ def processInstallDevices(deviceList):
             newDeviceList,
             Globals.MAX_THREAD_COUNT,
         )
-    time.sleep(1)
-    Globals.THREAD_POOL.join(tolerance=1)
+    Globals.THREAD_POOL.wait_for_count(newDeviceList, expected)
     postEventToFrame(
         eventUtil.myEVT_LOG,
         "---> Gathered Basic Device Info for Installed Devices",
@@ -1153,6 +1154,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
 
     deviceList = {}
     indx = 0
+    expected = len(devices)
 
     if getApps or getLatestEvents:
         postEventToFrame(eventUtil.myEVT_LOG, "Fetching extended device information")
@@ -1181,7 +1183,7 @@ def getAllDeviceInfo(frame, action=None, allDevices=True, tolarance=1):
             )
         indx += 1
 
-    Globals.THREAD_POOL.join(tolerance=tolarance)
+    Globals.THREAD_POOL.wait_for_count(deviceList, expected)
     postEventToFrame(eventUtil.myEVT_LOG, "Finished fetching extended device information")
     postEventToFrame(eventUtil.myEVT_UPDATE_GAUGE, 25)
 

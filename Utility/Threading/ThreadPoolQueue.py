@@ -171,6 +171,21 @@ class Pool:
     def isDoneWithinTolerance(self, queueTolerance=0):
         return self.idle(queueTolerance)
 
+    def wait_for_count(self, counter, expected, timeout=-1):
+        """Block until counter reaches expected, checking abort/stop conditions.
+        Use instead of join() when tasks write to a shared dict/list so the
+        barrier is scoped to this batch rather than the entire shared pool queue."""
+        start = time.perf_counter()
+        while len(counter) < expected:
+            if checkIfCurrentThreadStopped():
+                return False
+            if timeout > 0 and time.perf_counter() - start >= timeout:
+                return False
+            if self.abortJoin.is_set():
+                return False
+            time.sleep(0.01)
+        return True
+
     def results(self, wait=0):
         """Get the set of results that have been processed, repeatedly call until done"""
         time.sleep(wait)
