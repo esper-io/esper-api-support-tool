@@ -137,11 +137,10 @@ def postEventToFrame(eventType, eventValue=None):
     if eventType:
         try:
             evt = CustomEvent(eventType, -1, eventValue)
-            if Globals.frame and not Globals.frame.kill:
+            if Globals.frame and not Globals.frame.kill and not Globals.frame.IsBeingDeleted():
                 wx.PostEvent(Globals.frame, evt)
         except Exception as e:
             ApiToolLog().LogError(e)
-            raise e
 
 
 def download(url, file_name, overwrite=True, raiseError=True):

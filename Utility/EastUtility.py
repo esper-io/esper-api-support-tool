@@ -78,7 +78,7 @@ def TakeAction(frame, input, action, isDevice=False):
             frame.Logging("---> Making API Request")
             api_response = getAllDevices(input, tolarance=1)
             iterateThroughDeviceList(frame, action, api_response, Globals.enterprise_id)
-        except ApiException as e:
+        except Exception as e:
             print("Exception when calling DeviceApi->get_all_devices: %s\n" % e)
             ApiToolLog().LogError(e)
 
@@ -245,9 +245,8 @@ def iterateThroughDeviceList(frame, action, api_response, entId):
         if checkIfCurrentThreadStopped():
             return
         frame.Logging("---> No devices found for group")
-        frame.isRunning = False
         displayMessageBox(("No devices found for group.", wx.ICON_INFORMATION))
-        postEventToFrame(eventUtil.myEVT_COMPLETE, (True))
+        postEventToFrame(eventUtil.myEVT_COMPLETE, (False, -1))
 
 
 def processDeviceInDeviceList(
@@ -546,6 +545,7 @@ def compileDeviceGroupData(deviceInfo):
     else:
         deviceInfo["groups"] = ""
 
+    bp_id = None
     if "assigned_blueprint_id" in deviceInfo:
         bp_id = deviceInfo["assigned_blueprint_id"]
         if bp_id in Globals.knownBlueprints:

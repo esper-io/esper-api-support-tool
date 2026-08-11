@@ -718,7 +718,7 @@ class NewFrameLayout(wx.Frame):
             for item in deviceList.values():
                 input.extend(item["AppsEntry"] if "AppsEntry" in item else [])
                 deviceListLen = len(deviceList.values())
-                gaugeValue = (int(num / deviceListLen) * 35) + 50 if deviceListLen > 0 else 50
+                gaugeValue = (int(num / deviceListLen * 35)) + 50 if deviceListLen > 0 else 50
                 postEventToFrame(
                     eventUtil.myEVT_UPDATE_GAUGE,
                     gaugeValue,
@@ -765,8 +765,10 @@ class NewFrameLayout(wx.Frame):
         deviceData, networkData, appData = self.gridPanel.getGridDataForSave()
         if inFile.endswith(".csv"):
             if (deviceData is not None and len(deviceData) > 0) or (networkData is not None and len(networkData) > 0):
-                deviceData = deviceData.drop_duplicates(subset=["Esper Name"])
-                networkData = networkData.drop_duplicates(subset=["Esper Name"])
+                if deviceData is not None:
+                    deviceData = deviceData.drop_duplicates(subset=["Esper Name"])
+                if networkData is not None:
+                    networkData = networkData.drop_duplicates(subset=["Esper Name"])
                 result = pd.merge(
                     deviceData,
                     networkData,
@@ -803,8 +805,10 @@ class NewFrameLayout(wx.Frame):
                     if checkIfCurrentThreadStopped():
                         self.sleepInhibitor.uninhibit()
                         return
-                    deviceData = deviceData.drop_duplicates(subset=["Esper Name", "Serial Number"])
-                    networkData = networkData.drop_duplicates(subset=["Esper Name", "Serial Number"])
+                    if deviceData is not None:
+                        deviceData = deviceData.drop_duplicates(subset=["Esper Name", "Serial Number"])
+                    if networkData is not None:
+                        networkData = networkData.drop_duplicates(subset=["Esper Name", "Serial Number"])
                     result = pd.merge(
                         deviceData,
                         networkData,
@@ -2086,7 +2090,7 @@ class NewFrameLayout(wx.Frame):
             ) as dialog:
                 Globals.OPEN_DIALOGS.append(dialog)
                 res = dialog.ShowModal()
-                Globals.OPEN_DIALOGS.append(dialog)
+                Globals.OPEN_DIALOGS.remove(dialog)
         postEventToFrame(
             eventUtil.myEVT_PROCESS_FUNCTION,
             (wx.CallLater, (3000, self.statusBar.setGaugeValue, 0)),
@@ -2865,6 +2869,8 @@ class NewFrameLayout(wx.Frame):
         if inFile:  # Save button was pressed
             self.Logging("---> Processing User Report...")
             Globals.THREAD_POOL.enqueue(self.processOnUserReport, inFile)
+        else:
+            self.isSaving = False
 
     def processOnUserReport(self, inFile):
         self.statusBar.gauge.Pulse()
@@ -2946,6 +2952,8 @@ class NewFrameLayout(wx.Frame):
         if inFile:  # Save button was pressed
             self.Logging("---> Processing Pending User Report...")
             Globals.THREAD_POOL.enqueue(self.processOnPendingUserReport, inFile)
+        else:
+            self.isSaving = False
 
     def processOnPendingUserReport(self, inFile):
         self.statusBar.gauge.Pulse()
@@ -3131,6 +3139,8 @@ class NewFrameLayout(wx.Frame):
             if res == wx.YES:
                 parentDirectory = Path(inFile).parent.absolute()
                 openWebLinkInBrowser(parentDirectory, isfile=True)
+        else:
+            self.isSaving = False
 
     def onNewBlueprintApp(self, event):
         reset = True

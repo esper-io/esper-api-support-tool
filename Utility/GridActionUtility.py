@@ -121,24 +121,7 @@ def processDeviceModificationForList(action, chunk, tagsFromGrid, aliasDic, maxG
 def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     logString = ""
     status = deviceName = deviceId = aliasName = serial = imei1 = imei2 = None
-    if hasattr(device, "device_name"):
-        deviceName = device.device_name
-        deviceId = device.id
-        aliasName = device.alias_name
-        hardware = device.hardware_info
-        network = device.network_info
-        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-        imei1 = network["imei1"] if "imei1" in network else None
-        imei2 = network["imei2"] if "imei2" in network else None
-    elif type(device) is dict:
-        deviceName = device["device_name"]
-        deviceId = device["id"]
-        aliasName = device["alias_name"]
-        hardware = device["hardware_info"]
-        network = device["network_info"]
-        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-        imei1 = network["imei1"] if "imei1" in network else None
-        imei2 = network["imei2"] if "imei2" in network else None
+    deviceName, deviceId, aliasName, hardware, network, serial, imei1, imei2 = getDeviceLoggingAttr(device)
 
     match = list(
         filter(
@@ -272,22 +255,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
 def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
     # Tag modification
     status = deviceName = deviceId = serial = imei1 = imei2 = None
-    if hasattr(device, "device_name"):
-        deviceName = device.device_name
-        deviceId = device.id
-        hardware = device.hardware_info
-        network = device.network_info
-        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-        imei1 = network["imei1"] if "imei1" in network else None
-        imei2 = network["imei2"] if "imei2" in network else None
-    elif type(device) is dict:
-        deviceName = device["device_name"]
-        deviceId = device["id"]
-        hardware = device["hardware_info"]
-        network = device["network_info"]
-        serial = hardware["serialNumber"] if "serialNumber" in hardware else None
-        imei1 = network["imei1"] if "imei1" in network else None
-        imei2 = network["imei2"] if "imei2" in network else None
+    deviceName, deviceId, aliasName, hardware, network, serial, imei1, imei2 = getDeviceLoggingAttr(device)
 
     match = list(
         filter(
@@ -496,3 +464,25 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
     if not results:
         results["error"] = {"Error": "Failed to find devices to move, check tenant."}
     return results
+
+def getDeviceLoggingAttr(device):
+    deviceName = deviceId = aliasName = hardware = network = serial = imei1 = imei2 = None
+    if hasattr(device, "device_name"):
+        deviceName = device.device_name
+        deviceId = device.id
+        aliasName = device.alias_name
+        hardware = device.hardware_info
+        network = device.network_info
+        serial = hardware.get("serialNumber", None)
+        imei1 = network.get("imei1", None)
+        imei2 = network.get("imei2", None)
+    elif type(device) is dict:
+        deviceName = device.get("device_name", "")
+        deviceId = device.get("id", "")
+        aliasName = device.get("alias_name", "")
+        hardware = device.get("hardware_info", {})
+        network = device.get("network_info", {})
+        serial = hardware.get("serialNumber", None)
+        imei1 = network.get("imei1", None)
+        imei2 = network.get("imei2", None)
+    return deviceName, deviceId, aliasName, hardware, network, serial, imei1, imei2

@@ -97,6 +97,8 @@ class ToolsToolBar(wx.ToolBar):
     @api_tool_decorator()
     def on_copy(self, event):
         widget = self.FindFocus()
+        if widget is None:
+            return
         data = wx.TextDataObject()
         data.SetText(widget.GetStringSelection())
         if wx.TheClipboard.Open():
@@ -107,6 +109,8 @@ class ToolsToolBar(wx.ToolBar):
     @api_tool_decorator()
     def on_paste(self, event):
         widget = self.FindFocus()
+        if widget is None:
+            return
         success = False
         data = wx.TextDataObject()
         if wx.TheClipboard.Open():
