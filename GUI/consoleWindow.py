@@ -103,6 +103,9 @@ class Console(wx.Frame):
     @api_tool_decorator()
     def Logging(self, entry, scrollToEnd=True):
         """Display log entry in console UI (global list management handled by main frame)"""
+        if not wx.IsMainThread():
+            wx.CallAfter(self.Logging, entry, scrollToEnd=scrollToEnd)
+            return
         pattern = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
 
         if self.loggingList:

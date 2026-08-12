@@ -357,6 +357,9 @@ class NewFrameLayout(wx.Frame):
     @api_tool_decorator()
     def Logging(self, entry, isError=False):
         """Frame UI Logging with duplicate prevention"""
+        if not wx.IsMainThread():
+            wx.CallAfter(self.Logging, entry, isError=isError)
+            return
         try:
             entry = entry.replace("\n", " ").replace("--->", "").strip()
             shortMsg = entry
