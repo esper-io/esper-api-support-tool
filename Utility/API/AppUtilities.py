@@ -12,7 +12,8 @@ from Utility.Resource import (enforceRateLimit, getHeader, getTenant,
                               logBadResponse, postEventToFrame)
 from Utility.Web.WebRequests import (fetchRequestWithOffsets,
                                      handleRequestError,
-                                     performGetRequestWithRetry)
+                                     performGetRequestWithRetry,
+                                     retryApiCall)
 
 
 @api_tool_decorator()
@@ -155,22 +156,15 @@ def uploadApplication(file, config=None, enterpriseId=None, maxAttempt=Globals.M
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(Globals.configuration if not config else config))
         enterprise_id = Globals.enterprise_id if not enterpriseId else enterpriseId
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.upload(enterprise_id, file)
-                postEventToFrame(
-                    eventUtil.myEVT_AUDIT,
-                    {
-                        "operation": "UploadApp",
-                        "data": file,
-                        "resp": api_response,
-                    },
-                )
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt, raiseError=True)
+        api_response = retryApiCall(lambda: api_instance.upload(enterprise_id, file), maxAttempt=maxAttempt)
+        postEventToFrame(
+            eventUtil.myEVT_AUDIT,
+            {
+                "operation": "UploadApp",
+                "data": file,
+                "resp": api_response,
+            },
+        )
         return api_response
     except Exception as e:
         raise Exception("Exception when calling ApplicationApi->upload: %s\n" % e)
@@ -187,26 +181,18 @@ def getAllApplicationsForHost(
     """Make a API call to get all Applications belonging to the Enterprise"""
     try:
         api_instance = esperclient.ApplicationApi(esperclient.ApiClient(config))
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.get_all_applications(
-                    enterprise_id,
-                    limit=Globals.limit,
-                    application_name=application_name,
-                    package_name=package_name,
-                    offset=0,
-                    is_hidden=False,
-                )
-                ApiToolLog().LogApiRequestOccurrence(
-                    "getAllApplicationsForHost",
-                    api_instance.get_all_applications,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt, raiseError=True)
+        api_response = retryApiCall(
+            lambda: api_instance.get_all_applications(
+                enterprise_id,
+                limit=Globals.limit,
+                application_name=application_name,
+                package_name=package_name,
+                offset=0,
+                is_hidden=False,
+            ),
+            maxAttempt=maxAttempt,
+        )
+        ApiToolLog().LogApiRequestOccurrence("getAllApplicationsForHost", api_instance.get_all_applications, Globals.PRINT_API_LOGS)
         return api_response
     except Exception as e:
         raise Exception("Exception when calling ApplicationApi->get_all_applications: %s\n" % e)
@@ -221,24 +207,21 @@ def getAllAppVersionsForHost(
 ):
     """Make a API call to get all Applications belonging to the Enterprise"""
     try:
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
-                    tenant=config.host,
-                    enterprise_id=enterprise_id,
-                    appId=app_id,
-                )
-                header = {
-                    "Authorization": f"Bearer {config.api_key['Authorization']}",
-                    "Content-Type": "application/json",
-                }
-                api_response = performGetRequestWithRetry(url, header)
-                if api_response and api_response.status_code < 300:
-                    api_response = api_response.json()
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt, raiseError=True)
+        url = "{tenant}/v1/enterprise/{enterprise_id}/application/{appId}/version/".format(
+            tenant=config.host,
+            enterprise_id=enterprise_id,
+            appId=app_id,
+        )
+        header = {
+            "Authorization": f"Bearer {config.api_key['Authorization']}",
+            "Content-Type": "application/json",
+        }
+        def _fetch():
+            resp = performGetRequestWithRetry(url, header)
+            if resp and resp.status_code < 300:
+                return resp.json()
+            return resp
+        api_response = retryApiCall(_fetch, maxAttempt=maxAttempt, rateLimit=False)
         return api_response
     except Exception as e:
         raise Exception("Exception when calling ApplicationApi->get_app_versions: %s\n" % e)
@@ -277,6 +260,8 @@ def getInstallDevices(version_id, application_id, maxAttempt=Globals.MAX_RETRY, 
         api_response = None
         for version in version_id:
             resp = get_installed_devices(version, application_id, maxAttempt, tolarance=tolarance)
+            if resp is None:
+                continue
             if api_response is None:
                 api_response = resp
             else:

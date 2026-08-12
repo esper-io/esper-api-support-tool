@@ -16,7 +16,8 @@ from Utility.API.DeviceUtility import get_all_ios_devices_helper, getInfo
 from Utility.Logging.ApiToolLogging import ApiToolLog
 from Utility.Resource import enforceRateLimit, getHeader
 from Utility.Web.WebRequests import (handleRequestError,
-                                     performGetRequestWithRetry)
+                                     performGetRequestWithRetry,
+                                     retryApiCall)
 
 
 @api_tool_decorator()
@@ -76,20 +77,9 @@ def validateConfiguration(host, entId, key, prefix="Bearer", maxAttempt=Globals.
     enterprise_id = entId
 
     try:
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.get_enterprise(enterprise_id)
-                ApiToolLog().LogApiRequestOccurrence(
-                    "validateConfiguration",
-                    api_instance.get_enterprise,
-                    Globals.PRINT_API_LOGS,
-                )
-                ApiToolLog().Log(str(api_response))
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt, raiseError=True)
+        api_response = retryApiCall(lambda: api_instance.get_enterprise(enterprise_id), maxAttempt=maxAttempt)
+        ApiToolLog().LogApiRequestOccurrence("validateConfiguration", api_instance.get_enterprise, Globals.PRINT_API_LOGS)
+        ApiToolLog().Log(str(api_response))
         if hasattr(api_response, "id"):
             return True
     except ApiException as e:
@@ -100,20 +90,10 @@ def validateConfiguration(host, entId, key, prefix="Bearer", maxAttempt=Globals.
 
 def getCompanySettings(maxAttempt=Globals.MAX_RETRY):
     api_instance = esperclient.EnterpriseApi(esperclient.ApiClient(Globals.configuration))
+    api_response = None
     try:
-        api_response = None
-        for attempt in range(maxAttempt):
-            try:
-                enforceRateLimit()
-                api_response = api_instance.get_enterprise(Globals.enterprise_id)
-                ApiToolLog().LogApiRequestOccurrence(
-                    "validateConfiguration",
-                    api_instance.get_enterprise,
-                    Globals.PRINT_API_LOGS,
-                )
-                break
-            except Exception as e:
-                handleRequestError(attempt, e, maxAttempt, raiseError=True)
+        api_response = retryApiCall(lambda: api_instance.get_enterprise(Globals.enterprise_id), maxAttempt=maxAttempt)
+        ApiToolLog().LogApiRequestOccurrence("validateConfiguration", api_instance.get_enterprise, Globals.PRINT_API_LOGS)
     except ApiException as e:
         print("Exception when calling EnterpriseApi->get_enterprise: %s\n" % e)
         ApiToolLog().LogError(e, postStatus=False)
@@ -282,13 +262,10 @@ def searchForMatchingDevices(entry, maxAttempt=Globals.MAX_RETRY):
     else:
         search_params['search'] = entry
     
-    for attempt in range(maxAttempt):
-        try:
-            enforceRateLimit()
-            api_response = get_all_ios_devices_helper("", Globals.limit, 0, searchParamsDict=search_params)
-            break
-        except Exception as e:
-            handleRequestError(attempt, e, maxAttempt, raiseError=True)
+    api_response = retryApiCall(
+        lambda: get_all_ios_devices_helper("", Globals.limit, 0, searchParamsDict=search_params),
+        maxAttempt=maxAttempt,
+    )
     return api_response
 
 

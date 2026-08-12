@@ -512,16 +512,22 @@ class MultiSelectSearchDlg(wx.Dialog):
             return
         if self.IsBeingDeleted():
             return
-        setCursorBusy(self)
-        safeEnable(self.button_1, False)
-        safeEnable(self.button_2, False)
-        safeEnable(self.button_OK, False)
-        self.search.Enable(False)
-        self.checkbox_1.Enable(False)
-        self.check_list_box_1.Enable(False)
+        try:
+            setCursorBusy(self)
+            safeEnable(self.button_1, False)
+            safeEnable(self.button_2, False)
+            safeEnable(self.button_OK, False)
+            self.search.Enable(False)
+            self.checkbox_1.Enable(False)
+            self.check_list_box_1.Enable(False)
+        except RuntimeError:
+            return
 
         count = 0
-        selectedGroups = self.Parent.sidePanel.selectedGroups.GetStrings()
+        try:
+            selectedGroups = self.Parent.sidePanel.selectedGroups.GetStrings()
+        except RuntimeError:
+            return
         for group in selectedGroups:
             parts = group.split("Device Count: ")
             if len(parts) > 1:
@@ -537,13 +543,16 @@ class MultiSelectSearchDlg(wx.Dialog):
                 tolarance=1,
             )
             if self.resp:
-                self.check_list_box_1.Clear()
-                if hasattr(self.resp, "results"):
-                    self.originalChoices[0] = self.processDevices(self.resp.results)
-                elif type(self.resp) == dict and "results" in self.resp:
-                    self.originalChoices[0] = self.processDevices(self.resp["results"])
-                for item in self.originalChoices[0]:
-                    self.check_list_box_1.Append(item)
+                try:
+                    self.check_list_box_1.Clear()
+                    if hasattr(self.resp, "results"):
+                        self.originalChoices[0] = self.processDevices(self.resp.results)
+                    elif type(self.resp) == dict and "results" in self.resp:
+                        self.originalChoices[0] = self.processDevices(self.resp["results"])
+                    for item in self.originalChoices[0]:
+                        self.check_list_box_1.Append(item)
+                except RuntimeError:
+                    return
         if self.IsBeingDeleted():
             return
         self.selected = copy.deepcopy(self.originalChoices[0])
@@ -552,14 +561,16 @@ class MultiSelectSearchDlg(wx.Dialog):
         for item in self.selected:
             tmpSelection.append(num)
             num += 1
-        self.check_list_box_1.SetCheckedItems(tmpSelection)
-
-        self.search.Clear()
-        self.checkbox_1.Enable(True)
-        self.check_list_box_1.Enable(True)
-        self.search.Enable(True)
-        self.button_OK.Enable(True)
-        setCursorDefault(self)
+        try:
+            self.check_list_box_1.SetCheckedItems(tmpSelection)
+            self.search.Clear()
+            self.checkbox_1.Enable(True)
+            self.check_list_box_1.Enable(True)
+            self.search.Enable(True)
+            self.button_OK.Enable(True)
+            setCursorDefault(self)
+        except RuntimeError:
+            pass
 
     def applyFontSize(self):
         normalFont = getFont(FontStyles.NORMAL.value)

@@ -244,15 +244,18 @@ class BlueprintsDialog(wx.Dialog):
     @api_tool_decorator()
     def loadBlueprintsHelper(self, config):
         bps = getAllBlueprintsFromHost(config["apiHost"], config["apiKey"], config["enterprise"])
-        if bps:
-            self.blueprints = bps.json()
-            for blueprint in self.blueprints["results"]:
-                if blueprint["name"]:
-                    self.combo_box_4.Append(blueprint["name"], blueprint["id"])
-                else:
-                    self.combo_box_4.Append("Blueprint %s" % blueprint["id"], blueprint["id"])
-            self.checkInputs()
-        self.combo_box_4.Enable(True)
+        try:
+            if bps:
+                self.blueprints = bps.json()
+                for blueprint in self.blueprints["results"]:
+                    if blueprint["name"]:
+                        self.combo_box_4.Append(blueprint["name"], blueprint["id"])
+                    else:
+                        self.combo_box_4.Append("Blueprint %s" % blueprint["id"], blueprint["id"])
+                self.checkInputs()
+            self.combo_box_4.Enable(True)
+        except RuntimeError:
+            pass
 
     @api_tool_decorator()
     def loadBlueprintPreview(self, event):

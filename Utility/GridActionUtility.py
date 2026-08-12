@@ -123,17 +123,7 @@ def changeAliasForDevice(device, aliasList, maxGaugeAction, tracker):
     status = deviceName = deviceId = aliasName = serial = imei1 = imei2 = None
     deviceName, deviceId, aliasName, hardware, network, serial, imei1, imei2 = getDeviceLoggingAttr(device)
 
-    match = list(
-        filter(
-            lambda x: x["Esper Name"] == deviceName
-            or x["Esper Id"] == device
-            or x["Serial Number"] == serial
-            or x["Custom Serial Number"] == serial
-            or x["IMEI 1"] == imei1
-            or x["IMEI 2"] == imei2,
-            aliasList,
-        )
-    )
+    match = _filterDeviceMatch(aliasList, deviceName, deviceId, serial, imei1, imei2)
     resp = {}
     # Alias modification
     if match:
@@ -257,17 +247,7 @@ def changeTagsForDevice(device, tagsFromGrid, maxGaugeAction, tracker):
     status = deviceName = deviceId = serial = imei1 = imei2 = None
     deviceName, deviceId, aliasName, hardware, network, serial, imei1, imei2 = getDeviceLoggingAttr(device)
 
-    match = list(
-        filter(
-            lambda x: x["Esper Name"] == deviceName
-            or x["Esper Id"] == device
-            or x["Serial Number"] == serial
-            or x["Custom Serial Number"] == serial
-            or x["IMEI 1"] == imei1
-            or x["IMEI 2"] == imei2,
-            tagsFromGrid,
-        )
-    )
+    match = _filterDeviceMatch(tagsFromGrid, deviceName, deviceId, serial, imei1, imei2)
     if match:
         match = match[0]
         deviceName = match["Esper Name"] if "Esper Name" in match and match["Esper Name"] else deviceName
@@ -384,21 +364,7 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
             deviceId = device
 
 
-        match = []
-        if groupList:
-            match = list(
-                filter(
-                    lambda x: (
-                        x.get("Esper Name", None) == deviceName
-                        or x.get("Esper Id", None) == deviceId
-                        or x.get("Serial Number", None) == serial
-                        or x.get("Custom Serial Number", None) == serial
-                        or x.get("IMEI 1", None) == imei1
-                        or x.get("IMEI 2", None) == imei2
-                    ),
-                    groupList,
-                )
-            )
+        match = _filterDeviceMatch(groupList, deviceName, deviceId, serial, imei1, imei2) if groupList else []
         if match and len(match) > 0:
             match = match[0]
             groupName = match.get("Group", "").strip() if match.get("Group", None) else None
@@ -464,6 +430,20 @@ def processDeviceGroupMove(deviceChunk, groupList, tolerance=0):
     if not results:
         results["error"] = {"Error": "Failed to find devices to move, check tenant."}
     return results
+
+def _filterDeviceMatch(items, deviceName, deviceId, serial, imei1, imei2):
+    return list(filter(
+        lambda x: (
+            x.get("Esper Name") == deviceName
+            or x.get("Esper Id") == deviceId
+            or x.get("Serial Number") == serial
+            or x.get("Custom Serial Number") == serial
+            or x.get("IMEI 1") == imei1
+            or x.get("IMEI 2") == imei2
+        ),
+        items,
+    ))
+
 
 def getDeviceLoggingAttr(device):
     deviceName = deviceId = aliasName = hardware = network = serial = imei1 = imei2 = None

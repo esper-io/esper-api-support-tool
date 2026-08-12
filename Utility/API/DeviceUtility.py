@@ -12,7 +12,8 @@ from Utility.Resource import (getHeader, is_uuid, logBadResponse,
 from Utility.Web.WebRequests import (getAllFromOffsetsRequests,
                                      handleRequestError,
                                      performGetRequestWithRetry,
-                                     performPatchRequestWithRetry)
+                                     performPatchRequestWithRetry,
+                                     retryApiCall)
 
 
 @api_tool_decorator()
@@ -345,22 +346,19 @@ def getDeviceById(
 
 
 def getDeviceByIdHelper(device, api_response_list, api_response, maxAttempt=Globals.MAX_RETRY):
-    for attempt in range(maxAttempt):
-        try:
-            url = Globals.BASE_DEVICE_URL.format(
-                configuration_host=Globals.configuration.host,
-                enterprise_id=Globals.enterprise_id,
-                device_id=device,
-            )
-            api_response = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
-            if api_response.status_code < 300:
-                api_response = api_response.json()
-            break
-        except Exception as e:
-            handleRequestError(attempt, e, maxAttempt, raiseError=True)
+    url = Globals.BASE_DEVICE_URL.format(
+        configuration_host=Globals.configuration.host,
+        enterprise_id=Globals.enterprise_id,
+        device_id=device,
+    )
+    def _fetch():
+        resp = performGetRequestWithRetry(url, getHeader(), maxRetry=maxAttempt)
+        if resp.status_code < 300:
+            return resp.json()
+        return resp
+    api_response = retryApiCall(_fetch, maxAttempt=maxAttempt, rateLimit=False)
     if api_response:
         api_response_list.append(api_response)
-
     return api_response, api_response_list
 
 
@@ -375,53 +373,31 @@ def searchForDevice(
     gms=None,
     tags=None,
 ):
-    extention = ""
-
+    params = {}
     if search is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&search=%s" % (Globals.limit, search)
-        else:
-            extention += "&search=%s" % (search)
+        params["search"] = search
     if imei is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&imei=%s" % (Globals.limit, imei)
-        else:
-            extention += "&imei=%s" % (imei)
+        params["imei"] = imei
     if serial is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&serial=%s" % (Globals.limit, serial)
-        else:
-            extention += "&serial=%s" % (serial)
+        params["serial"] = serial
     if name is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&name=%s" % (Globals.limit, name)
-        else:
-            extention += "&name=%s" % (name)
+        params["name"] = name
     if group is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&group=%s" % (Globals.limit, group)
-        else:
-            extention += "&group=%s" % (group)
+        params["group"] = group
     if state is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&state=%s" % (Globals.limit, state)
-        else:
-            extention += "&state=%s" % (state)
+        params["state"] = state
     if brand is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&brand=%s" % (Globals.limit, brand)
-        else:
-            extention += "&brand=%s" % (brand)
+        params["brand"] = brand
     if gms is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&is_gms=%s" % (Globals.limit, gms)
-        else:
-            extention += "&is_gms=%s" % (gms)
+        params["is_gms"] = gms
     if tags is not None:
-        if "?limit=" not in extention:
-            extention += "?limit=%s&tags=%s" % (Globals.limit, tags)
-        else:
-            extention += "&tags=%s" % (tags)
+        params["tags"] = tags
+
+    if params:
+        query = "&".join("%s=%s" % (k, v) for k, v in params.items())
+        extention = "?limit=%s&%s" % (Globals.limit, query)
+    else:
+        extention = ""
 
     url = ("%s/v2/devices/" % Globals.configuration.host) + extention
     api_response = performGetRequestWithRetry(url, getHeader())

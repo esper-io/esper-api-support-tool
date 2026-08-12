@@ -104,6 +104,19 @@ def handleRequestError(attempt, e, maxRetry, raiseError=False, url=""):
     postEventToFrame(EventUtility.myEVT_LOG, str(e))
 
 
+def retryApiCall(func, maxAttempt=Globals.MAX_RETRY, raiseError=True, rateLimit=True):
+    result = None
+    for attempt in range(maxAttempt):
+        try:
+            if rateLimit:
+                enforceRateLimit()
+            result = func()
+            break
+        except Exception as e:
+            handleRequestError(attempt, e, maxAttempt, raiseError=raiseError)
+    return result
+
+
 def doExponentialBackoff(attempt, url, isRateLimit=True):
     # If we run into a Rate Limit error, do an exponential backoff
     sleepTime = (Globals.RETRY_SLEEP * 20) * (2 ** (attempt))

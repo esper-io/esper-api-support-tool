@@ -1539,7 +1539,7 @@ class NewFrameLayout(wx.Frame):
 
                 if type(group) is dict:
                     if not group or "enterprise" not in group or Globals.enterprise_id not in group["enterprise"]:
-                        return
+                        continue
                     groupEntryId = group["path"]
                     if groupEntryId not in self.sidePanel.groups:
                         self.sidePanel.groups[groupEntryId] = group["id"]
