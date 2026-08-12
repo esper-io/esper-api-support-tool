@@ -40,7 +40,7 @@ DATA_FILES = [
     curDirPath + "/Images",
 ]
 OPTIONS = {
-    "argv_emulation": True,
+    "argv_emulation": False,
     "extension": ".app",
     "iconfile": curDirPath + "/Images/icon.icns",
     "includes": ["os", "platform"],
