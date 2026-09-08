@@ -235,6 +235,7 @@ class MultiSelectSearchDlg(wx.Dialog):
                 self.check_list_box_1.Append(item)
             self.check_list_box_1.SetCheckedStrings(self.selected)
             self.isFiltered = False
+        setElmTheme(self)
 
     @api_tool_decorator()
     def OnListSelection(self, event):

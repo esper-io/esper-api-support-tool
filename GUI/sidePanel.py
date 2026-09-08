@@ -195,7 +195,7 @@ class SidePanel(wx.Panel):
 
         safeBind(self.removeEndpointBtn, wx.EVT_BUTTON, self.RemoveEndpoint)
         safeBind(self.groupChoice, wx.EVT_BUTTON, self.onGroupSelection)
-        safeBind(self.deviceChoice, wx.EVT_BUTTON, self.onActionSelection)
+        safeBind(self.deviceChoice, wx.EVT_BUTTON, self.onDeviceSelection)
         safeBind(self.actionChoice, wx.EVT_COMBOBOX, self.onActionSelection)
         safeBind(self.deviceChoice, wx.EVT_COMBOBOX, self.onDeviceSelection, self.deviceChoice)
 
