@@ -2,7 +2,8 @@
 
 import Common.Globals as Globals
 from Utility.Resource import getHeader, getTenant
-from Utility.Web.WebRequests import fetchRequestWithOffsets, performGetRequestWithRetry
+from Utility.Web.WebRequests import (fetchRequestWithOffsets,
+                                     performGetRequestWithRetry)
 
 
 def getUserAPIUrl(limit=Globals.limit, offset=0):
@@ -31,7 +32,7 @@ def getAllUsers(limit=Globals.limit, offset=0, tolerance=0):
 
 def getAllPendingUsers(limit=Globals.limit, offset=0, tolerance=0):
     url = getPendingUsersAPIUrl(limit=Globals.limit, offset=0)
-    return fetchRequestWithOffsets(url, tolerance=tolerance)
+    return fetchRequestWithOffsets(url, tolerance=tolerance, dictResKey="userinvites")
 
 
 def getUserInfo():

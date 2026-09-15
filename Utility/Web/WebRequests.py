@@ -167,7 +167,7 @@ def performPostRequestWithRetry(
     return performRequestWithRetry(url, requests.post, headers, json, data, files, maxRetry=maxRetry, sleepMin=sleepMin, sleepMax=sleepMax)
 
 
-def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True):
+def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-1, useThreadPool=True, dictResKey="results", baseUrl=""):
     count = None
     if results is None:
         results = []
@@ -188,51 +188,67 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
     elif type(api_response) is dict and "next" in api_response:
         apiNext = api_response["next"]
 
+    minSleep = 0
+    maxSleep = 0
+
+    if  (apiNext and "v2/devices/" in apiNext) or (baseUrl and "v2/devices/" in baseUrl):
+        minSleep = 25
+        maxSleep = 45
+
     if apiNext:
         respOffset = apiNext.split("offset=")[-1].split("&")[0]
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
-        if "v2/devices/" in apiNext:
-            minSleep = 25
-            maxSleep = 45
-        else:
-            minSleep = 0
-            maxSleep = 0
-        
-        if useThreadPool:
-            # Use a local queue so results are isolated from the shared THREAD_POOL
-            # result queue, which is shared across all concurrent tasks.
-            local_queue = Queue(0)
-            total_requests = 0
-            while int(respOffsetInt) < count and int(respLimit) < count:
-                if checkIfCurrentThreadStopped():
-                    return
-                url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
-                url = validateUrl(url)
-                Globals.THREAD_POOL.enqueue(
-                    _perform_web_request_to_queue,
-                    (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep),
-                    local_queue,
-                )
-                respOffsetInt += int(respLimit)
-                total_requests += 1
 
-            # Drain from the local queue — no cross-task contamination possible
-            _process_local_queue_responses(total_requests, local_queue, results, tolarance, timeout)
-        else:
-            # Sequential processing with immediate fail-fast
-            while int(respOffsetInt) < count and int(respLimit) < count:
-                if checkIfCurrentThreadStopped():
-                    return
-                url = apiNext.replace("offset=%s" % respOffset, "offset=%s" % str(respOffsetInt))
-                url = validateUrl(url)
-                resp_json = perform_web_requests((url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
-                
-                # Fail fast on invalid response
-                _validate_and_process_single_response(resp_json, results)
-                respOffsetInt += int(respLimit)
+        queueOffsetRequests(useThreadPool, count, respLimit, respOffset, respOffsetInt, apiNext, minSleep, maxSleep, results, tolarance, timeout, dictResKey)
+    elif baseUrl and count is not None:
+        respLimit = parseQueryParamValue(baseUrl, "limit", Globals.limit)
+        respOffset = parseQueryParamValue(baseUrl, "offset", 0)
+        respOffsetInt = int(respOffset) + int(respLimit)
+
+        queueOffsetRequests(useThreadPool, count, str(respLimit), str(respOffset), respOffsetInt, baseUrl, minSleep, maxSleep, results, tolarance, timeout, dictResKey)
     
     return results
+
+def parseQueryParamValue(url, key, default):
+    values = url.split("%s=" % key)
+    if len(values) > 1:
+        return values[-1].split("&")[0]
+    return default
+
+def queueOffsetRequests(useThreadPool, count, respLimit, respOffset, offsetInt, nextUrl, minSleep, maxSleep, results, tolarance, timeout, dictResKey):
+    if useThreadPool:
+        # Use a local queue so results are isolated from the shared THREAD_POOL
+        # result queue, which is shared across all concurrent tasks.
+        local_queue = Queue(0)
+        total_requests = 0
+        while int(offsetInt) < count and int(respLimit) < count:
+            if checkIfCurrentThreadStopped():
+                return
+            url = nextUrl.replace("offset=%s" % respOffset, "offset=%s" % str(offsetInt))
+            url = validateUrl(url)
+            Globals.THREAD_POOL.enqueue(
+                _perform_web_request_to_queue,
+                (url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep),
+                local_queue,
+            )
+            offsetInt += int(respLimit)
+            total_requests += 1
+
+        # Drain from the local queue — no cross-task contamination possible
+        _process_local_queue_responses(total_requests, local_queue, results, tolarance, timeout, dictResKey=dictResKey)
+    else:
+        # Sequential processing with immediate fail-fast
+        while int(offsetInt) < count and int(respLimit) < count:
+            if checkIfCurrentThreadStopped():
+                return
+            url = nextUrl.replace("offset=%s" % respOffset, "offset=%s" % str(offsetInt))
+            url = validateUrl(url)
+            resp_json = perform_web_requests((url, getHeader(), "GET", None, Globals.MAX_RETRY, minSleep, maxSleep))
+            
+            # Fail fast on invalid response
+            _validate_and_process_single_response(resp_json, results, dictResKey)
+            offsetInt += int(respLimit)
 
 def validateUrl(url):
     # check to ensure URL is https not http
@@ -248,7 +264,7 @@ def validateUrl(url):
     return url
 
 
-def _process_threaded_responses_with_fail_fast(total_requests, results, tolerance=0, timeout=-1):
+def _process_threaded_responses_with_fail_fast(total_requests, results, tolerance=0, timeout=-1, dictResKey="results"):
     """Process threaded responses as they become available with true fail-fast behavior."""
     import time
     processed_count = 0
@@ -268,7 +284,7 @@ def _process_threaded_responses_with_fail_fast(total_requests, results, toleranc
         if available_results:
             # Process each available result immediately
             for resp in available_results:
-                _validate_and_process_single_response(resp, results)
+                _validate_and_process_single_response(resp, results, dictResKey)
                 processed_count += 1
         else:
             # No results available yet, wait a short time before checking again
@@ -278,15 +294,18 @@ def _process_threaded_responses_with_fail_fast(total_requests, results, toleranc
     Globals.THREAD_POOL.join(tolerance)
 
 
-def _validate_and_process_single_response(resp, results):
+def _validate_and_process_single_response(resp, results, dictResKey):
     """Validate a single response and add its results to the results list, failing fast on invalid responses."""
-    if "content" in resp:
+    if not resp:
+        raise Exception("Failed to get valid response: %s" % str(resp))
+
+    if type(resp) is dict and "content" in resp:
         resp = resp["content"]
 
     if resp and hasattr(resp, "results") and resp.results:
         results += resp.results
-    elif type(resp) is dict and "results" in resp and resp["results"]:
-        results += resp["results"]
+    elif type(resp) is dict and dictResKey in resp and resp[dictResKey]:
+        results += resp[dictResKey]
     else:
         raise Exception("Failed to get valid response: %s" % str(resp))
 
@@ -298,7 +317,7 @@ def _perform_web_request_to_queue(content, local_queue):
     local_queue.put(resp)
 
 
-def _process_local_queue_responses(total_requests, local_queue, results, tolerance=0, timeout=-1):
+def _process_local_queue_responses(total_requests, local_queue, results, tolerance=0, timeout=-1, dictResKey="results"):
     """Drain exactly total_requests responses from a local queue and validate each one.
     Using a local queue (not the shared THREAD_POOL result queue) prevents cross-task
     contamination that caused duplicate device records in reports."""
@@ -311,7 +330,7 @@ def _process_local_queue_responses(total_requests, local_queue, results, toleran
             raise Exception("Timeout waiting for paginated responses")
         try:
             resp = local_queue.get(block=True, timeout=0.1)
-            _validate_and_process_single_response(resp, results)
+            _validate_and_process_single_response(resp, results, dictResKey)
             processed_count += 1
         except Empty:
             continue
@@ -344,18 +363,22 @@ def perform_web_requests(content):
     return resp
 
 
-def fetchRequestWithOffsets(url, tolerance=0, useThreadPool=True):
+def fetchRequestWithOffsets(url, tolerance=0, useThreadPool=True, dictResKey="results"):
     resp = performGetRequestWithRetry(url, headers=getHeader())
     if resp:
         respJson = resp.json()
         if respJson and "content" in respJson:
             respJson = respJson["content"]
-        offsetResponses = getAllFromOffsetsRequests(respJson, tolarance=tolerance, useThreadPool=useThreadPool)
-        if type(offsetResponses) is dict and "results" in offsetResponses:
-            respJson["results"] = respJson["results"] + offsetResponses["results"]
+        offsetResponses = getAllFromOffsetsRequests(respJson, tolarance=tolerance, useThreadPool=useThreadPool, dictResKey=dictResKey, baseUrl=url)
+        if type(offsetResponses) is dict and dictResKey in offsetResponses:
+            respJson[dictResKey] = respJson.get(dictResKey, []) + offsetResponses[dictResKey]
             respJson["next"] = None
             respJson["prev"] = None
-        elif type(offsetResponses) is list:
-            respJson["results"] = respJson["results"] + offsetResponses
+        elif type(offsetResponses) is list and offsetResponses:
+            dataKey = dictResKey if dictResKey in respJson else next(
+                (k for k, v in respJson.items() if isinstance(v, list)), None
+            )
+            if dataKey:
+                respJson[dataKey] = respJson[dataKey] + offsetResponses
         return respJson
     return resp
