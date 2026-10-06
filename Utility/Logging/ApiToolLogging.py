@@ -14,6 +14,8 @@ import Common.ApiTracker as ApiTracker
 import Common.Globals as Globals
 from Utility.FileUtility import getToolDataPath, write_content_to_file
 
+_log_write_lock = threading.Lock()
+
 
 class ApiToolLog:
     def __init__(self):
@@ -125,13 +127,14 @@ class ApiToolLog:
         Globals.error_tracker[errorLine] = datetime.now()
 
     def Log(self, msg):
-        with open(self.logPath, "a") as myfile:
-            if type(msg) == list:
-                for entry in msg:
-                    myfile.write("%s\n" % entry)
-                myfile.write("\n")
-            else:
-                myfile.write("%s\n" % msg)
+        with _log_write_lock:
+            with open(self.logPath, "a", encoding="utf-8") as myfile:
+                if type(msg) == list:
+                    for entry in msg:
+                        myfile.write("%s\n" % entry)
+                    myfile.write("\n")
+                else:
+                    myfile.write("%s\n" % msg)
 
     def LogPlace(self, str_place):
         write_content_to_file(self.placePath, "%s\t: %s\n" % (datetime.now(), str_place), "a")
@@ -154,10 +157,11 @@ class ApiToolLog:
         for line in exc_traceback:
             content.append(str(line))
         self.limitLogFileSizes()
-        with open(self.logPath, "a") as myfile:
-            for entry in content:
-                myfile.write("%s\n" % entry)
-            myfile.write("\n")
+        with _log_write_lock:
+            with open(self.logPath, "a", encoding="utf-8") as myfile:
+                for entry in content:
+                    myfile.write("%s\n" % entry)
+                myfile.write("\n")
 
         # Unified error limiting logic for Slack posting
         if Globals.frame:

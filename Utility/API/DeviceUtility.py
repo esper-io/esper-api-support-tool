@@ -204,7 +204,7 @@ def get_all_android_devices_helper(groupToUse, limit, offset, maxAttempt=Globals
 
 
 def get_all_ios_devices_helper(groupToUse, limit, offset, maxAttempt=Globals.MAX_RETRY, responses=None, searchParamsDict=None):
-    extention = "?limit=%s&offset=%s" % (limit, offset)
+    extention = "?limit=%s&offset=%s&ordering=name" % (limit, offset)
     if groupToUse.strip():
         extention += "&group_multi=%s" % (groupToUse.strip(),)
     if searchParamsDict:

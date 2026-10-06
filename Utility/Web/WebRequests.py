@@ -50,8 +50,15 @@ def performRequestWithRetry(
             if Globals.IS_DEBUG:
                 timeElapsed = resp.elapsed.total_seconds() if resp is not None and hasattr(resp, 'elapsed') else 'N/A'
                 respCode = resp.status_code if resp is not None and hasattr(resp, 'status_code') else 'N/A'
-                ApiToolLog().Log("%s\tThread:%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s\tResponse Time: %s" % (
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), threading.current_thread().name, method.__name__, url, respCode, timeElapsed
+                respJson = resp.json() if resp is not None and hasattr(resp, 'json') else 'N/A'
+                ApiToolLog().Log("%s\tThread:%s\tMethod: %s\tRequest Url: %s\tResponse Code: %s\tResponse Time: %s Response: %s" % (
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 
+                    threading.current_thread().name, 
+                    method.__name__, 
+                    url, 
+                    respCode, 
+                    timeElapsed,
+                    respJson
                 ))
             ApiToolLog().LogApiRequestOccurrence(method.__name__, url, Globals.PRINT_API_LOGS)
 
@@ -200,12 +207,22 @@ def getAllFromOffsetsRequests(api_response, results=None, tolarance=0, timeout=-
         respOffsetInt = int(respOffset)
         respLimit = apiNext.split("limit=")[-1].split("&")[0]
 
+        if Globals.IS_DEBUG:
+            ApiToolLog().Log(
+                "getAllFromOffsetsRequests: count=%s limit=%s firstOffset=%s url=%s"
+                % (count, respLimit, respOffsetInt, apiNext.split("?")[0])
+            )
         queueOffsetRequests(useThreadPool, count, respLimit, respOffset, respOffsetInt, apiNext, minSleep, maxSleep, results, tolarance, timeout, dictResKey)
     elif baseUrl and count is not None:
         respLimit = parseQueryParamValue(baseUrl, "limit", Globals.limit)
         respOffset = parseQueryParamValue(baseUrl, "offset", 0)
         respOffsetInt = int(respOffset) + int(respLimit)
 
+        if Globals.IS_DEBUG:
+            ApiToolLog().Log(
+                "getAllFromOffsetsRequests: count=%s limit=%s firstOffset=%s url=%s"
+                % (count, respLimit, respOffsetInt, baseUrl.split("?")[0])
+            )
         queueOffsetRequests(useThreadPool, count, str(respLimit), str(respOffset), respOffsetInt, baseUrl, minSleep, maxSleep, results, tolarance, timeout, dictResKey)
     
     return results
@@ -222,10 +239,13 @@ def queueOffsetRequests(useThreadPool, count, respLimit, respOffset, offsetInt, 
         # result queue, which is shared across all concurrent tasks.
         local_queue = Queue(0)
         total_requests = 0
+
+        # Enqueue ALL pages before checking for stop, so a momentary stop-flag
+        # on the calling worker thread cannot silently skip a page mid-loop.
         while int(offsetInt) < count and int(respLimit) < count:
-            if checkIfCurrentThreadStopped():
-                return
             url = nextUrl.replace("offset=%s" % respOffset, "offset=%s" % str(offsetInt))
+            if "v2/devices/" in url and "ordering=" not in url:
+                url += "&ordering=name"
             url = validateUrl(url)
             Globals.THREAD_POOL.enqueue(
                 _perform_web_request_to_queue,
@@ -235,7 +255,15 @@ def queueOffsetRequests(useThreadPool, count, respLimit, respOffset, offsetInt, 
             offsetInt += int(respLimit)
             total_requests += 1
 
-        # Drain from the local queue — no cross-task contamination possible
+        if Globals.IS_DEBUG:
+            ApiToolLog().Log(
+                "queueOffsetRequests: enqueued %d page requests (count=%s limit=%s)"
+                % (total_requests, count, respLimit)
+            )
+
+        # Drain from the local queue — no cross-task contamination possible.
+        # Stop-flag is checked inside _process_local_queue_responses so a
+        # cancellation after enqueuing still exits cleanly.
         _process_local_queue_responses(total_requests, local_queue, results, tolarance, timeout, dictResKey=dictResKey)
     else:
         # Sequential processing with immediate fail-fast
@@ -325,6 +353,10 @@ def _process_local_queue_responses(total_requests, local_queue, results, toleran
     processed_count = 0
     while processed_count < total_requests:
         if checkIfCurrentThreadStopped():
+            ApiToolLog().Log(
+                "_process_local_queue_responses: stopped early after %d of %d responses"
+                % (processed_count, total_requests)
+            )
             return
         if timeout > 0 and (time.time() - start_time) > timeout:
             raise Exception("Timeout waiting for paginated responses")
@@ -334,6 +366,10 @@ def _process_local_queue_responses(total_requests, local_queue, results, toleran
             processed_count += 1
         except Empty:
             continue
+    ApiToolLog().Log(
+        "_process_local_queue_responses: drained %d of %d responses"
+        % (processed_count, total_requests)
+    )
     Globals.THREAD_POOL.join(tolerance)
 
 
